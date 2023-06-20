@@ -16,11 +16,13 @@ use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IScheduleService;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitProposedScheduleEventRepository;
+use models\summit\ISummitProposedScheduleLockRepository;
 use models\summit\ISummitRepository;
 use models\utils\IBaseRepository;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\PagingInfo;
 
 /**
  * Class OAuth2SummitProposedScheduleApiController
@@ -40,6 +42,11 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
     private $summit_repository;
 
     /**
+     * @var ISummitProposedScheduleLockRepository
+     */
+    private $schedule_lock_repository;
+
+    /**
      * @var IScheduleService
      */
     private $service;
@@ -47,6 +54,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
     /**
      * @param ISummitRepository $summit_repository
      * @param ISummitProposedScheduleEventRepository $repository
+     * @param ISummitProposedScheduleLockRepository $schedule_lock_repository
      * @param IScheduleService $service
      * @param IResourceServerContext $resource_server_context
      */
@@ -54,6 +62,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
     (
         ISummitRepository                      $summit_repository,
         ISummitProposedScheduleEventRepository $repository,
+        ISummitProposedScheduleLockRepository  $schedule_lock_repository,
         IScheduleService                       $service,
         IResourceServerContext                 $resource_server_context
     )
@@ -61,6 +70,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
         parent::__construct($resource_server_context);
         $this->service = $service;
         $this->repository = $repository;
+        $this->schedule_lock_repository = $schedule_lock_repository;
         $this->summit_repository = $summit_repository;
     }
 
@@ -215,5 +225,98 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                     SerializerUtils::getRelations()
                 ));
         });
+    }
+
+
+    /**
+     * @param $summit_id
+     * @param $source
+     * @param $track_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addReview($summit_id, $source, $track_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $source, $track_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(ProposedScheduleLockValidationRulesFactory::buildForAdd());
+
+            $schedule = $this->service->addReview($summit, $source, intval($track_id), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($schedule)
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $source
+     * @param $track_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeReview($summit_id, $source, $track_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $source, $track_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $this->service->removeReview($summit, $source, intval($track_id));
+
+            return $this->deleted();
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $source
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getProposedScheduleReviewSubmissions($summit_id, $source)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'track_id' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'track_id' => 'sometimes|integer',
+                ];
+            },
+            function () {
+                return [
+                    'track_id'
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit_id, $source) {
+                return $this->schedule_lock_repository->getBySummitAndSource
+                (
+                    $summit_id,
+                    $source,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 }

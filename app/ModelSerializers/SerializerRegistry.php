@@ -74,6 +74,7 @@ use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackQuestionValueTe
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackSingleValueTemplateQuestionSerializer;
 use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleAllowedDaySerializer;
 use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocationSerializer;
+use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleLockSerializer;
 use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleSerializer;
 use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleSummitEventSerializer;
 use App\ModelSerializers\Summit\Registration\Refunds\SummitAttendeeTicketRefundRequestSerializer;
@@ -547,6 +548,9 @@ final class SerializerRegistry
         $this->registry['SummitProposedScheduleSummitEvent'] = SummitProposedScheduleSummitEventSerializer::class;
         $this->registry['SummitProposedScheduleAllowedLocation'] = SummitProposedScheduleAllowedLocationSerializer::class;
         $this->registry['SummitProposedScheduleAllowedDay'] = SummitProposedScheduleAllowedDaySerializer::class;
+
+        // proposed schedule lock
+        $this->registry['SummitProposedScheduleLock'] = SummitProposedScheduleLockSerializer::class;
 
     }
 

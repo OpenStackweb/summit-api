@@ -36,6 +36,7 @@ use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedDay;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
@@ -116,6 +117,7 @@ use models\main\SupportingCompany;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitBadgeViewTypeRepository;
 use models\summit\ISummitProposedScheduleEventRepository;
+use models\summit\ISummitProposedScheduleLockRepository;
 use models\summit\ISummitProposedScheduleRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -843,6 +845,13 @@ final class RepositoriesProvider extends ServiceProvider
              function(){
                  return EntityManager::getRepository(SummitProposedScheduleSummitEvent::class);
              }
+        );
+
+        App::singleton(
+            ISummitProposedScheduleLockRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitProposedScheduleLock::class);
+            }
         );
       
         App::singleton(

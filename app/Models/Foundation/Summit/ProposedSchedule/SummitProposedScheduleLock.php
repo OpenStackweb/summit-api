@@ -15,16 +15,29 @@
 use Doctrine\ORM\Mapping as ORM;
 use models\summit\PresentationCategory;
 use models\summit\SummitTrackChair;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleLockRepository")
  * @ORM\Table(name="SummitProposedScheduleLock")
  * Class SummitProposedScheduleLock
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
 class SummitProposedScheduleLock extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getTrackId' => 'track',
+        'getCreatedById' => 'created_by'
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasTrack' => 'track',
+        'hasCreatedBy' => 'created_by'
+    ];
+
     /**
      * @ORM\Column(name="Reason", type="string")
      * @var string
@@ -98,5 +111,26 @@ class SummitProposedScheduleLock extends SilverstripeBaseModel
     public function setCreatedBy(SummitTrackChair $created_by): void
     {
         $this->created_by = $created_by;
+    }
+
+    /**
+     * @return SummitProposedSchedule
+     */
+    public function getProposedSchedule(): SummitProposedSchedule
+    {
+        return $this->summit_proposed_schedule;
+    }
+
+    /**
+     * @param SummitProposedSchedule $summit_proposed_schedule
+     */
+    public function setProposedSchedule(SummitProposedSchedule $summit_proposed_schedule): void
+    {
+        $this->summit_proposed_schedule = $summit_proposed_schedule;
+    }
+
+    public function clearProposedSchedule(): void
+    {
+        $this->summit_proposed_schedule = null;
     }
 }

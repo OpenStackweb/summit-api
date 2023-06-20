@@ -17,6 +17,7 @@ use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
@@ -26,11 +27,13 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitProposedScheduleEventRepository;
+use models\summit\ISummitProposedScheduleLockRepository;
 use models\summit\ISummitProposedScheduleRepository;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
 use models\summit\SummitEvent;
+use models\summit\SummitTrackChair;
 use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
@@ -47,6 +50,11 @@ final class ScheduleService
      * @var ISummitProposedScheduleRepository
      */
     private $schedule_repository;
+
+    /**
+     * @var ISummitProposedScheduleLockRepository
+     */
+    private $schedule_lock_repository;
 
     /**
      * @var ISummitProposedScheduleEventRepository
@@ -71,6 +79,7 @@ final class ScheduleService
      * @param ITransactionService $tx_service
      */
     public function __construct(ISummitProposedScheduleRepository      $schedule_repository,
+                                ISummitProposedScheduleLockRepository  $schedule_lock_repository,
                                 ISummitEventRepository                 $event_repository,
                                 ISummitProposedScheduleEventRepository $proposed_events_repository,
                                 ISummitService                         $summit_service,
@@ -78,6 +87,7 @@ final class ScheduleService
     {
         parent::__construct($schedule_repository, $tx_service);
         $this->schedule_repository = $schedule_repository;
+        $this->schedule_lock_repository = $schedule_lock_repository;
         $this->event_repository = $event_repository;
         $this->proposed_events_repository = $proposed_events_repository;
         $this->summit_service = $summit_service;
@@ -402,5 +412,65 @@ final class ScheduleService
         }
 
         return $schedule;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule
+    {
+        return $this->tx_service->transaction(function () use ($summit, $source, $track_id, $payload) {
+
+            $former_lock = $this->schedule_lock_repository->getBySummitAndTrackId($summit->getId(), $track_id);
+
+            if (!is_null($former_lock)) {
+                throw new ValidationException("this track already has a review submission");
+            }
+
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
+
+            if (!$schedule instanceof SummitProposedSchedule) {
+                throw new EntityNotFoundException("can not find a proposed schedule for summit id {$summit->getId()} and source {$source}");
+            }
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException("can not find a presentation category with id {$track_id} for summit id {$summit->getId()}");
+            }
+            $member = ResourceServerContext::getCurrentUser(false);
+            $track_chair = $summit->getTrackChairByMember($member);
+
+            if (!$track_chair instanceof SummitTrackChair) {
+                throw new EntityNotFoundException("can not find a track chair for current member {$member->getId()}");
+            }
+            $lock = new SummitProposedScheduleLock();
+
+            if (isset($payload['message']))
+                $lock->setReason($payload['message']);
+
+            $lock->setTrack($track);
+            $lock->setCreatedBy($track_chair);
+
+            $schedule->addProposedScheduleLock($lock);
+            return $schedule;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeReview(Summit $summit, string $source, int $track_id): SummitProposedSchedule
+    {
+        return $this->tx_service->transaction(function () use ($summit, $source, $track_id) {
+
+            $lock = $this->schedule_lock_repository->getBySummitAndTrackId($summit->getId(), $track_id);
+
+            if (is_null($lock)) {
+                throw new EntityNotFoundException("this track does not have a review submission");
+            }
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
+            $schedule->removeProposedScheduleLock($lock);
+            return $schedule;
+        });
     }
 }

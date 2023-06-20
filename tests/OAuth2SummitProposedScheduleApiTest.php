@@ -180,4 +180,95 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
         $scheduled_event = json_decode($content);
         $this->assertTrue(!is_null($scheduled_event));
     }
+
+    public function testAddScheduleReview(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'source'   => 'track-chairs',
+            'track_id' => 39586
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $payload = [
+            'message' => 'TEST REVIEW',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitProposedScheduleApiController@addReview",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scheduled_event = json_decode($content);
+        $this->assertTrue(!is_null($scheduled_event));
+
+        return $scheduled_event;
+    }
+
+    public function testRemoveScheduleReview(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'source'   => 'track-chairs',
+            'track_id' => 39586
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitProposedScheduleApiController@removeReview",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testGetProposedScheduleReviewSubmissions(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'source'   => 'track-chairs',
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => 'track_id==39586',
+            'expand'   => 'created_by,track'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitProposedScheduleApiController@getProposedScheduleReviewSubmissions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+    }
 }

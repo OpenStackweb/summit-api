@@ -241,6 +241,8 @@ class SummitProposedSchedule extends SilverstripeBaseModel
 
     public function clearProposedScheduleLocks():void
     {
+        foreach($this->locks as $lock)
+            $lock->clearProposedSchedule();
         $this->locks->clear();
     }
 
@@ -248,7 +250,7 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      * @param int $lock_id
      * @return SummitProposedScheduleLock|null
      */
-    public function getProposedScheduleLockById(int $lock_id):?SummitProposedScheduleSummitEvent {
+    public function getProposedScheduleLockById(int $lock_id): ?SummitProposedScheduleLock {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $lock_id));
         $res = $this->locks->matching($criteria)->first();
@@ -266,7 +268,7 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('id', $lock));
         if($this->locks->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("Schedule lock %s already exists", $lock->getId()));
-
+        $lock->setProposedSchedule($this);
         $this->locks->add($lock);
     }
 
@@ -275,6 +277,7 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      */
     public function removeProposedScheduleLock(SummitProposedScheduleLock $lock){
         if(!$this->locks->contains($lock)) return;
+        $lock->clearProposedSchedule();
         $this->locks->removeElement($lock);
     }
 }

@@ -256,9 +256,13 @@ final class ScheduleService
 
             $member = ResourceServerContext::getCurrentUser(false);
             $summit = $schedule->getSummit();
+            $category = $event->getCategory();
 
-            if (!$this->isAuthorizedUser($member, $summit, $event->getCategory()))
+            if (!$this->isAuthorizedUser($member, $summit, $category))
                 throw new AuthzException("User is not authorized to perform this action.");
+
+            if ($schedule->hasLockFor($category))
+                throw new ValidationException("this track already has a review submission");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -307,6 +311,11 @@ final class ScheduleService
 
             if (!$schedule instanceof SummitProposedSchedule)
                 throw new EntityNotFoundException("schedule with source {$source} does not exists!");
+
+            $category = $event->getCategory();
+
+            if ($schedule->hasLockFor($category))
+                throw new ValidationException("this track already has a review submission");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 

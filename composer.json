@@ -113,7 +113,8 @@
             "@php artisan config:clear",
             "@php artisan doctrine:clear:metadata:cache",
             "@php artisan doctrine:clear:query:cache",
-            "@php artisan doctrine:clear:result:cache"
+            "@php artisan doctrine:clear:result:cache",
+            "@php artisan summit:seed-email-flow-events"
         ]
     },
     "config": {

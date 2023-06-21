@@ -18,6 +18,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\PresentationCategory;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitEvent;
 use models\summit\SummitOwned;
@@ -279,5 +280,16 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         if(!$this->locks->contains($lock)) return;
         $lock->clearProposedSchedule();
         $this->locks->removeElement($lock);
+    }
+
+    /**
+     * @param PresentationCategory $category
+     * @return bool
+     */
+    public function hasLockFor(?PresentationCategory $category): bool{
+        if (is_null($category)) return false;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('track', $category));
+        return $this->locks->matching($criteria)->count() > 0;
     }
 }

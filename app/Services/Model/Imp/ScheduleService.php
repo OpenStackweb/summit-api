@@ -255,7 +255,7 @@ final class ScheduleService
                 throw new AuthzException("User is not authorized to perform this action.");
 
             if ($schedule->hasLockFor($category))
-                throw new ValidationException("this track already has a review submission");
+                throw new ValidationException("This track is locked, its has been already submited for review.");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -308,7 +308,7 @@ final class ScheduleService
             $category = $event->getCategory();
 
             if ($schedule->hasLockFor($category))
-                throw new ValidationException("this track already has a review submission");
+                throw new ValidationException("This track is locked, its has been already submited for review.");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -423,31 +423,38 @@ final class ScheduleService
      */
     public function send2Review(Summit $summit, Member $member, string $source, int $track_id, array $payload): SummitProposedSchedule
     {
+        Log::debug(sprintf("ScheduleService::send2Review summit id %s track id %s payload %s", $summit->getId(), $track_id, json_encode($payload)));
+
         return $this->tx_service->transaction(function () use ($summit, $member, $source, $track_id, $payload) {
 
             $track = $summit->getPresentationCategory($track_id);
 
             if (!$track instanceof PresentationCategory) {
-                throw new EntityNotFoundException("can not find a presentation category with id {$track_id} for summit id {$summit->getId()}");
+                throw new EntityNotFoundException("Can not find a presentation category with id {$track_id} for summit id {$summit->getId()}.");
             }
 
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
 
             if (!$schedule instanceof SummitProposedSchedule) {
-                throw new EntityNotFoundException("can not find a proposed schedule for summit id {$summit->getId()} and source {$source}");
+                throw new EntityNotFoundException("Can not find a proposed schedule for summit id {$summit->getId()} and source {$source}.");
             }
 
             $former_lock = $schedule->getLockFor($track);
 
             if (!is_null($former_lock)) {
-                throw new ValidationException("this track already has a review submission");
+                throw new ValidationException("This track already has a review submission.");
             }
 
             $track_chair = $summit->getTrackChairByMember($member);
 
             if (!$track_chair instanceof SummitTrackChair) {
-                throw new EntityNotFoundException("can not find a track chair for current member {$member->getId()}");
+                throw new EntityNotFoundException("Can not find a track chair for current member {$member->getId()}.");
             }
+
+            if(!$summit->isTrackChair($member, $track)){
+                throw new ValidationException("Current member is not a track chair for track id {$track->getId()}.");
+            }
+
             $lock = new SummitProposedScheduleLock();
 
             if (isset($payload['message']))
@@ -468,31 +475,31 @@ final class ScheduleService
      */
     public function removeReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule
     {
+        Log::debug(sprintf("ScheduleService::removeReview summit id %s track id %s payload %s", $summit->getId(), $track_id, json_encode($payload)));
+
         return $this->tx_service->transaction(function () use ($summit, $source, $track_id, $payload) {
 
             $track = $summit->getPresentationCategory($track_id);
 
             if (!$track instanceof PresentationCategory) {
-                throw new EntityNotFoundException("can not find a presentation category with id {$track_id} for summit id {$summit->getId()}");
+                throw new EntityNotFoundException("Can not find a presentation category with id {$track_id} for summit id {$summit->getId()}.");
             }
 
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
 
             if (!$schedule instanceof SummitProposedSchedule) {
-                throw new EntityNotFoundException("can not find a proposed schedule for summit id {$summit->getId()} and source {$source}");
+                throw new EntityNotFoundException("Can not find a proposed schedule for summit id {$summit->getId()} and source {$source}.");
             }
 
             $lock = $schedule->getLockFor($track);
 
             if (is_null($lock)) {
-                throw new EntityNotFoundException("this track does not have a review submission");
+                throw new EntityNotFoundException("This track does not have a review submission.");
             }
 
             $schedule->removeProposedScheduleLock($lock);
 
-            $message = "";
-            if (isset($payload['message']))
-                $message = $payload['message'];
+            $message = $payload['message'] ?? "";
 
             UnsubmitForReviewEmail::dispatch($lock, $message);
 

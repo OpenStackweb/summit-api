@@ -23,8 +23,9 @@ class UnsubmitForReviewEmail extends AbstractEmailJob
     /**
      * UnsubmitForReviewEmail constructor.
      * @param SummitProposedScheduleLock $lock
+     * @param string $message
      */
-    public function __construct(SummitProposedScheduleLock $lock)
+    public function __construct(SummitProposedScheduleLock $lock, string $message)
     {
         $summit = $lock->getProposedSchedule()->getSummit();
         $submitter = $lock->getCreatedBy()->getMember();
@@ -36,7 +37,7 @@ class UnsubmitForReviewEmail extends AbstractEmailJob
         $payload['submitter_email']     = $submitter->getEmail();
         $payload['track']               = $lock->getTrack()->getTitle();
         $payload['track_id']            = $lock->getTrack()->getId();
-        $payload['message']             = $lock->getReason();
+        $payload['message']             = $message ?? "";
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 

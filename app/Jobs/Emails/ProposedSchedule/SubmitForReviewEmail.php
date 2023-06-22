@@ -13,6 +13,8 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
+use Exception;
+
 /**
  * Class SubmitForReviewEmail
  * @package App\Jobs\Emails\Schedule
@@ -36,10 +38,13 @@ class SubmitForReviewEmail extends AbstractEmailJob
         $payload['submitter_email']     = $submitter->getEmail();
         $payload['track']               = $lock->getTrack()->getTitle();
         $payload['track_id']            = $lock->getTrack()->getId();
-        $payload['message']             = $lock->getReason();
+        $payload['message']             = $lock->getReason() ?? "";
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         $to_email = $this->getEmailRecipientFromEmailEvent($summit);
+
+        if (is_null($to_email))
+            throw new Exception("SubmitForReviewEmail::__construct - there is no registered recipient");
 
         parent::__construct($payload, $template_identifier, $to_email);
     }

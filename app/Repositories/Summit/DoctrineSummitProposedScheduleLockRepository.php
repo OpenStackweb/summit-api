@@ -122,23 +122,4 @@ final class DoctrineSummitProposedScheduleLockRepository
             $data
         );
     }
-
-    /**
-     * @inheritDoc
-     */
-    public function getBySummitAndTrackId(int $summit_id, int $track_id): ?SummitProposedScheduleLock
-    {
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->join("e.track", "t")
-            ->join("e.summit_proposed_schedule","ps")
-            ->join("ps.summit","s")
-            ->where('s.id = :summit_id')
-            ->andWhere('t.id = :track_id')
-            ->setParameter('summit_id', $summit_id)
-            ->setParameter('track_id', $track_id);
-
-        return $query->getQuery()->getOneOrNullResult();
-    }
 }

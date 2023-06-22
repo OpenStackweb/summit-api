@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\Summit;
 use utils\Filter;
 
@@ -65,6 +66,7 @@ interface IScheduleService
 
     /**
      * @param Summit $summit
+     * @param Member $member
      * @param string $source
      * @param int $track_id
      * @param array $payload
@@ -72,14 +74,15 @@ interface IScheduleService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule;
+    public function send2Review(Summit $summit, Member $member, string $source, int $track_id, array $payload): SummitProposedSchedule;
 
     /**
      * @param Summit $summit
      * @param string $source
      * @param int $track_id
+     * @param array $payload
      * @return void
      * @throws EntityNotFoundException
      */
-    public function removeReview(Summit $summit, string $source, int $track_id): SummitProposedSchedule;
+    public function removeReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule;
 }

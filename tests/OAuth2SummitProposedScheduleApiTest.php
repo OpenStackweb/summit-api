@@ -185,7 +185,7 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
         $params = [
             'id'       => self::$summit->getId(),
             'source'   => 'track-chairs',
-            'track_id' => 39586
+            'track_id' => self::$summit->getPresentationCategories()[0]->getId()
         ];
 
         $headers = [
@@ -199,7 +199,7 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
 
         $response = $this->action(
             "POST",
-            "OAuth2SummitProposedScheduleApiController@addReview",
+            "OAuth2SummitProposedScheduleApiController@send2Review",
             $params,
             [],
             [],
@@ -220,12 +220,16 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
         $params = [
             'id'       => self::$summit->getId(),
             'source'   => 'track-chairs',
-            'track_id' => 39586
+            'track_id' => self::$summit->getPresentationCategories()[0]->getId()
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $payload = [
+            'message' => 'NOT APPROVED',
         ];
 
         $response = $this->action(
@@ -235,7 +239,8 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $headers,
+            json_encode($payload)
         );
 
         $this->assertResponseStatus(204);
@@ -247,7 +252,7 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
             'source'   => 'track-chairs',
             'page'     => 1,
             'per_page' => 10,
-            'filter'   => 'track_id==39586',
+            'filter'   => 'track_id==' . self::$summit->getPresentationCategories()[0]->getId(),
             'expand'   => 'created_by,track'
         ];
 

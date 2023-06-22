@@ -80,7 +80,7 @@ class OAuth2SummitEmailEventFlowApiController extends OAuth2ProtectedController
     {
         return [
             'email_template_identifier' => 'sometimes|required|string',
-            'recipient'                 => 'sometimes|string',
+            'recipient'                 => 'sometimes|string|max:255',
         ];
     }
 

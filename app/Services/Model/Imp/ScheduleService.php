@@ -54,11 +54,6 @@ final class ScheduleService
     private $schedule_repository;
 
     /**
-     * @var ISummitProposedScheduleLockRepository
-     */
-    private $schedule_lock_repository;
-
-    /**
      * @var ISummitProposedScheduleEventRepository
      */
     private $proposed_events_repository;
@@ -81,7 +76,6 @@ final class ScheduleService
      * @param ITransactionService $tx_service
      */
     public function __construct(ISummitProposedScheduleRepository      $schedule_repository,
-                                ISummitProposedScheduleLockRepository  $schedule_lock_repository,
                                 ISummitEventRepository                 $event_repository,
                                 ISummitProposedScheduleEventRepository $proposed_events_repository,
                                 ISummitService                         $summit_service,
@@ -89,7 +83,6 @@ final class ScheduleService
     {
         parent::__construct($schedule_repository, $tx_service);
         $this->schedule_repository = $schedule_repository;
-        $this->schedule_lock_repository = $schedule_lock_repository;
         $this->event_repository = $event_repository;
         $this->proposed_events_repository = $proposed_events_repository;
         $this->summit_service = $summit_service;
@@ -428,15 +421,14 @@ final class ScheduleService
     /**
      * @inheritDoc
      */
-    public function addReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule
+    public function send2Review(Summit $summit, Member $member, string $source, int $track_id, array $payload): SummitProposedSchedule
     {
-        return $this->tx_service->transaction(function () use ($summit, $source, $track_id, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $member, $source, $track_id, $payload) {
 
-            $former_lock = $this->schedule_lock_repository->getBySummitAndTrackId($summit->getId(), $track_id);
+            $track = $summit->getPresentationCategory($track_id);
 
-            if (!is_null($former_lock)) {
-                SubmitForReviewEmail::dispatch($former_lock);
-                throw new ValidationException("this track already has a review submission");
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException("can not find a presentation category with id {$track_id} for summit id {$summit->getId()}");
             }
 
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
@@ -444,12 +436,13 @@ final class ScheduleService
             if (!$schedule instanceof SummitProposedSchedule) {
                 throw new EntityNotFoundException("can not find a proposed schedule for summit id {$summit->getId()} and source {$source}");
             }
-            $track = $summit->getPresentationCategory($track_id);
 
-            if (!$track instanceof PresentationCategory) {
-                throw new EntityNotFoundException("can not find a presentation category with id {$track_id} for summit id {$summit->getId()}");
+            $former_lock = $schedule->getLockFor($track);
+
+            if (!is_null($former_lock)) {
+                throw new ValidationException("this track already has a review submission");
             }
-            $member = ResourceServerContext::getCurrentUser(false);
+
             $track_chair = $summit->getTrackChairByMember($member);
 
             if (!$track_chair instanceof SummitTrackChair) {
@@ -462,8 +455,10 @@ final class ScheduleService
 
             $lock->setTrack($track);
             $lock->setCreatedBy($track_chair);
-
             $schedule->addProposedScheduleLock($lock);
+
+            SubmitForReviewEmail::dispatch($lock);
+
             return $schedule;
         });
     }
@@ -471,19 +466,35 @@ final class ScheduleService
     /**
      * @inheritDoc
      */
-    public function removeReview(Summit $summit, string $source, int $track_id): SummitProposedSchedule
+    public function removeReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule
     {
-        return $this->tx_service->transaction(function () use ($summit, $source, $track_id) {
+        return $this->tx_service->transaction(function () use ($summit, $source, $track_id, $payload) {
 
-            $lock = $this->schedule_lock_repository->getBySummitAndTrackId($summit->getId(), $track_id);
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException("can not find a presentation category with id {$track_id} for summit id {$summit->getId()}");
+            }
+
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
+
+            if (!$schedule instanceof SummitProposedSchedule) {
+                throw new EntityNotFoundException("can not find a proposed schedule for summit id {$summit->getId()} and source {$source}");
+            }
+
+            $lock = $schedule->getLockFor($track);
 
             if (is_null($lock)) {
                 throw new EntityNotFoundException("this track does not have a review submission");
             }
-            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
+
             $schedule->removeProposedScheduleLock($lock);
 
-            UnsubmitForReviewEmail::dispatch($lock);
+            $message = "";
+            if (isset($payload['message']))
+                $message = $payload['message'];
+
+            UnsubmitForReviewEmail::dispatch($lock, $message);
 
             return $schedule;
         });

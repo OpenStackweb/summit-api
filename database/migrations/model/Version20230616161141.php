@@ -56,6 +56,8 @@ final class Version20230616161141 extends AbstractMigration
                 $table->integer("CreatedByID", false, false)->setNotnull(true);
                 $table->index("CreatedByID", "CreatedByID");
                 $table->foreign("SummitTrackChair", "CreatedByID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleLock_TrackChair");
+
+                $table->unique(['SummitProposedScheduleID', 'TrackID']);
             });
         }
     }

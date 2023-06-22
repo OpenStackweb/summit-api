@@ -292,4 +292,15 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('track', $category));
         return $this->locks->matching($criteria)->count() > 0;
     }
+
+    /**
+     * @param PresentationCategory $category
+     * @return SummitProposedScheduleLock|null
+     */
+    public function getLockFor(PresentationCategory $category): ?SummitProposedScheduleLock{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('track', $category));
+        $res = $this->locks->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
 }

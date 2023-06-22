@@ -1939,7 +1939,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::group(['prefix' => 'tracks'], function () {
                     Route::group(['prefix' => '{track_id}'], function () {
                         Route::group(['prefix' => 'review'], function () {
-                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@addReview']);
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@send2Review']);
                             Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@removeReview']);
                         });
                     });

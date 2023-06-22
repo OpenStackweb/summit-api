@@ -40,12 +40,4 @@ interface ISummitProposedScheduleLockRepository extends IBaseRepository
         Filter $filter = null,
         Order $order   = null
     );
-
-    /**
-     * @param int $summit_id
-     * @param int $track_id
-     * @return SummitProposedScheduleLock|null
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function getBySummitAndTrackId(int $summit_id, int $track_id): ?SummitProposedScheduleLock;
 }

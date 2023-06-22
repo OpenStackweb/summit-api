@@ -89,7 +89,7 @@ class SummitEmailEventFlow extends SilverstripeBaseModel
         $this->event_type = $event_type;
     }
 
-    public function getEmailRecipient(): string
+    public function getEmailRecipient(): ?string
     {
         return $this->recipient;
     }

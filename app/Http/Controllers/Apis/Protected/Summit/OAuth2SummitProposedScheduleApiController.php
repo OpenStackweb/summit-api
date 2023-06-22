@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Facades\ResourceServerContext;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IScheduleService;
 use models\oauth2\IResourceServerContext;
@@ -234,7 +235,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addReview($summit_id, $source, $track_id)
+    public function send2Review($summit_id, $source, $track_id)
     {
         return $this->processRequest(function () use ($summit_id, $source, $track_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -242,9 +243,11 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
 
             $payload = $this->getJsonPayload(ProposedScheduleLockValidationRulesFactory::buildForAdd());
 
-            $schedule = $this->service->addReview($summit, $source, intval($track_id), $payload);
+            $member = ResourceServerContext::getCurrentUser(false);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($schedule)
+            $schedule = $this->service->send2Review($summit, $member, $source, intval($track_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($schedule)
                 ->serialize
                 (
                     SerializerUtils::getExpand(),
@@ -267,7 +270,9 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
-            $this->service->removeReview($summit, $source, intval($track_id));
+            $payload = $this->getJsonPayload(ProposedScheduleLockValidationRulesFactory::buildForUpdate());
+
+            $this->service->removeReview($summit, $source, intval($track_id), $payload);
 
             return $this->deleted();
         });

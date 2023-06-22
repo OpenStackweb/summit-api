@@ -27,6 +27,7 @@ use models\utils\SilverstripeBaseModel;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleEventRepository")
+ * @ORM\HasLifecycleCallbacks
  * Class SummitProposedScheduleSummitEvent
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
  * @package App\Models\Foundation\Summit\ProposedSchedule

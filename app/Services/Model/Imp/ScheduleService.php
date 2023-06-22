@@ -13,10 +13,13 @@
  **/
 
 use App\Facades\ResourceServerContext;
+use App\Jobs\Emails\ProposedSchedule\SubmitForReviewEmail;
+use App\Jobs\Emails\ProposedSchedule\UnsubmitForReviewEmail;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
@@ -26,11 +29,13 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitProposedScheduleEventRepository;
+use models\summit\ISummitProposedScheduleLockRepository;
 use models\summit\ISummitProposedScheduleRepository;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
 use models\summit\SummitEvent;
+use models\summit\SummitTrackChair;
 use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
@@ -342,9 +347,13 @@ final class ScheduleService
 
             $member = ResourceServerContext::getCurrentUser(false);
             $summit = $schedule->getSummit();
+            $category = $event->getCategory();
 
-            if (!$this->isAuthorizedUser($member, $summit, $event->getCategory()))
+            if (!$this->isAuthorizedUser($member, $summit, $category))
                 throw new AuthzException("User is not authorized to perform this action.");
+
+            if ($schedule->hasLockFor($category))
+                throw new ValidationException("This track is locked, its has been already submited for review.");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -395,6 +404,11 @@ final class ScheduleService
 
             if (!$schedule instanceof SummitProposedSchedule)
                 throw new EntityNotFoundException("schedule with source {$source} does not exists!");
+
+            $category = $event->getCategory();
+
+            if ($schedule->hasLockFor($category))
+                throw new ValidationException("This track is locked, its has been already submited for review.");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -502,5 +516,94 @@ final class ScheduleService
         }
 
         return $schedule;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function send2Review(Summit $summit, Member $member, string $source, int $track_id, array $payload): SummitProposedSchedule
+    {
+        Log::debug(sprintf("ScheduleService::send2Review summit id %s track id %s payload %s", $summit->getId(), $track_id, json_encode($payload)));
+
+        return $this->tx_service->transaction(function () use ($summit, $member, $source, $track_id, $payload) {
+
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException("Can not find a presentation category with id {$track_id} for summit id {$summit->getId()}.");
+            }
+
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
+
+            if (!$schedule instanceof SummitProposedSchedule) {
+                throw new EntityNotFoundException("Can not find a proposed schedule for summit id {$summit->getId()} and source {$source}.");
+            }
+
+            $former_lock = $schedule->getLockFor($track);
+
+            if (!is_null($former_lock)) {
+                throw new ValidationException("This track already has a review submission.");
+            }
+
+            $track_chair = $summit->getTrackChairByMember($member);
+
+            if (!$track_chair instanceof SummitTrackChair) {
+                throw new EntityNotFoundException("Can not find a track chair for current member {$member->getId()}.");
+            }
+
+            if(!$summit->isTrackChair($member, $track)){
+                throw new ValidationException("Current member is not a track chair for track id {$track->getId()}.");
+            }
+
+            $lock = new SummitProposedScheduleLock();
+
+            if (isset($payload['message']))
+                $lock->setReason($payload['message']);
+
+            $lock->setTrack($track);
+            $lock->setCreatedBy($track_chair);
+            $schedule->addProposedScheduleLock($lock);
+
+            SubmitForReviewEmail::dispatch($lock);
+
+            return $schedule;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule
+    {
+        Log::debug(sprintf("ScheduleService::removeReview summit id %s track id %s payload %s", $summit->getId(), $track_id, json_encode($payload)));
+
+        return $this->tx_service->transaction(function () use ($summit, $source, $track_id, $payload) {
+
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException("Can not find a presentation category with id {$track_id} for summit id {$summit->getId()}.");
+            }
+
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
+
+            if (!$schedule instanceof SummitProposedSchedule) {
+                throw new EntityNotFoundException("Can not find a proposed schedule for summit id {$summit->getId()} and source {$source}.");
+            }
+
+            $lock = $schedule->getLockFor($track);
+
+            if (is_null($lock)) {
+                throw new EntityNotFoundException("This track does not have a review submission.");
+            }
+
+            $schedule->removeProposedScheduleLock($lock);
+
+            $message = $payload['message'] ?? "";
+
+            UnsubmitForReviewEmail::dispatch($lock, $message);
+
+            return $schedule;
+        });
     }
 }

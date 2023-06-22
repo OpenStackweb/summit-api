@@ -19,6 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\PresentationCategory;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitEvent;
 use models\summit\SummitOwned;
@@ -59,10 +60,17 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      */
     private $scheduled_summit_events;
 
+    /**
+     * @ORM\OneToMany(targetEntity="SummitProposedScheduleLock", mappedBy="summit_proposed_schedule", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitProposedScheduleLock[]
+     */
+    private $locks;
+
     public function __construct()
     {
         parent::__construct();
         $this->scheduled_summit_events = new ArrayCollection();
+        $this->locks = new ArrayCollection();
     }
 
     /**
@@ -281,5 +289,77 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         if(!$this->scheduled_summit_events->contains($scheduled_event)) return;
         $this->scheduled_summit_events->removeElement($scheduled_event);
         $scheduled_event->clearSchedule();
+    }
+
+    /**
+     * @return SummitProposedScheduleLock[]
+     */
+    public function getProposedScheduleLocks()
+    {
+        return $this->locks;
+    }
+
+    public function clearProposedScheduleLocks():void
+    {
+        foreach($this->locks as $lock)
+            $lock->clearProposedSchedule();
+        $this->locks->clear();
+    }
+
+    /**
+     * @param int $lock_id
+     * @return SummitProposedScheduleLock|null
+     */
+    public function getProposedScheduleLockById(int $lock_id): ?SummitProposedScheduleLock {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $lock_id));
+        $res = $this->locks->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param SummitProposedScheduleLock $lock
+     * @throws ValidationException
+     */
+    public function addProposedScheduleLock(SummitProposedScheduleLock $lock){
+        if($this->locks->contains($lock)) return;
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $lock));
+        if($this->locks->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("Schedule lock %s already exists", $lock->getId()));
+        $lock->setProposedSchedule($this);
+        $this->locks->add($lock);
+    }
+
+    /**
+     * @param SummitProposedScheduleLock $lock
+     */
+    public function removeProposedScheduleLock(SummitProposedScheduleLock $lock){
+        if(!$this->locks->contains($lock)) return;
+        $lock->clearProposedSchedule();
+        $this->locks->removeElement($lock);
+    }
+
+    /**
+     * @param PresentationCategory $category
+     * @return bool
+     */
+    public function hasLockFor(?PresentationCategory $category): bool{
+        if (is_null($category)) return false;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('track', $category));
+        return $this->locks->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param PresentationCategory $category
+     * @return SummitProposedScheduleLock|null
+     */
+    public function getLockFor(PresentationCategory $category): ?SummitProposedScheduleLock{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('track', $category));
+        $res = $this->locks->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 }

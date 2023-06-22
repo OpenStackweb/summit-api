@@ -41,6 +41,8 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitt
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessExcerptEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessRejectedOnlyEmail;
+use App\Jobs\Emails\ProposedSchedule\SubmitForReviewEmail;
+use App\Jobs\Emails\ProposedSchedule\UnsubmitForReviewEmail;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
@@ -276,6 +278,25 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'slug' => ShareEventEmail::EVENT_SLUG,
                 'default_email_template' => ShareEventEmail::DEFAULT_TEMPLATE
             ],
+        ], $flow);
+
+        $em->persist($flow);
+
+        // Proposed Schedule Flow
+        $flow = new SummitEmailFlowType();
+        $flow->setName("Proposed Schedule");
+
+        self::createEventsTypes([
+            [
+                'name' => SubmitForReviewEmail::EVENT_NAME,
+                'slug' => SubmitForReviewEmail::EVENT_SLUG,
+                'default_email_template' => SubmitForReviewEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => UnsubmitForReviewEmail::EVENT_NAME,
+                'slug' => UnsubmitForReviewEmail::EVENT_SLUG,
+                'default_email_template' => UnsubmitForReviewEmail::DEFAULT_TEMPLATE
+            ]
         ], $flow);
 
         $em->persist($flow);

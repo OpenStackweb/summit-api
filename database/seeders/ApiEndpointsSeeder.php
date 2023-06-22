@@ -8110,7 +8110,39 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::TrackChairsAdmins,
                 ]
             ],
-
+            [
+                'name' => 'add-proposed-schedule-review',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/review',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'remove-proposed-schedule-review',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/review',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators
+                ]
+            ],
+            [
+                'name' => 'get-proposed-schedule-review-submissions',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/review-submissions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ]
+            ],
         ]);
 
     }

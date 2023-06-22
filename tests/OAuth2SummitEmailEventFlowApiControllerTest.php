@@ -81,7 +81,8 @@ class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTest
         ];
 
         $data = [
-            'email_template_identifier' => "NEW_TEMPLATE",
+            'email_template_identifier' => "PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW",
+            'recipient' => "test@nomail.com"
         ];
 
         $response = $this->action(

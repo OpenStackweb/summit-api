@@ -25,5 +25,6 @@ class SummitEmailEventFlowSerializer extends SilverStripeSerializer
         'EmailTemplateIdentifier' => 'email_template_identifier:json_string',
         'FlowName' => 'flow_name:json_string',
         'EventTypeName' => 'event_type_name:json_string',
+        'EmailRecipient' => 'recipient:json_string'
     );
 }

@@ -4893,6 +4893,42 @@ SQL;
     }
 
     /**
+     * @param string $eventSlug
+     * @return string|null
+     */
+    public function getEmailRecipientPerEmailEventFlowSlug(string $eventSlug): ?string
+    {
+        Log::debug(sprintf("Summit::getEmailRecipientPerEmailEventFlowSlug id %s slug %s", $this->id, $eventSlug));
+
+        try {
+            $sql = <<<SQL
+           SELECT SummitEmailEventFlow.EmailRecipient AS Template 
+           FROM `SummitEmailEventFlow` 
+           inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID 
+           where SummitID = :summit_id 
+           AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute([
+                'summit_id' => $this->id,
+                'slug' => trim($eventSlug)
+            ]);
+
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $recipient = count($res) > 0 ? $res[0] : null;
+            if (!empty($recipient)) {
+                Log::debug(
+                    "Summit::getEmailRecipientPerEmailEventFlowSlug id {$this->id} slug {$eventSlug} " .
+                    "got override by template {$recipient}");
+                return $recipient;
+            }
+            return null;
+        } catch (\Exception $ex) {
+            return null;
+        }
+    }
+
+    /**
      * @param SummitEmailEventFlowType $type
      * @return SummitEmailEventFlow|null
      */

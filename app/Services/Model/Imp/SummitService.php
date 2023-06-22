@@ -2327,12 +2327,12 @@ final class SummitService
                 }
 
                 if ($summitEvent->hasLocation()) {
-                    $location = $summitEvent;
+                    $location = $summitEvent->getLocation();
                     $geo = null;
                     if ($location instanceof SummitGeoLocatedLocation) {
                         $geo = sprintf("%s;%s", $location->getLat(), $location->getLng());
                     }
-                    $vEvent->setLocation($location->getTitle(), $location->getTitle(), $geo);
+                    $vEvent->setLocation($location->getName(), $location->getName(), $geo);
                 }
 
                 $vCalendar->addComponent($vEvent);

@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use Doctrine\ORM\Mapping AS ORM;
+use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitEventType;
 use models\utils\SilverstripeBaseModel;
@@ -39,8 +42,8 @@ class DefaultSummitEventType extends SilverstripeBaseModel
     protected $color;
 
     /**
-     * @ORM\Column(name="BlackoutTimes", type="boolean")
-     * @var bool
+     * @ORM\Column(name="BlackoutTimes", type="string")
+     * @var string
      */
     protected $blackout_times;
 
@@ -103,16 +106,18 @@ class DefaultSummitEventType extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isBlackoutTimes()
-    {
-        return $this->blackout_times;
+    public function isBlackoutTimes(){
+        return $this->blackout_times === SummitEventTypeConstants::BLACKOUT_TIME_ALL;
     }
 
     /**
-     * @param bool $blackout_times
+     * @param string $blackout_times
+     * @throws ValidationException
      */
     public function setBlackoutTimes($blackout_times)
     {
+        if (!in_array($blackout_times, SummitEventTypeConstants::$valid_blackout_times))
+            throw new ValidationException("{$blackout_times} is not a valid blackout time target");
         $this->blackout_times = $blackout_times;
     }
 

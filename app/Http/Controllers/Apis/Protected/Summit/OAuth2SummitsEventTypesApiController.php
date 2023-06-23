@@ -26,6 +26,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
+use models\summit\SummitEventType;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterParser;
@@ -101,10 +102,10 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
             },
             function () {
                 return [
-                    'class_name' => sprintf('sometimes|in:%s', implode(',', SummitEventTypeConstants::$valid_class_names)),
+                    'class_name' => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_class_names),
                     'name' => 'sometimes|string',
                     'is_default' => 'sometimes|boolean',
-                    'black_out_times' => 'sometimes|boolean',
+                    'black_out_times' => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_blackout_times),
                     'use_sponsors' => 'sometimes|boolean',
                     'are_sponsors_mandatory' => 'sometimes|boolean',
                     'allows_attachment' => 'sometimes|boolean',
@@ -194,10 +195,10 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
             if (is_null($filter)) $filter = new Filter();
 
             $filter->validate([
-                'class_name' => sprintf('sometimes|in:%s', implode(',', SummitEventTypeConstants::$valid_class_names)),
+                'class_name' => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_class_names),
                 'name' => 'sometimes|string',
                 'is_default' => 'sometimes|boolean',
-                'black_out_times' => 'sometimes|boolean',
+                'black_out_times' => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_blackout_times),
                 'use_sponsors' => 'sometimes|boolean',
                 'are_sponsors_mandatory' => 'sometimes|boolean',
                 'allows_attachment' => 'sometimes|boolean',
@@ -237,7 +238,6 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                     'created' => new EpochCellFormatter,
                     'last_edited' => new EpochCellFormatter,
                     'is_default' => new BooleanCellFormatter,
-                    'black_out_times' => new BooleanCellFormatter,
                     'use_sponsors' => new BooleanCellFormatter,
                     'are_sponsors_mandatory' => new BooleanCellFormatter,
                     'allows_attachment' => new BooleanCellFormatter,

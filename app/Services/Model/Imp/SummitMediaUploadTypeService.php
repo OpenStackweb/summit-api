@@ -225,7 +225,7 @@ implements ISummitMediaUploadTypeService
                         $newPresentationType->setUseSpeakers($presentationType->isUseSpeakers());
                         $newPresentationType->setAreSponsorsMandatory($presentationType->isAreSponsorsMandatory());
                         $newPresentationType->setUseSponsors($presentationType->isUseSponsors());
-                        $newPresentationType->setBlackoutTimes($presentationType->isBlackoutTimes());
+                        $newPresentationType->setBlackoutTimes($presentationType->getBlackoutTimes());
                         $newPresentationType->setShouldBeAvailableOnCfp($presentationType->isShouldBeAvailableOnCfp());
                         $newPresentationType->setIsModeratorMandatory($presentationType->isModeratorMandatory());
                         $newPresentationType->setUseModerator($presentationType->isUseModerator());

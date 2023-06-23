@@ -117,7 +117,7 @@ final class SummitEventTypeFactory
             $event_type->setColor(trim($data['color']));
 
         if(isset($data['black_out_times']))
-            $event_type->setBlackoutTimes(boolval($data['black_out_times']));
+            $event_type->setBlackoutTimes(trim($data['black_out_times']));
 
         if(isset($data['use_sponsors']))
             $event_type->setUseSponsors(boolval($data['use_sponsors']));

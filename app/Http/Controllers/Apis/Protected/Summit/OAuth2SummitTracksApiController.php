@@ -212,7 +212,6 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'created' => new EpochCellFormatter,
                     'last_edited' => new EpochCellFormatter,
                     'is_default' => new BooleanCellFormatter,
-                    'black_out_times' => new BooleanCellFormatter,
                     'use_sponsors' => new BooleanCellFormatter,
                     'are_sponsors_mandatory' => new BooleanCellFormatter,
                     'allows_attachment' => new BooleanCellFormatter,

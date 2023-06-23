@@ -26,7 +26,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         'Type'                  => 'name:json_string',
         'ClassName'             => 'class_name:json_string',
         'Color'                 => 'color:json_color',
-        'BlackoutTimes'         => 'black_out_times:json_boolean',
+        'BlackoutTimes'         => 'black_out_times:json_string',
         'UseSponsors'           => 'use_sponsors:json_boolean',
         'AreSponsorsMandatory'  => 'are_sponsors_mandatory:json_boolean',
         'AllowsAttachment'      => 'allows_attachment:json_boolean',

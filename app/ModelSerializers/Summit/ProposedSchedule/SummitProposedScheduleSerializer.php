@@ -31,12 +31,17 @@ final class SummitProposedScheduleSerializer extends SilverStripeSerializer
 
     protected static $allowed_relations = [
         'scheduled_summit_events',
+        'locks',
     ];
 
     protected static $expand_mappings = [
         'scheduled_summit_events' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getScheduledSummitEvents',
+        ],
+        'locks' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getProposedScheduleLocks',
         ],
         'created_by' => [
             'type' => One2ManyExpandSerializer::class,

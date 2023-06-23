@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
@@ -162,20 +163,24 @@ class SummitEventType extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isBlackoutTimes(){
-        return $this->getBlackoutTimes() === SummitEventTypeConstants::BLACKOUT_TIME_ALL;
+    public function isBlackoutAppliedTo(IPublishableEvent $publishable_event){
+        if ($this->blackout_times === SummitEventTypeConstants::BLACKOUT_TIME_ALL) return true;
+        if ($this->blackout_times === SummitEventTypeConstants::BLACKOUT_TIME_NONE) return false;
+        return $this->blackout_times === $publishable_event->getSource();
     }
 
     /**
-     * @param string $blackout_times
+     * @param string|null $blackout_times
      * @throws ValidationException
      */
-    public function setBlackoutTimes($blackout_times)
+    public function setBlackoutTimes(?string $blackout_times)
     {
         if (!in_array($blackout_times, SummitEventTypeConstants::$valid_blackout_times))
             throw new ValidationException("{$blackout_times} is not a valid blackout time target");
         $this->blackout_times = $blackout_times;
     }
+
+
 
     /**
      * @param Summit $summit

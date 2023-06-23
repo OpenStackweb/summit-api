@@ -98,4 +98,6 @@ interface IPublishableEvent extends IEntity
     public function getTrackTransitionTime():?int;
 
     public function getSummitEventId():int;
+
+    public function getSource(): string;
 }

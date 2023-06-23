@@ -8111,8 +8111,8 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'add-proposed-schedule-review',
-                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/review',
+                'name' => 'add-proposed-schedule-lock',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -8123,8 +8123,8 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'remove-proposed-schedule-review',
-                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/review',
+                'name' => 'remove-proposed-schedule-lock',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -8136,8 +8136,8 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'get-proposed-schedule-review-submissions',
-                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/review-submissions',
+                'name' => 'get-proposed-schedule-locks',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/locks',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm)

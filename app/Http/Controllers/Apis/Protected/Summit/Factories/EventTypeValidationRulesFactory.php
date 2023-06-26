@@ -14,6 +14,7 @@
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use models\exceptions\ValidationException;
 use models\summit\PresentationType;
+
 /**
  * Class EventTypeValidationRulesFactory
  * @package App\Http\Controllers
@@ -51,7 +52,7 @@ final class EventTypeValidationRulesFactory
         $base_rules = [
             'name'                    => $name_rule,
             'color'                   => 'sometimes|hex_color',
-            'black_out_times'         => 'sometimes|boolean',
+            'black_out_times'         => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_blackout_times),
             'use_sponsors'            => 'sometimes|boolean',
             'are_sponsors_mandatory'  => 'sometimes|boolean|required_with:use_sponsors',
             'allows_attachment'       => 'sometimes|boolean',

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use DateTime;
@@ -444,5 +445,10 @@ class SummitProposedScheduleSummitEvent
     public function getTrackTransitionTime(): ?int
     {
         return $this->summit_event->getTrackTransitionTime();
+    }
+
+    public function getSource(): string
+    {
+        return SummitEventTypeConstants::BLACKOUT_TIME_PROPOSED;
     }
 }

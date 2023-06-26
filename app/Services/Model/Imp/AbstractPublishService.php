@@ -222,10 +222,15 @@ abstract class AbstractPublishService extends AbstractService
         // validate blackout times
         $conflict_events = $this->publish_repository->getPublishedOnSameTimeFrame($publishable_event);
         if (!is_null($conflict_events)) {
+
+            $apply_blackout_to_current_event = $eventType->isBlackoutAppliedTo($publishable_event);
+
             foreach ($conflict_events as $c_event) {
                 // if the published event is BlackoutTime or if there is a BlackoutTime event in this timeframe
                 if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) &&
-                    ($eventType->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $publishable_event->getSummitEventId() != $c_event->getSummitEventId()) {
+                    ($apply_blackout_to_current_event || $c_event->getType()->isBlackoutAppliedTo($c_event)) &&
+                    $publishable_event->getSummitEventId() != $c_event->getSummitEventId()) {
+
                     throw new ValidationException
                     (
                         sprintf

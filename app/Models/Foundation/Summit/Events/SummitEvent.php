@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
+use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
@@ -1539,5 +1540,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function getSummitEventId(): int
     {
         return $this->id;
+    }
+
+    public function getSource(): string
+    {
+        return SummitEventTypeConstants::BLACKOUT_TIME_FINAL;
     }
 }

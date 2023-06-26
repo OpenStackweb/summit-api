@@ -1906,6 +1906,7 @@ class Summit extends SilverstripeBaseModel
             ->from('models\summit\PresentationSpeaker', 'ps')
             ->join('ps.presentations', 'ps_p')
             ->join('ps_p.presentation', 'p')
+            ->join('ps_p.speaker', 'ps')
             ->join('p.summit', 's')
             ->where("s.id = :summit_id");
 
@@ -2007,6 +2008,8 @@ class Summit extends SilverstripeBaseModel
      */
     public function getSpeaker($speaker_id, $filter_published_events = true)
     {
+        Log::debug(sprintf("Summit::getSpeaker speaker_id %s", $speaker_id));
+
         // moderators
         $moderator = $this->buildModeratorsQuery($filter_published_events)
             ->andWhere('ps.id = :speaker_id')

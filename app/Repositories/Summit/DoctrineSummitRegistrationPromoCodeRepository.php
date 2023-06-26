@@ -115,8 +115,10 @@ class DoctrineSummitRegistrationPromoCodeRepository
             ),
             'speaker_email' => new DoctrineFilterMapping
             (
-                "(sprr.email :operator :value OR spmm.email :operator :value) ".
-                "OR (sprr2.email :operator :value OR spmm2.email :operator :value) "
+                "( sprr.email :operator :value OR spmm.email :operator :value ) ".
+                "OR ( sprr2.email :operator :value OR spmm2.email :operator :value) ".
+                "OR ( sprr3.email :operator :value OR spmm3.email :operator :value ) ".
+                "OR ( sprr4.email :operator :value OR spmm4.email :operator :value )"
             ),
             'type' => new DoctrineFilterMapping
             (
@@ -192,6 +194,14 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     ->leftJoin("mdc.owner", "owr2")
                     ->leftJoin("spc.sponsor", "spnr")
                     ->leftJoin("spdc.sponsor", "spnr2")
+                    ->leftJoin("spksdc.owners","spksdc_owr")
+                    ->leftJoin("spkspc.owners","spkspc_owr")
+                    ->leftJoin("spksdc_owr.speaker","spksdc_owr_speaker")
+                    ->leftJoin("spkspc_owr.speaker","spkspc_owr_speaker")
+                    ->leftJoin('spksdc_owr_speaker.member', "spmm3", Join::LEFT_JOIN)
+                    ->leftJoin('spkspc_owr_speaker.member', "spmm4", Join::LEFT_JOIN)
+                    ->leftJoin('spksdc_owr_speaker.registration_request', "sprr3", Join::LEFT_JOIN)
+                    ->leftJoin('spkspc_owr_speaker.registration_request', "sprr4", Join::LEFT_JOIN)
                     ->where("s.id = :summit_id");
 
         $query->setParameter("summit_id", $summit->getId());

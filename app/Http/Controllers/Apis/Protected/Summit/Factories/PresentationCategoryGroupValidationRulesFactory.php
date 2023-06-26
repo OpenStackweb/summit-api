@@ -48,8 +48,8 @@ final class PresentationCategoryGroupValidationRulesFactory
             'description' => 'sometimes|string',
             'color'       => 'sometimes|hex_color',
             'max_attendee_votes' => 'sometimes|integer|min:0',
-            'begin_attendee_voting_period_date' => 'sometimes|date_format:U',
-            'end_attendee_voting_period_date' => 'sometimes|date_format:U|required_with:submission_begin_date|after:begin_attendee_voting_period_date',
+            'begin_attendee_voting_period_date' => 'nullable|date_format:U|required_with:submission_begin_date',
+            'end_attendee_voting_period_date' => 'nullable|date_format:U|required_with:begin_attendee_voting_period_date|after:begin_attendee_voting_period_date',
         ];
 
         if($update){
@@ -66,8 +66,8 @@ final class PresentationCategoryGroupValidationRulesFactory
             case PrivatePresentationCategoryGroup::ClassName:
             {
                 $specific_rules = [
-                    'submission_begin_date'             => 'sometimes|date_format:U',
-                    'submission_end_date'               => 'sometimes|date_format:U|required_with:submission_begin_date|after:submission_begin_date',
+                    'submission_begin_date'             => 'nullable|date_format:U',
+                    'submission_end_date'               => 'nullable|date_format:U|required_with:submission_begin_date|after:submission_begin_date',
                     'max_submission_allowed_per_user'   => 'sometimes|integer|min:1',
                 ];
             }

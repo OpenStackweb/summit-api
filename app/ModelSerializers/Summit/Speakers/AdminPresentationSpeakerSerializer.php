@@ -87,6 +87,9 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 
             if(in_array('registration_codes', $relations)) {
                 $registration_codes = [];
+                foreach ($speaker->getAssignedPromoCodes() as $promo_code) {
+                    $registration_codes[] = SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize();
+                }
                 foreach ($speaker->getPromoCodes() as $promo_code) {
                     $registration_codes[] = SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize();
                 }

@@ -449,6 +449,22 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * @return ArrayCollection|SummitRegistrationPromoCode[]
      */
+    public function getAssignedPromoCodes() {
+        $assignments = $this->createQuery("SELECT o FROM models\summit\AssignedPromoCodeSpeaker o
+                    WHERE o.speaker = :speaker_id")
+            ->setParameter('speaker_id', $this->getId())
+            ->getResult();
+
+        $res = [];
+        foreach ($assignments as $assignment) {
+            $res[] = $assignment->getRegistrationPromoCode();
+        }
+        return $res;
+    }
+
+    /**
+     * @return ArrayCollection|SummitRegistrationPromoCode[]
+     */
     public function getPromoCodes()
     {
         return $this->promo_codes;

@@ -32,7 +32,7 @@ class AssignedPromoCodeSpeaker extends BaseEntity
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitRegistrationPromoCode",inversedBy="owners")
+     * @ORM\ManyToOne(targetEntity="SummitRegistrationPromoCode")
      * @ORM\JoinColumn(name="RegistrationPromoCodeID", referencedColumnName="ID")
      * @var SummitRegistrationPromoCode
      */

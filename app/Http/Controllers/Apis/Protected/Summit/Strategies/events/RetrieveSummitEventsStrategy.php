@@ -204,6 +204,8 @@ abstract class RetrieveSummitEventsStrategy
             'streaming_type' => ['=='],
             'submission_status' => ['=='],
             'type_show_always_on_schedule' => ['=='],
+            'has_media_upload_with_type' => ['=='],
+            'has_not_media_upload_with_type' => ['=='],
         ];
     }
 
@@ -253,6 +255,8 @@ abstract class RetrieveSummitEventsStrategy
             'streaming_type' => 'sometimes|string|in:VOD,LIVE',
             'submission_status' => 'sometimes|string|in:Accepted,Received,NonReceived',
             'type_show_always_on_schedule' => ['sometimes', new Boolean],
+            'has_media_upload_with_type' => 'sometimes|integer',
+            'has_not_media_upload_with_type' => 'sometimes|integer',
         ];
     }
 }

@@ -1314,6 +1314,41 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
+    public function testGetEventsByMediaUploadWithType(){
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 5,
+            'filter' => [
+                'has_media_upload_with_type==57'
+            ],
+            'order' => 'random'
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getEvents",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $events = json_decode($content);
+        $this->assertTrue(!is_null($events));
+    }
+
     public function testGetAllPresentations(){
         $params = array
         (
@@ -1345,6 +1380,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $events = json_decode($content);
         $this->assertTrue(!is_null($events));
     }
+
 
     public function testGetAllVoteablePresentations(){
 

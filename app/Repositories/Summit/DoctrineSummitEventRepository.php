@@ -462,7 +462,25 @@ final class DoctrineSummitEventRepository
             (
                 "( ( (e.start_date IS NULL OR e.end_date IS NULL ) AND e.duration :operator :value ) OR TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) :operator :value)"
             ),
-            'speakers_count' => "SIZE(p.speakers) :operator :value"
+            'speakers_count' => "SIZE(p.speakers) :operator :value",
+            'has_media_upload_with_type' => new DoctrineFilterMapping(
+                'EXISTS (
+                    SELECT pm1.id 
+                    FROM models\summit\PresentationMediaUpload pm1
+                    JOIN pm1.media_upload_type mut1
+                    JOIN pm1.presentation p3
+                    WHERE p3.id = p.id AND mut1.id :operator :value
+                )'
+            ),
+            'has_not_media_upload_with_type' => new DoctrineFilterMapping(
+                'NOT EXISTS (
+                    SELECT pm2.id 
+                    FROM models\summit\PresentationMediaUpload pm2
+                    JOIN pm2.media_upload_type mut2
+                    JOIN pm2.presentation p4
+                    WHERE p4.id = p.id AND mut2.id :operator :value
+                )'
+            ),
         ];
     }
 

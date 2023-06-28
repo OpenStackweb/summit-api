@@ -1085,7 +1085,7 @@ SQL;
 
         $resource_server_ctx = App::make(IResourceServerContext::class);
         $currentUser = $resource_server_ctx->getCurrentUser(false, false);
-        $currentUserIsAdmin = is_null($currentUser) ? false : ($currentUser->isAdmin() || $this->summit->isSummitAdmin($currentUser));
+        $currentUserIsAdmin = is_null($currentUser) ? false : $currentUser->isSummitAllowed($this->summit);
         Log::debug(sprintf("SummitAttendee::canChangeAnswerValue currentUserIsAdmin %b", $currentUserIsAdmin));
         $res = $currentUserIsAdmin || $this->summit->isAllowUpdateAttendeeExtraQuestions();
 

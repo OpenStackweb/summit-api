@@ -377,6 +377,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_track_group_id' => ['=='],
+            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<'],
         ];
 
         if (Request::has('filter')) {
@@ -432,6 +433,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'badge_type_id' => 'sometimes|integer',
                     'features_id'=> 'sometimes|integer',
                     'access_levels_id' => 'sometimes|integer',
+                    'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                 ];
             },
             function () {
@@ -446,7 +448,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'member_id',
                     'status',
                     'full_name',
-                    'presentation_votes_count'
+                    'presentation_votes_count',
+                    'summit_hall_checked_in_date',
                 ];
             },
             function ($filter) use ($summit) {
@@ -500,6 +503,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'features_id' => ['=='],
                     'access_levels' => ['=@', '==', '@@'],
                     'access_levels_id' => ['=='],
+                    'summit_hall_checked_in_date' =>  ['==', '>=', '<=', '>', '<'],
                 ];
             },
             function () {
@@ -526,6 +530,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'badge_type_id' => 'sometimes|integer',
                     'features_id'=> 'sometimes|integer',
                     'access_levels_id' => 'sometimes|integer',
+                    'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                 ];
             },
             function () {
@@ -539,6 +544,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'status',
                     'email',
                     'full_name',
+                    'summit_hall_checked_in_date',
                 ];
             },
             function ($filter) use ($summit) {

@@ -194,6 +194,7 @@ final class DoctrineSummitAttendeeRepository
             ],
             'access_levels' => 'bac.name :operator :value',
             'access_levels_id' => 'bac.id :operator :value',
+            'summit_hall_checked_in_date' => Filter::buildDateTimeEpochField("e.summit_hall_checked_in_date"),
         ];
     }
 
@@ -217,6 +218,7 @@ SQL,
 COALESCE(LOWER(m.email), LOWER(e.email)) 
 SQL,
             'presentation_votes_count' => 'COUNT(pv.id)',
+            'summit_hall_checked_in_date' => 'e.summit_hall_checked_in_date',
         ];
     }
 

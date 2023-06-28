@@ -403,19 +403,17 @@ EXISTS (
 SummitAttendee.SummitHallCheckedIn = 1
 SQL;
 
-
-
             if(!is_null($startDate)){
                 if(!is_null($endDate)) {
                     $sql .= sprintf(
-                        "AND SummitAttendee.SummitHallCheckedInDate BETWEEN '%s' AND '%s'",
+                        " AND SummitAttendee.SummitHallCheckedInDate BETWEEN '%s' AND '%s'",
                         $startDate->format("Y-m-d H:i:s"),
                         $endDate->format("Y-m-d H:i:s"),
                     );
                 }
                 else{
                     $sql .= sprintf(
-                        "AND SummitAttendee.SummitHallCheckedInDate >= '%s'",
+                        " AND SummitAttendee.SummitHallCheckedInDate >= '%s'",
                         $startDate->format("Y-m-d H:i:s"),
                     );
                 }
@@ -506,14 +504,14 @@ SQL;
             if(!is_null($startDate)){
                 if(!is_null($endDate)) {
                     $sql .= sprintf(
-                        "AND SummitAttendee.SummitVirtualCheckedInDate BETWEEN '%s' AND '%s'",
+                        " AND SummitAttendee.SummitVirtualCheckedInDate BETWEEN '%s' AND '%s'",
                         $startDate->format("Y-m-d H:i:s"),
                         $endDate->format("Y-m-d H:i:s"),
                     );
                 }
                 else{
                     $sql .= sprintf(
-                        "AND SummitAttendee.SummitVirtualCheckedInDate >= '%s'",
+                        " AND SummitAttendee.SummitVirtualCheckedInDate >= '%s'",
                         $startDate->format("Y-m-d H:i:s"),
                     );
                 }

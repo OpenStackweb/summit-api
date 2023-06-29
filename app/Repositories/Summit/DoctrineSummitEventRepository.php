@@ -56,6 +56,7 @@ final class DoctrineSummitEventRepository
         SummitGroupEvent::ClassName,
     ];
 
+
     /**
      * @param IPublishableEvent $event
      * @return IPublishableEvent[]
@@ -463,22 +464,26 @@ final class DoctrineSummitEventRepository
                 "( ( (e.start_date IS NULL OR e.end_date IS NULL ) AND e.duration :operator :value ) OR TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) :operator :value)"
             ),
             'speakers_count' => "SIZE(p.speakers) :operator :value",
+            /*
+             * The :i suffix is used to have Doctrine replace it with the current subquery index in order to avoid alias
+             * duplications when there is more than one subquery of the same kind.
+             */
             'has_media_upload_with_type' => new DoctrineFilterMapping(
                 'EXISTS (
-                    SELECT pm1.id 
-                    FROM models\summit\PresentationMediaUpload pm1
-                    JOIN pm1.media_upload_type mut1
-                    JOIN pm1.presentation p3
-                    WHERE p3.id = p.id AND mut1.id :operator :value
+                    SELECT pm1:i.id 
+                    FROM models\summit\PresentationMediaUpload pm1:i
+                    JOIN pm1:i.media_upload_type mut1:i
+                    JOIN pm1:i.presentation p3:i
+                    WHERE p3:i.id = p.id AND mut1:i.id :operator :value
                 )'
             ),
             'has_not_media_upload_with_type' => new DoctrineFilterMapping(
                 'NOT EXISTS (
-                    SELECT pm2.id 
-                    FROM models\summit\PresentationMediaUpload pm2
-                    JOIN pm2.media_upload_type mut2
-                    JOIN pm2.presentation p4
-                    WHERE p4.id = p.id AND mut2.id :operator :value
+                    SELECT pm2:i.id 
+                    FROM models\summit\PresentationMediaUpload pm2:i
+                    JOIN pm2:i.media_upload_type mut2:i
+                    JOIN pm2:i.presentation p4:i
+                    WHERE p4:i.id = p.id AND mut2:i.id :operator :value
                 )'
             ),
         ];

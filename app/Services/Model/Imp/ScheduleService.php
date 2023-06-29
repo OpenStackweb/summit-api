@@ -118,6 +118,7 @@ final class ScheduleService
 
         $transition_time = $event->getTrackTransitionTime();
 
+
         if (!is_null($transition_time)) { // check immediate previous one event
 
             Log::debug

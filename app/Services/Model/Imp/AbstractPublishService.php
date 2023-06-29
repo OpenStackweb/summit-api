@@ -221,14 +221,42 @@ abstract class AbstractPublishService extends AbstractService
 
         // validate blackout times
         $conflict_events = $this->publish_repository->getPublishedOnSameTimeFrame($publishable_event);
-        if (!is_null($conflict_events)) {
+        if (count($conflict_events) > 0) {
+
 
             $apply_blackout_to_current_event = $eventType->isBlackoutAppliedTo($publishable_event);
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "AbstractPublishService::validateBlackOutTimesAndTimes event %s apply_blackout_to_current_event %b conflict events %s",
+                    $publishable_event->getSummitEventId(),
+                    $apply_blackout_to_current_event,
+                    count($conflict_events)
+                )
+            );
+
             foreach ($conflict_events as $c_event) {
+
+                $is_blackout_applied_2_conflicting_event  = $c_event->getType()->isBlackoutAppliedTo($c_event);
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "AbstractPublishService::validateBlackOutTimesAndTimes event %s conflict event %s "
+                        ."current event location %s current event location override blackouts %b is_blackout_applied_2_conflicting_event %b",
+                        $publishable_event->getSummitEventId(),
+                        $c_event->getSummitEventId(),
+                        is_null($current_event_location) ? 'TBD': $current_event_location->getId(),
+                        is_null($current_event_location) ? false: $current_event_location->isOverrideBlackouts(),
+                        $is_blackout_applied_2_conflicting_event
+                    )
+                );
+
                 // if the published event is BlackoutTime or if there is a BlackoutTime event in this timeframe
                 if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) &&
-                    ($apply_blackout_to_current_event || $c_event->getType()->isBlackoutAppliedTo($c_event)) &&
+                    ($apply_blackout_to_current_event || $is_blackout_applied_2_conflicting_event) &&
                     $publishable_event->getSummitEventId() != $c_event->getSummitEventId()) {
 
                     throw new ValidationException

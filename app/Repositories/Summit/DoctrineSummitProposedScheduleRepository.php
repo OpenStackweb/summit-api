@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEv
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Dotenv\Exception\ValidationException;
+use Illuminate\Support\Facades\Log;
 use models\summit\ISummitProposedScheduleRepository;
 
 /**
@@ -57,12 +58,25 @@ final class DoctrineSummitProposedScheduleRepository
      */
     public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array
     {
+        Log::debug(sprintf("DoctrineSummitProposedScheduleRepository::getPublishedOnSameTimeFrame event id %s", $event->getSummitEventId()));
         if (!$event instanceof SummitProposedScheduleSummitEvent)
             throw new ValidationException(
-                "Event id {$event->getId()} is not a valid schedule event.");
+                "Event id {$event->getSummitEventId()} is not a valid schedule event.");
 
         $end_date = $event->getEndDate();
         $start_date = $event->getStartDate();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "DoctrineSummitProposedScheduleRepository::getPublishedOnSameTimeFrame event id %s start_date %s end_date %s schedule id %s",
+                $event->getSummitEventId(),
+                $start_date->format("Y-m-d H:i:s"),
+                $end_date->format("Y-m-d H:i:s"),
+                $event->getSchedule()->getId()
+            )
+        );
 
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")

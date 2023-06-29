@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
@@ -164,6 +165,11 @@ class SummitEventType extends SilverstripeBaseModel
      * @return bool
      */
     public function isBlackoutAppliedTo(IPublishableEvent $publishable_event){
+        Log::debug(sprintf("SummitEventType::isBlackoutAppliedTo blackout_times %s event %s event source %s",
+            $this->blackout_times,
+            $publishable_event->getId(),
+            $publishable_event->getSource())
+        );
         if ($this->blackout_times === SummitEventTypeConstants::BLACKOUT_TIME_ALL) return true;
         if ($this->blackout_times === SummitEventTypeConstants::BLACKOUT_TIME_NONE) return false;
         return $this->blackout_times === $publishable_event->getSource();

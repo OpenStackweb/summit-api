@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\FiltersParams;
 use App\Rules\Boolean;
 use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
@@ -89,8 +90,13 @@ abstract class RetrieveSummitEventsStrategy
 
         $filter = null;
 
-        if (Request::has('filter')) {
-            $filter = FilterParser::parse(Request::input('filter'), $this->getValidFilters());
+        if (FiltersParams::hasFilterParam()) {
+            $filter = FilterParser::parse
+            (
+                FiltersParams::getFilterParam(),
+                $this->getValidFilters(),
+                FiltersParams::getFilterMainOpParam()
+            );
         }
 
         if (is_null($filter)) $filter = new Filter();

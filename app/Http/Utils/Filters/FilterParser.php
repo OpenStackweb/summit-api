@@ -27,7 +27,18 @@ final class FilterParser
      */
     public static function parse($filters, $allowed_fields = [], string $main_operator = Filter::MainOperatorAnd)
     {
-        Log::debug(sprintf("FilterParser::parse allowed_fields %s", json_encode($allowed_fields)));
+        Log::debug
+        (
+            sprintf
+            (
+                "FilterParser::parse allowed_fields %s main operator %s",
+                json_encode($allowed_fields),
+                $main_operator
+            )
+        );
+
+        if(!in_array($main_operator, Filter::ValidMainOperators))
+            throw new FilterParserException(sprintf("main operator %s is not valid", $main_operator));
 
         $res                 = [];
         $matches             = [];

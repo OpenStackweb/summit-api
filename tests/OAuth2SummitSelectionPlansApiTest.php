@@ -143,7 +143,8 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'presentation_creator_notification_email_template' => 'creator_email_template',
             'presentation_moderator_notification_email_template' => '',
             'presentation_speaker_notification_email_template' => 'speaker_email_template',
-            'allowed_presentation_questions' => [SummitEvent::FieldLevel, SummitEvent::FieldTitle, Presentation::FieldWillAllSpeakersAttend]
+            //'allowed_presentation_questions' => [SummitEvent::FieldLevel, SummitEvent::FieldTitle, Presentation::FieldWillAllSpeakersAttend],
+            'allow_track_change_requests' => true
         ];
 
         $response = $this->action(

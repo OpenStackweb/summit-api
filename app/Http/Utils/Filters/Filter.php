@@ -36,6 +36,10 @@ final class Filter
 
     const Boolean = 'json_boolean';
 
+    const MainOperatorOr = 'OR';
+    const MainOperatorAnd = 'AND';
+    const ValidMainOperators = [self::MainOperatorOr, self::MainOperatorAnd];
+
     /**
      * @param string $mapping
      * @return string
@@ -64,10 +68,26 @@ final class Filter
      */
     private $originalExp;
 
-    public function __construct(array $filters = [], $originalExp = null)
+    /**
+     * @var string
+     */
+    private $main_operator;
+
+    /**
+     * @param array $filters
+     * @param $originalExp
+     * @param string $main_operator
+     */
+    public function __construct
+    (
+        array $filters = [],
+        $originalExp = null,
+        string $main_operator = self::MainOperatorAnd
+    )
     {
         $this->filters = $filters;
         $this->originalExp = $originalExp;
+        $this->main_operator = $main_operator;
     }
 
     /**
@@ -270,7 +290,7 @@ final class Filter
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
                 }
 
-                if (!empty($sql) && !empty($condition)) $sql .= ' AND ';
+                if (!empty($sql) && !empty($condition)) $sql .= sprintf(" %s ", $this->main_operator);
                 $sql .= $condition;
             } else if (is_array($filter)) {
                 // an array is a OR
@@ -292,7 +312,7 @@ final class Filter
                     }
                 }
 
-                if (!empty($sql)) $sql .= ' AND ';
+                if (!empty($sql)) $sql .= sprintf(" %s ", $this->main_operator);
                 $sql .= '( ' . $condition . ' )';
             }
         }
@@ -313,9 +333,9 @@ final class Filter
         foreach ($this->filters as $filter) {
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 // single filter element
-
                 $mapping = $mappings[$filter->getField()];
                 if ($mapping instanceof IQueryApplyable) {
+                    $mapping->setMainOperator($this->main_operator);
                     $query = $mapping->apply($query, $filter);
                 } else if (is_array($mapping)) {
                     $condition = '';
@@ -324,11 +344,16 @@ final class Filter
                         if (!empty($condition)) $condition .= ' OR ';
                         $condition .= $this->applyCondition($filter, $mapping_or, $param_idx);
                     }
-
-                    $query->andWhere($condition);
+                    if($this->main_operator == Filter::MainOperatorAnd)
+                        $query = $query->andWhere($condition);
+                    else
+                        $query = $query->orWhere($condition);
                 } else {
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
-                    $query->andWhere($condition);
+                    if($this->main_operator == Filter::MainOperatorAnd)
+                        $query = $query->andWhere($condition);
+                    else
+                        $query = $query->orWhere($condition);
                 }
             } else if (is_array($filter)) {
                 // OR
@@ -338,6 +363,7 @@ final class Filter
 
                         $mapping = $mappings[$e->getField()];
                         if ($mapping instanceof IQueryApplyable) {
+                            $mapping->setMainOperator($this->main_operator);
                             $condition = $mapping->applyOr($query, $e);
                             if (!empty($sub_or_query)) $sub_or_query .= ' OR ';
                             $sub_or_query .= $condition;
@@ -347,7 +373,6 @@ final class Filter
                                 if (!empty($condition)) $condition .= ' OR ';
                                 $condition .= $this->applyCondition($e, $mapping_or, $param_idx);
                             }
-
                             if (!empty($sub_or_query)) $sub_or_query .= ' OR ';
                             $sub_or_query .= ' ( ' . $condition . ' ) ';
                         } else {
@@ -357,7 +382,11 @@ final class Filter
                         }
                     }
                 }
-                $query->andWhere($sub_or_query);
+
+                if($this->main_operator == Filter::MainOperatorAnd)
+                    $query = $query->andWhere($sub_or_query);
+                else
+                    $query = $query->orWhere($sub_or_query);
             }
         }
 

@@ -21,6 +21,7 @@ use utils\FilterElement;
  */
 interface IQueryApplyable
 {
+    public function setMainOperator(string $op):void;
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter

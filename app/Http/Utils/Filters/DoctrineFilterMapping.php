@@ -22,12 +22,14 @@ use Doctrine\ORM\QueryBuilder;
 class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
 {
 
+    protected $main_operator;
     /**
      * DoctrineFilterMapping constructor.
      * @param string $condition
      */
     public function __construct($condition)
     {
+        $this->main_operator = Filter::MainOperatorAnd;
         parent::__construct("", $condition);
     }
 
@@ -75,8 +77,10 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
             }
             $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
             $inner_where .= ' )';
-
-            $query = $query->andWhere($inner_where);
+            if($this->main_operator === Filter::MainOperatorAnd)
+                $query = $query->andWhere($inner_where);
+            else
+                $query = $query->orWhere($inner_where);
         } else {
             $param_count = $query->getParameters()->count() + 1;
             $where = $this->where;
@@ -93,7 +97,10 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
             if (strstr($where, ":operator"))
                 $where = str_replace(":operator", $filter->getOperator(), $where);
 
-            $query = $query->andWhere($where);
+            if($this->main_operator === Filter::MainOperatorAnd)
+                $query = $query->andWhere($where);
+            else
+                $query = $query->orWhere($where);
 
             if ($has_param) {
                 $query = $query->setParameter(":value_" . $param_count, $filter->getValue());
@@ -162,5 +169,10 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
             $query->setParameter(":value_" . $param_count, $filter->getValue());
         }
         return $where;
+    }
+
+    public function setMainOperator(string $op): void
+    {
+        $this->main_operator = $op;
     }
 }

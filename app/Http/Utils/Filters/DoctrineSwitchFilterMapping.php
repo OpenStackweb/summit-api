@@ -22,6 +22,11 @@ use Doctrine\ORM\QueryBuilder;
 class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyable
 {
     /**
+     * @var string
+     */
+    protected $main_operator;
+
+    /**
      * @var DoctrineCaseFilterMapping[]
      */
     private $case_statements;
@@ -30,6 +35,7 @@ class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyab
     {
         parent::__construct("", "");
         $this->case_statements = $case_statements;
+        $this->main_operator = Filter::MainOperatorAnd;
     }
 
     /**
@@ -60,7 +66,10 @@ class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyab
         }
         if(!empty($condition))
             $condition = ' ( '.$condition.' ) ';
-        return $query->andWhere($condition);
+        if($this->main_operator === Filter::MainOperatorAnd)
+            return $query->andWhere($condition);
+        else
+            return $query->orWhere($condition);
     }
 
     /**
@@ -80,5 +89,10 @@ class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyab
             $condition .= ' ( '.$case_statement->getCondition().' ) ';
         }
         return $condition;
+    }
+
+    public function setMainOperator(string $op): void
+    {
+        $this->main_operator = $op;
     }
 }

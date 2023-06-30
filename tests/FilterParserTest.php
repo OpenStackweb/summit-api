@@ -41,7 +41,7 @@ final class FilterParserTest extends TestCase
             'last_name' => ['=@', '@@', '=='],
             'email' => ['=@', '@@', '=='],
             'full_name' => ['=@', '@@', '=='],
-        ]);
+        ], Filter::MainOperatorOr);
 
         $where_conditions = $filter->toRawSQL([
             'first_name' => 'FirstName',
@@ -62,7 +62,7 @@ final class FilterParserTest extends TestCase
         $this->assertTrue(!empty($where_conditions));
         $this->assertTrue
         (
-            $where_conditions == '( FullName like :param_1 OR Email like :param_2 OR Email2 like :param_3 OR Email3 like :param_4 ) AND FirstName like :param_5 AND LastName like :param_6'
+            $where_conditions == '( FullName like :param_1 OR Email like :param_2 OR Email2 like :param_3 OR Email3 like :param_4 ) OR FirstName like :param_5 OR LastName like :param_6'
         );
         $this->assertTrue(count($bindings) > 0);
         $this->assertTrue(count($bindings) == 6);
@@ -104,7 +104,7 @@ final class FilterParserTest extends TestCase
         $filter = FilterParser::parse($filters_input, [
             'actions' => ['=='],
             'type_id' => ['==']
-        ]);
+        ], Filter::MainOperatorAnd);
 
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $query = new QueryBuilder($em);
@@ -129,6 +129,49 @@ final class FilterParserTest extends TestCase
 
         $dql = $query->getDQL();
         $this->assertTrue(!empty($dql));
+    }
+
+    public function testApplyFilterAND2()
+    {
+        $filters_input = [
+            'actions==type_id==1&&is_completed==0,type_id==1',
+            'actions==type_id==2&&is_completed==1',
+        ];
+
+        $filter = FilterParser::parse($filters_input, [
+            'actions' => ['=='],
+            'type_id' => ['==']
+        ], Filter::MainOperatorOr);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query->select("e")
+            ->from(\models\summit\SummitEvent::class, "e")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
+
+        $filter->apply2Query($query, [
+            'actions' => new DoctrineCollectionFieldsFilterMapping
+            (
+                'p.actions',
+                "a",
+                [
+                    "type" => 'at',
+                ],
+                [
+                    'type_id' => 'at.id',
+                    'is_completed' => 'a.is_completed'
+                ]
+            )
+        ]);
+
+        $dql = $query->getDQL();
+        $this->assertTrue(!empty($dql));
+
+        $expected_dql = <<<DQL
+SELECT e FROM models\summit\SummitEvent e LEFT JOIN models\summit\Presentation p WITH e.id = p.id INNER JOIN p.actions a INNER JOIN a.type at INNER JOIN a.type at WHERE (( at.id = :value_1 AND a.is_completed = :value_2 )) OR (( at.id = :value_3 AND a.is_completed = :value_4 ))
+DQL;
+
+        $this->assertEquals($expected_dql, $dql);
     }
 
     public function testApplyFilterOR()

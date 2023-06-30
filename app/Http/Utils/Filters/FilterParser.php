@@ -20,11 +20,12 @@ final class FilterParser
 {
     /**
      * @param $filters
-     * @param array $allowed_fields
+     * @param $allowed_fields
+     * @param string $main_operator
      * @return Filter
      * @throws FilterParserException
      */
-    public static function parse($filters, $allowed_fields = [])
+    public static function parse($filters, $allowed_fields = [], string $main_operator = Filter::MainOperatorAnd)
     {
         Log::debug(sprintf("FilterParser::parse allowed_fields %s", json_encode($allowed_fields)));
 
@@ -109,7 +110,6 @@ final class FilterParser
 
                 if (!in_array($op, $allowed_fields[$field])){
                     throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
-
                 }
 
                 $f = self::buildFilter($field, $op, $value, $same_field_op);
@@ -118,7 +118,7 @@ final class FilterParser
             if (!is_null($f))
                 $res[] = $f;
         }
-        return new Filter($res, $filters);
+        return new Filter($res, $filters, $main_operator);
     }
 
     /**

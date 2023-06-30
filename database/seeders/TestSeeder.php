@@ -25,16 +25,18 @@ final class TestSeeder extends Seeder
     {
         Model::unguard();
         DB::setDefaultConnection("model");
-        DB::table('PresentationTrackChairRatingType')->delete();
-        DB::table('SummitScheduleConfig')->delete();
-        DB::table('Presentation')->delete();
-        DB::table('SummitEvent')->delete();
-        DB::table('Summit')->delete();
-        DB::table('SummitEventType')->delete();
-        DB::table('PresentationType')->delete();
-        DB::table('SummitAbstractLocation')->delete();
-        DB::table('SummitGeoLocatedLocation')->delete();
-        DB::table('SummitVenue')->delete();
+        if(env('TESTS_CLEAR_EVERYTHING', true)) {
+            DB::table('PresentationTrackChairRatingType')->delete();
+            DB::table('SummitScheduleConfig')->delete();
+            DB::table('Presentation')->delete();
+            DB::table('SummitEvent')->delete();
+            DB::table('Summit')->delete();
+            DB::table('SummitEventType')->delete();
+            DB::table('PresentationType')->delete();
+            DB::table('SummitAbstractLocation')->delete();
+            DB::table('SummitGeoLocatedLocation')->delete();
+            DB::table('SummitVenue')->delete();
+        }
 
         DB::setDefaultConnection("config");
         $this->call(ApiSeeder::class);

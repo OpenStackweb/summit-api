@@ -130,9 +130,8 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
             }
 
 
-            $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
-            $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
-            $values['votes_count'] = $attendee->getVotesCount($beginVotingDate, $endVotingDate, $track_group_id);
+            if(!count($fields) || in_array('votes_count', $fields))
+                $values['votes_count'] = $attendee->getVotesCount($beginVotingDate, $endVotingDate, $track_group_id);
 
             if (in_array('ticket_types', $relations)) {
                 $values['ticket_types'] = $attendee->getBoughtTicketTypes();

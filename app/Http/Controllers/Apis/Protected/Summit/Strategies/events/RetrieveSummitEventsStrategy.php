@@ -94,8 +94,7 @@ abstract class RetrieveSummitEventsStrategy
             $filter = FilterParser::parse
             (
                 FiltersParams::getFilterParam(),
-                $this->getValidFilters(),
-                FiltersParams::getFilterMainOpParam()
+                $this->getValidFilters()
             );
         }
 

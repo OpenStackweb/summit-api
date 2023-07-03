@@ -93,8 +93,7 @@ trait GetAll
                 $filter = FilterParser::parse
                 (
                     FiltersParams::getFilterParam(),
-                    $this->getFilterRules(),
-                    FiltersParams::getFilterMainOpParam()
+                    $this->getFilterRules()
                 );
             }
 

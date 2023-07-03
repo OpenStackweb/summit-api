@@ -39,8 +39,7 @@ trait ParseAndGetFilter
             $filter = FilterParser::parse
             (
                 FiltersParams::getFilterParam(),
-                call_user_func($getFilterRules),
-                FiltersParams::getFilterMainOpParam()
+                call_user_func($getFilterRules)
             );
         }
 

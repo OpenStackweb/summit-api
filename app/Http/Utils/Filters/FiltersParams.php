@@ -13,7 +13,6 @@
  **/
 
 use Illuminate\Support\Facades\Request;
-use utils\Filter;
 
 /**
  * Class FiltersParams
@@ -22,16 +21,11 @@ use utils\Filter;
 final class FiltersParams
 {
     const FilterRequestParamName = 'filter';
-    const FilterMainOpRequestParamName = 'filter_op';
     public static function hasFilterParam():bool{
         return Request::has(self::FilterRequestParamName);
     }
 
     public static function getFilterParam(){
         return Request::input(self::FilterRequestParamName);
-    }
-
-    public static function getFilterMainOpParam(){
-        return Request::input(self::FilterMainOpRequestParamName, Filter::MainOperatorAnd);
     }
 }

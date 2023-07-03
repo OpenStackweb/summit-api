@@ -13,6 +13,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\FiltersParams;
 use App\Http\Utils\Filters\IQueryApplyable;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\QueryBuilder;
@@ -69,34 +70,36 @@ final class Filter
     private $originalExp;
 
     /**
-     * @var string
+     * @var array
      */
-    private $main_operator;
+    private $ops;
 
     /**
      * @param array $filters
      * @param $originalExp
-     * @param string $main_operator
+     * @param array $ops
      */
     public function __construct
     (
         array $filters = [],
         $originalExp = null,
-        string $main_operator = self::MainOperatorAnd
+        array $ops = []
     )
     {
         $this->filters = $filters;
         $this->originalExp = $originalExp;
-        $this->main_operator = $main_operator;
+        $this->ops = $ops;
     }
 
     /**
      * @param FilterElement|array $filter
+     * @param string $op
      * @return $this
      */
-    public function addFilterCondition($filter)
+    public function addFilterCondition($filter, string $op = Filter::MainOperatorAnd)
     {
         $this->filters[] = $filter;
+        $this->ops[] = $op;
         return $this;
     }
 
@@ -277,7 +280,7 @@ final class Filter
         $sql = '';
         $this->bindings = [];
 
-        foreach ($this->filters as $filter) {
+        foreach ($this->filters as $idx => $filter) {
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 $condition = '';
                 $mapping = $mappings[$filter->getField()];
@@ -290,7 +293,7 @@ final class Filter
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
                 }
 
-                if (!empty($sql) && !empty($condition)) $sql .= sprintf(" %s ", $this->main_operator);
+                if (!empty($sql) && !empty($condition)) $sql .= sprintf(" %s ", $this->getMainOp($idx));
                 $sql .= $condition;
             } else if (is_array($filter)) {
                 // an array is a OR
@@ -312,13 +315,26 @@ final class Filter
                     }
                 }
 
-                if (!empty($sql)) $sql .= sprintf(" %s ", $this->main_operator);
+                if (!empty($sql)) $sql .= sprintf(" %s ", $this->getMainOp($idx));
                 $sql .= '( ' . $condition . ' )';
             }
         }
+
+        Log::debug(sprintf("Filter::toRawSQL SQL %s", $sql));
+
         return $sql;
     }
 
+    /**
+     * @param int $idx
+     * @return string
+     */
+    private function getMainOp(int $idx):string{
+        Log::debug(sprintf("Filter::getMainOp idx %s ops %s", $idx, json_encode($this->ops)));
+        if(count($this->ops) == 0) return Filter::MainOperatorAnd;
+        if((count($this->ops) - 1) < $idx) return Filter::MainOperatorAnd;
+        return $this->ops[$idx];
+    }
     /**
      * @param QueryBuilder $query
      * @param array $mappings
@@ -330,32 +346,38 @@ final class Filter
         $param_idx = 1;
         $this->bindings = [];
 
-        foreach ($this->filters as $filter) {
+        foreach ($this->filters as $idx => $filter) {
+            Log::debug(sprintf("Filter::apply2Query idx %s filter %s", $idx, json_encode($filter)));
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 // single filter element
                 $mapping = $mappings[$filter->getField()];
+                Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping %s", $idx, $filter->getField(), json_encode($mapping)));
                 if ($mapping instanceof IQueryApplyable) {
-                    $mapping->setMainOperator($this->main_operator);
+                    Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is IQueryApplyable", $idx, $filter->getField()));
+                    $mapping->setMainOperator($this->getMainOp($idx));
                     $query = $mapping->apply($query, $filter);
                 } else if (is_array($mapping)) {
+                    Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is array", $idx, $filter->getField()));
                     $condition = '';
                     // OR Criteria
                     foreach ($mapping as $mapping_or) {
                         if (!empty($condition)) $condition .= ' OR ';
                         $condition .= $this->applyCondition($filter, $mapping_or, $param_idx);
                     }
-                    if($this->main_operator == Filter::MainOperatorAnd)
+                    if($this->getMainOp($idx) == Filter::MainOperatorAnd)
                         $query = $query->andWhere($condition);
                     else
                         $query = $query->orWhere($condition);
                 } else {
+                    Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is raw", $idx, $filter->getField()));
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
-                    if($this->main_operator == Filter::MainOperatorAnd)
+                    if($this->getMainOp($idx) == Filter::MainOperatorAnd)
                         $query = $query->andWhere($condition);
                     else
                         $query = $query->orWhere($condition);
                 }
             } else if (is_array($filter)) {
+                Log::debug(sprintf("Filter::apply2Query single filter idx %s mapping is OR", $idx));
                 // OR
                 $sub_or_query = '';
                 foreach ($filter as $e) {
@@ -363,7 +385,8 @@ final class Filter
 
                         $mapping = $mappings[$e->getField()];
                         if ($mapping instanceof IQueryApplyable) {
-                            $mapping->setMainOperator($this->main_operator);
+                            Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is OR", $idx, $e->getField()));
+                            $mapping->setMainOperator($this->getMainOp($idx));
                             $condition = $mapping->applyOr($query, $e);
                             if (!empty($sub_or_query)) $sub_or_query .= ' OR ';
                             $sub_or_query .= $condition;
@@ -383,7 +406,7 @@ final class Filter
                     }
                 }
 
-                if($this->main_operator == Filter::MainOperatorAnd)
+                if($this->getMainOp($idx) == Filter::MainOperatorAnd)
                     $query = $query->andWhere($sub_or_query);
                 else
                     $query = $query->orWhere($sub_or_query);
@@ -393,6 +416,7 @@ final class Filter
         foreach ($this->bindings as $param => $value)
             $query->setParameter($param, $value);
 
+        Log::debug(sprintf("Filter::apply2Query DQL %s", $query->getDQL()));
         return $this;
     }
 

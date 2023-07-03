@@ -25,29 +25,36 @@ final class FilterParser
      * @return Filter
      * @throws FilterParserException
      */
-    public static function parse($filters, $allowed_fields = [], string $main_operator = Filter::MainOperatorAnd)
+    public static function parse($filters, $allowed_fields = [])
     {
         Log::debug
         (
             sprintf
             (
-                "FilterParser::parse allowed_fields %s main operator %s",
+                "FilterParser::parse filters %s allowed_fields %s",
+                json_encode($filters),
                 json_encode($allowed_fields),
-                $main_operator
             )
         );
 
-        if(!in_array($main_operator, Filter::ValidMainOperators))
-            throw new FilterParserException(sprintf("main operator %s is not valid", $main_operator));
-
-        $res                 = [];
-        $matches             = [];
-
+        $res     = [];
+        $matches = [];
+        $ops     = [];
         if (!is_array($filters))
             $filters = array($filters);
 
-        foreach ($filters as $filter) // parse AND filters
+        foreach ($filters as $filter) // parse Main Filters ( 1st grade )
         {
+
+            // check main operator
+            $main_op_matches = null;
+            if(preg_match('/(and|or)\((.*)\)/i', $filter, $main_op_matches)){
+                $ops[] = strtoupper($main_op_matches[1]);
+                $filter = $main_op_matches[2];
+            }
+            else{
+                $ops[] = Filter::MainOperatorAnd;
+            }
 
             $f = null;
             // parse OR filters
@@ -129,7 +136,10 @@ final class FilterParser
             if (!is_null($f))
                 $res[] = $f;
         }
-        return new Filter($res, $filters, $main_operator);
+
+        $res = new Filter($res, $filters, $ops);
+        Log::debug(sprintf("FilterParser::parse result %s",$res));
+        return $res;
     }
 
     /**

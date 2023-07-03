@@ -110,6 +110,18 @@ class PresentationType extends SummitEventType
     protected $allows_speaker_event_collision;
 
     /**
+     * @ORM\Column(name="MinDuration", type="integer")
+     * @var int
+     */
+    protected $min_duration;
+
+    /**
+     * @ORM\Column(name="MaxDuration", type="integer")
+     * @var int
+     */
+    protected $max_duration;
+
+    /**
      * @param Summit $summit
      * @param string $type
      * @return bool
@@ -354,6 +366,8 @@ SQL;
         $this->allow_attendee_vote = false;
         $this->allow_custom_ordering  = false;
         $this->allows_speaker_event_collision = false;
+        $this->min_duration = 0;
+        $this->max_duration = 0;
     }
 
     public function addAllowedMediaUploadType(SummitMediaUploadType $type)
@@ -449,4 +463,35 @@ SQL;
         $this->allows_speaker_event_collision = $allows_speaker_event_collision;
     }
 
+    /**
+     * @return int
+     */
+    public function getMinDuration():int
+    {
+        return $this->min_duration;
+    }
+
+    /**
+     * @param int $duration
+     */
+    public function setMinDuration(int $duration): void
+    {
+        $this->min_duration = $duration;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxDuration():int
+    {
+        return $this->max_duration;
+    }
+
+    /**
+     * @param int $duration
+     */
+    public function setMaxDuration(int $duration): void
+    {
+        $this->max_duration = $duration;
+    }
 }

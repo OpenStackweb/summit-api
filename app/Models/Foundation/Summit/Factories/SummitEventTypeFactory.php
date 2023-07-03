@@ -103,8 +103,17 @@ final class SummitEventTypeFactory
                         $event_type->setAllowAttendeeVote(boolval($data['allow_attendee_vote']));
                     }
 
-                    if(isset($data['allows_speaker_event_collision']))
+                    if(isset($data['allows_speaker_event_collision'])) {
                         $event_type->setAllowsSpeakerEventCollision(boolval($data['allows_speaker_event_collision']));
+                    }
+
+                    if(isset($data['min_duration'])) {
+                        $event_type->setMinDuration(intval($data['min_duration']));
+                    }
+
+                    if(isset($data['max_duration'])) {
+                        $event_type->setMaxDuration(intval($data['max_duration']));
+                    }
                 }
             }
            break;

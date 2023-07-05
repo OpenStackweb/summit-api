@@ -13,7 +13,7 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
-use Exception;
+use models\exceptions\ValidationException;
 
 /**
  * Class SubmitForReviewEmail
@@ -44,7 +44,7 @@ class SubmitForReviewEmail extends AbstractEmailJob
         $to_email = $this->getEmailRecipientFromEmailEvent($summit);
 
         if (is_null($to_email))
-            throw new Exception("SubmitForReviewEmail::__construct - there is no registered recipient");
+            throw new ValidationException("There is no registered recipient to send the email.");
 
         parent::__construct($payload, $template_identifier, $to_email);
     }

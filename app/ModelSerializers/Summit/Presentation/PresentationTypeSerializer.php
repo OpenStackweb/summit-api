@@ -24,6 +24,8 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
         'MinSpeakers'              => 'min_speakers:json_int',
         'MaxModerators'            => 'max_moderators:json_int',
         'MinModerators'            => 'min_moderators:json_int',
+        'MaxDuration'              => 'max_duration:json_int',
+        'MinDuration'              => 'min_duration:json_int',
         'UseSpeakers'              => 'use_speakers:json_boolean',
         'AreSpeakersMandatory'     => 'are_speakers_mandatory:json_boolean',
         'UseModerator'             => 'use_moderator:json_boolean',

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Facades\ResourceServerContext;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
@@ -59,7 +60,8 @@ abstract class AbstractPublishService extends AbstractService
             Log::debug(sprintf("AbstractPublishService::updateDuration data %s summit %s event %s",
                 json_encode($data), $summit->getId(), $publishable_event->getId()));
             if (isset($data['duration'])) {
-                $publishable_event->setDuration(intval($data['duration']));
+                $current_member = ResourceServerContext::getCurrentUser(false);
+                $publishable_event->setDuration(intval($data['duration']), false, $current_member);
             }
             return $publishable_event;
         });

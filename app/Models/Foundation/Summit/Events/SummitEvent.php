@@ -1476,14 +1476,15 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @param int $duration_in_seconds
      * @param bool $skipDatesSetting
+     * @param Member|null $member
      * @throws ValidationException
      */
-    public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false): void
+    public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false, ?Member $member = null): void
     {
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
-        $this->_setDuration($this->getSummit(), $duration_in_seconds, $skipDatesSetting);
+        $this->_setDuration($this->getSummit(), $duration_in_seconds, $skipDatesSetting, $member);
     }
 
     /**

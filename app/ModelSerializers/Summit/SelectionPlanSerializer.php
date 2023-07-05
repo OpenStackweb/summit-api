@@ -42,6 +42,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'PresentationSpeakerNotificationEmailTemplate' => 'presentation_speaker_notification_email_template:json_string',
         'Type' => 'type:json_string',
         'AllowProposedSchedules' => 'allow_proposed_schedules:json_boolean',
+        'AllowTrackChangeRequests' => 'allow_track_change_requests:json_boolean',
     ];
 
     protected static $allowed_relations = [

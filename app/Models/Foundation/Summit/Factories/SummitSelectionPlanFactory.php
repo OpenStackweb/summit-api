@@ -53,6 +53,9 @@ final class SummitSelectionPlanFactory
         if(isset($data['allow_proposed_schedules']))
             $selection_plan->setAllowProposedSchedules(boolval($data['allow_proposed_schedules']));
 
+        if(isset($data['allow_track_change_requests']))
+            $selection_plan->setAllowTrackChangeRequests(boolval($data['allow_track_change_requests']));
+
         if(isset($data['max_submission_allowed_per_user']) ){
             $selection_plan->setMaxSubmissionAllowedPerUser(intval($data['max_submission_allowed_per_user']));
         }

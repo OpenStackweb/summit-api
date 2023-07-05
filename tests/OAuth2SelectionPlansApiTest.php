@@ -786,7 +786,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
     public function testAddCategoryChangeRequest(){
 
         $params = [
-            'summit' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'presentation_id' => self::$presentations[0]->getId(),
             'expand' => 'presentation, new_category, old_category',

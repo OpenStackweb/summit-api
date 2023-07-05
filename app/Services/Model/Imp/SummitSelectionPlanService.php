@@ -372,6 +372,9 @@ final class SummitSelectionPlanService
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
+            if (!$selection_plan->isAllowedTrackChangeRequests())
+                throw new ValidationException(sprintf("Selection Plan %s does not allow track change requests", $selection_plan->getId()));
+
             if (!$selection_plan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection period is not open for selection plan %s", $selection_plan->getId()));
 
@@ -430,6 +433,9 @@ final class SummitSelectionPlanService
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
+            if (!$selection_plan->isAllowedTrackChangeRequests())
+                throw new ValidationException(sprintf("Selection Plan %s does not allow approve/reject track change requests", $selection_plan->getId()));
+
             if (!$selection_plan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection period is not open for selection plan %s", $selection_plan->getId()));
 
@@ -448,7 +454,7 @@ final class SummitSelectionPlanService
                 throw new EntityNotFoundException("Category Change Request not found.");
 
             if (!$change_request->isPending()) {
-                throw new ValidationException("Change request has already been  approved/rejected.");
+                throw new ValidationException("Change request has already been approved/rejected.");
             }
 
             $newCategory = $change_request->getNewCategory();

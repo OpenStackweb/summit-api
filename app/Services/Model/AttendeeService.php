@@ -491,6 +491,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 }
                 if (!$filter->hasFilter("summit_id"))
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+
                 Log::debug(sprintf("AttendeeService::send page %s", $page));
                 return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
             });

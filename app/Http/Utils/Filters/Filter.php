@@ -247,10 +247,10 @@ final class Filter
         $value = $filter->getValue();
         $op = $filter->getOperator();
         $sameOp = $filter->getSameFieldOp();
-
+        Log::debug(sprintf("Filter::applyCondition mapping %s op %s value %s", $mapping_parts[0], json_encode($op), json_encode($value)));
         if (count($mapping_parts) > 1) {
-            $filter->setValue($this->convertValue($filter->getRawValue(), $mapping_parts[1]));
-            $value = $filter->getValue();
+            $value = $this->convertValue($filter->getRawValue(), $mapping_parts[1]);
+            Log::debug(sprintf("Filter::applyCondition converted converted value %s", json_encode($value)));
         }
 
         if (is_array($value)) { // multiple values

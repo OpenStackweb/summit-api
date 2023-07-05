@@ -14,6 +14,7 @@
 
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Http\Utils\Filters\FiltersParams;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
@@ -931,6 +932,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
                     'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
                     'presentation_votes_track_group_id' => ['=='],
+                    'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','>=<'],
                 ]);
             }
 
@@ -963,9 +965,10 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'badge_type_id' => 'sometimes|integer',
                 'features_id'=> 'sometimes|integer',
                 'access_levels_id' => 'sometimes|integer',
+                'summit_hall_checked_in_date' => 'sometimes|date_format:U',
             ]);
 
-            $this->attendee_service->triggerSend($summit, $payload, Request::input('filter'));
+            $this->attendee_service->triggerSend($summit, $payload, FiltersParams::getFilterParam());
 
             return $this->ok();
 

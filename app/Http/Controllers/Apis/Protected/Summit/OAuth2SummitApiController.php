@@ -129,10 +129,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'name' => ['=@', '==', '@@'],
-                    'start_date' => ['==', '<', '>', '<=', '>='],
-                    'end_date' => ['==', '<', '>', '<=', '>='],
-                    'registration_begin_date' => ['==', '<', '>', '<=', '>='],
-                    'registration_end_date' => ['==', '<', '>', '<=', '>='],
+                    'start_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'end_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'registration_begin_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'registration_end_date' => ['==', '<', '>', '<=', '>=','>=<'],
                     'ticket_types_count' => ['==', '<', '>', '<=', '>=', '<>'],
                 ];
             },
@@ -210,17 +210,17 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'name' => ['=@', '==', '@@'],
-                    'start_date' => ['==', '<', '>', '<=', '>='],
-                    'end_date' => ['==', '<', '>', '<=', '>='],
-                    'registration_begin_date' => ['==', '<', '>', '<=', '>='],
-                    'registration_end_date' => ['==', '<', '>', '<=', '>='],
+                    'start_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'end_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'registration_begin_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'registration_end_date' => ['==', '<', '>', '<=', '>=','>=<'],
                     'ticket_types_count' => ['==', '<', '>', '<=', '>=', '<>'],
-                    'submission_begin_date' => ['==', '<', '>', '<=', '>='],
-                    'submission_end_date' => ['==', '<', '>', '<=', '>='],
-                    'voting_begin_date' => ['==', '<', '>', '<=', '>='],
-                    'voting_end_date' => ['==', '<', '>', '<=', '>='],
-                    'selection_begin_date' => ['==', '<', '>', '<=', '>='],
-                    'selection_end_date' => ['==', '<', '>', '<=', '>='],
+                    'submission_begin_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'submission_end_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'voting_begin_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'voting_end_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'selection_begin_date' => ['==', '<', '>', '<=', '>=','>=<'],
+                    'selection_end_date' => ['==', '<', '>', '<=', '>=','>=<'],
                     'selection_plan_enabled' => ['=='],
                 ];
             },

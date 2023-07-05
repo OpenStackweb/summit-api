@@ -253,10 +253,11 @@ final class Filter
             $value = $filter->getValue();
         }
 
-        if (is_array($value)) {
+        if (is_array($value)) { // multiple values
             $inner_condition = '( ';
-            foreach ($value as $val) {
-                $inner_condition .= sprintf("%s %s :%s %s ", self::cleanMapping($mapping_parts[0]), $op, sprintf(self::ParamPrefix, $param_idx), $sameOp);
+            foreach ($value as $idx => $val) {
+                $cond = is_array($op) ? $op[$idx] : $op;
+                $inner_condition .= sprintf("%s %s :%s %s ", self::cleanMapping($mapping_parts[0]), $cond, sprintf(self::ParamPrefix, $param_idx), $sameOp);
                 $this->bindings[sprintf(self::ParamPrefix, $param_idx)] = $val;
                 ++$param_idx;
             }
@@ -319,6 +320,8 @@ final class Filter
                 $sql .= '( ' . $condition . ' )';
             }
         }
+
+        $sql = trim($sql);
 
         Log::debug(sprintf("Filter::toRawSQL SQL %s", $sql));
 

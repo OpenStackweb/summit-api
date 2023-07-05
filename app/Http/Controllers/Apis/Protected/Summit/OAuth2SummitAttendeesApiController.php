@@ -380,7 +380,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_track_group_id' => ['=='],
-            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<'],
+            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','>=<'],
         ];
 
         if (Request::has('filter')) {
@@ -506,7 +506,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'features_id' => ['=='],
                     'access_levels' => ['=@', '==', '@@'],
                     'access_levels_id' => ['=='],
-                    'summit_hall_checked_in_date' =>  ['==', '>=', '<=', '>', '<'],
+                    'summit_hall_checked_in_date' =>  ['==', '>=', '<=', '>', '<', '>=<'],
                 ];
             },
             function () {

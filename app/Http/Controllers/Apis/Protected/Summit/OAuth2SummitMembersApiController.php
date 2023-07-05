@@ -305,8 +305,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                     'active' => ['=='],
                     'github_user' => ['=@', '==', '@@'],
                     'full_name' => ['=@', '==', '@@'],
-                    'created' => ['>', '<', '<=', '>=', '=='],
-                    'last_edited' => ['>', '<', '<=', '>=', '=='],
+                    'created' => ['>', '<', '<=', '>=', '==','>=<'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==','>=<'],
                 ];
             },
             function () {
@@ -416,8 +416,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                     'active' => ['=='],
                     'github_user' => ['=@', '==', '@@'],
                     'full_name' => ['=@', '==', '@@'],
-                    'created' => ['>', '<', '<=', '>=', '=='],
-                    'last_edited' => ['>', '<', '<=', '>=', '=='],
+                    'created' => ['>', '<', '<=', '>=', '==','>=<'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==','>=<'],
                     'schedule_event_id' => ['=='],
                 ]);
             }

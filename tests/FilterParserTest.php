@@ -15,7 +15,9 @@
 
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
+use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\FilterParser;
 use Doctrine\ORM\QueryBuilder;
@@ -60,10 +62,11 @@ final class FilterParserTest extends TestCase
         $bindings = $filter->getSQLBindings();
 
         $this->assertTrue(!empty($where_conditions));
-        $this->assertTrue
-        (
-            $where_conditions == '( FullName like :param_1 OR Email like :param_2 OR Email2 like :param_3 OR Email3 like :param_4 ) OR FirstName like :param_5 OR LastName like :param_6'
-        );
+        $expected_where = <<<SQL
+( FullName like :param_1  OR Email like :param_2  OR Email2 like :param_3  OR Email3 like :param_4  ) OR FirstName like :param_5  OR LastName like :param_6
+SQL;
+
+        $this->assertEquals($expected_where, $where_conditions);
         $this->assertTrue(count($bindings) > 0);
         $this->assertTrue(count($bindings) == 6);
     }
@@ -327,5 +330,51 @@ SQL;
         $dql = $query->getDQL();
 
         $this->assertNotEmpty($dql);
+    }
+
+    public function testOrAndOr(){
+        $filter_input = [
+            'or(has_checkin==true)',
+            'or(summit_hall_checked_in_date>=<1681855200&&1681855300)',
+            'and(summit_id==12)'
+        ];
+
+        $filter = FilterParser::parse($filter_input, [
+            'has_checkin' => ['=='],
+            'summit_id' => ['=='],
+            'summit_hall_checked_in_date' => ['>=','<=','>=<'],
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("e")
+            ->select("e")
+            ->from(\models\summit\SummitAttendee::class, "e")
+            ->leftJoin('e.summit', 's');
+
+        $filter->apply2Query($query, [
+            'has_checkin' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "e.summit_hall_checked_in = 1"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.summit_hall_checked_in = 0"
+                    ),
+                ]
+            ),
+            'summit_id'            => new DoctrineFilterMapping("s.id :operator :value"),
+            'summit_hall_checked_in_date' => Filter::buildDateTimeEpochField("e.summit_hall_checked_in_date"),
+        ]);
+
+        $dql = $query->getDQL();
+$expected_dql = <<<DQL
+SELECT DISTINCT e FROM models\summit\SummitAttendee e LEFT JOIN e.summit s WHERE ( (  ( e.summit_hall_checked_in = 1 )  )  OR (( e.summit_hall_checked_in_date >= :param_1 AND e.summit_hall_checked_in_date <= :param_2  ))) AND s.id = :value_1
+DQL;
+
+        $this->assertNotEmpty($dql);
+        $this->assertEquals($expected_dql, $dql);
     }
 }

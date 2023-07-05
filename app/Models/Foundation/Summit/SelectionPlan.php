@@ -92,6 +92,12 @@ class SelectionPlan extends SilverstripeBaseModel
     private $allow_proposed_schedules;
 
     /**
+     * @ORM\Column(name="AllowTrackChangeRequests", type="boolean")
+     * @var bool
+     */
+    private $allow_track_change_requests;
+
+    /**
      * @ORM\Column(name="SubmissionBeginDate", type="datetime")
      * @var \DateTime
      */
@@ -415,6 +421,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->is_enabled = false;
         $this->allow_new_presentations = true;
         $this->allow_proposed_schedules = true;
+        $this->allow_track_change_requests = true;
         $this->category_groups = new ArrayCollection;
         $this->presentations = new ArrayCollection;
         $this->extra_questions = new ArrayCollection;
@@ -719,6 +726,22 @@ class SelectionPlan extends SilverstripeBaseModel
     public function setAllowProposedSchedules(bool $allow_proposed_schedules): void
     {
         $this->allow_proposed_schedules = $allow_proposed_schedules;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowedTrackChangeRequests(): bool
+    {
+        return $this->allow_track_change_requests;
+    }
+
+    /**
+     * @param bool $allow_track_change_requests
+     */
+    public function setAllowTrackChangeRequests(bool $allow_track_change_requests): void
+    {
+        $this->allow_track_change_requests = $allow_track_change_requests;
     }
 
     /**

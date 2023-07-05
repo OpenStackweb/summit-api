@@ -44,6 +44,7 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
             'allowed_presentation_questions' => 'sometimes|string_array',
             'allow_proposed_schedules' => 'sometimes|boolean',
             'allowed_presentation_editable_questions' => 'sometimes|string_array',
+            'allow_track_change_requests' => 'sometimes|boolean',
         ];
     }
 
@@ -72,6 +73,7 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
             'allowed_presentation_questions' => 'sometimes|string_array',
             'allow_proposed_schedules' => 'sometimes|boolean',
             'allowed_presentation_editable_questions' => 'sometimes|string_array',
+            'allow_track_change_requests' => 'sometimes|boolean',
         ];
     }
 

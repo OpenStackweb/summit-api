@@ -77,8 +77,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'active' => ['=='],
                     'github_user' => ['=@', '==', '@@'],
                     'full_name' => ['=@', '==', '@@'],
-                    'created' => ['>', '<', '<=', '>=', '==','>=<'],
-                    'last_edited' => ['>', '<', '<=', '>=', '==','>=<'],
+                    'created' => ['>', '<', '<=', '>=', '==','[]'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==','[]'],
                 ];
             },
             function () {

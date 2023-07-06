@@ -335,14 +335,14 @@ SQL;
     public function testOrAndOr(){
         $filter_input = [
             'or(has_checkin==true)',
-            'or(summit_hall_checked_in_date>=<1681855200&&1681855300)',
+            'or(summit_hall_checked_in_date[]1681855200&&1681855300)',
             'and(summit_id==12)'
         ];
 
         $filter = FilterParser::parse($filter_input, [
             'has_checkin' => ['=='],
             'summit_id' => ['=='],
-            'summit_hall_checked_in_date' => ['>=','<=','>=<'],
+            'summit_hall_checked_in_date' => ['>=','<=','[]'],
         ]);
 
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
@@ -376,5 +376,22 @@ DQL;
 
         $this->assertNotEmpty($dql);
         $this->assertEquals($expected_dql, $dql);
+    }
+
+    public function testParseDates(){
+
+        $filter_input = [
+            "published==1",
+            "start_date[]1681855200&&1681941540",
+
+        ];
+
+        $filter = FilterParser::parse($filter_input, [
+            'start_date' => ['>', '<', '<=', '>=', '==','[]'],
+            'summit_id' => ['=='],
+            'published' => ['==']
+        ]);
+
+        $this->assertTrue(!is_null($filter));
     }
 }

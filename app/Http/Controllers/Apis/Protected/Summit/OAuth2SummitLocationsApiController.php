@@ -395,8 +395,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'title' => ['=@', '=='],
-                    'start_date' => ['>', '<', '<=', '>=', '==','>=<'],
-                    'end_date' => ['>', '<', '<=', '>=', '==','>=<'],
+                    'start_date' => ['>', '<', '<=', '>=', '==','[]'],
+                    'end_date' => ['>', '<', '<=', '>=', '==','[]'],
                     'speaker' => ['=@', '=='],
                     'tags' => ['=@', '=='],
                     'event_type_id' => ['=='],
@@ -1137,8 +1137,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'content' => ['=@'],
                     'type' => ['=='],
                     'enabled' => ['=='],
-                    'start_date' => ['>', '<', '<=', '>=', '==','>=<'],
-                    'end_date' => ['>', '<', '<=', '>=', '==','>=<'],
+                    'start_date' => ['>', '<', '<=', '>=', '==','[]'],
+                    'end_date' => ['>', '<', '<=', '>=', '==','[]'],
                 ];
             },
             function(){

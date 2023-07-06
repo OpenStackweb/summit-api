@@ -148,14 +148,15 @@ final class FilterParser
     public static function filterExpresion(string $exp)
     {
 
-        if (!preg_match('/>=<|>=|<=|<>|==|=\@|\@\@|<|>/i', $exp, $matches))
+        Log::debug(sprintf("FilterParser::filterExpresion %s", $exp));
+        if (!preg_match('/\[\]|\(\)|>=|<=|<>|==|=\@|\@\@|<|>/i', $exp, $matches))
             throw new FilterParserException(sprintf("Invalid filter format %s (should be [:FIELD_NAME:OPERAND:VALUE]).", $exp));
 
         $op = $matches[0];
         $operands = explode($op, $exp, 2);
         $field = $operands[0];
         $value = $operands[1];
-
+        Log::debug(sprintf("FilterParser::filterExpresion field %s op %s value %s", $field, $op, json_encode($value)));
         return [$field, $op, $value];
     }
 
@@ -170,6 +171,18 @@ final class FilterParser
      */
     public static function buildFilter($field, $op, $value, $same_field_op = null)
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "FilterParser::buildFilter field %s op %s value %s same_field_op %s",
+                $field,
+                $op,
+                json_encode($value),
+                $same_field_op
+            )
+        );
+
         switch ($op) {
             case '==':
                 return FilterElement::makeEqual($field, $value, $same_field_op);
@@ -186,8 +199,11 @@ final class FilterParser
             case '>=':
                 return FilterElement::makeGreatherOrEqual($field, $value, $same_field_op);
                 break;
-            case '>=<':
+            case '[]':
                 return FilterElement::makeBetween($field, $value, $same_field_op);
+                break;
+            case '()':
+                return FilterElement::makeBetweenStrict($field, $value, $same_field_op);
                 break;
             case '<':
                 return FilterElement::makeLower($field, $value, $same_field_op);

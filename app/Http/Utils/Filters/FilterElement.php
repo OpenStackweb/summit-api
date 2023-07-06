@@ -37,9 +37,6 @@ class FilterElement extends AbstractFilterElement
     {
         parent::__construct($operator);
         $this->field    = $field;
-        if($this->field == 'start_date'){
-            $value = intval($value);
-        }
         $this->value    = $value;
         $this->same_field_op = $same_field_op;
     }
@@ -123,6 +120,13 @@ class FilterElement extends AbstractFilterElement
         if(!is_array($value)) throw new \InvalidArgumentException("Value must be an array.");
         if(count($value) !=2 ) throw new \InvalidArgumentException("Value must be an array of 2 elements.");
         return new self($field, $value, ['>=','<='], $same_field_op);
+    }
+
+    public static function makeBetweenStrict($field, $value, $same_field_op = null)
+    {
+        if(!is_array($value)) throw new \InvalidArgumentException("Value must be an array.");
+        if(count($value) !=2 ) throw new \InvalidArgumentException("Value must be an array of 2 elements.");
+        return new self($field, $value, ['>','<'], $same_field_op);
     }
 
     public static function makeLower($field, $value, $same_field_op = null)

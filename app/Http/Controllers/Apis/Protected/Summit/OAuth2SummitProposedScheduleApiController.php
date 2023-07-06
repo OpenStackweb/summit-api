@@ -97,8 +97,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
         return $this->_getAll(
             function () {
                 return [
-                    'start_date' => ['==', '<', '>', '>=', '<=','>=<'],
-                    'end_date' => ['==', '<', '>', '>=', '<=','>=<'],
+                    'start_date' => ['==', '<', '>', '>=', '<=','[]'],
+                    'end_date' => ['==', '<', '>', '>=', '<=','[]'],
                     'duration' => ['==', '<', '>', '>=', '<='],
                     'presentation_title' => ['@@', '=@'],
                     'presentation_id' => ['=='],
@@ -205,8 +205,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
 
             $filter = self::getFilter(function () {
                 return [
-                    'start_date' => ['==', '<', '>', '>=', '<=','>=<'],
-                    'end_date' => ['==', '<', '>', '>=', '<=','>=<'],
+                    'start_date' => ['==', '<', '>', '>=', '<=','[]'],
+                    'end_date' => ['==', '<', '>', '>=', '<=','[]'],
                     'location_id' => ['=='],
                     'track_id' => ['=='],
                 ];

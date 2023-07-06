@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\IStatsConstants;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Illuminate\Http\UploadedFile;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
@@ -620,6 +622,36 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($stats));
     }
 
+    public function testGetAttendeesCheckinsOverTimeStats()
+    {
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 5,
+            'filter' => [
+                'start_date>=1688578812',
+                'end_date<=1688924412',
+            ],
+            'group_by' => IStatsConstants::GroupByHour
+        );
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getAttendeesCheckinsOverTimeStats",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $stats = json_decode($content);
+        $this->assertTrue(!is_null($stats));
+    }
 
     public function testGetCurrentSummitSpeakers()
     {

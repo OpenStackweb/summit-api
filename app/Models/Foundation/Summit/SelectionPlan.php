@@ -731,7 +731,7 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isAllowedTrackChangeRequests(): bool
+    public function isAllowTrackChangeRequests(): bool
     {
         return $this->allow_track_change_requests;
     }

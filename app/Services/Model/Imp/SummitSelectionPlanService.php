@@ -372,7 +372,7 @@ final class SummitSelectionPlanService
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if (!$selection_plan->isAllowedTrackChangeRequests())
+            if (!$selection_plan->isAllowTrackChangeRequests())
                 throw new ValidationException(sprintf("Selection Plan %s does not allow track change requests", $selection_plan->getId()));
 
             if (!$selection_plan->isSelectionOpen())
@@ -433,7 +433,7 @@ final class SummitSelectionPlanService
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if (!$selection_plan->isAllowedTrackChangeRequests())
+            if (!$selection_plan->isAllowTrackChangeRequests())
                 throw new ValidationException(sprintf("Selection Plan %s does not allow approve/reject track change requests", $selection_plan->getId()));
 
             if (!$selection_plan->isSelectionOpen())

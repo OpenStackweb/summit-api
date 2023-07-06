@@ -84,6 +84,8 @@ final class EventTypeValidationRulesFactory
                     'allow_custom_ordering'      => 'sometimes|boolean',
                     'allow_attendee_vote'        => 'sometimes|boolean',
                     'allows_speaker_event_collision' => 'sometimes|boolean',
+                    'min_duration'               => 'sometimes|integer',
+                    'max_duration'               => 'sometimes|integer|greater_than_field:min_duration',
                 ];
             }
             break;

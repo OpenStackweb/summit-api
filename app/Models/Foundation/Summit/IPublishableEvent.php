@@ -14,6 +14,7 @@
 
 use DateTime;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
 use models\summit\SummitAbstractLocation;
@@ -72,10 +73,11 @@ interface IPublishableEvent extends IEntity
     /**
      * @param int $duration_in_seconds
      * @param bool $skipDatesSetting
+     * @param Member|null $member
      * @throws ValidationException
      * @throws \Exception
      */
-    public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false): void;
+    public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false, ?Member $member = null): void;
 
     /**
      * @return SummitAbstractLocation

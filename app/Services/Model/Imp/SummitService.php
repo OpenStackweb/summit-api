@@ -605,10 +605,7 @@ final class SummitService
      * @param Summit $summit
      * @param array $data
      * @param null|int $event_id
-     * @param Member|null $current_member
      * @return SummitEvent
-     * @throws EntityNotFoundException
-     * @throws ValidationException
      * @throws Exception
      */
     private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null)

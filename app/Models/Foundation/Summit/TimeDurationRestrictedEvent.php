@@ -18,6 +18,8 @@ use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\main\Member;
+use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use ReflectionClass;
@@ -74,10 +76,10 @@ trait TimeDurationRestrictedEvent
      * @param Summit|null $summit
      * @param int $duration_in_seconds
      * @param bool $skipDatesSetting
+     * @param Member|null $member
      * @throws ValidationException
-     * @throws \Exception
      */
-    private function _setDuration(?Summit $summit, int $duration_in_seconds, bool $skipDatesSetting = false): void
+    private function _setDuration(?Summit $summit, int $duration_in_seconds, bool $skipDatesSetting = false, ?Member $member = null): void
     {
         if ($duration_in_seconds < 0) {
             throw new ValidationException('Duration should be greater or equal than zero.');
@@ -85,6 +87,22 @@ trait TimeDurationRestrictedEvent
 
         if ($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)) {
             throw new ValidationException(sprintf('Duration should be greater than %s minutes.', self::MIN_EVENT_MINUTES));
+        }
+
+        $isAdmin = !is_null($member) && $member->isSummitAllowed($summit);
+
+        if (!$isAdmin) {
+            $type = $this->getType();
+            if ($type instanceof PresentationType) {
+                $min_duration = $type->getMinDuration();
+                if ($min_duration > 0 && $duration_in_seconds < ($min_duration * 60)) {
+                    throw new ValidationException(sprintf('Duration must be greater than or equal to %s minutes.', $min_duration));
+                }
+                $max_duration = $type->getMaxDuration();
+                if ($max_duration > 0 && $duration_in_seconds > ($max_duration * 60)) {
+                    throw new ValidationException(sprintf('Duration must be less than or equal to %s minutes.', $max_duration));
+                }
+            }
         }
 
         $this->duration = $duration_in_seconds;

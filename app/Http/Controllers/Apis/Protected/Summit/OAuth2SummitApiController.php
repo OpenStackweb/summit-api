@@ -13,14 +13,18 @@
  **/
 
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\IStatsConstants;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\ModelSerializers\SerializerUtils;
+use App\Utils\FilterUtils;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
+use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ConfirmationExternalOrderRequest;
 use models\summit\IEventFeedbackRepository;
@@ -36,6 +40,7 @@ use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
 use utils\PagingInfo;
+use utils\PagingResponse;
 
 /**
  * Class OAuth2SummitApiController
@@ -111,6 +116,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     use ParametrizedGetAll;
 
     use RequestProcessor;
+
+    use ParseAndGetPaginationParams;
 
     /**
      * @return mixed
@@ -432,6 +439,52 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                         [ 'filter' => $filter ]
                     )
             );
+        });
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function getAttendeesCheckinsOverTimeStats($id)
+    {
+        return $this->processRequest(function () use ($id) {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($id);
+            if (is_null($summit))
+                $summit = $this->repository->getBySlug(trim($id));
+
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionFor($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
+            $group_by = Request::get('group_by');
+            if(!in_array($group_by, IStatsConstants::AttendeesCheckinsAllowedGroupBy))
+                throw new ValidationException(
+                    "Invalid group by criteria. Valid ones are ".join(',', IStatsConstants::AttendeesCheckinsAllowedGroupBy));
+
+            list($page, $per_page) = self::getPaginationParams();
+
+            $filter = self::getFilter(
+                function () {
+                    return [
+                        'start_date' => ['>='],
+                        'end_date' => ['<='],
+                    ];
+                },
+                function () {
+                    return [
+                        'start_date' => 'sometimes|required|date_format:U',
+                        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                    ];
+                });
+
+            list($start_date, $end_date) = FilterUtils::parseDateRangeUTC($filter);
+
+            $response = $summit->getAttendeesCheckinsGroupedBy($group_by, new PagingInfo($page, $per_page), $start_date, $end_date);
+
+            return $this->ok($response->toArray());
         });
     }
 

@@ -11,9 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\IStatsConstants;
+use Illuminate\Support\Facades\Log;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 use DateTimeZone;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Trait SummitRegistrationStats
  * @package models\summit
@@ -45,13 +51,14 @@ trait SummitRegistrationStats
      * @return string
      * @throws \Exception
      */
-    private static function addDatesFilteringWithTimeZone(string $sql, string $table, ?DateTime $startDate  = null, ?DateTime $endDate = null):string{
+    private static function addDatesFilteringWithTimeZone(string $sql, string $table, string $column = 'Created',
+                                                          ?DateTime $startDate  = null, ?DateTime $endDate = null):string{
         if(!is_null($startDate)){
             $offset1 = self::getDefaultTimeZoneOffset($startDate);
             if(!is_null($endDate)) {
                 $offset2 = self::getDefaultTimeZoneOffset($endDate);
                 $sql .= sprintf(
-                    " AND {$table}.Created BETWEEN CONVERT_TZ('%s','+00:00','%s:00') AND CONVERT_TZ('%s','+00:00','%s:00')",
+                    " AND {$table}.{$column} BETWEEN CONVERT_TZ('%s','+00:00','%s:00') AND CONVERT_TZ('%s','+00:00','%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
                     $offset1,
                     $endDate->format("Y-m-d H:i:s"),
@@ -60,7 +67,7 @@ trait SummitRegistrationStats
             }
             else{
                 $sql .= sprintf(
-                    " AND {$table}.Created >= CONVERT_TZ('%s','+00:00','%s:00')",
+                    " AND {$table}.{$column} >= CONVERT_TZ('%s','+00:00','%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
                     $offset1,
                 );
@@ -84,7 +91,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -113,7 +120,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -143,7 +150,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -170,7 +177,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitOrder.Status = 'Paid'
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitOrder", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitOrder", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -198,7 +205,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -230,7 +237,7 @@ WHERE
       SummitRefundRequest.Status='Approved' AND 
       SummitOrder.SummitID = :summit_id
 SQL;
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitRefundRequest", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitRefundRequest", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -259,7 +266,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitTicketType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -296,7 +303,7 @@ WHERE
       SummitAttendee.SummitHallCheckedIn = 1 AND
       SummitAccessLevelType.Name = 'IN_PERSON'
 SQL;
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitTicketType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -327,7 +334,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeType.ID';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -363,7 +370,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendee.SummitHallCheckedIn = 1 AND
       SummitAccessLevelType.Name = 'IN_PERSON'
 SQL;
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeType.ID';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -458,7 +465,7 @@ AND
 SummitAttendee.SummitHallCheckedIn = 0
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -556,7 +563,7 @@ EXISTS (
 AND SummitVirtualCheckedInDate IS NULL 
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -594,7 +601,7 @@ SummitAttendeeTicket.Status = 'Paid' AND
 SummitOrder.SummitID = :summit_id
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -632,7 +639,7 @@ SummitOrder.SummitID = :summit_id AND
 SummitAttendee.SummitHallCheckedIn = 1
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -645,4 +652,80 @@ SQL;
         return [];
     }
 
+    /**
+     * @param string $groupBy
+     * @param int $page
+     * @param int $per_page
+     * @param DateTime|null $startDate
+     * @param DateTime|null $endDate
+     * @return PagingResponse
+     */
+    public function getAttendeesCheckinsGroupedBy(
+        string $groupBy, PagingInfo $pagingInfo, ?DateTime $startDate  = null, ?DateTime $endDate = null): PagingResponse
+    {
+        $page = $pagingInfo->getCurrentPage();
+        $per_page = $pagingInfo->getPerPage();
+
+        try {
+            $date_format = "";
+            switch ($groupBy) {
+                case IStatsConstants::GroupByDay:
+                    $date_format = "%b %D";
+                    break;
+                case IStatsConstants::GroupByHour:
+                    $date_format = "%m/%d %h %p";
+                    break;
+                case IStatsConstants::GroupByMinute:
+                    $date_format = "%m/%d %h:%i %p";
+                    break;
+            }
+
+            $sql = <<<SQL
+SELECT COUNT(SummitAttendee.ID) as qty, DATE_FORMAT(SummitAttendee.SummitHallCheckedInDate, '{$date_format}') AS label 
+FROM SummitAttendee
+WHERE
+SummitID = :summit_id AND
+SummitHallCheckedInDate IS NOT NULL
+SQL;
+
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", "SummitHallCheckedInDate", $startDate, $endDate);
+            $sql .= " GROUP BY DATE_FORMAT(SummitHallCheckedInDate, '{$date_format}')";
+            $sql .= " ORDER BY DATE_FORMAT(SummitHallCheckedInDate, '{$date_format}')";
+
+            $count_sql = <<<SQL
+SELECT COUNT(*) FROM ({$sql}) T1
+SQL;
+            $stmt = $this->prepareRawSQL($count_sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            $total = count($res) > 0 ? intval($res[0]) : 0;
+
+            $sql .= " LIMIT {$pagingInfo->getPerPage()} OFFSET {$pagingInfo->getOffset()} ";
+            Log::debug(sprintf("Summit::getAttendeesCheckinsGroupedBy sql %s", $sql));
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            $res = count($res) > 0 ? $res : [];
+
+            return new PagingResponse
+            (
+                $total,
+                $per_page,
+                $page,
+                intval(ceil($total / $per_page)),
+                $res
+            );
+        } catch (\Exception $ex) {
+            Log::error($ex);
+        }
+        return new PagingResponse
+        (
+            0,
+            $per_page,
+            $page,
+            1,
+            []
+        );
+    }
 }

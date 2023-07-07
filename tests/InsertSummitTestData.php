@@ -335,6 +335,7 @@ trait InsertSummitTestData
         self::$defaultPresentationType->setIsModeratorMandatory(false);
         self::$defaultPresentationType->setAllowsLocationTimeframeCollision(true);
         self::$defaultPresentationType->setAllowsSpeakerEventCollision(true);
+        self::$defaultPresentationType->setBlackoutTimes('Final');
 
         self::$summit->addEventType(self::$defaultPresentationType);
 
@@ -353,9 +354,11 @@ trait InsertSummitTestData
         self::$allow2VotePresentationType->setAllowCustomOrdering(true);
         self::$allow2VotePresentationType->setAllowsLocation(false);
         self::$allow2VotePresentationType->setAllowsPublishingDates(false);
+        self::$allow2VotePresentationType->setBlackoutTimes('Final');
 
         self::$defaultEventType = new SummitEventType();
         self::$defaultEventType->setType(ISummitEventType::Breaks);
+        self::$defaultEventType->setBlackoutTimes('All');
         self::$summit->addEventType(self::$defaultEventType);
         
         self::$summit->addEventType(self::$allow2VotePresentationType);

@@ -1073,6 +1073,14 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-attendees-check-ins-over-time-stats',
+                'route' => '/api/v1/summits/all/{id}/registration-stats/check-ins',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                ],
+            ],
+            [
                 'name' => 'get-summit-cached',
                 'route' => '/api/v1/summits/{id}',
                 'http_method' => 'GET',

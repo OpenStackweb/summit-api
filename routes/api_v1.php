@@ -172,7 +172,10 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::get('', 'OAuth2SummitApiController@getAllSummits');
         Route::group(['prefix' => '{id}'], function () {
             Route::get('', 'OAuth2SummitApiController@getAllSummitByIdOrSlug');
-            Route::get('registration-stats', 'OAuth2SummitApiController@getAllSummitByIdOrSlugRegistrationStats');
+            Route::group(['prefix' => 'registration-stats'], function () {
+                Route::get('', 'OAuth2SummitApiController@getAllSummitByIdOrSlugRegistrationStats');
+                Route::get('check-ins', 'OAuth2SummitApiController@getAttendeesCheckinsOverTimeStats');
+            });
         });
 
         Route::group(['prefix' => 'locations'], function () {

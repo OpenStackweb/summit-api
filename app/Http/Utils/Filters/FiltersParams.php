@@ -1,6 +1,6 @@
 <?php namespace App\Http\Utils\Filters;
 /*
- * Copyright 2022 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,27 +12,20 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\QueryBuilder;
-use utils\FilterElement;
+use Illuminate\Support\Facades\Request;
 
 /**
- * Interface IQueryApplyable
+ * Class FiltersParams
  * @package App\Http\Utils\Filters
  */
-interface IQueryApplyable
+final class FiltersParams
 {
-    public function setMainOperator(string $op):void;
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return QueryBuilder
-     */
-    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder;
+    const FilterRequestParamName = 'filter';
+    public static function hasFilterParam():bool{
+        return Request::has(self::FilterRequestParamName);
+    }
 
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return string
-     */
-    public function applyOr(QueryBuilder $query, FilterElement $filter):string;
+    public static function getFilterParam(){
+        return Request::input(self::FilterRequestParamName);
+    }
 }

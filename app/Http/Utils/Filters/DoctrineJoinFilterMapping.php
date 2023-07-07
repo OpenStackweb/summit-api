@@ -25,6 +25,11 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
     /**
      * @var string
      */
+    protected $main_operator;
+
+    /**
+     * @var string
+     */
     protected $alias;
 
     /**
@@ -36,6 +41,7 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
     public function __construct($table, $alias, $where)
     {
         parent::__construct($table, $where);
+        $this->main_operator = Filter::MainOperatorAnd;
         $this->alias = $alias;
     }
 
@@ -83,8 +89,10 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
 
             if (!in_array($this->alias, $query->getAllAliases()))
                 $query->innerJoin($this->table, $this->alias, Join::WITH);
-
-            $query = $query->andWhere($inner_where);
+            if($this->main_operator === Filter::MainOperatorAnd)
+                $query = $query->andWhere($inner_where);
+            else
+                $query = $query->orWhere($inner_where);
 
         } else {
             $param_count = $query->getParameters()->count() + 1;
@@ -102,7 +110,10 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
             if (!in_array($this->alias, $query->getAllAliases()))
                 $query->innerJoin($this->table, $this->alias, Join::WITH);
 
-            $query = $query->andWhere($where);
+            if($this->main_operator === Filter::MainOperatorAnd)
+                $query = $query->andWhere($where);
+            else
+                $query = $query->orWhere($where);
 
             if ($has_param) {
                 $query = $query->setParameter(":value_" . $param_count, $filter->getValue());
@@ -175,4 +186,8 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
         return $where;
     }
 
+    public function setMainOperator(string $op): void
+    {
+        $this->main_operator = $op;
+    }
 }

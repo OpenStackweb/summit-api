@@ -1,5 +1,4 @@
 <?php namespace utils;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,9 +37,6 @@ class FilterElement extends AbstractFilterElement
     {
         parent::__construct($operator);
         $this->field    = $field;
-        if($this->field == 'start_date'){
-            $value = intval($value);
-        }
         $this->value    = $value;
         $this->same_field_op = $same_field_op;
     }
@@ -119,6 +115,20 @@ class FilterElement extends AbstractFilterElement
         return new self($field, $value, '>=', $same_field_op);
     }
 
+    public static function makeBetween($field, $value, $same_field_op = null)
+    {
+        if(!is_array($value)) throw new \InvalidArgumentException("Value must be an array.");
+        if(count($value) !=2 ) throw new \InvalidArgumentException("Value must be an array of 2 elements.");
+        return new self($field, $value, ['>=','<='], $same_field_op);
+    }
+
+    public static function makeBetweenStrict($field, $value, $same_field_op = null)
+    {
+        if(!is_array($value)) throw new \InvalidArgumentException("Value must be an array.");
+        if(count($value) !=2 ) throw new \InvalidArgumentException("Value must be an array of 2 elements.");
+        return new self($field, $value, ['>','<'], $same_field_op);
+    }
+
     public static function makeLower($field, $value, $same_field_op = null)
     {
         return new self($field, $value, '<', $same_field_op);
@@ -146,6 +156,6 @@ class FilterElement extends AbstractFilterElement
 
     public function __toString():string
     {
-        return sprintf("%s%s%s", $this->field, $this->operator, is_array($this->value)? json_encode($this->value):$this->value);
+        return sprintf("%s%s%s", $this->field, is_array($this->operator) ? json_encode($this->operator): $this->operator, is_array($this->value)? json_encode($this->value):$this->value);
     }
 }

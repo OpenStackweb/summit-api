@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\FiltersParams;
 use App\Rules\Boolean;
 use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
@@ -89,8 +90,12 @@ abstract class RetrieveSummitEventsStrategy
 
         $filter = null;
 
-        if (Request::has('filter')) {
-            $filter = FilterParser::parse(Request::input('filter'), $this->getValidFilters());
+        if (FiltersParams::hasFilterParam()) {
+            $filter = FilterParser::parse
+            (
+                FiltersParams::getFilterParam(),
+                $this->getValidFilters()
+            );
         }
 
         if (is_null($filter)) $filter = new Filter();
@@ -170,8 +175,8 @@ abstract class RetrieveSummitEventsStrategy
             'social_summary' => ['=@', '@@', '=='],
             'tags' => ['=@', '@@', '=='],
             'level' => ['=@', '@@', '=='],
-            'start_date' => ['>', '<', '<=', '>=', '=='],
-            'end_date' => ['>', '<', '<=', '>=', '=='],
+            'start_date' => ['>', '<', '<=', '>=', '==','[]'],
+            'end_date' => ['>', '<', '<=', '>=', '==','[]'],
             'summit_type_id' => ['=='],
             'event_type_id' => ['=='],
             'track_id' => ['=='],
@@ -197,10 +202,10 @@ abstract class RetrieveSummitEventsStrategy
             'type_allows_custom_ordering' => ['=='],
             'published' => ['=='],
             'class_name' => ['=='],
-            'presentation_attendee_vote_date' => ['>', '<', '<=', '>=', '=='],
-            'votes_count' => ['>', '<', '<=', '>=', '=='],
-            'duration' => ['>', '<', '<=', '>=', '=='],
-            'speakers_count' => ['>', '<', '<=', '>=', '=='],
+            'presentation_attendee_vote_date' => ['>', '<', '<=', '>=', '==','[]'],
+            'votes_count' => ['>', '<', '<=', '>=', '==','[]'],
+            'duration' => ['>', '<', '<=', '>=', '==','[]'],
+            'speakers_count' => ['>', '<', '<=', '>=', '==','[]'],
             'streaming_type' => ['=='],
             'submission_status' => ['=='],
             'type_show_always_on_schedule' => ['=='],

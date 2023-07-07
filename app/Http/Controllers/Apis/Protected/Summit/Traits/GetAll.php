@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\Filters\FiltersParams;
+use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -86,8 +89,12 @@ trait GetAll
 
             $filter = null;
 
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), $this->getFilterRules());
+            if (FiltersParams::hasFilterParam()) {
+                $filter = FilterParser::parse
+                (
+                    FiltersParams::getFilterParam(),
+                    $this->getFilterRules()
+                );
             }
 
             if(is_null($filter)) $filter = new Filter();
@@ -110,9 +117,9 @@ trait GetAll
             (
                 $data->toArray
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                     [ 'serializer_type' => $this->serializerType() ],
                     $this->serializerType()
                 )

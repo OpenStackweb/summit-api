@@ -101,8 +101,10 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
 
             $inner_where = sprintf("( %s )", $inner_where);
 
-            return $query->andWhere($inner_where);
-
+            if($this->main_operator === Filter::MainOperatorAnd)
+                return $query->andWhere($inner_where);
+            else
+                return $query->orWhere($inner_where);
         }
 
         $param_count = $query->getParameters()->count() + 1;
@@ -116,7 +118,10 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
             $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
         }
 
-        return $query->andWhere($where);
+        if($this->main_operator === Filter::MainOperatorAnd)
+            return $query->andWhere($where);
+        else
+            return $query->orWhere($where);
     }
 
     /**

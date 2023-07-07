@@ -21,11 +21,16 @@ use Doctrine\ORM\QueryBuilder;
  */
 final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQueryApplyable
 {
+    /**
+     * @var string
+     */
+    protected $main_operator;
 
     private $class_names = [];
 
     public function __construct($alias, $class_names = [])
     {
+        $this->main_operator = Filter::MainOperatorAnd;
         $this->class_names = $class_names;
         parent::__construct($alias, sprintf("%s %s :class_name", $alias, self::InstanceOfDoctrine));
     }
@@ -68,7 +73,10 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
      */
     public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
-        return $query->andWhere($this->buildWhere($query, $filter));
+        if($this->main_operator === Filter::MainOperatorAnd)
+            return $query->andWhere($this->buildWhere($query, $filter));
+        else
+            return $query->orWhere($this->buildWhere($query, $filter));
     }
 
     /**
@@ -79,6 +87,11 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
     public function applyOr(QueryBuilder $query, FilterElement $filter): string
     {
         return $this->buildWhere($query, $filter);
+    }
+
+    public function setMainOperator(string $op): void
+    {
+        $this->main_operator = $op;
     }
 
 }

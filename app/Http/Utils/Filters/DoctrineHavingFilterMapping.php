@@ -102,7 +102,10 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
                 $query = $query->setParameter(":value_" . $param_count, $value);
             }
 
-            $query = $query->andHaving($this->having);
+            if($this->main_operator === Filter::MainOperatorAnd)
+                $query = $query->andHaving($this->having);
+            else
+                $query = $query->orHaving($this->having);
         }
 
         return $query;

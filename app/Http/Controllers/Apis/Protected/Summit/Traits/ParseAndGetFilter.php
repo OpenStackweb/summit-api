@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Request;
+use App\Http\Utils\Filters\FiltersParams;
 use utils\Filter;
 use utils\FilterParser;
 
@@ -35,8 +35,12 @@ trait ParseAndGetFilter
     ){
         $filter = null;
 
-        if (Request::has('filter')) {
-            $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
+        if (FiltersParams::hasFilterParam()) {
+            $filter = FilterParser::parse
+            (
+                FiltersParams::getFilterParam(),
+                call_user_func($getFilterRules)
+            );
         }
 
         if (is_null($filter)) $filter = new Filter();

@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Support\Facades\Log;
+
 /**
  * Class FilterParser
  * @package utils
@@ -20,22 +22,40 @@ final class FilterParser
 {
     /**
      * @param $filters
-     * @param array $allowed_fields
+     * @param $allowed_fields
+     * @param string $main_operator
      * @return Filter
      * @throws FilterParserException
      */
     public static function parse($filters, $allowed_fields = [])
     {
-        Log::debug(sprintf("FilterParser::parse allowed_fields %s", json_encode($allowed_fields)));
+        Log::debug
+        (
+            sprintf
+            (
+                "FilterParser::parse filters %s allowed_fields %s",
+                json_encode($filters),
+                json_encode($allowed_fields),
+            )
+        );
 
-        $res                 = [];
-        $matches             = [];
-
+        $res = [];
+        $matches = [];
+        $ops = [];
         if (!is_array($filters))
             $filters = array($filters);
 
-        foreach ($filters as $filter) // parse AND filters
+        foreach ($filters as $filter) // parse Main Filters ( 1st grade )
         {
+
+            // check main operator
+            $main_op_matches = null;
+            if (preg_match('/(and|or)\((.*)\)/i', $filter, $main_op_matches)) {
+                $ops[] = strtoupper($main_op_matches[1]);
+                $filter = $main_op_matches[2];
+            } else {
+                $ops[] = Filter::MainOperatorAnd;
+            }
 
             $f = null;
             // parse OR filters
@@ -46,26 +66,25 @@ final class FilterParser
                 foreach ($or_filters as $of) {
 
                     //single filter
-                    if(empty($of)) continue;
+                    if (empty($of)) continue;
 
                     list($field, $op, $value) = self::filterExpresion($of);
 
-                    if (!isset($allowed_fields[$field])){
+                    if (!isset($allowed_fields[$field])) {
                         throw new FilterParserException(sprintf("filter by field %s is not allowed", $field));
                     }
-                    if (!in_array($op, $allowed_fields[$field])){
-                        throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
+                    if (!in_array($op, $allowed_fields[$field])) {
+                        throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s", $op, $field));
                     }
                     // check if value has AND or OR values on same field
                     $same_field_op = null;
-                    if(str_contains($value, '&&')){
+                    if (str_contains($value, '&&')) {
                         $values = explode('&&', $value);
                         if (count($values) > 1) {
                             $value = $values;
                             $same_field_op = 'AND';
                         }
-                    }
-                    else if(str_contains($value, '||')){
+                    } else if (str_contains($value, '||')) {
                         $values = explode('||', $value);
                         if (count($values) > 1) {
                             $value = $values;
@@ -84,14 +103,13 @@ final class FilterParser
 
                 // check if value has AND or OR values on same field
                 $same_field_op = null;
-                if(str_contains($value, '&&')){
+                if (str_contains($value, '&&')) {
                     $values = explode('&&', $value);
                     if (count($values) > 1) {
                         $value = $values;
                         $same_field_op = 'AND';
                     }
-                }
-                else if(str_contains($value, '||')){
+                } else if (str_contains($value, '||')) {
                     $values = explode('||', $value);
                     if (count($values) > 1) {
                         $value = $values;
@@ -99,17 +117,15 @@ final class FilterParser
                     }
                 }
 
-                if (!isset($allowed_fields[$field])){
+                if (!isset($allowed_fields[$field])) {
                     throw new FilterParserException(sprintf("filter by field %s is not allowed", $field));
                 }
 
-                if (!is_array($allowed_fields[$field])){
+                if (!is_array($allowed_fields[$field])) {
                     throw new FilterParserException(sprintf("filter by field %s is not an array", $field));
                 }
-
-                if (!in_array($op, $allowed_fields[$field])){
-                    throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
-
+                if (!in_array($op, $allowed_fields[$field])) {
+                    throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s", $op, $field));
                 }
 
                 $f = self::buildFilter($field, $op, $value, $same_field_op);
@@ -118,7 +134,10 @@ final class FilterParser
             if (!is_null($f))
                 $res[] = $f;
         }
-        return new Filter($res, $filters);
+
+        $res = new Filter($res, $filters, $ops);
+        Log::debug(sprintf("FilterParser::parse result %s", $res));
+        return $res;
     }
 
     /**
@@ -126,20 +145,21 @@ final class FilterParser
      * @return array
      * @throws FilterParserException
      */
-    public static function filterExpresion(string $exp){
+    public static function filterExpresion(string $exp)
+    {
 
-        preg_match('/[@=<>][=>@]{0,1}/', $exp, $matches);
+        Log::debug(sprintf("FilterParser::filterExpresion %s", $exp));
+        if (!preg_match('/\[\]|\(\)|>=|<=|<>|==|=\@|\@\@|<|>/i', $exp, $matches))
+            throw new FilterParserException(sprintf("Invalid filter format %s (should be [:FIELD_NAME:OPERAND:VALUE]).", $exp));
 
-        if (count($matches) != 1)
-            throw new FilterParserException(sprintf("invalid OR filter format %s (should be [:FIELD_NAME:OPERAND:VALUE])", $exp));
-
-        $op       = $matches[0];
+        $op = $matches[0];
         $operands = explode($op, $exp, 2);
-        $field    = $operands[0];
-        $value    = $operands[1];
-
+        $field = $operands[0];
+        $value = $operands[1];
+        Log::debug(sprintf("FilterParser::filterExpresion field %s op %s value %s", $field, $op, json_encode($value)));
         return [$field, $op, $value];
     }
+
     /**
      * Factory Method
      *
@@ -149,8 +169,20 @@ final class FilterParser
      * @param string $same_field_op
      * @return FilterElement|null
      */
-    public static function buildFilter($field, $op, $value, $same_field_op = null )
+    public static function buildFilter($field, $op, $value, $same_field_op = null)
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "FilterParser::buildFilter field %s op %s value %s same_field_op %s",
+                $field,
+                $op,
+                json_encode($value),
+                $same_field_op
+            )
+        );
+
         switch ($op) {
             case '==':
                 return FilterElement::makeEqual($field, $value, $same_field_op);
@@ -166,6 +198,12 @@ final class FilterParser
                 break;
             case '>=':
                 return FilterElement::makeGreatherOrEqual($field, $value, $same_field_op);
+                break;
+            case '[]':
+                return FilterElement::makeBetween($field, $value, $same_field_op);
+                break;
+            case '()':
+                return FilterElement::makeBetweenStrict($field, $value, $same_field_op);
                 break;
             case '<':
                 return FilterElement::makeLower($field, $value, $same_field_op);

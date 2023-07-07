@@ -54,7 +54,10 @@ class DoctrineLeftJoinFilterMapping extends DoctrineJoinFilterMapping
             $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
             $inner_where .= ' )';
 
-            $query = $query->andWhere($inner_where);
+            if($this->main_operator === Filter::MainOperatorAnd)
+                 $query = $query->andWhere($inner_where);
+            else
+                $query = $query->orWhere($inner_where);
 
             if (!in_array($this->alias, $query->getAllAliases()))
                 $query->leftJoin($this->table, $this->alias, Join::WITH);

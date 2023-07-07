@@ -56,9 +56,10 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
         (
             sprintf
             (
-                "ProcessAttendeesEmailRequestJob::handle summit id %s payload %s",
+                "ProcessAttendeesEmailRequestJob::handle summit id %s payload %s filter %s",
                 $this->summit_id,
-                json_encode($this->payload)
+                json_encode($this->payload),
+                json_encode($this->filter)
             )
         );
 
@@ -88,6 +89,7 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_track_group_id' => ['=='],
+            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);

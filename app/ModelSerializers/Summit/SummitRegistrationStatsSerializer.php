@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Utils\FilterUtils;
 use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\summit\Summit;
@@ -29,6 +30,7 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
      * @param array $relations
      * @param array $params
      * @return array
+     * @throws \Exception
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
@@ -41,27 +43,7 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
         $start_date = null;
         $end_date = null;
 
-        if($filter instanceof Filter && $filter->hasFilter('start_date')){
-
-            $start_date = Filter::convertToDateTime($filter->getUniqueFilter('start_date')->getValue(), 'UTC');
-            $end_date =  $filter->hasFilter('end_date') ?
-                Filter::convertToDateTime($filter->getUniqueFilter('end_date')->getValue(), 'UTC'):
-                null;
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitRegistrationStatsSerializer::serialize summit %s start_date %s end_date %s",
-                    $summit->getId(),
-                    $start_date,
-                    $end_date
-                )
-            );
-
-            $start_date = new \DateTime($start_date, new \DateTimeZone('UTC'));
-            $end_date = !is_null($end_date) ? new \DateTime($end_date, new \DateTimeZone('UTC')) : null;
-        }
+        if ($filter instanceof Filter) list($start_date, $end_date) = FilterUtils::parseDateRangeUTC($filter);
 
         $values['total_active_tickets'] = $summit->getActiveTicketsCount($start_date, $end_date);
         $values['total_inactive_tickets'] = $summit->getInactiveTicketsCount($start_date, $end_date);

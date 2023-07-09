@@ -236,6 +236,96 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $selection_lists;
 
     /**
+     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="selection_lists", fetch="EXTRA_LAZY")
+     * @ORM\JoinColumn(name="ParentPresentationCategoryID", referencedColumnName="ID")
+     * @var PresentationCategory
+     */
+    protected $parent;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationCategory", mappedBy="parent", cascade={"persist","remove"}, fetch="EXTRA_LAZY")
+     */
+    protected $children;
+
+    /**
+     * @return PresentationCategory|null
+     */
+    public function getParent(): ?PresentationCategory {
+        return $this->parent;
+    }
+
+    /**
+     * @return int
+     */
+    public function getParentId(): int
+    {
+        try{
+            if(is_null($this->parent)) return 0;
+            return $this->parent->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @param PresentationCategory $parent
+     */
+    public function setParent(PresentationCategory $parent) {
+        $this->parent = $parent;
+    }
+
+    public function clearParent() {
+        $this->parent = null;
+    }
+
+    /**
+     * @return PresentationCategory[]|ArrayCollection
+     */
+    public function getChildren() {
+        return $this->children;
+    }
+
+    /**
+     * @param int $child_id
+     * @return PresentationCategory|null
+     */
+    public function getChildById(int $child_id): ?PresentationCategory {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $child_id));
+        $child = $this->children->matching($criteria)->first();
+        return $child === false ? null : $child;
+    }
+
+    /**
+     * @param PresentationCategory $child
+     * @return $this
+     */
+    public function addChild(PresentationCategory $child): PresentationCategory {
+        if($this->children->contains($child)) return $this;
+        $this->children->add($child);
+        return $this;
+    }
+
+    /**
+     * @param PresentationCategory $child
+     * @return $this
+     */
+    public function removeChild(PresentationCategory $child): PresentationCategory {
+        if(!$this->children->contains($child)) return $this;
+        $this->children->removeElement($child);
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function clearChildren(): PresentationCategory {
+        $this->children->clear();
+        return $this;
+    }
+
+    /**
      * @return TrackQuestionTemplate[]|ArrayCollection
      */
     public function getExtraQuestions(){
@@ -312,6 +402,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->order = 0;
         $this->proposed_schedule_allowed_locations = new ArrayCollection();
         $this->text_color = "000000";
+        $this->children = new ArrayCollection();
     }
 
     /**

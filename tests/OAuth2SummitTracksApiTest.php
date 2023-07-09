@@ -40,7 +40,8 @@ class OAuth2SummitTracksApiTest extends ProtectedApiTest
             'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
-            'order'    => '+id'
+            'order'    => '+id',
+            'expand'   => 'subtracks'
         ];
 
         $headers = [

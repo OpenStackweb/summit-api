@@ -39,6 +39,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             'IconUrl' => 'icon_url:json_url',
             'Order' => 'order:json_int',
             'ProposedScheduleTransitionTime' => 'proposed_schedule_transition_time:json_int',
+            'ParentId' => 'parent_id:json_int',
         ];
 
     /**
@@ -59,6 +60,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
         $extra_questions = [];
         $selection_lists = [];
         $proposed_schedule_allowed_locations = [];
+        $subtracks = [];
 
         $summit = $category->getSummit();
 
@@ -86,12 +88,17 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             $proposed_schedule_allowed_locations[] = intval($allowed_location->getId());
         }
 
+        foreach ($category->getChildren() as $children) {
+            $subtracks[] = intval($children->getId());
+        }
+
         $values['track_groups'] = $groups;
         $values['allowed_tags'] = $allowed_tag;
         $values['extra_questions'] = $extra_questions;
         $values['selection_lists'] = $selection_lists;
         $values['allowed_access_levels'] = $allowed_access_levels;
         $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
+        $values['subtracks'] = $subtracks;
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
@@ -154,6 +161,16 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                                 $proposed_schedule_allowed_locations[] = SerializerRegistry::getInstance()->getSerializer($allowed_location)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
+                        }
+                        break;
+                    case 'subtracks':
+                        {
+                            $subtracks = [];
+                            unset($values['subtracks']);
+                            foreach ($category->getChildren() as $children) {
+                                $subtracks[] = SerializerRegistry::getInstance()->getSerializer($children)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                            $values['subtracks'] = $subtracks;
                         }
                         break;
                 }

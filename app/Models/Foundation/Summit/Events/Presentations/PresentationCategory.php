@@ -311,6 +311,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->voting_visible            = false;
         $this->order = 0;
         $this->proposed_schedule_allowed_locations = new ArrayCollection();
+        $this->text_color = "000000";
     }
 
     /**

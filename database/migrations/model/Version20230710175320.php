@@ -31,7 +31,7 @@ final class Version20230710175320 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("PresentationCategory") && !$builder->hasColumn("PresentationCategory","TextColor") ) {
             $builder->table('PresentationCategory', function (Table $table) {
-                $table->string('TextColor')->setNotnull(true)->setLength(50)->setDefault("#000000");
+                $table->string('TextColor')->setNotnull(true)->setLength(50)->setDefault("000000");
             });
         }
     }

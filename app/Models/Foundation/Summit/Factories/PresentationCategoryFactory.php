@@ -46,7 +46,7 @@ final class PresentationCategoryFactory
             $track->setColor(trim($data['color']));
 
         if(isset($data['text_color']))
-            $track->setColor(trim($data['text_color']));
+            $track->setTextColor(trim($data['text_color']));
 
         if(isset($data['description']))
             $track->setDescription(trim($data['description']));

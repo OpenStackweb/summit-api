@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\ORM\Mapping AS ORM;
@@ -43,6 +44,8 @@ class PresentationCategory extends SilverstripeBaseModel
 {
 
     use SummitOwned;
+
+    use OrderableChilds;
 
     /**
      * @ORM\Column(name="Title", type="string")
@@ -236,7 +239,7 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $selection_lists;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="selection_lists", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="children", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="ParentPresentationCategoryID", referencedColumnName="ID")
      * @var PresentationCategory
      */
@@ -280,6 +283,17 @@ class PresentationCategory extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    private function getChildrenMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $child = $this->children->matching($criteria)->first();
+        return $child === false ? 0 : $child->getOrder();
+    }
+
+    /**
      * @return PresentationCategory[]|ArrayCollection
      */
     public function getChildren() {
@@ -303,6 +317,8 @@ class PresentationCategory extends SilverstripeBaseModel
      */
     public function addChild(PresentationCategory $child): PresentationCategory {
         if($this->children->contains($child)) return $this;
+        $child->setOrder($this->getChildrenMaxOrder() + 1);
+        $child->setParent($this);
         $this->children->add($child);
         return $this;
     }
@@ -312,9 +328,31 @@ class PresentationCategory extends SilverstripeBaseModel
      * @return $this
      */
     public function removeChild(PresentationCategory $child): PresentationCategory {
-        if(!$this->children->contains($child)) return $this;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $child));
+        $child = $this->children->matching($criteria)->first();
+        if (!$child) return $this;
         $this->children->removeElement($child);
+        $child->clearParent();
+        self::resetOrderForSelectable($this->children);
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLeaf(): bool {
+        return $this->children->isEmpty();
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateSubTrackOrder(PresentationCategory $track, $new_order)
+    {
+        self::recalculateOrderForSelectable($this->children, $track, $new_order);
     }
 
     /**

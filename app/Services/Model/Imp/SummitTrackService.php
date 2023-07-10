@@ -406,4 +406,61 @@ final class SummitTrackService
             $track->clearIcon();
         });
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function addSubTrack(Summit $summit, int $track_id, int $child_track_id, array $data)
+    {
+        return $this->tx_service->transaction(function () use ($summit, $track_id, $child_track_id, $data) {
+
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (is_null($track) || !$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('track not found on summit!');
+            }
+
+            if ($summit->hasRelatedActivities($track)) {
+                throw new ValidationException('can not add a sub track to a track assigned to activities');
+            }
+
+            $child_track = $summit->getPresentationCategory($child_track_id);
+
+            if (is_null($child_track) || !$child_track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('child track not found on summit!');
+            }
+
+            $track->addChild($child_track);
+
+            if (isset($data['order'])) {
+                $new_order = intval($data['order']);
+                $track->recalculateSubTrackOrder($child_track, $new_order);
+            }
+
+            return $track;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeSubTrack(Summit $summit, int $track_id, int $child_track_id): void {
+
+        $this->tx_service->transaction(function () use ($summit, $track_id, $child_track_id) {
+
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (is_null($track) || !$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('track not found on summit!');
+            }
+
+            $child_track = $summit->getPresentationCategory($child_track_id);
+
+            if (is_null($child_track) || !$child_track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('child track not found on summit!');
+            }
+
+            $track->removeChild($child_track);
+        });
+    }
 }

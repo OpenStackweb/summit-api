@@ -6422,4 +6422,26 @@ SQL;
         $this->signs->add($sign);
         $sign->setSummit($this);
     }
+
+    /**
+     * @param PresentationCategory $track
+     * @return bool
+     */
+    public function hasRelatedActivities(PresentationCategory $track): bool{
+        $query = <<<SQL
+SELECT COUNT(e.id) as qty 
+FROM  models\summit\SummitEvent e
+WHERE e.summit = :summit
+AND e.category = :track
+SQL;
+
+        $native_query = $this->getEM()->createQuery($query);
+
+        $native_query->setParameter("summit", $this);
+        $native_query->setParameter("track", $track);
+
+        $res =  $native_query->getResult();
+
+        return count($res) > 0 && $res[0]['qty'] > 0;
+    }
 }

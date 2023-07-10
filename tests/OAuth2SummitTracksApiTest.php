@@ -99,4 +99,65 @@ class OAuth2SummitTracksApiTest extends ProtectedApiTest
         $track = json_decode($content);
         $this->assertTrue(!is_null($track));
     }
+
+    public function testAddSubTrack(){
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'child_track_id' => self::$defaultTrack->getId()
+        ];
+
+        $data = [
+            'order' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTracksApiController@addSubTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track = json_decode($content);
+        $this->assertTrue(!is_null($track));
+    }
+
+    public function testRemoveSubTrack(){
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'child_track_id' => self::$defaultTrack->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTracksApiController@removeSubTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+    }
 }

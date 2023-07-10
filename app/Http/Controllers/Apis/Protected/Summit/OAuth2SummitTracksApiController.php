@@ -15,6 +15,7 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTrackService;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
@@ -70,6 +71,10 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
     }
 
     use ParametrizedGetAll;
+
+    use RequestProcessor;
+
+    use GetAndValidateJsonPayload;
 
     /**
      * @param $summit_id
@@ -588,4 +593,31 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         }
     }
 
+    public function addSubTrack($summit_id, $track_id, $child_track_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $track_id, $child_track_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload([
+                'order' => 'sometimes|integer|min:1'
+            ], true);
+
+            $track = $this->track_service->addSubTrack($summit, intval($track_id), intval($child_track_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($track)->serialize());
+        });
+    }
+
+    public function removeSubTrack($summit_id, $track_id, $child_track_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $track_id, $child_track_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $this->track_service->removeSubTrack($summit, $track_id, $child_track_id);
+
+            return $this->deleted();
+        });
+    }
 }

@@ -31,6 +31,14 @@ trait SummitRegistrationStats
      */
 
     /**
+     * @param int $offset
+     * @return string
+     */
+    private static function getOffsetFormat(int $offset):string{
+        return ($offset > 0 ? '+': '-') . sprintf("%02d",  abs($offset) ).':00';
+    }
+
+    /**
      * @param DateTime|null $now
      * @return float|int
      * @throws \Exception
@@ -42,6 +50,18 @@ trait SummitRegistrationStats
         return $defaultSSTimeZone->getOffset($now) / 3600;
     }
 
+    private function getTimeZoneOffset(){
+        try {
+            $tz = $this->getTimeZone();
+            $offset = $tz->getOffset($this->getBeginDate());
+            Log::debug(sprintf("Summit::getTimeZoneOffset offset %s", $offset));
+            return $offset / 3600;
+        }
+        catch (\Exception $ex){
+            $offset = 0;
+        }
+        return $offset;
+    }
     /**
      * @param string $sql
      * @param string $table
@@ -680,17 +700,36 @@ SQL;
                     break;
             }
 
+            $offset = self::getOffsetFormat($this->getTimeZoneOffset());
+
             $sql = <<<SQL
-SELECT COUNT(SummitAttendee.ID) as qty, DATE_FORMAT(SummitAttendee.SummitHallCheckedInDate, '{$date_format}') AS label 
+SELECT COUNT(SummitAttendee.ID) as qty, 
+       DATE_FORMAT(CONVERT_TZ(SummitAttendee.SummitHallCheckedInDate,'+00:00','{$offset}'), '{$date_format}') AS label 
 FROM SummitAttendee
 WHERE
 SummitID = :summit_id AND
 SummitHallCheckedInDate IS NOT NULL
 SQL;
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", "SummitHallCheckedInDate", $startDate, $endDate);
-            $sql .= " GROUP BY DATE_FORMAT(SummitHallCheckedInDate, '{$date_format}')";
-            $sql .= " ORDER BY DATE_FORMAT(SummitHallCheckedInDate, '{$date_format}')";
+            // date filtering
+            if(!is_null($startDate)){
+                if(!is_null($endDate)) {
+                    $sql .= sprintf(
+                        " AND SummitAttendee.SummitHallCheckedInDate BETWEEN '%s' AND '%s'",
+                        $startDate->format("Y-m-d H:i:s"),
+                        $endDate->format("Y-m-d H:i:s"),
+                    );
+                }
+                else{
+                    $sql .= sprintf(
+                        " AND SummitAttendee.SummitHallCheckedInDate >= '%s'",
+                        $startDate->format("Y-m-d H:i:s"),
+                    );
+                }
+            }
+            // group by
+            $sql .= " GROUP BY DATE_FORMAT(CONVERT_TZ(SummitAttendee.SummitHallCheckedInDate,'+00:00','{$offset}'), '{$date_format}')";
+            $sql .= " ORDER BY DATE_FORMAT(CONVERT_TZ(SummitAttendee.SummitHallCheckedInDate,'+00:00','{$offset}'), '{$date_format}')";
 
             $count_sql = <<<SQL
 SELECT COUNT(*) FROM ({$sql}) T1

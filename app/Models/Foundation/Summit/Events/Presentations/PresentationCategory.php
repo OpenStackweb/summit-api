@@ -126,6 +126,12 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $color;
 
     /**
+     * @ORM\Column(name="TextColor", type="string")
+     * @var string
+     */
+    protected $text_color;
+
+    /**
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation", mappedBy="track", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     protected $proposed_schedule_allowed_locations;
@@ -616,6 +622,23 @@ SQL;
     {
         $this->color = $color;
     }
+
+    /**
+     * @return string
+     */
+    public function getTextColor(): string
+    {
+        return $this->text_color;
+    }
+
+    /**
+     * @param string $text_color
+     */
+    public function setTextColor(string $text_color): void
+    {
+        $this->text_color = $text_color;
+    }
+
 
     /**
      * @return File|null

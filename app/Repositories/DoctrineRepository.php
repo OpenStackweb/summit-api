@@ -63,10 +63,11 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
     /**
      * @param int $id
+     * @p
      * @return IEntity|null|object
      */
-    public function getByIdExclusiveLock($id){
-        return $this->find($id, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+    public function getByIdExclusiveLock($id, bool $refresh = false){
+        return $this->find($id, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE, null, $refresh);
     }
 
     /**
@@ -382,9 +383,10 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      */
     public function find($id, $lockMode = null, $lockVersion = null, $refresh = false)
     {
-        $res = $this->getEntityManager()->find($this->_entityName, $id, $lockMode, $lockVersion);
+        $em = $this->getEntityManager();
+        $res = $em->find($this->_entityName, $id, $lockMode, $lockVersion);
         if($refresh)
-            $this->getEntityManager()->refresh($res);
+            $em->refresh($res);
         return $res;
     }
 

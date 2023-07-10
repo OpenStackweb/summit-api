@@ -34,9 +34,10 @@ interface IBaseRepository
 
     /**
      * @param int $id
+     * @param bool $refresh
      * @return IEntity
      */
-    public function getByIdExclusiveLock($id);
+    public function getByIdExclusiveLock($id, bool $refresh = false);
 
     /**
      * @param IEntity $entity

@@ -4019,12 +4019,13 @@ final class SummitOrderService
 
         $this->tx_service->transaction(function () use ($orderId) {
 
-            Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - trying to get order id %s", $orderId));
+            Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation: trying to get order id %s", $orderId));
 
-            $order = $this->order_repository->getByIdExclusiveLock($orderId);
+            // lock it and refresh it
+            $order = $this->order_repository->getByIdExclusiveLock($orderId, true);
 
             if (is_null($order) || !$order instanceof SummitOrder) {
-                Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation order %s not found.", $orderId));
+                Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation: order %s not found.", $orderId));
             }
 
             $summit = $this->summit_repository->getByIdRefreshed($order->getSummitId());
@@ -4035,9 +4036,12 @@ final class SummitOrderService
             Log::debug(
                 sprintf
                 (
-                    "SummitOrderService::processOrderPaymentConfirmation - got order id %s nbr %s shouldSendOrderEmail %b shouldSendTicketEmail %b",
+                    "SummitOrderService::processOrderPaymentConfirmation: got order id %s nbr %s fname %s lname %s email %s shouldSendOrderEmail %b shouldSendTicketEmail %b",
                     $orderId,
                     $order->getNumber(),
+                    $order->getOwnerFirstName(),
+                    $order->getOwnerSurname(),
+                    $order->getOwnerEmail(),
                     $shouldSendOrderEmail,
                     $shouldSendTicketEmail
                 )
@@ -4047,26 +4051,36 @@ final class SummitOrderService
 
             if (!$order->hasOwner()) {
                 // owner is not registered ...
-                Log::debug("SummitOrderService::processOrderPaymentConfirmation - order has not owner set");
+                Log::debug("SummitOrderService::processOrderPaymentConfirmation: order has not owner set");
                 $ownerEmail = $order->getOwnerEmail();
                 // check if we have a member on db
-                Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - trying to get email %s from db", $ownerEmail));
+                Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation: trying to get email %s from db", $ownerEmail));
                 $member = $this->member_repository->getByEmail($ownerEmail);
 
                 if (!is_null($member)) {
                     // its turns out that email was registered as a member
                     // set the owner and move on
-                    Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - member %s found at db", $ownerEmail));
+                    Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation: member %s found at db", $ownerEmail));
                     $order->setOwner($member);
 
                     // send email to owner;
                     if ($shouldSendOrderEmail && !$order->isOfflineOrder()) {
-                        Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner");
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                            "SummitOrderService::processOrderPaymentConfirmation: order %s sending email to owner %s %s (%s)",
+                                $order->getId(),
+                                $order->getOwnerFirstName(),
+                                $order->getOwnerSurname(),
+                                $order->getOwnerEmail()
+                            )
+                        );
                         $this->sendExistentSummitOrderOwnerEmail($order);
                     }
 
                     if ($shouldSendTicketEmail && !$order->isOfflineOrder()) {
-                        Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
+                        Log::debug("SummitOrderService::processOrderPaymentConfirmation: sending email to attendees");
                         $this->sendAttendeesInvitationEmail($order);
                     }
 
@@ -4149,7 +4163,17 @@ final class SummitOrderService
             }
 
             if ($shouldSendOrderEmail && !$order->isOfflineOrder()) {
-                Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (REGISTERED)");
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processOrderPaymentConfirmation: order %s sending email to owner %s %s (%s) (REGISTERED)",
+                        $order->getId(),
+                        $order->getOwnerFirstName(),
+                        $order->getOwnerSurname(),
+                        $order->getOwnerEmail()
+                    )
+                );
                 $this->sendExistentSummitOrderOwnerEmail($order);
             }
 
@@ -4171,8 +4195,18 @@ final class SummitOrderService
     {
         $summit = $order->getSummit();
         // we should mark the associated invitation as processed
-        Log::debug(sprintf("SummitOrderService::processInvitation trying to get invitation for email %s.", $order->getOwnerEmail()));
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::processInvitation: trying to get invitation for email %s order %s.",
+                $order->getOwnerEmail(),
+                $order->getId()
+            )
+        );
+
         $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
+
         if (is_null($invitation) || $invitation->isAccepted()) {
             Log::debug(sprintf("SummitOrderService::processInvitation invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
             return $order;

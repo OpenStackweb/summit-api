@@ -250,7 +250,7 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $selection_lists;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="children", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="subtracks", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="ParentPresentationCategoryID", referencedColumnName="ID")
      * @var PresentationCategory
      */
@@ -258,8 +258,9 @@ class PresentationCategory extends SilverstripeBaseModel
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\PresentationCategory", mappedBy="parent", cascade={"persist","remove"}, fetch="EXTRA_LAZY")
+     * @var PresentationCategory[]
      */
-    protected $children;
+    protected $subtracks;
 
     /**
      * @return PresentationCategory|null
@@ -286,7 +287,7 @@ class PresentationCategory extends SilverstripeBaseModel
     {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
-        $child = $this->children->matching($criteria)->first();
+        $child = $this->subtracks->matching($criteria)->first();
         return $child === false ? 0 : $child->getOrder();
     }
 
@@ -296,7 +297,7 @@ class PresentationCategory extends SilverstripeBaseModel
     public function getSubTracks(){
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'ASC']);
-        return $this->children->matching($criteria);
+        return $this->subtracks->matching($criteria);
     }
 
     /**
@@ -306,7 +307,7 @@ class PresentationCategory extends SilverstripeBaseModel
     public function getChildById(int $child_id): ?PresentationCategory {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $child_id));
-        $child = $this->children->matching($criteria)->first();
+        $child = $this->subtracks->matching($criteria)->first();
         return $child === false ? null : $child;
     }
 
@@ -315,10 +316,10 @@ class PresentationCategory extends SilverstripeBaseModel
      * @return $this
      */
     public function addChild(PresentationCategory $child): PresentationCategory {
-        if($this->children->contains($child)) return $this;
+        if($this->subtracks->contains($child)) return $this;
         $child->setOrder($this->getChildrenMaxOrder() + 1);
         $child->setParent($this);
-        $this->children->add($child);
+        $this->subtracks->add($child);
         return $this;
     }
 
@@ -329,11 +330,11 @@ class PresentationCategory extends SilverstripeBaseModel
     public function removeChild(PresentationCategory $child): PresentationCategory {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $child));
-        $child = $this->children->matching($criteria)->first();
+        $child = $this->subtracks->matching($criteria)->first();
         if (!$child) return $this;
-        $this->children->removeElement($child);
+        $this->subtracks->removeElement($child);
         $child->clearParent();
-        self::resetOrderForSelectable($this->children);
+        self::resetOrderForSelectable($this->subtracks);
         return $this;
     }
 
@@ -341,7 +342,7 @@ class PresentationCategory extends SilverstripeBaseModel
      * @return bool
      */
     public function isLeaf(): bool {
-        return $this->children->isEmpty();
+        return $this->subtracks->isEmpty();
     }
 
     /**
@@ -351,14 +352,14 @@ class PresentationCategory extends SilverstripeBaseModel
      */
     public function recalculateSubTrackOrder(PresentationCategory $track, $new_order)
     {
-        self::recalculateOrderForSelectable($this->children, $track, $new_order);
+        self::recalculateOrderForSelectable($this->subtracks, $track, $new_order);
     }
 
     /**
      * @return $this
      */
     public function clearChildren(): PresentationCategory {
-        $this->children->clear();
+        $this->subtracks->clear();
         return $this;
     }
 
@@ -430,6 +431,8 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->track_chairs              = new ArrayCollection;
         $this->selection_lists           = new ArrayCollection();
         $this->allowed_access_levels     = new ArrayCollection();
+        $this->subtracks = new ArrayCollection();
+        $this->proposed_schedule_allowed_locations = new ArrayCollection();
         $this->session_count             = 0;
         $this->alternate_count           = 0;
         $this->lightning_alternate_count = 0;
@@ -437,9 +440,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->chair_visible             = false;
         $this->voting_visible            = false;
         $this->order = 0;
-        $this->proposed_schedule_allowed_locations = new ArrayCollection();
         $this->text_color = "000000";
-        $this->children = new ArrayCollection();
     }
 
     /**

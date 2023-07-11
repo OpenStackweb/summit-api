@@ -430,6 +430,10 @@ final class SummitTrackService
                 throw new EntityNotFoundException('Sub track not found on summit.');
             }
 
+            if($child_track->hasSubTracks()){
+                throw new ValidationException('Sub track already has sub tracks.');
+            }
+
             $track->addChild($child_track);
 
             if (isset($data['order'])) {

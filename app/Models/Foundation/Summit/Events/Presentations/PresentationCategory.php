@@ -1015,4 +1015,8 @@ SQL;
     public function setProposedScheduleTransitionTime(?int $proposed_schedule_transition_time) {
         $this->proposed_schedule_transition_time = $proposed_schedule_transition_time;
     }
+
+    public function hasSubTracks():bool{
+        return $this->subtracks->count() > 0;
+    }
 }

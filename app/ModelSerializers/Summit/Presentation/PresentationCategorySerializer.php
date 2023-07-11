@@ -88,7 +88,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             $proposed_schedule_allowed_locations[] = intval($allowed_location->getId());
         }
 
-        foreach ($category->getChildren() as $children) {
+        foreach ($category->getSubTracks() as $children) {
             $subtracks[] = intval($children->getId());
         }
 
@@ -163,11 +163,18 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
                         }
                         break;
+                    case 'parent':{
+                        if($category->hasParent()) {
+                            unset($values['parent_id']);
+                            $values['parent'] = SerializerRegistry::getInstance()->getSerializer($category->getParent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                    }
+                    break;
                     case 'subtracks':
                         {
                             $subtracks = [];
                             unset($values['subtracks']);
-                            foreach ($category->getChildren() as $children) {
+                            foreach ($category->getSubTracks() as $children) {
                                 $subtracks[] = SerializerRegistry::getInstance()->getSerializer($children)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['subtracks'] = $subtracks;

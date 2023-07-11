@@ -23,6 +23,7 @@ use models\exceptions\ValidationException;
 use models\main\File;
 use models\main\Member;
 use models\main\Tag;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Main\IOrderable;
@@ -46,6 +47,16 @@ class PresentationCategory extends SilverstripeBaseModel
     use SummitOwned;
 
     use OrderableChilds;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getParentId' => 'parent',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasParent' => 'parent',
+    ];
 
     /**
      * @ORM\Column(name="Title", type="string")
@@ -258,20 +269,6 @@ class PresentationCategory extends SilverstripeBaseModel
     }
 
     /**
-     * @return int
-     */
-    public function getParentId(): int
-    {
-        try{
-            if(is_null($this->parent)) return 0;
-            return $this->parent->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
      * @param PresentationCategory $parent
      */
     public function setParent(PresentationCategory $parent) {
@@ -296,8 +293,10 @@ class PresentationCategory extends SilverstripeBaseModel
     /**
      * @return PresentationCategory[]|ArrayCollection
      */
-    public function getChildren() {
-        return $this->children;
+    public function getSubTracks(){
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->children->matching($criteria);
     }
 
     /**

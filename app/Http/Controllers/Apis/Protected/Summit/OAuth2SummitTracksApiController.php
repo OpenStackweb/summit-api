@@ -16,6 +16,7 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISummitTrackService;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
@@ -94,6 +95,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'group_name' => ['=@', '==', '@@'],
                     'voting_visible' => ['=='],
                     'chair_visible' => ['=='],
+                    'has_parent'  => ['=='],
+                    'has_subtracks' => ['=='],
                     'has_proposed_schedule_allowed_locations' => ['=='],
                 ];
             },
@@ -103,8 +106,10 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'description' => 'sometimes|string',
                     'code' => 'sometimes|string',
                     'group_name' => 'sometimes|string',
-                    'voting_visible' => 'sometimes|boolean',
-                    'chair_visible' => 'sometimes|boolean',
+                    'voting_visible' =>  ['sometimes', new Boolean],
+                    'chair_visible' =>  ['sometimes', new Boolean],
+                    'has_parent'  => ['sometimes', new Boolean],
+                    'has_subtracks' =>  ['sometimes', new Boolean],
                     'has_proposed_schedule_allowed_locations'=> 'sometimes|required|string|in:true,false',
                 ];
             },
@@ -177,6 +182,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'voting_visible' => ['=='],
                     'chair_visible' => ['=='],
                     'has_proposed_schedule_allowed_locations' => ['=='],
+                    'has_parent'  => ['=='],
+                    'has_subtracks' => ['=='],
                 ]);
             }
 
@@ -187,8 +194,10 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'description' => 'sometimes|string',
                 'code' => 'sometimes|string',
                 'group_name' => 'sometimes|string',
-                'voting_visible' => 'sometimes|boolean',
-                'chair_visible' => 'sometimes|boolean',
+                'voting_visible' =>  ['sometimes', new Boolean],
+                'chair_visible' =>  ['sometimes', new Boolean],
+                'has_parent'  => ['sometimes', new Boolean],
+                'has_subtracks' =>  ['sometimes', new Boolean],
                 'has_proposed_schedule_allowed_locations'=> 'sometimes|boolean',
             ]);
 
@@ -615,7 +624,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
-            $this->track_service->removeSubTrack($summit, $track_id, $child_track_id);
+            $this->track_service->removeSubTrack($summit, intval($track_id), intval($child_track_id));
 
             return $this->deleted();
         });

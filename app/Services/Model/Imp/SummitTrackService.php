@@ -416,18 +416,18 @@ final class SummitTrackService
 
             $track = $summit->getPresentationCategory($track_id);
 
-            if (is_null($track) || !$track instanceof PresentationCategory) {
-                throw new EntityNotFoundException('track not found on summit!');
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('Track not found on summit.');
             }
 
             if ($summit->hasRelatedActivities($track)) {
-                throw new ValidationException('can not add a sub track to a track assigned to activities');
+                throw new ValidationException('Can not add a sub track to a track assigned to activities.');
             }
 
             $child_track = $summit->getPresentationCategory($child_track_id);
 
-            if (is_null($child_track) || !$child_track instanceof PresentationCategory) {
-                throw new EntityNotFoundException('child track not found on summit!');
+            if (!$child_track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('Sub track not found on summit.');
             }
 
             $track->addChild($child_track);
@@ -450,14 +450,14 @@ final class SummitTrackService
 
             $track = $summit->getPresentationCategory($track_id);
 
-            if (is_null($track) || !$track instanceof PresentationCategory) {
-                throw new EntityNotFoundException('track not found on summit!');
+            if (!$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('Track not found on summit.');
             }
 
             $child_track = $summit->getPresentationCategory($child_track_id);
 
-            if (is_null($child_track) || !$child_track instanceof PresentationCategory) {
-                throw new EntityNotFoundException('child track not found on summit!');
+            if (!$child_track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('Sub track not found on summit.');
             }
 
             $track->removeChild($child_track);

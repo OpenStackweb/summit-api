@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\EmailTemplatesSchemaSerializerRegistry;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
 use ModelSerializers\SilverStripeSerializer;
 
 /**
@@ -27,4 +30,21 @@ class SummitEmailEventFlowSerializer extends SilverStripeSerializer
         'EventTypeName' => 'event_type_name:json_string',
         'EmailRecipient' => 'recipient:json_string'
     );
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    {
+        $event_flow = $this->object;
+        if (!$event_flow instanceof SummitEmailEventFlow) return [];
+
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        $values['template_schema'] = EmailTemplatesSchemaSerializerRegistry::getInstance()->serialize($event_flow->getEventType()->getSlug());
+        return $values;
+    }
 }

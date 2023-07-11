@@ -614,7 +614,12 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             $track = $this->track_service->addSubTrack($summit, intval($track_id), intval($child_track_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($track)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($track)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         });
     }
 

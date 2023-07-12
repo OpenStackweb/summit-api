@@ -1652,6 +1652,7 @@ class Summit extends SilverstripeBaseModel
     private function getTrackMaxOrder(): int
     {
         $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->isNull('parent'));
         $criteria->orderBy(['order' => 'DESC']);
         $track = $this->presentation_categories->matching($criteria)->first();
         return $track === false ? 0 : $track->getOrder();
@@ -1664,7 +1665,9 @@ class Summit extends SilverstripeBaseModel
      */
     public function recalculateTrackOrder(PresentationCategory $track, $new_order)
     {
-        self::recalculateOrderForSelectable($this->presentation_categories, $track, $new_order);
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->isNull('parent'));
+        self::recalculateOrderForSelectable($this->presentation_categories->matching($criteria), $track, $new_order);
     }
 
     /**

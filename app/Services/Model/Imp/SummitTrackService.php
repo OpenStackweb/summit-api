@@ -424,6 +424,10 @@ final class SummitTrackService
                 throw new ValidationException('Can not add a sub track to a track assigned to activities.');
             }
 
+            if($track->hasParent()){
+                throw new ValidationException('Parent Track already has a parent.');
+            }
+
             $child_track = $summit->getPresentationCategory($child_track_id);
 
             if (!$child_track instanceof PresentationCategory) {

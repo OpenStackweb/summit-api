@@ -15,6 +15,7 @@
 
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
+use models\summit\SummitTicketType;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
@@ -393,5 +394,38 @@ DQL;
         ]);
 
         $this->assertTrue(!is_null($filter));
+    }
+
+    public function testFilterLike(){
+        $filter_input = [
+            'name@@test',
+        ];
+
+        $filter = FilterParser::parse($filter_input, [
+            'name' => ['==','=@','@@'],
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("tt")
+            ->select("tt")
+            ->from(\models\summit\SummitTicketType::class, "tt")
+            ->leftJoin('tt.summit', 's');
+
+        $filter->apply2Query($query, [
+            'name'        => 'tt.name:json_string',
+            'description' => 'tt.description:json_string',
+            'external_id' => 'tt.external_id:json_string',
+            'audience'    => 'tt.audience:json_string',
+        ]);
+
+        $dql = $query->getDQL();
+        $expected_dql = <<<DQL
+SELECT DISTINCT e FROM models\summit\SummitAttendee e LEFT JOIN e.summit s WHERE ( (  ( e.summit_hall_checked_in = 1 )  )  OR (( e.summit_hall_checked_in_date >= :param_1 AND e.summit_hall_checked_in_date <= :param_2  ))) AND s.id = :value_1
+DQL;
+
+        $this->assertNotEmpty($dql);
+        $this->assertEquals($expected_dql, $dql);
     }
 }

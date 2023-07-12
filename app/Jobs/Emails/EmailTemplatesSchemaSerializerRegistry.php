@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\BookableRooms\AbstractBookableRoomReservationEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationPaymentConfirmedEmail;
@@ -29,6 +31,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerCreationEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
@@ -76,71 +79,71 @@ final class EmailTemplatesSchemaSerializerRegistry
     {
         //Bookable Rooms
 
-        $this->registry[BookableRoomReservationCanceledEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[BookableRoomReservationCreatedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[BookableRoomReservationPaymentConfirmedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[BookableRoomReservationRefundAcceptedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[BookableRoomReservationRefundRequestedAdminEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[BookableRoomReservationRefundRequestedOwnerEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[BookableRoomReservationCanceledEmail::EVENT_SLUG] = AbstractBookableRoomReservationEmail::class;
+        $this->registry[BookableRoomReservationCreatedEmail::EVENT_SLUG] = AbstractBookableRoomReservationEmail::class;
+        $this->registry[BookableRoomReservationPaymentConfirmedEmail::EVENT_SLUG] = AbstractBookableRoomReservationEmail::class;
+        $this->registry[BookableRoomReservationRefundAcceptedEmail::EVENT_SLUG] = AbstractBookableRoomReservationEmail::class;
+        $this->registry[BookableRoomReservationRefundRequestedAdminEmail::EVENT_SLUG] = AbstractBookableRoomReservationEmail::class;
+        $this->registry[BookableRoomReservationRefundRequestedOwnerEmail::EVENT_SLUG] = AbstractBookableRoomReservationEmail::class;
 
         //Elections
 
-        $this->registry[NominationEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[NominationEmail::EVENT_SLUG] = NominationEmail::class;
 
         //Presentation Selections
 
-        $this->registry[PresentationCategoryChangeRequestCreatedEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[PresentationCategoryChangeRequestCreatedEmail::EVENT_SLUG] = PresentationCategoryChangeRequestCreatedEmail::class;
 
         //Presentation Submissions
 
-        $this->registry[InviteSubmissionEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[ImportEventSpeakerEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationCreatorNotificationEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationModeratorNotificationEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[PresentationSpeakerNotificationEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SpeakerCreationEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SpeakerEditPermissionApprovedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SpeakerEditPermissionRejectedEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SpeakerEditPermissionRequestedEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[InviteSubmissionEmail::EVENT_SLUG] = InviteSubmissionEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
+        $this->registry[ImportEventSpeakerEmail::EVENT_SLUG] = ImportEventSpeakerEmail::class;
+        $this->registry[PresentationCreatorNotificationEmail::EVENT_SLUG] = PresentationCreatorNotificationEmail::class;
+        $this->registry[PresentationModeratorNotificationEmail::EVENT_SLUG] = PresentationModeratorNotificationEmail::class;
+        $this->registry[PresentationSpeakerNotificationEmail::EVENT_SLUG] = PresentationSpeakerNotificationEmail::class;
+        $this->registry[SpeakerCreationEmail::EVENT_SLUG] = SpeakerCreationEmail::class;
+        $this->registry[SpeakerEditPermissionApprovedEmail::EVENT_SLUG] = SpeakerEditPermissionApprovedEmail::class;
+        $this->registry[SpeakerEditPermissionRejectedEmail::EVENT_SLUG] = SpeakerEditPermissionRejectedEmail::class;
+        $this->registry[SpeakerEditPermissionRequestedEmail::EVENT_SLUG] = SpeakerEditPermissionRequestedEmail::class;
 
         //Proposed Schedule
 
-        $this->registry[SubmitForReviewEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[UnsubmitForReviewEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[SubmitForReviewEmail::EVENT_SLUG] = SubmitForReviewEmail::class;
+        $this->registry[UnsubmitForReviewEmail::EVENT_SLUG] = UnsubmitForReviewEmail::class;
 
         //Registration
 
-        $this->registry[GenericSummitAttendeeEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[InviteAttendeeTicketEditionMail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[RevocationTicketEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitAttendeeTicketEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[GenericSummitAttendeeEmail::EVENT_SLUG] = GenericSummitAttendeeEmail::class;
+        $this->registry[InviteAttendeeTicketEditionMail::EVENT_SLUG] = InviteAttendeeTicketEditionMail::class;
+        $this->registry[RevocationTicketEmail::EVENT_SLUG] = RevocationTicketEmail::class;
+        $this->registry[SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG] = SummitAttendeeAllTicketsEditionEmail::class;
+        $this->registry[SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG] = SummitAttendeeRegistrationIncompleteReminderEmail::class;
+        $this->registry[SummitAttendeeTicketEmail::EVENT_SLUG] = SummitAttendeeTicketEmail::class;
 
-        $this->registry[SuccessfulIIngestionEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[UnsuccessfulIIngestionEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[SuccessfulIIngestionEmail::EVENT_SLUG] = SuccessfulIIngestionEmail::class;
+        $this->registry[UnsuccessfulIIngestionEmail::EVENT_SLUG] = UnsuccessfulIIngestionEmail::class;
 
-        $this->registry[InviteSummitRegistrationEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[ReInviteSummitRegistrationEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[InviteSummitRegistrationEmail::EVENT_SLUG] = InviteSummitRegistrationEmail::class;
+        $this->registry[ReInviteSummitRegistrationEmail::EVENT_SLUG] = ReInviteSummitRegistrationEmail::class;
 
-        $this->registry[SummitOrderRefundRequestAdmin::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitOrderRefundRequestOwner::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitTicketRefundRequestAdmin::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitTicketRefundRequestOwner::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[SummitOrderRefundRequestAdmin::EVENT_SLUG] = SummitOrderRefundRequestAdmin::class;
+        $this->registry[SummitOrderRefundRequestOwner::EVENT_SLUG] = SummitOrderRefundRequestOwner::class;
+        $this->registry[SummitTicketRefundRequestAdmin::EVENT_SLUG] = SummitTicketRefundRequestAdmin::class;
+        $this->registry[SummitTicketRefundRequestOwner::EVENT_SLUG] = SummitTicketRefundRequestOwner::class;
 
-        $this->registry[SummitOrderReminderEmail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[SummitTicketReminderEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[SummitOrderReminderEmail::EVENT_SLUG] = SummitOrderReminderEmail::class;
+        $this->registry[SummitTicketReminderEmail::EVENT_SLUG] = SummitTicketReminderEmail::class;
 
-        $this->registry[RegisteredMemberOrderPaidMail::EVENT_SLUG] = AbstractEmailJob::class;
-        $this->registry[UnregisteredMemberOrderPaidMail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[RegisteredMemberOrderPaidMail::EVENT_SLUG] = RegisteredMemberOrderPaidMail::class;
+        $this->registry[UnregisteredMemberOrderPaidMail::EVENT_SLUG] = UnregisteredMemberOrderPaidMail::class;
 
         //Schedule
 
-        $this->registry[ShareEventEmail::EVENT_SLUG] = AbstractEmailJob::class;
+        $this->registry[ShareEventEmail::EVENT_SLUG] = ShareEventEmail::class;
     }
 
     /**

@@ -43,6 +43,7 @@ final class SummitAttendeeFactory
      * @param SummitAttendee $attendee
      * @param array $payload
      * @param Member|null $member
+     * @param bool $validate_extra_questions
      * @return SummitAttendee
      * @throws ValidationException
      */
@@ -51,7 +52,8 @@ final class SummitAttendeeFactory
         Summit         $summit,
         SummitAttendee $attendee,
         array          $payload,
-        ?Member        $member = null
+        ?Member        $member = null,
+        bool           $validate_extra_questions = true
     )
     {
         $company_repository = EntityManager::getRepository(Company::class);
@@ -130,7 +132,7 @@ final class SummitAttendeeFactory
 
         if (count($extra_questions)) {
             $res = $attendee->hadCompletedExtraQuestions($extra_questions);
-            if (!$res) {
+            if (!$res && $validate_extra_questions) {
                 throw new ValidationException("You neglected to fill in all mandatory questions for the attendee.");
             }
         }

@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -1040,12 +1041,14 @@ final class OAuth2SummitOrdersApiController
                 return [
                     'order_id' => ['=='],
                     'order_owner_id' => ['=='],
+                    'is_active' => ['=='],
                 ];
             },
             function () {
                 return [
                     'order_id' => 'sometimes|integer',
                     'order_owner_id' => 'sometimes|integer',
+                    'is_active' => ['sometimes', new Boolean()]
                 ];
             },
             function () {
@@ -1063,7 +1066,6 @@ final class OAuth2SummitOrdersApiController
                     $filter->addFilterCondition(FilterElement::makeEqual('order_id', intval($order_id)));
                     $filter->addFilterCondition(FilterElement::makeEqual('order_owner_id', $owner->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('status', IOrderConstants::PaidStatus));
-                    $filter->addFilterCondition(FilterElement::makeEqual('is_active', 1));
                 }
                 return $filter;
             },

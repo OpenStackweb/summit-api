@@ -231,7 +231,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             // check if attendee already exist for this summit
 
-            SummitAttendeeFactory::populate($summit, $attendee , $data, $member);
+            SummitAttendeeFactory::populate($summit, $attendee , $data, $member, false);
             $attendee->updateStatus();
             return $attendee;
         });

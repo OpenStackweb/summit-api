@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\ORM\Mapping AS ORM;
@@ -22,6 +23,7 @@ use models\exceptions\ValidationException;
 use models\main\File;
 use models\main\Member;
 use models\main\Tag;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Main\IOrderable;
@@ -43,6 +45,18 @@ class PresentationCategory extends SilverstripeBaseModel
 {
 
     use SummitOwned;
+
+    use OrderableChilds;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getParentId' => 'parent',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasParent' => 'parent',
+    ];
 
     /**
      * @ORM\Column(name="Title", type="string")
@@ -236,6 +250,120 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $selection_lists;
 
     /**
+     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="subtracks", fetch="EXTRA_LAZY")
+     * @ORM\JoinColumn(name="ParentPresentationCategoryID", referencedColumnName="ID")
+     * @var PresentationCategory
+     */
+    protected $parent;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationCategory", mappedBy="parent", cascade={"persist","remove"}, fetch="EXTRA_LAZY")
+     * @var PresentationCategory[]
+     */
+    protected $subtracks;
+
+    /**
+     * @return PresentationCategory|null
+     */
+    public function getParent(): ?PresentationCategory {
+        return $this->parent;
+    }
+
+    /**
+     * @param PresentationCategory $parent
+     */
+    public function setParent(PresentationCategory $parent) {
+        $this->parent = $parent;
+    }
+
+    public function clearParent() {
+        $this->parent = null;
+    }
+
+    /**
+     * @return int
+     */
+    private function getChildrenMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $child = $this->subtracks->matching($criteria)->first();
+        return $child === false ? 0 : $child->getOrder();
+    }
+
+    /**
+     * @return PresentationCategory[]|ArrayCollection
+     */
+    public function getSubTracks(){
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->subtracks->matching($criteria);
+    }
+
+    /**
+     * @param int $child_id
+     * @return PresentationCategory|null
+     */
+    public function getChildById(int $child_id): ?PresentationCategory {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $child_id));
+        $child = $this->subtracks->matching($criteria)->first();
+        return $child === false ? null : $child;
+    }
+
+    /**
+     * @param PresentationCategory $child
+     * @return $this
+     */
+    public function addChild(PresentationCategory $child): PresentationCategory {
+        if($this->subtracks->contains($child)) return $this;
+        $child->setOrder($this->getChildrenMaxOrder() + 1);
+        $child->setParent($this);
+        $this->subtracks->add($child);
+        return $this;
+    }
+
+    /**
+     * @param PresentationCategory $child
+     * @return $this
+     */
+    public function removeChild(PresentationCategory $child): PresentationCategory {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $child));
+        $child = $this->subtracks->matching($criteria)->first();
+        if (!$child) return $this;
+        $this->subtracks->removeElement($child);
+        $child->clearParent();
+        self::resetOrderForSelectable($this->subtracks);
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLeaf(): bool {
+        return $this->subtracks->isEmpty();
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateSubTrackOrder(PresentationCategory $track, $new_order)
+    {
+        self::recalculateOrderForSelectable($this->subtracks, $track, $new_order);
+    }
+
+    /**
+     * @return $this
+     */
+    public function clearChildren(): PresentationCategory {
+        $this->subtracks->clear();
+        return $this;
+    }
+
+    /**
      * @return TrackQuestionTemplate[]|ArrayCollection
      */
     public function getExtraQuestions(){
@@ -303,6 +431,8 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->track_chairs              = new ArrayCollection;
         $this->selection_lists           = new ArrayCollection();
         $this->allowed_access_levels     = new ArrayCollection();
+        $this->subtracks = new ArrayCollection();
+        $this->proposed_schedule_allowed_locations = new ArrayCollection();
         $this->session_count             = 0;
         $this->alternate_count           = 0;
         $this->lightning_alternate_count = 0;
@@ -310,7 +440,6 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->chair_visible             = false;
         $this->voting_visible            = false;
         $this->order = 0;
-        $this->proposed_schedule_allowed_locations = new ArrayCollection();
         $this->text_color = "000000";
     }
 
@@ -885,5 +1014,9 @@ SQL;
 
     public function setProposedScheduleTransitionTime(?int $proposed_schedule_transition_time) {
         $this->proposed_schedule_transition_time = $proposed_schedule_transition_time;
+    }
+
+    public function hasSubTracks():bool{
+        return $this->subtracks->count() > 0;
     }
 }

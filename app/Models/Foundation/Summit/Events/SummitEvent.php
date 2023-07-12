@@ -419,6 +419,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function setCategory(PresentationCategory $category)
     {
+        if (!$category->isLeaf())
+            throw new ValidationException("Only leaf tracks can be assigned to activities.");
+
         $this->category = $category;
         return $this;
     }

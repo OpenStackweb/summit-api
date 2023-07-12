@@ -1641,7 +1641,9 @@ class Summit extends SilverstripeBaseModel
      */
     public function getPresentationCategories()
     {
-        return $this->presentation_categories;
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->presentation_categories->matching($criteria);
     }
 
     /**
@@ -6421,5 +6423,17 @@ SQL;
         if($this->signs->contains($sign)) return;
         $this->signs->add($sign);
         $sign->setSummit($this);
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @return bool
+     */
+    public function hasRelatedActivities(PresentationCategory $track): bool{
+        $criteria = new Criteria();
+        return $this->events->matching
+            (
+                $criteria->where($criteria->expr()->eq('category', $track)
+            ))->count() > 0;
     }
 }

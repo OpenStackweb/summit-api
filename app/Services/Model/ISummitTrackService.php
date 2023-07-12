@@ -101,4 +101,22 @@ interface ISummitTrackService
      */
     public function removeTrackIcon(Summit $summit, $track_id):void;
 
+    /**
+     * @param Summit $summit
+     * @param int $track_id
+     * @param int $child_track_id
+     * @param array $data
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addSubTrack(Summit $summit, int $track_id, int $child_track_id, array $data);
+
+    /**
+     * @param Summit $summit
+     * @param int $track_id
+     * @param int $child_track_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function removeSubTrack(Summit $summit, int $track_id, int $child_track_id): void;
 }

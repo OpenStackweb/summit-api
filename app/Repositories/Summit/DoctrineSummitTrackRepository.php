@@ -63,6 +63,28 @@ final class DoctrineSummitTrackRepository
                     ),
                 ]
             ),
+            'has_parent'=>  new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "t.parent is not null",
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "t.parent is null"
+                    ),
+                ]
+            ),
+            'has_subtracks'=>  new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "SIZE(t.children) > 0",
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "SIZE(t.children) = 0"
+                    ),
+                ]
+            ),
         ];
     }
 

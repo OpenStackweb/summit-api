@@ -1676,6 +1676,13 @@ Route::group(array('prefix' => 'summits'), function () {
                         });
                     });
                 });
+
+                Route::group(['prefix' => 'sub-tracks'], function () {
+                    Route::group(['prefix' => '{child_track_id}'], function () {
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTracksApiController@addSubTrack']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTracksApiController@removeSubTrack']);
+                    });
+                });
             });
         });
 

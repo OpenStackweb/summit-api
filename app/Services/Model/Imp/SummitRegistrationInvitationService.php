@@ -517,10 +517,9 @@ final class SummitRegistrationInvitationService
                 Log::debug(sprintf("SummitRegistrationInvitationService::send page %s", $page));
                 if($filter->hasFilter("is_sent")){
                     $isSentFilter = $filter->getUniqueFilter("is_sent");
-                    $filterValue = $isSentFilter->getValue();
-
-                    Log::debug(sprintf("SummitRegistrationInvitationService::send is_sent filter value %s", $filterValue));
-                    if($filterValue == 'false') {
+                    $is_sent = $isSentFilter->getBooleanValue();
+                    Log::debug(sprintf("SummitRegistrationInvitationService::send is_sent filter value %b", $is_sent));
+                    if(!$is_sent) {
                         // we need to reset the page bc the page processing will mark the current page as "sent"
                         // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
                         Log::debug("SummitRegistrationInvitationService::send resetting page bc is_sent filter is false");

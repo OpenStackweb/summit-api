@@ -67,11 +67,11 @@ class FilterElement extends AbstractFilterElement
         if(is_array($this->value)){
             $res = [];
             foreach ($this->value as $val){
-                $res[]= empty($val) ? '' : filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+                $res[]= empty($val) ? '' : to_boolean($val);
             }
             return $res;
         }
-        return filter_var($this->value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+        return to_boolean($this->value);
     }
     /**
      * @return mixed

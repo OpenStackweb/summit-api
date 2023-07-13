@@ -18,6 +18,7 @@ use App\Jobs\Emails\SummitAttendeeTicketEmail;
 use App\libs\Utils\PunnyCodeHelper;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
@@ -1129,14 +1130,16 @@ SQL;
     }
 
     /**
+     * @param bool $exclude_deactivated_tickets
      * @return array
      */
-    public function getAllowedTicketTypes(): array
+    public function getAllowedTicketTypes(bool $exclude_deactivated_tickets = true): array
     {
         $res = [];
         foreach($this->tickets as $ticket){
             $ticket_type = $ticket->getTicketType();
-            if($ticket->isActive() && $ticket->isPaid() && !isset($res[$ticket_type->getId()])) {
+            if($exclude_deactivated_tickets && !$ticket->isActive()) continue;
+            if($ticket->isPaid() && !isset($res[$ticket_type->getId()])) {
                 $res[$ticket_type->getId()] = $ticket_type;
             }
         }
@@ -1156,6 +1159,8 @@ INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitAc
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType_AccessLevels.SummitBadgeTypeID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
+    AND SummitAttendeeTicket.Status = 'Paid'
+    AND SummitAttendeeTicket.IsActive = 1
 SQL;
         $rsm = new ResultSetMappingBuilder($this->getEM());
         $rsm->addRootEntityFromClassMetadata(SummitAccessLevelType::class, 'E');
@@ -1169,11 +1174,21 @@ SQL;
         return $native_query->getResult();
     }
 
-    public function getAllowedBadgeFeatures(): array
+    /**
+     * @param bool $exclude_deactivated_tickets
+     * @return array
+     */
+    public function getAllowedBadgeFeatures(bool $exclude_deactivated_tickets = true): array
     {
         $bindings = [
             'owner_id' => $this->id
         ];
+
+        // exclude deactivated tickets
+        $extra_where = '';
+        if($exclude_deactivated_tickets){
+            $extra_where = ' AND SummitAttendeeTicket.IsActive = 1 ';
+        }
 
         $query = <<<SQL
 SELECT DISTINCT E.* 
@@ -1181,7 +1196,9 @@ FROM SummitBadgeFeatureType E
 INNER JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID = E.ID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadge_Features.SummitAttendeeBadgeID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
-WHERE SummitAttendeeTicket.OwnerID = :owner_id
+WHERE SummitAttendeeTicket.OwnerID = :owner_id 
+  AND SummitAttendeeTicket.Status = 'Paid'
+  {$extra_where}
 UNION
 SELECT DISTINCT E.*
 FROM SummitBadgeFeatureType E
@@ -1190,6 +1207,8 @@ INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitBadgeType_BadgeFeatures
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
+  AND SummitAttendeeTicket.Status = 'Paid'
+  {$extra_where}
 SQL;
         $rsm = new ResultSetMappingBuilder($this->getEM());
         $rsm->addRootEntityFromClassMetadata(SummitBadgeFeatureType::class, 'E');
@@ -1224,20 +1243,25 @@ SQL;
             return $e->getId();
         }, $this->getAllowedBadgeFeatures());
 
-        // attendee does not has any ticket nor badge feature
-        if (count($allowed_ticket_type_ids) == 0 && count($allowed_badge_feature_ids) == 0) return false;
-
         // not restricted question
         if($q->getAllowedTicketTypes()->count() === 0 && $q->getAllowedBadgeFeatureTypes()->count() === 0) return true;
+
+        // attendee does not has any ticket nor badge feature
+        if (count($allowed_ticket_type_ids) == 0 && count($allowed_badge_feature_ids) == 0) return false;
 
         // restricted question
         foreach ($q->getAllowedTicketTypes() as $question_ticket_type) {
             if (in_array($question_ticket_type->getId(), $allowed_ticket_type_ids)) return true;
         }
+
         foreach ($q->getAllowedBadgeFeatureTypes() as $question_badge_feature_type) {
             if (in_array($question_badge_feature_type->getId(), $allowed_badge_feature_ids)) return true;
         }
 
         return false;
+    }
+
+    public function hasAllowedExtraQuestions():bool{
+        return count($this->getExtraQuestions()) > 0;
     }
 }

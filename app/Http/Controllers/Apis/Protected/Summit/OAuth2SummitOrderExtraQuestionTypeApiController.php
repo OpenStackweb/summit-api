@@ -16,6 +16,7 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
@@ -482,10 +483,10 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
     public function getAttendeeExtraQuestions($summit_id, $attendee_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit)) return $this->error404("Summit not found");
 
         $attendee = $summit->getAttendeeById(intval($attendee_id));
-        if (is_null($attendee)) return $this->error404();
+        if (is_null($attendee)) return $this->error404("Attendee not found");
 
         // authz
         // check that we have a current member ( not service account )
@@ -522,7 +523,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     'label'     => ['=@', '=='],
                     'printable' => ['=='],
                     'usage'     => ['=@', '=='],
-                    'summit_id' => ['==']
+                    'summit_id' => ['=='],
+                    'tickets_exclude_inactives' => ['=='],
                 ];
             },
             function () {
@@ -532,7 +534,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     'label'     => 'sometimes|string',
                     'printable' => 'sometimes|string|in:true,false',
                     'usage'     => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer'
+                    'summit_id' => 'sometimes|integer',
+                    'tickets_exclude_inactives' => ['sometimes', new Boolean()],
                 ];
             },
             function () {

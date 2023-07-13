@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
@@ -60,35 +61,63 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['creator_full_name'] = is_null($creator) ? '' : $creator->getFullName();
-        $payload['creator_email'] = is_null($creator) ? '': $creator->getEmail();
-        $payload['presentation_name'] = $presentation->getTitle();
-        $payload['presentation_start_date'] = $presentation->getStartDateNice();
-        $payload['presentation_end_date'] = $presentation->getEndDateNice();
-        $payload['presentation_location'] = $presentation->getLocationName();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::creator_full_name] = is_null($creator) ? '' : $creator->getFullName();
+        $payload[IMailTemplatesConstants::creator_email] = is_null($creator) ? '': $creator->getEmail();
+        $payload[IMailTemplatesConstants::presentation_name] = $presentation->getTitle();
+        $payload[IMailTemplatesConstants::presentation_start_date] = $presentation->getStartDateNice();
+        $payload[IMailTemplatesConstants::presentation_end_date] = $presentation->getEndDateNice();
+        $payload[IMailTemplatesConstants::presentation_location] = $presentation->getLocationName();
 
-        $payload['selection_plan_name'] = is_null($selection_plan) ? '': $selection_plan->getName();
-        $payload['presentation_edit_link'] = $presentation->getEditLink();
-        $payload['summit_date'] = $summit->getMonthYear();
-        $payload['until_date'] =is_null($selection_plan) ? '' : $selection_plan->getSubmissionEndDate()->format('d F, Y');
-        $payload['selection_process_link'] = sprintf("%s/app/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug());
-        $payload['speaker_management_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
-        $payload['bio_edit_link'] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
+        $payload[IMailTemplatesConstants::selection_plan_name] = is_null($selection_plan) ? '': $selection_plan->getName();
+        $payload[IMailTemplatesConstants::presentation_edit_link] = $presentation->getEditLink();
+        $payload[IMailTemplatesConstants::summit_date] = $summit->getMonthYear();
+        $payload[IMailTemplatesConstants::until_date] =is_null($selection_plan) ? '' : $selection_plan->getSubmissionEndDate()->format('d F, Y');
+        $payload[IMailTemplatesConstants::selection_process_link] = sprintf("%s/app/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug());
+        $payload[IMailTemplatesConstants::speaker_management_link] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
+        $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
         if(!empty($setPasswordLink)){
-            $payload['bio_edit_link'] = $setPasswordLink;
+            $payload[IMailTemplatesConstants::bio_edit_link] = $setPasswordLink;
         }
-        $payload['reset_password_link'] = sprintf("%s/auth/password/reset", $idp_base_url);
-        $payload['support_email'] = $support_email;
-        $payload['speaker_full_name'] = $speaker->getFullName(' ');
-        if(empty($payload['speaker_full_name'])){
-            $payload['speaker_full_name'] = $speaker->getEmail();
+        $payload[IMailTemplatesConstants::reset_password_link] = sprintf("%s/auth/password/reset", $idp_base_url);
+        $payload[IMailTemplatesConstants::support_email] = $support_email;
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName(' ');
+        if(empty($payload[IMailTemplatesConstants::speaker_full_name])){
+            $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getEmail();
         }
-        $payload['speaker_email'] = $speaker->getEmail();
+        $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['speaker_email']);
+        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::speaker_email]);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::creator_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::creator_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_start_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_end_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_location]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_edit_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::until_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_process_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_management_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reset_password_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_email]['type'] = 'string';
+
+        return $payload;
     }
 }

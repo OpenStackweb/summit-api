@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\SummitRoomReservation;
 
 /**
@@ -36,21 +37,43 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload = [];
         $room = $reservation->getRoom();
         $summit = $room->getSummit();
-        $payload['owner_fullname'] = $reservation->getOwner()->getFullName();
-        $payload['owner_email'] = $reservation->getOwner()->getEmail();
-        $payload['room_complete_name'] = $room->getCompleteName();
-        $payload['reservation_start_datetime'] = $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s");
-        $payload['reservation_end_datetime'] = $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s");
-        $payload['reservation_created_datetime'] = $reservation->getCreated()->format("Y-m-d H:i:s");
-        $payload['reservation_amount'] = $reservation->getAmount();
-        $payload['reservation_currency'] = $reservation->getCurrency();
-        $payload['reservation_id'] = $reservation->getId();
-        $payload['room_capacity'] = $room->getCapacity();
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['reservation_refunded_amount'] = $reservation->getRefundedAmount();
+        $payload[IMailTemplatesConstants::owner_fullname] = $reservation->getOwner()->getFullName();
+        $payload[IMailTemplatesConstants::owner_email] = $reservation->getOwner()->getEmail();
+        $payload[IMailTemplatesConstants::room_complete_name] = $room->getCompleteName();
+        $payload[IMailTemplatesConstants::reservation_start_datetime] = $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s");
+        $payload[IMailTemplatesConstants::reservation_end_datetime] = $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s");
+        $payload[IMailTemplatesConstants::reservation_created_datetime] = $reservation->getCreated()->format("Y-m-d H:i:s");
+        $payload[IMailTemplatesConstants::reservation_amount] = $reservation->getAmount();
+        $payload[IMailTemplatesConstants::reservation_currency] = $reservation->getCurrency();
+        $payload[IMailTemplatesConstants::reservation_id] = $reservation->getId();
+        $payload[IMailTemplatesConstants::room_capacity] = $room->getCapacity();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::reservation_refunded_amount] = $reservation->getRefundedAmount();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         parent::__construct($payload, $template_identifier, $this->getTo($reservation));
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::room_complete_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reservation_start_datetime]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reservation_end_datetime]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reservation_created_datetime]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reservation_amount]['type'] = 'int';
+        $payload[IMailTemplatesConstants::reservation_currency]['type'] = 'int';
+        $payload[IMailTemplatesConstants::reservation_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::room_capacity]['type'] = 'int';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reservation_refunded_amount]['type'] = 'int';
+
+        return $payload;
     }
 }

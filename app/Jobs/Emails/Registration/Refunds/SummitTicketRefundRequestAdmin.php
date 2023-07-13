@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use libs\utils\FormatUtils;
 use models\summit\SummitAttendeeTicket;
@@ -43,26 +44,26 @@ class SummitTicketRefundRequestAdmin extends AbstractEmailJob
         $order = $ticket->getOrder();
         $summit = $order->getSummit();
         $payload = [];
-        $payload['owner_full_name'] = $order->getOwnerFullName();
-        $payload['owner_email'] = $order->getOwnerEmail();
-        $payload['owner_company'] = $order->getOwnerCompanyName();
-        $payload['ticket_number'] = $ticket->getNumber();
-        $payload['ticket_id'] = $ticket->getId();
-        $payload['order_id'] = $order->getId();
-        $payload['order_number'] = $order->getNumber();
-        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
-        $payload['order_currency'] = $order->getCurrency();
-        $payload['order_currency_symbol'] = $order->getCurrencySymbol();
+        $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
+        $payload[IMailTemplatesConstants::owner_email] = $order->getOwnerEmail();
+        $payload[IMailTemplatesConstants::owner_company] = $order->getOwnerCompanyName();
+        $payload[IMailTemplatesConstants::ticket_number] = $ticket->getNumber();
+        $payload[IMailTemplatesConstants::ticket_id] = $ticket->getId();
+        $payload[IMailTemplatesConstants::order_id] = $order->getId();
+        $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
+        $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat($order->getFinalAmount());
+        $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
+        $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
 
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $admin_ticket_edit_url = Config::get("registration.admin_ticket_edit_url", null);
-        $payload['admin_ticket_edit_url'] = !empty($admin_ticket_edit_url) ?
+        $payload[IMailTemplatesConstants::admin_ticket_edit_url] = !empty($admin_ticket_edit_url) ?
             sprintf($admin_ticket_edit_url, $summit->getId(), $order->getId(), $ticket->getId()) : '';
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
@@ -75,4 +76,29 @@ class SummitTicketRefundRequestAdmin extends AbstractEmailJob
         parent::__construct($payload, $template_identifier, $to);
     }
 
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_number]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::order_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_amount]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::admin_ticket_edit_url]['type'] = 'string';
+
+        return $payload;
+    }
 }

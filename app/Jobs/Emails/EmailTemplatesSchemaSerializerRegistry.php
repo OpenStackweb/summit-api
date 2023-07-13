@@ -24,14 +24,26 @@ use App\Jobs\Emails\Elections\NominationEmail;
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\Invitations\InviteSubmissionEmail;
+use App\Jobs\Emails\PresentationSubmissions\Invitations\ReInviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedAlternateEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessExcerptEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessRejectedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerCreationEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
@@ -43,13 +55,23 @@ use App\Jobs\Emails\Registration\ExternalIngestion\SuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\ExternalIngestion\UnsuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
+use App\Jobs\Emails\Registration\MemberPromoCodeEmail;
+use App\Jobs\Emails\Registration\PromoCodeEmail;
+use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestOwner;
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundAccepted;
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRejected;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
+use App\Jobs\Emails\Registration\SpeakerPromoCodeEMail;
+use App\Jobs\Emails\Schedule\RSVPMail;
+use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
+use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class EmailTemplatesSchemaSerializerRegistry
@@ -97,10 +119,23 @@ final class EmailTemplatesSchemaSerializerRegistry
         //Presentation Submissions
 
         $this->registry[InviteSubmissionEmail::EVENT_SLUG] = InviteSubmissionEmail::class;
-        $this->registry[PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
-        $this->registry[PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
-        $this->registry[PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
-        $this->registry[PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
+        $this->registry[ReInviteSubmissionEmail::EVENT_SLUG] = InviteSubmissionEmail::class;
+
+        $this->registry[PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessAcceptedAlternateEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessAcceptedOnlyEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessAcceptedRejectedEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessAlternateOnlyEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessAlternateRejectedEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessExcerptEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessExcerptEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessExcerptEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessExcerptEmail::class;
+
         $this->registry[ImportEventSpeakerEmail::EVENT_SLUG] = ImportEventSpeakerEmail::class;
         $this->registry[PresentationCreatorNotificationEmail::EVENT_SLUG] = PresentationCreatorNotificationEmail::class;
         $this->registry[PresentationModeratorNotificationEmail::EVENT_SLUG] = PresentationModeratorNotificationEmail::class;
@@ -123,6 +158,7 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG] = SummitAttendeeAllTicketsEditionEmail::class;
         $this->registry[SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG] = SummitAttendeeRegistrationIncompleteReminderEmail::class;
         $this->registry[SummitAttendeeTicketEmail::EVENT_SLUG] = SummitAttendeeTicketEmail::class;
+        $this->registry[SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG] = InviteAttendeeTicketEditionMail::class;
 
         $this->registry[SuccessfulIIngestionEmail::EVENT_SLUG] = SuccessfulIIngestionEmail::class;
         $this->registry[UnsuccessfulIIngestionEmail::EVENT_SLUG] = UnsuccessfulIIngestionEmail::class;
@@ -130,19 +166,26 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[InviteSummitRegistrationEmail::EVENT_SLUG] = InviteSummitRegistrationEmail::class;
         $this->registry[ReInviteSummitRegistrationEmail::EVENT_SLUG] = ReInviteSummitRegistrationEmail::class;
 
+        $this->registry[SummitOrderRefundAccepted::EVENT_SLUG] = SummitOrderRefundRequestOwner::class;
         $this->registry[SummitOrderRefundRequestAdmin::EVENT_SLUG] = SummitOrderRefundRequestAdmin::class;
         $this->registry[SummitOrderRefundRequestOwner::EVENT_SLUG] = SummitOrderRefundRequestOwner::class;
+        $this->registry[SummitTicketRefundAccepted::EVENT_SLUG] = SummitTicketRefundRequestOwner::class;
+        $this->registry[SummitTicketRefundRejected::EVENT_SLUG] = SummitTicketRefundRequestOwner::class;
         $this->registry[SummitTicketRefundRequestAdmin::EVENT_SLUG] = SummitTicketRefundRequestAdmin::class;
         $this->registry[SummitTicketRefundRequestOwner::EVENT_SLUG] = SummitTicketRefundRequestOwner::class;
 
         $this->registry[SummitOrderReminderEmail::EVENT_SLUG] = SummitOrderReminderEmail::class;
         $this->registry[SummitTicketReminderEmail::EVENT_SLUG] = SummitTicketReminderEmail::class;
 
+        $this->registry[MemberPromoCodeEmail::EVENT_SLUG] = PromoCodeEmail::class;
         $this->registry[RegisteredMemberOrderPaidMail::EVENT_SLUG] = RegisteredMemberOrderPaidMail::class;
+        $this->registry[SpeakerPromoCodeEMail::EVENT_SLUG] = PromoCodeEmail::class;
         $this->registry[UnregisteredMemberOrderPaidMail::EVENT_SLUG] = UnregisteredMemberOrderPaidMail::class;
 
         //Schedule
 
+        $this->registry[RSVPRegularSeatMail::EVENT_SLUG] = RSVPMail::class;
+        $this->registry[RSVPWaitListSeatMail::EVENT_SLUG] = RSVPMail::class;
         $this->registry[ShareEventEmail::EVENT_SLUG] = ShareEventEmail::class;
     }
 
@@ -152,8 +195,10 @@ final class EmailTemplatesSchemaSerializerRegistry
      */
     public function serialize(string $slug)
     {
-        if (!isset($this->registry[$slug]))
-            throw new \InvalidArgumentException('Emails template schema builder not found for ' . $slug);
+        if (!isset($this->registry[$slug])) {
+            Log::warning('Emails template schema builder not found for ' . $slug);
+            return [];
+        }
 
         $builder_class = $this->registry[$slug];
 

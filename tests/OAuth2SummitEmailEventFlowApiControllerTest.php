@@ -19,18 +19,18 @@ class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-//    protected function setUp():void
-//    {
-//        parent::setUp();
-//        self::insertSummitTestData();
-//        self::$summit->seedDefaultEmailFlowEvents();
-//    }
-//
-//    protected function tearDown():void
-//    {
-//        self::clearSummitTestData();
-//        parent::tearDown();
-//    }
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+        self::$summit->seedDefaultEmailFlowEvents();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
 
     /**
      * @param int $summit_id
@@ -69,7 +69,7 @@ class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTest
 
     public function testGetEmailEventById(){
         $params = [
-            'id'       => 3645, //self::$summit->getId(),
+            'id'       => self::$summit->getId(),
             'event_id' => 12286
         ];
 

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use Illuminate\Support\Facades\Config;
 
@@ -38,12 +39,25 @@ class SpeakerEditPermissionRejectedEmail extends AbstractEmailJob
     public function __construct(SpeakerEditPermissionRequest $request)
     {
         $payload = [];
-        $payload['requested_by_full_name'] = $request->getRequestedBy()->getFullName();
-        $payload['speaker_full_name'] = $request->getSpeaker()->getFullName();
-        $payload['speaker_management_link'] =
-        $payload['tenant_name'] = Config::get("app.tenant_name");
-        $payload['requested_by_email'] = $request->getRequestedBy()->getEmail();
-        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload['requested_by_email']);
+        $payload[IMailTemplatesConstants::requested_by_full_name] = $request->getRequestedBy()->getFullName();
+        $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
+        $payload[IMailTemplatesConstants::speaker_management_link] =
+        $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");
+        $payload[IMailTemplatesConstants::requested_by_email] = $request->getRequestedBy()->getEmail();
+        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload[IMailTemplatesConstants::requested_by_email]);
     }
 
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::requested_by_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_management_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::tenant_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::requested_by_email]['type'] = 'string';
+
+        return $payload;
+    }
 }

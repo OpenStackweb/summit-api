@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
@@ -47,32 +48,32 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJ
         $payload  = [];
 
         // accepted ones
-        $payload['accepted_presentations'] = [];
+        $payload[IMailTemplatesConstants::accepted_presentations] = [];
         foreach($submitter->getAcceptedPresentations($summit, $filter) as $p){
-            $payload['accepted_presentations'][] =
+            $payload[IMailTemplatesConstants::accepted_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SubmitterEmails)->serialize();
         }
 
         // alternates
-        $payload['alternate_presentations'] = [];
+        $payload[IMailTemplatesConstants::alternate_presentations] = [];
         foreach($submitter->getAlternatePresentations($summit, $filter) as $p){
-            $payload['alternate_presentations'][] =
+            $payload[IMailTemplatesConstants::alternate_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SubmitterEmails)->serialize();
         }
 
         // rejected
-        $payload['rejected_presentations'] = [];
+        $payload[IMailTemplatesConstants::rejected_presentations] = [];
         foreach($submitter->getRejectedPresentations($summit, $filter) as $p){
-            $payload['rejected_presentations'][] =
+            $payload[IMailTemplatesConstants::rejected_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SubmitterEmails)->serialize();
         }
 
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_schedule_url'] = $summit->getScheduleDefaultPageUrl();
-        $payload['summit_site_url'] = $summit->getLink();
-        $payload['submitter_full_name'] = $submitter->getFullName();
-        $payload['submitter_email'] = $submitter->getEmail();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
+        $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
+        $payload[IMailTemplatesConstants::submitter_full_name] = $submitter->getFullName();
+        $payload[IMailTemplatesConstants::submitter_email] = $submitter->getEmail();
 
         if (!empty($test_email_recipient)) {
             Log::debug
@@ -85,19 +86,40 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJ
                 )
             );
 
-            $payload['submitter_email'] = $test_email_recipient;
+            $payload[IMailTemplatesConstants::submitter_email] = $test_email_recipient;
         }
 
         $submitter_management_base_url = Config::get('cfp.base_url');
         if(empty($submitter_management_base_url))
             throw new \InvalidArgumentException('cfp.base_url is null.');
 
-        $payload['registration_link'] = $summit->getRegistrationLink();
-        $payload['virtual_event_site_link'] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
+        $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
 
-        $payload['bio_edit_link'] = sprintf("%s/app/profile", $submitter_management_base_url);
+        $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/profile", $submitter_management_base_url);
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['submitter_email'], null,null);
+        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::submitter_email], null,null);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::accepted_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::alternate_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::rejected_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::submitter_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
+
+        return $payload;
     }
 }

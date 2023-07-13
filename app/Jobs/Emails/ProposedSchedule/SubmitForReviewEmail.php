@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
 use models\exceptions\ValidationException;
 
@@ -32,13 +33,13 @@ class SubmitForReviewEmail extends AbstractEmailJob
         $submitter = $lock->getCreatedBy()->getMember();
         $payload = [];
 
-        $payload['summit_name']         = $summit->getName();
-        $payload['summit_logo']         = $summit->getLogoUrl();
-        $payload['submitter_fullname']  = $submitter->getFullName();
-        $payload['submitter_email']     = $submitter->getEmail();
-        $payload['track']               = $lock->getTrack()->getTitle();
-        $payload['track_id']            = $lock->getTrack()->getId();
-        $payload['message']             = $lock->getReason() ?? "";
+        $payload[IMailTemplatesConstants::summit_name]         = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo]         = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::submitter_fullname]  = $submitter->getFullName();
+        $payload[IMailTemplatesConstants::submitter_email]     = $submitter->getEmail();
+        $payload[IMailTemplatesConstants::track]               = $lock->getTrack()->getTitle();
+        $payload[IMailTemplatesConstants::track_id]            = $lock->getTrack()->getId();
+        $payload[IMailTemplatesConstants::message]             = $lock->getReason() ?? "";
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         $to_email = $this->getEmailRecipientFromEmailEvent($summit);
@@ -47,6 +48,22 @@ class SubmitForReviewEmail extends AbstractEmailJob
             throw new ValidationException("There is no registered recipient to send the email.");
 
         parent::__construct($payload, $template_identifier, $to_email);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::submitter_fullname]['type'] = 'string';
+        $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::track]['type'] = 'string';
+        $payload[IMailTemplatesConstants::track_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::message]['type'] = 'string';
+
+        return $payload;
     }
 
     protected function getEmailEventSlug(): string

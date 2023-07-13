@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\SummitCategoryChange;
 use Illuminate\Support\Facades\Config;
 /**
@@ -46,19 +47,38 @@ class PresentationCategoryChangeRequestCreatedEmail extends AbstractEmailJob
         $summit = $presentation->getSummit();
 
         $payload = [];
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_date'] = $summit->getMonthYear();
-        $payload['requester_fullname'] = $requester->getFullName();
-        $payload['requester_email'] = $requester->getEmail();
-        $payload['old_category'] = $old_category->getTitle();
-        $payload['new_category'] = $new_category->getTitle();
-        $payload['status'] = $request->getNiceStatus();
-        $payload['presentation_title'] = $presentation->getTitle();
-        $payload['presentation_id'] = $presentation->getId();
-        $payload['review_link'] = sprintf(Config::get("track_chairs.review_link"), $summit->getRawSlug(), $presentation->getSelectionPlanId());
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_date] = $summit->getMonthYear();
+        $payload[IMailTemplatesConstants::requester_fullname] = $requester->getFullName();
+        $payload[IMailTemplatesConstants::requester_email] = $requester->getEmail();
+        $payload[IMailTemplatesConstants::old_category] = $old_category->getTitle();
+        $payload[IMailTemplatesConstants::new_category] = $new_category->getTitle();
+        $payload[IMailTemplatesConstants::status] = $request->getNiceStatus();
+        $payload[IMailTemplatesConstants::presentation_title] = $presentation->getTitle();
+        $payload[IMailTemplatesConstants::presentation_id] = $presentation->getId();
+        $payload[IMailTemplatesConstants::review_link] = sprintf(Config::get("track_chairs.review_link"), $summit->getRawSlug(), $presentation->getSelectionPlanId());
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, implode(",", $to_emails));
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::requester_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::old_category]['type'] = 'string';
+        $payload[IMailTemplatesConstants::new_category]['type'] = 'string';
+        $payload[IMailTemplatesConstants::status]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_title]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::review_link]['type'] = 'string';
+
+        return $payload;
     }
 }

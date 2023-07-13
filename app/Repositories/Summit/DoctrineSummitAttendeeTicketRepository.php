@@ -14,10 +14,12 @@
 
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
+use Google\Service\AccessContextManager\AccessLevel;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRefundRequestConstants;
 use models\summit\Summit;
+use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendeeTicket;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitAttendeeTicketRefundRequest;
@@ -129,7 +131,20 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'owner_status' => 'a.status',
-            'final_amount' => new DoctrineHavingFilterMapping("", "e.id", "((e.raw_cost + SUM(COALESCE(ta.amount, 0))) - e.discount) :operator :value"),
+            'final_amount' =>  "(e.raw_cost - e.discount) :operator :value",
+            'is_printable' =>
+                new DoctrineSwitchFilterMapping([
+                        '1' => new DoctrineCaseFilterMapping(
+                            'true',
+                            sprintf("e.is_active = 1 and al.name = '%s'", SummitAccessLevelType::IN_PERSON),
+                        ),
+                        '0' => new DoctrineCaseFilterMapping(
+                            'false',
+                            sprintf("not(e.is_active = 1 and al.name = '%s')", SummitAccessLevelType::IN_PERSON),
+                        ),
+                    ]
+                ),
+
         ];
     }
 

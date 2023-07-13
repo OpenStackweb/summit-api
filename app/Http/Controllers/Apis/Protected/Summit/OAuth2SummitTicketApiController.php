@@ -16,6 +16,7 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Request;
@@ -120,6 +121,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag_id' => ['=='],
                     'promo_code_tag' => ['==', '@@', '=@'],
                     'final_amount' => ['==', '<>', '>=', '>'],
+                    'is_printable' => ['=='],
                 ];
             },
             function () {
@@ -150,6 +152,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag_id' => 'sometimes|integer',
                     'promo_code_tag' => 'sometimes|string',
                     'final_amount' => 'sometimes|numeric',
+                    'is_printable' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -258,6 +261,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag_id' => ['=='],
                     'promo_code_description' => ['@@', '=@'],
                     'final_amount' => ['==', '<>', '>=', '>'],
+                    'is_printable' => ['=='],
                 ];
             },
             function () {
@@ -288,6 +292,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_description' => 'sometimes|string',
                     'promo_code_tag_id' => 'sometimes|integer',
                     'final_amount' => 'sometimes|numeric',
+                    'is_printable' => ['sometimes', new Boolean()],
                 ];
             },
             function () {

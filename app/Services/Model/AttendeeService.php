@@ -230,6 +230,11 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             }
 
             // check if attendee already exist for this summit
+            if(isset($data['extra_questions']) && !$attendee->hasAllowedExtraQuestions()){
+                Log::debug(sprintf("SummitAttendeeService::updateAttendee attendee %s does not have allowed extra questions.", $attendee->getId()));
+                // dont not overwrite extra questions
+                unset($data['extra_questions']);
+            }
 
             SummitAttendeeFactory::populate($summit, $attendee , $data, $member, false);
             $attendee->updateStatus();

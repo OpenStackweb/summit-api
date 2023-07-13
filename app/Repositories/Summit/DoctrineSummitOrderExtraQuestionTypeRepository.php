@@ -87,18 +87,34 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
     /**
      * @inheritDoc
      */
-    public function getAllAllowedByPage(
-        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
+    public function getAllAllowedByPage
+    (
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
+    ): PagingResponse
     {
         Log::debug(sprintf("DoctrineSummitOrderExtraQuestionTypeRepository::getAllAllowedByPage attendee_id %s", $attendee->getId()));
 
         $attendee_ticket_type_ids = [];
-        foreach ($attendee->getAllowedTicketTypes() as $ticket_type) {
+
+        $exclude_inactive_tickets = true;
+        if($filter->hasFilter('tickets_exclude_inactives')){
+            $exclude_inactive_tickets = $filter->getUniqueFilter('tickets_exclude_inactives')->getBooleanValue();
+            Log::debug
+            (
+                sprintf
+                (
+                    "DoctrineSummitOrderExtraQuestionTypeRepository::getAllAllowedByPage exclude_inactive_tickets %b",
+                    $exclude_inactive_tickets
+                )
+            );
+        }
+
+        foreach ($attendee->getAllowedTicketTypes($exclude_inactive_tickets) as $ticket_type) {
             $attendee_ticket_type_ids[] = $ticket_type->getId();
         }
 
         $attendee_badge_feature_type_ids = [];
-        foreach ($attendee->getAllowedBadgeFeatures() as $badge_feature) {
+        foreach ($attendee->getAllowedBadgeFeatures($exclude_inactive_tickets) as $badge_feature) {
             $attendee_badge_feature_type_ids[] = $badge_feature->getId();
         }
 

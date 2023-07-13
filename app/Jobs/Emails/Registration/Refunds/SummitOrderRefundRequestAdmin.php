@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use libs\utils\FormatUtils;
 use models\summit\SummitOrder;
@@ -39,19 +40,19 @@ class SummitOrderRefundRequestAdmin extends AbstractEmailJob
     {
         $payload = [];
         $summit = $order->getSummit();
-        $payload['owner_full_name'] = $order->getOwnerFullName();
-        $payload['owner_email']     = $order->getOwnerEmail();
-        $payload['owner_company']   = $order->getOwnerCompanyName();
-        $payload['order_number']    = $order->getNumber();
-        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
-        $payload['order_currency'] = $order->getCurrency();
-        $payload['order_currency_symbol'] = $order->getCurrencySymbol();
-        $payload['summit_name']     = $order->getSummit()->getName();
-        $payload['summit_logo']     = $order->getSummit()->getLogoUrl();
-        $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
+        $payload[IMailTemplatesConstants::owner_email]     = $order->getOwnerEmail();
+        $payload[IMailTemplatesConstants::owner_company]   = $order->getOwnerCompanyName();
+        $payload[IMailTemplatesConstants::order_number]    = $order->getNumber();
+        $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat($order->getFinalAmount());
+        $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
+        $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
+        $payload[IMailTemplatesConstants::summit_name]     = $order->getSummit()->getName();
+        $payload[IMailTemplatesConstants::summit_logo]     = $order->getSummit()->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
@@ -63,5 +64,25 @@ class SummitOrderRefundRequestAdmin extends AbstractEmailJob
         parent::__construct($payload, $template_identifier, $to);
     }
 
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_amount]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
 
+        return $payload;
+    }
 }

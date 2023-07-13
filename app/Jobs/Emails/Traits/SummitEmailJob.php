@@ -13,6 +13,7 @@
  **/
 
 
+use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\Summit;
 
 trait SummitEmailJob
@@ -23,11 +24,11 @@ trait SummitEmailJob
      * @return array
      */
     public function emitSummitTemplateVars(array $payload, Summit $summit):array{
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
         $summitBeginDate = $summit->getLocalBeginDate();
-        $payload['summit_date'] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
-        $payload['summit_dates_label'] = $summit->getDatesLabel();
+        $payload[IMailTemplatesConstants::summit_date] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
+        $payload[IMailTemplatesConstants::summit_dates_label] = $summit->getDatesLabel();
         return $payload;
     }
 }

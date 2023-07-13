@@ -135,19 +135,4 @@ abstract class AbstractEmailJob implements ShouldQueue
     protected function getEmailRecipientFromEmailEvent(Summit $summit):?string{
         return $summit->getEmailRecipientPerEmailEventFlowSlug($this->getEmailEventSlug());
     }
-
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload['summit_name']['type'] = 'string';
-        $payload['summit_logo']['type'] = 'string';
-        $payload['summit_virtual_site_url']['type'] = 'string';
-        $payload['summit_marketing_site_url']['type'] = 'string';
-        $payload['raw_summit_virtual_site_url']['type'] = 'string';
-        $payload['raw_summit_marketing_site_url']['type'] = 'string';
-
-        return $payload;
-    }
 }

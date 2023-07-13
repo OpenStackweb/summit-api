@@ -42,40 +42,66 @@ class RevocationTicketEmail extends AbstractEmailJob
         $order = $ticket->getOrder();
         $payload = [];
 
-        $payload['owner_full_name'] = $attendee->getFullName();
-        $payload['owner_email'] = $attendee->getEmail();
-        $payload['owner_first_name'] = $attendee->getFirstName();
-        $payload['owner_last_name'] = $attendee->getSurname();
-        $payload['owner_company'] = $attendee->getCompanyName();
-        if(empty($payload['owner_full_name'])){
-            $payload['owner_full_name'] = $payload['owner_email'];
+        $payload[IMailTemplatesConstants::owner_full_name] = $attendee->getFullName();
+        $payload[IMailTemplatesConstants::owner_email] = $attendee->getEmail();
+        $payload[IMailTemplatesConstants::owner_first_name] = $attendee->getFirstName();
+        $payload[IMailTemplatesConstants::owner_last_name] = $attendee->getSurname();
+        $payload[IMailTemplatesConstants::owner_company] = $attendee->getCompanyName();
+        if(empty($payload[IMailTemplatesConstants::owner_full_name])){
+            $payload[IMailTemplatesConstants::owner_full_name] = $payload[IMailTemplatesConstants::owner_email];
         }
 
-        $payload['order_owner_full_name'] = $order->getOwnerFullName();
-        $payload['order_owner_email'] = $order->getOwnerEmail();
-        $payload['order_owner_company'] = $order->getOwnerCompanyName();
-        if(empty($payload['order_owner_full_name'])){
-            $payload['order_owner_full_name'] = $payload['order_owner_email'];
+        $payload[IMailTemplatesConstants::order_owner_full_name] = $order->getOwnerFullName();
+        $payload[IMailTemplatesConstants::order_owner_email] = $order->getOwnerEmail();
+        $payload[IMailTemplatesConstants::order_owner_company] = $order->getOwnerCompanyName();
+        if(empty($payload[IMailTemplatesConstants::order_owner_full_name])){
+            $payload[IMailTemplatesConstants::order_owner_full_name] = $payload[IMailTemplatesConstants::order_owner_email];
         }
 
 
-        $payload['ticket_number'] = $ticket->getNumber();
-        $payload['ticket_type_name'] = $ticket->getTicketTypeName();
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::ticket_number] = $ticket->getNumber();
+        $payload[IMailTemplatesConstants::ticket_type_name] = $ticket->getTicketTypeName();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $support_email = $summit->getSupportEmail();
-        $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
+        $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
 
-        if (empty($payload['support_email']))
+        if (empty($payload[IMailTemplatesConstants::support_email]))
             throw new \InvalidArgumentException("missing support_email value");
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, $owner_email);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_first_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_number]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_type_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+
+        return $payload;
     }
 }

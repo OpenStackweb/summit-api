@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -55,72 +56,72 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $shouldSendCopy2Submitter = $speaker_announcement_email_config->shouldSendCopy2Submitter();
 
         // accepted ones
-        $payload['accepted_presentations'] = [];
+        $payload[IMailTemplatesConstants::accepted_presentations] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, [], $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
-            $payload['accepted_presentations'][] =
+            $payload[IMailTemplatesConstants::accepted_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $payload['accepted_moderated_presentations'] = [];
+        $payload[IMailTemplatesConstants::accepted_moderated_presentations] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, [], $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
-            $payload['accepted_moderated_presentations'][] =
+            $payload[IMailTemplatesConstants::accepted_moderated_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         // alternates
-        $payload['alternate_presentations'] = [];
+        $payload[IMailTemplatesConstants::alternate_presentations] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], false, $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
-            $payload['alternate_presentations'][] =
+            $payload[IMailTemplatesConstants::alternate_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $payload['alternate_moderated_presentations'] = [];
+        $payload[IMailTemplatesConstants::alternate_moderated_presentations] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator, false, [], false, $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
-            $payload['alternate_moderated_presentations'][] =
+            $payload[IMailTemplatesConstants::alternate_moderated_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         // rejected
 
-        $payload['rejected_presentations'] = [];
+        $payload[IMailTemplatesConstants::rejected_presentations] = [];
         foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker, false, [] ,$filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
-            $payload['rejected_presentations'][] =
+            $payload[IMailTemplatesConstants::rejected_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $payload['rejected_moderated_presentations'] = [];
+        $payload[IMailTemplatesConstants::rejected_moderated_presentations] = [];
         foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator, false, [] , $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
-            $payload['rejected_moderated_presentations'][] =
+            $payload[IMailTemplatesConstants::rejected_moderated_presentations][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         if(count($cc_email) > 0){
-            $payload['cc_email'] = implode(',', $cc_email);
+            $payload[IMailTemplatesConstants::cc_email] = implode(',', $cc_email);
         }
 
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_schedule_url'] = $summit->getScheduleDefaultPageUrl();
-        $payload['summit_site_url'] = $summit->getLink();
-        $payload['speaker_full_name'] = $speaker->getFullName();
-        $payload['speaker_email'] = $speaker->getEmail();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
+        $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName();
+        $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
 
         if (!empty($test_email_recipient)) {
             Log::debug
@@ -128,38 +129,66 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
                 sprintf
                 (
                     "PresentationSpeakerSelectionProcessEmail::__construct replacing original email %s by %s and clearing cc field",
-                    $payload['speaker_email'],
+                    $payload[IMailTemplatesConstants::speaker_email],
                     $test_email_recipient
                 )
             );
 
-            $payload['speaker_email'] = $test_email_recipient;
-            $payload['cc_email'] = '';
+            $payload[IMailTemplatesConstants::speaker_email] = $test_email_recipient;
+            $payload[IMailTemplatesConstants::cc_email] = '';
         }
 
         $speaker_management_base_url = Config::get('cfp.base_url');
         if(empty($speaker_management_base_url))
             throw new \InvalidArgumentException('cfp.base_url is null.');
 
-        $payload['promo_code'] = '';
-        $payload['promo_code_until_date'] = '';
-        $payload['ticket_type'] = '';
-        $payload['registration_link'] = $summit->getRegistrationLink();
-        $payload['virtual_event_site_link'] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::promo_code] = '';
+        $payload[IMailTemplatesConstants::promo_code_until_date] = '';
+        $payload[IMailTemplatesConstants::ticket_type] = '';
+        $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
+        $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
 
         if(!is_null($promo_code)){
-            $payload['promo_code'] = $promo_code->getCode();
+            $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
             if(!is_null($promo_code->getValidUntilDate()))
-            $payload['promo_code_until_date'] = $promo_code->getValidUntilDate()->format("Y-m-d H:i:s");
+            $payload[IMailTemplatesConstants::promo_code_until_date] = $promo_code->getValidUntilDate()->format("Y-m-d H:i:s");
             $allowed_ticket_types = $promo_code->getAllowedTicketTypes();
             if(count($allowed_ticket_types) > 0)
-                $payload['ticket_type'] = $allowed_ticket_types[0]->getName();
+                $payload[IMailTemplatesConstants::ticket_type] = $allowed_ticket_types[0]->getName();
         }
 
-        $payload['bio_edit_link'] = sprintf("%s/app/profile", $speaker_management_base_url);
-        $payload['speaker_confirmation_link'] = $summit->getSpeakerConfirmationDefaultPageUrl();
+        $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/profile", $speaker_management_base_url);
+        $payload[IMailTemplatesConstants::speaker_confirmation_link] = $summit->getSpeakerConfirmationDefaultPageUrl();
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['speaker_email'], null,$payload['cc_email'] ?? null);
+        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::speaker_email], null,$payload[IMailTemplatesConstants::cc_email] ?? null);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::accepted_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::accepted_moderated_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::alternate_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::alternate_moderated_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::rejected_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::rejected_moderated_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::cc_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::promo_code]['type'] = 'string';
+        $payload[IMailTemplatesConstants::promo_code_until_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_type]['type'] = 'string';
+        $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_confirmation_link]['type'] = 'string';
+
+        return $payload;
     }
 }

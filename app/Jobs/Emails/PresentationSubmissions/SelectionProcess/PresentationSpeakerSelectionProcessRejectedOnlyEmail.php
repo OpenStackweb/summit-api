@@ -53,4 +53,6 @@ class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationS
         parent::__construct($summit, $speaker, $test_email_recipient, $speaker_announcement_email_config, null, $filter);
         Log::debug(sprintf("PresentationSpeakerSelectionProcessRejectedEmail::__construct payload %s", json_encode($this->payload)));
     }
+
+
 }

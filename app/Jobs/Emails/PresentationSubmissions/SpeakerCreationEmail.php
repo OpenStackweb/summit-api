@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use models\summit\PresentationSpeaker;
 /**
@@ -51,9 +52,9 @@ class SpeakerCreationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload['speaker_full_name'] = $speaker->getFullName();
-        $payload['speaker_email'] = $speaker->getEmail();
-        $payload['speaker_management_link'] = $speaker_management_base_url;
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName();
+        $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
+        $payload[IMailTemplatesConstants::speaker_management_link] = $speaker_management_base_url;
         $bio_edit_link = sprintf("%s/app/profile", $speaker_management_base_url);
         $registrationRequest = $speaker->getRegistrationRequest();
         /**
@@ -65,11 +66,27 @@ class SpeakerCreationEmail extends AbstractEmailJob
                 $bio_edit_link = $bio_edit_link.'/'.$token;
         }
          */
-        $payload['bio_edit_link'] = $bio_edit_link;
-        $payload['reset_password_link'] = sprintf("%s/auth/password/reset", $idp_base_url);
-        $payload['support_email'] = $support_email;
-        $payload['tenant_name'] = Config::get("app.tenant_name");
+        $payload[IMailTemplatesConstants::bio_edit_link] = $bio_edit_link;
+        $payload[IMailTemplatesConstants::reset_password_link] = sprintf("%s/auth/password/reset", $idp_base_url);
+        $payload[IMailTemplatesConstants::support_email] = $support_email;
+        $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");
 
-        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload['speaker_email']);
+        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload[IMailTemplatesConstants::speaker_email]);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_management_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reset_password_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::tenant_name]['type'] = 'string';
+
+        return $payload;
     }
 }

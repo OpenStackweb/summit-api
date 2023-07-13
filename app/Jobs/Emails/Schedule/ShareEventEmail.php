@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\SummitEvent;
 /**
  * Class ShareEventEmail
@@ -31,16 +32,31 @@ class ShareEventEmail extends AbstractEmailJob
     {
         $summit = $event->getSummit();
         $payload = [];
-        $payload['from_email']        = $from_email;
-        $payload['to_email ']         = $to_email;
-        $payload['summit_name']       = $summit->getName();
-        $payload['event_title']       = $event->getTitle();
-        $payload['event_description'] = $event->getAbstract();
-        $payload['event_url']         = $event_url;
+        $payload[IMailTemplatesConstants::from_email]        = $from_email;
+        $payload[IMailTemplatesConstants::to_email]          = $to_email;
+        $payload[IMailTemplatesConstants::summit_name]       = $summit->getName();
+        $payload[IMailTemplatesConstants::event_title]       = $event->getTitle();
+        $payload[IMailTemplatesConstants::event_description] = $event->getAbstract();
+        $payload[IMailTemplatesConstants::event_url]         = $event_url;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['to_email']);
+        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::to_email]);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::from_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::to_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
+        $payload[IMailTemplatesConstants::event_description]['type'] = 'string';
+        $payload[IMailTemplatesConstants::event_url]['type'] = 'string';
+
+        return $payload;
     }
 
     protected function getEmailEventSlug(): string

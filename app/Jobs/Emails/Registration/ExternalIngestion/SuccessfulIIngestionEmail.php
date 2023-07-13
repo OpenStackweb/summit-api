@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
 
@@ -39,11 +40,11 @@ class SuccessfulIIngestionEmail extends AbstractEmailJob
     public function __construct(string $email_to, Summit $summit)
     {
         $payload = [];
-        $payload['email_to']    = $email_to;
-        $payload['summit_id']   = $summit->getId();
-        $payload['summit_name'] = $summit->getName();
-        $payload['feed_type']   = $summit->getExternalRegistrationFeedType();
-        $payload['external_id'] = $summit->getExternalSummitId();
+        $payload[IMailTemplatesConstants::email_to]    = $email_to;
+        $payload[IMailTemplatesConstants::summit_id]   = $summit->getId();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::feed_type]   = $summit->getExternalRegistrationFeedType();
+        $payload[IMailTemplatesConstants::external_id] = $summit->getExternalSummitId();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug
@@ -58,4 +59,17 @@ class SuccessfulIIngestionEmail extends AbstractEmailJob
         parent::__construct($payload, $template_identifier, $email_to);
     }
 
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::email_to]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::feed_type]['type'] = 'string';
+        $payload[IMailTemplatesConstants::external_id]['type'] = 'int';
+
+        return $payload;
+    }
 }

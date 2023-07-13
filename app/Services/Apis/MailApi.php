@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleRetry\GuzzleRetryMiddleware;
@@ -168,7 +169,17 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
                 // retry
                 return $this->sendEmail($payload,  $template_identifier,  $to_email,  $subject, $cc_email, $bbc_email);
             }
-            Log::error($ex);
+            Log::error
+            (
+                sprintf
+                (
+                    "MailApi::sendEmail template_identifier %s to_email %s payload %s error %s",
+                    $template_identifier,
+                    $to_email,
+                    json_encode($payload),
+                    $ex->getMessage()
+                )
+            );
             throw $ex;
         }
         catch (\Exception $ex) {

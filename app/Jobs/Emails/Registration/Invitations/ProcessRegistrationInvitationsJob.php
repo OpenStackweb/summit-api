@@ -66,6 +66,7 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
             'email' => ['@@','=@', '=='],
             'first_name' => ['@@','=@', '=='],
             'last_name' => ['@@','=@', '=='],
+            'full_name' => ['@@','=@', '=='],
             'ticket_types_id' => ['=='],
             'tags' => ['@@','=@', '=='],
             'tags_id' => ['=='],

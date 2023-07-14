@@ -67,6 +67,35 @@ class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTest
         return $email_events;
     }
 
+    public function testGetEmailEventById(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'event_id' => 12286
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitEmailEventFlowApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $email_events = json_decode($content);
+        $this->assertTrue(!is_null($email_events));
+        $this->assertTrue($email_events->total >= 1);
+        return $email_events;
+    }
+
     public function testUpdateEmailEvent(){
         $email_events = $this->testGetAllEmailEvents();
 

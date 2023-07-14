@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\Traits\SummitEmailJob;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
@@ -59,25 +60,43 @@ class PresentationCreatorNotificationEmail extends AbstractEmailJob
         $payload = [];
         $payload = $this->emitSummitTemplateVars($payload, $summit);
 
-        $payload['creator_full_name'] = $creator->getFullName();
-        $payload['creator_email'] = $creator->getEmail();
-        $payload['selection_plan_name'] = $selection_plan->getName();
-        $payload['presentation_edit_link'] = $presentation->getEditLink();
+        $payload[IMailTemplatesConstants::creator_full_name] = $creator->getFullName();
+        $payload[IMailTemplatesConstants::creator_email] = $creator->getEmail();
+        $payload[IMailTemplatesConstants::selection_plan_name] = $selection_plan->getName();
+        $payload[IMailTemplatesConstants::presentation_edit_link] = $presentation->getEditLink();
 
         $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
-        $payload['until_date'] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
+        $payload[IMailTemplatesConstants::until_date] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
 
-        $payload['selection_process_link'] = sprintf("%s/app/%s/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
-        $payload['speaker_management_link'] = sprintf("%s/app/%s/%s", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
-        $payload['bio_edit_link'] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
-        $payload['reset_password_link'] = sprintf("%s/auth/password/reset", $idp_base_url);
-        $payload['support_email'] = $support_email;
+        $payload[IMailTemplatesConstants::selection_process_link] = sprintf("%s/app/%s/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
+        $payload[IMailTemplatesConstants::speaker_management_link] = sprintf("%s/app/%s/%s", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
+        $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
+        $payload[IMailTemplatesConstants::reset_password_link] = sprintf("%s/auth/password/reset", $idp_base_url);
+        $payload[IMailTemplatesConstants::support_email] = $support_email;
 
         $selectionPlanTemplateName = $selection_plan->getPresentationCreatorNotificationEmailTemplate();
 
         $template_identifier =  !empty($selectionPlanTemplateName) ?
             $selectionPlanTemplateName : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['creator_email']);
+        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::creator_email]);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::creator_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::creator_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::presentation_edit_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::until_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_process_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reset_password_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+
+        return $payload;
     }
 }

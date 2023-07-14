@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\FormatUtils;
@@ -42,15 +43,15 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
         $summit = $invitation->getSummit();
         $owner_email = $invitation->getEmail();
         $payload = [];
-        $payload['owner_email'] = $owner_email;
-        $payload['first_name'] = $invitation->getFirstName();
-        $payload['last_name'] = $invitation->getLastName();
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::owner_email] = $owner_email;
+        $payload[IMailTemplatesConstants::first_name] = $invitation->getFirstName();
+        $payload[IMailTemplatesConstants::last_name] = $invitation->getLastName();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $ticket_types = [];
 
         foreach ($invitation->getRemainingAllowedTicketTypes() as $ticketType){
@@ -65,17 +66,47 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
             $ticket_types[] = $ticket_type_dto;
         }
 
-        $payload['ticket_types'] = $ticket_types;
+        $payload[IMailTemplatesConstants::ticket_types] = $ticket_types;
 
         $support_email = $summit->getSupportEmail();
-        $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
+        $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
 
-        if (empty($payload['support_email']))
+        if (empty($payload[IMailTemplatesConstants::support_email]))
             throw new \InvalidArgumentException("missing support_email value");
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, $owner_email);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::first_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::last_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+
+        $ticket_type_schema = [];
+        $ticket_schema['type'] = 'object';
+        $ticket_schema['properties'][IMailTemplatesConstants::name]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::description]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::price]['type'] = 'float';
+        $ticket_schema['properties'][IMailTemplatesConstants::currency]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::currency_symbol]['type'] = 'string';
+
+        $payload[IMailTemplatesConstants::ticket_types]['type'] = 'array';
+        $payload[IMailTemplatesConstants::ticket_types]['items'] = $ticket_type_schema;
+
+        return $payload;
     }
 
     protected function getEmailEventSlug(): string

@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use http\Exception\InvalidArgumentException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -47,11 +48,11 @@ class InviteSubmissionEmail
         $owner_email = $invitation->getEmail();
 
         $payload = [];
-        $payload['owner_email'] = $owner_email;
-        $payload['first_name'] = $invitation->getFirstName();
-        $payload['last_name'] = $invitation->getLastName();
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::owner_email] = $owner_email;
+        $payload[IMailTemplatesConstants::first_name] = $invitation->getFirstName();
+        $payload[IMailTemplatesConstants::last_name] = $invitation->getLastName();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
 
         $base_url = Config::get('cfp.base_url', null);
 
@@ -59,12 +60,12 @@ class InviteSubmissionEmail
             throw new \InvalidArgumentException("missing cfp.base_url value");
 
         $back_url = sprintf("%s/app/%s/all-plans", $base_url, $summit->getRawSlug());
-        $payload['selection_plan_name'] = '';
-        $payload['selection_plan_id'] = 0;
-        $payload['selection_plan_submission_start_date'] = '';
-        $payload['selection_plan_submission_end_date'] = '';
+        $payload[IMailTemplatesConstants::selection_plan_name] = '';
+        $payload[IMailTemplatesConstants::selection_plan_id] = 0;
+        $payload[IMailTemplatesConstants::selection_plan_submission_start_date] = '';
+        $payload[IMailTemplatesConstants::selection_plan_submission_end_date] = '';
 
-        if (isset($extra_data['selection_plan_id'])) {
+        if (isset($extra_data[IMailTemplatesConstants::selection_plan_id])) {
             $selection_plan_id = intval($extra_data['selection_plan_id']);
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             Log::debug(sprintf("InviteSubmissionEmail::____construct selection plan %s was provided", $selection_plan_id));
@@ -80,17 +81,17 @@ class InviteSubmissionEmail
                     )
                 );
             }
-            $payload['selection_plan_name'] = $selection_plan->getName();
-            $payload['selection_plan_id'] = $selection_plan->getId();
+            $payload[IMailTemplatesConstants::selection_plan_name] = $selection_plan->getName();
+            $payload[IMailTemplatesConstants::selection_plan_id] = $selection_plan->getId();
             $submissionBeingDateLocal = $selection_plan->getSubmissionBeginDateLocal();
-            $payload['selection_plan_submission_start_date'] = !is_null($submissionBeingDateLocal) ? $submissionBeingDateLocal->format('F d, Y') : "";
+            $payload[IMailTemplatesConstants::selection_plan_submission_start_date] = !is_null($submissionBeingDateLocal) ? $submissionBeingDateLocal->format('F d, Y') : "";
             $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
-            $payload['selection_plan_submission_end_date'] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
+            $payload[IMailTemplatesConstants::selection_plan_submission_end_date] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
 
             $back_url = $back_url . '/' . $selection_plan_id;
         }
 
-        $payload['magic_link'] = sprintf
+        $payload[IMailTemplatesConstants::magic_link] = sprintf
         (
             "%s/auth/login?login_hint=%s&otp_login_hint=%s&BackUrl=%s"
             , $base_url
@@ -99,14 +100,34 @@ class InviteSubmissionEmail
             , urlencode($back_url)
         );
 
-        $payload['support_email'] = Config::get("cfp.support_email", null);
+        $payload[IMailTemplatesConstants::support_email] = Config::get("cfp.support_email", null);
 
-        if (empty($payload['support_email']))
+        if (empty($payload[IMailTemplatesConstants::support_email]))
             throw new \InvalidArgumentException("missing support_email value");
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, $owner_email);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::first_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::last_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_plan_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::selection_plan_submission_start_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::selection_plan_submission_end_date]['type'] = 'string';
+        $payload[IMailTemplatesConstants::magic_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+
+        return $payload;
     }
 
     protected function getEmailEventSlug(): string

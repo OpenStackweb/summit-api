@@ -42,16 +42,28 @@ class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
         Log::debug(sprintf("UnregisteredMemberOrderPaidMail::__construct %s", $this->template_identifier));
 
         $summit = $order->getSummit();
-        $this->payload['set_password_link'] = $set_password_link;
+        $this->payload[IMailTemplatesConstants::set_password_link] = $set_password_link;
 
-        $this->payload['set_password_link_to_registration'] = sprintf(
+        $this->payload[IMailTemplatesConstants::set_password_link_to_registration] = sprintf(
             "%s?client_id=%s&redirect_uri=%s",
             $set_password_link,
             $summit->getMarketingSiteOAuth2ClientId(),
             urlencode($summit->getMarketingSiteUrl())
         );
 
-        $this->payload['manage_orders_url'] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
+        $this->payload[IMailTemplatesConstants::manage_orders_url] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
 
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = RegisteredMemberOrderPaidMail::getEmailTemplateSchema();
+        $payload[IMailTemplatesConstants::set_password_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::set_password_link_to_registration]['type'] = 'string';
+        $payload[IMailTemplatesConstants::manage_orders_url]['type'] = 'string';
+
+        return $payload;
     }
 }

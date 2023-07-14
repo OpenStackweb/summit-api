@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use libs\utils\FormatUtils;
 use models\summit\SummitOrder;
@@ -38,34 +39,34 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
     {
         $payload = [];
         $summit = $order->getSummit();
-        $payload['owner_full_name'] = $order->getOwnerFullName();
-        $payload['owner_first_name'] = $order->getOwnerFirstName();
-        $payload['owner_full_name'] = $order->getOwnerFullName();
-        $payload['owner_company'] = $order->getOwnerCompanyName();
-        $payload['owner_email'] = $order->getOwnerEmail();
-        $payload['order_number'] = $order->getNumber();
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
-        $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
-        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
+        $payload[IMailTemplatesConstants::owner_first_name] = $order->getOwnerFirstName();
+        $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
+        $payload[IMailTemplatesConstants::owner_company] = $order->getOwnerCompanyName();
+        $payload[IMailTemplatesConstants::owner_email] = $order->getOwnerEmail();
+        $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
+        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
-        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
-        $payload['order_currency'] = $order->getCurrency();
-        $payload['order_currency_symbol'] = $order->getCurrencySymbol();
-        $payload['tickets'] = [];
+        $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat($order->getFinalAmount());
+        $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
+        $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
+        $payload[IMailTemplatesConstants::tickets] = [];
 
         $tickets = [];
         foreach ($order->getTickets() as $ticket) {
             $ticket_dto = [
-                'number' => $ticket->getNumber(),
-                'ticket_type_name' => $ticket->getTicketType()->getName(),
-                'has_owner' => false,
-                'price' => FormatUtils::getNiceFloat($ticket->getFinalAmount()),
-                'currency' => $ticket->getCurrency(),
-                'currency_symbol' => $ticket->getCurrencySymbol(),
-                'need_details' => false,
+                IMailTemplatesConstants::number => $ticket->getNumber(),
+                IMailTemplatesConstants::ticket_type_name => $ticket->getTicketType()->getName(),
+                IMailTemplatesConstants::has_owner => false,
+                IMailTemplatesConstants::price => FormatUtils::getNiceFloat($ticket->getFinalAmount()),
+                IMailTemplatesConstants::currency => $ticket->getCurrency(),
+                IMailTemplatesConstants::currency_symbol => $ticket->getCurrencySymbol(),
+                IMailTemplatesConstants::need_details => false,
             ];
             if ($ticket->hasPromoCode()) {
                 $promo_code = $ticket->getPromoCode();
@@ -75,36 +76,86 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
                 ];
 
                 if ($promo_code instanceof SummitRegistrationDiscountCode) {
-                    $promo_code_dto['is_discount'] = true;
-                    $promo_code_dto['discount_amount'] = FormatUtils::getNiceFloat($promo_code->getAmount());
-                    $promo_code_dto['discount_rate'] = $promo_code->getRate();
+                    $promo_code_dto[IMailTemplatesConstants::is_discount] = true;
+                    $promo_code_dto[IMailTemplatesConstants::discount_amount] = FormatUtils::getNiceFloat($promo_code->getAmount());
+                    $promo_code_dto[IMailTemplatesConstants::discount_rate] = $promo_code->getRate();
                 }
 
-                $ticket_dto['promo_code'] = $promo_code_dto;
+                $ticket_dto[IMailTemplatesConstants::promo_code] = $promo_code_dto;
             }
             if ($ticket->hasOwner()) {
                 $ticket_dto['has_owner'] = true;
                 $ticket_owner = $ticket->getOwner();
-                $ticket_dto['owner_email'] = $ticket_owner->getEmail();
-                $ticket_dto['owner_full_name'] = $ticket_owner->getFullName();
-                $ticket_dto['owner_company'] = $ticket_owner->getCompanyName();
-                $ticket_dto['owner_first_name'] = $ticket_owner->getFirstName();
-                $ticket_dto['owner_last_name'] = $ticket_owner->getSurname();
-                $ticket_dto['need_details'] = $ticket_owner->needToFillDetails();
+                $ticket_dto[IMailTemplatesConstants::owner_email] = $ticket_owner->getEmail();
+                $ticket_dto[IMailTemplatesConstants::owner_full_name] = $ticket_owner->getFullName();
+                $ticket_dto[IMailTemplatesConstants::owner_company] = $ticket_owner->getCompanyName();
+                $ticket_dto[IMailTemplatesConstants::owner_first_name] = $ticket_owner->getFirstName();
+                $ticket_dto[IMailTemplatesConstants::owner_last_name] = $ticket_owner->getSurname();
+                $ticket_dto[IMailTemplatesConstants::need_details] = $ticket_owner->needToFillDetails();
             }
             $tickets[] = $ticket_dto;
         }
 
-        $payload['tickets'] = $tickets;
+        $payload[IMailTemplatesConstants::tickets] = $tickets;
 
         $support_email = $summit->getSupportEmail();
-        $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
+        $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
 
-        if (empty($payload['support_email']))
+        if (empty($payload[IMailTemplatesConstants::support_email]))
             throw new \InvalidArgumentException("missing support_email value");
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['owner_email']);
+        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_first_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_amount]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+
+        $promo_code_schema = [];
+        $promo_code_schema['type'] = 'object';
+        $promo_code_schema['properties'][IMailTemplatesConstants::code]['type'] = 'string';
+        $promo_code_schema['properties'][IMailTemplatesConstants::is_discount]['type'] = 'bool';
+        $promo_code_schema['properties'][IMailTemplatesConstants::discount_amount]['type'] = 'string';
+        $promo_code_schema['properties'][IMailTemplatesConstants::discount_rate]['type'] = 'float';
+
+        $ticket_schema = [];
+        $ticket_schema['type'] = 'object';
+        $ticket_schema['properties'][IMailTemplatesConstants::number]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::ticket_type_name]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::has_owner]['type'] = 'bool';
+        $ticket_schema['properties'][IMailTemplatesConstants::owner_email]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::owner_full_name]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::owner_first_name]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::owner_last_name]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::owner_company]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::price]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::currency]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::currency_symbol]['type'] = 'string';
+        $ticket_schema['properties'][IMailTemplatesConstants::need_details]['type'] = 'bool';
+        $ticket_schema['properties'][IMailTemplatesConstants::promo_code] = $promo_code_schema;
+
+        $payload[IMailTemplatesConstants::tickets]['type'] = 'array';
+        $payload[IMailTemplatesConstants::tickets]['items'] = $ticket_schema;
+
+        return $payload;
     }
 }

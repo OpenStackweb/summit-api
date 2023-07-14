@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Models\Foundation\Elections\Election;
 use models\main\Member;
 use Illuminate\Support\Facades\Log;
@@ -40,21 +41,36 @@ class NominationEmail extends AbstractEmailJob
     {
         Log::debug(sprintf("NominationEmail::__construct election %s candidate %s", $election->getId(), $candidate->getId()));
         $payload = [];
-        $payload['election_title'] = $election->getName();
-        $payload['election_app_deadline'] = '';
+        $payload[IMailTemplatesConstants::election_title] = $election->getName();
+        $payload[IMailTemplatesConstants::election_app_deadline] = '';
         $nominationDeadline = $election->getNominationDeadline();
-        $payload['member_id'] = $candidate->getId();
+        $payload[IMailTemplatesConstants::member_id] = $candidate->getId();
         if(!is_null($nominationDeadline))
-            $payload['election_app_deadline'] = $election->getNominationDeadline()->format("l j F Y h:i A T");
-        $payload['candidate_full_name'] = $candidate->getFullName();
-        $payload['candidate_email'] = $candidate->getEmail();
+            $payload[IMailTemplatesConstants::election_app_deadline] = $election->getNominationDeadline()->format("l j F Y h:i A T");
+        $payload[IMailTemplatesConstants::candidate_full_name] = $candidate->getFullName();
+        $payload[IMailTemplatesConstants::candidate_email] = $candidate->getEmail();
 
-        if(empty($payload['candidate_full_name'])){
-            $payload['candidate_full_name'] = $payload['candidate_email'];
+        if(empty($payload[IMailTemplatesConstants::candidate_full_name])){
+            $payload[IMailTemplatesConstants::candidate_full_name] = $payload[IMailTemplatesConstants::candidate_email];
         }
-        $payload['candidate_has_accepted_nomination'] = $candidate->getLatestCandidateProfile()->isHasAcceptedNomination();
-        $payload['candidate_nominations_count'] = $candidate->getElectionApplicationsCountFor($election);
+        $payload[IMailTemplatesConstants::candidate_has_accepted_nomination] = $candidate->getLatestCandidateProfile()->isHasAcceptedNomination();
+        $payload[IMailTemplatesConstants::candidate_nominations_count] = $candidate->getElectionApplicationsCountFor($election);
         parent::__construct($payload, self::DEFAULT_TEMPLATE, $candidate->getEmail());
     }
 
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::election_title]['type'] = 'string';
+        $payload[IMailTemplatesConstants::election_app_deadline]['type'] = 'string';
+        $payload[IMailTemplatesConstants::member_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::candidate_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::candidate_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::candidate_has_accepted_nomination]['type'] = 'bool';
+        $payload[IMailTemplatesConstants::candidate_nominations_count]['type'] = 'int';
+
+        return $payload;
+    }
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
@@ -58,10 +59,20 @@ class PresentationSpeakerSelectionProcessAcceptedRejectedEmail extends Presentat
         parent::__construct($summit, $speaker, $test_email_recipient, $speaker_announcement_email_config, $promo_code, $filter);
 
         if (!empty($confirmation_token)) {
-            $this->payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+            $this->payload[IMailTemplatesConstants::speaker_confirmation_link] =
+                sprintf("%s?t=%s", $this->payload[IMailTemplatesConstants::speaker_confirmation_link], base64_encode($confirmation_token));
         }
 
         Log::debug(sprintf("PresentationSpeakerSelectionProcessAcceptedRejectedEmail::__construct payload %s", json_encode($this->payload)));
+    }
 
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = PresentationSpeakerSelectionProcessEmail::getEmailTemplateSchema();
+        $payload[IMailTemplatesConstants::speaker_confirmation_link]['type'] = 'string';
+
+        return $payload;
     }
 }

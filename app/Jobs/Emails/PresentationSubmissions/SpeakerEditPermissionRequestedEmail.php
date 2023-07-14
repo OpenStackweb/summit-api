@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -38,18 +39,34 @@ class SpeakerEditPermissionRequestedEmail extends AbstractEmailJob
     public function __construct(SpeakerEditPermissionRequest $request, string $token)
     {
         $payload = [];
-        $payload['requested_by_full_name'] = $request->getRequestedBy()->getFullName();
-        $payload['speaker_full_name'] = $request->getSpeaker()->getFullName();
-        $payload['token'] = $token;
-        $payload['link'] = $request->getConfirmationLink($request->getSpeaker()->getId(), $token);
-        $payload['tenant_name'] = Config::get("app.tenant_name");
-        $payload['requested_by_email'] = $request->getRequestedBy()->getEmail();
-        $payload['speaker_email'] = $request->getSpeaker()->getEmail();
-        if(empty($payload['speaker_email'])){
+        $payload[IMailTemplatesConstants::requested_by_full_name] = $request->getRequestedBy()->getFullName();
+        $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
+        $payload[IMailTemplatesConstants::token] = $token;
+        $payload[IMailTemplatesConstants::link] = $request->getConfirmationLink($request->getSpeaker()->getId(), $token);
+        $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");
+        $payload[IMailTemplatesConstants::requested_by_email] = $request->getRequestedBy()->getEmail();
+        $payload[IMailTemplatesConstants::speaker_email] = $request->getSpeaker()->getEmail();
+        if(empty($payload[IMailTemplatesConstants::speaker_email])){
             Log::error(sprintf("SpeakerEditPermissionRequestedEmail::__construct speaker %s has no email set", $request->getSpeaker()->getId()));
             throw new ValidationException(sprintf("SpeakerEditPermissionRequestedEmail::__construct speaker %s has no email set", $request->getSpeaker()->getId()));
         }
-        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload['speaker_email']);
+        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload[IMailTemplatesConstants::speaker_email]);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::requested_by_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::speaker_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::token]['type'] = 'string';
+        $payload[IMailTemplatesConstants::link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::tenant_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::requested_by_email]['type'] = 'string';
+
+        return $payload;
     }
 
     protected function getEmailEventSlug(): string

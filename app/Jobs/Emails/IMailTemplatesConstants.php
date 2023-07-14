@@ -111,6 +111,7 @@ interface IMailTemplatesConstants
     const registration_link = 'registration_link';
     const rejected_moderated_presentations = 'rejected_moderated_presentations';
     const rejected_presentations = 'rejected_presentations';
+    const report = 'report';
     const requested_by_email = 'requested_by_email';
     const requested_by_full_name = 'requested_by_full_name';
     const requester_email = 'requester_email';

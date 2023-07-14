@@ -34,6 +34,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedAlternateEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedOnlyEmail;
@@ -41,6 +42,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitt
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessExcerptEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessRejectedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerCreationEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
@@ -69,6 +71,7 @@ use App\Jobs\Emails\Schedule\RSVPMail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class EmailTemplatesSchemaSerializerRegistry
@@ -130,6 +133,8 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
         $this->registry[PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
         $this->registry[PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessEmail::class;
+        $this->registry[PresentationSpeakerSelectionProcessExcerptEmail::EVENT_SLUG] = PresentationSpeakerSelectionProcessExcerptEmail::class;
+        $this->registry[PresentationSubmitterSelectionProcessExcerptEmail::EVENT_SLUG] = PresentationSubmitterSelectionProcessExcerptEmail::class;
 
         $this->registry[ImportEventSpeakerEmail::EVENT_SLUG] = ImportEventSpeakerEmail::class;
         $this->registry[PresentationCreatorNotificationEmail::EVENT_SLUG] = PresentationCreatorNotificationEmail::class;
@@ -190,8 +195,10 @@ final class EmailTemplatesSchemaSerializerRegistry
      */
     public function serialize(string $slug)
     {
-        if (!isset($this->registry[$slug]))
-            throw new \InvalidArgumentException('Emails template schema builder not found for ' . $slug);
+        if (!isset($this->registry[$slug])) {
+            Log::warning('Emails template schema builder not found for ' . $slug);
+            return [];
+        }
 
         $builder_class = $this->registry[$slug];
 

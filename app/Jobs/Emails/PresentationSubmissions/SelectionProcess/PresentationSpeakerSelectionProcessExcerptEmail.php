@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
@@ -57,7 +58,7 @@ class PresentationSpeakerSelectionProcessExcerptEmail extends AbstractEmailJob
                 $report_lines[] = "INFO {$reportItem['message']}.";
         }
 
-        $payload['report'] = $report_lines;
+        $payload[IMailTemplatesConstants::report] = $report_lines;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
@@ -65,5 +66,15 @@ class PresentationSpeakerSelectionProcessExcerptEmail extends AbstractEmailJob
 
         Log::debug(sprintf("PresentationSpeakerSelectionProcessExcerptEmail::__construct payload %s", json_encode($payload)));
 
+    }
+
+    /**
+     * @return array
+     */
+    public static function getEmailTemplateSchema(): array{
+        $payload = [];
+        $payload[IMailTemplatesConstants::report]['type'] = 'string';
+
+        return $payload;
     }
 }

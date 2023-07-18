@@ -23,7 +23,7 @@ interface IPromoCodeStrategyFactory
     /**
      * @param Summit $summit
      * @param array $payload
-     * @return IPromoCodeStrategy
+     * @return IPromoCodeStrategy|null
      */
-    public function createStrategy(Summit $summit, array $payload): IPromoCodeStrategy;
+    public function createStrategy(Summit $summit, array $payload): ?IPromoCodeStrategy;
 }

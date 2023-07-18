@@ -64,14 +64,19 @@ final class PromoCodeStrategyFactory implements IPromoCodeStrategyFactory
     /**
      * @param Summit $summit
      * @param array $payload
-     * @return IPromoCodeStrategy
+     * @return IPromoCodeStrategy|null
      */
-    public function createStrategy(Summit $summit, array $payload): IPromoCodeStrategy
+    public function createStrategy(Summit $summit, array $payload): ?IPromoCodeStrategy
     {
         if (isset($payload["promo_code"]))
             return new ExistingMultiSpeakerPromoCodeStrategy($summit, $this->tx_service, $payload);
 
-        return new AutomaticMultiSpeakerPromoCodeStrategy(
-            $summit, $this->service, $this->repository, $this->code_generator, $payload);
+        if(isset($payload['promo_code_spec']))
+            return new AutomaticMultiSpeakerPromoCodeStrategy
+            (
+                $summit, $this->service, $this->repository, $this->code_generator, $payload
+            );
+
+        return null;
     }
 }

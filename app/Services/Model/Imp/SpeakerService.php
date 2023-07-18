@@ -1261,7 +1261,14 @@ final class SpeakerService
 
                         // try to get or auto-build a promo code
 
-                        $promo_code = $this->promo_code_strategy_factory->createStrategy($summit, $payload)->getPromoCode($speaker);
+                        $promo_code_strategy = $this->promo_code_strategy_factory->createStrategy($summit, $payload);
+
+                        $promo_code = null;
+
+                        if(!is_null($promo_code_strategy)) {
+                            Log::debug(sprintf("SpeakerService::send getting promo code for speaker id %s", $speaker_id));
+                            $promo_code = $promo_code_strategy->getPromoCode($speaker);
+                        }
 
                         // try to get a speaker assistance
                         $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);

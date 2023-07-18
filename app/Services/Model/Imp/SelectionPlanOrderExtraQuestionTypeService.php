@@ -128,6 +128,13 @@ final class SelectionPlanOrderExtraQuestionTypeService
                     json_encode($payload)
                 ));
 
+            $question = $selection_plan->getExtraQuestionById($question_id);
+            if (is_null($question))
+                throw new EntityNotFoundException("Question does not belongs to selection plan.");
+
+            if (!$question->isEditable($selection_plan))
+                throw new ValidationException("Question {$question_id} is not editable for this selection plan {$selection_plan->getId()}.");
+
             $summit = $selection_plan->getSummit();
 
             $question = $this->updateExtraQuestion($summit, $question_id, $payload);
@@ -279,6 +286,9 @@ final class SelectionPlanOrderExtraQuestionTypeService
             $question = $selection_plan->getExtraQuestionById($question_id);
             if (is_null($question))
                 throw new EntityNotFoundException("Question not found.");
+
+            if (!$question->isEditable($selection_plan))
+                throw new ValidationException("Question {$question_id} is not editable for this selection plan {$selection_plan_id}.");
 
             $selection_plan->removeExtraQuestion($question);
         });

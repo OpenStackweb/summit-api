@@ -13,7 +13,9 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use models\summit\SummitOwned;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -59,4 +61,14 @@ class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
         return $value === false ? null : $value->getOrder();
     }
 
+    /**
+     * @param SelectionPlan $selection_plan
+     * @return bool
+     */
+    public function isEditable(SelectionPlan $selection_plan):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('selection_plan', $selection_plan));
+        $value = $this->assigned_selection_plans->matching($criteria)->first();
+        return $value === false ? false : $value->isEditable();
+    }
 }

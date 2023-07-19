@@ -43,8 +43,8 @@ final class SummitEmailEventFlowService
 
             $event->setEmailTemplateIdentifier(trim($data['email_template_identifier']));
 
-            if (isset($data['recipient'])) {
-                $event->setEmailRecipient(trim($data['recipient']));
+            if (isset($data['recipients']) && is_array($data['recipients'])) {
+                $event->setEmailRecipients($data['recipients']);
             }
 
             return $event;

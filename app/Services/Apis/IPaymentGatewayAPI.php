@@ -97,6 +97,12 @@ interface IPaymentGatewayAPI
     public function getCartStatus(string $cart_id):?string;
 
     /**
+     * @param array $payload
+     * @return array
+     */
+    public function getCreditCardInfo(array $payload): array;
+
+    /**
      * @param string $status
      * @return bool
      */

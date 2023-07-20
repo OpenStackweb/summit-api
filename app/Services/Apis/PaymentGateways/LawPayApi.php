@@ -538,4 +538,9 @@ final class LawPayApi implements IPaymentGatewayAPI
             Log::warning(sprintf("LawPayApi::createWebHook code %s message %s", $ex->getCode(), $ex->getMessage()));
         }
     }
+
+    public function getCreditCardInfo(array $payload): array
+    {
+        return [];
+    }
 }

@@ -1910,7 +1910,7 @@ final class SummitOrderService
 
             if ($payment_gateway->isSuccessFullPayment($payload)) {
                 Log::debug("SummitOrderService::processPayment: payment is successful");
-                $order->setPaid();
+                $order->setPaid($payload);
                 return;
             }
 

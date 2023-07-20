@@ -4909,7 +4909,7 @@ SQL;
 
         try {
             $sql = <<<SQL
-           SELECT SummitEmailEventFlow.EmailRecipient AS Template 
+           SELECT SummitEmailEventFlow.EmailRecipients AS Template 
            FROM `SummitEmailEventFlow` 
            inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID 
            where SummitID = :summit_id 
@@ -4922,12 +4922,12 @@ SQL;
             ]);
 
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            $recipient = count($res) > 0 ? $res[0] : null;
-            if (!empty($recipient)) {
+            $recipients = count($res) > 0 ? $res[0] : null;
+            if (!empty($recipients)) {
                 Log::debug(
                     "Summit::getEmailRecipientPerEmailEventFlowSlug id {$this->id} slug {$eventSlug} " .
-                    "got override by template {$recipient}");
-                return $recipient;
+                    "got override by template {$recipients}");
+                return $recipients;
             }
             return null;
         } catch (\Exception $ex) {

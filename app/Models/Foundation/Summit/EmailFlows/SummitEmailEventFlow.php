@@ -37,10 +37,10 @@ class SummitEmailEventFlow extends SilverstripeBaseModel
     private $email_template_identifier;
 
     /**
-     * @ORM\Column(name="EmailRecipient", type="string")
+     * @ORM\Column(name="EmailRecipients", type="string")
      * @var string
      */
-    private $recipient;
+    private $recipients;
 
     /**
      * @ORM\ManyToOne(targetEntity="SummitEmailEventFlowType")
@@ -89,16 +89,17 @@ class SummitEmailEventFlow extends SilverstripeBaseModel
         $this->event_type = $event_type;
     }
 
-    public function getEmailRecipient(): ?string
+    public function getEmailRecipients(): array
     {
-        return $this->recipient;
+        if(empty($this->recipients)) return [];
+        return explode(",", $this->recipients);
     }
 
     /**
-     * @param string $email_recipient
+     * @param array recipients
      */
-    public function setEmailRecipient(string $email_recipient): void
+    public function setEmailRecipients(array $recipients): void
     {
-        $this->recipient = $email_recipient;
+        $this->recipients = implode(",", $recipients);
     }
 }

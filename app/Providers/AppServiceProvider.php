@@ -210,6 +210,19 @@ class AppServiceProvider extends ServiceProvider
             return true;
         });
 
+        // @see  RFC 5322 - https://www.rfc-editor.org/rfc/rfc5322#section-3.4
+        Validator::extend('emails_array', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('emails_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be an array of valid emails", $attribute);
+            });
+            if (!is_array($value)) return false;
+            foreach ($value as $element) {
+                if (!is_string($element)) return false;
+                if(!filter_var($element, FILTER_VALIDATE_EMAIL)) return false;
+            }
+            return true;
+        });
+
         Validator::extend('int_or_string_array', function ($attribute, $value, $parameters, $validator) {
             $validator->addReplacer('int_or_string_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be an array of integers or strings", $attribute);

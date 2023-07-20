@@ -350,13 +350,11 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->rsvp_max_user_wait_list_number = 0;
         $this->streaming_type = SummitEvent::STREAMING_TYPE_LIVE;
         $this->duration = 0;
-
         $this->tags = new ArrayCollection();
         $this->feedback = new ArrayCollection();
         $this->sponsors = new ArrayCollection();
         $this->rsvp = new ArrayCollection();
         $this->attendance_metrics = new ArrayCollection();
-
     }
 
     use SummitOwned;

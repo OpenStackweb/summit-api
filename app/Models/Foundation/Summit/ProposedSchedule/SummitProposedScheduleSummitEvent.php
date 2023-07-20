@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\PresentationCategory;
@@ -103,8 +104,8 @@ class SummitProposedScheduleSummitEvent
     public function __construct()
     {
         parent::__construct();
-        $this->start_date = new \DateTime("now", new \DateTimeZone("UTC"));
-        $this->end_date = new \DateTime("now", new \DateTimeZone("UTC"));
+        $this->start_date = null;
+        $this->end_date = null;
         $this->duration = 0;
     }
 
@@ -181,8 +182,26 @@ class SummitProposedScheduleSummitEvent
      */
     public function getDuration(): int
     {
-        if (!$this->duration && !is_null($this->start_date) && !is_null(!is_null($this->end_date))) {
-            $this->duration = $this->end_date->getTimestamp() - $this->start_date->getTimestamp();
+        Log::debug(sprintf("SummitProposedScheduleSummitEvent::getDuration event id %s", $this->id));
+        if (!$this->duration) {
+            if (!is_null($this->start_date) && !is_null(!is_null($this->end_date))) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitProposedScheduleSummitEvent::getDuration event id %s start date %s end date %s",
+                        $this->id,
+                        $this->start_date->format("Y-m-d H:i:s"),
+                        $this->end_date->format("Y-m-d H:i:s")
+                    )
+                );
+                $this->duration = $this->end_date->getTimestamp() - $this->start_date->getTimestamp();
+            }
+            else {
+                // if there is no dates set, default duration is the one from the summit event
+                $this->duration = $this->summit_event->getDuration();
+                Log::debug(sprintf("SummitProposedScheduleSummitEvent::getDuration overriding with summit event setting event id %s duration %s", $this->id, $this->duration));
+            }
         }
         return $this->duration;
     }
@@ -450,5 +469,11 @@ class SummitProposedScheduleSummitEvent
     public function getSource(): string
     {
         return SummitEventTypeConstants::BLACKOUT_TIME_PROPOSED;
+    }
+
+    public function clearPublishingDates(): void
+    {
+        $this->start_date = null;
+        $this->end_date = null;
     }
 }

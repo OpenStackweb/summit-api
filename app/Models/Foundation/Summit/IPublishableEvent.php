@@ -102,4 +102,6 @@ interface IPublishableEvent extends IEntity
     public function getSummitEventId():int;
 
     public function getSource(): string;
+
+    public function clearPublishingDates():void;
 }

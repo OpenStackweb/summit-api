@@ -193,8 +193,10 @@ final class ScheduleService
     /**
      * @inheritDoc
      */
-    public function publishProposedActivityToSource(
-        string $source, int $presentation_id, array $payload): SummitProposedScheduleSummitEvent
+    public function publishProposedActivityToSource
+    (
+        string $source, int $presentation_id, array $payload
+    ): SummitProposedScheduleSummitEvent
     {
 
         Log::debug
@@ -330,11 +332,24 @@ final class ScheduleService
     /**
      * @inheritDoc
      */
-    public function publishProposedActivity(
-        int $schedule_id, int $presentation_id, array $payload): SummitProposedScheduleSummitEvent
+    public function publishProposedActivity
+    (
+        int $schedule_id, int $presentation_id, array $payload
+    ): SummitProposedScheduleSummitEvent
     {
 
         return $this->tx_service->transaction(function () use ($schedule_id, $presentation_id, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "ScheduleService::publishProposedActivity schedule_id %s presentation_id %s payload %s",
+                    $schedule_id,
+                    $presentation_id,
+                    json_encode($payload)
+                )
+            );
 
             $schedule = $this->schedule_repository->getById($schedule_id);
 
@@ -363,6 +378,8 @@ final class ScheduleService
                 $schedule_event->setSummitEvent($event);
                 $schedule_event->setCreatedBy($member);
                 $schedule_event->setSchedule($schedule);
+                // only on creation
+                $payload = $this->overrideEndDate($schedule_event, $payload);
             }
 
             $schedule_event = $this->updateLocation($payload, $summit, $schedule_event);

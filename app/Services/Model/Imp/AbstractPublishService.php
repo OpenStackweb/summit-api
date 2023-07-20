@@ -47,6 +47,48 @@ abstract class AbstractPublishService extends AbstractService
     }
 
     /**
+     * @param IPublishableEvent $publishable_event
+     * @param array $payload
+     * @return array
+     * @throws \Exception
+     */
+    protected function overrideEndDate(IPublishableEvent $publishable_event, array $payload):array{
+        // override end_date if duration is set
+        $duration_in_seconds = $publishable_event->getDuration();
+        $summit = $publishable_event->getSummit();
+        Log::debug
+        (
+            sprintf
+            (
+                "AbstractPublishService::overrideEndDate event %s duration %s",
+                $publishable_event->getId(),
+                $duration_in_seconds
+            )
+        );
+
+        if($duration_in_seconds > 0) {
+            $start_datetime = $summit->parseDateTime(intval($payload['start_date']));
+            $value = $start_datetime->add(new \DateInterval('PT' . $duration_in_seconds . 'S'));
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+            $payload['end_date'] = $value->getTimestamp();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AbstractPublishService::overrideEndDate event %s duration %s start_date %s end_date %s",
+                    $publishable_event->getId(),
+                    $duration_in_seconds,
+                    $payload['start_date'],
+                    $payload['end_date']
+                )
+            );
+        }
+
+        return $payload;
+    }
+
+    /**
      * @param array $data
      * @param Summit $summit
      * @param IPublishableEvent $publishable_event
@@ -73,8 +115,10 @@ abstract class AbstractPublishService extends AbstractService
      * @throws ValidationException
      * @throws \Exception
      */
-    protected function updateEventDates(
-        array $data, Summit $summit, IPublishableEvent $publishable_event): IPublishableEvent
+    protected function updateEventDates
+    (
+        array $data, Summit $summit, IPublishableEvent $publishable_event
+    ): IPublishableEvent
     {
         Log::debug
         (
@@ -143,6 +187,10 @@ abstract class AbstractPublishService extends AbstractService
             // set local time from UTC
             $publishable_event->setStartDate($start_datetime);
             $publishable_event->setEndDate($end_datetime);
+        }
+        else{
+            // clear dates
+            $publishable_event->clearPublishingDates();
         }
 
         return $this->updateDuration($data, $summit, $publishable_event);

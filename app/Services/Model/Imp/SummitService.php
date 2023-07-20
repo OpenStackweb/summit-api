@@ -622,6 +622,7 @@ final class SummitService
                 throw new ValidationException(sprintf("user %s cant set requested summit event fields", $current_member->getEmail()));
             }
 
+
             $event_type = null;
             if (isset($data['type_id'])) {
                 $event_type = $summit->getEventType(intval($data['type_id']));

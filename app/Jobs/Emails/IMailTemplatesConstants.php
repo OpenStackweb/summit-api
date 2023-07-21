@@ -53,12 +53,14 @@ interface IMailTemplatesConstants
     const event_uri = 'event_uri';
     const event_url = 'event_url';
     const external_id = 'external_id';
+    const email = 'email';
     const email_to = 'email_to';
     const feed_type = 'feed_type';
     const first_name = 'first_name';
     const from_email = 'from_email';
     const has_owner = 'has_owner';
     const hash = 'hash';
+    const id = 'id';
     const invitation_token = 'invitation_token';
     const is_discount = 'is_discount';
     const last_name = 'last_name';
@@ -67,6 +69,7 @@ interface IMailTemplatesConstants
     const manage_orders_url = 'manage_orders_url';
     const member_id = 'member_id';
     const message = 'message';
+    const moderator = 'moderator';
     const name = 'name';
     const need_details = 'need_details';
     const net_selling_price = 'net_selling_price';
@@ -127,6 +130,7 @@ interface IMailTemplatesConstants
     const review_link = 'review_link';
     const room_capacity = 'room_capacity';
     const room_complete_name = 'room_complete_name';
+    const selection_plan = 'selection_plan';
     const selection_plan_id = 'selection_plan_id';
     const selection_plan_name = 'selection_plan_name';
     const selection_plan_submission_end_date = 'selection_plan_submission_end_date';
@@ -134,6 +138,8 @@ interface IMailTemplatesConstants
     const selection_process_link = 'selection_process_link';
     const set_password_link = 'set_password_link';
     const set_password_link_to_registration = 'set_password_link_to_registration';
+    const speaker = 'speaker';
+    const speakers = 'speakers';
     const speaker_confirmation_link = 'speaker_confirmation_link';
     const speaker_email = 'speaker_email';
     const speaker_full_name = 'speaker_full_name';

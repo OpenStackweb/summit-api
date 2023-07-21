@@ -42,6 +42,10 @@ final class SamsungApiTest extends TestCase
         Mockery::close();
     }
 
+    public function testAES() {
+        $enc = AES::encrypt('fntech01234567890123456789012345', "BADGE_YOCOVIRTUALSUMMIT42022|TICKET_YOCOVIRTUALSUMMIT2022_6343F3CD55353917431491|test@gmail.com|Test User");
+    }
+
     public function testUserCheckRequest(){
 
         $summit = new Summit();

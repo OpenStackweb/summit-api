@@ -1651,4 +1651,30 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $reservation = json_decode($content);
         $this->assertTrue(!is_null($reservation));
     }
+
+    public function testCopyLocation(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'target_summit_id' => self::$summit2->getId(),
+        ];
+
+        $data = [
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@copy",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+    }
+
 }

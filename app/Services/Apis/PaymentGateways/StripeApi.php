@@ -88,16 +88,22 @@ final class StripeApi implements IPaymentGatewayAPI
 
     public function getCreditCardInfo(array $payload): array
     {
+        if (!isset($payload['charges']) || !isset($payload['charges']['data'])) return [];
+
         $charges = $payload['charges']['data'];
-        if (count($charges) > 0) {
-            $payment_method_details = $charges[0]['payment_method_details'];
-            if (!is_null($payment_method_details) && isset($payment_method_details['card'])) {
-                $card = $payment_method_details['card'];
-                return [
-                    "order_credit_card_type"     => $card['brand'],
-                    "order_credit_card_4numbers" => $card['last4'],
-                ];
-            }
+
+        if (count($charges) == 0) return [];
+
+        $charge = $charges[0];
+        if (!isset($charge['payment_method_details'])) return [];
+
+        $payment_method_details = $charge['payment_method_details'];
+        if (!is_null($payment_method_details) && isset($payment_method_details['card'])) {
+            $card = $payment_method_details['card'];
+            return [
+                "order_credit_card_type"     => $card['brand'],
+                "order_credit_card_4numbers" => $card['last4'],
+            ];
         }
         return [];
     }
@@ -198,14 +204,14 @@ final class StripeApi implements IPaymentGatewayAPI
 
             $intent = $event->data->object;
 
-            $credircard_info = $this->getCreditCardInfo($intent->toArray());
+            $creditcard_info = $this->getCreditCardInfo($intent->toArray());
 
             if ($event->type == "payment_intent.succeeded") {
                 Log::debug("StripeApi::processCallback: payment_intent.succeeded");
                 return array_merge([
                     "event_type" => $event->type,
                     "cart_id" => $intent->id
-                ], $credircard_info);
+                ], $creditcard_info);
             }
 
             if ($event->type == "payment_intent.payment_failed") {
@@ -218,7 +224,7 @@ final class StripeApi implements IPaymentGatewayAPI
                         "last_payment_error" => $intent->last_payment_error,
                         "message" => $intent->last_payment_error->message
                     ]
-                ], $credircard_info);
+                ], $creditcard_info);
             }
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));

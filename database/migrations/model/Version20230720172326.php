@@ -31,8 +31,8 @@ final class Version20230720172326 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("SummitOrder")) {
             $builder->table("SummitOrder", function (Table $table) {
-                $table->string("CreditCardType")->setNotnull(false)->setLength(50);
-                $table->string("CreditCard4Numbers")->setNotnull(false)->setLength(4);
+                $table->string("CreditCardType", 50)->setNotnull(false)->setDefault(null);
+                $table->string("CreditCard4Numbers", 4)->setNotnull(false)->setDefault(null);
             });
         }
     }

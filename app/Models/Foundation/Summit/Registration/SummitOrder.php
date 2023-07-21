@@ -330,7 +330,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setPaid();
         }
 
-        if (!is_null($payload)) {
+        if (!is_null($payload) && isset($payload['order_credit_card_type']) && isset($payload['order_credit_card_4numbers'])) {
             $this->credit_card_type = $payload['order_credit_card_type'];
             $this->credit_card_4numbers = $payload['order_credit_card_4numbers'];
         }
@@ -1170,5 +1170,21 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $criteria->where(Criteria::expr()->eq('owner', $attendee))
             ->andWhere(Criteria::expr()->eq('status', IOrderConstants::PaidStatus));
         return $this->tickets->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCreditCardType():?string
+    {
+        return $this->credit_card_type;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCreditCard4Number():?string
+    {
+        return $this->credit_card_4numbers;
     }
 }

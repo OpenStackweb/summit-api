@@ -58,6 +58,7 @@ interface IMailTemplatesConstants
     const feed_type = 'feed_type';
     const first_name = 'first_name';
     const from_email = 'from_email';
+    const full_name = 'full_name';
     const has_owner = 'has_owner';
     const hash = 'hash';
     const id = 'id';
@@ -180,6 +181,7 @@ interface IMailTemplatesConstants
     const ticket_type_name = 'ticket_type_name';
     const ticket_types = 'ticket_types';
     const tickets = 'tickets';
+    const title = 'title';
     const to_email = 'to_email';
     const token = 'token';
     const track = 'track';

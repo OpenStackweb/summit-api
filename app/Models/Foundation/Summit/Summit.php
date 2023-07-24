@@ -634,6 +634,12 @@ class Summit extends SilverstripeBaseModel
     private $external_registration_feed_last_ingest_date;
 
     /**
+     * @ORM\Column(name="QRCodesEncKey", type="string")
+     * @var string
+     */
+    private $qr_codes_enc_key;
+
+    /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $event_types;
@@ -6438,5 +6444,23 @@ SQL;
             (
                 $criteria->where($criteria->expr()->eq('category', $track)
             ))->count() > 0;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getQRCodesEncKey():?string {
+        return $this->qr_codes_enc_key;
+    }
+
+    /**
+     * @param string $qr_codes_enc_key
+     */
+    public function setQRCodesEncKey(string $qr_codes_enc_key) {
+        $this->qr_codes_enc_key = $qr_codes_enc_key;
+    }
+
+    public function clearQRCodesEncKey() {
+        $this->qr_codes_enc_key = null;
     }
 }

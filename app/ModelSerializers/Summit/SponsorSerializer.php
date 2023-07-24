@@ -76,8 +76,9 @@ final class SponsorSerializer extends SilverStripeSerializer
                 switch (trim($relation)) {
                     case 'summit':
                         {
-                            unset($values['summit_id']);
-                            $values['summit'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit'), [
+                            $current_member = $params['member'];
+                            $serializer_type = SerializerRegistry::SerializerType_Public;
+                            $fields = [
                                 'id',
                                 'name',
                                 'start_date',
@@ -86,8 +87,16 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'order_qr_prefix',
                                 'ticket_qr_prefix',
                                 'badge_qr_prefix',
-                                'qr_registry_field_delimiter',
-                            ], ['none']);
+                                'qr_registry_field_delimiter'
+                            ];
+                            if (!is_null($current_member && ($current_member->isAdmin() || $current_member->isSummitAdmin()))) {
+                                $serializer_type = SerializerRegistry::SerializerType_Private;
+                                $fields[] = 'qr_codes_enc_key';
+                            }
+                            unset($values['summit_id']);
+                            $values['summit'] = SerializerRegistry::getInstance()
+                                ->getSerializer($sponsor->getSummit(), $serializer_type)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit'), $fields, ['none']);
                         }
                         break;
                     case 'members':

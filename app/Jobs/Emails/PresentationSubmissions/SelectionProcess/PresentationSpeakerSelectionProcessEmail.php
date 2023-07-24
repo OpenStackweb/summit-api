@@ -169,12 +169,6 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
      */
     public static function getEmailTemplateSchema(): array{
         $payload = [];
-        $payload[IMailTemplatesConstants::accepted_presentations]['type'] = 'array';
-        $payload[IMailTemplatesConstants::accepted_moderated_presentations]['type'] = 'array';
-        $payload[IMailTemplatesConstants::alternate_presentations]['type'] = 'array';
-        $payload[IMailTemplatesConstants::alternate_moderated_presentations]['type'] = 'array';
-        $payload[IMailTemplatesConstants::rejected_presentations]['type'] = 'array';
-        $payload[IMailTemplatesConstants::rejected_moderated_presentations]['type'] = 'array';
         $payload[IMailTemplatesConstants::cc_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
@@ -188,6 +182,48 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::speaker_confirmation_link]['type'] = 'string';
+
+        $track_schema = [];
+        $track_schema['type'] = 'object';
+        $track_schema['properties'][IMailTemplatesConstants::id]['type'] = 'int';
+        $track_schema['properties'][IMailTemplatesConstants::name]['type'] = 'string';
+
+        $selection_plan_schema = [];
+        $selection_plan_schema['type'] = 'object';
+        $selection_plan_schema['properties'][IMailTemplatesConstants::id]['type'] = 'int';
+        $selection_plan_schema['properties'][IMailTemplatesConstants::name]['type'] = 'string';
+
+        $speaker_schema = [];
+        $speaker_schema['type'] = 'object';
+        $speaker_schema['properties'][IMailTemplatesConstants::id]['type'] = 'int';
+        $speaker_schema['properties'][IMailTemplatesConstants::name]['type'] = 'string';
+        $speaker_schema['properties'][IMailTemplatesConstants::email]['type'] = 'string';
+
+        $presentations_schema = [];
+        $presentations_schema['type'] = 'object';
+        $presentations_schema['properties'][IMailTemplatesConstants::track] = $track_schema;
+        $presentations_schema['properties'][IMailTemplatesConstants::selection_plan] = $selection_plan_schema;
+        $presentations_schema['properties'][IMailTemplatesConstants::moderator] = $speaker_schema;
+        $presentations_schema['properties'][IMailTemplatesConstants::speakers]['type'] = 'array';
+        $presentations_schema['properties'][IMailTemplatesConstants::speakers]['items'] = $speaker_schema;
+
+        $payload[IMailTemplatesConstants::accepted_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::accepted_presentations]['items'] = $presentations_schema;
+
+        $payload[IMailTemplatesConstants::accepted_moderated_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::accepted_moderated_presentations]['items'] = $presentations_schema;
+
+        $payload[IMailTemplatesConstants::alternate_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::alternate_presentations]['items'] = $presentations_schema;
+
+        $payload[IMailTemplatesConstants::alternate_moderated_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::alternate_moderated_presentations]['items'] = $presentations_schema;
+
+        $payload[IMailTemplatesConstants::rejected_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::rejected_presentations]['items'] = $presentations_schema;
+
+        $payload[IMailTemplatesConstants::rejected_moderated_presentations]['type'] = 'array';
+        $payload[IMailTemplatesConstants::rejected_moderated_presentations]['items'] = $presentations_schema;
 
         return $payload;
     }

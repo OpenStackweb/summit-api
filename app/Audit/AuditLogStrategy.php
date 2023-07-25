@@ -83,7 +83,8 @@ class AuditLogStrategy
                     $child_entity = null;
                     if (count($subject) > 0) {
                         $child_entity = $subject[0];
-                    } else if (count($subject->getSnapshot()) > 0) {
+                    }
+                    if (is_null($child_entity) && count($subject->getSnapshot()) > 0) {
                         $child_entity = $subject->getSnapshot()[0];
                     }
                     $child_entity_formatter = $child_entity != null ? ChildEntityFormatterFactory::build($child_entity) : null;

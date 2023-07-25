@@ -37,8 +37,10 @@ use models\main\Member;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
 use models\summit\SummitAbstractLocation;
+use models\summit\SummitAirport;
 use models\summit\SummitBookableVenueRoom;
 use models\summit\SummitGeoLocatedLocation;
+use models\summit\SummitHotel;
 use models\summit\SummitLocationImage;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
@@ -2355,6 +2357,93 @@ final class SummitLocationService
             $floor->clearImage();
 
             return $floor;
+        });
+    }
+
+    /**
+     * @param Summit $source_summit
+     * @param Summit $target_summit
+     * @return Summit
+     * @throws \Exception
+     */
+    public function copySummitLocations(Summit $source_summit, Summit $target_summit): Summit
+    {
+        return $this->tx_service->transaction(function () use ($source_summit, $target_summit) {
+
+            foreach($source_summit->getVenues() as $venue) {
+                $data = [
+                    'class_name'       => $venue->getClassName(),
+                    'description'      => $venue->getDescription(),
+                    'name'             => $venue->getName(),
+                    'order'            => $venue->getOrder(),
+                    'short_name'       => $venue->getShortName(),
+                    'is_main'          => $venue->getIsMain(),
+                    'closing_hour'     => $venue->getClosingHour(),
+                    'opening_hour'     => $venue->getOpeningHour(),
+                    'address_1'        => $venue->getAddress1(),
+                    'address_2'        => $venue->getAddress2(),
+                    'city'             => $venue->getCity(),
+                    'country'          => $venue->getCountry(),
+                    'details_page'     => $venue->getDetailsPage(),
+                    'display_on_site'  => $venue->getDisplayOnSite(),
+                    'lat'              => $venue->getLat(),
+                    'lng'              => $venue->getLng(),
+                    'location_message' => $venue->getLocationMessage(),
+                    'state'            => $venue->getState(),
+                    'website_url'      => $venue->getWebsiteUrl(),
+                    'zip_code'         => $venue->getZipCode(),
+                ];
+                $new_venue = SummitLocationFactory::build($data);
+
+                foreach($venue->getFloors() as $venue_floor) {
+                    $floor_data = [
+                        'description' => $venue_floor->getDescription(),
+                        'name'        => $venue_floor->getName(),
+                        'number'      => $venue_floor->getNumber()
+                    ];
+                    $new_venue_floor = SummitVenueFloorFactory::build($floor_data);
+                    $new_venue_floor->setImage($venue_floor->getImage());
+                    $new_venue->addFloor($new_venue_floor);
+
+                    foreach($venue_floor->getRooms() as $venue_room) {
+                        $room_data = [
+                            'class_name'  => $venue_room->getClassName(),
+                            'description' => $venue_room->getDescription(),
+                            'name'        => $venue_room->getName(),
+                            'order'       => $venue_room->getOrder(),
+                            'short_name'  => $venue_room->getShortName(),
+                            'capacity'    => $venue_room->getCapacity(),
+                            'override_blackouts'  => $venue_room->isOverrideBlackouts()
+                        ];
+                        $new_venue_room = SummitLocationFactory::build($room_data);
+                        $new_venue_room->setImage($venue_room->getImage());
+                        $new_venue_floor->addRoom($new_venue_room);
+                        $new_venue->addRoom($new_venue_room);
+                        $target_summit->addLocation($new_venue_room);
+                    }
+                }
+
+                foreach($venue->getRooms() as $venue_room) {
+                    if (!is_null($venue_room->getFloor())) continue;    //skipped bc was added above into floor hierarchy
+                    $room_data = [
+                        'class_name'  => $venue_room->getClassName(),
+                        'description' => $venue_room->getDescription(),
+                        'name'        => $venue_room->getName(),
+                        'order'       => $venue_room->getOrder(),
+                        'short_name'  => $venue_room->getShortName(),
+                        'capacity'    => $venue_room->getCapacity(),
+                        'override_blackouts'  => $venue_room->isOverrideBlackouts(),
+                    ];
+                    $new_venue_room = SummitLocationFactory::build($room_data);
+                    $new_venue_room->setImage($venue_room->getImage());
+                    $new_venue->addRoom($new_venue_room);
+                    $target_summit->addLocation($new_venue_room);
+                }
+
+                $target_summit->addLocation($new_venue);
+            }
+
+            return $target_summit;
         });
     }
 }

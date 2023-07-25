@@ -348,4 +348,12 @@ interface ILocationService extends IProcessPaymentService
      * @param int $minutes
      */
     public function revokeBookableRoomsReservedOlderThanNMinutes(int $minutes):void;
+
+    /**
+     * @param Summit $source_summit
+     * @param Summit $target_summit
+     * @return Summit
+     * @throws \Exception
+     */
+    public function copySummitLocations(Summit $source_summit, Summit $target_summit): Summit;
 }

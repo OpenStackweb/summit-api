@@ -109,10 +109,8 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
      */
     protected $banners;
 
-
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEvent", mappedBy="location", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\Cache("NONSTRICT_READ_WRITE")
      * @var SummitEvent[]
      */
     protected $events;

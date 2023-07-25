@@ -2357,4 +2357,20 @@ final class SummitLocationService
             return $floor;
         });
     }
+
+    /**
+     * @param Summit $source_summit
+     * @param Summit $target_summit
+     * @return Summit
+     * @throws \Exception
+     */
+    public function copySummitLocations(Summit $source_summit, Summit $target_summit): Summit
+    {
+        return $this->tx_service->transaction(function () use ($source_summit, $target_summit) {
+
+            $target_summit->copyLocationsFrom($source_summit);
+
+            return $target_summit;
+        });
+    }
 }

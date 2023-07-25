@@ -1298,6 +1298,18 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @param Summit $source_summit
+     * @return $this
+     */
+    public function copyLocationsFrom(Summit $source_summit)
+    {
+        foreach($source_summit->getLocations() as $location) {
+            $new_location = clone $location;
+            $this->addLocation($new_location);
+        }
+    }
+
+    /**
      * @return ArrayCollection
      */
     public function getEvents()

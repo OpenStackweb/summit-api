@@ -1759,24 +1759,15 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function() use($request, $source_summit_id, $target_summit_id) {
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
             $source_summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($source_summit_id);
             if (is_null($source_summit)) return $this->error404();
 
             $target_summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($target_summit_id);
             if (is_null($target_summit)) return $this->error404();
 
-//            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize
-//            (
-//                SerializerUtils::getExpand(),
-//                SerializerUtils::getFields(),
-//                SerializerUtils::getRelations()
-//            ));
+            $this->location_service->copySummitLocations($source_summit, $target_summit);
 
             return $this->created();
-
         });
     }
 }

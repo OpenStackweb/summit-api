@@ -44,6 +44,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\IMemberService;
 use App\Services\Model\AbstractPublishService;
+use App\Services\Utils\Security\IEncryptionKeysGenerator;
 use DateInterval;
 use DateTime;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -215,6 +216,11 @@ final class SummitService
     private $download_strategy;
 
     /**
+     * @var IEncryptionKeysGenerator
+     */
+    private $encryption_key_generator;
+
+    /**
      * SummitService constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
@@ -237,6 +243,7 @@ final class SummitService
      * @param IMemberService $member_service
      * @param IFileUploadStrategy $upload_strategy
      * @param IFileDownloadStrategy $download_strategy
+     * @param IEncryptionKeysGenerator $encryption_key_generator
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -262,6 +269,7 @@ final class SummitService
         IMemberService                             $member_service,
         IFileUploadStrategy                        $upload_strategy,
         IFileDownloadStrategy                      $download_strategy,
+        IEncryptionKeysGenerator                   $encryption_key_generator,
         ITransactionService                        $tx_service
     )
     {
@@ -286,6 +294,7 @@ final class SummitService
         $this->member_service = $member_service;
         $this->presentation_media_upload_repository = $presentation_media_upload_repository;
         $this->upload_strategy = $upload_strategy;
+        $this->encryption_key_generator = $encryption_key_generator;
         $this->download_strategy = $download_strategy;
     }
 
@@ -3569,6 +3578,25 @@ final class SummitService
 
             $event->removeFeedback($feedback);
 
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @return string
+     * @throws ValidationException
+     */
+    public function generateQREncKey(Summit $summit):string
+    {
+        return $this->tx_service->transaction(function () use ($summit) {
+
+            if (!is_null($summit->getQRCodesEncKey()))
+                throw new ValidationException("There is already a QR encryption key configured for this Summit");
+
+            $enc_key = $this->encryption_key_generator->generate();
+            $summit->setQRCodesEncKey($enc_key);
+
+            return $enc_key;
         });
     }
 }

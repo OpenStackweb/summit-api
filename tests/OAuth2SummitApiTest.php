@@ -1797,4 +1797,25 @@ CSV;
         $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
+
+    public function testGenerateQREncKey()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitApiController@generateQREncKey",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+    }
 }

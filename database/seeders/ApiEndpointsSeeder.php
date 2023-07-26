@@ -8183,6 +8183,19 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
                 ]
             ],
+            [
+                'name' => 'generate-qr-enc-key',
+                'route' => '/api/v1/summits/{id}/qr-codes/all/enc-key',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::SummitAdministrators,
+                    IGroup::Administrators
+                ]
+            ],
         ]);
 
     }

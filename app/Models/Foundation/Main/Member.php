@@ -2557,7 +2557,7 @@ SQL;
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $extraWhere .= " AND cat.id IN (:type_id)";
+                $extraWhere .= " AND t.id IN (:type_id)";
             }
         }
         $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
@@ -2700,7 +2700,7 @@ SQL;
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $extraWhere .= " AND cat.id IN (:type_id)";
+                $extraWhere .= " AND t.id IN (:type_id)";
             }
         }
 
@@ -2822,7 +2822,7 @@ SQL;
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $extraWhere .= " AND cat.id IN (:type_id)";
+                $extraWhere .= " AND t.id IN (:type_id)";
             }
         }
 

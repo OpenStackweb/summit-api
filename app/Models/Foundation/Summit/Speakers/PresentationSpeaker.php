@@ -798,7 +798,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             }
             if($filter->hasFilter("presentations_type_id"))
             {
-                $extraWhere .= " AND cat.id IN (:type_id)";
+                $extraWhere .= " AND t.id IN (:type_id)";
             }
         }
         if($role == PresentationSpeaker::RoleSpeaker) {
@@ -995,7 +995,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             }
             if($filter->hasFilter("presentations_type_id"))
             {
-                $extraWhere .= " AND cat.id IN (:type_id)";
+                $extraWhere .= " AND t.id IN (:type_id)";
             }
         }
 
@@ -1246,7 +1246,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $extraWhere .= " AND cat.id IN (:type_id)";
+                $extraWhere .= " AND t.id IN (:type_id)";
             }
         }
 

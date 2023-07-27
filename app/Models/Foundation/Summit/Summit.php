@@ -1140,6 +1140,7 @@ class Summit extends SilverstripeBaseModel
         $this->selection_plan_extra_questions = new ArrayCollection();
         $this->submission_invitations = new ArrayCollection();
         $this->signs = new ArrayCollection();
+        $this->qr_codes_enc_key = null;
     }
 
     /**

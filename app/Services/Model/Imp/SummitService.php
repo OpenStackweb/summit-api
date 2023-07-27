@@ -44,7 +44,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\IMemberService;
 use App\Services\Model\AbstractPublishService;
-use App\Services\Utils\Security\IEncryptionKeysGenerator;
+use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -216,7 +216,7 @@ final class SummitService
     private $download_strategy;
 
     /**
-     * @var IEncryptionKeysGenerator
+     * @var IEncryptionAES256KeysGenerator
      */
     private $encryption_key_generator;
 
@@ -243,7 +243,7 @@ final class SummitService
      * @param IMemberService $member_service
      * @param IFileUploadStrategy $upload_strategy
      * @param IFileDownloadStrategy $download_strategy
-     * @param IEncryptionKeysGenerator $encryption_key_generator
+     * @param IEncryptionAES256KeysGenerator $encryption_key_generator
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -269,7 +269,7 @@ final class SummitService
         IMemberService                             $member_service,
         IFileUploadStrategy                        $upload_strategy,
         IFileDownloadStrategy                      $download_strategy,
-        IEncryptionKeysGenerator                   $encryption_key_generator,
+        IEncryptionAES256KeysGenerator             $encryption_key_generator,
         ITransactionService                        $tx_service
     )
     {
@@ -3593,7 +3593,7 @@ final class SummitService
             if (!is_null($summit->getQRCodesEncKey()))
                 throw new ValidationException("There is already a QR encryption key configured for this Summit");
 
-            $enc_key = $this->encryption_key_generator->generate();
+            $enc_key = $this->encryption_key_generator->generate($summit);
             $summit->setQRCodesEncKey($enc_key);
 
             return $enc_key;

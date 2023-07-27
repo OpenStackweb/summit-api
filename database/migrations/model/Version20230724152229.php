@@ -31,7 +31,9 @@ class Version20230724152229 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "QRCodesEncKey")) {
             $builder->table('Summit', function (Table $table) {
-                $table->string('QRCodesEncKey', 256)->setNotnull(false);
+                $table->string('QRCodesEncKey', 256)->setNotnull(false)->setDefault(null);
+
+                $table->unique("QRCodesEncKey", "QRCodesEncKey");
             });
         }
     }

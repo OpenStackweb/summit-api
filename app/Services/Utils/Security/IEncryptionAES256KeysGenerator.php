@@ -1,5 +1,7 @@
 <?php namespace App\Services\Utils\Security;
 
+use models\summit\Summit;
+
 /**
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +16,13 @@
  **/
 
 /**
- * Interface IEncryptionKeysGenerator
+ * Interface IEncryptionAES256KeysGenerator
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IEncryptionKeysGenerator
+interface IEncryptionAES256KeysGenerator
 {
     /**
      * @return string
      */
-    public function generate(): string;
+    public function generate(Summit $summit): string;
 }

@@ -129,7 +129,7 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
         ]);
 
         $qr_codes_enc_key = $summit->getQRCodesEncKey();
-        if (!is_null($qr_codes_enc_key)) {
+        if (!empty($qr_codes_enc_key)) {
             $this->qr_code = AES::encrypt($qr_codes_enc_key, $this->qr_code);
         }
 

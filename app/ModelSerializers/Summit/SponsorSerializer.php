@@ -76,7 +76,8 @@ final class SponsorSerializer extends SilverStripeSerializer
                 switch (trim($relation)) {
                     case 'summit':
                         {
-                            $current_member = $params['member'];
+                            $current_member = $params['member'] ?? null;
+                            $summit = $params['summit'] ?? null;
                             $serializer_type = SerializerRegistry::SerializerType_Public;
                             $fields = [
                                 'id',
@@ -89,7 +90,7 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'badge_qr_prefix',
                                 'qr_registry_field_delimiter'
                             ];
-                            if (!is_null($current_member && ($current_member->isAdmin() || $current_member->isSummitAdmin()))) {
+                            if (!is_null($current_member) && !is_null($summit) && ($current_member->isSummitAllowed($summit) || $current_member->hasSponsorMembershipsFor($sponsor))) {
                                 $serializer_type = SerializerRegistry::SerializerType_Private;
                                 $fields[] = 'qr_codes_enc_key';
                             }

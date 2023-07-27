@@ -13,16 +13,18 @@
  * limitations under the License.
  **/
 
+use models\summit\Summit;
 use Zend\Math\Rand;
 
 /**
  * Class EncryptionKeysGenerator
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class EncryptionKeysGenerator implements IEncryptionKeysGenerator
+final class EncryptionAES256KeysGenerator implements IEncryptionAES256KeysGenerator
 {
     const VsChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+    //AES256 default key length is 32 bytes
     const Length = 32;
 
     /**
@@ -48,8 +50,8 @@ final class EncryptionKeysGenerator implements IEncryptionKeysGenerator
     /**
      * @inheritDoc
      */
-    public function generate(): string
+    public function generate(Summit $summit): string
     {
-        return strtoupper($this->generateValue());
+        return strtoupper(sprintf("%s_%s", $summit->getRegistrationSlugPrefix(), $this->generateValue()));
     }
 }

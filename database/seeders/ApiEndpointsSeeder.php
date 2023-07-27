@@ -4049,6 +4049,21 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'copy-location',
+                'route' => '/api/v1/summits/{id}/locations/copy/{target_summit_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
+                    sprintf(SummitScopes::WriteLocationBannersData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // venues
             [
                 'name' => 'get-venues',

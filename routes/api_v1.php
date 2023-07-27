@@ -978,6 +978,10 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
             });
+
+            Route::group(['prefix' => 'copy'], function () {
+                Route::post('{target_summit_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@copy']);
+            });
         });
 
         // bookable rooms attributes

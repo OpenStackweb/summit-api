@@ -1748,4 +1748,26 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     // bookable rooms
 
     use SummitBookableVenueRoomApi;
+
+    /**
+     * @param LaravelRequest $request
+     * @param $source_summit_id
+     * @param $target_summit_id
+     * @return mixed
+     */
+    public function copy(LaravelRequest $request, $source_summit_id, $target_summit_id)
+    {
+        return $this->processRequest(function() use($request, $source_summit_id, $target_summit_id) {
+
+            $source_summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($source_summit_id);
+            if (is_null($source_summit)) return $this->error404();
+
+            $target_summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($target_summit_id);
+            if (is_null($target_summit)) return $this->error404();
+
+            $this->location_service->copySummitLocations($source_summit, $target_summit);
+
+            return $this->created();
+        });
+    }
 }

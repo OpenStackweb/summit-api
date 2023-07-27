@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Utils\AES;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -126,6 +127,11 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
             $ticket->getOwnerEmail(),
             $ticket->getOwnerFullName(),
         ]);
+
+        $qr_codes_enc_key = $summit->getQRCodesEncKey();
+        if (!is_null($qr_codes_enc_key)) {
+            $this->qr_code = AES::encrypt($qr_codes_enc_key, $this->qr_code);
+        }
 
         return $this->qr_code;
     }

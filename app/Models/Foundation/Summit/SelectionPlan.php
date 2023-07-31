@@ -1485,6 +1485,24 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
+     * @param array $payload
+     * @return array
+     * @throws ValidationException
+     */
+    public function curatePayloadByPresentationAllowedQuestions(array $payload): array
+    {
+        $allowed_fields = Presentation::getAllowedFields();
+        foreach ($allowed_fields as $field) {
+            Log::debug(sprintf("Selection Plan %s checking Presentation Field %s", $this->id, $field));
+
+            if (isset($payload[$field]) && !$this->isAllowedPresentationQuestion($field)) {
+                unset($payload[$field]);
+            }
+        }
+        return $payload;
+    }
+
+    /**
      * @param $field1
      * @param $field2
      * @return bool

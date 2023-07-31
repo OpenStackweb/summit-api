@@ -130,11 +130,13 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJ
         $speaker_schema = [];
         $speaker_schema['type'] = 'object';
         $speaker_schema['properties'][IMailTemplatesConstants::id]['type'] = 'int';
-        $speaker_schema['properties'][IMailTemplatesConstants::name]['type'] = 'string';
+        $speaker_schema['properties'][IMailTemplatesConstants::full_name]['type'] = 'string';
         $speaker_schema['properties'][IMailTemplatesConstants::email]['type'] = 'string';
 
         $presentations_schema = [];
         $presentations_schema['type'] = 'object';
+        $presentations_schema['properties'][IMailTemplatesConstants::id]['type'] = 'int';
+        $presentations_schema['properties'][IMailTemplatesConstants::title]['type'] = 'string';
         $presentations_schema['properties'][IMailTemplatesConstants::track] = $track_schema;
         $presentations_schema['properties'][IMailTemplatesConstants::selection_plan] = $selection_plan_schema;
         $presentations_schema['properties'][IMailTemplatesConstants::moderator] = $speaker_schema;

@@ -85,7 +85,7 @@ abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
 
         $key = sprintf("%s/%s_%b_%s", $this->getDriver(), $relativeFileName, $useTemporaryUrl, $ttl);
         $res = Cache::get($key);
-        if(!empty($res) && !$avoidCache) {
+        if(!empty($res) && $res != '#' && !$avoidCache) {
             Log::debug
             (
                 sprintf
@@ -100,7 +100,7 @@ abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
         // @see https://laravel.com/docs/8.x/filesystem#temporary-urls
         $res = $useTemporaryUrl ? Storage::disk($this->getDriver())->temporaryUrl($relativeFileName, now()->addMinutes($ttl))
             : Storage::disk($this->getDriver())->url($relativeFileName);
-        if(!empty($res)) {
+        if(!empty($res) && $res != '#') {
             $ttl = $useTemporaryUrl ? ($ttl - 1) : intval(Config::get('cache_api_response.file_url_lifetime', 3600));
             Log::debug(sprintf("AbstractFileDownloadStrategy::getUrl adding key %s res %s ttl %s to cache", $key, $res, $ttl));
             Cache::add($key, $res, $ttl);

@@ -33,6 +33,7 @@ use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
+use ModelSerializers\SummitQREncKeySerializer;
 use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
@@ -788,6 +789,24 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 'summit' => $summit
             ]
         );
+    }
+
+    /**
+     * @param $summit_id
+     * @return JsonResponse|mixed
+     */
+    public function generateQREncKey($summit_id)
+    {
+        return $this->processRequest(function() use($summit_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $this->summit_service->generateQREncKey($summit);
+
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($summit, SummitQREncKeySerializer::SerializerType)->serialize());
+        });
     }
 
 }

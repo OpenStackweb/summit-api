@@ -211,6 +211,7 @@ final class SerializerRegistry
                 self::SerializerType_Public => SummitSerializer::class,
                 self::SerializerType_Private => AdminSummitSerializer::class,
                 self::SerializerType_Admin_Registration_Stats => SummitRegistrationStatsSerializer::class,
+                SummitQREncKeySerializer::SerializerType => SummitQREncKeySerializer::class
             ];
 
         $this->registry['SummitScheduleConfig'] = [

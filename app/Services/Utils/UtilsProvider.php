@@ -14,6 +14,8 @@
  **/
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeGenerator;
 use App\Services\Model\Strategies\PromoCodes\PromoCodeGenerator;
+use App\Services\Utils\Security\EncryptionAES256KeysGenerator;
+use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use libs\utils\ICacheService;
@@ -42,6 +44,10 @@ final class UtilsProvider extends ServiceProvider
                 App::make(ICacheService::class),
                 PromoCodeGenerator::Length
             );
+        });
+
+        App::singleton(IEncryptionAES256KeysGenerator::class, function () {
+            return new EncryptionAES256KeysGenerator();
         });
     }
 }

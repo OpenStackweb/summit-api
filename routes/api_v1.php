@@ -1964,6 +1964,14 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
             });
         });
+
+        //qr-codes
+
+        Route::group(['prefix' => 'qr-codes'], function () {
+            Route::group(['prefix' => 'all'], function () {
+                Route::put('enc-key', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@generateQREncKey']);
+            });
+        });
     });
 });
 

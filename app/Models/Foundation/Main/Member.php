@@ -1772,6 +1772,21 @@ SQL;
     }
 
     /**
+     * @param Sponsor $sponsor
+     * @return bool
+     */
+    public function hasSponsorMembershipsFor(Sponsor $sponsor): bool
+    {
+        //TODO: Criteria approach must be used here but in order to do that, Sponsor.Order column must be renamed to Sponsor.CustomOrder
+
+        $memberships_count = $this->sponsor_memberships->filter(function ($entity) use ($sponsor) {
+            return $entity->getId() == $sponsor->getId();
+        })->count();
+
+        return $memberships_count > 0;
+    }
+
+    /**
      * @return string|null
      */
     public function getMembershipType(): ?string

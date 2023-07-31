@@ -581,4 +581,11 @@ interface ISummitService
      * @throws ValidationException
      */
     public function updateDuration(array $data, Summit $summit, IPublishableEvent $event):IPublishableEvent;
+
+    /**
+     * @param Summit $summit
+     * @return string
+     * @throws ValidationException
+     */
+    public function generateQREncKey(Summit $summit):string;
 }

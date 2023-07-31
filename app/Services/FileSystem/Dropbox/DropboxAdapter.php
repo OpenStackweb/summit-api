@@ -23,6 +23,7 @@ final class DropboxAdapter extends BaseDropboxAdapter
 {
     public function getUrl(string $path): string
     {
+        Log::debug(sprintf("DropboxAdapter::getUrl %s", $path));
         $client = $this->client;
         try {
             // default visibility is RequestedVisibility.public.
@@ -30,6 +31,7 @@ final class DropboxAdapter extends BaseDropboxAdapter
             return $res['url'];
         }
         catch (BadRequestException $ex){
+            Log::warning(sprintf("DropboxAdapter::getUrl %s code %s", $ex->getMessage(), $ex->dropboxCode));
             if($ex->dropboxCode === 'shared_link_already_exists')
             {
                 try {
@@ -47,7 +49,7 @@ final class DropboxAdapter extends BaseDropboxAdapter
             }
         }
         catch (Exception $ex){
-            Log::warning($ex);
+            Log::error($ex);
         }
         return '#';
     }

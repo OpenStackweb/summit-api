@@ -13,6 +13,7 @@
  * limitations under the License.
  **/
 
+use libs\utils\ICacheService;
 use models\summit\Summit;
 use Zend\Math\Rand;
 
@@ -28,15 +29,22 @@ final class EncryptionAES256KeysGenerator implements IEncryptionAES256KeysGenera
     const Length = 32;
 
     /**
+     * @var ICacheService
+     */
+    private $cache_service;
+
+    /**
      * @var int
      */
     private $length;
 
     /**
+     * @param ICacheService $cache_service
      * @param int $length
      */
-    public function __construct(int $length = self::Length)
+    public function __construct(ICacheService $cache_service, int $length = self::Length)
     {
+        $this->cache_service = $cache_service;
         $this->length = $length;
     }
 
@@ -50,8 +58,12 @@ final class EncryptionAES256KeysGenerator implements IEncryptionAES256KeysGenera
     /**
      * @inheritDoc
      */
-    public function generate(Summit $summit): string
+    public function generate(): string
     {
-        return strtoupper(sprintf("%s_%s", $summit->getRegistrationSlugPrefix(), $this->generateValue()));
+        do {
+            $key = strtoupper($this->generateValue());
+        } while(!$this->cache_service->addSingleValue($key, $key));
+
+        return $key;
     }
 }

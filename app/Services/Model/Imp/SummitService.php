@@ -3542,7 +3542,10 @@ final class SummitService
             if (!is_null($summit->getQRCodesEncKey()))
                 throw new ValidationException("There is already a QR encryption key configured for this Summit");
 
-            $enc_key = $this->encryption_key_generator->generate($summit);
+            do {
+                $enc_key = $this->encryption_key_generator->generate();
+            } while (!is_null($this->summit_repository->getByQREncryptionKey($enc_key)));
+
             $summit->setQRCodesEncKey($enc_key);
 
             return $enc_key;

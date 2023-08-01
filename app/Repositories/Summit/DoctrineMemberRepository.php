@@ -185,8 +185,9 @@ final class DoctrineMemberRepository
             ),
             'presentations_type_id' =>  new DoctrineFilterMapping(
                 "EXISTS ( 
-                              SELECT __p61_:i.id FROM models\summit\Presentation __p61_:i 
-                              JOIN __p61_:i.created_by __c61 WITH __c61 = e.id
+                              SELECT __p61_:i.id 
+                              FROM models\summit\Presentation __p61_:i 
+                              JOIN __p61_:i.created_by __c61:i WITH __c61:i = e.id
                               JOIN __p61_:i.type __type61_:i 
                               WHERE 
                               __p61_:i.summit = :summit AND

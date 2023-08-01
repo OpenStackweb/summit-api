@@ -30,7 +30,7 @@ class PresentationSpeakerAssignmentAuditLogFormatter implements IChildEntityAudi
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
                 return "Speaker {$subject->getSpeaker()->getEmail()} was added to the collection";
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
-                return "Speaker {$subject->getSpeaker()->getEmail()} ({$subject->getSpeaker()->getID()}) was removed from the collection";
+                return "Speaker {$subject->getSpeaker()->getEmail()} was removed from the collection";
         }
         return "";
     }

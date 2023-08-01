@@ -198,6 +198,26 @@ final class DoctrineSummitRepository
     }
 
     /**
+     * @param string $qr_enc_key
+     * @return Summit|null
+     */
+    public function getByQREncryptionKey(string $qr_enc_key): ?Summit
+    {
+        try {
+            return $this->getEntityManager()->createQueryBuilder()
+                ->select("s")
+                ->from($this->getBaseEntity(), "s")
+                ->where('s.qr_codes_enc_key = :qr_codes_enc_key')
+                ->setParameter('qr_codes_enc_key', strtoupper($qr_enc_key))
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+            return null;
+        }
+    }
+
+    /**
      * @return Summit
      */
     public function getActive()

@@ -47,7 +47,10 @@ final class UtilsProvider extends ServiceProvider
         });
 
         App::singleton(IEncryptionAES256KeysGenerator::class, function () {
-            return new EncryptionAES256KeysGenerator();
+            return new EncryptionAES256KeysGenerator(
+                App::make(ICacheService::class),
+                EncryptionAES256KeysGenerator::Length
+            );
         });
     }
 }

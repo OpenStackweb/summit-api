@@ -66,6 +66,12 @@ interface ISummitRepository extends IBaseRepository
     public function getBySlug(string $slug):?Summit;
 
     /**
+     * @param string $slug
+     * @return Summit|null
+     */
+    public function getByQREncryptionKey(string $qr_enc_key): ?Summit;
+
+    /**
      * @return Summit[]
      */
     public function getWithExternalFeed():array;

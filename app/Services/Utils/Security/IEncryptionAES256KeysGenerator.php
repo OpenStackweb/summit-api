@@ -24,5 +24,5 @@ interface IEncryptionAES256KeysGenerator
     /**
      * @return string
      */
-    public function generate(Summit $summit): string;
+    public function generate(): string;
 }

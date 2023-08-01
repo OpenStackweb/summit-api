@@ -53,7 +53,7 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
         if (is_array($value)) {
             $inner_where = '( ';
 
-            foreach ($value as $val) {
+            foreach ($value as $idx => $val) {
                 $param_count = $query->getParameters()->count() + 1;
                 $where = $this->where;
 
@@ -67,8 +67,13 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
                     $has_param = true;
                 }
 
-                if (strstr($where, ":operator"))
-                    $where = str_replace(":operator", $filter->getOperator(), $where);
+                if (strstr($where, ":operator")) {
+                    $operator = $filter->getOperator();
+                    if(is_array($operator)){
+                        $operator = $operator[$idx];
+                    }
+                    $where = str_replace(":operator", $operator, $where);
+                }
 
                 if ($has_param) {
                     $query = $query->setParameter(":value_" . $param_count, $val);

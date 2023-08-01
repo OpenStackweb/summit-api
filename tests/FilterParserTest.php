@@ -333,6 +333,51 @@ SQL;
         $this->assertNotEmpty($dql);
     }
 
+    public function testDurationActivities(){
+        $filter_input = [
+            'duration[]600&&1800',
+        ];
+
+        $filter = FilterParser::parse($filter_input, [
+            'duration' => ['[]'],
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("e")
+            ->select("e")
+            ->from(\models\summit\SummitEvent::class, "e")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+
+            ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
+            ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
+            ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
+            ->leftJoin("p.speakers", "sp_presentation", Join::LEFT_JOIN)
+            ->leftJoin("sp_presentation.speaker", "sp", Join::LEFT_JOIN)
+            ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+            ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
+            ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
+            ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
+            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+            ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
+            ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
+            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
+            ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
+
+
+        $filter->apply2Query($query, [
+            'duration' => new DoctrineFilterMapping
+            (
+                "( ( (e.start_date IS NULL OR e.end_date IS NULL ) AND e.duration :operator :value ) OR TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) :operator :value)"
+            ),
+        ]);
+
+        $dql = $query->getDQL();
+
+        $this->assertNotEmpty($dql);
+    }
+
     public function testOrAndOr(){
         $filter_input = [
             'or(has_checkin==true)',

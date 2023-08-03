@@ -650,7 +650,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     // try to register the company for the summit and get it
                     $summit = $attendee->getSummit();
                     if (!$summit instanceof Summit) continue;
-                    $company = $this->company_repository->getByName($company_name);
 
                     $attendee->setFirstName($fname);
                     $attendee->setSurname($lname);
@@ -661,6 +660,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         if (!is_null($company)) {
                             $attendee->setCompany($company);
                             $company_name = $company->getName();
+                        }
+                        else{
+                            $attendee->clearCompany();
                         }
                         $attendee->setCompanyName($company_name);
                     }
@@ -691,6 +693,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         if (!is_null($company)) {
                             $attendee->setCompany($company);
                             $company_name = $company->getName();
+                        }
+                        else{
+                            $attendee->clearCompany();
                         }
 
                         if (!empty($company_name))

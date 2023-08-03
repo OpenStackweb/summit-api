@@ -14,6 +14,11 @@
 
 use models\summit\SummitAttendeeBadge;
 use models\utils\IBaseRepository;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISummitAttendeeBadgeRepository
  * @package App\Models\Foundation\Summit\Repositories
@@ -25,4 +30,28 @@ interface ISummitAttendeeBadgeRepository extends IBaseRepository
      * @return SummitAttendeeBadge|null
      */
     public function getBadgeByTicketNumber(string $ticket_number):?SummitAttendeeBadge;
+
+    /**
+     * @param int $summit_id
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getBadgesBySummit(int $summit_id,
+                                      PagingInfo $paging_info,
+                                      Filter $filter = null,
+                                      Order $order = null): PagingResponse;
+
+    /**
+     * @param int $summit_id
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getBadgeIdsBySummit(int $summit_id,
+                                        PagingInfo $paging_info,
+                                        Filter $filter = null,
+                                        Order $order = null): PagingResponse;
 }

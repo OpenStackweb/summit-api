@@ -24,6 +24,7 @@ use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
+use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
@@ -34,6 +35,7 @@ use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Utils\IntervalParser;
 use App\Models\Utils\IStorageTypesConstants;
@@ -206,6 +208,11 @@ final class SummitService
     private $presentation_media_upload_repository;
 
     /**
+     * @var ISummitAttendeeBadgeRepository
+     */
+    private $summit_attendee_badge_repository;
+
+    /**
      * @var IFileUploadStrategy
      */
     private $upload_strategy;
@@ -237,6 +244,7 @@ final class SummitService
      * @param IGroupRepository $group_repository
      * @param IDefaultSummitEventTypeRepository $default_event_types_repository
      * @param IPresentationMediaUploadRepository $presentation_media_upload_repository
+     * @param ISummitAttendeeBadgeRepository $summit_attendee_badge_repository
      * @param IPermissionsManager $permissions_manager
      * @param IFileUploader $file_uploader
      * @param ISpeakerService $speaker_service
@@ -263,6 +271,7 @@ final class SummitService
         IGroupRepository                           $group_repository,
         IDefaultSummitEventTypeRepository          $default_event_types_repository,
         IPresentationMediaUploadRepository         $presentation_media_upload_repository,
+        ISummitAttendeeBadgeRepository             $summit_attendee_badge_repository,
         IPermissionsManager                        $permissions_manager,
         IFileUploader                              $file_uploader,
         ISpeakerService                            $speaker_service,
@@ -293,6 +302,7 @@ final class SummitService
         $this->speaker_service = $speaker_service;
         $this->member_service = $member_service;
         $this->presentation_media_upload_repository = $presentation_media_upload_repository;
+        $this->summit_attendee_badge_repository = $summit_attendee_badge_repository;
         $this->upload_strategy = $upload_strategy;
         $this->encryption_key_generator = $encryption_key_generator;
         $this->download_strategy = $download_strategy;
@@ -3537,7 +3547,7 @@ final class SummitService
      */
     public function generateQREncKey(Summit $summit):string
     {
-        return $this->tx_service->transaction(function () use ($summit) {
+        $res = $this->tx_service->transaction(function () use ($summit) {
 
             if (!is_null($summit->getQRCodesEncKey()))
                 throw new ValidationException("There is already a QR encryption key configured for this Summit");
@@ -3550,5 +3560,50 @@ final class SummitService
 
             return $enc_key;
         });
+
+        if (!is_null($res)) {
+            EncryptAllSummitBadgeQRCodes::dispatch($summit->getId());
+        }
+
+        return $res;
+    }
+
+    /**
+     * @param int $summit_id
+     * @return void
+     * @throws Exception
+     */
+    public function regenerateBadgeQRCodes(int $summit_id):void
+    {
+        $summit = $this->summit_repository->getById($summit_id);
+        if (!$summit instanceof Summit) {
+            throw new EntityNotFoundException
+            (
+                trans
+                (
+                    'not_found_errors.SummitService.updateSummit.SummitNotFound',
+                    ['summit_id' => $summit_id]
+                )
+            );
+        }
+        $enc_key = $summit->getQRCodesEncKey();
+
+        if (!is_null($enc_key)) {
+            $page = 1;
+            do {
+                $page_response = $this->summit_attendee_badge_repository->getBadgeIdsBySummit($summit_id, new PagingInfo($page, 500));
+                $has_more      = count($page_response->getItems()) > 0;
+                if(!$has_more) continue;
+
+                foreach ($page_response->getItems() as $page_response_item){
+                    $attendee_badge_id = $page_response_item['id'];
+                    $this->tx_service->transaction(function () use ($attendee_badge_id) {
+                        $attendee_badge = $this->summit_attendee_badge_repository->getById($attendee_badge_id);
+                        $attendee_badge->generateQRCode();
+                    });
+                }
+                $page++;
+            } while ($has_more);
+        }
     }
 }

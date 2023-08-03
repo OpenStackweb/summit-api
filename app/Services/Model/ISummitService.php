@@ -588,4 +588,9 @@ interface ISummitService
      * @throws ValidationException
      */
     public function generateQREncKey(Summit $summit):string;
+
+    /**
+     * @param int $summit_id
+     */
+    public function regenerateBadgeQRCodes(int $summit_id):void;
 }

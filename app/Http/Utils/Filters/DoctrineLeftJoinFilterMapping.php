@@ -78,7 +78,10 @@ class DoctrineLeftJoinFilterMapping extends DoctrineJoinFilterMapping
         if (strstr($where, ":operator"))
             $where = str_replace(":operator", $filter->getOperator(), $where);
 
-        $query = $query->andWhere($where);
+        if($this->main_operator === Filter::MainOperatorAnd)
+            $query = $query->andWhere($where);
+        else
+            $query = $query->orWhere($where);
 
         if ($has_param) {
             $query = $query->setParameter(":value_" . $param_count, $value);

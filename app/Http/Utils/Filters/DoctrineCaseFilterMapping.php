@@ -12,6 +12,10 @@
  * limitations under the License.
  **/
 
+/**
+ * Class DoctrineCaseFilterMapping
+ * @package utils
+ */
 class DoctrineCaseFilterMapping
 {
     /**

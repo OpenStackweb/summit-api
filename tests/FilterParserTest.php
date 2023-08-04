@@ -15,9 +15,11 @@
 
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
+use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitTicketType;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\FilterParser;
@@ -468,6 +470,66 @@ DQL;
         $dql = $query->getDQL();
         $expected_dql = <<<DQL
 SELECT DISTINCT e FROM models\summit\SummitAttendee e LEFT JOIN e.summit s WHERE ( (  ( e.summit_hall_checked_in = 1 )  )  OR (( e.summit_hall_checked_in_date >= :param_1 AND e.summit_hall_checked_in_date <= :param_2  ))) AND s.id = :value_1
+DQL;
+
+        $this->assertNotEmpty($dql);
+        $this->assertEquals($expected_dql, $dql);
+    }
+
+    public function testRegistrationInvitationsCriterias(){
+        $filter_input = [
+            'or(tags_id==1)',
+            'or(ticket_types_id==1)',
+        ];
+
+        $filter = FilterParser::parse($filter_input, [
+            'tags_id' => ['=='],
+            'ticket_types_id' => ['=='],
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("e")
+            ->select("e")
+            ->from(SummitRegistrationInvitation::class, "e");
+
+        $filter->apply2Query($query, [
+            'email' => 'e.email:json_string',
+            'first_name' => Filter::buildLowerCaseStringField('e.first_name'),
+            'last_name' => Filter::buildLowerCaseStringField('e.last_name'),
+            'full_name' => Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
+            'is_accepted' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "e.accepted_date is not null"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.accepted_date is null"
+                    ),
+                ]
+            ),
+            'is_sent' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "e.hash is not null"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.hash is null"
+                    ),
+                ]
+            ),
+            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
+            'ticket_types_id' => new DoctrineLeftJoinFilterMapping("e.ticket_types", "tt" ,"tt.id :operator :value"),
+            'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
+            'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
+        ]);
+
+        $dql = $query->getDQL();
+        $expected_dql = <<<DQL
+SELECT DISTINCT e FROM models\summit\SummitRegistrationInvitation e LEFT JOIN e.tags t LEFT JOIN e.ticket_types tt WHERE t.id = :value_1 OR tt.id = :value_2
 DQL;
 
         $this->assertNotEmpty($dql);

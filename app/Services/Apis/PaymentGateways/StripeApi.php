@@ -86,6 +86,28 @@ final class StripeApi implements IPaymentGatewayAPI
         $this->webhook_secret_key = $webhook_secret_key;
     }
 
+    public function getCreditCardInfo(array $payload): array
+    {
+        if (!isset($payload['charges']) || !isset($payload['charges']['data'])) return [];
+
+        $charges = $payload['charges']['data'];
+
+        if (count($charges) == 0) return [];
+
+        $charge = $charges[0];
+        if (!isset($charge['payment_method_details'])) return [];
+
+        $payment_method_details = $charge['payment_method_details'];
+        if (!is_null($payment_method_details) && isset($payment_method_details['card'])) {
+            $card = $payment_method_details['card'];
+            return [
+                "order_credit_card_type"     => $card['brand'],
+                "order_credit_card_4numbers" => $card['last4'],
+            ];
+        }
+        return [];
+    }
+
     /**
      * @param array $payload
      * @return array
@@ -181,25 +203,28 @@ final class StripeApi implements IPaymentGatewayAPI
                 throw new \InvalidArgumentException();
 
             $intent = $event->data->object;
+
+            $creditcard_info = $this->getCreditCardInfo($intent->toArray());
+
             if ($event->type == "payment_intent.succeeded") {
                 Log::debug("StripeApi::processCallback: payment_intent.succeeded");
-                return [
+                return array_merge([
                     "event_type" => $event->type,
-                    "cart_id" => $intent->id,
-                ];
+                    "cart_id" => $intent->id
+                ], $creditcard_info);
             }
 
             if ($event->type == "payment_intent.payment_failed") {
                 Log::debug("StripeApi::processCallback: payment_intent.payment_failed");
                 $intent = $event->data->object;
-                return [
+                return array_merge([
                     "event_type" => $event->type,
                     "cart_id" => $intent->id,
                     "error" => [
                         "last_payment_error" => $intent->last_payment_error,
                         "message" => $intent->last_payment_error->message
                     ]
-                ];
+                ], $creditcard_info);
             }
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));

@@ -91,6 +91,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 foreach ($attendee->getTickets() as $t) {
                     if (!$t->hasTicketType()) continue;
                     if ($t->isCancelled()) continue;
+                    if (!$t->isActive()) continue;
                     $tickets[] = intval($t->getId());
                     $count++;
                     /*if (AbstractSerializer::MaxCollectionPage < $count) {
@@ -166,6 +167,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                             {
                                 if (!$t->hasTicketType()) continue;
                                 if ($t->isCancelled()) continue;
+                                if (!$t->isActive()) continue;
                                 $tickets[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize(AbstractSerializer::getExpandForPrefix('tickets', $expand));
                                 $count++;
                                 /*if (AbstractSerializer::MaxCollectionPage < $count) {

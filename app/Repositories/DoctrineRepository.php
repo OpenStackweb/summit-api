@@ -199,8 +199,6 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $query = $this->applyExtraJoins($query, $filter);
 
-        ;
-
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));
         }

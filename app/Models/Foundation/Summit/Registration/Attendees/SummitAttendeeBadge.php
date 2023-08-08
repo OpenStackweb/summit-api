@@ -16,6 +16,7 @@ use App\Utils\AES;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Group;
 use models\main\Member;
@@ -109,17 +110,18 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
      */
     public function generateQRCode(): string
     {
+        Log::debug(sprintf("SummitAttendeeBadge::generateQRCode for id %s", $this->id));
         $ticket = $this->getTicket();
         if(is_null($ticket))
-            throw new ValidationException("ticket is not set.");
+            throw new ValidationException("Ticket is not set.");
 
         $order  = $ticket->getOrder();
         if(is_null($order))
-            throw new ValidationException("order is not set.");
+            throw new ValidationException("Order is not set.");
 
         $summit = $order->getSummit();
         if(is_null($summit))
-            throw new ValidationException("summit is not set.");
+            throw new ValidationException("Summit is not set.");
 
         $this->qr_code = $this->generateQRFromFields([
             $summit->getBadgeQRPrefix(),
@@ -130,9 +132,11 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
 
         $qr_codes_enc_key = $summit->getQRCodesEncKey();
         if (!empty($qr_codes_enc_key)) {
+            Log::debug(sprintf("SummitAttendeeBadge::generateQRCode encrypting qr_code %s for id %s", $this->qr_code, $this->id));
             $this->qr_code = AES::encrypt($qr_codes_enc_key, $this->qr_code);
         }
 
+        Log::debug(sprintf("SummitAttendeeBadge::generateQRCode generated qr_code %s for id %s", $this->qr_code, $this->id));
         return $this->qr_code;
     }
 

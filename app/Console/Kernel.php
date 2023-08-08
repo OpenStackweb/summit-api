@@ -48,6 +48,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
         \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
         \App\Console\Commands\PurgeAuditLogCommand::class,
+        \App\Console\Commands\SummitBadgesQREncryptor::class,
     ];
 
     /**

@@ -3579,55 +3579,44 @@ final class SummitService
     {
         Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s", $summit_id));
 
-        $enc_key = $this->tx_service->transaction(function() use($summit_id) {
-            $summit = $this->summit_repository->getById($summit_id);
-            if (!$summit instanceof Summit) {
-                throw new EntityNotFoundException
-                (
-                    trans
-                    (
-                        'not_found_errors.SummitService.updateSummit.SummitNotFound',
-                        ['summit_id' => $summit_id]
-                    )
-                );
+       $page = 1;
+       $count = 0;
+
+       do {
+            Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processing page %s", $summit_id, $page));
+            $page_response = $this->summit_attendee_badge_repository->getBadgeIdsBySummit($summit_id, new PagingInfo($page, 500));
+            $has_more      = count($page_response->getItems()) > 0;
+
+            if(!$has_more) {
+                Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s no more pages", $summit_id));
+                continue;
             }
-            return $summit->getQRCodesEncKey();
-        });
 
-        if (!empty($enc_key)) {
-            Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s using enc key %s", $summit_id, $enc_key));
-            $page = 1;
-            $count = 0;
-            do {
-                Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processing page %s", $summit_id, $page));
-                $page_response = $this->summit_attendee_badge_repository->getBadgeIdsBySummit($summit_id, new PagingInfo($page, 500));
-                $has_more      = count($page_response->getItems()) > 0;
-                if(!$has_more) {
-                    Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s no more pages", $summit_id));
-                    continue;
-                }
+            foreach ($page_response->getItems() as $page_response_item){
 
-                foreach ($page_response->getItems() as $page_response_item){
-                    $attendee_badge_id = $page_response_item['id'];
-                    $count++;
-                    Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processing badge %s", $summit_id, $attendee_badge_id));
-                    $this->tx_service->transaction(function () use ($attendee_badge_id) {
-                        try {
-                            $attendee_badge = $this->summit_attendee_badge_repository->getById(intval($attendee_badge_id));
-                            if(!$attendee_badge instanceof SummitAttendeeBadge){
-                                Log::warning(sprintf("SummitService::regenerateBadgeQRCodes badge %s not found", $attendee_badge_id));
-                                return;
-                            }
-                            $attendee_badge->generateQRCode();
+                $attendee_badge_id = $page_response_item['id'];
+                $count++;
+
+                Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processing badge %s", $summit_id, $attendee_badge_id));
+
+                $this->tx_service->transaction(function () use ($attendee_badge_id) {
+                    try {
+                        $attendee_badge = $this->summit_attendee_badge_repository->getById(intval($attendee_badge_id));
+                        if(!$attendee_badge instanceof SummitAttendeeBadge){
+                            Log::warning(sprintf("SummitService::regenerateBadgeQRCodes badge %s not found", $attendee_badge_id));
+                            return;
                         }
-                        catch (Exception $ex){
+                        $attendee_badge->generateQRCode();
+                    }
+                    catch (Exception $ex){
                             Log::error($ex);
-                        }
-                    });
-                }
-                $page++;
-            } while ($has_more);
-            Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processed %s badges", $summit_id, $count));
-        }
+                    }
+                });
+            }
+
+            $page++;
+
+        } while ($has_more);
+        Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processed %s badges", $summit_id, $count));
     }
 }

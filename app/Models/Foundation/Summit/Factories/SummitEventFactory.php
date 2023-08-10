@@ -63,9 +63,11 @@ final class SummitEventFactory
                 if ($selection_plan_id > 0) {
                     $selection_plan = $event->getSummit()->getSelectionPlanById($selection_plan_id);
                     if (!is_null($selection_plan)) {
+
                         $track = $event->getCategory();
                         $type = $event->getType();
-                        if (!$selection_plan->hasTrack($track)) {
+
+                        if (!is_null($track) && !$selection_plan->hasTrack($track)) {
                             throw new ValidationException
                             (
                                 sprintf
@@ -78,7 +80,8 @@ final class SummitEventFactory
                                 )
                             );
                         }
-                        if (!$selection_plan->hasEventType($type)) {
+
+                        if (!is_null($type) && !$selection_plan->hasEventType($type)) {
                             throw new ValidationException
                             (
                                 sprintf
@@ -91,6 +94,7 @@ final class SummitEventFactory
                                 )
                             );
                         }
+
                         $event->setSelectionPlan($selection_plan);
                     }
                 } else {

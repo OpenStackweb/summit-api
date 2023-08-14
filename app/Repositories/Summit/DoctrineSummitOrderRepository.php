@@ -163,6 +163,28 @@ SQL
     }
 
     /**
+     * @param Summit $summit
+     * @param string $email
+     * @return mixed
+     */
+    public function getAllReservedBySummitAndOwnerEmail(Summit $summit, string $email){
+
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->join('e.summit', 's')
+            ->where("e.owner_email = :owner_email")
+            ->andWhere('s.id = :summit_id')
+            ->andWhere("e.status = :status");
+
+        $query->setParameter("owner_email", trim($email));
+        $query->setParameter("summit_id", $summit->getId());
+        $query->setParameter("status", IOrderConstants::ReservedStatus);
+        return $query->getQuery()->getResult();
+    }
+
+    /**
      * @param string $email
      * @return mixed
      */
@@ -263,8 +285,8 @@ SQL
         ;
 
         $query->setParameter("external_id", $externalId);
-        $query->setParameter("summit_id", $summit->getId())
-        ;
+        $query->setParameter("summit_id", $summit->getId());
+
         return $query->getQuery()
             ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)

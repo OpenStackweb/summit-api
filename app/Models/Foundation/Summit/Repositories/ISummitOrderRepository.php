@@ -55,6 +55,13 @@ interface ISummitOrderRepository extends IBaseRepository
     public function getAllByOwnerEmail(string $email);
 
     /**
+     * @param Summit $summit
+     * @param string $email
+     * @return mixed
+     */
+    public function getAllReservedBySummitAndOwnerEmail(Summit $summit, string $email);
+
+    /**
      * @param string $email
      * @return mixed
      */

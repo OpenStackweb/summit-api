@@ -852,22 +852,88 @@ final class PreOrderValidationTask extends AbstractTask
     private $ticket_type_repository;
 
     /**
+     * @var ISummitOrderRepository
+     */
+    private $order_repository;
+
+    /**
+     * @var IBuildDefaultPaymentGatewayProfileStrategy
+     */
+    private $default_payment_gateway_strategy;
+
+    /**
      * @param Summit $summit
      * @param array $payload
      * @param ISummitTicketTypeRepository $ticket_type_repository
+     * @param ISummitOrderRepository $order_repository
+     * @param IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        Summit                      $summit, array $payload,
-        ISummitTicketTypeRepository $ticket_type_repository,
-        ITransactionService         $tx_service
+        Summit                                     $summit,
+        array                                      $payload,
+        ISummitTicketTypeRepository                $ticket_type_repository,
+        ISummitOrderRepository                     $order_repository,
+        IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
+        ITransactionService                        $tx_service
     )
     {
         $this->tx_service = $tx_service;
         $this->summit = $summit;
         $this->payload = $payload;
         $this->ticket_type_repository = $ticket_type_repository;
+        $this->order_repository = $order_repository;
+        $this->default_payment_gateway_strategy = $default_payment_gateway_strategy;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $owner_email
+     * @throws \Exception
+     */
+    private function confirmBySummitAndOwnerEmail(Summit $summit, string $owner_email): void
+    {
+        // done in this way to avoid db lock contention
+        $orders = $this->tx_service->transaction(function () use ($summit, $owner_email) {
+            return $this->order_repository->getAllReservedBySummitAndOwnerEmail($summit, $owner_email);
+        });
+
+        foreach ($orders as $order) {
+            $this->tx_service->transaction(function () use ($summit, $order) {
+
+                try {
+                    if (!$order instanceof SummitOrder) return;
+
+                    $order = $this->order_repository->getByIdExclusiveLock($order->getId());
+                    if (!$order instanceof SummitOrder) return;
+                    Log::debug(sprintf("SummitOrderService::confirmBySummitAndOwnerEmail processing order %s", $order->getId()));
+                    $payment_gateway = $summit->getPaymentGateWayPerApp
+                    (
+                        IPaymentConstants::ApplicationTypeRegistration,
+                        $this->default_payment_gateway_strategy
+                    );
+                    if (is_null($payment_gateway)) {
+                        Log::warning(sprintf("SummitOrderService::confirmBySummitAndOwnerEmail Payment configuration is not set for summit %s", $summit->getId()));
+                        return;
+                    }
+
+                    $cart_id = $order->getPaymentGatewayCartId();
+                    if (!empty($cart_id)) {
+
+                        $status = $payment_gateway->getCartStatus($cart_id);
+
+                        if (!is_null($status) && $payment_gateway->isSucceeded($status)) {
+                            Log::info(sprintf("SummitOrderService::confirmBySummitAndOwnerEmail marking as paid order %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
+                            $order->setPaid();
+                        }
+
+                    }
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                }
+            });
+        }
     }
 
     public function run(array $formerState): array
@@ -940,6 +1006,8 @@ final class PreOrderValidationTask extends AbstractTask
                         )
                     );
                 }
+
+                $this->confirmBySummitAndOwnerEmail($ticket_type->getSummit(), $owner_email);
             }
         });
         return [];
@@ -1169,7 +1237,16 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::reserve owner %s %s %s", $owner->getId(), $owner->getFirstName(), $owner->getLastName()));
 
             $state = Saga::start()
-                ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
+                ->addTask(new PreOrderValidationTask
+                    (
+                        $summit,
+                        $payload,
+                        $this->ticket_type_repository,
+                        $this->order_repository,
+                        $this->default_payment_gateway_strategy,
+                        $this->tx_service
+                    )
+                )
                 ->addTask(new PreProcessReservationTask($payload))
                 ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
                 ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))

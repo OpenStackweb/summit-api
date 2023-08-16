@@ -28,6 +28,7 @@ class SummitDocumentSerializer extends SilverStripeSerializer
         'SummitId' => 'summit_id:json_int',
         'FileUrl' => 'file:json_url',
         'SelectionPlanId' => 'selection_plan_id:json_int',
+        'WebLink' => 'web_link:json_url',
     ];
 
     /**

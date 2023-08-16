@@ -91,6 +91,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
                 'show_always'     => 'sometimes|boolean',
+                'web_link'        => 'sometimes|url|max:256',
                 'selection_plan_id' => 'sometimes|nullable|integer',
             ];
 
@@ -152,11 +153,12 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
 
             $rules = [
                 'file'            => 'sometimes',
-                'name'            => 'nullable|string:512',
-                'label'           => 'nullable|string:512',
+                'name'            => 'nullable|string:255',
+                'label'           => 'nullable|string:255',
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
                 'show_always'     => 'sometimes|boolean',
+                'web_link'        => 'sometimes|url|max:256',
                 'selection_plan_id' => 'sometimes|nullable|integer',
             ];
 
@@ -175,6 +177,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'name',
                 'description',
                 'label',
+                'web_link',
             ];
 
             $document = $this->service->updateSummitDocument

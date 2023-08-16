@@ -68,6 +68,12 @@ class SummitDocument extends SilverstripeBaseModel
     private $show_always;
 
     /**
+     * @ORM\Column(name="WebLink", type="string")
+     * @var string
+     */
+    private $web_link;
+
+    /**
      * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
@@ -103,6 +109,7 @@ class SummitDocument extends SilverstripeBaseModel
         $this->description = '';
         $this->name = '';
         $this->show_always = false;
+        $this->web_link = null;
     }
 
     /**
@@ -238,6 +245,22 @@ class SummitDocument extends SilverstripeBaseModel
         if($this->show_always){
             $this->clearEventTypes();
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getWebLink(): ?string
+    {
+        return $this->web_link;
+    }
+
+    /**
+     * @param string $web_link
+     */
+    public function setWebLink(string $web_link): void
+    {
+        $this->web_link = $web_link;
     }
 
     /**

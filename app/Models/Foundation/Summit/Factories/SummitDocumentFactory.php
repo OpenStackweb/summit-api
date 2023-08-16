@@ -47,6 +47,9 @@ final class SummitDocumentFactory
         if(isset($payload['description']))
             $document->setDescription(trim($payload['description']));
 
+        if(isset($payload['web_link']))
+            $document->setWebLink(trim($payload['web_link']));
+
         return $document;
     }
 }

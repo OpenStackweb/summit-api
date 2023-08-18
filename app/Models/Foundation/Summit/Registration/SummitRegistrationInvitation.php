@@ -319,18 +319,36 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     }
 
     public function getBoughtTicketTypesExcerpt():array{
+
+        Log::debug(sprintf("SummitRegistrationInvitation::getBoughtTicketTypesExcerpt id %s", $this->id));
+
         if($this->orders->count() === 0 ) return[];
 
         $bought_tickets = [];
+
         foreach ($this->orders as $order){
-            foreach ($order->getTickets() as $ticket){
-                $type = $ticket->getTicketType();
-                if(!isset($bought_tickets[$type->getId()])){
-                    $bought_tickets[$type->getId()] = 0;
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationInvitation::getBoughtTicketTypesExcerpt id %s order id %s order status %s",
+                    $this->id,
+                    $order->getId(),
+                    $order->getStatus(),
+                )
+            );
+
+            if($order->isPaid() || $order->isReserved() || $order->isConfirmed()) {
+                foreach ($order->getTickets() as $ticket) {
+                    $type = $ticket->getTicketType();
+                    if (!isset($bought_tickets[$type->getId()])) {
+                        $bought_tickets[$type->getId()] = 0;
+                    }
+                    $bought_tickets[$type->getId()] += 1;
                 }
-                $bought_tickets[$type->getId()] += 1;
             }
         }
+
         return $bought_tickets;
     }
 
@@ -338,6 +356,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
         $res = [];
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
+
         Log::debug
         (
             sprintf
@@ -398,7 +417,16 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      */
     public function markAsAccepted(): void
     {
-        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s orders count %s", $this->id, $this->orders->count()));
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationInvitation::markAsAccepted %s orders count %s",
+                $this->id,
+                $this->orders->count()
+            )
+        );
+
         if($this->orders->count() === 0 ) return;
 
         if($this->isAccepted()) return;

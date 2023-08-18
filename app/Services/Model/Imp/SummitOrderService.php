@@ -464,6 +464,21 @@ final class ReserveOrderTask extends AbstractTask
             // generate the key to access
             $order->generateHash();
             $order->generateQRCode();
+            $invitation = $this->summit->getSubmissionInvitationByEmail($order->getOwnerEmail());
+            if(!is_null($invitation)){
+                // add the order to the corresponding invitation , if does exist to avoid user
+                // to purchase multiple tickets for the same invitation
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ReserveOrderTask::run got invitation %s for email %s",
+                        $invitation->getId(),
+                        $order->getOwnerEmail()
+                    )
+                );
+                $invitation->addOrder($order);
+            }
             Event::dispatch(new CreatedSummitRegistrationOrder($order->getId()));
             return ['order' => $order];
         });
@@ -1952,12 +1967,22 @@ final class SummitOrderService
 
                     $cart_id = $order->getPaymentGatewayCartId();
                     if (!empty($cart_id)) {
-
                         $status = $payment_gateway->getCartStatus($cart_id);
-
                         if (!is_null($status) && $payment_gateway->isSucceeded($status)) {
-                            Log::info(sprintf("SummitOrderService::confirmOrdersOlderThanNMinutes marking as paid order %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
-                            $order->setPaid();
+
+                            Log::info
+                            (
+                                sprintf
+                                (
+                                    "SummitOrderService::confirmOrdersOlderThanNMinutes marking as paid order %s create at %s",
+                                    $order->getNumber(),
+                                    $order->getCreated()->format("Y-m-d h:i:sa")
+                                )
+                            );
+
+                            $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                            // invoke now to avoid delays
+                            $this->processInvitation($order);
                         }
 
                     }
@@ -2015,7 +2040,9 @@ final class SummitOrderService
                             if (!$payment_gateway->canAbandon($status)) {
                                 Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
                                 if ($payment_gateway->isSucceeded($status)) {
-                                    $order->setPaid();
+                                    $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                    // invoke now to avoid delays
+                                    $this->processInvitation($order);
                                 }
                                 return;
                             }

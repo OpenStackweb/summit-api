@@ -88,6 +88,8 @@ final class StripeApi implements IPaymentGatewayAPI
 
     public function getCreditCardInfo(array $payload): array
     {
+        Log::debug(sprintf("StripeApi::getCreditCardInfo payload %s", json_encode($payload)));
+
         if (!isset($payload['charges']) || !isset($payload['charges']['data'])) return [];
 
         $charges = $payload['charges']['data'];
@@ -540,5 +542,29 @@ final class StripeApi implements IPaymentGatewayAPI
     public function clearWebHooks(): void
     {
         // TODO: Implement clearWebHooks() method.
+    }
+
+    public function getCartCreditCardInfo(string $cart_id): ?array
+    {
+        Log::debug(sprintf("StripeApi::getCartCreditCardInfo cart_id %s", $cart_id));
+
+        if (empty($this->secret_key))
+            throw new \InvalidArgumentException();
+
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
+
+        try {
+            $intent = PaymentIntent::retrieve($cart_id);
+
+            if (is_null($intent))
+                throw new \InvalidArgumentException();
+
+            return $this->getCreditCardInfo($intent->toArray());
+        }
+        catch(Exception $ex){
+            Log::warning(sprintf("StripeApi::getCartCreditCardInfo cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
+            return null;
+        }
     }
 }

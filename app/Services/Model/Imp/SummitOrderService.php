@@ -464,7 +464,7 @@ final class ReserveOrderTask extends AbstractTask
             // generate the key to access
             $order->generateHash();
             $order->generateQRCode();
-            $invitation = $this->summit->getSubmissionInvitationByEmail($order->getOwnerEmail());
+            $invitation = $this->summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
             if(!is_null($invitation)){
                 // add the order to the corresponding invitation , if does exist to avoid user
                 // to purchase multiple tickets for the same invitation

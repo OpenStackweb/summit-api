@@ -300,6 +300,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForSubmission($this->getJsonData(), true), true);
 
+            Log::debug(sprintf("SummitEventApiController::updatePresentationSubmission presentation_id %s payload %s", $presentation_id, json_encode($payload)));
             $presentation = $this->presentation_service->updatePresentationSubmission
             (
                 $summit,

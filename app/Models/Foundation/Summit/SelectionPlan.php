@@ -1538,7 +1538,9 @@ class SelectionPlan extends SilverstripeBaseModel
         foreach ($allowed_fields as $field) {
             Log::debug(sprintf("SelectionPlan::checkPresentationAllowedEdtiableQuestions Selection Plan %s checking Presentation Field %s if its editable...", $this->id, $field));
             if (isset($payload[$field]) && isset($former_data[$field]) && !self::areFieldsEqual($payload[$field], $former_data[$field]) && !$this->isAllowedEditablePresentationQuestion($field)) {
-                throw new ValidationException(sprintf("Field %s is not allowed for edition on Selection Plan %s", $field, $this->name));
+                Log::debug(sprintf("SelectionPlan::checkPresentationAllowedEdtiableQuestions current field %s ( %s ).",$field, $payload[$field]));
+                Log::debug(sprintf("SelectionPlan::checkPresentationAllowedEdtiableQuestions former field %s ( %s ).",$field, $former_data[$field]));
+                throw new ValidationException(sprintf("Field %s is not allowed for edition on Selection Plan %s.", $field, $this->name));
             }
         }
     }

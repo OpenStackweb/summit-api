@@ -1513,7 +1513,7 @@ class SelectionPlan extends SilverstripeBaseModel
             if (count($field1) != count($field2)) return false;
             return array_diff($field1, $field2) === array_diff($field2, $field1);
         }
-        return $field1 == $field2;
+        return html_entity_decode($field1) == html_entity_decode($field1);
     }
 
     /**

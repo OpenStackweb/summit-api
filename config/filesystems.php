@@ -48,6 +48,11 @@ return [
             'root' => storage_path('app'),
         ],
 
+        'logs' => [
+            'driver' => 'local',
+            'root' => storage_path('logs'),
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
@@ -90,6 +95,15 @@ return [
             'bucket' => env('AWS_BUCKET_ASSETS'),
             'url' => env('AWS_URL_ASSETS'),
             'endpoint' => env('AWS_ENDPOINT_ASSETS'),
+        ],
+
+        'logs_s3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID_LOGS'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY_LOGS'),
+            'region' => env('AWS_DEFAULT_REGION_LOGS'),
+            'bucket' => env('AWS_BUCKET_LOGS'),
+            'endpoint' => env('AWS_ENDPOINT_LOGS'),
         ],
 
         'static_images_s3' => [

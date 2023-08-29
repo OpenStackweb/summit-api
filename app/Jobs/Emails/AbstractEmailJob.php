@@ -78,10 +78,20 @@ abstract class AbstractEmailJob implements ShouldQueue
     )
     {
         $this->template_identifier = $template_identifier;
-        Log::debug(sprintf("AbstractEmailJob::__construct template_identifier %s", $template_identifier));
+        Log::debug
+        (
+            sprintf
+            (
+                "AbstractEmailJob::__construct template_identifier %s to_email %s",
+                $template_identifier,
+                $to_email
+            )
+        );
+
         if(empty($this->template_identifier)){
             throw new \InvalidArgumentException("missing template_identifier value");
         }
+
         $this->payload = $payload;
         $this->to_email = $to_email;
         $this->subject = $subject;

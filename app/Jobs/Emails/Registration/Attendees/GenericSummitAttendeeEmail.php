@@ -26,6 +26,8 @@ use models\summit\SummitRegistrationDiscountCode;
  */
 final class GenericSummitAttendeeEmail extends AbstractSummitAttendeeTicketEmail
 {
+    public $tries = 5;
+
     /**
      * SummitAttendeeAllTicketsEditionEmail constructor.
      * @param SummitAttendee $attendee

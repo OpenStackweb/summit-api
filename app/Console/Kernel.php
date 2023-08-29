@@ -49,6 +49,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
         \App\Console\Commands\PurgeAuditLogCommand::class,
         \App\Console\Commands\SummitBadgesQREncryptor::class,
+        \App\Console\Commands\LogsUploader::class,
     ];
 
     /**
@@ -98,5 +99,8 @@ class Kernel extends ConsoleKernel
         }
 
         $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
+
+        // logs upload
+        $schedule->command('management:logs-uploader')->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
     }
 }

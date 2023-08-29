@@ -26,4 +26,5 @@ return array
     'ss_encrypt_cypher'                 => env('SS_ENCRYPT_CYPHER', ''),
     'google_geocoding_api_key'          => env('GOOGLE_GEO_CODING_API_KEY', ''),
     'samsung_registration_api_endpoint' => env('SAMSUNG_REGISTRATION_API_ENDPOINT', ''),
+    'app_node_number'                   => env('APP_NODE_NBR', 1),
 );

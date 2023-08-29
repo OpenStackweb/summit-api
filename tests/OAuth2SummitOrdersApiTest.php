@@ -13,10 +13,12 @@
  **/
 
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\IPaymentConstants;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitBadgeTypeFactory;
+use models\summit\Summit;
 use services\model\ISummitService;
 
 /**
@@ -58,54 +60,54 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
     use InsertOrdersTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
-        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
-        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
-        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
-
-        self::insertSummitTestData();
-        self::InsertOrdersTestData();
-        // build payment profile and attach to summit
-        self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
-            'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
-            'is_test_mode'         => true,
-            'test_publishable_key' => self::$test_public_key,
-            'test_secret_key'      => self::$test_secret_key,
-            'is_active'            => false,
-        ]);
-
-        // build default badge type
-
-        $defaultBadge = SummitBadgeTypeFactory::build([
-            'name' => 'DEFAULT',
-            'is_default' => true,
-        ]);
-
-        // build ticket type
-
-        self::$ticketType = SummitTicketTypeFactory::build(self::$summit, [
-            'name'            => 'TICKET_1',
-            'cost'            => 100,
-            'quantity_2_sell' => 1000,
-        ]);
-
-        self::$summit->addPaymentProfile(self::$profile);
-        self::$summit->addBadgeType($defaultBadge);
-        self::$summit->addTicketType(self::$ticketType);
-
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-
-    }
-
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+//    protected function setUp():void
+//    {
+//        parent::setUp();
+//        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
+//        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
+//        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
+//        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
+//
+//        self::insertSummitTestData();
+//        self::InsertOrdersTestData();
+//        // build payment profile and attach to summit
+//        self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
+//            'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
+//            'is_test_mode'         => true,
+//            'test_publishable_key' => self::$test_public_key,
+//            'test_secret_key'      => self::$test_secret_key,
+//            'is_active'            => false,
+//        ]);
+//
+//        // build default badge type
+//
+//        $defaultBadge = SummitBadgeTypeFactory::build([
+//            'name' => 'DEFAULT',
+//            'is_default' => true,
+//        ]);
+//
+//        // build ticket type
+//
+//        self::$ticketType = SummitTicketTypeFactory::build(self::$summit, [
+//            'name'            => 'TICKET_1',
+//            'cost'            => 100,
+//            'quantity_2_sell' => 1000,
+//        ]);
+//
+//        self::$summit->addPaymentProfile(self::$profile);
+//        self::$summit->addBadgeType($defaultBadge);
+//        self::$summit->addTicketType(self::$ticketType);
+//
+//        self::$em->persist(self::$summit);
+//        self::$em->flush();
+//
+//    }
+//
+//    protected function tearDown():void
+//    {
+//        self::clearSummitTestData();
+//        parent::tearDown();
+//    }
 
     /**
      * @return mixed
@@ -380,11 +382,14 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
         $res = memory_get_peak_usage(true);
 
+        $summit_repository = EntityManager::getRepository(Summit::class);
+        self::$summit = $summit_repository->find(3685);
+
         $summitId = self::$summit->getId();
         $companyId = 5;
 
         $service = App::make(ISummitService::class);
-        $service->addCompany($summitId, $companyId);
+        //$service->addCompany($summitId, $companyId);
         $company = self::$summit->getRegistrationCompanyById($companyId);
 
         $params = [
@@ -398,7 +403,8 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
             "owner_company"     => $company->getName(),
             "owner_company_id"  => $company->getId(),
             "tickets" => [
-                ["type_id" => self::$ticketType->getId()],
+                //["type_id" => self::$ticketType->getId()],
+                ["type_id" => 3080],
             ]
         ];
 

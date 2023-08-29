@@ -23,6 +23,8 @@ use App\Services\Apis\MailApi;
 use App\Services\Apis\PasswordlessAPI;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Apis\Samsung\SamsungRegistrationAPI;
+use App\Services\FileSystem\ILogsUploadService;
+use App\Services\FileSystem\LogsUploadService;
 use App\Services\Model\FolderService;
 use App\Services\Model\IFolderService;
 use App\Services\utils\EmailExcerptService;
@@ -148,6 +150,11 @@ final class BaseServicesProvider extends ServiceProvider
                 );
             }
         );
+
+        App::singleton(
+            ILogsUploadService::class,
+            LogsUploadService::class
+        );
     }
 
     /**
@@ -172,6 +179,7 @@ final class BaseServicesProvider extends ServiceProvider
             ILockManagerService::class,
             IPasswordlessAPI::class,
             ISamsungRegistrationAPI::class,
+            ILogsUploadService::class,
         ];
     }
 }

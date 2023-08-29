@@ -11,4 +11,6 @@ return [
     'level'         => env('LOG_LEVEL', 'error'),
     'email_level'   => env('LOG_EMAIL_LEVEL', 'error'),
     'email_subject' => env('LOG_EMAIL_SUBJECT', ''),
+    'remote_storage_name' => env('REMOTE_LOGS_STORAGE_NAME', 'logs_s3'),
+    'app_log_file_name_prefix' => env('APP_LOG_FILE_NAME_PREFIX', 'laravel'),
 ];

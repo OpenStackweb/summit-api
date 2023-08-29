@@ -12,12 +12,8 @@
  * limitations under the License.
  **/
 
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
-use Exception;
+use App\Services\FileSystem\ILogsUploadService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Class LogsUploader
@@ -47,50 +43,28 @@ final class LogsUploader extends Command
      */
     protected $description = 'Upload local logs to external storage';
 
-    private function formatFileName(string $date_str) {
-        return "laravel-{$date_str}.log";
+    /**
+     * @var ILogsUploadService
+     */
+    protected $logs_upload_service;
+
+    /**
+     * SummitEventSetAvgRateProcessor constructor.
+     * @param ILogsUploadService $logs_upload_service
+     */
+    public function __construct(ILogsUploadService $logs_upload_service)
+    {
+        parent::__construct();
+        $this->logs_upload_service = $logs_upload_service;
     }
 
     /**
      * Execute the console command.
      *
      * @return mixed
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function handle()
     {
-        try {
-            $date_format = 'Y-m-d';
-            $ui_file_name = 'uploads_info';
-            $pending_uploads = [];
-            $yesterday = Carbon::yesterday('UTC');
-
-            $logs_fs = Storage::disk('logs');
-            if ($logs_fs->exists($ui_file_name)) {
-                $uploads_info = explode(PHP_EOL, $logs_fs->get($ui_file_name));
-                sort($uploads_info);
-                $first_date_str = $uploads_info[0];
-                $date_from = Carbon::createFromFormat($date_format, $first_date_str);
-                //get upload gaps
-                $period = CarbonPeriod::create($date_from, $yesterday);
-
-                foreach ($period as $date) {
-                    $date_str = $date->format($date_format);
-                    if (!in_array($date_str, $uploads_info)) {
-                        $pending_uploads[] = $this->formatFileName($date_str);
-                    }
-                }
-            } else {
-                $pending_uploads[] = $this->formatFileName($yesterday->format($date_format));
-            }
-
-            foreach ($pending_uploads as $pending_upload) {
-                $logs_fs->append($ui_file_name, $pending_upload);
-            }
-
-            //Storage::disk('logs_s3')->put($log_name, $content);
-        } catch (Exception $ex) {
-            Log::error($ex);
-        }
+        $this->logs_upload_service->startUpload();
     }
 }

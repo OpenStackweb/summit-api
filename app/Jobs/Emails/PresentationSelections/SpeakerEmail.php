@@ -14,6 +14,8 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 
+// TODO: Remove this job as it's not triggered anywhere.
+
 /**
  * Class SpeakerEmail
  * @package App\Jobs\Emails\PresentationSelections

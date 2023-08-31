@@ -51,6 +51,19 @@ final class AdminSummitSerializer extends SummitSerializer
         // oauth2 clients
         'VirtualSiteOAuth2ClientId' => 'virtual_site_oauth2_client_id:json_string',
         'MarketingSiteOAuth2ClientId' => 'marketing_site_oauth2_client_id:json_string',
+        // calculated attributes
+        'PresentationVotesCount' => 'presentation_votes_count:json_int',
+        'PresentationVotersCount' => 'presentation_voters_count:json_int',
+        'PresentationsSubmittedCount' => 'presentations_submitted_count:json_int',
+        'AttendeesCount' => 'attendees_count:json_int',
+        'PaidTicketsCount' => 'paid_tickets_count:json_int',
+        'SpeakersCount' => 'speakers_count:json_int',
+        'SpeakerAnnouncementEmailAcceptedCount' => 'speaker_announcement_email_accepted_count:json_int',
+        'SpeakerAnnouncementEmailRejectedCount' => 'speaker_announcement_email_rejected_count:json_int',
+        'SpeakerAnnouncementEmailAlternateCount' => 'speaker_announcement_email_alternate_count:json_int',
+        'SpeakerAnnouncementEmailAcceptedAlternateCount' => 'speaker_announcement_email_accepted_alternate_count:json_int',
+        'SpeakerAnnouncementEmailAcceptedRejectedCount' => 'speaker_announcement_email_accepted_rejected_count:json_int',
+        'SpeakerAnnouncementEmailAlternateRejectedCount' => 'speaker_announcement_email_alternate_rejected_count:json_int',
     ];
 
     protected static $allowed_relations = [

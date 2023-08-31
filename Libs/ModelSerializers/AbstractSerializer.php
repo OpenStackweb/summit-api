@@ -355,6 +355,10 @@ abstract class AbstractSerializer implements IModelSerializer
                         {
                             $value = JsonUtils::toObfuscatedEmail($value);
                         }
+                        case 'json_null_email':
+                        {
+                            $value = JsonUtils::toNullEmail($value);
+                        }
                         case 'json_url':
                             {
                                 $value = JsonUtils::encodeUrl($value);

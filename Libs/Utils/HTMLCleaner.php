@@ -29,6 +29,7 @@ final class HTMLCleaner
     {
         $config = \HTMLPurifier_Config::createDefault();
         // Remove any CSS or inline styles
+        $config->set('Core.Encoding', 'UTF-8');
         $config->set('CSS.AllowedProperties', []);
         $config->set('HTML.TargetBlank', true);
         $purifier = new \HTMLPurifier($config);

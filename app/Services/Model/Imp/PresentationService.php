@@ -490,6 +490,8 @@ final class PresentationService
     {
         return $this->tx_service->transaction(function () use ($summit, $presentation_id, $data) {
 
+            Log::debug(sprintf("PresentationService::updatePresentationSubmission presentation %s payload %s",  $presentation_id, json_encode($data)));
+
             $member = ResourceServerContext::getCurrentUser(false);
             $current_speaker = $this->speaker_repository->getByMember($member);
 

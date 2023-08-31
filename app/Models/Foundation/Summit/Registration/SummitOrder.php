@@ -331,6 +331,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         }
 
         if (!is_null($payload) && isset($payload['order_credit_card_type']) && isset($payload['order_credit_card_4numbers'])) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrder::setPaid order %s setting credit card info %s",
+                    $this->id,
+                    json_encode($payload)
+                )
+            );
+
             $this->credit_card_type = $payload['order_credit_card_type'];
             $this->credit_card_4numbers = $payload['order_credit_card_4numbers'];
         }
@@ -1052,6 +1063,15 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function isPaid(): bool
     {
         return $this->status == IOrderConstants::PaidStatus;
+    }
+
+    public function isReserved(): bool
+    {
+        return $this->status == IOrderConstants::ReservedStatus;
+    }
+
+    public function isConfirmed(): bool{
+        return $this->status == IOrderConstants::ConfirmedStatus;
     }
 
     /**

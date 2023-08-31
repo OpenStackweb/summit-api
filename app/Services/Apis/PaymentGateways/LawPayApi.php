@@ -543,4 +543,9 @@ final class LawPayApi implements IPaymentGatewayAPI
     {
         return [];
     }
+
+    public function getCartCreditCardInfo(string $cart_id): ?array
+    {
+        return [];
+    }
 }

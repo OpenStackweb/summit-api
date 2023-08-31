@@ -45,6 +45,14 @@ abstract class JsonUtils
     }
 
     /**
+     * @param $value
+     * @return string
+     */
+    public static function toNullEmail($value){
+       return "blank@blank.com";
+    }
+
+    /**
      * @param string $url
      * @return string
      */

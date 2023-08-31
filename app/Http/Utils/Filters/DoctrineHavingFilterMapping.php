@@ -54,7 +54,7 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
 
         $value = $filter->getValue();
 
-        if (trim($value) == '' || is_null($value)) return $query;
+        if (is_string($value) && ( trim($value) == '' || empty($value))) return $query;
 
         if (is_array($value) && count($value) == 0) return $query;
 

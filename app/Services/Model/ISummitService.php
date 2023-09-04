@@ -593,4 +593,10 @@ interface ISummitService
      * @param int $summit_id
      */
     public function regenerateBadgeQRCodes(int $summit_id):void;
+
+    /**
+     * @param int $summit_id
+     * @return void
+     */
+    public function generateMUXPrivateKey(int $summit_id):void;
 }

@@ -91,6 +91,7 @@ final class MUXApi implements IMUXApi
                 new GuzzleHttpClient,
                 $this->config
             );
+            return $this;
         } catch (\Exception $ex) {
             Log::error($ex);
             throw $ex;

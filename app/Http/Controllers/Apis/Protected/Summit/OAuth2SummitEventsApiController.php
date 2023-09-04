@@ -15,6 +15,7 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\MultipartFormDataCleaner;
+use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +31,7 @@ use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use utils\Filter;
@@ -575,8 +577,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->ok($this->_getSummitEvent($summit_id, $event_id));
         });
     }
-
-
 
     /**
      * @param $summit_id
@@ -1488,6 +1488,44 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 ]
             ));
 
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function getScheduledEventJWT($summit_id, $event_id)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id){
+            Log::debug(sprintf("OAuth2SummitEventsApiController::getScheduledEventJWT summit id %s event id %s", $summit_id, $event_id));
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $event = $summit->getScheduleEvent(intval($event_id));
+
+            if (is_null($event)) throw new EntityNotFoundException;
+
+            if(!$summit->hasMuxPrivateKey())
+                throw new ValidationException(sprintf("Summit %s has not set a private key.", $summit_id));
+
+            if(!$event->isMuxStream())
+                throw new ValidationException(sprintf("Event %s has not set a valid MUX url", $event_id));
+
+            if(!$event->IsSecureStream()){
+                throw new ValidationException(sprintf("Event %s is not marked as secure.", $event_id));
+            }
+
+            return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::SecureStream)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                [
+                    'current_user' => $this->resource_server_context->getCurrentUser(true)
+                ]
+            );
         });
     }
 }

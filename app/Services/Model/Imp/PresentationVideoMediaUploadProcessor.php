@@ -23,6 +23,7 @@ use App\Services\Model\IPresentationVideoMediaUploadProcessor;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use libs\utils\ITransactionService;
+use libs\utils\MUXUtils;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
 use MuxPhp\ApiException;
@@ -44,7 +45,6 @@ final class PresentationVideoMediaUploadProcessor
     implements IPresentationVideoMediaUploadProcessor
 {
 
-    const MUX_STREAM_REGEX = '/https\:\/\/stream\.mux\.com\/(.*)\.m3u8/';
     /**
      * @var ISummitEventRepository
      */
@@ -335,7 +335,7 @@ final class PresentationVideoMediaUploadProcessor
                                 $excerpt .= sprintf("event %s stream url does not match mux format (empty)", $event_id) . PHP_EOL;
                             }
                             // test $stream_url to check if a mux playlist format
-                            if (!preg_match(self::MUX_STREAM_REGEX, $stream_url, $matches)) {
+                            if (!preg_match(MUXUtils::MUX_STREAM_REGEX, $stream_url, $matches)) {
                                 Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s stream url does not match mux format (%s)", $event_id, $stream_url));
                                 $excerpt .= sprintf("event %s stream url does not match mux format (%s)", $event_id, $stream_url) . PHP_EOL;
                                 return false;

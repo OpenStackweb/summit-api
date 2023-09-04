@@ -40,6 +40,8 @@ use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Utils\IntervalParser;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Permissions\IPermissionsManager;
+use App\Services\Apis\IMUXApi;
+use App\Services\Apis\MuxCredentials;
 use App\Services\Filesystem\FileDownloadStrategyFactory;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\FileSystem\IFileDownloadStrategy;
@@ -229,7 +231,11 @@ final class SummitService
     private $encryption_key_generator;
 
     /**
-     * SummitService constructor.
+     * @var IMUXApi
+     */
+    private $mux_api;
+
+    /**
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
@@ -253,6 +259,7 @@ final class SummitService
      * @param IFileUploadStrategy $upload_strategy
      * @param IFileDownloadStrategy $download_strategy
      * @param IEncryptionAES256KeysGenerator $encryption_key_generator
+     * @param IMUXApi $mux_api
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -280,6 +287,7 @@ final class SummitService
         IFileUploadStrategy                        $upload_strategy,
         IFileDownloadStrategy                      $download_strategy,
         IEncryptionAES256KeysGenerator             $encryption_key_generator,
+        IMUXApi                                    $mux_api,
         ITransactionService                        $tx_service
     )
     {
@@ -307,6 +315,7 @@ final class SummitService
         $this->upload_strategy = $upload_strategy;
         $this->encryption_key_generator = $encryption_key_generator;
         $this->download_strategy = $download_strategy;
+        $this->mux_api = $mux_api;
     }
 
     /**
@@ -3618,5 +3627,39 @@ final class SummitService
 
         } while ($has_more);
         Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processed %s badges", $summit_id, $count));
+    }
+
+    /**
+     * @param int $summit_id
+     * @return void
+     * @throws Exception
+     */
+    public function generateMUXPrivateKey(int $summit_id): void
+    {
+        $this->tx_service->transaction(function() use($summit_id){
+            try {
+                Log::debug(sprintf("SummitService::generateMUXPrivateKey summit %s", $summit_id));
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit)
+                    throw new EntityNotFoundException("Summit not found.");
+
+                $this->mux_api->setCredentials(new MuxCredentials(
+                    $summit->getMuxTokenId(),
+                    $summit->getMuxTokenSecret()
+                ));
+
+                $key = $this->mux_api->createUrlSigningKey();
+
+                Log::debug(sprintf("SummitService::generateMUXPrivateKey summit %s key %s", $summit_id, json_encode($key)));
+
+                $summit->setMUXPrivateKey($key['private_key']);
+
+                $summit->setMuxPrivateKeyId($key['id']);
+            }
+            catch(Exception $ex){
+                Log::error($ex);
+                throw $ex;
+            }
+        });
     }
 }

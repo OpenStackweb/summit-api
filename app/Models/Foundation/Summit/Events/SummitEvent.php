@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\CreateMUXURLSigningKeyForSummit;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
@@ -1204,6 +1205,11 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->streaming_url;
     }
 
+    public function getStreamDuration():int{
+        // TODO: Implement getStreamDuration() method.
+        return 0;
+    }
+
     /**
      * @param string $streaming_url
      */
@@ -1569,8 +1575,11 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function setStreamIsSecure(bool $stream_is_secure): void
     {
+        Log::debug(sprintf("SummitEvent::setStreamIsSecure summit %s event %s stream_is_secure %s", $this->summit->getId(), $this->id, $stream_is_secure));
         $this->stream_is_secure = $stream_is_secure;
-    }
 
+        if($this->hasSummit() && $this->stream_is_secure && !$this->summit->hasMuxPrivateKey())
+            CreateMUXURLSigningKeyForSummit::dispatch($this->summit->getId());
+    }
 
 }

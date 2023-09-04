@@ -144,6 +144,10 @@ final class SummitEventFactory
             $event->setStreamingUrl(html_entity_decode(trim($payload['streaming_url'])));
         }
 
+        if (isset($payload['stream_is_secure'])) {
+            $event->setStreamIsSecure(filter_var($payload['stream_is_secure'], FILTER_VALIDATE_BOOLEAN));
+        }
+
         if (isset($payload['streaming_type'])) {
             $event->setStreamingType(trim($payload['streaming_type']));
         }

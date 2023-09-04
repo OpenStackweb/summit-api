@@ -265,6 +265,12 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     protected $streaming_url;
 
+    /**
+     * @ORM\Column(name="StreamIsSecure", type="boolean")
+     * @var boolean
+     */
+    protected $stream_is_secure;
+
 
     const STREAMING_TYPE_LIVE = 'LIVE';
     const STREAMING_TYPE_VOD = 'VOD';
@@ -355,6 +361,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->sponsors = new ArrayCollection();
         $this->rsvp = new ArrayCollection();
         $this->attendance_metrics = new ArrayCollection();
+        $this->stream_is_secure = false;
     }
 
     use SummitOwned;
@@ -1548,4 +1555,22 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         return SummitEventTypeConstants::BLACKOUT_TIME_FINAL;
     }
+
+    /**
+     * @return bool
+     */
+    public function IsSecureStream(): bool
+    {
+        return $this->stream_is_secure;
+    }
+
+    /**
+     * @param bool $stream_is_secure
+     */
+    public function setStreamIsSecure(bool $stream_is_secure): void
+    {
+        $this->stream_is_secure = $stream_is_secure;
+    }
+
+
 }

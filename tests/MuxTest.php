@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\Apis\IMUXApi;
 use App\Services\Apis\MuxCredentials;
 use App\Services\Model\IPresentationVideoMediaUploadProcessor;
 use Illuminate\Support\Facades\App;
@@ -19,7 +21,7 @@ use DateInterval;
  * Class MuxImportTest
  * @package Tests
  */
-final class MuxImportTest extends TestCase
+final class MuxTest extends TestCase
 {
     use InsertSummitTestData;
 
@@ -39,11 +41,9 @@ final class MuxImportTest extends TestCase
         $begin_date = new \DateTime("now", $time_zone);
         self::$presentations[0]->setStartDate($begin_date);
         self::$presentations[0]->setEndDate((clone $begin_date)->add(new DateInterval("P1D")));
-        self::$presentations[0]->publish();
         self::$presentations[1]->setStreamingUrl(env("MUX_STREAM_URL2"));
         self::$presentations[1]->setStartDate($begin_date);
         self::$presentations[1]->setEndDate((clone $begin_date)->add(new DateInterval("P1D")));
-        self::$presentations[1]->publish();
         self::$em->persist(self::$presentations[0]);
         self::$em->persist(self::$presentations[1]);
         self::$em->flush();
@@ -99,4 +99,21 @@ final class MuxImportTest extends TestCase
         $this->assertTrue(self::$presentations[0]->getVideosWithExternalUrls()->count() > 0);
         $this->assertTrue(self::$presentations[1]->getVideosWithExternalUrls()->count() > 0);
     }
+
+    public function testApi(){
+        $api = App::make(IMUXApi::class);
+
+        $api->setCredentials(new MuxCredentials
+        (
+            env('MUX_TOKEN_ID'),
+            env('MUX_TOKEN_SECRET')
+        ));
+
+        $key = $api->createUrlSigningKey();
+
+        $this->assertTrue(count($key) >= 2);
+        $this->assertTrue(isset($key['private_key']));
+        $this->assertTrue(isset($key['id']));
+    }
+
 }

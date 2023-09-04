@@ -98,6 +98,8 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'time_zone_label' => 'sometimes|string',
             'registration_allowed_refund_request_till_date' => 'nullable|date_format:U',
             'registration_slug_prefix' => 'sometimes|string|max:50',
+            'mux_token_id' => 'nullable|string',
+            'mux_token_secret' => 'nullable|string',
         ];
     }
 
@@ -177,6 +179,8 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'time_zone_label' => 'sometimes|string',
             'registration_allowed_refund_request_till_date' => 'nullable|date_format:U',
             'registration_slug_prefix' => 'sometimes|string|max:50',
+            'mux_token_id' => 'nullable|string',
+            'mux_token_secret' => 'nullable|string',
         ];
     }
 }

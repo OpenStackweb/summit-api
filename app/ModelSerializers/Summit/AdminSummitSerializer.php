@@ -64,6 +64,9 @@ final class AdminSummitSerializer extends SummitSerializer
         'SpeakerAnnouncementEmailAcceptedAlternateCount' => 'speaker_announcement_email_accepted_alternate_count:json_int',
         'SpeakerAnnouncementEmailAcceptedRejectedCount' => 'speaker_announcement_email_accepted_rejected_count:json_int',
         'SpeakerAnnouncementEmailAlternateRejectedCount' => 'speaker_announcement_email_alternate_rejected_count:json_int',
+        // MUX
+        'MuxTokenId' => 'mux_token_id:json_string',
+        'MuxTokenSecret' => 'mux_token_secret:json_string',
     ];
 
     protected static $allowed_relations = [

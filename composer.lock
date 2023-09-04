@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6ac96844deb74c3dc9d7bd9ea821d385",
+    "content-hash": "2181ad4b3ab2ebb4bedfc2bafb056d4a",
     "packages": [
         {
             "name": "affinipay/chargeio-php",
@@ -4567,28 +4567,28 @@
         },
         {
             "name": "muxinc/mux-php",
-            "version": "0.9.0",
+            "version": "3.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/muxinc/mux-php.git",
-                "reference": "7e7710bfc77335ca336527a3a3e26f4be6dff6f5"
+                "reference": "a905b64ac23661d3bd4f80bba6b0db56eacdecd9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/muxinc/mux-php/zipball/7e7710bfc77335ca336527a3a3e26f4be6dff6f5",
-                "reference": "7e7710bfc77335ca336527a3a3e26f4be6dff6f5",
+                "url": "https://api.github.com/repos/muxinc/mux-php/zipball/a905b64ac23661d3bd4f80bba6b0db56eacdecd9",
+                "reference": "a905b64ac23661d3bd4f80bba6b0db56eacdecd9",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "guzzlehttp/guzzle": "^7",
-                "php": ">=7.2.5"
+                "guzzlehttp/guzzle": "^7.4.5",
+                "php": ">=7.4.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "~2.12",
-                "squizlabs/php_codesniffer": "~2.6"
+                "friendsofphp/php-cs-fixer": "^3.14",
+                "phpunit/phpunit": "^8.0 || ^9.0"
             },
             "type": "library",
             "autoload": {
@@ -4602,12 +4602,12 @@
             ],
             "authors": [
                 {
-                    "name": "Mux SDK team",
+                    "name": "Mux SDK Team",
                     "email": "sdks@mux.com",
                     "homepage": "https://mux.com"
                 }
             ],
-            "description": "Official Mux API wrapper for PHP projects, supporting both Mux Data and Mux Video. Not familiar with Mux? Check out https://mux.com/ for more information.",
+            "description": "Mux is how developers build online video. This API encompasses both Mux Video and Mux Data functionality to help you build your video-related projects better and faster than ever before.",
             "homepage": "https://mux.com",
             "keywords": [
                 "api",
@@ -4619,9 +4619,9 @@
             ],
             "support": {
                 "issues": "https://github.com/muxinc/mux-php/issues",
-                "source": "https://github.com/muxinc/mux-php/tree/0.9.0"
+                "source": "https://github.com/muxinc/mux-php/tree/3.11.0"
             },
-            "time": "2021-03-17T18:06:14+00:00"
+            "time": "2023-04-27T15:17:50+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -12095,6 +12095,7 @@
         "ext-gd": "*",
         "ext-imagick": "*",
         "ext-json": "*",
+        "ext-openssl": "*",
         "ext-pdo": "*",
         "ext-zlib": "*"
     },

@@ -98,6 +98,7 @@ use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
 use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
+use App\ModelSerializers\Summit\SummitEventSecureStreamSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
 use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
@@ -266,7 +267,8 @@ final class SerializerRegistry
         $this->registry['SummitEvent'] = [
             self::SerializerType_Public => SummitEventSerializer::class,
             self::SerializerType_Private => AdminSummitEventSerializer::class,
-            self::SerializerType_CSV => AdminSummitEventCSVSerializer::class
+            self::SerializerType_CSV => AdminSummitEventCSVSerializer::class,
+            IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
         ];
 
         $this->registry['Presentation'] =
@@ -279,7 +281,8 @@ final class SerializerRegistry
                 IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
                 IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
                 IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class,
-                IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class
+                IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class,
+                IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
             ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;

@@ -652,6 +652,18 @@ class Summit extends SilverstripeBaseModel
     private $mux_token_secret;
 
     /**
+     * @ORM\Column(name="MUXPrivateKeyId", type="string")
+     * @var string
+     */
+    private $mux_private_key_id;
+
+    /**
+     * @ORM\Column(name="MUXPrivateKey", type="string")
+     * @var string
+     */
+    private $mux_private_key;
+
+    /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $event_types;
@@ -6492,7 +6504,7 @@ SQL;
     /**
      * @return string
      */
-    public function getMuxTokenId(): string
+    public function getMuxTokenId(): ?string
     {
         return $this->mux_token_id;
     }
@@ -6508,7 +6520,7 @@ SQL;
     /**
      * @return string
      */
-    public function getMuxTokenSecret(): string
+    public function getMuxTokenSecret(): ?string
     {
         return $this->mux_token_secret;
     }
@@ -6521,5 +6533,40 @@ SQL;
         $this->mux_token_secret = $mux_token_secret;
     }
 
+    /**
+     * @return string
+     */
+    public function getMuxPrivateKeyId(): ?string
+    {
+        return $this->mux_private_key_id;
+    }
+
+    /**
+     * @param string $mux_private_key_id
+     */
+    public function setMuxPrivateKeyId(string $mux_private_key_id): void
+    {
+        $this->mux_private_key_id = $mux_private_key_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMuxPrivateKey(): ?string
+    {
+        return $this->mux_private_key;
+    }
+
+    /**
+     * @param string $mux_private_key
+     */
+    public function setMuxPrivateKey(string $mux_private_key): void
+    {
+        $this->mux_private_key = $mux_private_key;
+    }
+
+    public function hasMuxPrivateKey():bool{
+        return !empty($this->mux_private_key);
+    }
 
 }

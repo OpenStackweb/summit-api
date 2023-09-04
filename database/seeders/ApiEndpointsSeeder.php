@@ -3552,6 +3552,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-published-event-tokens',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/published/tokens',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-published-event-media-uploads',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/published/media-uploads',
                 'http_method' => 'GET',

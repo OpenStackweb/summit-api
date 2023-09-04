@@ -1,6 +1,7 @@
-<?php namespace ModelSerializers;
-/**
- * Copyright 2021 OpenStack Foundation
+<?php namespace libs\utils;
+
+/*
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +14,24 @@
  **/
 
 /**
- * Interface IPresentationSerializerTypes
- * @package ModelSerializers
+ * Class MUXUtils
+ * @package libs\utils
  */
-interface IPresentationSerializerTypes
+final class MUXUtils
 {
-    const TrackChairs = "TRACK_CHAIRS";
-    const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
-    const SpeakerEmails = "SPEAKER_EMAILS";
-    const SubmitterEmails = "SUBMITTER_EMAILS";
+    const MUX_STREAM_REGEX = '/https\:\/\/stream\.mux\.com\/(.*)\.m3u8/';
 
-    const SecureStream = 'SECURE_STREAM';
+    /**
+     * @param string $url
+     * @return string|null
+     */
+    public static function getPlaybackId(string $url):?string{
+        if (!preg_match(self::MUX_STREAM_REGEX, $url, $matches)) {
+            return null;
+        }
+        if(count($matches) < 2){
+            return null;
+        }
+        return $matches[1];
+    }
 }

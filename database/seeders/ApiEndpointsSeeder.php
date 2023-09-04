@@ -9454,9 +9454,9 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/metrics/onsite/enter',
                     'http_method' => 'GET',
                     'scopes' => [
-                        printf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        printf(SummitScopes::ReadMetrics, $current_realm),
+                        sprintf(SummitScopes::ReadMetrics, $current_realm),
                     ],
                     'authz_groups' => [
                         IGroup::SummitAccessControl,

@@ -253,6 +253,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::post('leave', 'OAuth2SummitMetricsApiController@leave');
             // on site
             Route::group(['prefix' => 'onsite'], function () {
+                Route::get('enter', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMetricsApiController@checkOnSiteEnter']);
                 Route::put('enter', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMetricsApiController@onSiteEnter']);
                 Route::post('leave', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMetricsApiController@onSiteLeave']);
             });

@@ -210,6 +210,33 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         });
     }
 
+
+    public function checkOnSiteEnter($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'attendee_id' => 'required|integer',
+                'room_id' => 'sometimes|integer',
+                'event_id' => 'sometimes|integer',
+            ], false);
+
+            $metric = $this->service->checkOnSiteEnter($summit, $current_member, $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($metric)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
     public function onSiteLeave($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {

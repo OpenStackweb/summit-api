@@ -346,4 +346,84 @@ final class SummitMetricService
         );
     }
 
+    /**
+     * @param Summit $summit
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitMetric
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function checkOnSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric
+    {
+        Log::debug(sprintf("SummitMetricService::checkOnSiteEnter summit %s payload %s", $summit->getId(), json_encode($payload)));
+
+        $room_id = $payload['room_id'] ?? null;
+        if(!is_null($room_id))
+            $room_id = intval($room_id);
+
+        $event_id = $payload['event_id'] ?? null;
+        if(!is_null($event_id))
+            $event_id = intval($event_id);
+
+        return $this->checkAttendeePhysicalIngress
+        (
+            $summit,
+            $current_user,
+            intval($payload['attendee_id']),
+            $room_id,
+            $event_id
+        );
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $attendee_id
+     * @param int|null $room_id
+     * @param int|null $event_id
+     * @return SummitMetric
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    private function checkAttendeePhysicalIngress
+    (
+        Summit $summit,
+        Member $current_user,
+        int    $attendee_id,
+        ?int   $room_id = null,
+        ?int   $event_id = null
+    ): SummitMetric
+    {
+        Log::debug(sprintf("SummitMetricService::checkAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
+
+        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $room_id, $event_id) {
+
+            $attendee = $summit->getAttendeeById($attendee_id);
+            if (is_null($attendee))
+                throw new EntityNotFoundException("Attendee not found.");
+
+            $event = null;
+            $room = null;
+
+            if (!is_null($room_id)) {
+                $room = $summit->getLocation($room_id);
+                if (!$room instanceof SummitVenueRoom)
+                    throw new EntityNotFoundException("Room not found.");
+            }
+
+            if (!is_null($event_id)) {
+                $event = $summit->getEvent($event_id);
+                if (is_null($event))
+                    throw new EntityNotFoundException("Event not found.");
+            }
+
+            $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
+
+            if (is_null($metric)) {
+                throw new EntityNotFoundException("Metric not found.");
+            }
+
+            return $metric;
+        });
+    }
 }

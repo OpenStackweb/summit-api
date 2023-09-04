@@ -54,4 +54,13 @@ interface ISummitMetricService
      * @return SummitMetric
      */
     public function onSiteLeave(Summit $summit, Member $current_user, array $payload):SummitMetric;
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_user
+     * @param array $payload
+     * @throws EntityNotFoundException
+     * @return SummitMetric
+     */
+    public function checkOnSiteEnter(Summit $summit, Member $current_user, array $payload):SummitMetric;
 }

@@ -9450,6 +9450,19 @@ class ApiEndpointsSeeder extends Seeder
                     ],
                 ],
                 [
+                    'name' => 'metric-onsite-enter-check',
+                    'route' => '/api/v1/summits/{id}/metrics/onsite/enter',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        printf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm),
+                        printf(SummitScopes::ReadMetrics, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SummitAccessControl,
+                    ]
+                ],
+                [
                     'name' => 'metric-onsite-enter',
                     'route' => '/api/v1/summits/{id}/metrics/onsite/enter',
                     'http_method' => 'PUT',

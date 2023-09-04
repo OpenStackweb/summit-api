@@ -149,7 +149,7 @@ final class PresentationVideoMediaUploadProcessor
 
                                 // Create Asset Request
                                 $input = new MuxInputSettings(["url" => $assetUrl]);
-                                $createAssetRequest = new MuxCreateAssetRequest(["input" => $input, "playback_policy" => [MuxPlaybackPolicy::PUBLIC_PLAYBACK_POLICY]]);
+                                $createAssetRequest = new MuxCreateAssetRequest(["input" => $input, "playback_policy" => [MuxPlaybackPolicy::_PUBLIC]]);
                                 // Ingest
                                 $result = $this->assets_api->createAsset($createAssetRequest);
 

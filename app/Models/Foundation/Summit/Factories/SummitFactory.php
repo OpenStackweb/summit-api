@@ -476,6 +476,14 @@ final class SummitFactory
             $summit->setRegistrationSlugPrefix(trim($data['registration_slug_prefix']));
         }
 
+        if(isset($data['mux_token_id'])){
+            $summit->setMuxTokenId(trim($data['mux_token_id']));
+        }
+
+        if(isset($data['mux_token_secret'])){
+            $summit->setMuxTokenSecret(trim($data['mux_token_secret']));
+        }
+
         return $summit;
     }
 }

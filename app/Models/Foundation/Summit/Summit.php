@@ -640,6 +640,18 @@ class Summit extends SilverstripeBaseModel
     private $qr_codes_enc_key;
 
     /**
+     * @ORM\Column(name="MUXTokenId", type="string")
+     * @var string
+     */
+    private $mux_token_id;
+
+    /**
+     * @ORM\Column(name="MUXTokenSecret", type="string")
+     * @var string
+     */
+    private $mux_token_secret;
+
+    /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $event_types;
@@ -6476,4 +6488,38 @@ SQL;
     public function clearQRCodesEncKey() {
         $this->qr_codes_enc_key = null;
     }
+
+    /**
+     * @return string
+     */
+    public function getMuxTokenId(): string
+    {
+        return $this->mux_token_id;
+    }
+
+    /**
+     * @param string $mux_token_id
+     */
+    public function setMuxTokenId(string $mux_token_id): void
+    {
+        $this->mux_token_id = $mux_token_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMuxTokenSecret(): string
+    {
+        return $this->mux_token_secret;
+    }
+
+    /**
+     * @param string $mux_token_secret
+     */
+    public function setMuxTokenSecret(string $mux_token_secret): void
+    {
+        $this->mux_token_secret = $mux_token_secret;
+    }
+
+
 }

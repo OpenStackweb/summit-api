@@ -18,8 +18,11 @@ use App\Services\Apis\GoogleGeoCodingAPI;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Apis\IGeoCodingAPI;
 use App\Services\Apis\IMailApi;
+use App\Services\Apis\IMUXApi;
 use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Apis\MailApi;
+use App\Services\Apis\MUXApi;
+use App\Services\Apis\MuxCredentials;
 use App\Services\Apis\PasswordlessAPI;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Apis\Samsung\SamsungRegistrationAPI;
@@ -148,6 +151,13 @@ final class BaseServicesProvider extends ServiceProvider
                 );
             }
         );
+
+        App::singleton(
+            IMUXApi::class,
+            function(){
+                return new MUXApi();
+            }
+        );
     }
 
     /**
@@ -172,6 +182,7 @@ final class BaseServicesProvider extends ServiceProvider
             ILockManagerService::class,
             IPasswordlessAPI::class,
             ISamsungRegistrationAPI::class,
+            IMUXApi::class,
         ];
     }
 }

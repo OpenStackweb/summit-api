@@ -1,6 +1,6 @@
 <?php namespace Database\Migrations\Model;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,23 +15,23 @@ use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
+
 /**
- * Class Version20191212002736
+ * Class Version20230904190156
  * @package Database\Migrations\Model
  */
-final class Version20191212002736 extends AbstractMigration
+final class Version20230904190156 extends AbstractMigration
 {
-
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema):void
+    public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "BeginAllowBookingDate")) {
+        if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "MUXTokenId")) {
             $builder->table('Summit', function (Table $table) {
-                $table->dateTime("BeginAllowBookingDate")->setNotnull(false);
-                $table->dateTime("EndAllowBookingDate")->setNotnull(false);
+                $table->string("MUXTokenId")->setNotnull(false)->setDefault(null);
+                $table->string("MUXTokenSecret")->setNotnull(false)->setDefault(null);
             });
         }
     }
@@ -39,13 +39,13 @@ final class Version20191212002736 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema):void
+    public function down(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("Summit") && $builder->hasColumn("Summit", "BeginAllowBookingDate")) {
+        if($schema->hasTable("Summit") && $builder->hasColumn("Summit", "MUXTokenId")) {
             $builder->table('Summit', function (Table $table) {
-                $table->dropColumn("BeginAllowBookingDate");
-                $table->dropColumn("EndAllowBookingDate");
+                $table->dropColumn("MUXTokenId");
+                $table->dropColumn("MUXTokenSecret");
             });
         }
     }

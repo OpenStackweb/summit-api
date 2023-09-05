@@ -6640,4 +6640,8 @@ SQL;
             CreateMUXPlaybackRestrictionForSummit::dispatch($this->id);
     }
 
+    public function getRegistrationFeedMetadata():array{
+        // todo : implement
+        return [];
+    }
 }

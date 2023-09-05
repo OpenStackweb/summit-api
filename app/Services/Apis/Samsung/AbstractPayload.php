@@ -21,17 +21,21 @@ abstract class AbstractPayload
 {
     protected $payload = [];
 
-    /**
-     * @var string
-     */
-    protected $forum;
 
     /**
      * @param string $forum
+     * @param string $region
+     * @param string $gbm
+     * @param string $year
      */
-    function __construct(string $forum)
+    function __construct(string $forum, string $region, string $gbm, string $year)
     {
-        $this->forum = $forum;
+        $this->payload = [
+            PayloadParamNames::Forum => $forum,
+            PayloadParamNames::Region => $region,
+            PayloadParamNames::GBM => $gbm,
+            PayloadParamNames::Year => $year,
+        ];
     }
 
     public function __toString()

@@ -25,7 +25,6 @@ use models\summit\Summit;
 final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
 {
 
-
     /**
      * @var string
      */
@@ -54,15 +53,25 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
     /**
      * @param Summit $summit
      * @param string $userId
-     * @param string $region
      * @return array|mixed|null
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function checkUser(Summit $summit, string $userId, string $region = Regions::US)
+    public function checkUser(Summit $summit, string $userId)
     {
         try {
 
-            $request = new CheckUserRequest($userId, $summit->getExternalSummitId(), $region);
+            $metadata = $summit->getRegistrationFeedMetadata();
+            if(!isset($metadata[PayloadParamNames::Forum]))
+                $metadata[PayloadParamNames::Forum] = $summit->getExternalSummitId();
+
+            $request = new CheckUserRequest
+            (
+                $userId,
+                $metadata[PayloadParamNames::Forum],
+                $metadata[PayloadParamNames::Region],
+                $metadata[PayloadParamNames::GBM],
+                $metadata[PayloadParamNames::Year]
+            );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkUser POST %s payload %s", $this->endpoint, $request));
 
@@ -117,7 +126,18 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
     {
         try {
 
-            $request = new CheckEmailRequest($email, $summit->getExternalSummitId(), $region);
+            $metadata = $summit->getRegistrationFeedMetadata();
+            if(!isset($metadata[PayloadParamNames::Forum]))
+                $metadata[PayloadParamNames::Forum] = $summit->getExternalSummitId();
+
+            $request = new CheckEmailRequest
+            (
+                $email,
+                $metadata[PayloadParamNames::Forum],
+                $metadata[PayloadParamNames::Region],
+                $metadata[PayloadParamNames::GBM],
+                $metadata[PayloadParamNames::Year]
+            );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s payload %s", $this->endpoint, $request));
 
@@ -170,9 +190,27 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
     {
         try {
 
-            $request = new UserListRequest($summit->getExternalSummitId(), $region);
+            $metadata = $summit->getRegistrationFeedMetadata();
+            if(!isset($metadata[PayloadParamNames::Forum]))
+                $metadata[PayloadParamNames::Forum] = $summit->getExternalSummitId();
 
-            Log::debug(sprintf("SamsungRegistrationAPI::userList POST %s payload %s", $this->endpoint, $request));
+            $request = new UserListRequest
+            (
+                $metadata[PayloadParamNames::Forum],
+                $metadata[PayloadParamNames::Region],
+                $metadata[PayloadParamNames::GBM],
+                $metadata[PayloadParamNames::Year]
+            );
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SamsungRegistrationAPI::userList POST %s payload %s",
+                    $this->endpoint,
+                    $request
+                )
+            );
 
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $this->client->request('POST',

@@ -48,4 +48,7 @@ final class PayloadParamNames
 
     const AllowedExtraQuestions = [self::Session, self::CompanyType, self::JobFunction, self::JobTitle, self::Country, self::Forum];
 
+    const GBM = 'gbm';
+
+    const Year = 'year';
 }

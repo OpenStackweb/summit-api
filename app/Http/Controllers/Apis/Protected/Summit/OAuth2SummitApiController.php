@@ -310,12 +310,15 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if
             (
                 !is_null($current_member) &&
-                !$current_member->isAdmin() &&
-                !$current_member->hasPermissionFor($summit)
+                !$current_member->isSummitAllowed($summit)
             )
                 return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
-            $serializer_type = $this->serializer_type_selector->getSerializerType();
+            $serializer_type = SerializerRegistry::SerializerType_Public;
+
+            if(!is_null($current_member) && $current_member->isSummitAllowed($summit))
+                $serializer_type = SerializerRegistry::SerializerType_Private;
+
             return $this->ok
             (
                 SerializerRegistry::getInstance()

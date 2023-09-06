@@ -174,13 +174,14 @@ final class SummitMetricService
 
     /**
      * @param Summit $summit
+     * @param Member $current_user
      * @param int $attendee_id
      * @param array $required_access_levels
      * @param int|null $room_id
      * @param int|null $event_id
+     * @param bool $check_ingress
      * @return SummitMetric
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
     private function registerAttendeePhysicalIngress
     (
@@ -189,12 +190,13 @@ final class SummitMetricService
         int    $attendee_id,
         array  $required_access_levels = [],
         ?int   $room_id = null,
-        ?int   $event_id = null
+        ?int   $event_id = null,
+        bool   $check_ingress = false
     ): SummitMetric
     {
         Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
 
-        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $required_access_levels, $room_id, $event_id) {
+        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $required_access_levels, $room_id, $event_id, $check_ingress) {
 
             $attendee = $summit->getAttendeeById($attendee_id);
             if (is_null($attendee))
@@ -221,9 +223,16 @@ final class SummitMetricService
 
             $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
 
-//            if ($metric) {
-//                throw new ValidationException(sprintf("There is already a registered ingress scan for attendee %s", $attendee->getEmail()));
-//            }
+            if ($check_ingress && !is_null($metric)) {
+               throw new ValidationException
+               (
+                   sprintf
+                   (
+                       "There is already a registered ingress scan for attendee %s",
+                       $attendee->getEmail()
+                   )
+               );
+            }
 
             $metric = SummitEventAttendanceMetric::buildOnSiteMetric($current_user, $attendee, $room, $event);
             $metric->setSummit($summit);
@@ -301,13 +310,28 @@ final class SummitMetricService
      */
     public function onSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric
     {
-        Log::debug(sprintf("SummitMetricService::onSiteEnter summit %s payload %s", $summit->getId(), json_encode($payload)));
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitMetricService::onSiteEnter summit %s payload %s",
+                $summit->getId(),
+                json_encode($payload)
+            )
+        );
+
         $room_id = $payload['room_id'] ?? null;
         if(!is_null($room_id))
             $room_id = intval($room_id);
+
         $event_id = $payload['event_id'] ?? null;
         if(!is_null($event_id))
             $event_id = intval($event_id);
+
+        $check_ingress = false;
+        if(isset($payload['check_ingress']))
+            $check_ingress = to_boolean($payload['check_ingress']);
+
         return $this->registerAttendeePhysicalIngress
         (
             $summit,
@@ -315,7 +339,8 @@ final class SummitMetricService
             intval($payload['attendee_id']),
             $payload['required_access_levels'] ?? [],
             $room_id,
-            $event_id
+            $event_id,
+            $check_ingress
         );
     }
 

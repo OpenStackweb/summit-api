@@ -13,6 +13,7 @@
  **/
 
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISummitMetricService;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
@@ -197,6 +198,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
                 'room_id' => 'sometimes|integer',
                 'event_id' => 'sometimes|integer',
                 'required_access_levels' => 'sometimes|int_array',
+                'check_ingress' =>  ['sometimes', new Boolean],
             ]);
 
             $metric = $this->service->onSiteEnter($summit, $current_member, $payload);

@@ -25,6 +25,8 @@ use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 use Illuminate\Support\Facades\App;
+use models\summit\SummitAttendeeTicket;
+
 /**
  * Class TicketFinderStrategyFactory
  * @package App\Services\Model\Strategies\TicketFinder
@@ -122,16 +124,17 @@ final class TicketFinderStrategyFactory
 
                 try {
 
-                    $fields = SummitAttendeeBadge::parseQRCode($qr_code_content);
+                    $fields = SummitAttendeeTicket::parseQRCode($qr_code_content);
                     $prefix = $fields['prefix'];
-                    if ($summit->getBadgeQRPrefix() != $prefix)
+                    if ($summit->getTicketQRPrefix() != $prefix)
                         throw new ValidationException
                         (
                             sprintf
                             (
-                                "%s QR CODE is not valid for summit %s.",
+                                "%s QR CODE is not valid for summit %s QR PREFIX %s",
                                 $qr_code_content,
-                                $summit->getId()
+                                $summit->getId(),
+                                $summit->getTicketQRPrefix()
                             )
                         );
 
@@ -154,6 +157,7 @@ final class TicketFinderStrategyFactory
                     );
                 }
                 catch(ValidationException $ex){
+                    Log::warning($ex);
                     Log::debug
                     (
                         sprintf

@@ -1218,7 +1218,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         $this->streaming_url = $streaming_url;
         $key = $this->getSecureStreamCacheKey();
-        if(Cache::has($key)) Cache::forget($key);
+        if(Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->has($key))
+            Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->forget($key);
     }
 
     /**
@@ -1462,7 +1463,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             throw new ValidationException(sprintf("%s is not a valid streaming type", $streaming_type));
         $this->streaming_type = $streaming_type;
         $key = $this->getSecureStreamCacheKey();
-        if(Cache::has($key)) Cache::forget($key);
+        if(Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->has($key))
+            Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->forget($key);
     }
 
     /**
@@ -1588,7 +1590,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->stream_is_secure = $stream_is_secure;
 
         $key = $this->getSecureStreamCacheKey();
-        if(Cache::has($key)) Cache::forget($key);
+        if(Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->has($key))
+            Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->forget($key);
 
         if($this->hasSummit() && $this->stream_is_secure && !$this->summit->hasMuxPrivateKey())
             CreateMUXURLSigningKeyForSummit::dispatch($this->summit->getId());

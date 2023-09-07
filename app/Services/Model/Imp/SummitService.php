@@ -3639,6 +3639,7 @@ final class SummitService
         $this->tx_service->transaction(function() use($summit_id){
             try {
                 Log::debug(sprintf("SummitService::generateMUXPrivateKey summit %s", $summit_id));
+
                 $summit = $this->summit_repository->getById($summit_id);
                 if (!$summit instanceof Summit)
                     throw new EntityNotFoundException("Summit not found.");
@@ -3655,6 +3656,61 @@ final class SummitService
                 $summit->setMUXPrivateKey($key['private_key']);
 
                 $summit->setMuxPrivateKeyId($key['id']);
+            }
+            catch(Exception $ex){
+                Log::error($ex);
+                throw $ex;
+            }
+        });
+    }
+
+    /**
+     * @param int $summit_id
+     * @return void
+     * @throws Exception
+     */
+    public function generateMuxPlaybackRestriction(int $summit_id): void
+    {
+        $this->tx_service->transaction(function() use($summit_id){
+            try {
+                Log::debug(sprintf("SummitService::generateMuxPlaybackRestriction summit %s", $summit_id));
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit)
+                    throw new EntityNotFoundException("Summit not found.");
+
+                $this->mux_api->setCredentials(new MuxCredentials(
+                    $summit->getMuxTokenId(),
+                    $summit->getMuxTokenSecret()
+                ));
+
+                $former_playback_restriction_id = $summit->getMuxPlaybackRestrictionId();
+                if(!empty($former_playback_restriction_id)) {
+                    $this->mux_api->deletePlaybackRestriction($former_playback_restriction_id);
+                    $summit->clearMuxPlaybackRestrictionId();
+                }
+
+                $allowed_domains = $summit->getMuxAllowedDomains();
+                if(count($allowed_domains) > 0) {
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitService::generateMuxPlaybackRestriction trying to create playback restriction for summit %s allowed_domains %s",
+                            $summit_id,
+                            json_encode($allowed_domains)
+                        )
+                    );
+
+                    $playback_restriction = $this->mux_api->createPlaybackRestriction
+                    (
+                        $allowed_domains
+                    );
+
+                    Log::debug(sprintf("SummitService::generateMuxPlaybackRestriction summit %s playback_restriction %s", $summit_id, json_encode($playback_restriction)));
+
+                    $summit->setMuxPlaybackRestrictionId($playback_restriction['id']);
+                }
             }
             catch(Exception $ex){
                 Log::error($ex);

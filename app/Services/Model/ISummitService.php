@@ -599,4 +599,10 @@ interface ISummitService
      * @return void
      */
     public function generateMUXPrivateKey(int $summit_id):void;
+
+    /**
+     * @param int $summit_id
+     * @return void
+     */
+    public function generateMuxPlaybackRestriction(int $summit_id):void;
 }

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use MuxPhp\Api\AssetsApi as MuxAssetApi;
 use MuxPhp\Api\PlaybackIDApi as MuxPlaybackIDApi;
 use MuxPhp\Api\SigningKeysApi as SigningKeysApi;
+use MuxPhp\Api\PlaybackRestrictionsApi as MuxPlaybackRestrictionsApi;
 use MuxPhp\Configuration;
 use MuxPhp\Configuration as MuxConfig;
 
@@ -47,26 +48,11 @@ final class MUXApi implements IMUXApi
      */
     private $playback_api;
 
-
     /**
-     * @return array
-     * @throws \MuxPhp\ApiException
+     * @var MuxPlaybackRestrictionsApi
      */
-    public function createUrlSigningKey(): array
-    {
-        try {
-            $res = $this->signing_key_api->createSigningKey();
-            $data = $res->getData();
-            return
-                [
-                    'private_key' => $data->getPrivateKey(),
-                    'id' => $data->getId(),
-                ];
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            throw $ex;
-        }
-    }
+    private $playback_restriction_api;
+
 
     public function setCredentials(MuxCredentials $credentials): IMUXApi
     {
@@ -91,8 +77,74 @@ final class MUXApi implements IMUXApi
                 new GuzzleHttpClient,
                 $this->config
             );
+
+            $this->playback_restriction_api = new MuxPlaybackRestrictionsApi(
+                new GuzzleHttpClient,
+                $this->config
+            );
             return $this;
         } catch (\Exception $ex) {
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    /**
+     * @return array
+     * @throws \MuxPhp\ApiException
+     */
+    public function createUrlSigningKey(): array
+    {
+        try {
+            $res = $this->signing_key_api->createSigningKey();
+            $data = $res->getData();
+            return
+                [
+                    'private_key' => $data->getPrivateKey(),
+                    'id' => $data->getId(),
+                ];
+        } catch (\Exception $ex) {
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    public function createPlaybackRestriction(array $allowed_domains, bool $allow_no_referrer = false): array
+    {
+        try{
+
+            Log::debug(sprintf("MUXApi::createPlaybackRestriction allowed_domains %s", json_encode($allowed_domains)));
+            $res = $this->playback_restriction_api->createPlaybackRestriction(
+               [
+                   'referrer' =>
+                    [
+                        'allowed_domains' => $allowed_domains,
+                        'allow_no_referrer' => $allow_no_referrer,
+                    ]
+               ]
+            );
+            $data = $res->getData();
+            return ['id' => $data->getId()];
+        }
+        catch (\Exception $ex) {
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param string $playback_restriction_id
+     * @return void
+     * @throws \MuxPhp\ApiException
+     */
+    public function deletePlaybackRestriction(string $playback_restriction_id): void
+    {
+        try{
+            $this->playback_restriction_api->deletePlaybackRestriction(
+                $playback_restriction_id
+            );
+        }
+        catch (\Exception $ex) {
             Log::error($ex);
             throw $ex;
         }

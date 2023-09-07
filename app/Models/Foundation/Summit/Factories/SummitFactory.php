@@ -484,6 +484,10 @@ final class SummitFactory
             $summit->setMuxTokenSecret(trim($data['mux_token_secret']));
         }
 
+        if(isset($data['mux_allowed_domains'])){
+            $summit->setMuxAllowedDomains($data['mux_allowed_domains']);
+        }
+
         return $summit;
     }
 }

@@ -15,6 +15,8 @@
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
+use App\Rules\DomainArray;
+
 /**
  * Class SummitValidationRulesFactory
  * @package App\Http\Controllers
@@ -100,6 +102,7 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'registration_slug_prefix' => 'sometimes|string|max:50',
             'mux_token_id' => 'nullable|string',
             'mux_token_secret' => 'nullable|string',
+            'mux_allowed_domains' => ['sometimes', new DomainArray()],
         ];
     }
 
@@ -181,6 +184,7 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'registration_slug_prefix' => 'sometimes|string|max:50',
             'mux_token_id' => 'nullable|string',
             'mux_token_secret' => 'nullable|string',
+            'mux_allowed_domains' => ['sometimes', new DomainArray()],
         ];
     }
 }

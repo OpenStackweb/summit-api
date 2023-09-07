@@ -24,4 +24,17 @@ interface IMUXApi
      * @return array
      */
     public function createUrlSigningKey():array;
+
+    /**
+     * @param array $allowed_domains
+     * @param bool $allow_no_referrer
+     * @return array
+     */
+    public function createPlaybackRestriction(array $allowed_domains, bool $allow_no_referrer = false):array;
+
+    /**
+     * @param string $playback_restriction_id
+     * @return void
+     */
+    public function deletePlaybackRestriction(string $playback_restriction_id): void;
 }

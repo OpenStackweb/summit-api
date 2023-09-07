@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Cache;
  */
 final class SummitEventSecureStreamSerializer extends SilverStripeSerializer
 {
-    const JWT_TTL = 60 * 60 * 24; // secs
+    const JWT_TTL = 60 * 60 * 6; // secs
     const TTL_SKEW = 60; // secs
     /**
      * @param $expand
@@ -44,14 +44,16 @@ final class SummitEventSecureStreamSerializer extends SilverStripeSerializer
 
         Log::debug(sprintf("SummitEventSecureStreamSerializer::serialize cache key %s", $key));
 
-        if(Cache::has($key)){
-            $values = json_decode(Cache::get($key), true);
+        $summit = $event->getSummit();
+
+        if(Cache::tags(sprintf('secure_streams_%s',$summit->getId()))->has($key)){
+            $values = json_decode(Cache::tags(sprintf('secure_streams_%s',$summit->getId()))->get($key), true);
             Log::debug(sprintf("SummitEventSecureStreamSerializer::serialize cache hit for event %s", $event->getId()));
             return $values;
         }
 
         $values = parent::serialize($expand, $fields, $relations, $params);
-        $summit = $event->getSummit();
+
 
         if(!$event->IsSecureStream()){
             Log::debug
@@ -120,7 +122,7 @@ final class SummitEventSecureStreamSerializer extends SilverStripeSerializer
         $stream_duration = $event->getStreamDuration();
         if(!$stream_duration) $stream_duration = self::JWT_TTL;
         $exp = time() +  $stream_duration;
-
+        $playback_restriction_id = $summit->getMuxPlaybackRestrictionId();
         foreach($tokenTypes as $type => $audience ) {
 
             $payload = [
@@ -130,13 +132,17 @@ final class SummitEventSecureStreamSerializer extends SilverStripeSerializer
                 "kid" => $key_id,
             ];
 
+            if(!empty($playback_restriction_id))
+                $payload['playback_restriction_id'] = $playback_restriction_id;
+
+
            $tokens[$type] = JWT::encode($payload, base64_decode($key_secret), 'RS256');
         }
 
 
         $values['tokens'] = $tokens;
 
-        Cache::put($key, json_encode($values),  $stream_duration - self::TTL_SKEW);
+        Cache::tags(sprintf('secure_streams_%s',$summit->getId()))->put($key, json_encode($values),  $stream_duration - self::TTL_SKEW);
 
         return $values;
     }

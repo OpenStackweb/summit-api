@@ -6490,6 +6490,10 @@ SQL;
         return $this->qr_codes_enc_key;
     }
 
+    public function hasQRCodesEncKey():bool{
+        return !empty($this->qr_codes_enc_key);
+    }
+
     /**
      * @param string $qr_codes_enc_key
      */

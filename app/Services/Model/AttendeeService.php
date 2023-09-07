@@ -15,6 +15,7 @@
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
+use App\Utils\AES;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -550,6 +551,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     {
         return $this->tx_service->transaction(function() use($summit, $attendee_id){
 
+            Log::debug(sprintf("AttendeeService::doVirtualCheckin summit id %s attendee id %s", $summit->getId(), $attendee_id));
+
             $attendee = $summit->getAttendeeById($attendee_id);
             if(is_null($attendee))
                 throw new EntityNotFoundException(sprintf("Attendee does not belongs to summit id %s.", $summit->getId()));
@@ -560,9 +563,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         });
     }
 
+    /**
+     * @param Summit $summit
+     * @param String $qr_code
+     * @return void
+     * @throws \Exception
+     */
     public function doCheckIn(Summit $summit, String $qr_code): void
     {
         $this->tx_service->transaction(function() use($summit, $qr_code){
+            Log::debug(sprintf("AttendeeService::doCheckIn summit id %s qr_code %s", $summit->getId(), $qr_code));
+
+            if(!str_starts_with($qr_code, $summit->getBadgeQRPrefix()) && $summit->hasQRCodesEncKey()){
+                Log::debug(sprintf("AttendeeService::doCheckIn summit id %s qr_code %s decrypting", $summit->getId(), $qr_code));
+                $qr_code = AES::decrypt($summit->getQRCodesEncKey(), $qr_code)->getData();
+            }
 
             $fields        = SummitAttendeeBadge::parseQRCode($qr_code);
             $ticket_number = $fields['ticket_number'];
@@ -573,9 +588,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 (
                     sprintf
                     (
-                        "%s qr code is not valid for summit %s.",
+                        "%s QR CODE is not valid for summit %s Prefix %s.",
                         $qr_code,
-                        $summit->getId()
+                        $summit->getId(),
+                        $summit->getBadgeQRPrefix()
                     )
                 );
 

@@ -18,6 +18,7 @@ use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByExternalFeedStrategy;
 use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByIdStrategy;
 use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByNumberStrategy;
+use App\Utils\AES;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\summit\ISummitAttendeeRepository;
@@ -124,19 +125,90 @@ final class TicketFinderStrategyFactory
 
                 try {
 
-                    $fields = SummitAttendeeTicket::parseQRCode($qr_code_content);
-                    $prefix = $fields['prefix'];
-                    if ($summit->getTicketQRPrefix() != $prefix)
-                        throw new ValidationException
+                    // check first for encryption ...
+                    if(
+                        !str_starts_with($qr_code_content, $summit->getTicketQRPrefix()) &&
+                        !str_starts_with($qr_code_content, $summit->getBadgeQRPrefix()) &&
+                        $summit->hasQRCodesEncKey()){
+
+                        Log::debug
                         (
                             sprintf
                             (
-                                "%s QR CODE is not valid for summit %s QR PREFIX %s",
-                                $qr_code_content,
+                                "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByQRCodeStrategy with encryption",
                                 $summit->getId(),
-                                $summit->getTicketQRPrefix()
+                                $qr_code_content
                             )
                         );
+
+                        $qr_code_content = AES::decrypt($summit->getQRCodesEncKey(), $qr_code_content)->getData();
+                    }
+
+                    if(str_starts_with($qr_code_content, $summit->getTicketQRPrefix())) {
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByQRCodeStrategy with ticket prefix",
+                                $summit->getId(),
+                                $qr_code_content
+                            )
+                        );
+
+                        $fields = SummitAttendeeTicket::parseQRCode($qr_code_content);
+                        $prefix = $fields['prefix'];
+                        if ($summit->getTicketQRPrefix() != $prefix)
+                            throw new ValidationException
+                            (
+                                sprintf
+                                (
+                                    "%s QR CODE is not valid for summit %s QR TICKET PREFIX %s",
+                                    $qr_code_content,
+                                    $summit->getId(),
+                                    $summit->getTicketQRPrefix()
+                                )
+                            );
+                    }
+
+                    if(str_starts_with($qr_code_content, $summit->getBadgeQRPrefix())){
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByQRCodeStrategy with badge prefix",
+                                $summit->getId(),
+                                $qr_code_content
+                            )
+                        );
+
+                        $fields = SummitAttendeeBadge::parseQRCode($qr_code_content);
+                        $prefix = $fields['prefix'];
+                        if ($summit->getBadgeQRPrefix() != $prefix)
+                            throw new ValidationException
+                            (
+                                sprintf
+                                (
+                                    "%s QR CODE is not valid for summit %s QR BADGE PREFIX %s",
+                                    $qr_code_content,
+                                    $summit->getId(),
+                                    $summit->getBadgeQRPrefix()
+                                )
+                            );
+                    }
+
+                    if(!isset($fields['ticket_number'])) {
+                        Log::warning
+                        (
+                            sprintf
+                            (
+                                "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByQRCodeStrategy ticket_number is missing",
+                                $summit->getId(),
+                                $qr_code_content
+                            )
+                        );
+
+                        throw new ValidationException("ticket_number is missing");
+                    }
 
                     $ticket_number = $fields['ticket_number'];
                     Log::debug

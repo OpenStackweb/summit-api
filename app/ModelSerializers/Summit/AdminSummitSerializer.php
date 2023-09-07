@@ -67,6 +67,7 @@ final class AdminSummitSerializer extends SummitSerializer
         // MUX
         'MuxTokenId' => 'mux_token_id:json_string',
         'MuxTokenSecret' => 'mux_token_secret:json_string',
+        'MuxAllowedDomains' => 'mux_allowed_domains:json_string_array',
     ];
 
     protected static $allowed_relations = [

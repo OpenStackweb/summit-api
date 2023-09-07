@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\CreateMUXPlaybackRestrictionForSummit;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
@@ -34,6 +35,7 @@ use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -662,6 +664,18 @@ class Summit extends SilverstripeBaseModel
      * @var string
      */
     private $mux_private_key;
+
+    /**
+     * @ORM\Column(name="MUXPlaybackRestrictionId", type="string")
+     * @var string
+     */
+    private $mux_playback_restriction_id;
+
+    /**
+     * @ORM\Column(name="MUXAllowedDomains", type="string")
+     * @var string
+     */
+    private $mux_allowed_domains;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
@@ -6489,7 +6503,6 @@ SQL;
     public function getQRCodesEncKey():?string {
         return $this->qr_codes_enc_key;
     }
-
     public function hasQRCodesEncKey():bool{
         return !empty($this->qr_codes_enc_key);
     }
@@ -6571,6 +6584,60 @@ SQL;
 
     public function hasMuxPrivateKey():bool{
         return !empty($this->mux_private_key);
+    }
+
+    /**
+     * @return string
+     */
+    public function getMuxPlaybackRestrictionId(): ?string
+    {
+        return $this->mux_playback_restriction_id;
+    }
+
+    /**
+     * @param string $mux_playback_restriction_id
+     */
+    public function setMuxPlaybackRestrictionId(string $mux_playback_restriction_id): void
+    {
+        $this->mux_playback_restriction_id = $mux_playback_restriction_id;
+
+        Cache::tags(sprintf('secure_streams_%s', $this->id))->flush();
+    }
+
+    public function clearMuxPlaybackRestrictionId(): void
+    {
+        $this->mux_playback_restriction_id = null;
+
+        Cache::tags(sprintf('secure_streams_%s', $this->id))->flush();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMuxAllowedDomains(): array
+    {
+        if(empty($this->mux_allowed_domains)) return [];
+        return explode('|', $this->mux_allowed_domains);
+    }
+
+    /**
+     * @param array $mux_allowed_domains
+     */
+    public function setMuxAllowedDomains(array $mux_allowed_domains): void
+    {
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::setMuxAllowedDomains summit %s mux_allowed_domains %s",
+                $this->getId(),
+                json_encode($mux_allowed_domains)
+            )
+        );
+
+        $this->mux_allowed_domains = implode('|', $mux_allowed_domains);
+        if(!empty($this->mux_token_id) && !empty($this->mux_token_secret))
+            CreateMUXPlaybackRestrictionForSummit::dispatch($this->id);
     }
 
 }

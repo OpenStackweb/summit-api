@@ -561,7 +561,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function generateQRCode(): string
     {
         if (is_null($this->order)) {
-            throw new ValidationException("ticket has not order set");
+            throw new ValidationException("Ticket has not order set.");
         }
 
         $this->qr_code = $this->generateQRFromFields([
@@ -1197,5 +1197,20 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function getRefundedRequests()
     {
         return $this->refund_requests;
+    }
+
+    /**
+     * @param string $qr_code
+     * @return array
+     * @throws ValidationException
+     */
+    static public function parseQRCode(string $qr_code):array{
+        $fields = explode(IQREntity::QRRegistryFieldDelimiterChar, $qr_code);
+        if(count($fields) != 2) throw new ValidationException("Invalid Ticket QR code.");
+
+        return [
+            'prefix'         => $fields[0],
+            'ticket_number'  => $fields[1],
+        ];
     }
 }

@@ -147,7 +147,7 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
      */
     static public function parseQRCode(string $qr_code):array{
         $fields = explode(IQREntity::QRRegistryFieldDelimiterChar, $qr_code);
-        if(count($fields) != 4) throw new ValidationException("Invalid QR code.");
+        if(count($fields) != 4) throw new ValidationException("Invalid Badge QR code.");
 
         return [
             'prefix'         => $fields[0],

@@ -40,7 +40,8 @@ final class SummitEventSecureStreamSerializer extends SilverStripeSerializer
         if (!count($relations)) $relations = $this->getAllowedRelations();
         if(!count($fields)) $fields = $this->getAllowedFields();
 
-        $key = sprintf("event_%s_secure_stream", $event->getId());
+        $key = $event->getSecureStreamCacheKey();
+
         Log::debug(sprintf("SummitEventSecureStreamSerializer::serialize cache key %s", $key));
 
         if(Cache::has($key)){

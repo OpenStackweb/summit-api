@@ -24,6 +24,7 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -1216,6 +1217,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function setStreamingUrl(?string $streaming_url): void
     {
         $this->streaming_url = $streaming_url;
+        $key = $this->getSecureStreamCacheKey();
+        if(Cache::has($key)) Cache::forget($key);
     }
 
     /**
@@ -1458,6 +1461,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         if (!in_array($streaming_type, self::ValidStreamingTypes))
             throw new ValidationException(sprintf("%s is not a valid streaming type", $streaming_type));
         $this->streaming_type = $streaming_type;
+        $key = $this->getSecureStreamCacheKey();
+        if(Cache::has($key)) Cache::forget($key);
     }
 
     /**
@@ -1570,6 +1575,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->stream_is_secure;
     }
 
+    public function getSecureStreamCacheKey():string{
+        return sprintf("event_%s_secure_stream", $this->id);
+    }
+
     /**
      * @param bool $stream_is_secure
      */
@@ -1577,6 +1586,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         Log::debug(sprintf("SummitEvent::setStreamIsSecure summit %s event %s stream_is_secure %s", $this->summit->getId(), $this->id, $stream_is_secure));
         $this->stream_is_secure = $stream_is_secure;
+
+        $key = $this->getSecureStreamCacheKey();
+        if(Cache::has($key)) Cache::forget($key);
 
         if($this->hasSummit() && $this->stream_is_secure && !$this->summit->hasMuxPrivateKey())
             CreateMUXURLSigningKeyForSummit::dispatch($this->summit->getId());

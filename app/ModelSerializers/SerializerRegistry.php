@@ -81,6 +81,7 @@ use App\ModelSerializers\Summit\Registration\Refunds\SummitAttendeeTicketRefundR
 use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
+use App\ModelSerializers\Summit\Registration\SummitRegistrationFeedMetadataSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPLiteralContentQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPMultiValueQuestionTemplateSerializer;
@@ -395,7 +396,7 @@ final class SerializerRegistry
         $this->registry['SpeakersSummitRegistrationPromoCode'] = SpeakersSummitRegistrationPromoCodeSerializer::class;
         $this->registry['SpeakersRegistrationDiscountCode'] = SpeakersRegistrationDiscountCodeSerializer::class;
         $this->registry['AssignedPromoCodeSpeaker'] = AssignedPromoCodeSpeakerSerializer::class;
-
+        $this->registry['SummitRegistrationFeedMetadata'] = SummitRegistrationFeedMetadataSerializer::class;
         // submission invitations
         $this->registry['SummitSubmissionInvitation'] = [
             self::SerializerType_Public => SummitSubmissionInvitationSerializer::class,

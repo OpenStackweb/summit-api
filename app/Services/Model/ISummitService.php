@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\IPublishableEvent;
+use App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Utils\IStorageTypesConstants;
 use Illuminate\Http\UploadedFile;
@@ -605,4 +606,20 @@ interface ISummitService
      * @return void
      */
     public function generateMuxPlaybackRestriction(int $summit_id):void;
+
+    /*
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitRegistrationFeedMetadata
+     * @throws ValidationException
+     */
+    public function addRegistrationFeedMetadata(Summit $summit, array $payload):SummitRegistrationFeedMetadata;
+
+    /**
+     * @param Summit $summit
+     * @param int $metadata_id
+     * @return void
+     * @throws EntityNotFoundException
+     */
+    public function removeRegistrationFeedMetadata(Summit $summit, int $metadata_id):void;
 }

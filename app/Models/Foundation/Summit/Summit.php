@@ -22,6 +22,7 @@ use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use App\Models\Foundation\Summit\ISummitModality;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
+use App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Signs\SummitSign;
@@ -834,6 +835,12 @@ class Summit extends SilverstripeBaseModel
     private $selection_plan_extra_questions;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitRegistrationFeedMetadata[]
+     */
+    private $registration_feed_metadata;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -1179,6 +1186,7 @@ class Summit extends SilverstripeBaseModel
         $this->submission_invitations = new ArrayCollection();
         $this->signs = new ArrayCollection();
         $this->qr_codes_enc_key = null;
+        $this->registration_feed_metadata = new ArrayCollection();
     }
 
     /**
@@ -6641,7 +6649,50 @@ SQL;
     }
 
     public function getRegistrationFeedMetadata():array{
-        // todo : implement
-        return [];
+        $res = [];
+        foreach($this->registration_feed_metadata as $metadata){
+            $res[$metadata->getKey()] = $metadata->getValue();
+        }
+        return $res;
     }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @return SummitRegistrationFeedMetadata
+     * @throws ValidationException
+     */
+    public function addRegistrationFeedMetadata(string $key, string $value):SummitRegistrationFeedMetadata{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('key', trim($key)));
+        if($this->registration_feed_metadata->matching($criteria)->count()){
+            throw new ValidationException(sprintf("key %s already exists.", $key));
+        }
+        $metadata = new SummitRegistrationFeedMetadata($key, $value);
+        $this->registration_feed_metadata->add($metadata);
+        $metadata->setSummit($this);
+        return $metadata;
+    }
+
+    /**
+     * @param int $metadata_id
+     * @return SummitRegistrationFeedMetadata|null
+     */
+    public function getRegistrationFeedMetadataById(int $metadata_id):?SummitRegistrationFeedMetadata{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $metadata_id));
+        $res = $this->registration_feed_metadata->matching($criteria)->first();
+        return $res ? $res : null;
+    }
+
+    /**
+     * @param SummitRegistrationFeedMetadata $metadata
+     * @return void
+     */
+    public function removeRegistrationFeedMetadata(SummitRegistrationFeedMetadata $metadata):void{
+        if(!$this->registration_feed_metadata->contains($metadata)) return;
+        $this->registration_feed_metadata->removeElement($metadata);
+        $metadata->clearSummit();
+    }
+
 }

@@ -729,7 +729,7 @@ SQL;
             }
             // group by
             $sql .= " GROUP BY DATE_FORMAT(CONVERT_TZ(SummitAttendee.SummitHallCheckedInDate,'+00:00','{$offset}'), '{$date_format}')";
-            $sql .= " ORDER BY DATE_FORMAT(CONVERT_TZ(SummitAttendee.SummitHallCheckedInDate,'+00:00','{$offset}'), '{$date_format}')";
+            $sql .= " ORDER BY SummitAttendee.SummitHallCheckedInDate ASC";
 
             $count_sql = <<<SQL
 SELECT COUNT(*) FROM ({$sql}) T1

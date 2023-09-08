@@ -271,26 +271,35 @@ final class SerializerRegistry
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
         ];
 
-        $this->registry['Presentation'] =
-            [
-                self::SerializerType_Public => PresentationSerializer::class,
-                self::SerializerType_Private => AdminPresentationSerializer::class,
-                self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
-                self::SerializerType_Admin_Voteable => AdminVoteablePresentationSerializer::class,
-                self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
-                IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
-                IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
-                IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class,
-                IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class,
-                IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
-            ];
+        $this->registry['SummitEventWithFile'] = [
+            self::SerializerType_Public => SummitEventWithFileSerializer::class,
+            self::SerializerType_Private => AdminSummitEventSerializer::class,
+            self::SerializerType_CSV => SummitEventWithFileSerializer::class,
+            IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+        ];
+
+        $this->registry['SummitGroupEvent'] = [
+            self::SerializerType_Public => SummitGroupEventSerializer::class,
+            self::SerializerType_Private => SummitGroupEventSerializer::class,
+            self::SerializerType_CSV => SummitGroupEventSerializer::class,
+            IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+        ];
+
+        $this->registry['Presentation'] = [
+            self::SerializerType_Public => PresentationSerializer::class,
+            self::SerializerType_Private => AdminPresentationSerializer::class,
+            self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
+            self::SerializerType_Admin_Voteable => AdminVoteablePresentationSerializer::class,
+            self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
+            IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
+            IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
+            IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class,
+            IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class,
+            IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+        ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;
-
-        $this->registry['SummitGroupEvent'] = SummitGroupEventSerializer::class;
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;
-
-
         $this->registry['SummitCategoryChange'] = SummitCategoryChangeSerializer::class;
 
         $this->registry['PresentationActionType'] = PresentationActionTypeSerializer::class;
@@ -370,7 +379,6 @@ final class SerializerRegistry
         $this->registry['SummitMemberSchedule'] = SummitMemberScheduleSerializer::class;
         $this->registry['SummitMemberFavorite'] = SummitMemberFavoriteSerializer::class;
         $this->registry['SummitEntityEvent'] = SummitEntityEventSerializer::class;
-        $this->registry['SummitEventWithFile'] = SummitEventWithFileSerializer::class;
         $this->registry['SummitScheduleEmptySpot'] = SummitScheduleEmptySpotSerializer::class;
 
         // promo codes

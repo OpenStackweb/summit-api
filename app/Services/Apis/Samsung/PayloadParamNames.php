@@ -51,4 +51,12 @@ final class PayloadParamNames
     const GBM = 'gbm';
 
     const Year = 'year';
+
+    const ExternalShowId = 'externalShowId';
+
+    const DefaultTicketId = 'defaultTicketId';
+
+    const DefaultTicketDescription = 'defaultTicketDescription';
+
+    const DefaultTicketName = 'defaultTicketName';
 }

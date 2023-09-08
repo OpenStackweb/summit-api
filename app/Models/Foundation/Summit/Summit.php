@@ -3847,6 +3847,20 @@ SQL;
     }
 
     /**
+     * @return SummitTicketType|null
+     */
+    public function getFirstDefaultTicketType():?SummitTicketType
+    {
+        $defaultBadgeType = $this->getDefaultBadgeType();
+        if (is_null($defaultBadgeType))
+            return null;
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('badge_type', $defaultBadgeType));
+        $res =  $this->ticket_types->matching($criteria)->first();
+        return $res == false ? null : $res;
+    }
+    /**
      * @return DateTime
      */
     public function getEndAllowBookingDate(): ?DateTime

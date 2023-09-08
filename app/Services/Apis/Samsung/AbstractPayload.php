@@ -21,20 +21,33 @@ abstract class AbstractPayload
 {
     protected $payload = [];
 
+    protected $params = [];
 
     /**
-     * @param string $forum
-     * @param string $region
-     * @param string $gbm
-     * @param string $year
+     * @param array $params
      */
-    function __construct(string $forum, string $region, string $gbm, string $year)
+    function __construct(array $params)
     {
+        if(!isset($params[PayloadParamNames::Forum]))
+
+            throw new \InvalidArgumentException("missing forum param");
+
+        if(!isset($params[PayloadParamNames::Region]))
+            throw new \InvalidArgumentException("missing region param");
+
+        if(!isset($params[PayloadParamNames::GBM]))
+            throw new \InvalidArgumentException("missing gbm param");
+
+        if(!isset($params[PayloadParamNames::Year]))
+            throw new \InvalidArgumentException("missing year param");
+
+        $this->params = $params;
+
         $this->payload = [
-            PayloadParamNames::Forum => $forum,
-            PayloadParamNames::Region => $region,
-            PayloadParamNames::GBM => $gbm,
-            PayloadParamNames::Year => $year,
+            PayloadParamNames::Forum => $params[PayloadParamNames::Forum],
+            PayloadParamNames::Region => $params[PayloadParamNames::Region],
+            PayloadParamNames::GBM => $params[PayloadParamNames::GBM],
+            PayloadParamNames::Year => $params[PayloadParamNames::Year],
         ];
     }
 

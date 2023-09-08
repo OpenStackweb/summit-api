@@ -23,13 +23,13 @@ final class DecryptedSingleResponse extends AbstractPayload
     /**
      * @param string $key
      * @param string $content
-     * @param string $forum
+     * @param array $params
      * @throws EmptyResponse
      * @throws InvalidResponse
      */
-    public function __construct(string $key, string $content,  string $forum){
+    public function __construct(string $key, string $content, array $params){
 
-        parent::__construct($forum);
+        parent::__construct($params);
         $response = json_decode($content, true);
         if(is_array($response) && !count($response))
             throw new EmptyResponse("response not found");
@@ -53,7 +53,7 @@ final class DecryptedSingleResponse extends AbstractPayload
 
     public function getPayload(): array
     {
-        return SamsungRecordSerializer::serialize($this->payload, $this->forum);
+        return SamsungRecordSerializer::serialize($this->payload, $this->params);
     }
 
 }

@@ -16,6 +16,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 use models\summit\Summit;
 
 /**
@@ -61,20 +62,22 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         try {
 
             $metadata = $summit->getRegistrationFeedMetadata();
-            if(!isset($metadata[PayloadParamNames::Forum]))
-                $metadata[PayloadParamNames::Forum] = $summit->getExternalSummitId();
+            $metadata[PayloadParamNames::ExternalShowId] = $summit->getExternalSummitId();
+            $defaultTicketType = $summit->getFirstDefaultTicketType();
+            if(is_null($defaultTicketType))
+                throw new ValidationException(sprintf("Summit %s has not default ticket type set.", $summit->getId()));
+
+            $metadata[PayloadParamNames::DefaultTicketId] = $defaultTicketType->getId();
+            $metadata[PayloadParamNames::DefaultTicketDescription] = $defaultTicketType->getDescription();
+            $metadata[PayloadParamNames::DefaultTicketName] = $defaultTicketType->getName();
 
             $request = new CheckUserRequest
             (
                 $userId,
-                $metadata[PayloadParamNames::Forum],
-                $metadata[PayloadParamNames::Region],
-                $metadata[PayloadParamNames::GBM],
-                $metadata[PayloadParamNames::Year]
+                $metadata
             );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkUser POST %s payload %s", $this->endpoint, $request));
-
 
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $this->client->request('POST',
@@ -90,7 +93,7 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
             (
                 $summit->getExternalRegistrationFeedApiKey(),
                 $response->getBody()->getContents(),
-                $summit->getExternalSummitId()
+                $metadata
             );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkUser POST %s response %s", $this->endpoint, $response));
@@ -127,16 +130,19 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         try {
 
             $metadata = $summit->getRegistrationFeedMetadata();
-            if(!isset($metadata[PayloadParamNames::Forum]))
-                $metadata[PayloadParamNames::Forum] = $summit->getExternalSummitId();
+            $metadata[PayloadParamNames::ExternalShowId] = $summit->getExternalSummitId();
+            $defaultTicketType = $summit->getFirstDefaultTicketType();
+            if(is_null($defaultTicketType))
+                throw new ValidationException(sprintf("Summit %s has not default ticket type set.", $summit->getId()));
+
+            $metadata[PayloadParamNames::DefaultTicketId] = $defaultTicketType->getId();
+            $metadata[PayloadParamNames::DefaultTicketDescription] = $defaultTicketType->getDescription();
+            $metadata[PayloadParamNames::DefaultTicketName] = $defaultTicketType->getName();
 
             $request = new CheckEmailRequest
             (
                 $email,
-                $metadata[PayloadParamNames::Forum],
-                $metadata[PayloadParamNames::Region],
-                $metadata[PayloadParamNames::GBM],
-                $metadata[PayloadParamNames::Year]
+                $metadata
             );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s payload %s", $this->endpoint, $request));
@@ -155,7 +161,7 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
             (
                 $summit->getExternalRegistrationFeedApiKey(),
                 $response->getBody()->getContents(),
-                $summit->getExternalSummitId()
+                $metadata
             );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s response %s", $this->endpoint, $response));
@@ -191,18 +197,19 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         try {
 
             $metadata = $summit->getRegistrationFeedMetadata();
-            if(!isset($metadata[PayloadParamNames::Forum]))
-                $metadata[PayloadParamNames::Forum] = $summit->getExternalSummitId();
+            $metadata[PayloadParamNames::ExternalShowId] = $summit->getExternalSummitId();
+            $defaultTicketType = $summit->getFirstDefaultTicketType();
+            if(is_null($defaultTicketType))
+                throw new ValidationException(sprintf("Summit %s has not default ticket type set.", $summit->getId()));
 
-            $request = new UserListRequest
-            (
-                $metadata[PayloadParamNames::Forum],
-                $metadata[PayloadParamNames::Region],
-                $metadata[PayloadParamNames::GBM],
-                $metadata[PayloadParamNames::Year]
-            );
+            $metadata[PayloadParamNames::DefaultTicketId] = $defaultTicketType->getId();
+            $metadata[PayloadParamNames::DefaultTicketDescription] = $defaultTicketType->getDescription();
+            $metadata[PayloadParamNames::DefaultTicketName] = $defaultTicketType->getName();
+
+            $request = new UserListRequest($metadata);
 
             Log::debug
+
             (
                 sprintf
                 (
@@ -227,7 +234,7 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
             (
                 $summit->getExternalRegistrationFeedApiKey(),
                 $response->getBody()->getContents(),
-                $summit->getExternalSummitId()
+                $metadata
             );
         }
         catch (RequestException $ex) {

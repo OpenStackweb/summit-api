@@ -67,7 +67,7 @@ final class SamsungRegistrationFeed
                 return null;
             }
 
-            return $this->api->userList($this->summit, Regions::US);
+            return $this->api->userList($this->summit);
         }
         catch(InvalidResponse $ex){
             Log::warning($ex->getMessage());

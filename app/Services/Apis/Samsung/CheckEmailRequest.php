@@ -21,13 +21,10 @@ final class CheckEmailRequest extends AbstractPayload
 {
     /**
      * @param string $email
-     * @param string $forum
-     * @param string $region
-     * @param string $gbm
-     * @param string $year
+     * @param array $params
      */
-    public function __construct(string $email, string $forum, string $region, string $gbm, string $year){
-        parent::__construct($forum, $region, $gbm, $year);
+    public function __construct(string $email, array $params = []){
+        parent::__construct($params);
         $this->payload = array_merge($this->payload, [
             PayloadParamNames::Type => RequestTypes::EmailCheck,
             PayloadParamNames::Email => trim($email),

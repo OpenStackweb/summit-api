@@ -22,6 +22,7 @@ use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedAdminEma
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedOwnerEmail;
 use App\Jobs\Emails\Elections\NominationEmail;
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
+use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\Invitations\InviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\Invitations\ReInviteSubmissionEmail;
@@ -115,6 +116,7 @@ final class EmailTemplatesSchemaSerializerRegistry
         //Presentation Selections
 
         $this->registry[PresentationCategoryChangeRequestCreatedEmail::EVENT_SLUG] = PresentationCategoryChangeRequestCreatedEmail::class;
+        $this->registry[PresentationCategoryChangeRequestResolvedEmail::EVENT_SLUG] = PresentationCategoryChangeRequestResolvedEmail::class;
 
         //Presentation Submissions
 

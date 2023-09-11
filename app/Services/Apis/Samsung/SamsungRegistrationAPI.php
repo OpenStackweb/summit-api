@@ -219,6 +219,8 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 )
             );
 
+            $payload = (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload();
+
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $this->client->request('POST',
                 $this->endpoint,
@@ -226,7 +228,7 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                     'timeout' => 120,
                     'http_errors' => true,
                     'headers' => ['Accept' => 'application/json'],
-                    RequestOptions::JSON => (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload(),
+                    RequestOptions::JSON => $payload,
                 ]
             );
 

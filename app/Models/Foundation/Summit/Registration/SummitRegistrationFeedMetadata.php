@@ -33,13 +33,13 @@ class SummitRegistrationFeedMetadata extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Key", type="string")
+     * @ORM\Column(name="`Key`", type="string")
      * @var string
      */
     private $key;
 
     /**
-     * @ORM\Column(name="Name", type="string")
+     * @ORM\Column(name="Value", type="string")
      * @var string
      */
     private $value;

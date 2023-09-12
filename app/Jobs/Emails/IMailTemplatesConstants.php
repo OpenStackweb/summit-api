@@ -127,7 +127,7 @@ interface IMailTemplatesConstants
     const reservation_created_datetime = 'reservation_created_datetime';
     const reservation_end_datetime = 'reservation_end_datetime';
     const reservation_id = 'reservation_id';
-    const reservation_refunded_amount = 'reservation_id';
+    const reservation_refunded_amount = 'reservation_refunded_amount';
     const reservation_start_datetime = 'reservation_start_datetime';
     const reset_password_link = 'reset_password_link';
     const review_link = 'review_link';

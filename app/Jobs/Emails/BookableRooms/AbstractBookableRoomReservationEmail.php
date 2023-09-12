@@ -72,7 +72,7 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::room_capacity]['type'] = 'int';
         $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::reservation_refunded_amount]['type'] = 'int';
+        $payload[IMailTemplatesConstants::reservation_refunded_amount]['type'] = 'float';
 
         return $payload;
     }

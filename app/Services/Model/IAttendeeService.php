@@ -104,11 +104,6 @@ interface IAttendeeService
     public function send(int $summit_id, array $payload, Filter $filter = null):void;
 
     /**
-     * @param int $summit_id
-     */
-    public function recalculateAttendeeStatus(int $summit_id):void;
-
-    /**
      * @param Summit $summit_id
      * @param int $attendee_id
      * @return SummitAttendee|null
@@ -129,4 +124,6 @@ interface IAttendeeService
      * @param int $member_id
      */
     public function updateAttendeesByMemberId(int $member_id):void;
+
+    public function resynchAttendeesStatusBySummit(int $summit_id):void;
 }

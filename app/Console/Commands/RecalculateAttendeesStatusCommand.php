@@ -77,7 +77,7 @@ class RecalculateAttendeesStatusCommand extends Command {
             $summit_id = $this->argument('summit_id');
             if(empty($summit_id))
                 throw new \InvalidArgumentException("summit_id is required");
-            $this->service->recalculateAttendeeStatus(intval($summit_id));
+            $this->service->resynchAttendeesStatusBySummit(intval($summit_id));
             $end   = time();
             $delta = $end - $start;
             $this->info(sprintf("execution call %s seconds", $delta));

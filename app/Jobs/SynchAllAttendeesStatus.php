@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\Model\IAttendeeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,21 +20,16 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
-use models\exceptions\EntityNotFoundException;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitRepository;
-use models\summit\Summit;
-use models\summit\SummitAttendee;
 
 /**
  * Class SynchAllAttendeesStatus
  * @package App\Jobs
  */
-class SynchAllAttendeesStatus implements ShouldQueue
+final class SynchAllAttendeesStatus implements ShouldQueue
 {
     public $tries = 1;
-
-    public $timeout = 0;
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -51,36 +48,22 @@ class SynchAllAttendeesStatus implements ShouldQueue
     }
 
     /**
+     * @param IAttendeeService $service
      * @param ISummitRepository $repository
+     * @param ISummitAttendeeRepository $attendeeRepository
      * @param ITransactionService $tx_service
+     * @return void
      * @throws \Exception
      */
-    public function handle(
-        ISummitRepository $repository,
-        ISummitAttendeeRepository $attendeeRepository,
-        ITransactionService $tx_service
-    )
+    public function handle(IAttendeeService $service)
     {
         Log::debug(sprintf("SynchAllAttendeesStatus::handle summit %s", $this->summit_id));
-        $attendees_ids = $tx_service->transaction(function() use($repository){
-            $attendees_ids = [];
-            $summit = $repository->getById($this->summit_id);
-            if(!$summit instanceof Summit)
-                throw new EntityNotFoundException(sprintf("Summit %s not found", $this->summit_id));
+        $service->resynchAttendeesStatusBySummit($this->summit_id);
+    }
 
-            foreach($summit->getAttendees() as $a)
-                $attendees_ids[] = $a->getId();
-
-            return $attendees_ids;
-        });
-
-        foreach ($attendees_ids as $attendee_id){
-            $tx_service->transaction(function() use($attendeeRepository, $attendee_id){
-                $attendee = $attendeeRepository->getById($attendee_id);
-                if(!$attendee instanceof SummitAttendee) return;
-                $attendee->updateStatus();
-            });
-        }
+    public function failed(\Throwable $exception)
+    {
+        Log::error($exception);
     }
 }
 

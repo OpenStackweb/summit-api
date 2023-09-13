@@ -3746,4 +3746,28 @@ final class SummitService
             $summit->removeRegistrationFeedMetadata($metadata);
         });
     }
+
+    public function updateRegistrationFeedMetadata(Summit $summit, int $metadata_id, array $payload): SummitRegistrationFeedMetadata
+    {
+        return $this->tx_service->transaction(function() use($summit, $metadata_id, $payload){
+            $metadata = $summit->getRegistrationFeedMetadataById($metadata_id);
+            if(is_null($metadata))
+                throw new EntityNotFoundException(sprintf("Metadata %s not found,", $metadata_id));
+
+            if(isset($payload['key'])) {
+                $formerMetadata = $summit->getRegistrationFeedMetadataByKey($payload['key']);
+                if(!is_null($formerMetadata) && $formerMetadata->getId() != $metadata->getId())
+                    throw new ValidationException(sprintf("Metadata with key %s already exists", $payload['key']));
+            }
+
+
+            if(isset($payload['value']))
+                $metadata->setValue($payload['value']);
+            if(isset($payload['key']))
+                $metadata->setKey($payload['key']);
+
+            return $metadata;
+        });
+    }
+
 }

@@ -63,6 +63,8 @@ class OAuth2SummitRegistrationFeedMetadataApiController
 
     use AddSummitChildElement;
 
+    use UpdateSummitChildElement;
+
     use DeleteSummitChildElement;
 
     /**
@@ -105,6 +107,19 @@ class OAuth2SummitRegistrationFeedMetadataApiController
             'key' => 'required|string',
             'value' => 'required|string',
         ];
+    }
+
+    function getUpdateValidationRules(array $payload): array
+    {
+        return [
+            'key' => 'sometimes|string',
+            'value' => 'sometimes|string',
+        ];
+    }
+
+    function updateChild(Summit $summit, $child_id, array $payload): IEntity
+    {
+        return $this->service->updateRegistrationFeedMetadata($summit, intval($child_id), $payload);
     }
 
     /**

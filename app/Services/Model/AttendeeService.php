@@ -753,7 +753,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $attendees_ids =
                 $this->tx_service->transaction(function() use($summit, $current_page, $filter, $maxPageSize) {
                     Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit page %s", $current_page));
-                    $this->attendee_repository->getAllIdsByPage(new PagingInfo($current_page, $maxPageSize), $filter);
+                    return $this->attendee_repository->getAllIdsByPage(new PagingInfo($current_page, $maxPageSize), $filter);
                 });
 
             if (!count($attendees_ids)) {

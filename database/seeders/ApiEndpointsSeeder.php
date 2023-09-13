@@ -8251,49 +8251,50 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                     IGroup::Administrators
                 ],
-                [
-                    'name' => 'add-registration-feed-metadata',
-                    'route' => '/api/v1/summits/{id}/registration-feed-metadata',
-                    'http_method' => 'POST',
-                    'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteRegistrationData, $current_realm)
-                    ],
-                    'authz_groups' => [
-                        IGroup::SuperAdmins,
-                        IGroup::SummitAdministrators,
-                        IGroup::Administrators
-                    ],
+            ],
+            [
+                'name' => 'delete-registration-feed-metadata',
+                'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationData, $current_realm)
                 ],
-                [
-                    'name' => 'delete-registration-feed-metadata',
-                    'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
-                    'http_method' => 'DELETE',
-                    'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteRegistrationData, $current_realm)
-                    ],
-                    'authz_groups' => [
-                        IGroup::SuperAdmins,
-                        IGroup::SummitAdministrators,
-                        IGroup::Administrators
-                    ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::SummitAdministrators,
+                    IGroup::Administrators
                 ],
-                [
-                    'name' => 'get-registration-feed-metadata-by-id',
-                    'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
-                    'http_method' => 'GET',
-                    'scopes' => [
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    ],
-                    'authz_groups' => [
-                        IGroup::SuperAdmins,
-                        IGroup::SummitAdministrators,
-                        IGroup::Administrators
-                    ],
+            ],
+            [
+                'name' => 'update-registration-feed-metadata',
+                'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationData, $current_realm)
                 ],
-            ]
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::SummitAdministrators,
+                    IGroup::Administrators
+                ],
+            ],
+            [
+                'name' => 'get-registration-feed-metadata-by-id',
+                'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::SummitAdministrators,
+                    IGroup::Administrators
+                ],
+            ],
+
         ]);
 
     }

@@ -6700,6 +6700,17 @@ SQL;
     }
 
     /**
+     * @param string $key
+     * @return SummitRegistrationFeedMetadata|null
+     */
+    public function getRegistrationFeedMetadataByKey(string $key):?SummitRegistrationFeedMetadata{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('key', trim($key)));
+        $res = $this->registration_feed_metadata->matching($criteria)->first();
+        return $res ? $res : null;
+    }
+
+    /**
      * @param SummitRegistrationFeedMetadata $metadata
      * @return void
      */

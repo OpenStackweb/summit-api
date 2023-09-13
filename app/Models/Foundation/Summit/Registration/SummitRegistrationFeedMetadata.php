@@ -30,6 +30,21 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class SummitRegistrationFeedMetadata extends SilverstripeBaseModel
 {
+    /**
+     * @param string $key
+     */
+    public function setKey(string $key): void
+    {
+        $this->key = $key;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setValue(string $value): void
+    {
+        $this->value = $value;
+    }
     use SummitOwned;
 
     /**
@@ -70,5 +85,6 @@ class SummitRegistrationFeedMetadata extends SilverstripeBaseModel
     {
         return $this->value;
     }
+
 
 }

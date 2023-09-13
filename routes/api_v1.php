@@ -1983,6 +1983,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@add']);
             Route::group(['prefix' => '{metadata_id}'], function(){
+                Route::put('', ['uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@update']);
                 Route::get('', ['uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@get']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@delete']);
             });

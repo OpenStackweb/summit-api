@@ -618,6 +618,14 @@ interface ISummitService
     /**
      * @param Summit $summit
      * @param int $metadata_id
+     * @param array $payload
+     * @return SummitRegistrationFeedMetadata
+     */
+    public function updateRegistrationFeedMetadata(Summit $summit, int $metadata_id, array $payload):SummitRegistrationFeedMetadata;
+
+    /**
+     * @param Summit $summit
+     * @param int $metadata_id
      * @return void
      * @throws EntityNotFoundException
      */

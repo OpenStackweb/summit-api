@@ -551,17 +551,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
     }
 
-    public function recalculateAttendeeStatus(int $summit_id):void{
-        $this->tx_service->transaction(function() use($summit_id){
-            $summit = $this->summit_repository->getById($summit_id);
-            if(is_null($summit) || !$summit instanceof Summit) return;
-
-            foreach($summit->getAttendees() as $attendee){
-                $attendee->updateStatus();
-            }
-        });
-    }
-
     public function doVirtualCheckin(Summit $summit, int $attendee_id): ?SummitAttendee
     {
         return $this->tx_service->transaction(function() use($summit, $attendee_id){
@@ -738,5 +727,63 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 }
             }
         });
+    }
+
+    /**
+     * @param int $summit_id
+     * @return void
+     * @throws EntityNotFoundException
+     */
+    public function resynchAttendeesStatusBySummit(int $summit_id): void
+    {
+
+        Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s", $summit_id));
+        $summit = $this->summit_repository->getById($summit_id);
+        if(!$summit instanceof Summit)
+            throw new EntityNotFoundException(sprintf("Summit %s not found", $summit_id));
+
+        $count = 0;
+        $maxPageSize = 100;
+        $current_page = 1;
+        $filter = new Filter();
+        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+
+        do {
+            $attendees_ids =
+                $this->tx_service->transaction(function() use($summit, $current_page, $filter, $maxPageSize) {
+                    Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit page %s", $current_page));
+                    $this->attendee_repository->getAllIdsByPage(new PagingInfo($current_page, $maxPageSize), $filter);
+                });
+
+            if (!count($attendees_ids)) {
+                // if we are processing a page, then break it
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "AttendeeService::resynchAttendeesStatusBySummit summit id %s page is empty, ending processing.",
+                        $summit_id
+                    )
+                );
+                break;
+            }
+
+            foreach ($attendees_ids as $attendee_id) {
+                try {
+                    $this->tx_service->transaction(function () use ($attendee_id) {
+                        $attendee = $this->attendee_repository->getById($attendee_id);
+                        if (!$attendee instanceof SummitAttendee) return;
+                        $attendee->updateStatus();
+                    });
+                    $count++;
+                }
+                catch (\Exception $ex){
+                    Log::warning($ex);
+                }
+            }
+            ++$current_page;
+        } while(true);
+
+        Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees", $summit_id, $count));
     }
 }

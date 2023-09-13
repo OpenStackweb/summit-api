@@ -36,8 +36,9 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
     /**
      * @param SummitAttendeeTicket $ticket
      * @param array $payload
+     * @param string|null $test_email_recipient
      */
-    public function __construct(SummitAttendeeTicket $ticket, array $payload = [])
+    public function __construct(SummitAttendeeTicket $ticket, array $payload = [], ?string $test_email_recipient = null)
     {
         Log::debug("SummitAttendeeTicketEmail::__construct");
 
@@ -136,6 +137,24 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("SummitAttendeeTicketEmail::__construct payload %s template %s", json_encode($payload), $template_identifier));
+
+        if (!empty($test_email_recipient)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitAttendeeTicketEmail::__construct replacing original email %s by %s and clearing cc field",
+                    $payload[IMailTemplatesConstants::owner_email],
+                    $test_email_recipient
+                )
+            );
+
+            $payload[IMailTemplatesConstants::owner_email] = $test_email_recipient;
+            $owner_email = $test_email_recipient;
+            $payload[IMailTemplatesConstants::cc_email] = '';
+
+        }
+
         parent::__construct($payload, $template_identifier, $owner_email);
     }
 
@@ -154,12 +173,12 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_number]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_type_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::ticket_amount]['type'] = 'float';
+        $payload[IMailTemplatesConstants::ticket_amount]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_currency_symbol]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';

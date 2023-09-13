@@ -27,7 +27,12 @@ class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmail
         parent::__construct($flow_event);
     }
 
-    public function process(SummitAttendee $attendee)
+    /**
+     * @param SummitAttendee $attendee
+     * @param string|null $test_email_recipient
+     * @return void
+     */
+    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
     {
         if (!$attendee->isComplete()) {
             Log::debug
@@ -39,7 +44,7 @@ class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmail
                     $this->flow_event
                 )
             );
-            SummitAttendeeRegistrationIncompleteReminderEmail::dispatch($attendee);
+            SummitAttendeeRegistrationIncompleteReminderEmail::dispatch($attendee, $test_email_recipient);
         } else {
             Log::debug
             (

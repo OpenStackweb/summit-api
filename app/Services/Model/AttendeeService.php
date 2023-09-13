@@ -482,6 +482,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $count = 0;
         $maxPageSize = 100;
 
+        $test_email_recipient = null;
+        if(isset($payload['test_email_recipient'])) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::send summit id %s setting test_email_recipient %s",
+                    $summit_id,
+                    $payload['test_email_recipient']
+                )
+            );
+
+            $test_email_recipient = $payload['test_email_recipient'];
+        }
+
         do {
             Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
 
@@ -512,7 +527,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             foreach ($ids as $attendee_id) {
                 try {
-                    $this->tx_service->transaction(function () use ($flow_event, $attendee_id, $emailActionsStrategyFactory) {
+                    $this->tx_service->transaction(function () use ($flow_event, $attendee_id, $emailActionsStrategyFactory, $test_email_recipient) {
 
                         Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
 
@@ -521,7 +536,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
                         $strategy = $emailActionsStrategyFactory->build($flow_event);
                         if ($strategy != null) {
-                            $strategy->process($attendee);
+                            $strategy->process($attendee, $test_email_recipient);
                         }
                     });
                 } catch (\Exception $ex) {

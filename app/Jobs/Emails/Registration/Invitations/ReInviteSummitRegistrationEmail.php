@@ -25,10 +25,14 @@ use models\summit\SummitRegistrationInvitation;
 class ReInviteSummitRegistrationEmail extends AbstractEmailJob
 {
     /**
-     * InviteSummitRegistrationEmail constructor.
      * @param SummitRegistrationInvitation $invitation
+     * @param string|null $test_email_recipient
      */
-    public function __construct(SummitRegistrationInvitation $invitation){
+    public function __construct
+    (
+        SummitRegistrationInvitation $invitation,
+        ?string $test_email_recipient = null
+    ){
         Log::debug
         (
             sprintf
@@ -77,6 +81,22 @@ class ReInviteSummitRegistrationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException("missing support_email value");
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+        if (!empty($test_email_recipient)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "ReInviteSummitRegistrationEmail::__construct replacing original email %s by %s and clearing cc field",
+                    $payload[IMailTemplatesConstants::owner_email],
+                    $test_email_recipient
+                )
+            );
+
+            $payload[IMailTemplatesConstants::owner_email] = $test_email_recipient;
+            $owner_email = $test_email_recipient;
+            $payload[IMailTemplatesConstants::cc_email] = '';
+        }
 
         parent::__construct($payload, $template_identifier, $owner_email);
     }

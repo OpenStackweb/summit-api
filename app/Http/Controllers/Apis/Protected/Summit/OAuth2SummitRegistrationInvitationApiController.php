@@ -391,6 +391,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                         ReInviteSummitRegistrationEmail::EVENT_SLUG,
                     ]),
                 'invitations_ids' => 'sometimes|int_array',
+                'test_email_recipient' => 'sometimes|email',
             ]);
 
             if ($validation->fails()) {

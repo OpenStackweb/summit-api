@@ -27,7 +27,12 @@ class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
         parent::__construct($flow_event);
     }
 
-    public function process(SummitAttendee $attendee)
+    /**
+     * @param SummitAttendee $attendee
+     * @param string|null $test_email_recipient
+     * @return void
+     */
+    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
     {
         Log::debug
         (
@@ -38,6 +43,6 @@ class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
                 $this->flow_event
             )
         );
-        SummitAttendeeAllTicketsEditionEmail::dispatch($attendee);
+        SummitAttendeeAllTicketsEditionEmail::dispatch($attendee, $test_email_recipient);
     }
 }

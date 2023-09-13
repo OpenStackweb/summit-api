@@ -32,7 +32,12 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
         parent::__construct($flow_event);
     }
 
-    public function process(SummitAttendee $attendee)
+    /**
+     * @param SummitAttendee $attendee
+     * @param string|null $test_email_recipient
+     * @return void
+     */
+    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
     {
         foreach ($attendee->getTickets() as $ticket) {
             try {
@@ -65,11 +70,11 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
                 }
                 // send email
                 if ($this->flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
-                    $ticket->sendPublicEditEmail();
+                    $ticket->sendPublicEditEmail($test_email_recipient);
                 }
 
                 if ($this->flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
-                    $attendee->sendInvitationEmail($ticket, true);
+                    $attendee->sendInvitationEmail($ticket, true, [], $test_email_recipient);
                 }
                 $this->flow_event = $original_flow_event;
 

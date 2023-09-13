@@ -24,10 +24,14 @@ use models\summit\SummitAttendee;
 class SummitAttendeeRegistrationIncompleteReminderEmail extends AbstractSummitAttendeeTicketEmail
 {
     /**
-     * SummitAttendeeRegistrationIncompleteReminderEmail constructor.
      * @param SummitAttendee $attendee
+     * @param string|null $test_email_recipient
      */
-    public function __construct(SummitAttendee $attendee)
+    public function __construct
+    (
+        SummitAttendee $attendee,
+        ?string $test_email_recipient = null
+    )
     {
         $payload = [];
         $payload[IMailTemplatesConstants::owner_full_name] = $attendee->getFullName();
@@ -73,6 +77,21 @@ class SummitAttendeeRegistrationIncompleteReminderEmail extends AbstractSummitAt
 
         $payload[IMailTemplatesConstants::manage_orders_url] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
 
+        if (!empty($test_email_recipient)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitAttendeeRegistrationIncompleteReminderEmail::__construct replacing original email %s by %s and clearing cc field",
+                    $payload[IMailTemplatesConstants::owner_email],
+                    $test_email_recipient
+                )
+            );
+
+            $payload[IMailTemplatesConstants::owner_email] = $test_email_recipient;
+            $payload[IMailTemplatesConstants::cc_email] = '';
+
+        }
         parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email] );
     }
 
@@ -92,7 +111,7 @@ class SummitAttendeeRegistrationIncompleteReminderEmail extends AbstractSummitAt
         $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id]['type'] = 'int';
+        $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::manage_orders_url]['type'] = 'string';

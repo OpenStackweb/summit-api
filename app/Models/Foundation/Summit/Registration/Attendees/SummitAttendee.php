@@ -436,13 +436,16 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param SummitAttendeeTicket $ticket
      * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
      * @param array $payload
+     * @param string|null $test_email_recipient
+     * @return void
      * @throws \Exception
      */
     public function sendInvitationEmail
     (
         SummitAttendeeTicket $ticket,
         bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false,
-        array $payload = []
+        array $payload = [],
+        ?string $test_email_recipient = null
     ):void
     {
 
@@ -470,7 +473,7 @@ class SummitAttendee extends SilverstripeBaseModel
             // adds a threshold of 10 minutes to avoid duplicates emails
             if (Cache::add(sprintf("%s_emit_ticket", $key), true, 10)) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending SummitAttendeeTicketEmail", $email, $ticket->getId()));
-                SummitAttendeeTicketEmail::dispatch($ticket, $payload);
+                SummitAttendeeTicketEmail::dispatch($ticket, $payload, $test_email_recipient);
                 $ticket->getOwner()->markInvitationEmailSentDate();
             }
             return;
@@ -487,7 +490,7 @@ class SummitAttendee extends SilverstripeBaseModel
             // adds a threshold of 10 minutes to avoid duplicates emails
             if (Cache::add(sprintf("%s_edit_ticket", $key), true, 10)) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending InviteAttendeeTicketEditionMail", $email, $ticket->getId()));
-                InviteAttendeeTicketEditionMail::dispatch($ticket, $payload);
+                InviteAttendeeTicketEditionMail::dispatch($ticket, $payload, $test_email_recipient);
                 $ticket->getOwner()->markInvitationEmailSentDate();
             }
         }

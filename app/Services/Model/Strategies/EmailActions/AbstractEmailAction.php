@@ -37,7 +37,8 @@ abstract class AbstractEmailAction
 
     /**
      * @param SummitAttendee $attendee
-     * @return void
+     * @param string|null $test_email_recipient
+     * @return mixed
      */
-    public abstract function process(SummitAttendee $attendee);
+    public abstract function process(SummitAttendee $attendee, ?string $test_email_recipient = null);
 }

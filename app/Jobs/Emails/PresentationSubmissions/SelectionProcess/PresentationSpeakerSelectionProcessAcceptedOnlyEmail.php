@@ -50,7 +50,7 @@ class PresentationSpeakerSelectionProcessAcceptedOnlyEmail extends PresentationS
         Summit                              $summit,
         ?SummitRegistrationPromoCode        $promo_code,
         PresentationSpeaker                 $speaker,
-        ?string                              $test_email_recipient,
+        ?string                             $test_email_recipient,
         SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
         ?string                             $confirmation_token = null,
         ?Filter                             $filter = null

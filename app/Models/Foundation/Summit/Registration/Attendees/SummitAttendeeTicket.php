@@ -306,9 +306,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     }
 
     /**
+     * @param string|null $test_email_recipient
+     * @return void
      * @throws ValidationException
      */
-    public function sendPublicEditEmail()
+    public function sendPublicEditEmail(?string $test_email_recipient = null)
     {
         if (!$this->isPaid())
             throw new ValidationException("ticket is not paid");
@@ -319,7 +321,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->generateQRCode();
         $this->generateHash();
 
-        SummitAttendeeTicketRegenerateHashEmail::dispatch($this);
+        SummitAttendeeTicketRegenerateHashEmail::dispatch($this,[], $test_email_recipient);
         $this->getOwner()->markPublicEditionEmailSentDate();
     }
 

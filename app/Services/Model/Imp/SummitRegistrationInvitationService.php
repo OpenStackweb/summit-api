@@ -499,6 +499,21 @@ final class SummitRegistrationInvitationService
         $count = 0;
         $maxPageSize = 100;
 
+        $test_email_recipient = null;
+        if(isset($payload['test_email_recipient'])) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationInvitationService::send summit id %s setting test_email_recipient %s",
+                    $summit_id,
+                    $payload['test_email_recipient']
+                )
+            );
+
+            $test_email_recipient = $payload['test_email_recipient'];
+        }
+
         do{
 
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page));
@@ -558,9 +573,9 @@ final class SummitRegistrationInvitationService
 
                 // send email
                 if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
-                    InviteSummitRegistrationEmail::dispatch($res);
+                    InviteSummitRegistrationEmail::dispatch($res, $test_email_recipient);
                 if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
-                    ReInviteSummitRegistrationEmail::dispatch($res);
+                    ReInviteSummitRegistrationEmail::dispatch($res, $test_email_recipient);
                 $count++;
             }
 

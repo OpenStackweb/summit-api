@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
+use libs\utils\FormatUtils;
 use models\summit\SummitRoomReservation;
 
 /**
@@ -40,11 +41,11 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_fullname] = $reservation->getOwner()->getFullName();
         $payload[IMailTemplatesConstants::owner_email] = $reservation->getOwner()->getEmail();
         $payload[IMailTemplatesConstants::room_complete_name] = $room->getCompleteName();
-        $payload[IMailTemplatesConstants::reservation_start_datetime] = $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s");
-        $payload[IMailTemplatesConstants::reservation_end_datetime] = $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s");
-        $payload[IMailTemplatesConstants::reservation_created_datetime] = $reservation->getCreated()->format("Y-m-d H:i:s");
-        $payload[IMailTemplatesConstants::reservation_amount] = $reservation->getAmount();
-        $payload[IMailTemplatesConstants::reservation_currency] = $reservation->getCurrency();
+        $payload[IMailTemplatesConstants::reservation_start_datetime] = $reservation->getLocalStartDatetime()->format("F d, Y");
+        $payload[IMailTemplatesConstants::reservation_end_datetime] = $reservation->getLocalEndDatetime()->format("F d, Y");
+        $payload[IMailTemplatesConstants::reservation_created_datetime] = $reservation->getCreated()->format("F d, Y");
+        $payload[IMailTemplatesConstants::reservation_amount] = FormatUtils::getNiceFloat($reservation->getAmount());
+        $payload[IMailTemplatesConstants::reservation_currency] = FormatUtils::getNiceFloat($reservation->getCurrency());
         $payload[IMailTemplatesConstants::reservation_id] = $reservation->getId();
         $payload[IMailTemplatesConstants::room_capacity] = $room->getCapacity();
         $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
@@ -66,13 +67,13 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::reservation_start_datetime]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_end_datetime]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_created_datetime]['type'] = 'string';
-        $payload[IMailTemplatesConstants::reservation_amount]['type'] = 'int';
-        $payload[IMailTemplatesConstants::reservation_currency]['type'] = 'int';
+        $payload[IMailTemplatesConstants::reservation_amount]['type'] = 'string';
+        $payload[IMailTemplatesConstants::reservation_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_id]['type'] = 'int';
         $payload[IMailTemplatesConstants::room_capacity]['type'] = 'int';
         $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::reservation_refunded_amount]['type'] = 'float';
+        $payload[IMailTemplatesConstants::reservation_refunded_amount]['type'] = 'string';
 
         return $payload;
     }

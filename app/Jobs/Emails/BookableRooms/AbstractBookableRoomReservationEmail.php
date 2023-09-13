@@ -67,7 +67,7 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::reservation_end_datetime]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_created_datetime]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_amount]['type'] = 'int';
-        $payload[IMailTemplatesConstants::reservation_currency]['type'] = 'int';
+        $payload[IMailTemplatesConstants::reservation_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_id]['type'] = 'int';
         $payload[IMailTemplatesConstants::room_capacity]['type'] = 'int';
         $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';

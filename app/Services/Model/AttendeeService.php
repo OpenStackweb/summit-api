@@ -16,6 +16,7 @@ use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use App\Utils\AES;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -736,53 +737,63 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function resynchAttendeesStatusBySummit(int $summit_id): void
     {
-
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s", $summit_id));
-        $summit = $this->summit_repository->getById($summit_id);
-        if(!$summit instanceof Summit)
-            throw new EntityNotFoundException(sprintf("Summit %s not found", $summit_id));
+        $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", $summit_id);
 
-        $count = 0;
-        $maxPageSize = 100;
-        $current_page = 1;
-        $filter = new Filter();
-        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+        if(Cache::has($key)){
+            Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s already running", $summit_id));
+            return;
+        }
 
-        do {
-            $attendees_ids =
-                $this->tx_service->transaction(function() use($summit, $current_page, $filter, $maxPageSize) {
-                    Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit page %s", $current_page));
-                    return $this->attendee_repository->getAllIdsByPage(new PagingInfo($current_page, $maxPageSize), $filter);
-                });
+        try {
+            Cache::add($key, $key);
+            $summit = $this->summit_repository->getById($summit_id);
+            if (!$summit instanceof Summit)
+                throw new EntityNotFoundException(sprintf("Summit %s not found", $summit_id));
 
-            if (!count($attendees_ids)) {
-                // if we are processing a page, then break it
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "AttendeeService::resynchAttendeesStatusBySummit summit id %s page is empty, ending processing.",
-                        $summit_id
-                    )
-                );
-                break;
-            }
+            $count = 0;
+            $maxPageSize = 100;
+            $current_page = 1;
+            $filter = new Filter();
+            $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
 
-            foreach ($attendees_ids as $attendee_id) {
-                try {
-                    $this->tx_service->transaction(function () use ($attendee_id) {
-                        $attendee = $this->attendee_repository->getById($attendee_id);
-                        if (!$attendee instanceof SummitAttendee) return;
-                        $attendee->updateStatus();
+            do {
+                $attendees_ids =
+                    $this->tx_service->transaction(function () use ($summit, $current_page, $filter, $maxPageSize) {
+                        Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit page %s", $current_page));
+                        return $this->attendee_repository->getAllIdsByPage(new PagingInfo($current_page, $maxPageSize), $filter);
                     });
-                    $count++;
+
+                if (!count($attendees_ids)) {
+                    // if we are processing a page, then break it
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AttendeeService::resynchAttendeesStatusBySummit summit id %s page is empty, ending processing.",
+                            $summit_id
+                        )
+                    );
+                    break;
                 }
-                catch (\Exception $ex){
-                    Log::warning($ex);
+
+                foreach ($attendees_ids as $attendee_id) {
+                    try {
+                        $this->tx_service->transaction(function () use ($attendee_id) {
+                            $attendee = $this->attendee_repository->getById($attendee_id);
+                            if (!$attendee instanceof SummitAttendee) return;
+                            $attendee->updateStatus();
+                        });
+                        $count++;
+                    } catch (\Exception $ex) {
+                        Log::warning($ex);
+                    }
                 }
-            }
-            ++$current_page;
-        } while(true);
+                ++$current_page;
+            } while (true);
+        } finally {
+            Cache::forget($key);
+        }
 
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees", $summit_id, $count));
     }

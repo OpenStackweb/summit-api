@@ -33,6 +33,7 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use mysql_xdevapi\Warning;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
 use utils\FilterElement;

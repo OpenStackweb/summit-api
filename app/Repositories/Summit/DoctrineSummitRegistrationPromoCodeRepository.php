@@ -100,7 +100,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
             ),
             'speaker'       => new DoctrineFilterMapping
             (
-                "( concat(spkr.first_name, ' ', spkr.last_name) :operator :value ".
+                "( ".
+                "concat(spkr.first_name, ' ', spkr.last_name) :operator :value ".
                 "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value ".
                 "OR spkr.first_name :operator :value ".
                 "OR spkr.last_name :operator :value ".
@@ -111,7 +112,14 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 "OR spkr2.first_name :operator :value ".
                 "OR spkr2.last_name :operator :value ".
                 "OR spmm2.first_name :operator :value ".
-                "OR spmm2.last_name :operator :value ) "
+                "OR spmm2.last_name :operator :value ".
+                "OR concat(spksdc_owr_speaker.first_name, ' ', spksdc_owr_speaker.last_name) :operator :value ".
+                "OR concat(spkspc_owr_speaker.first_name, ' ', spkspc_owr_speaker.last_name) :operator :value ".
+                "OR spksdc_owr_speaker.first_name :operator :value ".
+                "OR spksdc_owr_speaker.last_name :operator :value ".
+                "OR spkspc_owr_speaker.first_name :operator :value ".
+                "OR spkspc_owr_speaker.last_name :operator :value ".
+                ")"
             ),
             'speaker_email' => new DoctrineFilterMapping
             (

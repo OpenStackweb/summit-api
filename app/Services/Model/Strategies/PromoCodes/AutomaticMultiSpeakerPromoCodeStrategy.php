@@ -13,6 +13,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -81,6 +82,7 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
      * @throws ValidationException|\Exception
      */
     public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
+        Log::debug(sprintf("AutomaticMultiSpeakerPromoCodeStrategy::getPromoCode speaker %s", $speaker->getId()));
         $code = null;
         do {
             $code = $this->code_generator->generate($this->summit);
@@ -89,11 +91,13 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
         $promo_code_spec = $this->data["promo_code_spec"];
         $promo_code_spec["code"] = $code;
         $promo_code_spec["speaker_ids"] = [$speaker->getId()];
+
         $promo_code = $this->service->addPromoCode($this->summit, $promo_code_spec);
 
         if (is_null($promo_code)) {
-            throw new ValidationException('cannot build a valid promo code with the given specification');
+            throw new ValidationException('Cannot build a valid promo code with the given specification.');
         }
+
         return $promo_code;
     }
 }

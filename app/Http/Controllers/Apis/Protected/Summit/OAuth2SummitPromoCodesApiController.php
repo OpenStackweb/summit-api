@@ -572,7 +572,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        $discount_code = $this->repository->getById($discount_code_id);
+        $discount_code = $this->repository->getById(intval($discount_code_id));
 
         if (!$discount_code instanceof SpeakersRegistrationDiscountCode) {
             return $this->error404();
@@ -582,6 +582,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             function () {
                 return [
                     'email' => ['@@', '=@', '=='],
+                    'full_name' => ['@@', '=@', '=='],
                     'first_name' => ['@@', '=@', '=='],
                     'last_name' => ['@@', '=@', '=='],
                 ];

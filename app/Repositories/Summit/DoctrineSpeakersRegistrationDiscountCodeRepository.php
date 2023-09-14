@@ -43,8 +43,25 @@ class DoctrineSpeakersRegistrationDiscountCodeRepository
     protected function getFilterMappings(): array
     {
         return [
-            'email'     => new DoctrineFilterMapping("m.email :operator :value"),
-            'full_name' => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
+            'first_name' => new DoctrineFilterMapping(
+                "( LOWER(m.first_name) :operator LOWER(:value) )".
+                "OR ( LOWER(s.first_name) :operator LOWER(:value) )"
+            ),
+            'last_name' => new DoctrineFilterMapping(
+                "( LOWER(m.last_name) :operator LOWER(:value) )".
+                " OR ( LOWER(s.last_name) :operator LOWER(:value) )"
+            ),
+            'email' => [
+                Filter::buildEmailField('m.email'),
+                Filter::buildEmailField('m.second_email'),
+                Filter::buildEmailField('m.third_email'),
+                Filter::buildEmailField('rr.email'),
+            ],
+            'full_name' => new DoctrineFilterMapping
+            (
+                "( CONCAT(LOWER(m.first_name), ' ', LOWER(m.last_name)) :operator LOWER(:value) )".
+                " OR ( CONCAT(LOWER(s.first_name), ' ', LOWER(s.last_name)) :operator LOWER(:value) )"
+            ),
         ];
     }
 
@@ -61,7 +78,8 @@ class DoctrineSpeakersRegistrationDiscountCodeRepository
                 ->from(AssignedPromoCodeSpeaker::class, 'o')
                 ->join('o.registration_promo_code', 'd')
                 ->join('o.speaker', 's')
-                ->join('s.member', 'm')
+                ->leftJoin("s.registration_request", "rr")
+                ->leftJoin('s.member', 'm')
                 ->where("d.id = :discount_code")
                 ->setParameter("discount_code", $discount_code);
         },

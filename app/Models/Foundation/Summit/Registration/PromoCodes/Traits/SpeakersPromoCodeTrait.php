@@ -85,7 +85,28 @@ trait SpeakersPromoCodeTrait
      */
     public function assignSpeaker(PresentationSpeaker $speaker)
     {
-        if ($this->isSpeakerAlreadyAssigned($speaker)) return $this;
+        Log::debug
+        (
+            sprintf
+            (
+                "SpeakersPromoCodeTrait::assignSpeaker promo_code %s speaker %s",
+                $this->getId(),
+                $speaker->getId()
+            )
+        );
+
+        if ($this->isSpeakerAlreadyAssigned($speaker)) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SpeakersPromoCodeTrait::assignSpeaker promo_code %s speaker %s already assigned",
+                    $this->getId(),
+                    $speaker->getId()
+                )
+            );
+            return $this;
+        }
         $owner = new AssignedPromoCodeSpeaker();
         $owner->setSpeaker($speaker);
         $owner->setRegistrationPromoCode($this);

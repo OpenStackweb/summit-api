@@ -32,9 +32,11 @@ interface ISpeakersRegistrationDiscountCodeRepository extends IBaseRepository
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getDiscountCodeSpeakers(
+    public function getDiscountCodeSpeakers
+    (
         SpeakersRegistrationDiscountCode $discount_code,
         PagingInfo $paging_info,
         Filter $filter = null,
-        Order $order = null);
+        Order $order = null
+    );
 }

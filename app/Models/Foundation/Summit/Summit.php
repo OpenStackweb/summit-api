@@ -2085,7 +2085,8 @@ class Summit extends SilverstripeBaseModel
             ->setParameter('speaker_id', $speaker_id)
             ->getQuery()->getOneOrNullResult();
 
-        if (!is_null($speaker)) return $speaker;
+        if (!is_null($speaker))
+            return $speaker;
 
         // attendance
         $speaker = $this->buildSpeakerSummitAttendanceQuery()
@@ -2093,7 +2094,8 @@ class Summit extends SilverstripeBaseModel
             ->setParameter('speaker_id', $speaker_id)
             ->getQuery()->getOneOrNullResult();
 
-        if (!is_null($speaker)) return $speaker;
+        if (!is_null($speaker))
+            return $speaker;
 
         return null;
     }

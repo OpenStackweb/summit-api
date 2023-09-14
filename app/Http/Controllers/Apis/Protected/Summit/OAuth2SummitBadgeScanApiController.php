@@ -257,11 +257,13 @@ final class OAuth2SummitBadgeScanApiController
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
+        // check if we have an user ( not allowed for service accounts )
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) return $this->error403();
+        if (is_null($current_member))
+            return $this->error403();
 
         $sponsor = null;
-        if(!$current_member->isAdmin()){
+        if(!$current_member->isSummitAllowed($summit)){
             $sponsor = $current_member->getSponsorBySummit($summit);
             if(is_null($sponsor)){
                 return $this->error403();
@@ -330,10 +332,11 @@ final class OAuth2SummitBadgeScanApiController
         if (is_null($summit)) return $this->error404();
 
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) return $this->error403();
+        if (is_null($current_member))
+            return $this->error403();
 
         $sponsor = null;
-        if(!$current_member->isAdmin()){
+        if(!$current_member->isSummitAllowed($summit)){
             $sponsor = $current_member->getSponsorBySummit($summit);
             if(is_null($sponsor)){
                 return $this->error403();
@@ -463,7 +466,15 @@ final class OAuth2SummitBadgeScanApiController
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException();
+
+        if(!$current_member->isSummitAllowed($summit)){
+            $sponsor = $current_member->getSponsorBySummit($summit);
+            if(is_null($sponsor)){
+                throw new HTTP403ForbiddenException();
+            }
+        }
 
         return $this->service->getBadgeScan($summit, $current_member, $child_id);
     }

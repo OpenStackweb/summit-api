@@ -630,6 +630,9 @@ class SummitTicketType extends SilverstripeBaseModel
      */
     public function setAudience(string $audience)
     {
+        if(!in_array($audience, self::AllowedAudience))
+            throw new ValidationException(sprintf("audience %s is not allowed", $audience));
+
         $this->audience = $audience;
     }
 

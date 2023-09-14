@@ -24,17 +24,16 @@ final class DecryptedListResponse
 implements IExternalRegistrationFeedResponse
 {
     private $position = 0;
-
     /**
      * @param string $key
      * @param string $content
-     * @param string $forum
+     * @param array $params
      * @throws EmptyResponse
      * @throws InvalidResponse
      */
-    public function __construct(string $key, string $content, string $forum){
+    public function __construct(string $key, string $content, array $params = []){
 
-        parent::__construct($forum);
+        parent::__construct($params);
 
         $this->position  = 0;
 
@@ -64,7 +63,7 @@ implements IExternalRegistrationFeedResponse
         return SamsungRecordSerializer::serialize
         (
             $this->payload[$this->position],
-            $this->forum
+            $this->params
         );
     }
 

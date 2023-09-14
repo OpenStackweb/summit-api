@@ -22,6 +22,7 @@ use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use App\Models\Foundation\Summit\ISummitModality;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
+use App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Signs\SummitSign;
@@ -834,6 +835,12 @@ class Summit extends SilverstripeBaseModel
     private $selection_plan_extra_questions;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitRegistrationFeedMetadata[]
+     */
+    private $registration_feed_metadata;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -1179,6 +1186,7 @@ class Summit extends SilverstripeBaseModel
         $this->submission_invitations = new ArrayCollection();
         $this->signs = new ArrayCollection();
         $this->qr_codes_enc_key = null;
+        $this->registration_feed_metadata = new ArrayCollection();
     }
 
     /**
@@ -3840,6 +3848,20 @@ SQL;
         return $badge_type === false ? null : $badge_type;
     }
 
+    /**
+     * @return SummitTicketType|null
+     */
+    public function getFirstDefaultTicketType():?SummitTicketType
+    {
+        $defaultBadgeType = $this->getDefaultBadgeType();
+        if (is_null($defaultBadgeType))
+            return null;
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('badge_type', $defaultBadgeType));
+        $res =  $this->ticket_types->matching($criteria)->first();
+        return $res == false ? null : $res;
+    }
     /**
      * @return DateTime
      */
@@ -6640,6 +6662,64 @@ SQL;
         $this->mux_allowed_domains = implode('|', $mux_allowed_domains);
         if(!empty($this->mux_token_id) && !empty($this->mux_token_secret))
             CreateMUXPlaybackRestrictionForSummit::dispatch($this->id);
+    }
+
+    public function getRegistrationFeedMetadata():array{
+        $res = [];
+        foreach($this->registration_feed_metadata as $metadata){
+            $res[$metadata->getKey()] = $metadata->getValue();
+        }
+        return $res;
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @return SummitRegistrationFeedMetadata
+     * @throws ValidationException
+     */
+    public function addRegistrationFeedMetadata(string $key, string $value):SummitRegistrationFeedMetadata{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('key', trim($key)));
+        if($this->registration_feed_metadata->matching($criteria)->count()){
+            throw new ValidationException(sprintf("key %s already exists.", $key));
+        }
+        $metadata = new SummitRegistrationFeedMetadata($key, $value);
+        $this->registration_feed_metadata->add($metadata);
+        $metadata->setSummit($this);
+        return $metadata;
+    }
+
+    /**
+     * @param int $metadata_id
+     * @return SummitRegistrationFeedMetadata|null
+     */
+    public function getRegistrationFeedMetadataById(int $metadata_id):?SummitRegistrationFeedMetadata{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $metadata_id));
+        $res = $this->registration_feed_metadata->matching($criteria)->first();
+        return $res ? $res : null;
+    }
+
+    /**
+     * @param string $key
+     * @return SummitRegistrationFeedMetadata|null
+     */
+    public function getRegistrationFeedMetadataByKey(string $key):?SummitRegistrationFeedMetadata{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('key', trim($key)));
+        $res = $this->registration_feed_metadata->matching($criteria)->first();
+        return $res ? $res : null;
+    }
+
+    /**
+     * @param SummitRegistrationFeedMetadata $metadata
+     * @return void
+     */
+    public function removeRegistrationFeedMetadata(SummitRegistrationFeedMetadata $metadata):void{
+        if(!$this->registration_feed_metadata->contains($metadata)) return;
+        $this->registration_feed_metadata->removeElement($metadata);
+        $metadata->clearSummit();
     }
 
 }

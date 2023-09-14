@@ -33,6 +33,7 @@ use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\IPublishableEvent;
+use App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
@@ -3671,7 +3672,7 @@ final class SummitService
      */
     public function generateMuxPlaybackRestriction(int $summit_id): void
     {
-        $this->tx_service->transaction(function() use($summit_id){
+        $this->tx_service->transaction(function() use($summit_id) {
             try {
                 Log::debug(sprintf("SummitService::generateMuxPlaybackRestriction summit %s", $summit_id));
                 $summit = $this->summit_repository->getById($summit_id);
@@ -3684,13 +3685,13 @@ final class SummitService
                 ));
 
                 $former_playback_restriction_id = $summit->getMuxPlaybackRestrictionId();
-                if(!empty($former_playback_restriction_id)) {
+                if (!empty($former_playback_restriction_id)) {
                     $this->mux_api->deletePlaybackRestriction($former_playback_restriction_id);
                     $summit->clearMuxPlaybackRestrictionId();
                 }
 
                 $allowed_domains = $summit->getMuxAllowedDomains();
-                if(count($allowed_domains) > 0) {
+                if (count($allowed_domains) > 0) {
 
                     Log::debug
                     (
@@ -3711,11 +3712,62 @@ final class SummitService
 
                     $summit->setMuxPlaybackRestrictionId($playback_restriction['id']);
                 }
-            }
-            catch(Exception $ex){
+            } catch (Exception $ex) {
                 Log::error($ex);
                 throw $ex;
             }
+
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitRegistrationFeedMetadata
+     * @throws Exception
+     */
+    public function addRegistrationFeedMetadata(Summit $summit, array $payload):SummitRegistrationFeedMetadata{
+        return $this->tx_service->transaction(function() use($summit, $payload){
+            return $summit->addRegistrationFeedMetadata($payload['key'], $payload['value']);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $metadata_id
+     * @return void
+     * @throws Exception
+     */
+    public function removeRegistrationFeedMetadata(Summit $summit, int $metadata_id):void{
+        $this->tx_service->transaction(function() use($summit, $metadata_id){
+            $metadata = $summit->getRegistrationFeedMetadataById($metadata_id);
+            if(is_null($metadata))
+                throw new EntityNotFoundException(sprintf("Metadata %s not found,", $metadata_id));
+            $summit->removeRegistrationFeedMetadata($metadata);
+        });
+    }
+
+    public function updateRegistrationFeedMetadata(Summit $summit, int $metadata_id, array $payload): SummitRegistrationFeedMetadata
+    {
+        return $this->tx_service->transaction(function() use($summit, $metadata_id, $payload){
+            $metadata = $summit->getRegistrationFeedMetadataById($metadata_id);
+            if(is_null($metadata))
+                throw new EntityNotFoundException(sprintf("Metadata %s not found,", $metadata_id));
+
+            if(isset($payload['key'])) {
+                $formerMetadata = $summit->getRegistrationFeedMetadataByKey($payload['key']);
+                if(!is_null($formerMetadata) && $formerMetadata->getId() != $metadata->getId())
+                    throw new ValidationException(sprintf("Metadata with key %s already exists", $payload['key']));
+            }
+
+
+            if(isset($payload['value']))
+                $metadata->setValue($payload['value']);
+            if(isset($payload['key']))
+                $metadata->setKey($payload['key']);
+
+            return $metadata;
+        });
+    }
+
 }

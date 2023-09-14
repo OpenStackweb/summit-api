@@ -170,7 +170,9 @@ final class RegistrationIngestionService
                 $refunded = $external_attendee['refunded'] ?? false;
                 $cancelled = $external_attendee['cancelled'] ?? false;
 
-                $ticket_type = $summit->getTicketTypeByExternalId($ticket_class['id']);
+                $ticket_type = $summit->getTicketTypeByExternalId(intval($ticket_class['id']));
+                if(is_null($ticket_type))
+                    $summit->getTicketTypeById(intval($ticket_class['id']));
 
                 if (is_null($ticket_type)) {
                     // create ticket type if it does not exists

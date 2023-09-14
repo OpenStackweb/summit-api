@@ -1495,6 +1495,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@delete'])->where('invitation_id', '[0-9]+');
             });
         });
+
         // submission invitations
         Route::group(array('prefix' => 'submission-invitations'), function () {
 
@@ -1972,6 +1973,18 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'qr-codes'], function () {
             Route::group(['prefix' => 'all'], function () {
                 Route::put('enc-key', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@generateQREncKey']);
+            });
+        });
+
+        // registration-feed-metadata
+
+        Route::group(['prefix' => 'registration-feed-metadata'], function(){
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@getAllBySummit']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@add']);
+            Route::group(['prefix' => '{metadata_id}'], function(){
+                Route::put('', ['uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@update']);
+                Route::get('', ['uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@get']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@delete']);
             });
         });
     });

@@ -23,23 +23,20 @@ interface ISamsungRegistrationAPI
     /**
      * @param Summit $summit
      * @param string $userId
-     * @param string $region
      * @return mixed
      */
-    public function checkUser(Summit $summit, string $userId, string $region = Regions::US);
+    public function checkUser(Summit $summit, string $userId);
 
     /**
      * @param Summit $summit
      * @param string $email
-     * @param string $region
      * @return mixed
      */
-    public function checkEmail(Summit $summit, string $email, string $region = Regions::US);
+    public function checkEmail(Summit $summit, string $email);
 
     /**
      * @param Summit $summit
-     * @param string $region
      * @return mixed
      */
-    public function userList(Summit $summit, string $region = Regions::US);
+    public function userList(Summit $summit);
 }

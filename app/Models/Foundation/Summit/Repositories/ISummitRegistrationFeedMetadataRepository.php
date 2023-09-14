@@ -1,4 +1,4 @@
-<?php namespace App\Services\Apis\Samsung;
+<?php namespace App\Models\Foundation\Summit\Repositories;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +12,13 @@
  * limitations under the License.
  **/
 
-
+use models\utils\IBaseRepository;
 /**
- * Class CheckEmailRequest
- * @package App\Services\Apis\Samsung
+ * Interface ISummitRegistrationFeedMetadataRepository
+ * @package App\Models\Foundation\Summit\Repositories
  */
-final class CheckEmailRequest extends AbstractPayload
+interface ISummitRegistrationFeedMetadataRepository
+    extends IBaseRepository
 {
-    /**
-     * @param string $email
-     * @param array $params
-     */
-    public function __construct(string $email, array $params = []){
-        parent::__construct($params);
-        $this->payload = array_merge($this->payload, [
-            PayloadParamNames::Type => RequestTypes::EmailCheck,
-            PayloadParamNames::Email => trim($email),
-        ]);
-    }
+
 }

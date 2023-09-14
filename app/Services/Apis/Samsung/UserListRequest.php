@@ -19,11 +19,18 @@
  */
 final class UserListRequest extends AbstractPayload
 {
-    public function __construct(string $forum, string $region){
-        $this->payload = [
+    /**
+     * @param array $params
+     */
+    public function __construct(array $params = []){
+
+        parent::__construct
+        (
+            $params
+        );
+
+        $this->payload = array_merge($this->payload,[
             PayloadParamNames::Type => RequestTypes::UserList,
-            PayloadParamNames::Forum => $forum,
-            PayloadParamNames::Region => $region
-        ];
+        ]);
     }
 }

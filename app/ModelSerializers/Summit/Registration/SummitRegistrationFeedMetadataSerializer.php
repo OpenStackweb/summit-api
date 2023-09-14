@@ -1,4 +1,4 @@
-<?php namespace App\Services\Apis\Samsung;
+<?php namespace App\ModelSerializers\Summit\Registration;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +12,17 @@
  * limitations under the License.
  **/
 
+use ModelSerializers\SilverStripeSerializer;
 
 /**
- * Class CheckEmailRequest
- * @package App\Services\Apis\Samsung
+ * Class SummitRegistrationFeedMetadataSerializer
+ * @package App\ModelSerializers\Summit\Registration
  */
-final class CheckEmailRequest extends AbstractPayload
+final class SummitRegistrationFeedMetadataSerializer  extends SilverStripeSerializer
 {
-    /**
-     * @param string $email
-     * @param array $params
-     */
-    public function __construct(string $email, array $params = []){
-        parent::__construct($params);
-        $this->payload = array_merge($this->payload, [
-            PayloadParamNames::Type => RequestTypes::EmailCheck,
-            PayloadParamNames::Email => trim($email),
-        ]);
-    }
+    protected static $array_mappings = [
+        'Key'      => 'key:json_string',
+        'Value'    => 'value:json_string',
+        'SummitId' => 'summit_id:json_int',
+    ];
 }

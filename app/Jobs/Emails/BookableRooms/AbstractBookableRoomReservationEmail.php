@@ -45,7 +45,7 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::reservation_end_datetime] = $reservation->getLocalEndDatetime()->format("F d, Y");
         $payload[IMailTemplatesConstants::reservation_created_datetime] = $reservation->getCreated()->format("F d, Y");
         $payload[IMailTemplatesConstants::reservation_amount] = FormatUtils::getNiceFloat($reservation->getAmount());
-        $payload[IMailTemplatesConstants::reservation_currency] = FormatUtils::getNiceFloat($reservation->getCurrency());
+        $payload[IMailTemplatesConstants::reservation_currency] = $reservation->getCurrency();
         $payload[IMailTemplatesConstants::reservation_id] = $reservation->getId();
         $payload[IMailTemplatesConstants::room_capacity] = $room->getCapacity();
         $payload[IMailTemplatesConstants::summit_name] = $summit->getName();

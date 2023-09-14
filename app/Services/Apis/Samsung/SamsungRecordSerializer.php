@@ -22,12 +22,13 @@ final class SamsungRecordSerializer
 {
     /**
      * @param array $res
-     * @param string $forum
+     * @param array $params
      * @return array
      */
-    public static function serialize(array $res, string $forum):array{
+    public static function serialize(array $res, array $params = []):array{
 
         $answers = [];
+
         // answers mapping
         foreach (PayloadParamNames::AllowedExtraQuestions as $extraQuestion){
             if(!isset($res[$extraQuestion])) continue;
@@ -48,9 +49,9 @@ final class SamsungRecordSerializer
                 'badge_feature' => $res[PayloadParamNames::Group],
             ],
             'ticket_class' => [
-                'id'=> $forum,
-                'name'=> $forum,
-                'description'=> $forum,
+                'id'=> $params[PayloadParamNames::DefaultTicketId],
+                'name'=> $params[PayloadParamNames::DefaultTicketName],
+                'description'=> $params[PayloadParamNames::DefaultTicketDescription],
                 'quantity_total' => SummitTicketType::QtyInfinite, // infinite
                 'cost' =>[
                     'major_value' => SummitTicketType::AmountFree, // free

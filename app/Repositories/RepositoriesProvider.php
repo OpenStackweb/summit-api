@@ -38,6 +38,7 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedD
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
+use App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
@@ -82,6 +83,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitPresentationSpeakerAssignme
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedDayRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRegistrationFeedMetadataRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
@@ -886,6 +888,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitProposedScheduleAllowedDayRepository::class,
             function (){
                 return EntityManager::getRepository(SummitProposedScheduleAllowedDay::class);
+            }
+        );
+
+        App::singleton(
+            ISummitRegistrationFeedMetadataRepository::class,
+            function (){
+                return EntityManager::getRepository(SummitRegistrationFeedMetadata::class);
             }
         );
     }

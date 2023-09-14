@@ -21,17 +21,34 @@ abstract class AbstractPayload
 {
     protected $payload = [];
 
-    /**
-     * @var string
-     */
-    protected $forum;
+    protected $params = [];
 
     /**
-     * @param string $forum
+     * @param array $params
      */
-    function __construct(string $forum)
+    function __construct(array $params)
     {
-        $this->forum = $forum;
+        if(!isset($params[PayloadParamNames::Forum]))
+
+            throw new \InvalidArgumentException("missing forum param");
+
+        if(!isset($params[PayloadParamNames::Region]))
+            throw new \InvalidArgumentException("missing region param");
+
+        if(!isset($params[PayloadParamNames::GBM]))
+            throw new \InvalidArgumentException("missing gbm param");
+
+        if(!isset($params[PayloadParamNames::Year]))
+            throw new \InvalidArgumentException("missing year param");
+
+        $this->params = $params;
+
+        $this->payload = [
+            PayloadParamNames::Forum => $params[PayloadParamNames::Forum],
+            PayloadParamNames::Region => $params[PayloadParamNames::Region],
+            PayloadParamNames::GBM => $params[PayloadParamNames::GBM],
+            PayloadParamNames::Year => $params[PayloadParamNames::Year],
+        ];
     }
 
     public function __toString()

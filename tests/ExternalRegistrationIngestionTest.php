@@ -14,6 +14,7 @@
 
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitTicketTypeService;
+use models\summit\SummitTicketType;
 use Illuminate\Support\Facades\App;
 use Mockery;
 use models\summit\Summit;
@@ -69,6 +70,55 @@ class ExternalRegistrationIngestionTest extends \Tests\BrowserKitTestCase
 
         $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
 
+        $this->assertTrue($summit->getTicketTypes()->count() > 0);
+
+        $service->ingestSummit($summit);
+
+        $this->assertTrue($summit->getAttendeesCount() > 0);
+    }
+
+    public function testIngestSummitSamsungAPI(){
+
+        $summit = new Summit();
+        $summit->setActive(true);
+        // set feed type (sched)
+        $summit->setExternalRegistrationFeedType(ISummitExternalRegistrationFeedType::Samsung);
+        $summit->setExternalRegistrationFeedApiKey(getenv('SUMMIT_REGISTRATION_EXT_API_KEY'));
+        $summit->setExternalSummitId(getenv('SUMMIT_REGISTRATION_EXT_SUMMIT_ID'));
+        $summit->setTimeZoneId("America/Los_Angeles");
+        $summit->setBeginDate(new \DateTime("2023-10-6"));
+        $summit->setEndDate(new \DateTime("2023-10-7"));
+
+        // registration metdata
+
+        $summit->addRegistrationFeedMetadata("forum", "Tech day 2023");
+        $summit->addRegistrationFeedMetadata("gbm", "LSI");
+        $summit->addRegistrationFeedMetadata("region", "LS");
+        $summit->addRegistrationFeedMetadata("year", "2023");
+
+        $mainVenue = new SummitVenue();
+        $mainVenue->setIsMain(true);
+        $summit->addLocation($mainVenue);
+
+
+        $defaultBadge = new SummitBadgeType();
+        $defaultBadge->setName("DEFAULT");
+        $defaultBadge->setIsDefault(true);
+        $summit->addBadgeType($defaultBadge);
+
+        $defaultTicketType = new SummitTicketType();
+        $defaultTicketType->setName("DEFAULT");
+        $defaultTicketType->setDescription("DEFAULT");
+        $defaultTicketType->setAudience(SummitTicketType::Audience_All);
+        $defaultTicketType->setCost(0.0);
+        $defaultTicketType->setBadgeType($defaultBadge);
+        $summit->addTicketType($defaultTicketType);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->persist($summit);
+        $em->flush();
+
+        $service = App::make(IRegistrationIngestionService::class);
         $this->assertTrue($summit->getTicketTypes()->count() > 0);
 
         $service->ingestSummit($summit);

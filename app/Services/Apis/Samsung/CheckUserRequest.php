@@ -19,13 +19,18 @@
  */
 final class CheckUserRequest extends AbstractPayload
 {
-    public function __construct(string $userId, string $forum, string $region){
-        $this->payload = [
+    /**
+     * @param string $userId
+     * @param array $params
+     */
+    public function __construct(string $userId, array $params = []){
+
+        parent::__construct($params);
+
+        $this->payload = array_merge($this->payload , [
             PayloadParamNames::Type => RequestTypes::UserCheck,
             PayloadParamNames::UserId => trim($userId),
-            PayloadParamNames::Forum => $forum,
-            PayloadParamNames::Region => $region
-        ];
+        ]);
     }
 
 }

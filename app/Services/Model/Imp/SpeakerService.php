@@ -1256,7 +1256,7 @@ final class SpeakerService
                         $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
 
                         if (!$speaker instanceof PresentationSpeaker) {
-                            throw new EntityNotFoundException('speaker not found!');
+                            throw new EntityNotFoundException('Speaker not found');
                         }
 
                         // try to get or auto-build a promo code

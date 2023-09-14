@@ -191,18 +191,28 @@ final class SummitPromoCodeService
     public function addPromoCode(Summit $summit, array $data, Member $current_user = null)
     {
         $promo_code =  $this->tx_service->transaction(function () use ($summit, $data, $current_user) {
-            Log::debug(sprintf("SummitPromoCodeService::addPromoCode summit %s data %s", $summit->getId(), json_encode($data)));
 
-            $code = trim($data['code']);
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitPromoCodeService::addPromoCode summit %s data %s",
+                    $summit->getId(),
+                    json_encode($data)
+                )
+            );
+
+
+            $code = isset($data['code']) ? trim($data['code']) : null;
 
             if (empty($code)) {
-                throw new ValidationException("code can not be empty!");
+                throw new ValidationException("Code can not be empty.");
             }
 
             $old_promo_code = $summit->getPromoCodeByCode($code);
 
             if (!is_null($old_promo_code))
-                throw new ValidationException(sprintf("promo code %s already exits on summit id %s", trim($data['code']), $summit->getId()));
+                throw new ValidationException(sprintf("Promo code %s already exits on Summit %s.", trim($data['code']), $summit->getId()));
 
             $promo_code = SummitPromoCodeFactory::build($summit, $data, $this->getPromoCodeParams($summit, $data));
             if (is_null($promo_code))
@@ -213,15 +223,43 @@ final class SummitPromoCodeService
 
             $promo_code->setSourceAdmin();
 
-            if (isset($data['speaker_ids']) && ($promo_code->getClassName() == SpeakersSummitRegistrationPromoCode::ClassName ||
+            if (isset($data['speaker_ids']) && (
+                $promo_code->getClassName() == SpeakersSummitRegistrationPromoCode::ClassName ||
                 $promo_code->getClassName() == SpeakersRegistrationDiscountCode::ClassName)) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitPromoCodeService::addPromoCode promo code %s is a speaker promo code",
+                        $promo_code->getId()
+                    )
+                );
 
                 foreach ($data['speaker_ids'] as $speaker_id) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitPromoCodeService::addPromoCode promo code %s trying to assign to speaker %s",
+                            $promo_code->getId(),
+                            $speaker_id
+                        )
+                    );
+
                     $speaker = $summit->getSpeaker(intval($speaker_id), false);
-                    if(is_null($speaker))
-                        throw new EntityNotFoundException(sprintf("speaker %s not found", $speaker_id));
+
+                    if(is_null($speaker)) {
+                        Log::warning
+                        (
+                            sprintf("SummitPromoCodeService::addPromoCode Speaker %s not found.", $speaker_id)
+                        );
+                        throw new EntityNotFoundException(sprintf("Speaker %s not found.", $speaker_id));
+                    }
+
                     $promo_code->assignSpeaker($speaker);
                 }
+
+                $this->repository->add($promo_code, true);
             }
 
             // tags

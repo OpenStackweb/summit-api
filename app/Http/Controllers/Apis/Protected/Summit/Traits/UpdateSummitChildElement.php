@@ -13,15 +13,12 @@
  **/
 
 use App\ModelSerializers\SerializerUtils;
-use models\summit\Summit;
-use models\utils\IEntity;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
+use models\summit\Summit;
+use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+
 /**
  * Trait UpdateSummitChildElement
  * @package App\Http\Controllers
@@ -30,7 +27,10 @@ trait UpdateSummitChildElement
 {
     use BaseSummitAPI;
 
-    protected function updateSerializerType():string{
+    use RequestProcessor;
+
+    protected function updateSerializerType(): string
+    {
         return SerializerRegistry::SerializerType_Admin;
     }
 
@@ -46,20 +46,23 @@ trait UpdateSummitChildElement
      * @param array $payload
      * @return IEntity
      */
-    abstract protected function updateChild(Summit $summit,int $child_id, array $payload):IEntity;
+    abstract protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity;
 
     /**
      * @param $summit_id
      * @param $child_id
      * @return mixed
      */
-    public function update($summit_id, $child_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
+    public function update($summit_id, $child_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $child_id) {
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $data->all();
 
@@ -87,19 +90,7 @@ trait UpdateSummitChildElement
                 SerializerUtils::getRelations()
             ));
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        );
     }
 
 }

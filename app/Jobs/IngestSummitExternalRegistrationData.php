@@ -27,7 +27,6 @@ use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
-use Exception;
 /**
  * Class IngestSummitExternalRegistrationData
  * @package App\Jobs

@@ -1524,7 +1524,18 @@ final class SummitLocationService
      */
     public function addBookableRoomReservation(Summit $summit, int $room_id, array $payload): SummitRoomReservation
     {
-        return $this->tx_service->transaction(function () use ($summit, $room_id, $payload) {
+        $reservation = $this->tx_service->transaction(function () use ($summit, $room_id, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitLocationService::addBookableRoomReservation summit %s room_id %s payload %s",
+                    $summit->getId(),
+                    $room_id,
+                    json_encode($payload)
+                )
+            );
 
             $payment_gateway = $summit->getPaymentGateWayPerApp
             (
@@ -1533,7 +1544,14 @@ final class SummitLocationService
             );
 
             if(is_null($payment_gateway))
-                throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Payment configuration is not set for summit %s.",
+                        $summit->getId()
+                    )
+                );
 
             $room = $this->location_repository->getByIdExclusiveLock($room_id);
 
@@ -1542,7 +1560,7 @@ final class SummitLocationService
             }
 
             if (!$room instanceof SummitBookableVenueRoom) {
-                throw new EntityNotFoundException("room not found");
+                throw new EntityNotFoundException("Room not found");
             }
 
             $owner_id = $payload["owner_id"];
@@ -1554,7 +1572,15 @@ final class SummitLocationService
             }
 
             if ($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
-                throw new ValidationException(sprintf("member %s already reached maximun quantity of reservations (%s)", $owner->getId(), $summit->getMeetingRoomBookingMaxAllowed()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Member %s already reached max. quantity of reservations (%s).",
+                        $owner->getId(),
+                        $summit->getMeetingRoomBookingMaxAllowed()
+                    )
+                );
 
             $payload['owner'] = $owner;
 
@@ -1565,57 +1591,77 @@ final class SummitLocationService
                 (
                     sprintf
                     (
-                        "currency set %s is not allowed for room %s",
+                        "Currency set %s is not allowed for room %s.",
                         $currency,
                         $room->getId()
                     )
                 );
             }
 
-            $amount = intval($payload['amount']);
+            if(!$room->isFree()) {
+                $amount = intval($payload['amount']);
 
-            if ($room->getTimeSlotCost() != $amount) {
-                throw new ValidationException
-                (
-                    sprintf
+                if ($room->getTimeSlotCost() != $amount) {
+                    throw new ValidationException
                     (
-                        "amount set %s does not match with time slot cost %s for room %s",
-                        $amount,
-                        $room->getTimeSlotCost(),
-                        $room->getId()
-                    )
-                );
+                        sprintf
+                        (
+                            "Amount set %s does not match with time slot cost %s for room %s",
+                            $amount,
+                            $room->getTimeSlotCost(),
+                            $room->getId()
+                        )
+                    );
+                }
             }
 
             $reservation = SummitRoomReservationFactory::build($summit, $payload);
 
             $room->addReservation($reservation);
 
+            if($room->isFree()) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitLocationService::addBookableRoomReservation room %s is free, marked as paid...",
+                        $room->getId()
+                    )
+                );
+
+                $reservation->setPaid();
+                return $reservation;
+            }
+
             $result = $payment_gateway->generatePayment
-            (
-                [
-                    "amount" => $reservation->getAmount(),
-                    "currency" => $reservation->getCurrency(),
-                    "receipt_email" => $reservation->getOwner()->getEmail(),
-                    "metadata" => [
-                        "type"      => IPaymentConstants::ApplicationTypeBookableRooms,
-                        "room_id"   => $room->getId(),
-                        "summit_id" => $summit->getId(),
+                (
+                    [
+                        "amount" => $reservation->getAmount(),
+                        "currency" => $reservation->getCurrency(),
+                        "receipt_email" => $reservation->getOwner()->getEmail(),
+                        "metadata" => [
+                            "type" => IPaymentConstants::ApplicationTypeBookableRooms,
+                            "room_id" => $room->getId(),
+                            "summit_id" => $summit->getId(),
+                        ]
                     ]
-                ]
-            );
+                );
 
             if (!isset($result['cart_id']))
-                throw new ValidationException("payment gateway error");
+                throw new ValidationException("Payment gateway error.");
 
             if (!isset($result['client_token']))
-                throw new ValidationException("payment gateway error");
+                throw new ValidationException("Payment gateway error.");
 
             $reservation->setPaymentGatewayCartId($result['cart_id']);
             $reservation->setPaymentGatewayClientToken($result['client_token']);
-            Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
+
             return $reservation;
         });
+
+        Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
+
+        return $reservation;
     }
 
     /**
@@ -1702,26 +1748,42 @@ final class SummitLocationService
      * @param int $reservation_id
      * @param int $amount
      * @return SummitRoomReservation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
     public function refundReservation(SummitBookableVenueRoom $room, int $reservation_id, int $amount): SummitRoomReservation
     {
         return $this->tx_service->transaction(function () use ($room, $reservation_id, $amount) {
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitLocationService::refundReservation room %s reservation_id %s amount %s",
+                    $room->getId(),
+                    $reservation_id,
+                    $amount
+                )
+            );
+
             $reservation = $room->getReservationById($reservation_id);
 
-            if (is_null($reservation)) {
-                throw new EntityNotFoundException();
+            if (!$reservation instanceof SummitRoomReservation) {
+                throw new EntityNotFoundException(sprintf("Reservation %s not found.", $reservation_id));
             }
+
+            if($reservation->isFree()){
+                throw new ValidationException("Can not refund a free booking.");
+            }
+
             $summit = $room->getSummit();
             $payment_gateway = $summit->getPaymentGateWayPerApp
             (
                 IPaymentConstants::ApplicationTypeBookableRooms,
                 $this->default_payment_gateway_strategy
             );
+
             if(is_null($payment_gateway))
-                throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
+                throw new ValidationException(sprintf("Payment configuration is not set for summit %s.", $summit->getId()));
 
             $status = $reservation->getStatus();
             $validStatuses = [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::PaidStatus];
@@ -1730,26 +1792,22 @@ final class SummitLocationService
                 (
                     sprintf
                     (
-                        "can not request a refund on a %s booking!",
+                        "Can not request a refund on a %s booking.",
                         $status
                     )
                 );
 
             if ($amount <= 0) {
-                throw new ValidationException("can not refund an amount lower than zero!");
+                throw new ValidationException("Can not refund an amount lower than zero.");
             }
 
-            if ($amount > intval($reservation->getAmount())) {
-                throw new ValidationException("can not refund an amount greater than paid one!");
-            }
+            $reservation->refund($amount);
 
             try {
                 $payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount, $reservation->getCurrency());
             } catch (\Exception $ex) {
                 throw new ValidationException($ex->getMessage());
             }
-
-            $reservation->refund($amount);
 
             return $reservation;
         });

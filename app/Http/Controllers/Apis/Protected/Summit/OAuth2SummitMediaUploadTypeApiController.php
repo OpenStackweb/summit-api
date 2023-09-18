@@ -11,19 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use HTTP401UnauthorizedException;
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaUploadTypeRepository;
-use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Model\ISummitMediaUploadTypeService;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+
 /**
  * Class OAuth2SummitMediaUploadTypeApiController
  * @package App\Http\Controllers
@@ -51,7 +48,6 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      * @var ISummitRepository
      */
     private $summit_repository;
-
 
     public function __construct
     (
@@ -100,6 +96,14 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
+        // authz
+        // check that we have a current member ( not service account )
+        $current_member = $this->getResourceServerContext()->getCurrentUser();
+        if(is_null($current_member))
+            throw new HTTP401UnauthorizedException();
+        // check summit access
+        if(!$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException();
         return $this->service->add($summit, $payload);
     }
 
@@ -124,6 +128,15 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      */
     protected function deleteChild(Summit $summit, $child_id): void
     {
+        // authz
+        // check that we have a current member ( not service account )
+        $current_member = $this->getResourceServerContext()->getCurrentUser();
+        if(is_null($current_member))
+            throw new HTTP401UnauthorizedException();
+        // check summit access
+        if(!$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException();
+
         $this->service->delete($summit, $child_id);
     }
 
@@ -132,6 +145,15 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      */
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
+        // authz
+        // check that we have a current member ( not service account )
+        $current_member = $this->getResourceServerContext()->getCurrentUser();
+        if(is_null($current_member))
+            throw new HTTP401UnauthorizedException();
+        // check summit access
+        if(!$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException();
+
        return $summit->getMediaUploadTypeById($child_id);
     }
 
@@ -148,6 +170,15 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      */
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
+        // authz
+        // check that we have a current member ( not service account )
+        $current_member = $this->getResourceServerContext()->getCurrentUser();
+        if(is_null($current_member))
+            throw new HTTP401UnauthorizedException();
+        // check summit access
+        if(!$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException();
+
         return $this->service->update($summit, $child_id, $payload);
     }
 
@@ -161,6 +192,15 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
        return $this->processRequest(function() use($summit_id, $media_upload_type_id, $presentation_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+           // authz
+           // check that we have a current member ( not service account )
+           $current_member = $this->getResourceServerContext()->getCurrentUser();
+           if(is_null($current_member))
+               throw new HTTP401UnauthorizedException();
+           // check summit access
+           if(!$current_member->isSummitAllowed($summit))
+               throw new HTTP403ForbiddenException();
 
             $presentation_type = $this->service->addToPresentationType($summit, intval($media_upload_type_id), intval($presentation_type_id));
 
@@ -182,6 +222,15 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            // authz
+            // check that we have a current member ( not service account )
+            $current_member = $this->getResourceServerContext()->getCurrentUser();
+            if(is_null($current_member))
+                throw new HTTP401UnauthorizedException();
+            // check summit access
+            if(!$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException();
+
             $presentation_type = $this->service->deleteFromPresentationType($summit, intval($media_upload_type_id), intval($presentation_type_id));
             return $this->updated(SerializerRegistry::getInstance()->getSerializer
             (
@@ -202,6 +251,19 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
             $to_summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($to_summit_id);
             if (is_null($to_summit)) return $this->error404();
+
+            // authz
+            // check that we have a current member ( not service account )
+            $current_member = $this->getResourceServerContext()->getCurrentUser();
+            if(is_null($current_member))
+                throw new HTTP401UnauthorizedException();
+            // check summit access
+            if(!$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException();
+
+            // check summit access
+            if(!$current_member->isSummitAllowed($to_summit))
+                throw new HTTP403ForbiddenException();
 
             $to_summit = $this->service->cloneMediaUploadTypes($summit, $to_summit);
 

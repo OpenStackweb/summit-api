@@ -11,17 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Http\Exceptions\HTTP403ForbiddenException;
+
 use App\ModelSerializers\SerializerUtils;
-use models\summit\Summit;
-use models\utils\IEntity;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
+use models\summit\Summit;
+use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+
 /**
  * Trait AddSummitChildElement
  * @package App\Http\Controllers
@@ -29,6 +26,8 @@ use Exception;
 trait AddSummitChildElement
 {
     use BaseSummitAPI;
+
+    use RequestProcessor;
 
     /**
      * @param Summit $summit
@@ -52,12 +51,14 @@ trait AddSummitChildElement
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function add($summit_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
+        return $this->processRequest(function() use($summit_id){
+            if(!Request::isJson())
+                return $this->error400();
             $data = Request::json();
             $payload = $data->all();
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, $this->getAddValidationRules($payload));
@@ -82,28 +83,7 @@ trait AddSummitChildElement
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
 }

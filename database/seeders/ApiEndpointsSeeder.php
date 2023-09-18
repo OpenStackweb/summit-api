@@ -9484,6 +9484,7 @@ class ApiEndpointsSeeder extends Seeder
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
+                        IGroup::SummitAdministrators,
                     ]
                 ],
                 [
@@ -9494,6 +9495,7 @@ class ApiEndpointsSeeder extends Seeder
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
+                        IGroup::SummitAdministrators,
                     ]
                 ],
                 [

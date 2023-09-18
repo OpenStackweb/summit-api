@@ -189,6 +189,10 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $this->time_slot_cost = $time_slot_cost;
     }
 
+    public function isFree():bool{
+        return $this->time_slot_cost == 0;
+    }
+
     /**
      * @return ArrayCollection
      */

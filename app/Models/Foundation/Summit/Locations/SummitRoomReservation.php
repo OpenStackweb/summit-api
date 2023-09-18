@@ -129,8 +129,13 @@ class SummitRoomReservation extends SilverstripeBaseModel
 
     /**
      * @param int $amount
+     * @return mixed
+     * @throws ValidationException
      */
     public function refund(int $amount){
+        if ($amount > $this->amount) {
+            throw new ValidationException("Can not refund an amount greater than paid one.");
+        }
         $this->status = self::RefundedStatus;
         $this->refunded_amount = $amount;
         Event::dispatch(new BookableRoomReservationRefundAccepted($this->getId()));
@@ -320,13 +325,23 @@ class SummitRoomReservation extends SilverstripeBaseModel
     }
 
     public function setPaid():void{
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRoomReservation::setPaid id %s",
+                $this->getId()
+            )
+        );
+
         if($this->isPaid()){
-            Log::warning(sprintf("SummitRoomReservation %s is already Paid", $this->getId()));
+            Log::warning(sprintf("Room Reservation %s is already Paid.", $this->getId()));
             return;
         }
 
         if($this->status != self::ReservedStatus){
-            Log::warning(sprintf("setting payed status to SummitRoomReservation %s with status %s", $this->getId(), $this->status));
+            Log::warning(sprintf("Setting payed status to SummitRoomReservation %s with status %s.", $this->getId(), $this->status));
         }
 
         $this->status = self::PaidStatus;
@@ -393,4 +408,7 @@ class SummitRoomReservation extends SilverstripeBaseModel
         return $this->refunded_amount;
     }
 
+    public function isFree():bool{
+        return $this->amount == 0;
+    }
 }

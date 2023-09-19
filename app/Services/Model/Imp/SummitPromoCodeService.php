@@ -699,11 +699,15 @@ final class SummitPromoCodeService
     {
         return $this->tx_service->transaction(function () use ($promo_code, $speaker_id) {
             if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode && !$promo_code instanceof SpeakersRegistrationDiscountCode)
-                throw new ValidationException("invalid promo code");
+                throw new ValidationException("Invalid Promo Code.");
 
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (!$speaker instanceof PresentationSpeaker)
-                throw new EntityNotFoundException("speaker not found");
+                throw new EntityNotFoundException("Speaker not found.");
+
+            $assignment = $promo_code->getSpeakerAssignment($speaker);
+            if(!is_null($assignment))
+                throw new ValidationException("Speaker already assigned.");
 
             $promo_code->assignSpeaker($speaker);
 
@@ -721,15 +725,15 @@ final class SummitPromoCodeService
     {
         return $this->tx_service->transaction(function () use ($promo_code, $speaker_id) {
             if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode && !$promo_code instanceof SpeakersRegistrationDiscountCode)
-                throw new ValidationException("invalid promo code");
+                throw new ValidationException("Invalid Promo Code.");
 
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (!$speaker instanceof PresentationSpeaker)
-                throw new EntityNotFoundException("speaker not found");
+                throw new EntityNotFoundException("Speaker not found.");
 
-            //can't remove sent or redeemed associations
             $assignment = $promo_code->getSpeakerAssignment($speaker);
-            if (!is_null($assignment) && ($assignment->isSent() || $assignment->isRedeemed())) return $promo_code;
+            if(is_null($assignment))
+                throw new EntityNotFoundException("Speaker not found.");
 
             $promo_code->unassignSpeaker($speaker);
 

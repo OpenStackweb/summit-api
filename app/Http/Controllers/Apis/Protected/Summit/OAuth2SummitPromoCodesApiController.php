@@ -25,6 +25,7 @@ use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\summit\SummitRegistrationPromoCode;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitPromoCodeService;
 use utils\Order;
@@ -634,12 +635,14 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     {
         return $this->processRequest(function () use ($summit_id, $promo_code_id, $speaker_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404("Summit not found.");
 
             $promo_code = $this->repository->getById($promo_code_id);
-            if (is_null($promo_code)) return $this->error404();
+            if (!$promo_code instanceof SummitRegistrationPromoCode)
+                return $this->error404("Promo Code not found.");
 
-            $this->promo_code_service->addPromoCodeSpeaker($promo_code, $speaker_id);
+            $this->promo_code_service->addPromoCodeSpeaker($promo_code, intval($speaker_id));
 
             return $this->created();
         });
@@ -655,12 +658,14 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     {
         return $this->processRequest(function () use ($summit_id, $promo_code_id, $speaker_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404("Summit not found.");
 
             $promo_code = $this->repository->getById($promo_code_id);
-            if (is_null($promo_code)) return $this->error404();
+            if (!$promo_code instanceof SummitRegistrationPromoCode)
+                return $this->error404("Promo Code not found.");
 
-            $this->promo_code_service->removePromoCodeSpeaker($promo_code, $speaker_id);
+            $this->promo_code_service->removePromoCodeSpeaker($promo_code, intval($speaker_id));
 
             return $this->deleted();
         });

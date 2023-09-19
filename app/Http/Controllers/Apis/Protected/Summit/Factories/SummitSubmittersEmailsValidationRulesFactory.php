@@ -42,6 +42,7 @@ final class SummitSubmittersEmailsValidationRulesFactory extends AbstractValidat
                     PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG
                 ]),
             'submitter_ids'             => 'sometimes|int_array',
+            'excluded_submitter_ids'    => 'sometimes|int_array',
             'test_email_recipient'      => 'sometimes|email',
             'outcome_email_recipient'   => 'sometimes|email',
         ];

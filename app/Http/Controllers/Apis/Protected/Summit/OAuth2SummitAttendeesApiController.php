@@ -874,11 +874,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function() use($summit_id){
 
-            if (!Request::isJson()) return $this->error400();
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $data->all();
 
@@ -892,6 +894,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                         GenericSummitAttendeeEmail::EVENT_SLUG,
                     ]),
                 'attendees_ids' => 'sometimes|int_array',
+                'excluded_attendees_ids' => 'sometimes|int_array',
                 'test_email_recipient' => 'sometimes|email',
             ]);
 

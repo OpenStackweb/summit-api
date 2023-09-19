@@ -16,7 +16,6 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
-use App\Models\Foundation\Summit\Factories\SummitRegistrationInvitationFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitRegistrationInvitationService;
@@ -391,6 +390,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                         ReInviteSummitRegistrationEmail::EVENT_SLUG,
                     ]),
                 'invitations_ids' => 'sometimes|int_array',
+                'excluded_invitations_ids' => 'sometimes|int_array',
                 'test_email_recipient' => 'sometimes|email',
             ]);
 

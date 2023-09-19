@@ -21,10 +21,11 @@ use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\AbstractService;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use App\Services\Model\ITagService;
 use App\Services\Utils\CSVReader;
-use Google\Service\Classroom\Registration;
+use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,6 @@ use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use utils\Filter;
 use utils\FilterElement;
-use utils\PagingInfo;
 
 /**
  * Class SummitRegistrationInvitationService
@@ -124,7 +124,7 @@ final class SummitRegistrationInvitationService
      * @return void
      * @throws ValidationException
      */
-    public function importInvitationData(Summit $summit, UploadedFile $csv_file, array $payload=[]): void
+    public function importInvitationData(Summit $summit, UploadedFile $csv_file, array $payload = []): void
     {
         Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData - summit %s", $summit->getId()));
 
@@ -247,8 +247,7 @@ final class SummitRegistrationInvitationService
 
             try {
                 $invitation = $this->setInvitationMember($invitation, $email);
-            }
-            catch (\Exception $ex){
+            } catch (\Exception $ex) {
                 Log::warning($ex);
             }
 
@@ -331,8 +330,7 @@ final class SummitRegistrationInvitationService
 
                 if (!is_null($member))
                     $invitation->setMember($member);
-            }
-            catch (\Exception $ex){
+            } catch (\Exception $ex) {
                 Log::warning($ex);
             }
             return $invitation;
@@ -386,18 +384,18 @@ final class SummitRegistrationInvitationService
                 }
                 // remove missing ones
                 $to_remove = [];
-                foreach ($invitation->getTicketTypes() as $invitation_ticket_type){
-                    if(!in_array($invitation_ticket_type->getId(), $allowed_ticket_types)){
+                foreach ($invitation->getTicketTypes() as $invitation_ticket_type) {
+                    if (!in_array($invitation_ticket_type->getId(), $allowed_ticket_types)) {
                         $to_remove[] = $invitation_ticket_type;
                     }
                 }
-                foreach ($to_remove as $ticket_type_to_remove){
+                foreach ($to_remove as $ticket_type_to_remove) {
                     $invitation->removeTicketType($ticket_type_to_remove);
                 }
             }
 
-            if($invitation->isAccepted() != $is_formerly_accepted){
-               // it changed its state bc the ticket types update
+            if ($invitation->isAccepted() != $is_formerly_accepted) {
+                // it changed its state bc the ticket types update
                 $payload['is_accepted'] = $invitation->isAccepted();
             }
 
@@ -436,8 +434,8 @@ final class SummitRegistrationInvitationService
             if (strtolower($invitation->getEmail()) !== strtolower($current_member->getEmail()))
                 throw new ValidationException(sprintf(
                     "This invitation was sent to %s but you logged in as %s."
-                    ." To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
-                    ." Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
+                    . " To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
+                    . " Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
                     ,
                     $invitation->getEmail(),
                     $current_member->getEmail(),
@@ -487,102 +485,81 @@ final class SummitRegistrationInvitationService
         ProcessRegistrationInvitationsJob::dispatch($summit, $payload, $filter);
     }
 
+    use ParametrizedSendEmails;
+
     /**
-     * @inheritDoc
+     * @param int $summit_id
+     * @param array $payload
+     * @param Filter|null $filter
+     * @return void
+     * @throws ValidationException
      */
     public function send(int $summit_id, array $payload, Filter $filter = null): void
     {
-        $flow_event = trim($payload['email_flow_event']);
-        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
-        $done = isset($payload['invitations_ids']); // we have provided only ids and not a criteria
-        $page = 1;
-        $count = 0;
-        $maxPageSize = 100;
+        $this->_sendEmails(
+            $summit_id,
+            $payload,
+            "invitations",
+            function ($summit, $paging_info, $filter, $resetPage) {
 
-        $test_email_recipient = null;
-        if(isset($payload['test_email_recipient'])) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitRegistrationInvitationService::send summit id %s setting test_email_recipient %s",
-                    $summit_id,
-                    $payload['test_email_recipient']
-                )
-            );
-
-            $test_email_recipient = $payload['test_email_recipient'];
-        }
-
-        do{
-
-            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page));
-
-            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
-                if (isset($payload['invitations_ids'])) {
-                    Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
-                    return $payload['invitations_ids'];
-                }
-                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s getting by filter", $summit_id));
-                if (is_null($filter)) {
-                    $filter = new Filter();
-                }
                 if (!$filter->hasFilter("summit_id"))
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
-                Log::debug(sprintf("SummitRegistrationInvitationService::send page %s", $page));
-                if($filter->hasFilter("is_sent")){
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+
+                if ($filter->hasFilter("is_sent")) {
                     $isSentFilter = $filter->getUniqueFilter("is_sent");
                     $is_sent = $isSentFilter->getBooleanValue();
                     Log::debug(sprintf("SummitRegistrationInvitationService::send is_sent filter value %b", $is_sent));
-                    if(!$is_sent) {
+                    if (!$is_sent && is_callable($resetPage)) {
                         // we need to reset the page bc the page processing will mark the current page as "sent"
                         // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
                         Log::debug("SummitRegistrationInvitationService::send resetting page bc is_sent filter is false");
-                        $page = 1;
+                        $resetPage();
                     }
                 }
-                return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
-            });
+                return $this->invitation_repository->getAllIdsByPage($paging_info, $filter);
+            },
+            function ($summit, $flow_event, $invitation_id, $test_email_recipient, $announcement_email_config, $filter) use ($payload) {
+                try {
+                    $this->tx_service->transaction(function () use (
+                        $summit,
+                        $flow_event,
+                        $invitation_id,
+                        $test_email_recipient,
+                        $filter,
+                        $payload
+                    ) {
+                        $invitation = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
 
-            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
-            if (!count($ids)) {
-                // if we are processing a page , then break it
-                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
-                break;
-            }
+                            Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
 
-            foreach ($ids as $invitation_id) {
+                            $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
+                            if (!$invitation instanceof SummitRegistrationInvitation)
+                                return null;
 
-                $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
+                            $summit = $invitation->getSummit();
 
-                    Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
+                            while (true) {
+                                $invitation->generateConfirmationToken();
+                                $former_invitation = $this->invitation_repository->getByHashAndSummit($invitation->getHash(), $summit);
+                                if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
+                            }
 
-                    $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
-                    if (is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return null;
+                            return $invitation;
+                        });
 
-                    $summit = $invitation->getSummit();
-
-                    while (true) {
-                        $invitation->generateConfirmationToken();
-                        $former_invitation = $this->invitation_repository->getByHashAndSummit($invitation->getHash(), $summit);
-                        if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
-                    }
-
-                    return $invitation;
-                });
-
-                // send email
-                if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
-                    InviteSummitRegistrationEmail::dispatch($res, $test_email_recipient);
-                if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
-                    ReInviteSummitRegistrationEmail::dispatch($res, $test_email_recipient);
-                $count++;
-            }
-
-            $page++;
-
-        }while(!$done);
-
-        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s had processed %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
+                        // send email
+                        if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($invitation))
+                            InviteSummitRegistrationEmail::dispatch($invitation, $test_email_recipient);
+                        if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($invitation))
+                            ReInviteSummitRegistrationEmail::dispatch($invitation, $test_email_recipient);
+                    });
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                    EmailExcerpt::addErrorMessage($ex->getMessage());
+                }
+            },
+            null,
+            $filter
+        );
     }
 }

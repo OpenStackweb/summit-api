@@ -19,9 +19,11 @@ use App\Models\Foundation\Summit\Factories\SummitSubmissionInvitationFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitSubmissionInvitationRepository;
 use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Model\AbstractService;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\ISummitSubmissionInvitationService;
 use App\Services\Model\ITagService;
 use App\Services\Utils\CSVReader;
+use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
@@ -341,6 +343,7 @@ final class SummitSubmissionInvitationService
         ProcessSubmissionsInvitationsJob::dispatch($summit, $payload, $filter);
     }
 
+    use ParametrizedSendEmails;
     /**
      * @param int $summit_id
      * @param array $payload
@@ -349,111 +352,96 @@ final class SummitSubmissionInvitationService
      */
     public function send(int $summit_id, array $payload, Filter $filter = null): void
     {
-        $flow_event = trim($payload['email_flow_event']);
-        Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
-        $done = isset($payload['invitations_ids']); // we have provided only ids and not a criteria
-        $page = 1;
-        $count = 0;
-        $maxPageSize = 100;
+        $this->_sendEmails(
+            $summit_id,
+            $payload,
+            "invitations",
+            function ($summit, $paging_info, $filter, $resetPage) {
 
-        do {
-
-            Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page));
-
-            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
-                if (isset($payload['invitations_ids'])) {
-                    Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
-                    return $payload['invitations_ids'];
-                }
-                Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s getting by filter", $summit_id));
-                if (is_null($filter)) {
-                    $filter = new Filter();
-                }
                 if (!$filter->hasFilter("summit_id"))
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
-                Log::debug(sprintf("SummitSubmissionInvitationService::send page %s", $page));
-                if ($filter->hasFilter("is_sent")) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+
+                if ($filter->hasFilter("is_sent") && is_callable($resetPage)) {
                     // we need to reset the page bc the page processing will mark the current page as "sent"
                     // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
-                    $page = 1;
+                    $resetPage();
                 }
-                return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
-            });
+                return $this->invitation_repository->getAllIdsByPage($paging_info, $filter);
+            },
+            function ($summit, $flow_event, $invitation_id, $test_email_recipient, $announcement_email_config, $filter) use ($payload) {
+                try {
+                    $this->tx_service->transaction(function () use (
+                        $summit,
+                        $flow_event,
+                        $invitation_id,
+                        $test_email_recipient,
+                        $filter,
+                        $payload
+                    ) {
+                        $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id, $payload) {
 
-            Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
-            if (!count($ids)) {
-                // if we are processing a page , then break it
-                Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
-                break;
-            }
+                            Log::debug(sprintf("SummitSubmissionInvitationService::send processing invitation id  %s", $invitation_id));
 
-            foreach ($ids as $invitation_id) {
+                            $invitation = $this->invitation_repository->getById(intval($invitation_id));
+                            if (!$invitation instanceof SummitSubmissionInvitation) return null;
 
-                $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id, $payload) {
+                            if(empty($invitation->getOtp())) {
+                                $otp = null;
+                                try {
+                                    // generate inline OTP
+                                    $otp = $this->passwordless_api->generateInlineOTP
+                                    (
+                                        $invitation->getEmail(),
+                                        Config::get("cfp.client_id"),
+                                        Config::get("cfp.scopes")
+                                    );
+                                } catch (\Exception $ex) {
+                                    Log::error($ex);
+                                    $otp = null;
+                                }
 
-                    Log::debug(sprintf("SummitSubmissionInvitationService::send processing invitation id  %s", $invitation_id));
+                                if (is_null($otp)) {
+                                    Log::warning(sprintf("SummitSubmissionInvitationService::send can not generate OTP for invitation %s", $invitation->getId()));
+                                    return null;
+                                }
 
-                    $invitation = $this->invitation_repository->getById(intval($invitation_id));
-                    if (is_null($invitation) || !$invitation instanceof SummitSubmissionInvitation) return null;
+                                Log::debug(sprintf("SummitSubmissionInvitationService::send got OTP %s for invitation %s", json_encode($otp), $invitation->getId()));
+                                $invitation->setOtp($otp['value']);
+                            }
 
-                    if(empty($invitation->getOtp())) {
-                        $otp = null;
-                        try {
-                            // generate inline OTP
-                            $otp = $this->passwordless_api->generateInlineOTP
-                            (
-                                $invitation->getEmail(),
-                                Config::get("cfp.client_id"),
-                                Config::get("cfp.scopes")
-                            );
-                        } catch (\Exception $ex) {
-                            Log::error($ex);
-                            $otp = null;
-                        }
+                            $invitation->markAsSent();
 
-                        if (is_null($otp)) {
-                            Log::warning(sprintf("SummitSubmissionInvitationService::send can not generate OTP for invitation %s", $invitation->getId()));
-                            return null;
-                        }
+                            if(isset($payload['selection_plan_id'])){
+                                $selection_plan_id = intval($payload['selection_plan_id']);
+                                $summit = $invitation->getSummit();
+                                $email = $invitation->getEmail();
+                                $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+                                if(is_null($selection_plan)){
+                                    Log::warning(sprintf("SummitSubmissionInvitationService::send selection plan %s does not exists on summit %s", $selection_plan_id, $summit->getId()));
+                                    return null;
+                                }
+                                if(!$selection_plan->isAllowedMember($email)) {
+                                    Log::debug(sprintf("SummitSubmissionInvitationService::send adding %s to selection plan %s", $email, $selection_plan_id));
+                                    $selection_plan->addAllowedMember($email);
+                                }
+                            }
 
-                        Log::debug(sprintf("SummitSubmissionInvitationService::send got OTP %s for invitation %s", json_encode($otp), $invitation->getId()));
-                        $invitation->setOtp($otp['value']);
-                    }
+                            return $invitation;
+                        });
 
-                    $invitation->markAsSent();
-
-                    if(isset($payload['selection_plan_id'])){
-                        $selection_plan_id = intval($payload['selection_plan_id']);
-                        $summit = $invitation->getSummit();
-                        $email = $invitation->getEmail();
-                        $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
-                        if(is_null($selection_plan)){
-                            Log::warning(sprintf("SummitSubmissionInvitationService::send selection plan %s does not exists on summit %s", $selection_plan_id, $summit->getId()));
-                            return null;
-                        }
-                        if(!$selection_plan->isAllowedMember($email)) {
-                            Log::debug(sprintf("SummitSubmissionInvitationService::send adding %s to selection plan %s", $email, $selection_plan_id));
-                            $selection_plan->addAllowedMember($email);
-                        }
-                    }
-
-                    return $invitation;
-                });
-
-                // send email
-                if ($flow_event == InviteSubmissionEmail::EVENT_SLUG && !is_null($res))
-                    InviteSubmissionEmail::dispatch($res, $payload);
-                if($flow_event == ReInviteSubmissionEmail::EVENT_SLUG && !is_null($res))
-                    ReInviteSubmissionEmail::dispatch($res, $payload);
-
-                $count++;
-            }
-
-            $page++;
-
-        } while (!$done);
-
-        Log::debug(sprintf("SummitSubmissionInvitationService::send summit id %s flow_event %s filter %s had processed %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
-
+                        // send email
+                        if ($flow_event == InviteSubmissionEmail::EVENT_SLUG && !is_null($res))
+                            InviteSubmissionEmail::dispatch($res, $payload);
+                        if($flow_event == ReInviteSubmissionEmail::EVENT_SLUG && !is_null($res))
+                            ReInviteSubmissionEmail::dispatch($res, $payload);
+                    });
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                    EmailExcerpt::addErrorMessage($ex->getMessage());
+                }
+            },
+            null,
+            $filter
+        );
     }
 }

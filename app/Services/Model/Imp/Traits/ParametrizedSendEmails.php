@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\Log;
@@ -20,9 +19,16 @@ use models\summit\Summit;
 use ReflectionClass;
 use utils\Filter;
 use utils\PagingInfo;
+use Exception;
+const MaxPageSize = 100;
 
+/**
+ * Trait ParametrizedSendEmails
+ * @package App\Services\Model\Imp\Traits
+ */
 trait ParametrizedSendEmails
 {
+
     /**
      * @param int $summit_id
      * @param array $payload
@@ -45,6 +51,7 @@ trait ParametrizedSendEmails
     {
         $caller = (new ReflectionClass($this))->getShortName();
         $subject_ids_key = $subject . '_ids';   //We assume that the payload key for the ids array starts with the prefix that contains $subject
+        $exclude_subject_ids_key = 'excluded_' . $subject_ids_key;
         Log::debug
         (
             sprintf
@@ -82,12 +89,21 @@ trait ParametrizedSendEmails
 
         $page = 1;
         $count = 0;
-        $maxPageSize = 100;
 
-        Log::debug(sprintf("%s::send summit id %s flow_event %s filter %s",
-            $caller, $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
+        Log::debug
+        (
+            sprintf
+            (
+                "%s::send summit id %s flow_event %s filter %s",
+            $caller,
+                $summit_id,
+                $flow_event,
+                is_null($filter) ? '' : $filter->__toString()
+            )
+        );
 
-        EmailExcerpt::addInfoMessage(
+        EmailExcerpt::addInfoMessage
+        (
             sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit_id)
         );
 
@@ -103,7 +119,15 @@ trait ParametrizedSendEmails
         }
 
         do {
-            $ids = $this->tx_service->transaction(function () use ($summit, $payload, $subject_ids_key, $caller, $filter, $page, $maxPageSize, $getIdsBySummit, $processCurrentId) {
+            $ids = $this->tx_service->transaction(function () use ($summit,
+                $caller,
+                $payload,
+                $subject_ids_key,
+                $filter,
+                &$page,
+                $getIdsBySummit,
+                $processCurrentId
+            ) {
                 if (isset($payload[$subject_ids_key])) {
                     $res = $payload[$subject_ids_key];
                     Log::debug(sprintf("%s::send summit id %s %s %s",
@@ -113,6 +137,7 @@ trait ParametrizedSendEmails
                         json_encode($res)));
                     return $res;
                 }
+
                 Log::debug(sprintf("%s::send summit id %s getting by filter", $caller, $summit->getId()));
                 if (is_null($filter)) {
                     $filter = new Filter();
@@ -120,33 +145,93 @@ trait ParametrizedSendEmails
 
                 Log::debug(sprintf("%s::send page %s", $caller, $page));
 
-                return $getIdsBySummit($summit, new PagingInfo($page, $maxPageSize), $filter);
+                return $getIdsBySummit($summit, new PagingInfo($page, MaxPageSize), $filter, function() use($caller, &$page){
+                    $page = 0;
+                    Log::debug(sprintf("%s::send page has been reset to zero...", $caller));
+                });
+
             });
 
-            Log::debug(sprintf("%s::send summit id %s flow_event %s filter %s page %s got %s records",
-                $caller, $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
+            Log::debug
+            (
+                sprintf
+                (
+                    "%s::send summit id %s flow_event %s filter %s page %s got %s records",
+                $caller,
+                    $summit_id,
+                    $flow_event,
+                    is_null($filter) ? '' : $filter->__toString(),
+                    $page,
+                    count($ids)
+                )
+            );
 
             if (!count($ids)) {
                 // if we are processing a page, then break it
                 Log::debug(sprintf("%s::send summit id %s page is empty, ending processing.", $caller, $summit_id));
                 break;
             }
+            // explicit exclude ids
+            $exclude_ids = [];
+            if (isset($payload[$exclude_subject_ids_key])) {
+                $exclude_ids = $payload[$exclude_subject_ids_key];
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "%s::send summit id %s excluded ids %s",
+                        $caller,
+                        $summit->getId(),
+                        json_encode($exclude_ids)
+                    )
+                );
+            }
 
             foreach ($ids as $subject_id) {
-                $processCurrentId($summit, $flow_event, $subject_id, $test_email_recipient, $email_config, $filter);
-                $count++;
+                try {
+                    if (in_array($subject_id, $exclude_ids)) {
+                        Log::debug(sprintf("%s::send summit id %s %s id %s is excluded",
+                            $caller,
+                            $summit->getId(),
+                            $subject,
+                            $subject_id));
+                        continue;
+                    };
+                    $processCurrentId($summit, $flow_event, $subject_id, $test_email_recipient, $email_config, $filter);
+                    $count++;
+                } catch (Exception $ex) {
+                    Log::warning($ex);
+                    EmailExcerpt::addErrorMessage($ex->getMessage());
+                }
             }
             $page++;
         } while (!$done);
 
-        EmailExcerpt::addInfoMessage(sprintf("TOTAL of %s %s(s) processed.", $count, $subject));
+        EmailExcerpt::addInfoMessage
+        (
+            sprintf
+            (
+                "TOTAL of %s %s(s) processed.", $count, $subject
+            )
+        );
+
         EmailExcerpt::generateEmailCountLine();
 
-        if (!empty($outcome_email_recipient) && !is_null($sendEmailExcerpt)) {
+        if (!empty($outcome_email_recipient) && !is_null($sendEmailExcerpt) && is_callable($sendEmailExcerpt)) {
             $sendEmailExcerpt($summit, $outcome_email_recipient, EmailExcerpt::getReport());
         }
 
-        Log::debug(sprintf("%s::send summit id %s flow_event %s filter %s had processed %s records",
-            $caller, $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
+        Log::debug
+        (
+            sprintf
+            (
+                "%s::send summit id %s flow_event %s filter %s had processed %s records",
+            $caller,
+                $summit_id,
+                $flow_event,
+                is_null($filter) ? '' : $filter->__toString(),
+                $count
+            )
+        );
     }
 }

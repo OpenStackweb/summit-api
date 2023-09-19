@@ -104,6 +104,7 @@ final class SubmitterService
                         if (!$submitter instanceof Member) {
                             throw new EntityNotFoundException('submitter not found!');
                         }
+
                         $email_strategy->process
                         (
                             $submitter,

@@ -333,6 +333,7 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                     ]),
                 'selection_plan_id' => 'sometimes|integer',
                 'invitations_ids' => 'sometimes|int_array',
+                'excluded_invitations_ids' => 'sometimes|int_array',
             ]);
 
             if ($validation->fails()) {

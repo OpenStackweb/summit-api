@@ -334,7 +334,7 @@ class Member extends SilverstripeBaseModel
     private $schedule_shareable_links;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitOrder", mappedBy="owner", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity="models\summit\SummitOrder", mappedBy="owner", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var SummitOrder[]
      */
     private $summit_registration_orders;

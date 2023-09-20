@@ -356,6 +356,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         $filter = null;
 
         $filterRules =  [
+            'id' => ['=='],
+            'not_id' => ['=='],
             'first_name' => ['=@', '=='],
             'last_name' => ['=@', '=='],
             'full_name' => ['=@', '=='],
@@ -412,6 +414,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
@@ -485,6 +489,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         return $this->_getAllCSV(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
                     'full_name' => ['=@', '=='],
@@ -512,6 +518,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
@@ -911,6 +919,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
                     'full_name' => ['=@', '=='],
@@ -944,6 +954,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 $filter = new Filter();
 
             $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
                 'first_name' => 'sometimes|string',
                 'last_name' => 'sometimes|string',
                 'full_name' => 'sometimes|string',

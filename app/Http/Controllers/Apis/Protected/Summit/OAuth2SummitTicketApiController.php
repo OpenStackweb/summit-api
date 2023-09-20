@@ -96,6 +96,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'id' => ['=='],
+                    'not_id' => ['=='],
                     'number' => ['@@', '=@', '=='],
                     'order_number' => ['@@', '=@', '=='],
                     'owner_name' => ['@@', '=@', '=='],
@@ -127,6 +128,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
                     'number' => 'sometimes|string',
                     'order_number' => 'sometimes|string',
@@ -236,6 +238,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'id' => ['=='],
+                    'not_id' => ['=='],
                     'number' => ['@@', '=@', '=='],
                     'order_number' => ['@@', '=@', '=='],
                     'owner_name' => ['@@', '=@', '=='],
@@ -267,6 +270,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'id' => 'sometimes|integer',
+                    'not_id' =>  'sometimes|integer',
                     'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
                     'number' => 'sometimes|string',
                     'order_number' => 'sometimes|string',

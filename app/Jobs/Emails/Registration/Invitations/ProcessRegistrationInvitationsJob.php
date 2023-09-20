@@ -61,6 +61,8 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
         Log::debug(sprintf("ProcessRegistrationInvitationsJob::handle summit id %s", $this->summit_id));
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
+            'id' => ['=='],
+            'not_id' => ['=='],
             'is_accepted' => ['=='],
             'is_sent' => ['=='],
             'email' => ['@@','=@', '=='],

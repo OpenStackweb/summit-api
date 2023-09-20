@@ -64,6 +64,8 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
         );
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
+            'id' => ['=='],
+            'not_id' => ['=='],
             'first_name' => ['=@', '=='],
             'last_name' => ['=@', '=='],
             'full_name' => ['=@', '=='],

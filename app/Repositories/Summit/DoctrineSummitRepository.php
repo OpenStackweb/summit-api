@@ -56,6 +56,8 @@ final class DoctrineSummitRepository
             'available_on_api' => Filter::buildBooleanField('e.available_on_api'),
             'summit_id' => Filter::buildIntField('e.id'),
             'ticket_types_count' => new DoctrineHavingFilterMapping("", "tt.summit", "count(tt.id) :operator :value"),
+            'begin_allow_booking_date' => Filter::buildDateTimeEpochField('e.begin_allow_booking_date'),
+            'end_allow_booking_date' => Filter::buildDateTimeEpochField('e.end_allow_booking_date'),
         ];
     }
 

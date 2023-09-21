@@ -356,4 +356,13 @@ interface ILocationService extends IProcessPaymentService
      * @throws \Exception
      */
     public function copySummitLocations(Summit $source_summit, Summit $target_summit): Summit;
+
+    /**
+     * @param Summit $summit
+     * @param SummitBookableVenueRoom $room
+     * @param int $reservation_id
+     * @throws EntityNotFoundException
+     * @return void
+     */
+    public function deleteReservation(Summit $summit, SummitBookableVenueRoom $room, int $reservation_id):void;
 }

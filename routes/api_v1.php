@@ -837,6 +837,10 @@ Route::group(array('prefix' => 'summits'), function () {
                             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@getBookableVenueRoomReservation']);
                             // DELETE /api/v1/summits/{id}/bookable-rooms/{room_id}/reservations/{reservation_id}/refund
                             Route::delete('refund', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@refundBookableVenueRoomReservation']);
+                            // DELETE /api/v1/summits/{id}/bookable-rooms/{room_id}/reservations/{reservation_id}/cancel
+
+                            Route::delete('cancel', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@cancelBookableVenueRoomReservation']);
+
                         });
                     });
 

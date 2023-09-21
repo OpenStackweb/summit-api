@@ -1730,12 +1730,12 @@ final class SummitLocationService
             }
 
             if ($reservation->getStatus() == SummitRoomReservation::ReservedStatus)
-                throw new ValidationException("can not request a refund on a reserved booking!");
+                throw new ValidationException("Can not request a refund on a reserved booking.");
 
             if ($reservation->getStatus() == SummitRoomReservation::RequestedRefundStatus ||
                 $reservation->getStatus() == SummitRoomReservation::RefundedStatus
             )
-                throw new ValidationException("can not request a refund on an already refunded booking!");
+                throw new ValidationException("Can not request a refund on an already refunded booking.");
 
             $reservation->requestRefund();
 
@@ -2429,6 +2429,33 @@ final class SummitLocationService
             $target_summit->copyLocationsFrom($source_summit);
 
             return $target_summit;
+        });
+    }
+
+
+    /**
+     * @param Summit $summit
+     * @param SummitBookableVenueRoom $room
+     * @param int $reservation_id
+     * @return void
+     * @throws \Exception
+     */
+    public function deleteReservation(Summit $summit, SummitBookableVenueRoom $room, int $reservation_id):void
+    {
+         $this->tx_service->transaction(function () use ($summit, $room, $reservation_id) {
+
+            $reservation = $room->getReservationById($reservation_id);
+
+            if (is_null($reservation)) {
+                throw new EntityNotFoundException("Reservation not found");
+            }
+
+            if(!$reservation->isFree() && $reservation->isPaid()){
+                throw new ValidationException("You must emit a refund before to cancel the reservation.");
+            }
+
+             $reservation->cancel();
+
         });
     }
 }

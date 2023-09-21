@@ -230,6 +230,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     'selection_begin_date' => ['==', '<', '>', '<=', '>=','[]'],
                     'selection_end_date' => ['==', '<', '>', '<=', '>=','[]'],
                     'selection_plan_enabled' => ['=='],
+                    'begin_allow_booking_date' => ['==', '<', '>', '<=', '>=','[]'],
+                    'end_allow_booking_date' => ['==', '<', '>', '<=', '>=','[]']
                 ];
             },
             function () {
@@ -247,6 +249,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     'selection_begin_date' => 'sometimes|required|date_format:U',
                     'selection_end_date' => 'sometimes|required_with:selection_begin_date|date_format:U',
                     'selection_plan_enabled' => 'sometimes|required|boolean',
+                    'begin_allow_booking_date' =>'sometimes|required|date_format:U',
+                    'end_allow_booking_date' => 'sometimes|required|date_format:U',
                 ];
             },
             function () {

@@ -3904,6 +3904,15 @@ SQL;
         return false;
     }
 
+    public function isBookingPeriodEnded():bool{
+        $now_utc = new \DateTime('now', new \DateTimeZone('UTC'));
+        if (!is_null($this->end_allow_booking_date)) {
+            return $now_utc > $this->end_allow_booking_date;
+        }
+
+        return true;
+    }
+
     public function getMonthYear(): ?string
     {
         if (is_null($this->end_date)) return "";

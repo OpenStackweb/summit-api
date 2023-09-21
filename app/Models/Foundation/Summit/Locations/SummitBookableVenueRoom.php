@@ -67,8 +67,6 @@ class SummitBookableVenueRoom extends SummitVenueRoom
      */
     public function addReservation(SummitRoomReservation $reservation){
 
-        if(!$this->summit->isBookingPeriodOpen())
-            throw new ValidationException(sprintf("booking period is not open for summit %s", $this->summit->getId()));
 
         $criteria         = Criteria::create();
         $start_date       = $reservation->getStartDatetime();
@@ -77,12 +75,30 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $local_start_date = $summit->convertDateFromUTC2TimeZone(clone $start_date);
         $local_end_date   = $summit->convertDateFromUTC2TimeZone(clone $end_date);
 
+        if($summit->isBookingPeriodEnded()){
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Booking period ended for summit %s.",
+                    $summit->getName()
+                )
+            );
+        }
+
         if(!$summit->isTimeFrameOnBookingPeriod($local_start_date, $local_end_date))
-            throw new ValidationException("requested reservation slot does not belong to summit booking period");
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Requested reservation slot does not belong to summit %s booking period.",
+                    $summit->getName()
+                )
+            );
 
         $criteria
-            ->where(Criteria::expr()->eq('start_datetime', $start_date))
-            ->andWhere(Criteria::expr()->eq('end_datetime',$end_date))
+            ->where(Criteria::expr()->lte('start_datetime', $end_date))
+            ->andWhere(Criteria::expr()->gte('end_datetime', $start_date))
             ->andWhere(Criteria::expr()->notIn("status", [
                 SummitRoomReservation::RequestedRefundStatus,
                 SummitRoomReservation::RefundedStatus,
@@ -90,19 +106,13 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             ]));
 
         if($this->reservations->matching($criteria)->count() > 0)
-            throw new ValidationException(sprintf("reservation overlaps an existent reservation (1)"));
-
-        $criteria
-            ->where(Criteria::expr()->lt('start_datetime', $end_date))
-            ->andWhere(Criteria::expr()->gt('end_datetime', $start_date))
-            ->andWhere(Criteria::expr()->notIn("status", [
-                SummitRoomReservation::RequestedRefundStatus,
-                SummitRoomReservation::RefundedStatus,
-                SummitRoomReservation::Canceled
-            ]));
-
-        if($this->reservations->matching($criteria)->count() > 0)
-            throw new ValidationException(sprintf("reservation overlaps an existent reservation (2)"));
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Reservation overlaps an existent reservation(s)."
+                )
+            );
 
         $start_time       = $summit->getMeetingRoomBookingStartTime();
         $end_time         = $summit->getMeetingRoomBookingEndTime();
@@ -141,7 +151,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             (
                 sprintf
                 (
-                    "requested booking time slot is not allowed! requested [from %s to %s] allowed [from %s to %s]",
+                    "Requested booking time slot is not allowed! requested [from %s to %s] allowed [from %s to %s]",
                     $local_start_date->format("Y-m-d H:i:s"),
                     $local_end_date->format("Y-m-d H:i:s"),
                     $local_start_time->format("Y-m-d H:i:s"),
@@ -156,7 +166,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             (
                 sprintf
                 (
-                    "requested booking time slot is not allowed! request slot (%s minutes) - summit allowed slot (%s minutes)",
+                    "Requested booking time slot is not allowed! request slot (%s minutes) - summit allowed slot (%s minutes)",
                     $minutes,
                     $summit->getMeetingRoomBookingSlotLength()
                 )
@@ -165,7 +175,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $now_utc    = new \DateTime('now', new \DateTimeZone('UTC'));
         // we cant choose the slots on the past or slots that are going on
         if((($now_utc > $end_date) || ( $start_date <= $now_utc && $now_utc <= $end_date ))){
-            throw new ValidationException("selected slot is on the past");
+            throw new ValidationException("Selected slot is on the past.");
         }
 
         $this->reservations->add($reservation);

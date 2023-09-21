@@ -16,6 +16,7 @@ use App\Events\MemberUpdated;
 use App\Events\NewMember;
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
 use App\Events\Registration\MemberDataUpdatedExternally;
+use App\Events\RequestedBookableRoomReservationRefund;
 use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;
 use App\Events\TicketUpdated;
@@ -118,10 +119,10 @@ final class EventServiceProvider extends ServiceProvider
             BookableRoomReservationPaymentConfirmedEmail::dispatch($reservation);
         });
 
-        Event::listen(\App\Events\RequestedBookableRoomReservationRefund::class, function ($event) {
+        Event::listen(RequestedBookableRoomReservationRefund::class, function ($event) {
             $repository = EntityManager::getRepository(SummitRoomReservation::class);
             $reservation = $repository->find($event->getReservationId());
-            if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
+            if (!$reservation instanceof SummitRoomReservation) return;
 
             BookableRoomReservationRefundRequestedAdminEmail::dispatch($reservation);
             BookableRoomReservationRefundRequestedOwnerEmail::dispatch($reservation);

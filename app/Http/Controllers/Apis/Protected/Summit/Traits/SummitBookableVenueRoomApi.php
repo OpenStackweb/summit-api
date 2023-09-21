@@ -37,6 +37,10 @@ use utils\PagingResponse;
 trait SummitBookableVenueRoomApi
 {
 
+    use RequestProcessor;
+
+    use GetAndValidateJsonPayload;
+
     /**
      * @param $id
      * @return mixed
@@ -662,38 +666,21 @@ trait SummitBookableVenueRoomApi
      * @return mixed
      */
     public function cancelMyBookableVenueRoomReservation($summit_id, $reservation_id){
-        try{
+        return $this->processRequest(function() use ($summit_id, $reservation_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
             $current_member = $this->resource_server_context->getCurrentUser();
 
             if (is_null($current_member))
                 return $this->error403();
 
-            $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-
             $reservation = $this->location_service->cancelReservation($summit, $current_member, $reservation_id);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize());
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1018,49 +1005,45 @@ trait SummitBookableVenueRoomApi
     }
 
     public function refundBookableVenueRoomReservation($summit_id, $room_id, $reservation_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-            $rules = [
-                'amount' => 'required|integer|greater_than:0',
-            ];
+       return $this->processRequest(function() use($summit_id, $room_id, $reservation_id){
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+           $payload = $this->getJsonPayload(
+                [
+                    'amount' => 'required|integer|greater_than:0',
+                ],
+                true
+            );
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $room = $summit->getLocation($room_id);
-            if (is_null($room)) return $this->error404();
-            if (!$room instanceof SummitBookableVenueRoom) return $this->error404();
+            if (!$room instanceof SummitBookableVenueRoom)
+                return $this->error404();
 
             $amount = intval($payload['amount']);
-            $reservation = $this->location_service->refundReservation($room, $reservation_id, $amount);
+
+            $reservation = $this->location_service->refundReservation($room, intval($reservation_id), $amount);
 
             return  SerializerRegistry::getInstance()->getSerializer($reservation)->serialize();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
+    }
+
+    public function cancelBookableVenueRoomReservation($summit_id, $room_id, $reservation_id){
+        return $this->processRequest(function() use($summit_id, $room_id, $reservation_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $room = $summit->getLocation($room_id);
+            if (!$room instanceof SummitBookableVenueRoom)
+                return $this->error404();
+
+            $this->location_service->deleteReservation($summit, $room, intval($reservation_id));
+
+            return $this->deleted();
+        });
     }
 }

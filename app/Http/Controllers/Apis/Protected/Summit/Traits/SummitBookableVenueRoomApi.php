@@ -14,8 +14,10 @@
 
 use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitBookableVenueRoom;
@@ -344,7 +346,17 @@ trait SummitBookableVenueRoomApi
     {
         return $this->processRequest(function () use ($summit_id, $room_id, $day) {
 
-            $day = intval($day);
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitBookableVenueRoomApi::getBookableVenueRoomAvailability summit_id %s room_id %s day %s",
+                    $summit_id,
+                    $room_id,
+                    $day
+                )
+            );
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (!$summit instanceof Summit) return $this->error404();
 
@@ -353,7 +365,19 @@ trait SummitBookableVenueRoomApi
             if (!$room instanceof SummitBookableVenueRoom)
                 return $this->error404();
 
-            $slots_definitions = $room->getAvailableSlots(new \DateTime("@$day"));
+            try{
+                // day could be epoch or YMD format
+                $from_day = is_numeric($day) ? new \DateTime("@$day") :
+                            // if its a string then we need to be aware of time zone
+                             \DateTime::createFromFormat("Y-m-d", $day, $summit->getTimeZone())
+                                 ->setTime(0,0,0);
+            }
+            catch (\Exception $ex){
+                throw new ValidationException(sprintf("day %s is not valid", $day));
+            }
+
+            $slots_definitions = $room->getAvailableSlots($from_day);
+
             $list = [];
             foreach ($slots_definitions as $slot_label => $is_free) {
                 $dates = explode('|', $slot_label);

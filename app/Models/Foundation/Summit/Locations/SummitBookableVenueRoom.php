@@ -14,6 +14,7 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
  * @ORM\Entity
@@ -249,12 +250,34 @@ class SummitBookableVenueRoom extends SummitVenueRoom
      * @return array
      * @throws ValidationException
      */
-    public function getAvailableSlots(\DateTime $day): array {
+    public function getAvailableSlots(\DateTime $from_day): array {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitBookableVenueRoom::getAvailableSlots room %s from_day %s",
+                $this->id,
+                $from_day->format("Y-m-d H:i:sP")
+            )
+        );
+
         $availableSlots     = [];
         $summit             = $this->summit;
-        $test_date          = clone $day;
+        $test_date          = clone $from_day;
         // reset time only interest the date portion
-        $test_date          = $test_date->setTimezone($summit->getTimeZone())->setTime(0, 0,0);
+        $test_date          = $test_date->setTimezone($summit->getTimeZone())
+                                        ->setTime(0, 0,0, 0);
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitBookableVenueRoom::getAvailableSlots room %s test_date %s",
+                $this->id,
+                $test_date->format("Y-m-d H:i:sP")
+            )
+        );
 
         $booking_start_time = $summit->getMeetingRoomBookingStartTime();
         if(is_null($booking_start_time))
@@ -273,17 +296,20 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $local_start_datetime->setTimezone($summit->getTimeZone())->setTime(
             intval($booking_start_time->format("H")),
             intval($booking_start_time->format("i")),
-            0);
+            0, 0);
 
         $local_end_datetime->setTimezone($summit->getTimeZone())->setTime(
             intval($booking_end_time->format("H")),
             intval($booking_end_time->format("i")),
-            00);
+            0, 0);
 
         // check if day belongs to booking period
 
         if(!$summit->isTimeFrameOnBookingPeriod($local_start_datetime, $local_end_datetime))
-            throw new ValidationException("requested day does not belong to summit booking period");
+            throw new ValidationException
+            (
+                "Requested Day does not belong to summit booking period."
+            );
 
         // now we have the allowed time frame for that particular day
 

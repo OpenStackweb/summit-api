@@ -228,6 +228,16 @@ interface ILocationService extends IProcessPaymentService
     public function addBookableRoomReservation(Summit $summit, int $room_id, array $payload):SummitRoomReservation;
 
     /**
+     * @param Summit $summit
+     * @param int $room_id
+     * @param array $payload
+     * @return SummitRoomReservation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addOfflineBookableRoomReservation(Summit $summit, int $room_id, array $payload): SummitRoomReservation;
+
+    /**
      * @param Summit $sumit
      * @param Member $owner
      * @param int $reservation_id

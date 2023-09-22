@@ -11,26 +11,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\exceptions\ValidationException;
+
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 /**
  * Class SummitRoomReservationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRoomReservationValidationRulesFactory
+final class SummitRoomReservationValidationRulesFactory extends AbstractValidationRulesFactory
 {
     /**
-     * @param array $data
-     * @param bool $update
+     * @param array $payload
      * @return array
-     * @throws ValidationException
      */
-    public static function build(array $data, $update = false){
+    public  static function buildForAdd(array $payload = []):array{
 
         return [
             'currency'       => 'required|string|currency_iso',
             'amount'         => 'required|integer|min:0',
             'start_datetime' => 'required|date_format:U',
             'end_datetime'   => 'required|date_format:U|after:start_datetime',
+        ];
+    }
+
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'currency'       => 'sometimes|string|currency_iso',
+            'amount'         => 'sometimes|integer|min:0',
+            'start_datetime' => 'sometimes|date_format:U',
+            'end_datetime'   => 'sometimes|date_format:U|after:start_datetime',
         ];
     }
 }

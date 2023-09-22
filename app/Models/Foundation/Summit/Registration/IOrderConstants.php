@@ -27,6 +27,11 @@ interface IOrderConstants
     const OnlinePaymentMethod   = 'Online';
     const OfflinePaymentMethod  = 'Offline';
 
+    const ValidPaymentMethods   = [
+        self::OnlinePaymentMethod,
+        self::OfflinePaymentMethod
+    ];
+
     const ValidStatus = [
         self::ReservedStatus,
         self::CancelledStatus,

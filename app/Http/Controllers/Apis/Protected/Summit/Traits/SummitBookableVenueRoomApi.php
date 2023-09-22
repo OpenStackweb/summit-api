@@ -13,13 +13,11 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
-use Exception;
-use Illuminate\Support\Facades\Log;
+use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use libs\utils\PaginationValidationRules;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
+use models\main\Member;
+use models\summit\Summit;
 use models\summit\SummitBookableVenueRoom;
 use models\summit\SummitBookableVenueRoomAvailableSlot;
 use models\summit\SummitRoomReservation;
@@ -27,9 +25,9 @@ use models\summit\SummitVenue;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterParser;
-use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
+
 /**
  * Trait SummitBookableVenueRoomApi
  * @package App\Http\Controllers
@@ -41,207 +39,130 @@ trait SummitBookableVenueRoomApi
 
     use GetAndValidateJsonPayload;
 
+    use ParametrizedGetAll;
+
     /**
      * @param $id
      * @return mixed
      */
-    public function getReservationById($id){
-        try {
-
-            $expand    = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-
-            $reservation = $this->reservation_repository->getById($id);
+    public function getReservationById($id)
+    {
+        return $this->processRequest(function () use ($id) {
+            $reservation = $this->reservation_repository->getById(intval($id));
 
             if (is_null($reservation)) {
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize($expand,[], $relations));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getBookableVenueRooms($summit_id){
-        $values = Request::all();
-        $rules  = PaginationValidationRules::get();
+    public function getBookableVenueRooms($summit_id)
+    {
 
-        try {
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = PaginationValidationRules::PerPageMin;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'             => ['==', '=@'],
-                    'description'      => ['=@'],
-                    'capacity'         => ['>', '<', '<=', '>=', '=='],
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['==', '=@'],
+                    'description' => ['=@'],
+                    'capacity' => ['>', '<', '<=', '>=', '=='],
                     'availability_day' => ['=='],
-                    'attribute'         => ['=='],
-                ]);
-            }
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'name'             => 'sometimes|string',
-                'description'      => 'sometimes|string',
-                'capacity'         => 'sometimes|integer',
-                'availability_day' => 'sometimes|date_format:U',
-                'attribute'        => 'sometimes|string',
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
+                    'attribute' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'capacity' => 'sometimes|integer',
+                    'availability_day' => 'sometimes|date_format:U',
+                    'attribute' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
                     'id',
                     'name',
                     'capacity',
-                ]);
-            }
+                ];
+            },
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterParser::buildFilter('class_name', '==', SummitBookableVenueRoom::ClassName));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
 
-            $filter->addFilterCondition(FilterParser::buildFilter('class_name','==', SummitBookableVenueRoom::ClassName));
-
-            $data = $this->location_repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order, false);
-
-            return $this->ok
-            (
-                $data->toArray
+                return $this->location_repository->getBySummit
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
-                )
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order,
+                    false
+                );
+            }
+        );
     }
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getAllReservationsBySummit($summit_id){
-        $values = Request::all();
-        $rules  = PaginationValidationRules::get();
+    public function getAllReservationsBySummit($summit_id)
+    {
 
-        try {
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = PaginationValidationRules::PerPageMin;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'summit_id'      => ['=='],
-                    'room_name'      => ['==', '=@'],
-                    'room_id'        => ['=='],
-                    'owner_id'       => ['=='],
-                    'owner_name'     => ['==', '=@'],
-                    'owner_email'    => ['==', '=@'],
-                    'status'         => ['=='],
+        return $this->_getAll(
+            function () {
+                return [
+                    'summit_id' => ['=='],
+                    'room_name' => ['==', '=@'],
+                    'room_id' => ['=='],
+                    'owner_id' => ['=='],
+                    'owner_name' => ['==', '=@'],
+                    'owner_email' => ['==', '=@'],
+                    'status' => ['=='],
                     'start_datetime' => ['>', '<', '<=', '>=', '=='],
-                    'end_datetime'   => ['>', '<', '<=', '>=', '=='],
-                ]);
-            }
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'status'         => sprintf('sometimes|in:%s',implode(',', SummitRoomReservation::$valid_status)),
-                'room_name'      => 'sometimes|string',
-                'owner_name'     => 'sometimes|string',
-                'owner_email'    => 'sometimes|string',
-                'summit_id'      => 'sometimes|integer',
-                'room_id'        => 'sometimes|integer',
-                'owner_id'       => 'sometimes|string',
-                'start_datetime' => 'sometimes|required|date_format:U',
-                'end_datetime'   => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
-
-            ], [
-                'status.in' =>  sprintf
-                (
-                    ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", SummitRoomReservation::$valid_status)
-                )
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
+                    'end_datetime' => ['>', '<', '<=', '>=', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'status' => sprintf('sometimes|in:%s', implode(',', SummitRoomReservation::$valid_status)),
+                    'room_name' => 'sometimes|string',
+                    'owner_name' => 'sometimes|string',
+                    'owner_email' => 'sometimes|string',
+                    'summit_id' => 'sometimes|integer',
+                    'room_id' => 'sometimes|integer',
+                    'owner_id' => 'sometimes|string',
+                    'start_datetime' => 'sometimes|required|date_format:U',
+                    'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
+                ];
+            },
+            function () {
+                return [
                     'id',
                     'start_datetime',
                     'end_datetime',
@@ -250,99 +171,68 @@ trait SummitBookableVenueRoomApi
                     'status',
                     'created',
                     'owner_name',
-                ]);
-            }
-
-            $data = $this->reservation_repository->getAllBySummitByPage($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $data->toArray
+                ];
+            },
+            function ($filter) use ($summit) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->reservation_repository->getAllBySummitByPage
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
-                )
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getAllReservationsBySummitCSV($summit_id){
+    public function getAllReservationsBySummitCSV($summit_id)
+    {
 
-        try {
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            // default values
-            $page     = 1;
-            $per_page = PHP_INT_MAX;
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'summit_id'      => ['=='],
-                    'room_name'      => ['==', '=@'],
-                    'room_id'        => ['=='],
-                    'owner_id'       => ['=='],
-                    'owner_name'     => ['==', '=@'],
-                    'owner_email'    => ['==', '=@'],
-                    'status'         => ['=='],
+        return $this->_getAllCSV(
+            function () {
+                return [
+                    'summit_id' => ['=='],
+                    'room_name' => ['==', '=@'],
+                    'room_id' => ['=='],
+                    'owner_id' => ['=='],
+                    'owner_name' => ['==', '=@'],
+                    'owner_email' => ['==', '=@'],
+                    'status' => ['=='],
                     'start_datetime' => ['>', '<', '<=', '>=', '=='],
-                    'end_datetime'   => ['>', '<', '<=', '>=', '=='],
-                ]);
-            }
-            if(is_null($filter)) $filter = new Filter();
+                    'end_datetime' => ['>', '<', '<=', '>=', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'status' => sprintf('sometimes|in:%s', implode(',', SummitRoomReservation::$valid_status)),
+                    'room_name' => 'sometimes|string',
+                    'owner_name' => 'sometimes|string',
+                    'owner_email' => 'sometimes|string',
+                    'summit_id' => 'sometimes|integer',
+                    'room_id' => 'sometimes|integer',
+                    'owner_id' => 'sometimes|string',
+                    'start_datetime' => 'sometimes|required|date_format:U',
+                    'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
 
-            $filter->validate([
-                'status'         => sprintf('sometimes|in:%s',implode(',', SummitRoomReservation::$valid_status)),
-                'room_name'      => 'sometimes|string',
-                'owner_name'     => 'sometimes|string',
-                'owner_email'    => 'sometimes|string',
-                'summit_id'      => 'sometimes|integer',
-                'room_id'        => 'sometimes|integer',
-                'owner_id'       => 'sometimes|string',
-                'start_datetime' => 'sometimes|required|date_format:U',
-                'end_datetime'   => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
-
-            ], [
-                'status.in' =>  sprintf
-                (
-                    ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", SummitRoomReservation::$valid_status)
-                )
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
+                ];
+            },
+            function () {
+                return [
                     'id',
                     'start_datetime',
                     'end_datetime',
@@ -351,45 +241,37 @@ trait SummitBookableVenueRoomApi
                     'status',
                     'created',
                     'owner_name',
-                ]);
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function () {
+                return [
+                    'created' => new EpochCellFormatter,
+                    'last_edited' => new EpochCellFormatter,
+                    'start_datetime' => new EpochCellFormatter,
+                    'end_datetime' => new EpochCellFormatter,
+                ];
+            },
+            function () {
+                return [];
+            },
+            'bookable-rooms-reservations-',
+            [],
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->reservation_repository->getAllBySummitByPage
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
             }
-
-            $data = $this->reservation_repository->getAllBySummitByPage($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            $filename = "bookable-rooms-reservations-" . date('Ymd');
-            $list     =  $data->toArray();
-            return $this->export
-            (
-                'csv',
-                $filename,
-                $list['data'],
-                [
-                    'created'                    => new EpochCellFormatter,
-                    'last_edited'                => new EpochCellFormatter,
-                    'start_datetime'             => new EpochCellFormatter,
-                    'end_datetime'               => new EpochCellFormatter,
-                ]
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        );
     }
 
     /**
@@ -398,21 +280,14 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
-    public function getBookableVenueRoomByVenue($summit_id, $venue_id, $room_id){
-        try {
+    public function getBookableVenueRoomByVenue($summit_id, $venue_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $room_id) {
 
-            $expand    = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-
-            $summit    = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $venue = $summit->getLocation(intval($venue_id));
-
-            if (is_null($venue)) {
-                return $this->error404();
-            }
 
             if (!$venue instanceof SummitVenue) {
                 return $this->error404();
@@ -420,25 +295,16 @@ trait SummitBookableVenueRoomApi
 
             $room = $venue->getRoom(intval($room_id));
 
-            if (is_null($room) || !$room instanceof SummitBookableVenueRoom) {
+            if (!$room instanceof SummitBookableVenueRoom) {
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand,[], $relations));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -447,62 +313,52 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
-    public function getBookableVenueRoom($summit_id, $room_id){
-        try {
+    public function getBookableVenueRoom($summit_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id) {
 
-            $expand    = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-
-            $summit    = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-
 
             $room = $summit->getLocation(intval($room_id));
 
-            if (is_null($room) || !$room instanceof SummitBookableVenueRoom) {
+            if (!$room instanceof SummitBookableVenueRoom) {
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand,[], $relations));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
+
     /**
      * @param $summit_id
      * @param $room_id
      * @param $day
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getBookableVenueRoomAvailability($summit_id, $room_id, $day){
-        try {
-            $day    = intval($day);
-            $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
+    public function getBookableVenueRoomAvailability($summit_id, $room_id, $day)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id, $day) {
+
+            $day = intval($day);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (!$summit instanceof Summit) return $this->error404();
 
             $room = $summit->getLocation($room_id);
 
-            if(!$room instanceof SummitBookableVenueRoom)
+            if (!$room instanceof SummitBookableVenueRoom)
                 return $this->error404();
 
             $slots_definitions = $room->getAvailableSlots(new \DateTime("@$day"));
             $list = [];
-            foreach($slots_definitions as $slot_label => $is_free){
+            foreach ($slots_definitions as $slot_label => $is_free) {
                 $dates = explode('|', $slot_label);
                 $list[] =
-                    SerializerRegistry::getInstance()->getSerializer( new SummitBookableVenueRoomAvailableSlot
+                    SerializerRegistry::getInstance()->getSerializer(new SummitBookableVenueRoomAvailableSlot
                     (
                         $room,
                         $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[0], $summit->getTimeZone())),
@@ -521,28 +377,13 @@ trait SummitBookableVenueRoomApi
             );
 
             return $this->ok(
-                $response->toArray()
+                $response->toArray(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -550,77 +391,84 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function createBookableVenueRoomReservation($summit_id, $room_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
+    public function createBookableVenueRoomReservation($summit_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (!$summit instanceof Summit) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
-
-            if (is_null($current_member))
+            if (!$current_member instanceof Member)
                 return $this->error403();
 
-            $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
+            $payload = $this->getJsonPayload(
+                SummitRoomReservationValidationRulesFactory::buildForAdd(),
+                true
+            );
 
-            $room = $summit->getLocation($room_id);
-
-            if(!$room instanceof SummitBookableVenueRoom)
-                return $this->error404();
-
-            $payload = Request::json()->all();
             $payload['owner_id'] = $current_member->getId();
-            $rules   = SummitRoomReservationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $reservation = $this->location_service->addBookableRoomReservation($summit, intval($room_id), $payload);
 
-            $reservation = $this->location_service->addBookableRoomReservation($summit, $room_id, $payload);
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize());
+        });
+    }
 
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+    /**
+     * @param $summit_id
+     * @param $room_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function createOfflineBookableVenueRoomReservation($summit_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (!$summit instanceof Summit) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!$current_member instanceof Member)
+                return $this->error403();
+
+            $payload = $this->getJsonPayload(
+                SummitRoomReservationValidationRulesFactory::buildForAdd(),
+                true
+            );
+
+            $payload['owner_id'] = $current_member->getId();
+
+            $reservation = $this->location_service->addOfflineBookableRoomReservation($summit, intval($room_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getMyBookableVenueRoomReservations($summit_id){
-        try{
+    public function getMyBookableVenueRoomReservations($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (!$summit instanceof Summit) return $this->error404();
+
             $current_member = $this->resource_server_context->getCurrentUser();
 
             if (is_null($current_member))
                 return $this->error403();
-
-            $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-
 
             $reservations = $current_member->getReservationsBySummit($summit);
 
@@ -635,29 +483,12 @@ trait SummitBookableVenueRoomApi
 
             return $this->ok(
                 $response->toArray(
-                    Request::input('expand', '')
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                 )
             );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -665,11 +496,12 @@ trait SummitBookableVenueRoomApi
      * @param $reservation_id
      * @return mixed
      */
-    public function cancelMyBookableVenueRoomReservation($summit_id, $reservation_id){
-        return $this->processRequest(function() use ($summit_id, $reservation_id){
+    public function cancelMyBookableVenueRoomReservation($summit_id, $reservation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $reservation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
+            if (!$summit instanceof Summit)
                 return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -689,9 +521,14 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
-    public function updateVenueBookableRoom($summit_id, $venue_id, $room_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
+    public function updateVenueBookableRoom($summit_id, $venue_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $room_id) {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (!$summit instanceof Summit)
+                return $this->error404();
+
+            if (!Request::isJson()) return $this->error400();
             $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -711,31 +548,19 @@ trait SummitBookableVenueRoomApi
 
             $room = $this->location_service->updateVenueBookableRoom($summit, $venue_id, $room_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
-    public function getVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id){
-        try {
+    public function getVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $floor_id, $room_id) {
 
-            $expand    = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-
-            $summit    = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $venue = $summit->getLocation($venue_id);
@@ -756,25 +581,16 @@ trait SummitBookableVenueRoomApi
 
             $room = $floor->getRoom($room_id);
 
-            if (is_null($room) || !$room instanceof SummitBookableVenueRoom) {
+            if (!$room instanceof SummitBookableVenueRoom) {
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand,[], $relations));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -784,12 +600,16 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
-    public function updateVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+    public function updateVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $floor_id, $room_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            if (!Request::isJson()) return $this->error400();
+            $payload = Request::json()->all();
+
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
             $rules = SummitLocationValidationRulesFactory::build($payload, true);
             // Creates a Validator instance and validates the data.
@@ -804,51 +624,30 @@ trait SummitBookableVenueRoomApi
                 );
             }
 
-            if(!isset($payload['floor_id']))
+            if (!isset($payload['floor_id']))
                 $payload['floor_id'] = intval($floor_id);
 
-            $room = $this->location_service->updateVenueBookableRoom($summit, $venue_id, $room_id, $payload);
+            $room = $this->location_service->updateVenueBookableRoom($summit, intval($venue_id), intval($room_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
-    public function deleteVenueBookableRoom($summit_id, $venue_id, $room_id){
-        try {
+    public function deleteVenueBookableRoom($summit_id, $venue_id, $room_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $room_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $this->location_service->deleteVenueBookableRoom($summit, $venue_id, $room_id);
+            $this->location_service->deleteVenueBookableRoom($summit, intval($venue_id), intval($room_id));
 
             return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -856,12 +655,15 @@ trait SummitBookableVenueRoomApi
      * @param $venue_id
      * @return mixed
      */
-    public function addVenueBookableRoom($summit_id, $venue_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+    public function addVenueBookableRoom($summit_id, $venue_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            if (!Request::isJson()) return $this->error400();
+            $payload = Request::json()->all();
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
             $rules = SummitLocationValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
@@ -876,23 +678,14 @@ trait SummitBookableVenueRoomApi
                 );
             }
 
-            $room = $this->location_service->addVenueBookableRoom($summit, $venue_id, $payload);
+            $room = $this->location_service->addVenueBookableRoom($summit, intval($venue_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -900,12 +693,15 @@ trait SummitBookableVenueRoomApi
      * @param $venue_id
      * @return mixed
      */
-    public function addVenueFloorBookableRoom($summit_id, $venue_id, $floor_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+    public function addVenueFloorBookableRoom($summit_id, $venue_id, $floor_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $floor_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            if (!Request::isJson()) return $this->error400();
+            $payload = Request::json()->all();
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
             $rules = SummitLocationValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
@@ -922,23 +718,14 @@ trait SummitBookableVenueRoomApi
 
             $payload['floor_id'] = intval($floor_id);
 
-            $room = $this->location_service->addVenueBookableRoom($summit, $venue_id, $payload);
+            $room = $this->location_service->addVenueBookableRoom($summit, intval($venue_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -948,29 +735,27 @@ trait SummitBookableVenueRoomApi
      * @param $attribute_id
      * @return mixed
      */
-    public function addVenueBookableRoomAttribute($summit_id, $venue_id, $room_id, $attribute_id){
-        try {
+    public function addVenueBookableRoomAttribute($summit_id, $venue_id, $room_id, $attribute_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $room_id, $attribute_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $room = $this->location_service->addVenueBookableRoomAttribute($summit, $venue_id, $room_id, $attribute_id);
+            $room = $this->location_service->addVenueBookableRoomAttribute
+            (
+                $summit,
+                intval($venue_id),
+                intval($room_id),
+                intval($attribute_id)
+            );
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -980,34 +765,31 @@ trait SummitBookableVenueRoomApi
      * @param $attribute_id
      * @return mixed
      */
-    public function deleteVenueBookableRoomAttribute($summit_id, $venue_id, $room_id, $attribute_id){
-        try {
+    public function deleteVenueBookableRoomAttribute($summit_id, $venue_id, $room_id, $attribute_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $venue_id, $room_id, $attribute_id) {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $room = $this->location_service->deleteVenueBookableRoomAttribute($summit, $venue_id, $room_id, $attribute_id);
+            $room = $this->location_service->deleteVenueBookableRoomAttribute($summit,
+                intval($venue_id),
+                intval($room_id),
+                intval($attribute_id)
+            );
 
-            return $this->deleted(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->deleted(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
-    public function refundBookableVenueRoomReservation($summit_id, $room_id, $reservation_id){
-       return $this->processRequest(function() use($summit_id, $room_id, $reservation_id){
+    public function refundBookableVenueRoomReservation($summit_id, $room_id, $reservation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id, $reservation_id) {
 
-           $payload = $this->getJsonPayload(
+            $payload = $this->getJsonPayload(
                 [
                     'amount' => 'required|integer|greater_than:0',
                 ],
@@ -1026,12 +808,13 @@ trait SummitBookableVenueRoomApi
 
             $reservation = $this->location_service->refundReservation($room, intval($reservation_id), $amount);
 
-            return  SerializerRegistry::getInstance()->getSerializer($reservation)->serialize();
+            return SerializerRegistry::getInstance()->getSerializer($reservation)->serialize();
         });
     }
 
-    public function cancelBookableVenueRoomReservation($summit_id, $room_id, $reservation_id){
-        return $this->processRequest(function() use($summit_id, $room_id, $reservation_id){
+    public function cancelBookableVenueRoomReservation($summit_id, $room_id, $reservation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id, $reservation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit))

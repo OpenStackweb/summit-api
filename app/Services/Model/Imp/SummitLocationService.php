@@ -1555,20 +1555,16 @@ final class SummitLocationService
 
             $room = $this->location_repository->getByIdExclusiveLock($room_id);
 
-            if (is_null($room)) {
-                throw new EntityNotFoundException("room not found");
-            }
-
             if (!$room instanceof SummitBookableVenueRoom) {
-                throw new EntityNotFoundException("Room not found");
+                throw new EntityNotFoundException("Room not found.");
             }
 
             $owner_id = $payload["owner_id"];
 
             $owner = $this->member_repository->getById($owner_id);
 
-            if (is_null($owner)) {
-                throw new EntityNotFoundException('member not found');
+            if (!$owner instanceof Member){
+                throw new EntityNotFoundException('Member not found.');
             }
 
             if ($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
@@ -1656,6 +1652,100 @@ final class SummitLocationService
             $reservation->setPaymentGatewayCartId($result['cart_id']);
             $reservation->setPaymentGatewayClientToken($result['client_token']);
 
+            return $reservation;
+        });
+
+        Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
+
+        return $reservation;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $room_id
+     * @param array $payload
+     * @return SummitRoomReservation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addOfflineBookableRoomReservation(Summit $summit, int $room_id, array $payload): SummitRoomReservation
+    {
+        $reservation = $this->tx_service->transaction(function () use ($summit, $room_id, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitLocationService::addOfflineBookableRoomReservation summit %s room_id %s payload %s",
+                    $summit->getId(),
+                    $room_id,
+                    json_encode($payload)
+                )
+            );
+
+            $room = $this->location_repository->getByIdExclusiveLock($room_id);
+
+
+            if (!$room instanceof SummitBookableVenueRoom) {
+                throw new EntityNotFoundException("Room not found.");
+            }
+
+            $owner_id = $payload["owner_id"];
+
+            $owner = $this->member_repository->getById($owner_id);
+
+            if (!$owner instanceof Member) {
+                throw new EntityNotFoundException('Member not found.');
+            }
+
+            if ($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Member %s already reached max. quantity of reservations (%s).",
+                        $owner->getId(),
+                        $summit->getMeetingRoomBookingMaxAllowed()
+                    )
+                );
+
+            $payload['owner'] = $owner;
+
+            $currency = trim($payload['currency']);
+
+            if ($room->getCurrency() != $currency) {
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Currency set %s is not allowed for room %s.",
+                        $currency,
+                        $room->getId()
+                    )
+                );
+            }
+
+            if(!$room->isFree()) {
+                $amount = intval($payload['amount']);
+
+                if ($room->getTimeSlotCost() != $amount) {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Amount set %s does not match with time slot cost %s for room %s",
+                            $amount,
+                            $room->getTimeSlotCost(),
+                            $room->getId()
+                        )
+                    );
+                }
+            }
+
+            $reservation = SummitRoomReservationFactory::build($summit, $payload);
+            $reservation->markAsOffline();
+            $room->addReservation($reservation);
+            $reservation->setPaid();
             return $reservation;
         });
 

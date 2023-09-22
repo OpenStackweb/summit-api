@@ -84,6 +84,12 @@ class SummitRoomReservation extends SilverstripeBaseModel
     private $amount;
 
     /**
+     * @ORM\Column(name="PaymentMethod", type="string")
+     * @var string
+     */
+    private $payment_method;
+
+    /**
      * @var float
      * @ORM\Column(name="RefundedAmount", type="integer")
      */
@@ -120,6 +126,38 @@ class SummitRoomReservation extends SilverstripeBaseModel
     ];
 
     /**
+     * @return string
+     */
+    public function getPaymentMethod(): string
+    {
+        return $this->payment_method;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOffline(): bool
+    {
+        return $this->payment_method == IOrderConstants::OfflinePaymentMethod;
+    }
+
+    public function markAsOffline():void{
+        $this->payment_method = IOrderConstants::OfflinePaymentMethod;
+    }
+
+    /**
+     * @param string $payment_method
+     * @return void
+     * @throws ValidationException
+     */
+    public function setPaymentMethod(string $payment_method): void
+    {
+        if(in_array($payment_method, IOrderConstants::ValidPaymentMethods))
+            throw new ValidationException(sprintf("payment method %s is not valid.", $payment_method));
+        $this->payment_method = $payment_method;
+    }
+
+    /**
      * @return \DateTime
      */
     public function getStartDatetime(): \DateTime
@@ -133,6 +171,10 @@ class SummitRoomReservation extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function refund(int $amount){
+        if($this->isFree())
+            throw new ValidationException("Can not refund a free reservation.");
+        if($this->isOffline())
+            throw new ValidationException("Can not refund an offline payment.");
         if ($amount > $this->amount) {
             throw new ValidationException("Can not refund an amount greater than paid one.");
         }
@@ -299,6 +341,7 @@ class SummitRoomReservation extends SilverstripeBaseModel
         $this->amount = 0;
         $this->refunded_amount = 0;
         $this->status = self::ReservedStatus;
+        $this->payment_method = IOrderConstants::OnlinePaymentMethod;
     }
 
     /**

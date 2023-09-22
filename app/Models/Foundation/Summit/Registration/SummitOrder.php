@@ -423,6 +423,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function setPaymentMethod(string $payment_method): void
     {
+        if(in_array($payment_method, IOrderConstants::ValidPaymentMethods))
+            throw new ValidationException(sprintf("payment method %s is not valid.", $payment_method));
         $this->payment_method = $payment_method;
     }
 

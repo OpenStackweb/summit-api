@@ -1819,6 +1819,12 @@ final class SummitLocationService
                 throw new EntityNotFoundException();
             }
 
+            if($reservation->isFree()){
+                // just cancel it
+                $reservation->cancel();
+                return $reservation;
+            }
+
             if ($reservation->getStatus() == SummitRoomReservation::ReservedStatus)
                 throw new ValidationException("Can not request a refund on a reserved booking.");
 

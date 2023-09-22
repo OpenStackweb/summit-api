@@ -33,7 +33,8 @@ final class SummitRoomReservationSerializer extends SilverStripeSerializer
         'EndDatetime'               => 'end_datetime:datetime_epoch',
         'ApprovedPaymentDate'       => 'approved_payment_date:datetime_epoch',
         'LastError'                 => 'last_error:json_string',
-        'PaymentGatewayClientToken' => 'payment_gateway_client_token:json_string'
+        'PaymentGatewayClientToken' => 'payment_gateway_client_token:json_string',
+        'PaymentMethod'             => 'payment_method:json_string',
     ];
 
     /**

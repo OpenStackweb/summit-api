@@ -3414,7 +3414,7 @@ SQL;
     public function setMeetingRoomBookingSlotLength(int $meeting_room_booking_slot_length): void
     {
         if ($meeting_room_booking_slot_length <= 0)
-            throw new ValidationException("meeting_room_booking_slot_length should be greather than zero");
+            throw new ValidationException("meeting_room_booking_slot_length should be greater than zero.");
 
         if ($this->meeting_room_booking_slot_length != $meeting_room_booking_slot_length) {
             // only allow to change if we dont have any reservation
@@ -3438,7 +3438,15 @@ SQL;
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $reservation_count = count($res) > 0 ? $res[0] : 0;
             if ($reservation_count > 0) {
-                throw new ValidationException("summit already has reservations with that slot len!");
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                    "Slot length change not allowed. ".
+                        "Summit already has reservations with former slot length (%s minutes)",
+                        $this->meeting_room_booking_slot_length
+                    )
+                );
             }
         }
 

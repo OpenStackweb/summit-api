@@ -140,7 +140,7 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
         $this->order   = 0;
         $this->type    = self::TypeNone;
         $this->banners = new ArrayCollection();
-        $this->events = new ArrayCollection();
+        $this->events  = new ArrayCollection();
     }
 
     /**
@@ -224,9 +224,13 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @param int|null $opening_hour
+     * @return void
+     * @throws ValidationException
      */
     public function setOpeningHour(?int $opening_hour)
     {
+        if(!is_null($opening_hour) && $opening_hour < 0)
+            throw new ValidationException(sprintf("opening_hour %s is invalid", $opening_hour));
         $this->opening_hour = $opening_hour;
     }
 
@@ -240,9 +244,18 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @param int|null $closing_hour
+     * @return void
+     * @throws ValidationException
      */
     public function setClosingHour(?int $closing_hour)
     {
+        if(!is_null($closing_hour)) {
+            if($closing_hour < 0)
+                throw new ValidationException(sprintf("closing_hour %s is invalid", $closing_hour));
+            if(!is_null($this->opening_hour) && $closing_hour <= $this->opening_hour)
+                throw new ValidationException(sprintf("closing_hour %s must be greater than opening_hour %s", $closing_hour, $this->opening_hour));
+        }
+
         $this->closing_hour = $closing_hour;
     }
 

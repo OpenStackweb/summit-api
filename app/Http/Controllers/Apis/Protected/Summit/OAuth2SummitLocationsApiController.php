@@ -631,7 +631,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($this->getJsonData()), true);
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($this->getJsonData()), true);
 
             $location = $this->location_service->addLocation($summit, $payload);
 
@@ -842,7 +842,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload = $this->getJsonData();
-            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload, true), true);
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
 
             $location = $this->location_service->updateLocation($summit, $location_id, $payload);

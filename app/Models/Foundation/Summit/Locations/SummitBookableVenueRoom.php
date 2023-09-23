@@ -404,4 +404,23 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $this->attributes->removeElement($attribute);
     }
 
+    public function setOpeningHour(?int $opening_hour)
+    {
+        $this->opening_hour = null;
+    }
+
+    public function getOpeningHour(): ?int
+    {
+        return null;
+    }
+
+    public function setClosingHour(?int $closing_hour)
+    {
+       $this->closing_hour = null;
+    }
+
+    public function getClosingHour(): ?int
+    {
+        return null;
+    }
 }

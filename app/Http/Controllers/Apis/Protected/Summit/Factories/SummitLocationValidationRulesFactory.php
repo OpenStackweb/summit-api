@@ -37,8 +37,8 @@ final class SummitLocationValidationRulesFactory
             throw new ValidationException('class_name is required');
 
         $base_rules = [
-           'opening_hour' => 'sometimes|integer|min:0|max:2359',
-           'closing_hour' => 'required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359',
+           'opening_hour' => 'sometimes|nullable|integer|min:0|max:2359',
+           'closing_hour' => 'nullable|required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359',
            'class_name' => sprintf('required|in:%s',  implode(",", SummitLocationConstants::$valid_class_names))
         ];
 

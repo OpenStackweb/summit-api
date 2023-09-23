@@ -13,6 +13,8 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
 use models\summit\SummitRegistrationInvitation;
@@ -290,11 +292,12 @@ SQL;
     public function testFilterActivities(){
         $filter_input = [
             'selection_plan_id==34',
-            'event_type_id==638||635'
+            'excluded_event_type_id==638||635'
         ];
 
         $filter = FilterParser::parse($filter_input, [
             'selection_plan_id' => ['=='],
+            'excluded_event_type_id'=> ['=='],
             'event_type_id' => ['=='],
         ]);
 
@@ -328,6 +331,7 @@ SQL;
                 "(selp.id :operator :value)"
             ),
             'event_type_id' => "et.id :operator :value",
+            'excluded_event_type_id' => new DoctrineInFilterMapping("et.id"),
         ]);
 
         $dql = $query->getDQL();

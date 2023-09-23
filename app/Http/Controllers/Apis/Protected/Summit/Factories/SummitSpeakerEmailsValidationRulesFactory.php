@@ -42,6 +42,7 @@ final class SummitSpeakerEmailsValidationRulesFactory extends AbstractValidation
                     PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG
                 ]),
             'speaker_ids'               => 'sometimes|int_array',
+            'excluded_speaker_ids'      => 'sometimes|int_array',
             'test_email_recipient'      => 'sometimes|email',
             'outcome_email_recipient'   => 'sometimes|email',
             'should_send_copy_2_submitter' => 'sometimes|boolean',

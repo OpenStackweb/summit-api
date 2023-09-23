@@ -78,10 +78,11 @@ final class OAuth2SummitSubmittersApiController
         return $this->_getAll(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '@@', '=='],
                     'last_name' => ['=@', '@@', '=='],
                     'email' => ['=@', '@@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
@@ -100,10 +101,11 @@ final class OAuth2SummitSubmittersApiController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
@@ -164,10 +166,11 @@ final class OAuth2SummitSubmittersApiController
         return $this->_getAllCSV(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '@@', '=='],
                     'last_name' => ['=@', '@@', '=='],
                     'email' => ['=@', '@@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
@@ -186,10 +189,11 @@ final class OAuth2SummitSubmittersApiController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
@@ -262,10 +266,11 @@ final class OAuth2SummitSubmittersApiController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '@@', '=='],
                     'last_name' => ['=@', '@@', '=='],
                     'email' => ['=@', '@@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
@@ -287,10 +292,11 @@ final class OAuth2SummitSubmittersApiController
                 $filter = new Filter();
 
             $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
                 'first_name' => 'sometimes|string',
                 'last_name' => 'sometimes|string',
                 'email' => 'sometimes|string',
-                'id' => 'sometimes|integer',
                 'full_name' => 'sometimes|string',
                 'member_id' => 'sometimes|integer',
                 'member_user_external_id' => 'sometimes|integer',

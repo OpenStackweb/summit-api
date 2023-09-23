@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
 use Google\Service\AccessContextManager\AccessLevel;
@@ -52,7 +54,8 @@ final class DoctrineSummitAttendeeTicketRepository
     protected function getFilterMappings()
     {
         return [
-            'id' => 'e.id:json_int',
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
             'number' => 'e.number:json_string',
             'is_active' => 'e.is_active',
             'order_number' => 'o.number:json_string',

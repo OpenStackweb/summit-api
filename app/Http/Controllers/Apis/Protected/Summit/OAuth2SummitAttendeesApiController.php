@@ -356,6 +356,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         $filter = null;
 
         $filterRules =  [
+            'id' => ['=='],
+            'not_id' => ['=='],
             'first_name' => ['=@', '=='],
             'last_name' => ['=@', '=='],
             'full_name' => ['=@', '=='],
@@ -412,6 +414,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
@@ -485,6 +489,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         return $this->_getAllCSV(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
                     'full_name' => ['=@', '=='],
@@ -512,6 +518,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
@@ -874,11 +882,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function() use($summit_id){
 
-            if (!Request::isJson()) return $this->error400();
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $data->all();
 
@@ -892,6 +902,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                         GenericSummitAttendeeEmail::EVENT_SLUG,
                     ]),
                 'attendees_ids' => 'sometimes|int_array',
+                'excluded_attendees_ids' => 'sometimes|int_array',
                 'test_email_recipient' => 'sometimes|email',
             ]);
 
@@ -908,6 +919,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
                     'full_name' => ['=@', '=='],
@@ -941,6 +954,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 $filter = new Filter();
 
             $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
                 'first_name' => 'sometimes|string',
                 'last_name' => 'sometimes|string',
                 'full_name' => 'sometimes|string',

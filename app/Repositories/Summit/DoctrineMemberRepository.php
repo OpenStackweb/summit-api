@@ -12,9 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\main\IMemberRepository;
 use models\main\Member;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -121,6 +122,8 @@ final class DoctrineMemberRepository
         }
 
         return [
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
             'last_name' => new DoctrineFilterMapping(
                 "( LOWER(e.last_name) :operator LOWER(:value) )"
             ),
@@ -135,7 +138,6 @@ final class DoctrineMemberRepository
                 Filter::buildEmailField('e.second_email'),
                 Filter::buildEmailField('e.third_email'),
             ],
-            'id' => 'e.id',
             'member_id' => new DoctrineFilterMapping(
                 "( e.id :operator :value )"
             ),

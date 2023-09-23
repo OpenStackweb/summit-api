@@ -81,10 +81,11 @@ final class ProcessSubmittersEmailRequestJob implements ShouldQueue
         );
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
+            'id' => ['=='],
+            'not_id' => ['=='],
             'first_name' => ['=@', '@@', '=='],
             'last_name' => ['=@', '@@', '=='],
             'email' => ['=@', '@@', '=='],
-            'id' => ['=='],
             'full_name' => ['=@', '@@', '=='],
             'member_id' => ['=='],
             'member_user_external_id' => ['=='],

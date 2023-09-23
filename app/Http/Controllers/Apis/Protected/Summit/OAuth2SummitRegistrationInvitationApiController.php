@@ -16,7 +16,6 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
-use App\Models\Foundation\Summit\Factories\SummitRegistrationInvitationFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitRegistrationInvitationService;
@@ -166,6 +165,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         return $this->_getAll(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'email' => ['@@','=@', '=='],
                     'first_name' => ['@@','=@', '=='],
                     'last_name' => ['@@','=@', '=='],
@@ -179,6 +180,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'email' => 'sometimes|required|string',
                     'first_name' => 'sometimes|required|string',
                     'last_name' => 'sometimes|required|string',
@@ -224,6 +227,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         return $this->_getAllCSV(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'email' =>  ['@@','=@', '=='],
                     'first_name' =>  ['@@','=@', '=='],
                     'full_name' => ['@@','=@', '=='],
@@ -237,6 +242,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'email' => 'sometimes|required|string',
                     'first_name' => 'sometimes|required|string',
                     'last_name' => 'sometimes|required|string',
@@ -391,6 +398,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                         ReInviteSummitRegistrationEmail::EVENT_SLUG,
                     ]),
                 'invitations_ids' => 'sometimes|int_array',
+                'excluded_invitations_ids' => 'sometimes|int_array',
                 'test_email_recipient' => 'sometimes|email',
             ]);
 
@@ -407,6 +415,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'email' => ['@@','=@', '=='],
                     'first_name' =>['@@','=@', '=='],
                     'last_name' => ['@@','=@', '=='],
@@ -423,6 +433,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 $filter = new Filter();
 
             $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
                 'is_accepted' => 'sometimes|required|string|in:true,false',
                 'is_sent' => 'sometimes|required|string|in:true,false',
                 'email' => 'sometimes|required|string',

@@ -149,10 +149,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '@@', '=='],
                     'last_name' => ['=@', '@@', '=='],
                     'email' => ['=@', '@@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
@@ -170,10 +171,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
@@ -242,10 +244,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAllCSV(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '@@', '=='],
                     'last_name' => ['=@', '@@', '=='],
                     'email' => ['=@', '@@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
@@ -263,10 +266,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
@@ -344,10 +348,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
                     'email' => ['=@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '=='],
                     'event_start_date' => ['>', '<', '<=', '>=', '==','[]'],
                     'event_end_date' => ['>', '<', '<=', '>=', '==','[]'],
@@ -356,10 +361,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
                     'event_start_date' => 'sometimes|date_format:U',
                     'event_end_date' => 'sometimes|date_format:U',
@@ -414,10 +420,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '==','@@'],
                     'last_name' => ['=@', '==','@@'],
                     'email' => ['=@', '==','@@'],
-                    'id' => ['=='],
                     'full_name' => ['=@', '==','@@'],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
@@ -425,10 +432,12 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             },
             function () {
                 return [
+
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
@@ -1457,10 +1466,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
                     'first_name' => ['=@', '@@', '=='],
                     'last_name' => ['=@', '@@', '=='],
                     'email' => ['=@', '@@', '=='],
-                    'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
                     'has_accepted_presentations' => ['=='],
                     'has_alternate_presentations' => ['=='],
@@ -1479,10 +1489,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $filter = new Filter();
 
             $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
                 'first_name' => 'sometimes|string',
                 'last_name' => 'sometimes|string',
                 'email' => 'sometimes|string',
-                'id' => 'sometimes|integer',
                 'full_name' => 'sometimes|string',
                 'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
                 'has_alternate_presentations' => 'sometimes|required|string|in:true,false',

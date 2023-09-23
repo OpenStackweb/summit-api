@@ -14,7 +14,9 @@
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
+use App\Services\Utils\Facades\EmailExcerpt;
 use App\Utils\AES;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +36,6 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
-use mysql_xdevapi\Warning;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
 use utils\FilterElement;
@@ -105,28 +106,28 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function __construct
     (
-        ISummitAttendeeRepository $attendee_repository,
-        IMemberRepository $member_repository,
-        ISummitAttendeeTicketRepository $ticket_repository,
-        ISummitTicketTypeRepository $ticket_type_repository,
+        ISummitAttendeeRepository              $attendee_repository,
+        IMemberRepository                      $member_repository,
+        ISummitAttendeeTicketRepository        $ticket_repository,
+        ISummitTicketTypeRepository            $ticket_type_repository,
         ISummitRegistrationPromoCodeRepository $promo_code_repository,
-        ISummitRepository $summit_repository,
-        ISummitAttendeeBadgeRepository $badge_repository,
-        IEventbriteAPI $eventbrite_api,
-        ICompanyRepository $company_repository,
-        ITransactionService $tx_service
+        ISummitRepository                      $summit_repository,
+        ISummitAttendeeBadgeRepository         $badge_repository,
+        IEventbriteAPI                         $eventbrite_api,
+        ICompanyRepository                     $company_repository,
+        ITransactionService                    $tx_service
     )
     {
         parent::__construct($tx_service);
-        $this->attendee_repository    = $attendee_repository;
-        $this->ticket_repository      = $ticket_repository;
-        $this->member_repository      = $member_repository;
+        $this->attendee_repository = $attendee_repository;
+        $this->ticket_repository = $ticket_repository;
+        $this->member_repository = $member_repository;
         $this->ticket_type_repository = $ticket_type_repository;
-        $this->promo_code_repository  = $promo_code_repository;
-        $this->eventbrite_api         = $eventbrite_api;
-        $this->summit_repository      = $summit_repository;
-        $this->badge_repository       = $badge_repository;
-        $this->company_repository     = $company_repository;
+        $this->promo_code_repository = $promo_code_repository;
+        $this->eventbrite_api = $eventbrite_api;
+        $this->summit_repository = $summit_repository;
+        $this->badge_repository = $badge_repository;
+        $this->company_repository = $company_repository;
     }
 
     /**
@@ -137,19 +138,19 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function addAttendee(Summit $summit, array $data)
     {
-        return $this->tx_service->transaction(function() use($summit, $data){
+        return $this->tx_service->transaction(function () use ($summit, $data) {
 
-            $member    = null;
+            $member = null;
             $member_id = $data['member_id'] ?? 0;
             $member_id = intval($member_id);
-            $email     = $data['email'] ?? null;
+            $email = $data['email'] ?? null;
 
-            if($member_id > 0 && !empty($email)){
+            if ($member_id > 0 && !empty($email)) {
                 // both are defined
                 throw new ValidationException("you should define a member_id or an email, not both");
             }
 
-            if($member_id > 0 ) {
+            if ($member_id > 0) {
 
                 $member = $this->member_repository->getById($member_id);
                 if (is_null($member) || !$member instanceof Member)
@@ -162,7 +163,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             }
 
-            if(!empty($email)) {
+            if (!empty($email)) {
                 $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($email));
                 if (!is_null($old_attendee))
                     throw new ValidationException(sprintf("attendee already exist for summit id %s and email %s", $summit->getId(), trim($data['email'])));
@@ -187,10 +188,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function deleteAttendee(Summit $summit, $attendee_id)
     {
-        return $this->tx_service->transaction(function() use($summit, $attendee_id){
+        return $this->tx_service->transaction(function () use ($summit, $attendee_id) {
 
             $attendee = $summit->getAttendeeById($attendee_id);
-            if(is_null($attendee))
+            if (is_null($attendee))
                 throw new EntityNotFoundException();
 
             $this->attendee_repository->delete($attendee);
@@ -207,14 +208,14 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function updateAttendee(Summit $summit, $attendee_id, array $data)
     {
-        return $this->tx_service->transaction(function() use($summit, $attendee_id, $data){
+        return $this->tx_service->transaction(function () use ($summit, $attendee_id, $data) {
 
             $attendee = $summit->getAttendeeById($attendee_id);
-            if(is_null($attendee))
+            if (is_null($attendee))
                 throw new EntityNotFoundException(sprintf("Attendee does not belongs to summit id %s.", $summit->getId()));
 
             $member = null;
-            if(isset($data['member_id']) && intval($data['member_id']) > 0) {
+            if (isset($data['member_id']) && intval($data['member_id']) > 0) {
                 $member_id = intval($data['member_id']);
                 $member = $this->member_repository->getById($member_id);
 
@@ -222,24 +223,24 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     throw new EntityNotFoundException("Member not found.");
 
                 $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
-                if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
+                if (!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
                     throw new ValidationException(sprintf("Another attendee (%s) already exist for summit id %s and member id %s.", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
             }
 
-            if(isset($data['email'])) {
+            if (isset($data['email'])) {
                 $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($data['email']));
-                if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
+                if (!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
                     throw new ValidationException(sprintf("Attendee already exist for summit id %s and email %s.", $summit->getId(), trim($data['email'])));
             }
 
             // check if attendee already exist for this summit
-            if(isset($data['extra_questions']) && !$attendee->hasAllowedExtraQuestions()){
+            if (isset($data['extra_questions']) && !$attendee->hasAllowedExtraQuestions()) {
                 Log::debug(sprintf("SummitAttendeeService::updateAttendee attendee %s does not have allowed extra questions.", $attendee->getId()));
                 // dont not overwrite extra questions
                 unset($data['extra_questions']);
             }
 
-            SummitAttendeeFactory::populate($summit, $attendee , $data, $member, false);
+            SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false);
             $attendee->updateStatus();
             return $attendee;
         });
@@ -248,15 +249,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     /**
      * @param SummitAttendee $attendee
      * @param int $ticket_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function deleteAttendeeTicket(SummitAttendee $attendee, $ticket_id)
     {
-        return $this->tx_service->transaction(function() use($attendee, $ticket_id){
+        return $this->tx_service->transaction(function () use ($attendee, $ticket_id) {
             $ticket = $attendee->getTicketById($ticket_id);
-            if(is_null($ticket)){
+            if (is_null($ticket)) {
                 throw new EntityNotFoundException(sprintf("ticket id %s does not belongs to attendee id %s", $ticket_id, $attendee->getId()));
             }
             $attendee->removeTicket($ticket);
@@ -270,23 +271,23 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function updateRedeemedPromoCodes(Summit $summit, $page_nbr = 1)
     {
-        return $this->tx_service->transaction(function() use($summit, $page_nbr){
+        return $this->tx_service->transaction(function () use ($summit, $page_nbr) {
             $response = $this->eventbrite_api->getAttendees($summit, $page_nbr);
 
-            if(!isset($response['pagination'])) return false;
-            if(!isset($response['attendees'])) return false;
+            if (!isset($response['pagination'])) return false;
+            if (!isset($response['attendees'])) return false;
             $pagination = $response['pagination'];
-            $attendees  = $response['attendees'];
+            $attendees = $response['attendees'];
             $has_more_items = boolval($pagination['has_more_items']);
 
-            foreach($attendees as $attendee){
-                if(!isset($attendee['promotional_code'])) continue;
+            foreach ($attendees as $attendee) {
+                if (!isset($attendee['promotional_code'])) continue;
                 $promotional_code = $attendee['promotional_code'];
-                if(!isset($promotional_code['code'])) continue;
+                if (!isset($promotional_code['code'])) continue;
                 $code = $promotional_code['code'];
 
                 $promo_code = $this->promo_code_repository->getByCode($code);
-                if(is_null($promo_code)) continue;
+                if (is_null($promo_code)) continue;
                 $promo_code->setRedeemed(true);
             }
 
@@ -302,21 +303,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      * @return SummitAttendeeTicket
      * @throws \Exception
      */
-    public function reassignAttendeeTicketByMember(Summit $summit, SummitAttendee $attendee, Member $other_member, int $ticket_id):SummitAttendeeTicket
+    public function reassignAttendeeTicketByMember(Summit $summit, SummitAttendee $attendee, Member $other_member, int $ticket_id): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function() use($summit, $attendee, $other_member, $ticket_id){
+        return $this->tx_service->transaction(function () use ($summit, $attendee, $other_member, $ticket_id) {
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
-            if(is_null($ticket) || !$ticket instanceof SummitAttendeeTicket){
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket) {
                 throw new EntityNotFoundException("ticket not found");
             }
 
             $new_owner = $this->attendee_repository->getBySummitAndMember($summit, $other_member);
-            if(is_null($new_owner)){
-                $new_owner = SummitAttendeeFactory::build($summit,[
+            if (is_null($new_owner)) {
+                $new_owner = SummitAttendeeFactory::build($summit, [
                     'first_name' => $other_member->getFirstName(),
-                    'last_name'  => $other_member->getLastName(),
-                    'email'      => $other_member->getEmail(),
+                    'last_name' => $other_member->getLastName(),
+                    'email' => $other_member->getEmail(),
                 ], $other_member);
                 $this->attendee_repository->add($new_owner);
             }
@@ -329,7 +330,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $ticket->generateQRCode();
             $ticket->generateHash();
-            if($summit->isRegistrationSendTicketEmailAutomatically())
+            if ($summit->isRegistrationSendTicketEmailAutomatically())
                 $new_owner->sendInvitationEmail($ticket);
 
             return $ticket;
@@ -345,9 +346,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      * @return SummitAttendeeTicket
      * @throws \Exception
      */
-    public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, int $ticket_id, array $payload):SummitAttendeeTicket
+    public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, int $ticket_id, array $payload): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function() use($summit, $attendee, $ticket_id, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $attendee, $ticket_id, $payload) {
 
             Log::debug
             (
@@ -363,7 +364,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
-            if(is_null($ticket) || !$ticket instanceof SummitAttendeeTicket){
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket) {
                 throw new EntityNotFoundException("ticket not found.");
             }
 
@@ -379,12 +380,12 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 )
             );
 
-            $new_owner = $this->attendee_repository->getBySummitAndEmail($summit , $attendee_email);
+            $new_owner = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
 
-            if(is_null($new_owner)){
+            if (is_null($new_owner)) {
                 Log::debug(sprintf("AttendeeService::reassignAttendeeTicket attendee %s does no exists .. creating it.", $attendee_email));
                 $attendee_payload = [
-                    'email'  => $attendee_email
+                    'email' => $attendee_email
                 ];
 
                 $new_owner = SummitAttendeeFactory::build
@@ -399,16 +400,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $attendee_payload = [];
 
-            if(isset($payload['attendee_first_name']))
+            if (isset($payload['attendee_first_name']))
                 $attendee_payload['first_name'] = $payload['attendee_first_name'];
 
-            if(isset($payload['attendee_last_name']))
+            if (isset($payload['attendee_last_name']))
                 $attendee_payload['last_name'] = $payload['attendee_last_name'];
 
-            if(isset($payload['attendee_company']))
+            if (isset($payload['attendee_company']))
                 $attendee_payload['company'] = $payload['attendee_company'];
 
-            if(isset($payload['extra_questions']))
+            if (isset($payload['extra_questions']))
                 $attendee_payload['extra_questions'] = $payload['extra_questions'];
 
             SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
@@ -446,14 +447,14 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $new_owner->updateStatus();
 
 
-            if($summit->isRegistrationSendTicketEmailAutomatically()) {
+            if ($summit->isRegistrationSendTicketEmailAutomatically()) {
                 Log::debug
                 (
                     sprintf
                     (
                         "AttendeeService::reassignAttendeeTicket sending invitation email to new owner %s (%s).",
-                         $new_owner->getId(),
-                         $new_owner->getEmail()
+                        $new_owner->getId(),
+                        $new_owner->getEmail()
                     )
                 );
                 $new_owner->sendInvitationEmail($ticket);
@@ -472,70 +473,45 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         ProcessAttendeesEmailRequestJob::dispatch($summit, $payload, $filter);
     }
 
+    use ParametrizedSendEmails;
+
     /**
-     * @inheritDoc
+     * @param int $summit_id
+     * @param array $payload
+     * @param Filter|null $filter
+     * @return void
+     * @throws ValidationException
      */
     public function send(int $summit_id, array $payload, Filter $filter = null): void
     {
-        $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
-        $flow_event = trim($payload['email_flow_event']);
-        $done = isset($payload['attendees_ids']); // we have provided only ids and not a criteria
-        $page = 1;
-        $count = 0;
-        $maxPageSize = 100;
+        $this->_sendEmails(
+            $summit_id,
+            $payload,
+            "attendees",
+            function ($summit, $paging_info, $filter) {
 
-        $test_email_recipient = null;
-        if(isset($payload['test_email_recipient'])) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "AttendeeService::send summit id %s setting test_email_recipient %s",
-                    $summit_id,
-                    $payload['test_email_recipient']
-                )
-            );
-
-            $test_email_recipient = $payload['test_email_recipient'];
-        }
-
-        do {
-            Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
-
-            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
-                if (isset($payload['attendees_ids'])) {
-                    Log::debug(sprintf("AttendeeService::send summit id %s attendees_ids %s", $summit_id,
-                        json_encode($payload['attendees_ids'])));
-                    return $payload['attendees_ids'];
-                }
-                Log::debug(sprintf("AttendeeService::send summit id %s getting by filter", $summit_id));
-                if (is_null($filter)) {
-                    $filter = new Filter();
-                }
                 if (!$filter->hasFilter("summit_id"))
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
 
-                Log::debug(sprintf("AttendeeService::send page %s", $page));
-                return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
-            });
-
-            Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
-
-            if (!count($ids)) {
-                // if we are processing a page, then break it
-                Log::debug(sprintf("AttendeeService::send summit id %s page is empty, ending processing.", $summit_id));
-                break;
-            }
-
-            foreach ($ids as $attendee_id) {
+                return $this->attendee_repository->getAllIdsByPage($paging_info, $filter);
+            },
+            function ($summit, $flow_event, $attendee_id, $test_email_recipient, $announcement_email_config, $filter) use ($payload) {
                 try {
-                    $this->tx_service->transaction(function () use ($flow_event, $attendee_id, $emailActionsStrategyFactory, $test_email_recipient) {
-
+                    $this->tx_service->transaction(function () use (
+                        $summit,
+                        $flow_event,
+                        $attendee_id,
+                        $test_email_recipient,
+                        $filter,
+                        $payload
+                    ) {
                         Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
 
                         $attendee = $this->attendee_repository->getByIdExclusiveLock(intval($attendee_id));
-                        if (is_null($attendee) || !$attendee instanceof SummitAttendee) return;
+                        if (!$attendee instanceof SummitAttendee)
+                            return;
 
+                        $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
                         $strategy = $emailActionsStrategyFactory->build($flow_event);
                         if ($strategy != null) {
                             $strategy->process($attendee, $test_email_recipient);
@@ -543,24 +519,22 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
+                    EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
-                $count++;
-            }
-            $page++;
-        } while(!$done);
-
-        Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s had processed %s records",
-            $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
+            },
+            null,
+            $filter
+        );
     }
 
     public function doVirtualCheckin(Summit $summit, int $attendee_id): ?SummitAttendee
     {
-        return $this->tx_service->transaction(function() use($summit, $attendee_id){
+        return $this->tx_service->transaction(function () use ($summit, $attendee_id) {
 
             Log::debug(sprintf("AttendeeService::doVirtualCheckin summit id %s attendee id %s", $summit->getId(), $attendee_id));
 
             $attendee = $summit->getAttendeeById($attendee_id);
-            if(is_null($attendee))
+            if (is_null($attendee))
                 throw new EntityNotFoundException(sprintf("Attendee does not belongs to summit id %s.", $summit->getId()));
 
             $attendee->doVirtualChecking();
@@ -575,21 +549,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      * @return void
      * @throws \Exception
      */
-    public function doCheckIn(Summit $summit, String $qr_code): void
+    public function doCheckIn(Summit $summit, string $qr_code): void
     {
-        $this->tx_service->transaction(function() use($summit, $qr_code){
+        $this->tx_service->transaction(function () use ($summit, $qr_code) {
             Log::debug(sprintf("AttendeeService::doCheckIn summit id %s qr_code %s", $summit->getId(), $qr_code));
 
-            if(!str_starts_with($qr_code, $summit->getBadgeQRPrefix()) && $summit->hasQRCodesEncKey()){
+            if (!str_starts_with($qr_code, $summit->getBadgeQRPrefix()) && $summit->hasQRCodesEncKey()) {
                 Log::debug(sprintf("AttendeeService::doCheckIn summit id %s qr_code %s decrypting", $summit->getId(), $qr_code));
                 $qr_code = AES::decrypt($summit->getQRCodesEncKey(), $qr_code)->getData();
             }
 
-            $fields        = SummitAttendeeBadge::parseQRCode($qr_code);
+            $fields = SummitAttendeeBadge::parseQRCode($qr_code);
             $ticket_number = $fields['ticket_number'];
-            $prefix        = $fields['prefix'];
+            $prefix = $fields['prefix'];
 
-            if($summit->getBadgeQRPrefix() != $prefix)
+            if ($summit->getBadgeQRPrefix() != $prefix)
                 throw new ValidationException
                 (
                     sprintf
@@ -603,7 +577,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
 
-            if(is_null($badge))
+            if (is_null($badge))
                 throw new EntityNotFoundException("Badge not found.");
 
             $ticket = $badge->getTicket();
@@ -636,11 +610,11 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function updateAttendeesByMemberId(int $member_id): void
     {
-        $this->tx_service->transaction(function() use($member_id){
+        $this->tx_service->transaction(function () use ($member_id) {
 
             $member = $this->member_repository->getByIdRefreshed($member_id);
 
-            if(!$member instanceof Member){
+            if (!$member instanceof Member) {
                 Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId member %s not found.", $member_id));
                 return;
             }
@@ -665,7 +639,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             );
 
             $attendees = $this->attendee_repository->getByMember($member);
-            if(!is_null($attendees)) {
+            if (!is_null($attendees)) {
                 foreach ($attendees as $attendee) {
                     if (!$attendee instanceof SummitAttendee) continue;
                     Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s", $attendee->getId(), $member_id));
@@ -677,25 +651,23 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
                     // company logic
-                    if(!empty($company_name)) {
+                    if (!empty($company_name)) {
                         $company = $this->company_repository->getByName($company_name);
                         if (!is_null($company)) {
                             $attendee->setCompany($company);
                             $company_name = $company->getName();
-                        }
-                        else{
+                        } else {
                             $attendee->clearCompany();
                         }
                         $attendee->setCompanyName($company_name);
-                    }
-                    else{
+                    } else {
                         $attendee->clearCompany();
                     }
                 }
             }
 
             $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
-            if(!is_null($attendees)) {
+            if (!is_null($attendees)) {
                 foreach ($attendees as $attendee) {
                     if (!$attendee instanceof SummitAttendee) continue;
                     Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s ( member null )", $attendee->getId(), $member_id));
@@ -710,20 +682,18 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
                     // company logic
-                    if(!empty($company_name)) {
+                    if (!empty($company_name)) {
                         $company = $this->company_repository->getByName($company_name);
                         if (!is_null($company)) {
                             $attendee->setCompany($company);
                             $company_name = $company->getName();
-                        }
-                        else{
+                        } else {
                             $attendee->clearCompany();
                         }
 
                         if (!empty($company_name))
                             $attendee->setCompanyName($company_name);
-                    }
-                    else{
+                    } else {
                         $attendee->clearCompany();
                     }
                 }
@@ -741,7 +711,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s", $summit_id));
         $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", $summit_id);
 
-        if(Cache::has($key)){
+        if (Cache::has($key)) {
             Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s already running", $summit_id));
             return;
         }

@@ -81,10 +81,11 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         );
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
+            'id' => ['=='],
+            'not_id' => ['=='],
             'first_name' => ['=@', '@@', '=='],
             'last_name' => ['=@', '@@', '=='],
             'email' => ['=@', '@@', '=='],
-            'id' => ['=='],
             'full_name' => ['=@', '@@', '=='],
             'has_accepted_presentations' => ['=='],
             'has_alternate_presentations' => ['=='],

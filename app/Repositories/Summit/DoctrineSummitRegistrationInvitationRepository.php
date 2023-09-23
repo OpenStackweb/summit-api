@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -54,6 +57,8 @@ class DoctrineSummitRegistrationInvitationRepository
     protected function getFilterMappings()
     {
         return [
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
             'email' => 'e.email:json_string',
             'first_name' => Filter::buildLowerCaseStringField('e.first_name'),
             'last_name' => Filter::buildLowerCaseStringField('e.last_name'),

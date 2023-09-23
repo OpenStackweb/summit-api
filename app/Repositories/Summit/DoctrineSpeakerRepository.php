@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\libs\Utils\PunnyCodeHelper;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
@@ -98,6 +100,8 @@ final class DoctrineSpeakerRepository
         }
 
         return [
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
             'last_name' => new DoctrineFilterMapping(
                 "( LOWER(m.last_name) :operator LOWER(:value) )".
                 " OR ( LOWER(e.last_name) :operator LOWER(:value) )"
@@ -116,7 +120,6 @@ final class DoctrineSpeakerRepository
                 Filter::buildEmailField('m.third_email'),
                 Filter::buildEmailField('rr.email'),
             ],
-            'id' => 'e.id',
             'member_id' => new DoctrineFilterMapping(
                 "( m.id :operator :value )"
             ),

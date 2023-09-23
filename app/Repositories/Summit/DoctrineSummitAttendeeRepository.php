@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use Doctrine\ORM\QueryBuilder;
 use models\main\Member;
 use models\summit\IOrderConstants;
@@ -100,6 +103,8 @@ final class DoctrineSummitAttendeeRepository
     protected function getFilterMappings()
     {
         return [
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
             'summit_id'            => new DoctrineFilterMapping("s.id :operator :value"),
             'member_id'            => new DoctrineFilterMapping("m.id :operator :value"),
             'first_name'           => [

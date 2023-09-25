@@ -14,22 +14,21 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
-use Google\Service\AccessContextManager\AccessLevel;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRefundRequestConstants;
 use models\summit\Summit;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendeeTicket;
-use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitAttendeeTicketRefundRequest;
 use models\utils\IEntity;
 use utils\DoctrineCaseFilterMapping;
-use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitAttendeeTicketRepository
@@ -48,6 +47,20 @@ final class DoctrineSummitAttendeeTicketRepository
         return SummitAttendeeTicket::class;
     }
 
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return QueryBuilder
+     */
+    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
+        $query = $query->addSelect("COALESCE(SUM(ta.amount),0) AS HIDDEN HIDDEN_APPLIED_TAXES");
+        $query = $query->addSelect("(e.raw_cost - e.discount) AS HIDDEN HIDDEN_FINAL_AMOUNT");
+        $query = $query->addSelect("COALESCE(SUM(rr.refunded_amount),0) AS HIDDEN HIDDEN_REFUNDED_AMOUNT");
+        $query = $query->addSelect("( (e.raw_cost - e.discount) - COALESCE(SUM(rr.refunded_amount),0) ) AS HIDDEN HIDDEN_FINAL_AMOUNT_ADJUSTED");
+        $query->groupBy("e");
+        return $query;
+    }
     /**
      * @return array
      */
@@ -158,22 +171,18 @@ final class DoctrineSummitAttendeeTicketRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query->join("e.order", "o");
-        $query->join("o.summit", "s");
-        $query->leftJoin("o.owner", "ord_m");
-        $query->leftJoin("e.owner", "a");
-        $query->leftJoin("e.badge", "b");
-        $query->leftJoin("b.type", "bt");
-        $query->leftJoin("bt.access_levels", "al");
-        $query->leftJoin("a.member", "m");
-        if ($filter->hasFilter('final_amount')) {
-            $query = $query->leftJoin("e.applied_taxes", "ta");
-        }
-        if ($filter->hasFilter('ticket_type_id')) {
-            $query = $query->join("e.ticket_type", "tt");
-        }
-        if ($filter->hasFilter('promo_code_id') || $filter->hasFilter('promo_code_description') || $filter->hasFilter('promo_code') ) {
-            $query = $query->leftJoin("e.promo_code", "pc");
-        }
+        $query = $query->join("o.summit", "s");
+        $query = $query->leftJoin("o.owner", "ord_m");
+        $query = $query->leftJoin("e.owner", "a");
+        $query = $query->leftJoin("e.badge", "b");
+        $query = $query->leftJoin("b.type", "bt");
+        $query = $query->leftJoin("bt.access_levels", "al");
+        $query = $query->leftJoin("a.member", "m");
+        $query = $query->leftJoin("e.refund_requests", "rr");
+        $query = $query->leftJoin("e.applied_taxes", "ta");
+        $query = $query->join("e.ticket_type", "tt");
+        $query = $query->leftJoin("e.promo_code", "pc");
+
         if ($filter->hasFilter('promo_code_tag_id') || $filter->hasFilter('promo_code_tag')) {
             if (!collect($query->getAllAliases())->contains('pc')) {
                 $query = $query->leftJoin("e.promo_code", "pc");
@@ -200,6 +209,13 @@ final class DoctrineSummitAttendeeTicketRepository
             "owner_name" => <<<SQL
 COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
+            'ticket_type' => 'tt.name',
+            'final_amount' => 'HIDDEN_FINAL_AMOUNT',
+            'owner_email' => 'COALESCE(LOWER(m.email), LOWER(m.second_email), LOWER(m.third_email), LOWER(a.email))',
+            'promo_code' => 'pc.code',
+            'bought_date' => 'e.bought_date',
+            'refunded_amount' => 'HIDDEN_REFUNDED_AMOUNT',
+            'final_amount_adjusted' => 'HIDDEN_FINAL_AMOUNT_ADJUSTED',
         ];
     }
 

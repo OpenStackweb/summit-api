@@ -460,16 +460,10 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
     public function testGetAllTickets()
     {
         $params = [
-            //'id' => self::$summit->getId(),
-            'id' => 13,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
-            'filter' => [
-                'owner_first_name@@A,owner_first_name@@T',
-                'has_badge==1',
-                'has_owner==1',
-            ],
-            'order' => '+id',
+            'order' => '+final_amount_adjusted',
             'expand' => 'owner,order,ticket_type,badge,promo_code'
         ];
 

@@ -165,6 +165,13 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_name',
                     'owner_first_name',
                     'owner_last_name',
+                    'ticket_type',
+                    'final_amount',
+                    'owner_email',
+                    'promo_code',
+                    'bought_date',
+                    'refunded_amount',
+                    'final_amount_adjusted',
                 ];
             },
             function ($filter) use ($summit) {
@@ -307,6 +314,13 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_name',
                     'owner_first_name',
                     'owner_last_name',
+                    'ticket_type',
+                    'final_amount',
+                    'owner_email',
+                    'promo_code',
+                    'bought_date',
+                    'refunded_amount',
+                    'final_amount_adjusted',
                 ];
             },
             function ($filter) use ($summit) {

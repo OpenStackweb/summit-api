@@ -129,6 +129,16 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      */
     protected abstract function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null);
 
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return QueryBuilder
+     */
+    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
+        return $query;
+    }
+
 
     /**
      * @param callable $fnQuery
@@ -150,6 +160,8 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         $query  = call_user_func($fnQuery);
 
         $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));
@@ -199,6 +211,8 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $query = $this->applyExtraJoins($query, $filter);
 
+        $query = $this->applyExtraSelects($query, $filter, $order);
+
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));
         }
@@ -233,6 +247,8 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->from($this->getBaseEntity(), "e");
 
         $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));
@@ -280,6 +296,8 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->from($this->getBaseEntity(), "e");
 
         $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));

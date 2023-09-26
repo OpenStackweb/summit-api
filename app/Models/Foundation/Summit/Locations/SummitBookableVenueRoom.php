@@ -14,6 +14,7 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
+use Google\Service\PubsubLite\Reservation;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
@@ -63,12 +64,10 @@ class SummitBookableVenueRoom extends SummitVenueRoom
 
     /**
      * @param SummitRoomReservation $reservation
-     * @return $this
+     * @return bool
      * @throws ValidationException
      */
-    public function addReservation(SummitRoomReservation $reservation){
-
-
+    public function validateReservation(SummitRoomReservation $reservation):bool{
         $criteria         = Criteria::create();
         $start_date       = $reservation->getStartDatetime();
         $end_date         = $reservation->getEndDatetime();
@@ -157,7 +156,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         );
 
         if(!($local_start_time <= $local_start_date
-        && $local_end_date <= $local_end_time))
+            && $local_end_date <= $local_end_time))
             throw new ValidationException
             (
                 sprintf
@@ -189,6 +188,16 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             throw new ValidationException("Selected slot is on the past.");
         }
 
+        return true;
+    }
+
+    /**
+     * @param SummitRoomReservation $reservation
+     * @return $this
+     * @throws ValidationException
+     */
+    public function addReservation(SummitRoomReservation $reservation){
+        $this->validateReservation($reservation);
         $this->reservations->add($reservation);
         $reservation->setRoom($this);
         return $this;

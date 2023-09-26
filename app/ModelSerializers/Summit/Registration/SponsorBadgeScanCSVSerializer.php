@@ -23,6 +23,7 @@ use models\summit\SummitOrderExtraQuestionType;
 final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
+        'Id'           => 'id:json_int',
         'ScanDate'     => 'scan_date:datetime_epoch',
         'QRCode'       => 'qr_code:json_string',
         'Notes'        => 'notes:json_string',

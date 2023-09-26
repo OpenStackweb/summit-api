@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Eluceo\iCal\Component\Timezone;
 use models\summit\Summit;
 use models\summit\SummitRoomReservation;
 /**
@@ -25,8 +24,11 @@ final class SummitRoomReservationFactory
      * @param array $data
      * @return SummitRoomReservation
      */
-    public static function build(Summit $summit, array $data){
-        $reservation = new SummitRoomReservation;
+    public static function build(Summit $summit, array $data):SummitRoomReservation{
+        return self::populate(new SummitRoomReservation, $summit, $data);
+    }
+
+    public static function populate(SummitRoomReservation $reservation, Summit $summit, array $data):SummitRoomReservation{
         if(isset($data['owner']))
             $reservation->setOwner($data['owner']);
         if(isset($data['currency']))

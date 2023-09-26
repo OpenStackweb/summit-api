@@ -382,13 +382,16 @@ trait SummitBookableVenueRoomApi
             foreach ($slots_definitions as $slot_label => $is_free) {
                 $dates = explode('|', $slot_label);
                 $list[] =
-                    SerializerRegistry::getInstance()->getSerializer(new SummitBookableVenueRoomAvailableSlot
+                    SerializerRegistry::getInstance()->getSerializer
                     (
-                        $room,
-                        $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[0], $summit->getTimeZone())),
-                        $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[1], $summit->getTimeZone())),
-                        $is_free
-                    ))->serialize();
+                        new SummitBookableVenueRoomAvailableSlot
+                        (
+                            $room,
+                            $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[0], $summit->getTimeZone())),
+                            $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[1], $summit->getTimeZone())),
+                            $is_free
+                        )
+                    )->serialize();
             }
 
             $response = new PagingResponse
@@ -461,11 +464,9 @@ trait SummitBookableVenueRoomApi
                 return $this->error403();
 
             $payload = $this->getJsonPayload(
-                SummitRoomReservationValidationRulesFactory::buildForAdd(),
+                SummitRoomReservationValidationRulesFactory::buildForAddOffline(),
                 true
             );
-
-            $payload['owner_id'] = $current_member->getId();
 
             $reservation = $this->location_service->addOfflineBookableRoomReservation($summit, intval($room_id), $payload);
 
@@ -474,7 +475,37 @@ trait SummitBookableVenueRoomApi
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
+        });
+    }
 
+    /**
+     * @param $summit_id
+     * @param $room_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateBookableVenueRoomReservation($summit_id, $room_id, $reservation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $room_id, $reservation_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (!$summit instanceof Summit) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!$current_member instanceof Member)
+                return $this->error403();
+
+            $payload = $this->getJsonPayload(
+                SummitRoomReservationValidationRulesFactory::buildForUpdate(),
+                true
+            );
+
+            $reservation = $this->location_service->updateBookableRoomReservation($summit, intval($room_id), int($reservation_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         });
     }
 

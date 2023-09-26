@@ -25,6 +25,7 @@ final class AssignedSelectionPlanExtraQuestionTypeSerializer
     extends AbstractSerializer
 {
     protected static $array_mappings = [
+        'Id' => 'id:json_int',
         'Order' => 'order:json_int',
         'Editable'=> 'is_editable:json_boolean',
         'SelectionPlanId' => 'selection_plan_id:json_int',

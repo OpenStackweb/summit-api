@@ -23,6 +23,7 @@ use ModelSerializers\SilverStripeSerializer;
 final class SummitSponsorshipTypeSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
+        'Id' => 'id:json_int',
         'WidgetTitle' => 'widget_title:json_string',
         'LobbyTemplate' => 'lobby_template:json_string',
         'ExpoHallTemplate' => 'expo_hall_template:json_string',

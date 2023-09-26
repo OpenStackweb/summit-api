@@ -21,6 +21,7 @@ use ModelSerializers\SerializerRegistry;
 final class TrackTagGroupAllowedTagSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
+        'Id' => 'id:json_int',
         'Default' => 'is_default:json_boolean',
         'TrackTagGroupId' => 'track_tag_group_id:json_int',
         'TagId' => 'tag_id:json_int',

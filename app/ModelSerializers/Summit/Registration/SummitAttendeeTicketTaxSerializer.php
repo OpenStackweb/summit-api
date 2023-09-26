@@ -21,6 +21,7 @@ use models\summit\SummitAttendeeTicketTax;
 final class SummitAttendeeTicketTaxSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
+        'Id' => 'id:json_int',
         'Amount'   => 'amount:json_float',
         'AmountInCents' => 'amount_in_cents:json_int',
         'TaxId'    => 'tax_id:json_int',

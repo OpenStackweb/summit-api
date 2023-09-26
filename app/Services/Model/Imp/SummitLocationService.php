@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Events\BookableRooms\UpdatedBookableRoomReservation;
 use App\Events\CreatedBookableRoomReservation;
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitLocationBannerFactory;
@@ -2553,5 +2555,48 @@ final class SummitLocationService
              $reservation->cancel();
 
         });
+    }
+
+    public function updateBookableRoomReservation($summit, int $room_id, int $reservation_id, array $payload): SummitRoomReservation
+    {
+        $reservation = $this->tx_service->transaction(function () use ($summit, $room_id, $reservation_id ,$payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitLocationService::updateBookableRoomReservation summit %s room_id %s payload %s",
+                    $summit->getId(),
+                    $room_id,
+                    json_encode($payload)
+                )
+            );
+
+            $room = $this->location_repository->getByIdExclusiveLock($room_id);
+
+            if (!$room instanceof SummitBookableVenueRoom) {
+                throw new EntityNotFoundException("Room not found.");
+            }
+
+            $reservation = $room->getReservationById($reservation_id);
+
+            if (!$reservation instanceof SummitRoomReservation) {
+                throw new EntityNotFoundException(sprintf("Reservation %s not found.", $reservation_id));
+            }
+
+            if(!$reservation->isPaid() && !$reservation->isFree()){
+                throw new ValidationException("Reservation is not paid.");
+            }
+
+            $reservation = SummitRoomReservationFactory::populate($reservation, $summit, $payload);
+
+            $room->validateReservation($reservation);
+
+            return $reservation;
+        });
+
+        Event::dispatch(new UpdatedBookableRoomReservation($reservation->getId()));
+
+        return $reservation;
     }
 }

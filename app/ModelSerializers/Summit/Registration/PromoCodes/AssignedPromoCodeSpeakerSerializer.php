@@ -22,6 +22,7 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
 class AssignedPromoCodeSpeakerSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
+        'Id'         => 'id:json_int',
         'SpeakerId'  => 'speaker_id:integer',
         'RedeemedAt' => 'redeemed:datetime_epoch',
         'SentAt'     => 'sent:datetime_epoch',

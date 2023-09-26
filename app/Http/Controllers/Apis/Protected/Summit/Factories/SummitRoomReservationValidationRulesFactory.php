@@ -33,11 +33,24 @@ final class SummitRoomReservationValidationRulesFactory extends AbstractValidati
         ];
     }
 
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public  static function buildForAddOffline(array $payload = []):array{
+
+        return [
+            'currency'       => 'required|string|currency_iso',
+            'owner_id'       => 'required|integer',
+            'amount'         => 'required|integer|min:0',
+            'start_datetime' => 'required|date_format:U',
+            'end_datetime'   => 'required|date_format:U|after:start_datetime',
+        ];
+    }
+
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'currency'       => 'sometimes|string|currency_iso',
-            'amount'         => 'sometimes|integer|min:0',
             'start_datetime' => 'sometimes|date_format:U',
             'end_datetime'   => 'sometimes|date_format:U|after:start_datetime',
         ];

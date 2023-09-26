@@ -50,7 +50,6 @@ abstract class AbstractSerializer implements IModelSerializer
     }
 
     protected static $array_mappings = [
-        'Id' => 'id:json_int',
     ];
 
     protected static $allowed_fields = [];

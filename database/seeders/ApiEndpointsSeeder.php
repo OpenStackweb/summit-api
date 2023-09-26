@@ -4593,6 +4593,20 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'update-bookable-venue-room-reservation',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'add-bookable-venue-room',
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
                 'http_method' => 'POST',

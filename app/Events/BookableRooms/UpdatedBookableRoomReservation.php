@@ -1,6 +1,6 @@
-<?php namespace App\ModelSerializers\Summit;
+<?php namespace App\Events\BookableRooms;
 /*
- * Copyright 2022 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,16 +12,13 @@
  * limitations under the License.
  **/
 
-use Libs\ModelSerializers\AbstractSerializer;
+use App\Events\BookableRoomReservationAction;
 
 /**
- * Class SelectionPlanAllowedMemberSerializer
- * @package App\ModelSerializers\Summit
+ * Class UpdatedBookableRoomReservation
+ * @package App\Events\BookableRooms
  */
-final class SelectionPlanAllowedMemberSerializer extends AbstractSerializer
+final class UpdatedBookableRoomReservation extends BookableRoomReservationAction
 {
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Email' => 'email:json_string',
-    ];
+
 }

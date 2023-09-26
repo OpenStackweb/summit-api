@@ -20,7 +20,6 @@ use Libs\ModelSerializers\AbstractSerializer;
 final class SummitScheduleEmptySpotSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
-
         'LocationId'    => 'location_id:json_int',
         'StartDateTime' => 'start_date:datetime_epoch',
         'EndDateTime'   => 'end_date:datetime_epoch',

@@ -833,6 +833,8 @@ Route::group(array('prefix' => 'summits'), function () {
                         // POST /api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/offline
                         Route::post('offline',  ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@createOfflineBookableVenueRoomReservation']);
                         Route::group(['prefix' => '{reservation_id}'], function () {
+                            // PUT /api/v1/summits/{id}/bookable-rooms/{room_id}/reservations/{reservation_id}
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@updateBookableVenueRoomReservation']);
                             // GET /api/v1/summits/{id}/bookable-rooms/{room_id}/reservations/{reservation_id}
                             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@getBookableVenueRoomReservation']);
                             // DELETE /api/v1/summits/{id}/bookable-rooms/{room_id}/reservations/{reservation_id}/refund

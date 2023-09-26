@@ -65,8 +65,8 @@ final class ProcessSubmissionsInvitationsJob
         Log::debug(sprintf("ProcessSubmissionsInvitationsJob::handle summit id %s", $this->summit_id));
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'id' => 'sometimes|integer',
-            'not_id' => 'sometimes|integer',
+            'id' => ['=='],
+            'not_id' => ['=='],
             'is_sent' => ['=='],
             'email' => ['@@', '=@', '=='],
             'first_name' => ['@@', '=@', '=='],

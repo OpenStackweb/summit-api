@@ -41,8 +41,19 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_fullname] = $reservation->getOwner()->getFullName();
         $payload[IMailTemplatesConstants::owner_email] = $reservation->getOwner()->getEmail();
         $payload[IMailTemplatesConstants::room_complete_name] = $room->getCompleteName();
-        $payload[IMailTemplatesConstants::reservation_start_datetime] = $reservation->getLocalStartDatetime()->format("F d, Y");
-        $payload[IMailTemplatesConstants::reservation_end_datetime] = $reservation->getLocalEndDatetime()->format("F d, Y");
+        // dates
+
+        $local_start_date_time = $reservation->getLocalStartDatetime();
+        $local_end_date_time = $reservation->getLocalEndDatetime();
+        $time_zone_label = $summit->getTimeZoneLabel();
+
+        if(empty($time_zone_label)){
+            $time_zone_label = $summit->getTimeZone()->getName();
+        }
+
+        $payload[IMailTemplatesConstants::reservation_start_datetime] = $local_start_date_time->format("F d, Y")." at ".$local_start_date_time->format("h:i A")." ".$time_zone_label;
+        $payload[IMailTemplatesConstants::reservation_end_datetime] = $local_end_date_time->format("F d, Y")." at ".$local_end_date_time->format("h:i A")." ".$time_zone_label;
+
         $payload[IMailTemplatesConstants::reservation_created_datetime] = $reservation->getCreated()->format("F d, Y");
         $payload[IMailTemplatesConstants::reservation_amount] = FormatUtils::getNiceFloat($reservation->getAmount());
         $payload[IMailTemplatesConstants::reservation_currency] = $reservation->getCurrency();

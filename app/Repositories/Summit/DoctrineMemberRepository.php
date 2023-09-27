@@ -73,51 +73,44 @@ final class DoctrineMemberRepository
 
         $extraSelectionStatusFilter = '';
         $extraSelectionPlanFilter = '';
+        $extraMediaUploadFilter = '';
 
         if(!is_null($filter) && $filter instanceof Filter){
             if($filter->hasFilter("presentations_selection_plan_id")){
-                $e = $filter->getFilter("presentations_selection_plan_id");
-                $v = [];
-                foreach($e as $f){
-                    if(is_array($f->getValue())){
-                        foreach ($f->getValue() as $iv){
-                            $v[] = $iv;
-                        }
-                    }
-                    else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
                 $extraSelectionStatusFilter .= ' AND __sel_plan%1$s.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_track_id")){
-                $e = $filter->getFilter("presentations_track_id");
-                $v = [];
-                foreach($e as $f){
-                    if(is_array($f->getValue())){
-                        foreach ($f->getValue() as $iv){
-                            $v[] = $iv;
-                        }
-                    }
-                    else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
                 $extraSelectionStatusFilter .= ' AND __cat%1$s.id IN ('.implode(',', $v).')';
                 $extraSelectionPlanFilter .= ' AND __tr%1$s_:i.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_type_id")){
-                $e = $filter->getFilter("presentations_type_id");
-                $v = [];
-                foreach($e as $f){
-                    if(is_array($f->getValue())){
-                        foreach ($f->getValue() as $iv){
-                            $v[] = $iv;
-                        }
-                    }
-                    else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
                 $extraSelectionStatusFilter .= ' AND __t%1$s.id IN ('.implode(',', $v).')';
                 $extraSelectionPlanFilter .= ' AND __type%1$s_:i.id IN ('.implode(',', $v).')';
+            }
+            if($filter->hasFilter("has_media_upload_with_type")){
+                $e = $filter->getFilter("has_media_upload_with_type");
+                $v = Filter::getValueFromFilterElement($e);
+                $extraMediaUploadFilter .= ' AND EXISTS (
+                    SELECT __pm%1$s.id 
+                    FROM models\summit\PresentationMediaUpload __pm%1$s
+                    JOIN __pm%1$s.media_upload_type __mut%1$s
+                    JOIN __pm%1$s.presentation __p%1$s_1
+                    WHERE __p%1$s.id = __p%1$s_1.id AND __mut%1$s.id IN ('.implode(',', $v).')
+                ) ';
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type")){
+                $e = $filter->getFilter("has_not_media_upload_with_type");
+                $v = Filter::getValueFromFilterElement($e);
+                $extraMediaUploadFilter .= ' AND NOT EXISTS (
+                    SELECT __pm%1$s.id 
+                    FROM models\summit\PresentationMediaUpload __pm%1$s
+                    JOIN __pm%1$s.media_upload_type __mut%1$s
+                    JOIN __pm%1$s.presentation __p%1$s_1
+                    WHERE __p%1$s.id = __p%1$s_1.id AND __mut%1$s.id IN ('.implode(',', $v).')
+                ) ';
             }
         }
 
@@ -247,7 +240,9 @@ final class DoctrineMemberRepository
                                         __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\') OR __p12.published = 1) ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
-                                SummitSelectedPresentationList::Session).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '12'): '').
+                                SummitSelectedPresentationList::Session
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '12'): '').
+                            (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '12'): ' ').
                             ' )'
                         ),
                         'false' => new DoctrineCaseFilterMapping(
@@ -269,7 +264,9 @@ final class DoctrineMemberRepository
                                 ,
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
-                                SummitSelectedPresentationList::Session).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '12'): '').
+                                SummitSelectedPresentationList::Session
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '12'): '').
+                            (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '12'): ' ').
                             ')'
                         ),
                     ]
@@ -294,6 +291,7 @@ final class DoctrineMemberRepository
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
                             ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '21'): '').
+                            (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '21'): ' ').
                             ' )'
                         ),
                         'false' => new DoctrineCaseFilterMapping(
@@ -314,6 +312,7 @@ final class DoctrineMemberRepository
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
                             ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '21'): '').
+                            (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '21'): ' ').
                             ')'
                         ),
                     ]
@@ -332,6 +331,7 @@ final class DoctrineMemberRepository
                                         __p31.summit = :summit 
                                         AND __p31.published = 0'.
                                 (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
+                                (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '31'): ' ').
                                 'AND NOT EXISTS (
                                             SELECT ___sp31.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp31
@@ -355,8 +355,9 @@ final class DoctrineMemberRepository
                                         LEFT JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit  
-                                        AND __p31.published = 0'
-                                .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
+                                        AND __p31.published = 0'.
+                                (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
+                                (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '31'): ' ').
                                 'AND NOT EXISTS (
                                             SELECT ___sp31.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp31

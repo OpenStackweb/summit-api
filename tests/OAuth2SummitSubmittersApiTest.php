@@ -19,25 +19,25 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
 
     use InsertMemberTestData;
 
-//    protected function setUp(): void
-//    {
-//        parent::setUp();
-//        self::insertMemberTestData(IGroup::TrackChairs);
-//        self::$defaultMember = self::$member;
-//        self::$defaultMember2 = self::$member2;
-//        self::insertSummitTestData();
-//    }
-//
-//    protected function tearDown(): void
-//    {
-//        self::clearSummitTestData();
-//        parent::tearDown();
-//    }
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
 
     public function testGetCurrentSummitSubmittersOrderByID()
     {
         $params = [
-            'id' => 3410, //self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'filter'    => [
@@ -203,5 +203,40 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
         );
 
         $this->assertResponseStatus(200);
+    }
+
+    public function testGetSubmittersWithSubmittedMediaUploadsWithType()
+    {
+        $params = [
+            'id'        => self::$summit->getId(),
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_accepted_presentations==true',
+                'has_media_upload_with_type==59'
+            ],
+            'expand' => 'presentations,accepted_presentations',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $submitters = json_decode($content);
+        $this->assertTrue(!is_null($submitters));
     }
 }

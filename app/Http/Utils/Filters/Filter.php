@@ -634,4 +634,22 @@ final class Filter
     {
         return $this->originalExp;
     }
+
+    /**
+     * @param FilterElement[] $e
+     * @return array
+     */
+    public static function getValueFromFilterElement(array $e): array {
+        $v = [];
+        foreach($e as $f){
+            if(is_array($f->getValue())){
+                foreach ($f->getValue() as $iv){
+                    $v[] = $iv;
+                }
+            }
+            else
+                $v[] = $f->getValue();
+        }
+        return $v;
+    }
 }

@@ -800,6 +800,26 @@ class PresentationSpeaker extends SilverstripeBaseModel
             {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $extraWhere .= " AND EXISTS (
+                    SELECT pmu.id 
+                    FROM models\summit\PresentationMediaUpload pmu
+                    JOIN pmu.media_upload_type mut
+                    JOIN pmu.presentation p_1
+                    WHERE p.id = p_1.id AND mut.id IN (:media_upload_type_id)
+                )";
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $extraWhere .= " AND NOT EXISTS (
+                    SELECT pmu.id 
+                    FROM models\summit\PresentationMediaUpload pmu
+                    JOIN pmu.media_upload_type mut
+                    JOIN pmu.presentation p_1
+                    WHERE p.id = p_1.id AND mut.id IN (:media_upload_type_id)
+                )";
+            }
         }
         if($role == PresentationSpeaker::RoleSpeaker) {
             $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
@@ -864,43 +884,28 @@ class PresentationSpeaker extends SilverstripeBaseModel
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if($filter->hasFilter("presentations_track_id"))
             {
-                $v = [];
-                foreach ($filter->getFilter("presentations_track_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    }
-                    else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
                 $query = $query->setParameter("track_id", $v);
             }
             if($filter->hasFilter("presentations_type_id"))
             {
-                $v = [];
-                foreach($filter->getFilter("presentations_type_id") as $f){
-                    if(is_array($f->getValue())){
-                        foreach ($f->getValue() as $iv){
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
                 $query = $query->setParameter("type_id", $v);
+            }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $v = Filter::getValueFromFilterElement($filter->getFilter("has_media_upload_with_type"));
+                $query = $query->setParameter("media_upload_type_id", $v);
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $v = Filter::getValueFromFilterElement($filter->getFilter("has_not_media_upload_with_type"));
+                $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
 
@@ -997,6 +1002,26 @@ class PresentationSpeaker extends SilverstripeBaseModel
             {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $extraWhere .= " AND EXISTS (
+                    SELECT pmu.id 
+                    FROM models\summit\PresentationMediaUpload pmu
+                    JOIN pmu.media_upload_type mut
+                    JOIN pmu.presentation p_1
+                    WHERE p.id = p_1.id AND mut.id IN (:media_upload_type_id)
+                )";
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $extraWhere .= " AND NOT EXISTS (
+                    SELECT pmu.id 
+                    FROM models\summit\PresentationMediaUpload pmu
+                    JOIN pmu.media_upload_type mut
+                    JOIN pmu.presentation p_1
+                    WHERE p.id = p_1.id AND mut.id IN (:media_upload_type_id)
+                )";
+            }
         }
 
         if ($role == PresentationSpeaker::RoleSpeaker) {
@@ -1034,42 +1059,28 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if (!is_null($filter)){
             if ($filter->hasFilter("presentations_selection_plan_id"))
             {
-                $v = [];
-                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id"))
             {
-                $v = [];
-                foreach ($filter->getFilter("presentations_track_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id"))
             {
-                $v = [];
-                foreach ($filter->getFilter("presentations_type_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
                 $query = $query->setParameter("type_id", $v);
+            }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $v = Filter::getValueFromFilterElement($filter->getFilter("has_media_upload_with_type"));
+                $query = $query->setParameter("media_upload_type_id", $v);
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $v = Filter::getValueFromFilterElement($filter->getFilter("has_not_media_upload_with_type"));
+                $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
 
@@ -1248,6 +1259,26 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if ($filter->hasFilter("presentations_type_id")) {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $extraWhere .= " AND EXISTS (
+                    SELECT pmu.id 
+                    FROM models\summit\PresentationMediaUpload pmu
+                    JOIN pmu.media_upload_type mut
+                    JOIN pmu.presentation p_1
+                    WHERE p.id = p_1.id AND mut.id IN (:media_upload_type_id)
+                )";
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $extraWhere .= " AND NOT EXISTS (
+                    SELECT pmu.id 
+                    FROM models\summit\PresentationMediaUpload pmu
+                    JOIN pmu.media_upload_type mut
+                    JOIN pmu.presentation p_1
+                    WHERE p.id = p_1.id AND mut.id IN (:media_upload_type_id)
+                )";
+            }
         }
 
         if ($role == PresentationSpeaker::RoleSpeaker) {
@@ -1283,40 +1314,26 @@ class PresentationSpeaker extends SilverstripeBaseModel
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_track_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_type_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
                 $query = $query->setParameter("type_id", $v);
+            }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $v = Filter::getValueFromFilterElement($filter->getFilter("has_media_upload_with_type"));
+                $query = $query->setParameter("media_upload_type_id", $v);
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $v = Filter::getValueFromFilterElement($filter->getFilter("has_not_media_upload_with_type"));
+                $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
 

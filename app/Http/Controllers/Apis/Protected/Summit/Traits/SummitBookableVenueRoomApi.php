@@ -173,6 +173,7 @@ trait SummitBookableVenueRoomApi
                     'status',
                     'created',
                     'owner_name',
+                    'owner_email',
                 ];
             },
             function ($filter) use ($summit) {

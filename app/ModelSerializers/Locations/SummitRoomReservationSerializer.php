@@ -59,12 +59,20 @@ final class SummitRoomReservationSerializer extends SilverStripeSerializer
                 switch ($relation) {
                     case 'room': {
                         unset($values['room_id']);
-                        $values['room'] = SerializerRegistry::getInstance()->getSerializer($reservation->getRoom())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['room'] = SerializerRegistry::getInstance()->getSerializer
+                        (
+                            $reservation->getRoom(),
+                            $this->getSerializerType($relation)
+                        )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                     case 'owner': {
                         unset($values['owner_id']);
-                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($reservation->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer
+                        (
+                            $reservation->getOwner(),
+                            $this->getSerializerType($relation)
+                        )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                 }
@@ -72,5 +80,21 @@ final class SummitRoomReservationSerializer extends SilverStripeSerializer
         }
 
         return $values;
+    }
+
+    /**
+     * @param string|null $relation
+     * @return string
+     */
+    protected function getSerializerType(?string $relation = null): string
+    {
+        $serializer_type = SerializerRegistry::SerializerType_Public;
+        $current_member  = $this->resource_server_context->getCurrentUser();
+        if(!is_null($current_member)){
+            if($current_member->isAdmin()){
+                $serializer_type = SerializerRegistry::SerializerType_Private;
+            }
+        }
+        return $serializer_type;
     }
 }

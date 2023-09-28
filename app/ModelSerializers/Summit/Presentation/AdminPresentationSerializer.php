@@ -19,10 +19,10 @@ use models\summit\Presentation;
 class AdminPresentationSerializer extends PresentationSerializer
 {
     /**
-     * @param string $relation
+     * @param string|null $relation
      * @return string
      */
-    protected function getSerializerType(string $relation):string{
+    protected function getSerializerType(?string $relation=null):string{
         $relation = trim($relation);
         if($relation == 'created_by')
             return SerializerRegistry::SerializerType_Admin;

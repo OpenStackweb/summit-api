@@ -50,7 +50,7 @@ final class BaseSerializerTypeSelector implements ISerializerTypeSelector
     /**
      * @return string
      */
-    public function getSerializerType()
+    public function getSerializerType():string
     {
         $serializer_type = SerializerRegistry::SerializerType_Public;
         $current_member  = $this->resource_server_context->getCurrentUser();

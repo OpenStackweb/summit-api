@@ -532,14 +532,6 @@ class SummitSerializer extends SilverStripeSerializer
         return $values;
     }
 
-    /**
-     * @return string
-     */
-    protected function getSerializerType(): string
-    {
-        return SerializerRegistry::SerializerType_Public;
-    }
-
     protected static $expand_mappings = [
         'schedule_settings' => [
             'serializer_type' => SerializerRegistry::SerializerType_Private,

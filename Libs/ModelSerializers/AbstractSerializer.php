@@ -464,4 +464,13 @@ abstract class AbstractSerializer implements IModelSerializer
 
         return implode(',', $prefix_expand);
     }
+
+    /**
+     * @param string|null $relation
+     * @return string
+     */
+    protected function getSerializerType(?string $relation = null):string{
+        return SerializerRegistry::SerializerType_Public;
+    }
+
 }

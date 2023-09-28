@@ -89,9 +89,10 @@ final class AdminSummitSerializer extends SummitSerializer
     ];
 
     /**
+     * @param string|null $relation
      * @return string
      */
-    protected function getSerializerType(): string
+    protected function getSerializerType(?string $relation=null): string
     {
         return SerializerRegistry::SerializerType_Private;
     }

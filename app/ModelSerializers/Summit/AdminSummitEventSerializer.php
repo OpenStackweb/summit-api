@@ -19,10 +19,10 @@ use models\summit\SummitEvent;
 class AdminSummitEventSerializer extends SummitEventSerializer
 {
     /**
-     * @param string $relation
+     * @param string|null $relation
      * @return string
      */
-    protected function getSerializerType(string $relation):string{
+    protected function getSerializerType(?string $relation=null):string{
         $relation = trim($relation);
         if($relation == 'created_by')
             return SerializerRegistry::SerializerType_Admin;

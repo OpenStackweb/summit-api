@@ -22,13 +22,6 @@ use ModelSerializers\SilverStripeSerializer;
  */
 class AuditLogSerializer extends SilverStripeSerializer
 {
-    /**
-     * @param string $relation
-     * @return string
-     */
-    protected function getSerializerType(string $relation):string{
-        return SerializerRegistry::SerializerType_Public;
-    }
 
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {

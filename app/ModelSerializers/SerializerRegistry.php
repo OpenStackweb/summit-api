@@ -27,6 +27,7 @@ use App\ModelSerializers\Locations\SummitBookableVenueRoomAttributeTypeSerialize
 use App\ModelSerializers\Locations\SummitBookableVenueRoomAttributeValueSerializer;
 use App\ModelSerializers\Locations\SummitBookableVenueRoomAvailableSlotSerializer;
 use App\ModelSerializers\Locations\SummitBookableVenueRoomSerializer;
+use App\ModelSerializers\Locations\SummitRoomReservationCSVSerializer;
 use App\ModelSerializers\Locations\SummitRoomReservationSerializer;
 use App\ModelSerializers\Marketplace\ApplianceSerializer;
 use App\ModelSerializers\Marketplace\CloudServiceOfferedSerializer;
@@ -486,7 +487,10 @@ final class SerializerRegistry
         $this->registry['SummitBookableVenueRoomAttributeType'] = SummitBookableVenueRoomAttributeTypeSerializer::class;
         $this->registry['SummitBookableVenueRoomAttributeValue'] = SummitBookableVenueRoomAttributeValueSerializer::class;
         $this->registry['SummitBookableVenueRoomAvailableSlot'] = SummitBookableVenueRoomAvailableSlotSerializer::class;
-        $this->registry['SummitRoomReservation'] = SummitRoomReservationSerializer::class;
+        $this->registry['SummitRoomReservation'] = [
+            self::SerializerType_Public => SummitRoomReservationSerializer::class,
+            self::SerializerType_CSV => SummitRoomReservationCSVSerializer::class,
+        ];
 
         // track tag groups
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;

@@ -20,7 +20,7 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitRoomReservationSerializer
  * @package App\ModelSerializers\Locations
  */
-final class SummitRoomReservationSerializer extends SilverStripeSerializer
+class SummitRoomReservationSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'RoomId'                    => 'room_id:json_int',

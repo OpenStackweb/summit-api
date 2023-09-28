@@ -499,7 +499,7 @@ trait SummitBookableVenueRoomApi
                 true
             );
 
-            $reservation = $this->location_service->updateBookableRoomReservation($summit, intval($room_id), int($reservation_id), $payload);
+            $reservation = $this->location_service->updateBookableRoomReservation($summit, intval($room_id), intval($reservation_id), $payload);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize(
                 SerializerUtils::getExpand(),

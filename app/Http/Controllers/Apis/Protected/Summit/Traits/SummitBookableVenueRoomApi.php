@@ -231,7 +231,6 @@ trait SummitBookableVenueRoomApi
                     'owner_id' => 'sometimes|string',
                     'start_datetime' => 'sometimes|required|date_format:U',
                     'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
-
                 ];
             },
             function () {
@@ -244,6 +243,7 @@ trait SummitBookableVenueRoomApi
                     'status',
                     'created',
                     'owner_name',
+                    'owner_email',
                 ];
             },
             function ($filter) {

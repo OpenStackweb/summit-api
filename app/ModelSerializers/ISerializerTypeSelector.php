@@ -17,5 +17,5 @@ interface ISerializerTypeSelector
     /**
      * @return string
      */
-    public function getSerializerType();
+    public function getSerializerType():string;
 }

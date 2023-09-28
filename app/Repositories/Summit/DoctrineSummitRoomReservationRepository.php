@@ -17,7 +17,6 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\summit\Summit;
 use models\summit\SummitRoomReservation;
 use models\utils\SilverstripeBaseModel;
-use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -54,6 +53,7 @@ final class DoctrineSummitRoomReservationRepository
             'status'          => 'e.status',
             'created'         => 'e.created',
             'owner_name'      => "LOWER(CONCAT(o1.first_name, ' ', o1.last_name))",
+            'owner_email'     => "COALESCE(LOWER(o1.email),LOWER(o1.second_email),LOWER(o1.third_email))",
         ];
     }
 

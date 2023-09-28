@@ -24,14 +24,6 @@ use models\summit\SummitEvent;
 class SummitEventSerializer extends SilverStripeSerializer
 {
 
-    /**
-     * @param string $relation
-     * @return string
-     */
-    protected function getSerializerType(string $relation):string{
-        return SerializerRegistry::SerializerType_Public;
-    }
-
     protected static $array_mappings = [
         'Title' => 'title:json_string',
         'Abstract' => 'description:json_string',

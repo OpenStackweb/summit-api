@@ -54,25 +54,21 @@ final class DoctrineSpeakerRepository
 
         if(!is_null($filter) && $filter instanceof Filter){
             if($filter->hasFilter("presentations_selection_plan_id")){
-                $e = $filter->getFilter("presentations_selection_plan_id");
-                $v = Filter::getValueFromFilterElement($e);
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $extraSelectionStatusFilter .= ' AND __sel_plan%1$s.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_track_id")){
-                $e = $filter->getFilter("presentations_track_id");
-                $v = Filter::getValueFromFilterElement($e);
+                $v = $filter->getValue("presentations_track_id");
                 $extraSelectionStatusFilter .= ' AND __cat%1$s.id IN ('.implode(',', $v).')';
                 $extraSelectionPlanFilter .= ' AND __tr%1$s_:i.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_type_id")){
-                $e = $filter->getFilter("presentations_type_id");
-                $v = Filter::getValueFromFilterElement($e);
+                $v = $filter->getValue("presentations_type_id");
                 $extraSelectionStatusFilter .= ' AND __t%1$s.id IN ('.implode(',', $v).')';
                 $extraSelectionPlanFilter .= ' AND __type%1$s_:i.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("has_media_upload_with_type")){
-                $e = $filter->getFilter("has_media_upload_with_type");
-                $v = Filter::getValueFromFilterElement($e);
+                $v = $filter->getValue("has_media_upload_with_type");
                 $extraMediaUploadFilter .= ' AND EXISTS (
                     SELECT __pm%1$s.id 
                     FROM models\summit\PresentationMediaUpload __pm%1$s
@@ -82,8 +78,7 @@ final class DoctrineSpeakerRepository
                 ) ';
             }
             if($filter->hasFilter("has_not_media_upload_with_type")){
-                $e = $filter->getFilter("has_not_media_upload_with_type");
-                $v = Filter::getValueFromFilterElement($e);
+                $v = $filter->getValue("has_not_media_upload_with_type");
                 $extraMediaUploadFilter .= ' AND NOT EXISTS (
                     SELECT __pm%1$s.id 
                     FROM models\summit\PresentationMediaUpload __pm%1$s

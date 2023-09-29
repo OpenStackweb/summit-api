@@ -884,27 +884,27 @@ class PresentationSpeaker extends SilverstripeBaseModel
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if($filter->hasFilter("presentations_track_id"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
+                $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
             }
             if($filter->hasFilter("presentations_type_id"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
+                $v = $filter->getValue("presentations_type_id");
                 $query = $query->setParameter("type_id", $v);
             }
             if($filter->hasFilter("has_media_upload_with_type"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("has_media_upload_with_type"));
+                $v = $filter->getValue("has_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("has_not_media_upload_with_type"));
+                $v = $filter->getValue("has_not_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
@@ -1059,27 +1059,27 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if (!is_null($filter)){
             if ($filter->hasFilter("presentations_selection_plan_id"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
+                $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
+                $v = $filter->getValue("presentations_type_id");
                 $query = $query->setParameter("type_id", $v);
             }
             if($filter->hasFilter("has_media_upload_with_type"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("has_media_upload_with_type"));
+                $v = $filter->getValue("has_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("has_not_media_upload_with_type"));
+                $v = $filter->getValue("has_not_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
@@ -1314,25 +1314,25 @@ class PresentationSpeaker extends SilverstripeBaseModel
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_selection_plan_id"));
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id")) {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_track_id"));
+                $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("presentations_type_id"));
+                $v = $filter->getValue("presentations_type_id");
                 $query = $query->setParameter("type_id", $v);
             }
             if($filter->hasFilter("has_media_upload_with_type"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("has_media_upload_with_type"));
+                $v = $filter->getValue("has_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
-                $v = Filter::getValueFromFilterElement($filter->getFilter("has_not_media_upload_with_type"));
+                $v = $filter->getValue("has_not_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
         }

@@ -636,10 +636,11 @@ final class Filter
     }
 
     /**
-     * @param FilterElement[] $e
+     * @param string $filter_name
      * @return array
      */
-    public static function getValueFromFilterElement(array $e): array {
+    public function getValue(string $filter_name): array {
+        $e = $this->getFilter($filter_name);
         $v = [];
         foreach($e as $f){
             if(is_array($f->getValue())){

@@ -1194,4 +1194,52 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
         $this->assertTrue($request->id > 0);
         return $request;
     }
+
+    public function testGetSpeakersWithSubmittedMediaUploadsWithType()
+    {
+        $media_upload_ids =array_map(function($v){
+            return $v->getId();
+        }, self::$media_uploads_types);
+
+        $params = [
+            'id'        => self::$summit->getId(),
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_accepted_presentations==true',
+                //'has_alternate_presentations==true',
+                //'has_rejected_presentations==true',
+                sprintf('has_media_upload_with_type==%s', implode("||", $media_upload_ids) ),
+            ],
+            'expand' => 'presentations,accepted_presentations,accepted_presentations.media_uploads',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+        $this->assertTrue(count($speakers->data) > 0);
+        $speaker = $speakers->data[0];
+        $this->assertTrue(count($speaker->accepted_presentations) > 0);
+        $accepted_presentation = $speaker->accepted_presentations[0];
+        $this->assertTrue(count($accepted_presentation->media_uploads) > 0);
+        $media_upload = $accepted_presentation->media_uploads[0];
+        $this->assertTrue(in_array($media_upload->media_upload_type_id, $media_upload_ids));
+    }
 }

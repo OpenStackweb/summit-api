@@ -37,6 +37,7 @@ use models\summit\Presentation;
 use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
+use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\Sponsor;
@@ -51,6 +52,8 @@ use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
+use models\summit\SummitMediaFileType;
+use models\summit\SummitMediaUploadType;
 use models\summit\SummitOrder;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
@@ -232,6 +235,11 @@ trait InsertSummitTestData
 
     static $ticket_types = [];
 
+    static $media_uploads_types = [];
+
+    static $default_media_file_type;
+
+    static $media_file_type_repository;
     /**
      * @throws Exception
      */
@@ -339,6 +347,26 @@ trait InsertSummitTestData
 
         self::$summit->addEventType(self::$defaultPresentationType);
 
+        self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
+        self::$default_media_file_type = new SummitMediaFileType();
+        self::$default_media_file_type->setName("PDF_".rand(1,100));
+        self::$default_media_file_type->setDescription("PDF");
+        self::$default_media_file_type->setAllowedExtensions(".PDF");
+
+        self::$em->persist(self::$default_media_file_type);
+        self::$em->flush();
+
+        // media upload types
+        for($i = 0; $i <5 ; $i++) {
+            $media_upload_type = new SummitMediaUploadType();
+            $media_upload_type->setType(self::$default_media_file_type);
+            $media_upload_type->setName(sprintf("Media Upload Type %s", $i));
+            $media_upload_type->setDescription(sprintf("Media Upload Type %s Description", $i));
+            $media_upload_type->addPresentationType(self::$defaultPresentationType);
+            self::$summit->addMediaUploadType($media_upload_type);
+            self::$media_uploads_types[] = $media_upload_type;
+        }
+
         self::$allow2VotePresentationType = new PresentationType();
         self::$allow2VotePresentationType->setType('TEST PRESENTATION TYPE VOTABLE');
         self::$allow2VotePresentationType->setMinSpeakers(1);
@@ -362,8 +390,6 @@ trait InsertSummitTestData
         self::$summit->addEventType(self::$defaultEventType);
         
         self::$summit->addEventType(self::$allow2VotePresentationType);
-
-
 
         if (self::$defaultMember != null) {
             $attendee = new SummitAttendee();
@@ -614,6 +640,13 @@ trait InsertSummitTestData
             $presentation->setStartDate($start_date);
             $presentation->setEndDate($end_date);
             $presentation->addSpeaker($speaker1);
+            $media_upload = new PresentationMediaUpload();
+            $media_upload_type_idx = array_rand(self::$media_uploads_types);
+            $media_upload->setName(sprintf("Media Upload %s", $i));
+            $media_upload->setDescription(sprintf("Media Upload Description %s", $i));
+            $media_upload->setFilename(sprintf("Media Upload Filename %s", $i));
+            $media_upload->setMediaUploadType(self::$media_uploads_types[$media_upload_type_idx]);
+            $presentation->addMediaUpload($media_upload);
             self::$default_selection_plan->addPresentation($presentation);
             self::$presentations[] = $presentation;
             $presentation->publish();
@@ -621,6 +654,7 @@ trait InsertSummitTestData
             $start_date = $start_date->add(new DateInterval("P1D"));
             $end_date = clone($start_date);
             $end_date = $end_date->add(new DateInterval("P1D"));
+
         }
 
         for($i = 20 ; $i < 40; $i++){
@@ -754,12 +788,14 @@ trait InsertSummitTestData
         }
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
+        self::$default_media_file_type = self::$media_file_type_repository->find(self::$default_media_file_type->getId());
         self::$summit_permission_group = self::$summit_permission_group_repository->find(self::$summit_permission_group->getId());
         self::$summit->clearMetrics();
         self::$summit2->clearMetrics();
         self::$em->remove(self::$summit);
         self::$em->remove(self::$summit2);
         self::$em->remove(self::$summit_permission_group);
+        self::$em->remove(self::$default_media_file_type);
         self::$em->flush();
 
         // reset static vars

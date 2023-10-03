@@ -16,9 +16,11 @@
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
 use models\summit\SummitRegistrationInvitation;
+use models\summit\SummitRoomReservation;
 use models\summit\SummitTicketType;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
@@ -530,6 +532,81 @@ DQL;
         $dql = $query->getDQL();
         $expected_dql = <<<DQL
 SELECT DISTINCT e FROM models\summit\SummitRegistrationInvitation e LEFT JOIN e.tags t LEFT JOIN e.ticket_types tt WHERE t.id = :value_1 OR tt.id = :value_2
+DQL;
+
+        $this->assertNotEmpty($dql);
+        $this->assertEquals($expected_dql, $dql);
+    }
+
+    function testRoomReservationCriteria(){
+
+        $filter_input = [
+            'not_owner_email=@help@fntech.com',
+        ];
+
+        $filter = FilterParser::parse($filter_input, [
+            'not_owner_email' => ['=@'],
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("e")
+            ->select("e")
+            ->from(SummitRoomReservation::class, "e");
+
+        $filter->apply2Query($query,[
+            'status'         => 'e.status:json_string',
+            'start_datetime' => 'e.start_datetime:datetime_epoch',
+            'end_datetime'   => 'e.end_datetime:datetime_epoch',
+            'created'        => 'e.created:datetime_epoch',
+            'room_id' => new DoctrineJoinFilterMapping
+            (
+                'e.room',
+                'r',
+                "r.id :operator :value"
+            ),
+            'room_name' => new DoctrineJoinFilterMapping
+            (
+                'e.room',
+                'r',
+                "r.name :operator :value"
+            ),
+            'venue_id' => new DoctrineJoinFilterMapping
+            (
+                'r.venue',
+                'v',
+                "v.id :operator :value"
+            ),
+            'owner_id' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "o.id :operator :value"
+            ),
+            'owner_name' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "LOWER(CONCAT(o.first_name, ' ', o.last_name)) :operator :value"
+            ),
+            'owner_email' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "o.email :operator :value"
+            ),
+            'not_owner_email' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "NOT(o.email :operator :value)"
+            ),
+        ]);
+
+        $dql = $query->getDQL();
+        $expected_dql = <<<DQL
+SELECT DISTINCT e FROM models\summit\SummitRoomReservation e INNER JOIN e.owner o WHERE NOT(o.email like :value_1)
 DQL;
 
         $this->assertNotEmpty($dql);

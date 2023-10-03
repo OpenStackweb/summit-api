@@ -103,6 +103,12 @@ final class DoctrineSummitRoomReservationRepository
                 'o',
                 "o.email :operator :value"
             ),
+            'not_owner_email' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "NOT(o.email :operator :value)"
+            ),
         ];
     }
 

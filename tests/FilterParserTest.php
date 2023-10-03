@@ -13,14 +13,14 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\Filters\DoctrineInFilterMapping;
-use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
 use models\summit\SummitRegistrationInvitation;
+use models\summit\SummitRoomReservation;
 use models\summit\SummitTicketType;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
@@ -292,12 +292,11 @@ SQL;
     public function testFilterActivities(){
         $filter_input = [
             'selection_plan_id==34',
-            'excluded_event_type_id==638||635'
+            'event_type_id==638||635'
         ];
 
         $filter = FilterParser::parse($filter_input, [
             'selection_plan_id' => ['=='],
-            'excluded_event_type_id'=> ['=='],
             'event_type_id' => ['=='],
         ]);
 
@@ -331,7 +330,6 @@ SQL;
                 "(selp.id :operator :value)"
             ),
             'event_type_id' => "et.id :operator :value",
-            'excluded_event_type_id' => new DoctrineInFilterMapping("et.id"),
         ]);
 
         $dql = $query->getDQL();
@@ -540,24 +538,14 @@ DQL;
         $this->assertEquals($expected_dql, $dql);
     }
 
+    function testRoomReservationCriteria(){
 
-    public function testRegistrationInvitationsCriterias2(){
         $filter_input = [
-            'not_id==7',
+            'not_owner_email=@help@fntech.com',
         ];
 
         $filter = FilterParser::parse($filter_input, [
-            'id' => ['=='],
-            'not_id' => ['=='],
-            'email' => ['@@','=@', '=='],
-            'first_name' =>['@@','=@', '=='],
-            'last_name' => ['@@','=@', '=='],
-            'full_name' => ['@@','=@', '=='],
-            'is_accepted' => ['=='],
-            'is_sent' => ['=='],
-            'ticket_types_id' => ['=='],
-            'tags' => ['@@','=@', '=='],
-            'tags_id' => ['=='],
+            'not_owner_email' => ['=@'],
         ]);
 
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
@@ -565,46 +553,60 @@ DQL;
         $query = $query
             ->distinct("e")
             ->select("e")
-            ->from(SummitRegistrationInvitation::class, "e");
+            ->from(SummitRoomReservation::class, "e");
 
-        $filter->apply2Query($query, [
-            'id' => new DoctrineInFilterMapping('e.id'),
-            'not_id' => new DoctrineNotInFilterMapping('e.id'),
-            'email' => 'e.email:json_string',
-            'first_name' => Filter::buildLowerCaseStringField('e.first_name'),
-            'last_name' => Filter::buildLowerCaseStringField('e.last_name'),
-            'full_name' => Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
-            'is_accepted' => new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        "e.accepted_date is not null"
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "e.accepted_date is null"
-                    ),
-                ]
+        $filter->apply2Query($query,[
+            'status'         => 'e.status:json_string',
+            'start_datetime' => 'e.start_datetime:datetime_epoch',
+            'end_datetime'   => 'e.end_datetime:datetime_epoch',
+            'created'        => 'e.created:datetime_epoch',
+            'room_id' => new DoctrineJoinFilterMapping
+            (
+                'e.room',
+                'r',
+                "r.id :operator :value"
             ),
-            'is_sent' => new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        "e.hash is not null"
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "e.hash is null"
-                    ),
-                ]
+            'room_name' => new DoctrineJoinFilterMapping
+            (
+                'e.room',
+                'r',
+                "r.name :operator :value"
             ),
-            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
-            'ticket_types_id' => new DoctrineLeftJoinFilterMapping("e.ticket_types", "tt" ,"tt.id :operator :value"),
-            'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
-            'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
+            'venue_id' => new DoctrineJoinFilterMapping
+            (
+                'r.venue',
+                'v',
+                "v.id :operator :value"
+            ),
+            'owner_id' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "o.id :operator :value"
+            ),
+            'owner_name' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "LOWER(CONCAT(o.first_name, ' ', o.last_name)) :operator :value"
+            ),
+            'owner_email' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "o.email :operator :value"
+            ),
+            'not_owner_email' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "NOT(o.email :operator :value)"
+            ),
         ]);
 
         $dql = $query->getDQL();
         $expected_dql = <<<DQL
-SELECT DISTINCT e FROM models\summit\SummitRegistrationInvitation e LEFT JOIN e.tags t LEFT JOIN e.ticket_types tt WHERE t.id = :value_1 OR tt.id = :value_2
+SELECT DISTINCT e FROM models\summit\SummitRoomReservation e INNER JOIN e.owner o WHERE NOT(o.email like :value_1)
 DQL;
 
         $this->assertNotEmpty($dql);

@@ -18,7 +18,7 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeBadgePrintRepository")
  * @ORM\Table(name="SummitAttendeeBadgePrint")
  * Class SummitAttendeeBadgePrint
  * @package models\summit
@@ -128,6 +128,10 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
         $print->view_type = $view_type;
 
         return $print;
+    }
+
+    public function getViewTypeName():string{
+        return $this->view_type->getName();
     }
 
 }

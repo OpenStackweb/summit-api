@@ -16,6 +16,7 @@ use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\QueryBuilder;
+use libs\utils\TextUtils;
 use models\main\IMemberRepository;
 use models\main\Member;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -443,7 +444,7 @@ SQL,
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->where("e.email = :email")
-            ->setParameter("email", strtolower(trim($email)))
+            ->setParameter("email", strtolower(TextUtils::trim($email)))
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();

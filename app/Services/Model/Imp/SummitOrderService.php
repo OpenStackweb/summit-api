@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
+use libs\utils\TextUtils;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
@@ -1396,7 +1397,16 @@ final class SummitOrderService
 
         return $this->tx_service->transaction(function () use ($current_user, $order_id, $ticket_id, $payload) {
 
-            Log::debug(sprintf("SummitOrderService::_assignTicket order id %s ticket id %s", $order_id, $ticket_id));
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::_assignTicket order id %s ticket id %s payload %s",
+                    $order_id,
+                    $ticket_id,
+                    json_encode($payload)
+                )
+            );
 
             // lock and get the order
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
@@ -1427,6 +1437,7 @@ final class SummitOrderService
 
             // check attendee email
             $email = $payload['attendee_email'] ?? '';
+            $email = TextUtils::trim($email);
 
             if ($ticket->hasOwner()) {
 
@@ -1451,14 +1462,29 @@ final class SummitOrderService
 
             if (is_null($attendee) && !is_null($member)) {
                 // if we have a member, try to get attendee by member
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::_assignTicket - attendee does not exists for email %s trying to get by member",
+                        $email
+                    )
+                );
                 $attendee = $summit->getAttendeeByMember($member);
             }
 
             if (is_null($attendee)) {
                 // if attendee did not exist , create a new one
-                Log::debug(sprintf("SummitOrderService::_assignTicket - attendee does not exists for email %s creating it", $email));
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::_assignTicket - attendee does not exists for email %s creating it",
+                        $email
+                    )
+                );
                 $attendee = SummitAttendeeFactory::build($summit, [
-                    'email' => trim($email),
+                    'email' => $email,
                 ], $member);
             }
 
@@ -1466,12 +1492,11 @@ final class SummitOrderService
             $first_name = $payload['attendee_first_name'] ?? null;
             $last_name = $payload['attendee_last_name'] ?? null;
             $company = $payload['attendee_company'] ?? null;
-            $email = $payload['attendee_email'] ?? '';
             $extra_questions = $payload['extra_questions'] ?? [];
             $disclaimer_accepted = $payload['disclaimer_accepted'] ?? false;
 
             $normalize_payload = [
-                'email' => trim($email),
+                'email' => $email,
                 'extra_questions' => $extra_questions,
                 'disclaimer_accepted' => $disclaimer_accepted,
             ];

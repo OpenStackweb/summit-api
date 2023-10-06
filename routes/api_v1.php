@@ -1394,7 +1394,14 @@ Route::group(array('prefix' => 'summits'), function () {
 
                         // printing endpoints
 
+                        Route::group(['prefix' => 'prints'], function () {
+                            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@getAllBySummitAndTicket']);
+                            Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@getAllBySummitAndTicketCSV']);
+
+                        });
+
                         // legacy ( default )
+
                         Route::group(['prefix' => 'print'], function () {
                             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadgeDefault']);
                             Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadgeDefault']);

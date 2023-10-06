@@ -61,6 +61,7 @@ use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorSocialNetworkRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAccessLevelTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
@@ -144,6 +145,7 @@ use models\summit\SponsorUserInfoGrant;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendeeBadge;
+use models\summit\SummitAttendeeBadgePrint;
 use models\summit\SummitAttendeeBadgePrintRule;
 use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
@@ -895,6 +897,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitRegistrationFeedMetadataRepository::class,
             function (){
                 return EntityManager::getRepository(SummitRegistrationFeedMetadata::class);
+            }
+        );
+
+        App::singleton(
+            ISummitAttendeeBadgePrintRepository::class,
+            function (){
+                return EntityManager::getRepository(SummitAttendeeBadgePrint::class);
             }
         );
     }

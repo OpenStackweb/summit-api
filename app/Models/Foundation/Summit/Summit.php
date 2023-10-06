@@ -39,6 +39,7 @@ use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -1893,7 +1894,7 @@ class Summit extends SilverstripeBaseModel
     public function getAttendeeByEmail(string $email): ?SummitAttendee
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('email', strtolower(trim($email))));
+        $criteria->where(Criteria::expr()->eq('email', strtolower(TextUtils::trim($email))));
         $attendee = $this->attendees->matching($criteria)->first();
         return $attendee === false ? null : $attendee;
     }

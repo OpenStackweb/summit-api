@@ -680,8 +680,10 @@ SQL;
      * @param DateTime|null $endDate
      * @return PagingResponse
      */
-    public function getAttendeesCheckinsGroupedBy(
-        string $groupBy, PagingInfo $pagingInfo, ?DateTime $startDate  = null, ?DateTime $endDate = null): PagingResponse
+    public function getAttendeesCheckinsGroupedBy
+    (
+        string $groupBy, PagingInfo $pagingInfo, ?DateTime $startDate  = null, ?DateTime $endDate = null
+    ): PagingResponse
     {
         $page = $pagingInfo->getCurrentPage();
         $per_page = $pagingInfo->getPerPage();
@@ -742,6 +744,107 @@ SQL;
 
             $sql .= " LIMIT {$pagingInfo->getPerPage()} OFFSET {$pagingInfo->getOffset()} ";
             Log::debug(sprintf("Summit::getAttendeesCheckinsGroupedBy sql %s", $sql));
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            $res = count($res) > 0 ? $res : [];
+
+            return new PagingResponse
+            (
+                $total,
+                $per_page,
+                $page,
+                intval(ceil($total / $per_page)),
+                $res
+            );
+        } catch (\Exception $ex) {
+            Log::error($ex);
+        }
+        return new PagingResponse
+        (
+            0,
+            $per_page,
+            $page,
+            1,
+            []
+        );
+    }
+
+    /**
+     * @param string $groupBy
+     * @param int $page
+     * @param int $per_page
+     * @param DateTime|null $startDate
+     * @param DateTime|null $endDate
+     * @return PagingResponse
+     */
+    public function getPurchasedTicketsGroupedBy
+    (
+        string $groupBy, PagingInfo $pagingInfo, ?DateTime $startDate  = null, ?DateTime $endDate = null
+    ): PagingResponse
+    {
+        $page = $pagingInfo->getCurrentPage();
+        $per_page = $pagingInfo->getPerPage();
+
+        try {
+            $date_format = "";
+            switch ($groupBy) {
+                case IStatsConstants::GroupByDay:
+                    $date_format = "%b %D";
+                    break;
+                case IStatsConstants::GroupByHour:
+                    $date_format = "%m/%d %h %p";
+                    break;
+                case IStatsConstants::GroupByMinute:
+                    $date_format = "%m/%d %h:%i %p";
+                    break;
+            }
+
+            $offset = self::getOffsetFormat($this->getTimeZoneOffset());
+
+            $sql = <<<SQL
+SELECT COUNT(SummitAttendeeTicket.ID) as qty, 
+       DATE_FORMAT(CONVERT_TZ(SummitAttendeeTicket.TicketBoughtDate,'+00:00','{$offset}'), '{$date_format}') AS label 
+FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+WHERE
+SummitOrder.SummitID = :summit_id AND
+SummitAttendeeTicket.IsActive = 1 AND 
+SummitAttendeeTicket.Status = 'Paid'
+SQL;
+
+            // date filtering
+            if(!is_null($startDate)){
+                if(!is_null($endDate)) {
+                    $sql .= sprintf(
+                        " AND SummitAttendeeTicket.TicketBoughtDate BETWEEN '%s' AND '%s'",
+                        $startDate->format("Y-m-d H:i:s"),
+                        $endDate->format("Y-m-d H:i:s"),
+                    );
+                }
+                else{
+                    $sql .= sprintf(
+                        " AND SummitAttendeeTicket.TicketBoughtDate >= '%s'",
+                        $startDate->format("Y-m-d H:i:s"),
+                    );
+                }
+            }
+            // group by
+            $sql .= " GROUP BY DATE_FORMAT(CONVERT_TZ(SummitAttendeeTicket.TicketBoughtDate,'+00:00','{$offset}'), '{$date_format}')";
+            $sql .= " ORDER BY SummitAttendeeTicket.TicketBoughtDate ASC";
+
+            $count_sql = <<<SQL
+SELECT COUNT(*) FROM ({$sql}) T1
+SQL;
+            $stmt = $this->prepareRawSQL($count_sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            $total = count($res) > 0 ? intval($res[0]) : 0;
+
+            $sql .= " LIMIT {$pagingInfo->getPerPage()} OFFSET {$pagingInfo->getOffset()} ";
+            Log::debug(sprintf("Summit::getTicketsPurchasedGroupedBy sql %s", $sql));
+
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();

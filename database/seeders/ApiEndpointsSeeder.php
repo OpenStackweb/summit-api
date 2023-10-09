@@ -1104,6 +1104,12 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
             ],
             [
                 'name' => 'get-attendees-check-ins-over-time-stats',
@@ -1112,7 +1118,28 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
             ],
+            [
+                'name' => 'get-attendees-purchased-tickets-over-time-stats',
+                'route' => '/api/v1/summits/all/{id}/registration-stats/purchased-tickets',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+
             [
                 'name' => 'get-summit-cached',
                 'route' => '/api/v1/summits/{id}',

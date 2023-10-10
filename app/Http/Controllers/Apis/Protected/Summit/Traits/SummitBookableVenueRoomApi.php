@@ -256,12 +256,13 @@ trait SummitBookableVenueRoomApi
             function () {
                 return SerializerRegistry::SerializerType_CSV;
             },
-            function () {
+            function ()  use($summit){
                 return [
-                    'created' => new EpochCellFormatter,
-                    'last_edited' => new EpochCellFormatter,
-                    'start_datetime' => new EpochCellFormatter,
-                    'end_datetime' => new EpochCellFormatter,
+                    'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'start_datetime' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'end_datetime' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'approved_payment_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
                 ];
             },
             function () {

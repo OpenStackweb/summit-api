@@ -1866,6 +1866,24 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $email
+     * @return SummitAttendee|null
+     */
+    public function getAttendeeByEmailAndMemberNotSet(string $email):?SummitAttendee{
+        $builder = $this->createQueryBuilder();
+        $res = $builder
+            ->select('a')
+            ->from('models\summit\SummitAttendee', 'a')
+            ->join('a.summit', 's')
+            ->where('s.id = :summit_id and a.member is null and a.email = :email')
+            ->setParameter('summit_id', $this->getId())
+            ->setParameter('email', strtolower(TextUtils::trim($email)))
+            ->getQuery()
+            ->getResult();
+        return count($res) > 0 ? $res[0] : null;
+    }
+
+    /**
      * @param SummitAttendee $attendee
      */
     public function addAttendee(SummitAttendee $attendee)

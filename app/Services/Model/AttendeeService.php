@@ -612,26 +612,32 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function updateAttendeesByMemberId(int $member_id): void
     {
-        $this->tx_service->transaction(function () use ($member_id) {
+        Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId member id %s", $member_id));
 
+        // process attendees with members ...
+        $attendees_2_delete = $this->tx_service->transaction(function () use ($member_id) {
+
+            // collection of possible attendees to delete ( dupes )
+            $attendees_2_delete = [];
+            // try to get the member ...
             $member = $this->member_repository->getByIdRefreshed($member_id);
 
             if (!$member instanceof Member) {
                 Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId member %s not found.", $member_id));
-                return;
+                return $attendees_2_delete;
             }
 
+            // get member data
             $fname = $member->getFirstName();
             $lname = $member->getLastName();
             $email = $member->getEmail();
-            // free text
             $company_name = $member->getCompany();
 
             Log::debug
             (
                 sprintf
                 (
-                    "AttendeeService::updateAttendeesByMemberId member %s fname %s lname %s email %s company name %s",
+                    "AttendeeService::updateAttendeesByMemberId got member %s fname %s lname %s email %s company name %s",
                     $member_id,
                     $fname,
                     $lname,
@@ -640,19 +646,73 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 )
             );
 
+            // get all attendees associated to this member ...
             $attendees = $this->attendee_repository->getByMember($member);
+
             if (!is_null($attendees)) {
                 foreach ($attendees as $attendee) {
                     if (!$attendee instanceof SummitAttendee) continue;
-                    Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s", $attendee->getId(), $member_id));
-                    // try to register the company for the summit and get it
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s",
+                            $attendee->getId(),
+                            $member_id
+                        )
+                    );
+
+                    // get the summit and to check for dupe attendees
                     $summit = $attendee->getSummit();
                     if (!$summit instanceof Summit) continue;
+
+                    // check if we have an attendee without member set and with same email
+                    $attendee_without_member = $summit->getAttendeeByEmailAndMemberNotSet($email);
+
+                    if (!is_null($attendee_without_member) && $member->isEmailVerified()) {
+
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "AttendeeService::updateAttendeesByMemberId found attendee %s with email %s and member not set ( marking it for deletion ).",
+                                $attendee_without_member->getId(),
+                                $attendee_without_member->getEmail()
+                            )
+                        );
+
+                        // mark the attendee to be deleted bc its dupe
+
+                        $attendees_2_delete[] = $attendee_without_member->getId();
+
+                        // overwrite email to avoid FK exception
+                        $attendee_without_member->setEmail($attendee_without_member->getEmail() . '-deleted');
+
+                        // check if we have ticket and re-assign them
+                        if ($attendee_without_member->hasTickets()) {
+                            foreach ($attendee_without_member->getTickets() as $ticket) {
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "AttendeeService::updateAttendeesByMemberId re-assigning ticket %s from attendee %s to attendee %s",
+                                        $ticket->getId(),
+                                        $attendee_without_member->getId(),
+                                        $attendee->getId()
+                                    )
+                                );
+                                $attendee->addTicket($ticket);
+                            }
+                        }
+                    }
 
                     $attendee->setFirstName($fname);
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
+
                     // company logic
+
                     if (!empty($company_name)) {
                         $company = $this->company_repository->getByName($company_name);
                         if (!is_null($company)) {
@@ -668,39 +728,80 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 }
             }
 
+            return $attendees_2_delete;
+        });
+
+        // delete dupe attendees
+
+        if(count($attendees_2_delete)){
+            Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId deleting %s attendees", count($attendees_2_delete)));
+            $this->tx_service->transaction(function() use($attendees_2_delete){
+                foreach ($attendees_2_delete as $attendee_id){
+                    $attendee = $this->attendee_repository->getByIdExclusiveLock($attendee_id);
+                    Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId deleting attendee %s", $attendee->getId()));
+                    $this->attendee_repository->delete($attendee);
+                }
+            });
+        }
+
+        // process attendees without members ...
+        $this->tx_service->transaction(function () use ($member_id) {
+
+            // try to get member ...
+            $member = $this->member_repository->getByIdRefreshed($member_id);
+
+            if (!$member instanceof Member) {
+                Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId member %s not found.", $member_id));
+                return;
+            }
+
+            // get member data
+            $fname = $member->getFirstName();
+            $lname = $member->getLastName();
+            $email = $member->getEmail();
+            $company_name = $member->getCompany();
+
             $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
             if (!is_null($attendees)) {
-                foreach ($attendees as $attendee) {
-                    if (!$attendee instanceof SummitAttendee) continue;
-                    Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s ( member null )", $attendee->getId(), $member_id));
 
-                    // try to register the company for the summit and get it
-                    $summit = $attendee->getSummit();
-                    if (!$summit instanceof Summit) continue;
+                    foreach ($attendees as $attendee) {
+                        if (!$attendee instanceof SummitAttendee) continue;
 
-                    // set the member
-                    $attendee->setMember($member);
-                    $attendee->setFirstName($fname);
-                    $attendee->setSurname($lname);
-                    $attendee->setEmail($email);
-                    // company logic
-                    if (!empty($company_name)) {
-                        $company = $this->company_repository->getByName($company_name);
-                        if (!is_null($company)) {
-                            $attendee->setCompany($company);
-                            $company_name = $company->getName();
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s ( member null )",
+                                $attendee->getId(),
+                                $member_id
+                            )
+                        );
+
+
+                        // set the member
+                        $attendee->setMember($member);
+                        $attendee->setFirstName($fname);
+                        $attendee->setSurname($lname);
+                        $attendee->setEmail($email);
+
+                        // company logic
+                        if (!empty($company_name)) {
+                            $company = $this->company_repository->getByName($company_name);
+                            if (!is_null($company)) {
+                                $attendee->setCompany($company);
+                                $company_name = $company->getName();
+                            } else {
+                                $attendee->clearCompany();
+                            }
+
+                            if (!empty($company_name))
+                                $attendee->setCompanyName($company_name);
                         } else {
                             $attendee->clearCompany();
                         }
-
-                        if (!empty($company_name))
-                            $attendee->setCompanyName($company_name);
-                    } else {
-                        $attendee->clearCompany();
                     }
                 }
-            }
-        });
+            });
     }
 
     /**

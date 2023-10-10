@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
+use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\Order;
 use utils\OrderParser;
@@ -73,7 +74,7 @@ trait ParametrizedGetAll
         callable $getFilterValidatorRules,
         callable $getOrderRules,
         callable $applyExtraFilters,
-        callable $serializerType,
+        callable $serializerType = null,
         callable $defaultOrderRules = null,
         callable $defaultPageSize = null,
         callable $queryCallable = null,
@@ -153,7 +154,7 @@ trait ParametrizedGetAll
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                     $serializerParams,
-                    call_user_func($serializerType)
+                    $serializerType  && is_callable($serializerType) ? call_user_func($serializerType) : SerializerRegistry::SerializerType_Public
                 )
             );
 

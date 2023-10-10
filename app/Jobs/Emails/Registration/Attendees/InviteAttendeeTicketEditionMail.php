@@ -123,7 +123,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_email]['type'] = 'string';

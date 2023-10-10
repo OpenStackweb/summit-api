@@ -30,6 +30,8 @@ final class SummitRoomReservationCSVSerializer extends SummitRoomReservationSeri
         $values = parent::serialize($expand, $fields, $relations, $params);
         $values['owner_name'] = $reservation->getOwner()->getFullName();
         $values['owner_email'] = $reservation->getOwner()->getEmail();
+        $values['start_datetime'] = $reservation->getLocalStartDatetime()->getTimestamp();
+        $values['end_datetime'] =  $reservation->getLocalEndDatetime()->getTimestamp();
 
         return $values;
     }

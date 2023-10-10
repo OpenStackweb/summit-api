@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitAttendeeTicketEmail;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use models\summit\SummitAttendeeTicket;
@@ -21,7 +22,7 @@ use models\summit\SummitAttendeeTicket;
  * Class SummitTicketReminderEmail
  * @package App\Jobs\Emails\Registration\Reminders
  */
-class SummitTicketReminderEmail extends AbstractEmailJob
+class SummitTicketReminderEmail extends AbstractSummitAttendeeTicketEmail
 {
 
     /**
@@ -63,6 +64,9 @@ class SummitTicketReminderEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id] = $summit->getVirtualSiteOAuth2ClientId();
+        $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id] = $summit->getMarketingSiteOAuth2ClientId();
+        $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes] = $summit->getMarketingSiteOauth2ClientScopes();
 
         if (empty($payload[IMailTemplatesConstants::support_email]))
             throw new \InvalidArgumentException("missing support_email value");
@@ -76,7 +80,7 @@ class SummitTicketReminderEmail extends AbstractEmailJob
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
         $payload[IMailTemplatesConstants::summit_reassign_ticket_till_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';

@@ -144,7 +144,7 @@ final class GenericSummitAttendeeEmail extends AbstractSummitAttendeeTicketEmail
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
         $payload[IMailTemplatesConstants::owner_first_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';

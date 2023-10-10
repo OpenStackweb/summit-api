@@ -162,7 +162,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
         $payload[IMailTemplatesConstants::hash]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';

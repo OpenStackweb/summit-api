@@ -18,6 +18,7 @@ use models\summit\Presentation;
  */
 class AdminPresentationSerializer extends PresentationSerializer
 {
+
     /**
      * @param string|null $relation
      * @return string
@@ -49,6 +50,7 @@ class AdminPresentationSerializer extends PresentationSerializer
         'PassersCount' => 'passers_count:json_int',
         'LikersCount' => 'likers_count:json_int',
         'SelectorsCount' => 'selectors_count:json_int',
+        'Occupancy' => 'occupancy:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -66,6 +68,7 @@ class AdminPresentationSerializer extends PresentationSerializer
         'likers_count',
         'selectors_count',
         'track_chair_scores_avg',
+        'occupancy',
     ];
 
     /**

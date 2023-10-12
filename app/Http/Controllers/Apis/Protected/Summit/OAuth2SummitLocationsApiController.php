@@ -381,10 +381,11 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     private function _getLocationEvents($summit_id, $location_id, $published = true)
     {
         $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit))
-            if (is_null($summit)) return $this->error404();
+        if (is_null($summit)) return $this->error404();
 
         $location = null;
+
+        $current_user = $this->resource_server_context->getCurrentUser();
 
         if (strtolower($location_id) !== "tbd" && intval($location_id) !== 0) {
             $location = $summit->getLocation(intval($location_id));
@@ -437,7 +438,10 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
                 return $filter;
             },
-            function () {
+            function () use($summit, $current_user) {
+                if(!is_null($current_user) && $current_user->isSummitAllowed($summit))
+                    return SerializerRegistry::SerializerType_Private;
+
                 return SerializerRegistry::SerializerType_Public;
             },
             null,

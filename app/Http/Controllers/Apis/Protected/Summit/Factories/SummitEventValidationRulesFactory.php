@@ -1,4 +1,6 @@
 <?php namespace App\Http\Controllers;
+use models\summit\SummitEvent;
+
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,7 +62,7 @@ final class SummitEventValidationRulesFactory
                 'links' => 'sometimes|url_array',
                 // group event
                 'groups' => 'sometimes|int_array',
-                'occupancy' => 'sometimes|in:EMPTY,25%,50%,75%,FULL',
+                'occupancy' => 'sometimes|in:'.join(',', SummitEvent::ValidOccupanciesValues),
                 'selection_plan_id' => 'sometimes|integer',
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'created_by_id' => 'sometimes|integer',

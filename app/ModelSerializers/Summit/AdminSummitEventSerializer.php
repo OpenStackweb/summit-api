@@ -18,6 +18,14 @@ use models\summit\SummitEvent;
  */
 class AdminSummitEventSerializer extends SummitEventSerializer
 {
+    protected static $array_mappings = [
+        'Occupancy' => 'occupancy:json_string',
+    ];
+
+    protected static $allowed_fields = [
+        'occupancy',
+    ];
+
     /**
      * @param string|null $relation
      * @return string

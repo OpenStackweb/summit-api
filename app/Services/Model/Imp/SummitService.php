@@ -675,6 +675,7 @@ final class SummitService
             }
 
             $event = null;
+
             // existing event
 
             if (!is_null($event_id) && intval($event_id) > 0) {
@@ -713,6 +714,7 @@ final class SummitService
                 $event->setSummit($summit);
                 if (!is_null($event_type))
                     $event->setType($event_type);
+
                 SummitEventFactory::populate($event, $data);
             }
 

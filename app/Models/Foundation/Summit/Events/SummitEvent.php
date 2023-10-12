@@ -999,16 +999,31 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return string
      */
-    public function getOccupancy()
+    public function getOccupancy():?string
     {
         return $this->occupancy;
     }
 
+    const OccupancyEmpty = 'EMPTY';
+    const Occupancy25_Percent = '25%';
+    const Occupancy50_Percent = '50%';
+    const Occupancy75_Percent = '75%';
+    const OccupancyFull = 'FULL';
+
+    const ValidOccupanciesValues = [
+        self::OccupancyEmpty,
+        self::Occupancy25_Percent,
+        self::Occupancy50_Percent,
+        self::Occupancy75_Percent,
+        self::OccupancyFull
+    ];
     /**
      * @param string $occupancy
      */
-    public function setOccupancy($occupancy)
+    public function setOccupancy(string $occupancy)
     {
+        if(!in_array($occupancy, self::ValidOccupanciesValues))
+            throw new ValidationException(sprintf("occupancy %s is not valid", $occupancy));
         $this->occupancy = $occupancy;
     }
 

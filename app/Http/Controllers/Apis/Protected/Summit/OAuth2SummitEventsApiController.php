@@ -651,6 +651,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -666,10 +667,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (is_null($summit))
                 return $this->error404();
 
-            if (!Request::isJson())
-                return $this->error400();
-            $data = Request::json();
-
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member))
                 return $this->error403();
@@ -678,10 +675,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (is_null($event))
                 return $this->error404();
 
-            $isAdmin = $current_member->isAdmin() || $current_member->isSummitAdmin();
+            $isAdmin = $current_member->isSummitAllowed($summit);
             $isTrackChair = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $event->getCategory());
 
-            $payload = $data->all();
+            $payload = $this->getJsonData();
+
             // Creates a Validator instance and validates the data.
             $rules = $isAdmin ? SummitEventValidationRulesFactory::build($payload, true) : null;
             if(is_null($rules)){
@@ -691,16 +689,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if(is_null($rules))
                 return $this->error403();
 
-            $validation = Validator::make($payload, $rules);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload($rules, true);
 
             $fields = [
                 'title',

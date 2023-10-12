@@ -145,6 +145,7 @@ abstract class AbstractPublishService extends AbstractService
         );
 
         if (isset($data['start_date']) && isset($data['end_date'])) {
+
             // we are setting dates
 
             if (!$publishable_event->hasType()) {
@@ -189,10 +190,6 @@ abstract class AbstractPublishService extends AbstractService
             // set local time from UTC
             $publishable_event->setStartDate($start_datetime);
             $publishable_event->setEndDate($end_datetime);
-        }
-        else{
-            // clear dates
-            $publishable_event->clearPublishingDates();
         }
 
         return $this->updateDuration($data, $summit, $publishable_event);

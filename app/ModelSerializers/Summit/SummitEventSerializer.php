@@ -12,9 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Facades\ResourceServerContext;
 use Libs\ModelSerializers\AbstractSerializer;
-use models\main\Member;
 use models\summit\SummitEvent;
 
 /**

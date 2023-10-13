@@ -1817,50 +1817,134 @@ final class SummitService
             if (is_null($event))
                 throw new EntityNotFoundException(sprintf("event %s not found!", $event_id));
 
-            if ($event instanceof Presentation)
-                throw new ValidationException(sprintf("event %s is not allowed to be cloned!", $event_id));
+            $event_clone = SummitEventFactory::build($event->getType(), $summit);
 
-            $eventClone = SummitEventFactory::build($event->getType(), $summit);
-
-            $eventClone->setTitle($event->getTitle());
-            $eventClone->setAbstract($event->getAbstract());
-            $eventClone->setLocation($event->getLocation());
-            $eventClone->setAllowFeedBack($event->getAllowFeedback());
-            $eventClone->setSocialSummary($event->getSocialSummary());
-            $eventClone->setStartDate($event->getLocalStartDate());
-            $eventClone->setEndDate($event->getLocalEndDate());
-            $eventClone->setCategory($event->getCategory());
-            $eventClone->setEtherpadLink($event->getEtherpadLink());
-            $eventClone->setStreamingUrl($event->getStreamingUrl());
-            $eventClone->setCreatedBy(ResourceServerContext::getCurrentUser(false));
-            $eventClone->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
-
+            $event_clone->setTitle($event->getTitle());
+            $event_clone->setAbstract($event->getAbstract());
+            $event_clone->setAllowFeedBack($event->getAllowFeedback());
+            $event_clone->setSocialSummary($event->getSocialSummary());
+            $event_clone->setHeadCount($event->getHeadCount());
             if ($event->hasRSVPTemplate()) {
-                $eventClone->setRSVPTemplate($event->getRSVPTemplate());
+                $event_clone->setRSVPTemplate($event->getRSVPTemplate());
+            }
+            $event_clone->setRSVPLink($event->getRSVPLink());
+            $event_clone->setRSVPMaxUserNumber($event->getRSVPMaxUserNumber());
+            $event_clone->setRSVPMaxUserWaitListNumber($event->getRSVPMaxUserWaitListNumber());
+            $event_clone->setOccupancy($event->getOccupancy());
+
+            $external_id = $event->getExternalId();
+            if ($external_id != null) {
+                $event_clone->setExternalId($external_id);
             }
 
-            if ($event->isExternalRSVP()) {
-                $eventClone->setRSVPLink($event->getRSVPLink());
+            $location = $event->getLocation();
+            if ($location != null) {
+                $event_clone->setLocation($location);
             }
+
+            $local_start_date = $event->getLocalStartDate();
+            if ($local_start_date != null) {
+                $event_clone->setStartDate($local_start_date);
+            }
+
+            $local_end_date = $event->getLocalEndDate();
+            if ($local_end_date != null) {
+                $event_clone->setEndDate($local_end_date);
+            }
+
+            $category = $event->getCategory();
+            if ($category != null) {
+                $event_clone->setCategory($category);
+            }
+
+            $event_clone->setStreamingUrl($event->getStreamingUrl());
+
+            $etherpad_link = $event->getEtherpadLink();
+            if ($etherpad_link != null) {
+                $event_clone->setEtherpadLink($etherpad_link);
+            }
+
+            $meeting_url = $event->getMeetingUrl();
+            if ($meeting_url != null) {
+                $event_clone->setMeetingUrl($meeting_url);
+            }
+
+            if ($event->hasImage()) {
+                $event_clone->setImage($event->getImage());
+            }
+
+            $mux_playback_id = $event->getMuxPlaybackId();
+            if ($mux_playback_id != null) {
+                $event_clone->setMuxPlaybackId($mux_playback_id);
+            }
+
+            $mux_asset_id = $event->getMuxAssetId();
+            if ($mux_asset_id != null) {
+                $event_clone->setMuxAssetId($mux_asset_id);
+            }
+
+            $level = $event->getLevel();
+            if ($level != null) {
+                $event_clone->setLevel($level);
+            }
+
+            $current_user = ResourceServerContext::getCurrentUser(false);
+
+            $event_clone->setCreatedBy($current_user);
+            $event_clone->setUpdatedBy($current_user);
+            $event_clone->setStreamIsSecure($event->IsSecureStream());
 
             foreach ($event->getSponsors() as $sponsor) {
-                $eventClone->addSponsor($sponsor);
+                $event_clone->addSponsor($sponsor);
             }
 
             foreach ($event->getTags() as $tag) {
-                $eventClone->addTag($tag);
+                $event_clone->addTag($tag);
             }
 
             // check if SummitEventWithFile
 
             if ($event instanceof SummitEventWithFile && $event->hasAttachment()) {
-                $eventClone->setAttachment($event->getAttachment());
+                $event_clone->setAttachment($event->getAttachment());
             }
 
-            $this->event_repository->add($eventClone);
+            if ($event instanceof Presentation) {
+                $event_clone->setStatus($event->getStatus());
+                $event_clone->setProgress($event->getProgress());
+                $event_clone->setViewsCount($event->getViewsCount());
+                $event_clone->setProblemAddressed($event->getProblemAddressed());
+                $event_clone->setAttendeesExpectedLearnt($event->getAttendeesExpectedLearnt());
+                $event_clone->setToRecord($event->getToRecord());
+                $event_clone->setAttendingMedia($event->getAttendingMedia());
+                $event_clone->setSlug($event->getSlug());
+                $event_clone->setSelectionPlan($event->getSelectionPlan());
 
-            return $eventClone;
+                $last_order = $this->event_repository->getLastPresentationOrderBySummit($summit->getId());
+                if ($last_order > 0) {
+                    $event_clone->setCustomOrder($last_order + 1);
+                }
 
+                $moderator = $event->getModerator();
+                if ($moderator != null) {
+                    $event_clone->setModerator($moderator);
+                }
+
+                $disclaimer_accepted_date = $event->getDisclaimerAcceptedDate();
+                if ($disclaimer_accepted_date != null) {
+                    $event_clone->setDisclaimerAcceptedDate($disclaimer_accepted_date);
+                }
+
+                foreach ($event->getSpeakers() as $speaker) {
+                    $event_clone->addSpeaker($speaker);
+                }
+
+                foreach ($event->getPresentationActions() as $action) {
+                    $event_clone->setActionByType($action->getType());
+                }
+            }
+            $this->event_repository->add($event_clone);
+
+            return $event_clone;
         });
     }
 

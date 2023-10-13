@@ -36,6 +36,7 @@ final class DoctrineSummitAttendeeBadgePrintRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query = $query->innerJoin("e.badge", "b");
+        $query = $query->innerJoin("e.requestor", "r");
         $query = $query->innerJoin("e.view_type", "vt");
         $query = $query->innerJoin("b.ticket", "t");
         $query = $query->innerJoin("t.order", "o");
@@ -52,6 +53,8 @@ final class DoctrineSummitAttendeeBadgePrintRepository
             'view_type_id' => new DoctrineInFilterMapping('vt.id'),
             'created' => Filter::buildDateTimeEpochField('e.created'),
             'print_date'=>Filter::buildDateTimeEpochField('e.print_date'),
+            'requestor_full_name' => "CONCAT(LOWER(r.first_name), ' ', LOWER(r.last_name)) :operator LOWER(:value) )",
+            'requestor_email' => 'r.email',
         ];
     }
 
@@ -61,7 +64,11 @@ final class DoctrineSummitAttendeeBadgePrintRepository
             'id' => 'e.id',
             'created' => 'e.created',
             'view_type_id' => 'vt.id',
-            'print_date'=>'e.print_date'
+            'print_date'=>'e.print_date',
+            "requestor_full_name" => <<<SQL
+LOWER(CONCAT(r.first_name, ' ', r.first_name))
+SQL,
+            'requestor_email' => 'r.email',
         ];
     }
 

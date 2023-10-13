@@ -33,7 +33,8 @@ final class SummitAttendeeBadgePrintSerializer extends SilverStripeSerializer
             'type' => One2ManyExpandSerializer::class,
             'original_attribute' => 'requestor_id',
             'getter' => 'getRequestor',
-            'has' => 'hasRequestor'
+            'has' => 'hasRequestor',
+            'serializer_type' => SerializerRegistry::SerializerType_Admin,
         ],
         'badge' => [
             'type' => One2ManyExpandSerializer::class,

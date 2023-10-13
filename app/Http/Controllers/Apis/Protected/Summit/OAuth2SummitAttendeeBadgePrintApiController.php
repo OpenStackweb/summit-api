@@ -12,15 +12,10 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepository;
-use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
-use App\Rules\Boolean;
 use models\oauth2\IResourceServerContext;
-use models\summit\IOrderConstants;
 use models\summit\ISummitRepository;
-use models\summit\SummitAttendee;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
@@ -59,6 +54,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                     'view_type_id' =>  ['=='],
                     'created' =>  ['>', '<', '<=', '>=', '==','[]'],
                     'print_date' =>  ['>', '<', '<=', '>=', '==','[]'],
+                    'requestor_full_name' => ['==','@@','=@'],
+                    'requestor_email' => ['==','@@','=@'],
                 ];
             },
             function () {
@@ -67,6 +64,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                     'view_type_id' => 'sometimes|integer',
                     'created' =>  'sometimes|date_format:U',
                     'print_date'=>  'sometimes|date_format:U',
+                    'requestor_full_name' => 'sometimes|string',
+                    'requestor_email' => 'sometimes|string',
                 ];
             },
             function () {
@@ -75,6 +74,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                     'created',
                     'view_type_id',
                     'print_date',
+                    'requestor_full_name',
+                    'requestor_email',
                 ];
             },
             function ($filter) use ($summit, $ticket_id) {
@@ -99,6 +100,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                     'view_type_id' =>  ['=='],
                     'created' =>   ['>', '<', '<=', '>=', '==','[]'],
                     'print_date' =>   ['>', '<', '<=', '>=', '==','[]'],
+                    'requestor_full_name' => ['==','@@','=@'],
+                    'requestor_email' => ['==','@@','=@'],
                 ];
             },
             function () {
@@ -107,6 +110,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                     'view_type_id' => 'sometimes|integer',
                     'created' =>  'sometimes|date_format:U',
                     'print_date'=>  'sometimes|date_format:U',
+                    'requestor_full_name' => 'sometimes|string',
+                    'requestor_email' => 'sometimes|string',
                 ];
             },
             function () {
@@ -115,6 +120,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                     'created',
                     'view_type_id',
                     'print_date',
+                    'requestor_full_name',
+                    'requestor_email',
                 ];
             },
             function ($filter) use ($summit, $ticket_id) {

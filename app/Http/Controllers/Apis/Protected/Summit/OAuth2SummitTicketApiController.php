@@ -173,6 +173,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'refunded_amount',
                     'final_amount_adjusted',
                     'badge_type_id',
+                    'badge_type',
                 ];
             },
             function ($filter) use ($summit) {
@@ -323,6 +324,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'refunded_amount',
                     'final_amount_adjusted',
                     'badge_type_id',
+                    'badge_type',
                 ];
             },
             function ($filter) use ($summit) {

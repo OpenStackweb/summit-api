@@ -203,6 +203,7 @@ SQL,
             'refunded_amount' => 'HIDDEN_REFUNDED_AMOUNT',
             'final_amount_adjusted' => 'HIDDEN_FINAL_AMOUNT_ADJUSTED',
             'badge_type_id' => 'bt.id',
+            'badge_type' => 'bt.name',
         ];
     }
 

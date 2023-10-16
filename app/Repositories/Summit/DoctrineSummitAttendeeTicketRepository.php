@@ -14,7 +14,6 @@
 
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
-use Google\Service\AccessContextManager\AccessLevel;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRefundRequestConstants;
@@ -25,7 +24,6 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitAttendeeTicketRefundRequest;
 use models\utils\IEntity;
 use utils\DoctrineCaseFilterMapping;
-use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 
@@ -144,7 +142,7 @@ final class DoctrineSummitAttendeeTicketRepository
                         ),
                     ]
                 ),
-
+            'badge_type_id' => 'bt.id:json_int',
         ];
     }
 
@@ -197,6 +195,14 @@ final class DoctrineSummitAttendeeTicketRepository
             "owner_name" => <<<SQL
 COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
+            'ticket_type' => 'tt.name',
+            'final_amount' => 'HIDDEN_FINAL_AMOUNT',
+            'owner_email' => 'COALESCE(LOWER(m.email), LOWER(m.second_email), LOWER(m.third_email), LOWER(a.email))',
+            'promo_code' => 'pc.code',
+            'bought_date' => 'e.bought_date',
+            'refunded_amount' => 'HIDDEN_REFUNDED_AMOUNT',
+            'final_amount_adjusted' => 'HIDDEN_FINAL_AMOUNT_ADJUSTED',
+            'badge_type_id' => 'bt.id',
         ];
     }
 

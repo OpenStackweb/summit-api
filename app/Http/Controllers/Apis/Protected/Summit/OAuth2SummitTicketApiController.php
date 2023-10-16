@@ -122,6 +122,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag' => ['==', '@@', '=@'],
                     'final_amount' => ['==', '<>', '>=', '>'],
                     'is_printable' => ['=='],
+                    'badge_type_id' => ['=='],
                 ];
             },
             function () {
@@ -153,6 +154,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag' => 'sometimes|string',
                     'final_amount' => 'sometimes|numeric',
                     'is_printable' => ['sometimes', new Boolean()],
+                    'badge_type_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -163,6 +165,14 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_name',
                     'owner_first_name',
                     'owner_last_name',
+                    'ticket_type',
+                    'final_amount',
+                    'owner_email',
+                    'promo_code',
+                    'bought_date',
+                    'refunded_amount',
+                    'final_amount_adjusted',
+                    'badge_type_id',
                 ];
             },
             function ($filter) use ($summit) {
@@ -262,6 +272,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_description' => ['@@', '=@'],
                     'final_amount' => ['==', '<>', '>=', '>'],
                     'is_printable' => ['=='],
+                    'badge_type_id' => ['=='],
                 ];
             },
             function () {
@@ -293,6 +304,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag_id' => 'sometimes|integer',
                     'final_amount' => 'sometimes|numeric',
                     'is_printable' => ['sometimes', new Boolean()],
+                    'badge_type_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -303,6 +315,14 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_name',
                     'owner_first_name',
                     'owner_last_name',
+                    'ticket_type',
+                    'final_amount',
+                    'owner_email',
+                    'promo_code',
+                    'bought_date',
+                    'refunded_amount',
+                    'final_amount_adjusted',
+                    'badge_type_id',
                 ];
             },
             function ($filter) use ($summit) {
@@ -421,6 +441,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
              * attendee_company (optional)
              * ticket_type_name ( mandatory if id and number are missing)
              * ticket_type_id ( mandatory if id and number are missing)
+             * promo_code_id (optional)
+             * promo_code (optional)
              * ticket_promo_code (optional)
              * badge_type_id (optional)
              * badge_type_name (optional)
@@ -439,6 +461,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 'attendee_company' => '',
                 'ticket_type_name' => '',
                 'ticket_type_id' => '',
+                'promo_code_id' => '',
+                'promo_code' => '',
                 'ticket_promo_code' => '',
                 'badge_type_id' => '',
                 'badge_type_name' => '',

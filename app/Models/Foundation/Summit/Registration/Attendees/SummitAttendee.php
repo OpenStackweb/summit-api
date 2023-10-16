@@ -194,7 +194,16 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function setSummitHallCheckedIn(bool $summit_hall_checked_in): void
     {
-        Log::debug(sprintf("SummitAttendee::setSummitHallCheckedIn for attendee %s", $this->getId()));
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendee::setSummitHallCheckedIn for attendee %s summit_hall_checked_in %b",
+                $this->getId(),
+                $summit_hall_checked_in
+            )
+        );
+
         $this->summit_hall_checked_in = $summit_hall_checked_in;
         $this->summit_hall_checked_in_date = $summit_hall_checked_in ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
     }

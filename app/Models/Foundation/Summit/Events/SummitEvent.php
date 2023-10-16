@@ -1010,12 +1010,15 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     const Occupancy75_Percent = '75%';
     const OccupancyFull = 'FULL';
 
+    const OccupancyOverflow = 'OVERFLOW';
+
     const ValidOccupanciesValues = [
         self::OccupancyEmpty,
         self::Occupancy25_Percent,
         self::Occupancy50_Percent,
         self::Occupancy75_Percent,
-        self::OccupancyFull
+        self::OccupancyFull,
+        self::OccupancyOverflow,
     ];
     /**
      * @param string $occupancy

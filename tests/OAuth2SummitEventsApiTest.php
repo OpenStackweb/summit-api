@@ -1913,7 +1913,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testCloneEvent($summit_id = 25, $event_id= 22943)
+    public function testCloneEvent($summit_id = 3693, $event_id= 119634)
     {
         $params = [
 

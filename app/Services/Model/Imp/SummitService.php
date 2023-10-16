@@ -1908,6 +1908,16 @@ final class SummitService
                 $event_clone->setAttachment($event->getAttachment());
             }
 
+            if ($event instanceof SummitGroupEvent) {
+                $group_ids = $event->getGroupsIds();
+
+                foreach ($group_ids as $group_id) {
+                    $group = $this->group_repository->getById(intval($group_id));
+                    if (is_null($group)) throw new EntityNotFoundException(sprintf('group id %s', $group_id));
+                    $event_clone->addGroup($group);
+                }
+            }
+
             if ($event instanceof Presentation) {
                 $event_clone->setStatus($event->getStatus());
                 $event_clone->setProgress($event->getProgress());

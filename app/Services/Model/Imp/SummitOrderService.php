@@ -3453,6 +3453,8 @@ final class SummitOrderService
             * attendee_company_id (optional)
             * ticket_type_name ( mandatory if id and number are missing)
             * ticket_type_id ( mandatory if id and number are missing)
+            * promo_code_id (optional)
+            * promo_code (optional)
             * ticket_promo_code (optional)
             * badge_type_id (optional)
             * badge_type_name (optional)
@@ -3602,6 +3604,16 @@ final class SummitOrderService
                         if ($reader->hasColumn('ticket_promo_code')) {
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['ticket_promo_code']));
                             $promo_code = $this->promo_code_repository->getByCode($row['ticket_promo_code']);
+                        }
+
+                        if ($reader->hasColumn('promo_code_id')) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by id %s", $row['promo_code_id']));
+                            $promo_code = $this->promo_code_repository->getById(intval($row['promo_code_id']));
+                        }
+
+                        if (is_null($promo_code) && $reader->hasColumn('promo_code')) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['promo_code']));
+                            $promo_code = $this->promo_code_repository->getByCode($row['promo_code']);
                         }
 
                         if (is_null($ticket_type) && $reader->hasColumn('ticket_type_id')) {

@@ -548,8 +548,8 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
     public function testIngestTicketData()
     {
         $csv_content = <<<CSV
-attendee_email,attendee_first_name,attendee_last_name,ticket_type_name,badge_type_name,Bloomreach Connect Summit - Day 1,User Group - Day 2,Tech Track - Day 3,Partner Summit - Day 4
-smarcet+json12@gmail.com,Jason12,Marcet,General Admission,General Admission,1,1,1,1
+attendee_email,attendee_first_name,attendee_last_name,ticket_type_name,badge_type_name,promo_code_id,promo_code,Bloomreach Connect Summit - Day 1,User Group - Day 2,Tech Track - Day 3,Partner Summit - Day 4
+smarcet+json12@gmail.com,Jason12,Marcet,General Admission,General Admission,1,FNSPEAKER,1,1,1,1
 CSV;
         $path = "/tmp/tickets.csv";
 
@@ -894,11 +894,11 @@ CSV;
     public function testGetAllTicketsByPromoCodeTag()
     {
         $params = [
-            'id' => 3343,
+            'id' => 3693, //self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'filter' => [
-                'promo_code_tag_id==23',
+                'badge_type_id==2036',
             ],
             'order' => '+id'
         ];

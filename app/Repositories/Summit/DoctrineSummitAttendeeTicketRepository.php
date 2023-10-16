@@ -160,7 +160,7 @@ final class DoctrineSummitAttendeeTicketRepository
                         ),
                     ]
                 ),
-
+            'badge_type_id' => 'bt.id:json_int',
         ];
     }
 

@@ -137,6 +137,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
             function () {
                 return [
                     'created' => new EpochCellFormatter(),
+                    'last_edited' => new EpochCellFormatter(),
+                    'print_date' => new EpochCellFormatter(),
                 ];
             },
             function () {

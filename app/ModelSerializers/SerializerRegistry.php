@@ -451,7 +451,7 @@ final class SerializerRegistry
         $this->registry['SummitAttendeeBadge'] = SummitAttendeeBadgeSerializer::class;
         $this->registry['SummitAttendeeBadgePrint'] = [
             self::SerializerType_Public => SummitAttendeeBadgePrintSerializer::class,
-            self::SerializerType_CSV => SummitAttendeeBadgePrintSerializer::class,
+            self::SerializerType_CSV => SummitAttendeeBadgePrintCSVSerializer::class,
         ];
 
         $this->registry['SponsorBadgeScan'] = [

@@ -490,9 +490,7 @@ SQL,
         return $this->getParametrizedAllByPage(function () {
             return $this->getEntityManager()->createQueryBuilder()
                 ->select("e")
-                ->from($this->getBaseEntity(), "e")
-                ->andWhere("e.first_name is not null")
-                ->andWhere("e.last_name is not null");
+                ->from($this->getBaseEntity(), "e");
         },
             $paging_info,
             $filter,

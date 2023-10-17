@@ -1025,6 +1025,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function setOccupancy(string $occupancy)
     {
+        $occupancy = trim($occupancy);
+        if(empty($occupancy)) return;
+
         if(!in_array($occupancy, self::ValidOccupanciesValues))
             throw new ValidationException(sprintf("occupancy %s is not valid", $occupancy));
         $this->occupancy = $occupancy;

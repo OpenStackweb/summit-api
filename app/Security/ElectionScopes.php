@@ -18,6 +18,7 @@
  */
 final class ElectionScopes
 {
+    const ReadAllElections         = 'elections/read';  // read all elections
     const WriteMyCandidateProfile    = 'elections/candidates/write/me';
     const NominatesCandidates     = 'elections/candidates/nominate';
 }

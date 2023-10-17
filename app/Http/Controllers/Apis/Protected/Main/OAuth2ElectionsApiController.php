@@ -12,16 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Elections\Election;
+use App\Models\Foundation\Elections\IElectionsRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IElectionService;
-use Exception;
-use App\Models\Foundation\Elections\IElectionsRepository;
-use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
+use utils\Filter;
 use utils\PagingInfo;
 
 /**
@@ -33,6 +31,8 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
 
     use ParametrizedGetAll;
 
+    use RequestProcessor;
+
     /**
      * @var IElectionService
      */
@@ -40,8 +40,8 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
 
     public function __construct
     (
-        IElectionsRepository $repository,
-        IElectionService $service,
+        IElectionsRepository   $repository,
+        IElectionService       $service,
         IResourceServerContext $resource_server_context
     )
     {
@@ -51,14 +51,61 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     }
 
     /**
+     * @return mixed
+     */
+    public function getAll()
+    {
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => Filter::buildStringDefaultOperators(),
+                    'opens' => Filter::buildEpochDefaultOperators(),
+                    'closes' => Filter::buildEpochDefaultOperators(),
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'opens' => 'sometimes|date_format:U',
+                    'closes' => 'sometimes|date_format:U',
+                ];
+            },
+            function () {
+                return [
+                    'name',
+                    'id',
+                    'opens',
+                    'closes',
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Private;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getCurrent()
     {
-        try {
+        return $this->processRequest(function () {
             $election = $this->repository->getCurrent();
-            if (is_null($election))
-                throw new EntityNotFoundException();
+            if (!$election instanceof Election)
+                return $this->error404();
 
             return $this->ok
             (
@@ -72,19 +119,33 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
                     )
             );
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessage());
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
+    }
+
+    /**
+     * @param $election_id
+     * @return mixed
+     */
+    public function getById($election_id)
+    {
+        return $this->processRequest(function () use ($election_id) {
+            $election = $this->repository->getById(intval($election_id));
+            if (!$election instanceof Election)
+                return $this->error404();
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($election)
+                    ->serialize
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
+                    )
+            );
+
+        });
     }
 
     /**
@@ -92,63 +153,101 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
      */
     public function getCurrentCandidates()
     {
-        try {
-            $election = $this->repository->getCurrent();
-            if (is_null($election))
-                throw new EntityNotFoundException();
 
-            return $this->_getAll(
-                function () {
-                    return [
-                        'first_name' => ['=@', '=='],
-                        'last_name' => ['=@', '=='],
-                        'full_name' => ['=@', '=='],
-                    ];
-                },
-                function () {
-                    return [
-                        'first_name' => 'sometimes|string',
-                        'last_name' => 'sometimes|string',
-                        'full_name' => 'sometimes|string',
-                    ];
-                },
-                function () {
-                    return [
-                        'first_name',
-                        'last_name',
-                    ];
-                },
-                function ($filter) use ($election) {
-                    return $filter;
-                },
-                function () {
-                    return SerializerRegistry::SerializerType_Public;
-                },
-                null,
-                null,
-                function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($election) {
-                    return $this->repository->getAcceptedCandidates
-                    (
-                        $election,
-                        new PagingInfo($page, $per_page),
-                        call_user_func($applyExtraFilters, $filter),
-                        $order
-                    );
-                }
-            );
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
+        $election = $this->repository->getCurrent();
+        if (!$election instanceof Election)
             return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessage());
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'first_name',
+                    'last_name',
+                ];
+            },
+            function ($filter) use ($election) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($election) {
+                return $this->repository->getAcceptedCandidates
+                (
+                    $election,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getElectionCandidates($election_id)
+    {
+
+        $election = $this->repository->getById(intval($election_id));
+        if (!$election instanceof Election)
+            return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'first_name',
+                    'last_name',
+                ];
+            },
+            function ($filter) use ($election) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($election) {
+                return $this->repository->getAcceptedCandidates
+                (
+                    $election,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     /**
@@ -156,63 +255,98 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
      */
     public function getCurrentGoldCandidates()
     {
-        try {
-            $election = $this->repository->getCurrent();
-            if (is_null($election))
-                throw new EntityNotFoundException();
 
-            return $this->_getAll(
-                function () {
-                    return [
-                        'first_name' => ['=@', '=='],
-                        'last_name' => ['=@', '=='],
-                        'full_name' => ['=@', '=='],
-                    ];
-                },
-                function () {
-                    return [
-                        'first_name' => 'sometimes|string',
-                        'last_name' => 'sometimes|string',
-                        'full_name' => 'sometimes|string',
-                    ];
-                },
-                function () {
-                    return [
-                        'first_name',
-                        'last_name'
-                    ];
-                },
-                function ($filter) use ($election) {
-                    return $filter;
-                },
-                function () {
-                    return SerializerRegistry::SerializerType_Public;
-                },
-                null,
-                null,
-                function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($election) {
-                    return $this->repository->getGoldCandidates
-                    (
-                        $election,
-                        new PagingInfo($page, $per_page),
-                        call_user_func($applyExtraFilters, $filter),
-                        $order
-                    );
-                }
-            );
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
+        $election = $this->repository->getCurrent();
+        if (!$election instanceof Election)
             return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessage());
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'first_name',
+                    'last_name'
+                ];
+            },
+            function ($filter) use ($election) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($election) {
+                return $this->repository->getGoldCandidates
+                (
+                    $election,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    public function getElectionGoldCandidates($election_id)
+    {
+
+        $election = $this->repository->getById(intval($election_id));
+        if (!$election instanceof Election)
+            return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'first_name',
+                    'last_name'
+                ];
+            },
+            function ($filter) use ($election) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($election) {
+                return $this->repository->getGoldCandidates
+                (
+                    $election,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     use GetAndValidateJsonPayload;
@@ -222,13 +356,13 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
      */
     public function updateMyCandidateProfile()
     {
-        try {
+        return $this->processRequest(function () {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
             $election = $this->repository->getCurrent();
-            if (is_null($election))
-                throw new EntityNotFoundException();
+            if (!$election instanceof Election)
+                return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'bio' => 'sometimes|string',
@@ -256,16 +390,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
                     SerializerUtils::getRelations()
                 )
             );
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessage());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404($ex2->getMessage());
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -274,13 +399,13 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
      */
     public function nominateCandidate($candidate_id)
     {
-        try {
+        return $this->processRequest(function () use ($candidate_id) {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
             $election = $this->repository->getCurrent();
-            if (is_null($election))
-                throw new EntityNotFoundException();
+            if (!$election instanceof Election)
+                return $this->error404();
 
             $nomination = $this->service->nominateCandidate($current_member, intval($candidate_id), $election);
 
@@ -293,15 +418,6 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
                 )
             );
 
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404($ex2->getMessage());
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 }

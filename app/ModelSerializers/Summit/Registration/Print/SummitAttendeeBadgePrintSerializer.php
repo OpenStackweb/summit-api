@@ -18,7 +18,7 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitAttendeeBadgePrintSerializer
  * @package ModelSerializers
  */
-final class SummitAttendeeBadgePrintSerializer extends SilverStripeSerializer
+class SummitAttendeeBadgePrintSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'PrintDate'           => 'print_date:datetime_epoch',

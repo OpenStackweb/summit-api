@@ -106,8 +106,8 @@ class AdminPresentationSerializer extends PresentationSerializer
             $values['streaming_type'] = $presentation->getStreamingType();
         if(in_array("etherpad_link",$fields))
             $values['etherpad_link'] = $presentation->getEtherpadLink();
-
-        $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
+        if(in_array("track_chair_scores_avg",$fields))
+            $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
 
         return $values;
     }

@@ -1,7 +1,6 @@
 <?php namespace ModelSerializers;
-
-/**
- * Copyright 2017 OpenStack Foundation
+/*
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +12,29 @@
  * limitations under the License.
  **/
 
-use models\summit\SummitEventWithFile;
+use models\summit\SummitEvent;
 
 /**
- * Class SummitEventWithFileSerializer
+ * Class AdminSummitEventWithFileCSVSerializer
  * @package ModelSerializers
  */
-class SummitEventWithFileSerializer extends SummitEventSerializer
+final class AdminSummitEventWithFileCSVSerializer extends AdminSummitEventWithFileSerializer
 {
-
     protected static $allowed_fields = [
-        'attachment'
+        'location_name',
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
     {
-
-        $event = $this->object;
         if(!count($fields)) $fields = $this->getAllowedFields();
-        if (!$event instanceof SummitEventWithFile) return [];
 
         $values = parent::serialize($expand, $fields, $relations, $params);
-        if(in_array("attachment",$fields))
-            $values['attachment'] = $event->hasAttachment()? $event->getAttachment()->getUrl() : null;
+        $summit_event = $this->object;
+        if(!$summit_event instanceof SummitEvent) return $values;
+
+        if(in_array("location_name",$fields) && $summit_event->hasLocation()){
+            $values['location_name'] = $summit_event->getLocation()->getName();
+        }
 
         return $values;
     }

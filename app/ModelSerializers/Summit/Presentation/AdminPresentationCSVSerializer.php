@@ -13,7 +13,6 @@
  **/
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
-use libs\utils\JsonUtils;
 use models\main\Member;
 use models\summit\Presentation;
 /**
@@ -22,6 +21,31 @@ use models\summit\Presentation;
  */
 final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
 {
+    protected static $allowed_fields = [
+        'moderator_id',
+        'moderator_full_name',
+        'moderator_email',
+        'moderator_title',
+        'moderator_company',
+        'speaker_ids',
+        'speaker_fullnames',
+        'speaker_titles',
+        'speaker_companies',
+        'speaker_countries',
+        'submitter_id',
+        'submitter_full_name',
+        'submitter_email',
+        'submitter_title',
+        'submitter_company',
+        'submitter_country',
+        'video',
+        'public_video',
+        'extra_questions',
+        'presentation_flags',
+        'created_by',
+        'location_name',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -31,6 +55,8 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
     {
+        if(!count($fields)) $fields = $this->getAllowedFields();
+
         $values = parent::serialize($expand, $fields, $relations, $params);
         $presentation = $this->object;
         if(!$presentation instanceof Presentation) return $values;
@@ -42,32 +68,46 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         }
 
         // moderator data
-
-        $values['moderator_id'] = "";
-        $values['moderator_full_name'] = "";
-        $values['moderator_email'] = "";
-        $values['moderator_title'] = "";
-        $values['moderator_company'] = "";
+        if(in_array("moderator_id",$fields))
+            $values['moderator_id'] = "";
+        if(in_array("moderator_full_name",$fields))
+            $values['moderator_full_name'] = "";
+        if(in_array("moderator_email",$fields))
+            $values['moderator_email'] = "";
+        if(in_array("moderator_title",$fields))
+            $values['moderator_title'] = "";
+        if(in_array("moderator_company",$fields))
+            $values['moderator_company'] = "";
 
         if(isset($values['moderator_speaker_id']))
             unset($values['moderator_speaker_id']);
 
         if($presentation->hasModerator()){
-            $values['moderator_id'] = $presentation->getModerator()->getId();
-            $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
-            $values['moderator_email'] = $presentation->getModerator()->getEmail();
-            $values['moderator_title'] = trim($presentation->getModerator()->getTitle());
-            $values['moderator_company'] = trim($presentation->getModerator()->getCompany());
+            if(in_array("moderator_id",$fields))
+                $values['moderator_id'] = $presentation->getModerator()->getId();
+            if(in_array("moderator_full_name",$fields))
+                $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
+            if(in_array("moderator_email",$fields))
+                $values['moderator_email'] = $presentation->getModerator()->getEmail();
+            if(in_array("moderator_title",$fields))
+                $values['moderator_title'] = trim($presentation->getModerator()->getTitle());
+            if(in_array("moderator_company",$fields))
+                $values['moderator_company'] = trim($presentation->getModerator()->getCompany());
         }
 
         // speaker data
-
-        $values['speaker_ids'] = "";
-        $values['speaker_fullnames'] = "";
-        $values['speaker_emails'] = "";
-        $values['speaker_titles'] = "";
-        $values['speaker_companies'] = "";
-        $values['speaker_countries'] = "";
+        if(in_array("speaker_ids",$fields))
+            $values['speaker_ids'] = "";
+        if(in_array("speaker_fullnames",$fields))
+            $values['speaker_fullnames'] = "";
+        if(in_array("speaker_emails",$fields))
+            $values['speaker_emails'] = "";
+        if(in_array("speaker_titles",$fields))
+            $values['speaker_titles'] = "";
+        if(in_array("speaker_companies",$fields))
+            $values['speaker_companies'] = "";
+        if(in_array("speaker_countries",$fields))
+            $values['speaker_countries'] = "";
 
         if($presentation->getSpeakers()->count() > 0){
 
@@ -87,33 +127,50 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 $speaker_countries[] = trim($speaker->getCountry());
             }
 
-            $values['speaker_ids'] = implode("|", $speaker_ids);
-            $values['speaker_fullnames'] = implode("|", $speaker_fullnames);
-            $values['speaker_emails'] = implode("|", $speaker_emails);
-            $values['speaker_titles'] = implode("|", $speaker_titles);
-            $values['speaker_companies'] = implode("|", $speaker_companies);
-            $values['speaker_countries'] = implode("|", $speaker_countries);
+            if(in_array("speaker_ids",$fields))
+                $values['speaker_ids'] = implode("|", $speaker_ids);
+            if(in_array("speaker_fullnames",$fields))
+                $values['speaker_fullnames'] = implode("|", $speaker_fullnames);
+            if(in_array("speaker_emails",$fields))
+                $values['speaker_emails'] = implode("|", $speaker_emails);
+            if(in_array("speaker_titles",$fields))
+                $values['speaker_titles'] = implode("|", $speaker_titles);
+            if(in_array("speaker_companies",$fields))
+                $values['speaker_companies'] = implode("|", $speaker_companies);
+            if(in_array("speaker_countries",$fields))
+                $values['speaker_countries'] = implode("|", $speaker_countries);
         }
 
         // submitter
-
-        $values['submitter_id'] = "";
-        $values['submitter_full_name'] = "";
-        $values['submitter_email'] = "";
-        $values['submitter_title'] = "";
-        $values['submitter_company'] = "";
-        $values['submitter_country'] = "";
+        if(in_array("submitter_id",$fields))
+            $values['submitter_id'] = "";
+        if(in_array("submitter_full_name",$fields))
+            $values['submitter_full_name'] = "";
+        if(in_array("submitter_email",$fields))
+            $values['submitter_email'] = "";
+        if(in_array("submitter_title",$fields))
+            $values['submitter_title'] = "";
+        if(in_array("submitter_company",$fields))
+            $values['submitter_company'] = "";
+        if(in_array("submitter_country",$fields))
+            $values['submitter_country'] = "";
 
         if($presentation->hasCreatedBy()){
             $creator = $presentation->getCreatedBy();
             if($creator->hasSpeaker()){
                 $submitter = $creator->getSpeaker();
-                $values['submitter_id'] = $submitter->getId();
-                $values['submitter_full_name'] = $submitter->getFullName();
-                $values['submitter_email'] = $submitter->getEmail();
-                $values['submitter_title'] = $submitter->getTitle();
-                $values['submitter_company'] = $submitter->getCompany();
-                $values['submitter_country'] = $submitter->getCountry();
+                if(in_array("submitter_id",$fields))
+                    $values['submitter_id'] = $submitter->getId();
+                if(in_array("submitter_full_name",$fields))
+                    $values['submitter_full_name'] = $submitter->getFullName();
+                if(in_array("submitter_email",$fields))
+                    $values['submitter_email'] = $submitter->getEmail();
+                if(in_array("submitter_title",$fields))
+                    $values['submitter_title'] = $submitter->getTitle();
+                if(in_array("submitter_company",$fields))
+                    $values['submitter_company'] = $submitter->getCompany();
+                if(in_array("submitter_country",$fields))
+                    $values['submitter_country'] = $submitter->getCountry();
             }
         }
 
@@ -125,9 +182,10 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         }
 
         // add video column
-
-        $values['video'] = '';
-        $values['public_video'] = '';
+        if(in_array("video",$fields))
+            $values['video'] = '';
+        if(in_array("public_video",$fields))
+            $values['public_video'] = '';
 
         foreach ($presentation->getMediaUploads() as $mediaUpload) {
             if($mediaUpload->getMediaUploadType()->isVideo()) {
@@ -136,43 +194,53 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                     Log::warning(sprintf("AdminPresentationCSVSerializer::serialize can not process media upload %s", json_encode($media_upload_csv)));
                     continue;
                 }
-                $values['video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['private_url'], $media_upload_csv['filename']);
+                if(in_array("video",$fields))
+                    $values['video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['private_url'], $media_upload_csv['filename']);
 
                 if(!isset($media_upload_csv['public_url']) || !isset($media_upload_csv['filename'])){
                     Log::warning(sprintf("AdminPresentationCSVSerializer::serialize can not process media upload %s", json_encode($media_upload_csv)));
                     continue;
                 }
-                $values['public_video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['public_url'], $media_upload_csv['filename']);
+                if(in_array("public_video",$fields))
+                    $values['public_video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['public_url'], $media_upload_csv['filename']);
             }
         }
 
         // extra questions
-
-        $values['extra_questions'] = '';
-        foreach ($presentation->getExtraQuestionAnswers() as $answer){
-            if(!empty($values['extra_questions']))
-                $values['extra_questions'] = $values['extra_questions'] . '|';
-            $values['extra_questions'] =  $values['extra_questions'] . str_replace(",", "", (string)$answer);
+        if(in_array("extra_questions",$fields)) {
+            $values['extra_questions'] = '';
+            foreach ($presentation->getExtraQuestionAnswers() as $answer) {
+                if (!empty($values['extra_questions']))
+                    $values['extra_questions'] = $values['extra_questions'] . '|';
+                $values['extra_questions'] = $values['extra_questions'] . str_replace(",", "", (string)$answer);
+            }
         }
 
-        if($presentation->hasCategory()){
+        if(in_array("track", $fields) && $presentation->hasCategory()){
             $values['track'] = $presentation->getCategory()->getTitle();
         }
 
-
-        // presentation flags
-        $values['presentation_flags'] = '';
-        foreach($presentation->getPresentationActions() as $action){
-            if(!empty($values['presentation_flags']))
-                $values['presentation_flags'] = $values['presentation_flags'] . '|';
-            $values['presentation_flags'] =  $values['presentation_flags'] . str_replace(",", "", (string)$action);
+        if(in_array("presentation_flags",$fields)) {
+            // presentation flags
+            $values['presentation_flags'] = '';
+            foreach ($presentation->getPresentationActions() as $action) {
+                if (!empty($values['presentation_flags']))
+                    $values['presentation_flags'] = $values['presentation_flags'] . '|';
+                $values['presentation_flags'] = $values['presentation_flags'] . str_replace(",", "", (string)$action);
+            }
         }
 
-        $values['created_by'] = '';
-        if($presentation->hasCreatedBy()){
-            unset($values['created_by_id']);
-            $created_by = $presentation->getCreatedBy();
-            $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
+        if(in_array("created_by",$fields)) {
+            $values['created_by'] = '';
+            if ($presentation->hasCreatedBy()) {
+                unset($values['created_by_id']);
+                $created_by = $presentation->getCreatedBy();
+                $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
+            }
+        }
+
+        if(in_array("location_name",$fields) && $presentation->hasLocation()){
+            $values['location_name'] = $presentation->getLocation()->getName();
         }
 
         return $values;

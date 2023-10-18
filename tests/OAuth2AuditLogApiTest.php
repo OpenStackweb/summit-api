@@ -1,4 +1,5 @@
 <?php namespace Tests;
+
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +18,7 @@ class OAuth2AuditLogApiTest extends ProtectedApiTest
     public function testGetSummitAuditLog()
     {
         $params = [
-            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3343'],
+            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3699'],
             'order'  => '+event_id',
             'expand' => 'user'
         ];
@@ -46,7 +47,36 @@ class OAuth2AuditLogApiTest extends ProtectedApiTest
     public function testGetSummitEventAuditLog()
     {
         $params = [
-            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3343', 'event_id==107223'],
+            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3699', 'event_id==119876'],
+            'order'  => '-created',
+            'expand' => 'user'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2AuditLogController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $audit_log = json_decode($content);
+        $this->assertTrue(!is_null($audit_log));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetSummitAttendeeBadgeAuditLog()
+    {
+        $params = [
+            'filter' => ['class_name==SummitAttendeeBadgeAuditLog', 'summit_id==3699', 'entity_id==7249'],
             'order'  => '-created',
             'expand' => 'user'
         ];

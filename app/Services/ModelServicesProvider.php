@@ -137,12 +137,14 @@ use services\model\IChatTeamService;
 use services\model\IPresentationService;
 use services\model\ISpeakerService;
 use services\model\ISubmitterService;
+use services\model\ISummitAttendeeBadgePrintService;
 use services\model\ISummitPromoCodeService;
 use services\model\ISummitService;
 use services\model\ISummitSponsorService;
 use services\model\PresentationService;
 use services\model\SpeakerService;
 use services\model\SubmitterService;
+use services\model\SummitAttendeeBadgePrintService;
 use services\model\SummitService;
 
 /***
@@ -485,6 +487,11 @@ final class ModelServicesProvider extends ServiceProvider
             IPromoCodeStrategyFactory::class,
             PromoCodeStrategyFactory::class,
         );
+
+        App::singleton(
+            ISummitAttendeeBadgePrintService::class,
+            SummitAttendeeBadgePrintService::class
+        );
     }
 
     /**
@@ -554,6 +561,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitProposedScheduleAllowedLocationService::class,
             ITicketFinderStrategyFactory::class,
             IPromoCodeStrategyFactory::class,
+            ISummitAttendeeBadgePrintService::class,
         ];
     }
 }

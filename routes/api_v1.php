@@ -1397,8 +1397,8 @@ Route::group(array('prefix' => 'summits'), function () {
 
                         Route::group(['prefix' => 'prints'], function () {
                             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@getAllBySummitAndTicket']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@deleteBadgePrints']);
                             Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@getAllBySummitAndTicketCSV']);
-
                         });
 
                         // legacy ( default )

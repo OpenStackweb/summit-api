@@ -2,9 +2,6 @@
 
 namespace App\Audit\ConcreteFormatters;
 
-use App\Audit\IAuditLogFormatter;
-use ReflectionClass;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +15,10 @@ use ReflectionClass;
  * limitations under the License.
  **/
 
+use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
+use App\Audit\IAuditLogFormatter;
+use models\summit\SummitAttendeeBadgePrint;
+use ReflectionClass;
 
 /**
  * Class EntityDeletionAuditLogFormatter
@@ -25,6 +26,16 @@ use ReflectionClass;
  */
 class EntityDeletionAuditLogFormatter implements IAuditLogFormatter
 {
+    /**
+     * @var IChildEntityAuditLogFormatter
+     */
+    private $child_entity_formatter;
+
+    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
+    {
+        $this->child_entity_formatter = $child_entity_formatter;
+    }
+
     protected function getCreationIgnoredEntities(): array {
         return [
             'PresentationAction',
@@ -39,6 +50,12 @@ class EntityDeletionAuditLogFormatter implements IAuditLogFormatter
         $class_name = (new ReflectionClass($subject))->getShortName();
         $ignored_entities = $this->getCreationIgnoredEntities();
         if (in_array($class_name, $ignored_entities)) return null;
+
+        if ($this->child_entity_formatter != null) {
+            return $this->child_entity_formatter
+                ->format($subject, IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION);
+        }
+
         return "{$class_name} deleted";
     }
 }

@@ -372,4 +372,8 @@ SQL;
         return $res;
     }
 
+    public function clearPrints()
+    {
+        return $this->prints->clear();
+    }
 }

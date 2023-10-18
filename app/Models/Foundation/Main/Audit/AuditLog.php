@@ -23,6 +23,7 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\DiscriminatorMap({
  *     "SummitAuditLog" = "SummitAuditLog",
  *     "SummitEventAuditLog" = "SummitEventAuditLog",
+ *     "SummitAttendeeBadgeAuditLog" = "SummitAttendeeBadgeAuditLog"
  * })
  * Class AuditLog
  * @package models\main

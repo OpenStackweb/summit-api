@@ -71,4 +71,10 @@ interface ISummitEventRepository extends ISummitEventPublishRepository
      * @return array
      */
     public function getPublishedEventsIdsBySummit(int $summit_id):array;
+
+    /**
+     * @param int $summit_id ,
+     * @return int
+     */
+    public function getLastPresentationOrderBySummit(int $summit_id):int;
 }

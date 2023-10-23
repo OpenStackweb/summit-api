@@ -758,4 +758,25 @@ SQL,*/
             $data
         );
     }
+
+    /**
+     * @param int $summit_id ,
+     * @return int
+     */
+    public function getLastPresentationOrderBySummit(int $summit_id): int
+    {
+        try {
+            $query = $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select("MAX(p.custom_order)")
+                ->from(Presentation::class, "p")
+                ->join("p.summit", "s", Join::WITH, "s.id = :summit_id")
+                ->setParameter("summit_id", $summit_id);
+
+            return intval($query->getQuery()->getSingleScalarResult());
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+            return 0;
+        }
+    }
 }

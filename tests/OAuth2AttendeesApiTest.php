@@ -43,7 +43,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
             'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
-            'order'    => '+id',
+            'order'    => '+tickets_count',
             'filter'   => 'has_tickets==true',
             'expand'   => 'member,schedule,rsvp,tickets, tickets.ticket_type'
         ];

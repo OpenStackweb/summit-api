@@ -123,7 +123,8 @@ final class DoctrineSummitAttendeeRepository
                         'true',
                         sprintf
                         (
-                            "SIZE(e.tickets) > 0 AND t.status = '%s' AND t.is_active = 1",
+                            "EXISTS (select t1 from %s t1 where t1.owner = e and t1.status = '%s' and t1.is_active = 1)",
+                            SummitAttendeeTicket::class,
                             IOrderConstants::PaidStatus,
                         )
                     ),
@@ -131,7 +132,7 @@ final class DoctrineSummitAttendeeRepository
                         'false',
                         sprintf
                         (
-                            "NOT EXISTS (select t1 from %s t1 where t1.owner = e and (t1.status = '%s') and t1.is_active = 1)"
+                            "NOT EXISTS (select t1 from %s t1 where t1.owner = e and t1.status = '%s' and t1.is_active = 1)"
                             ,
                             SummitAttendeeTicket::class,
                             IOrderConstants::PaidStatus,
@@ -167,7 +168,7 @@ final class DoctrineSummitAttendeeRepository
                 "t.owner",
                 sprintf
                 (
-                    "COUNT(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END)  :operator :value", IOrderConstants::PaidStatus
+                    "COALESCE(SUM(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END), 0)  :operator :value", IOrderConstants::PaidStatus
                 )
             ),
             'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
@@ -212,7 +213,7 @@ final class DoctrineSummitAttendeeRepository
         (
             sprintf
             (
-                "COUNT(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END) AS HIDDEN HIDDEN_TICKETS_QTY",
+                "COALESCE(SUM(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END), 0) AS HIDDEN HIDDEN_TICKETS_QTY",
                 IOrderConstants::PaidStatus
             )
         );

@@ -15,6 +15,7 @@
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use models\summit\SummitMediaFileType;
 
 /**
  * Class TestSeeder
@@ -26,6 +27,7 @@ final class TestSeeder extends Seeder
         Model::unguard();
         DB::setDefaultConnection("model");
         if(env('TESTS_CLEAR_EVERYTHING', true)) {
+            DB::table('SummitMediaFileType')->delete();
             DB::table('PresentationTrackChairRatingType')->delete();
             DB::table('SummitScheduleConfig')->delete();
             DB::table('Presentation')->delete();

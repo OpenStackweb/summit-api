@@ -238,6 +238,7 @@ trait InsertSummitTestData
     protected static function insertSummitTestData(){
 
         DB::setDefaultConnection("model");
+        DB::delete("DELETE FROM SummitMediaFileType");
         DB::delete("DELETE FROM Summit");
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {

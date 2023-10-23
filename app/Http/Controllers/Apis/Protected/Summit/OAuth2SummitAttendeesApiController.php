@@ -454,6 +454,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'full_name',
                     'presentation_votes_count',
                     'summit_hall_checked_in_date',
+                    'tickets_count',
                 ];
             },
             function ($filter) use ($summit) {
@@ -549,6 +550,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'email',
                     'full_name',
                     'summit_hall_checked_in_date',
+                    'tickets_count',
                 ];
             },
             function ($filter) use ($summit) {

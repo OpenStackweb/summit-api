@@ -26,8 +26,6 @@ use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
-use utils\DoctrineJoinFilterMapping;
-use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -50,7 +48,8 @@ final class DoctrineSummitAttendeeRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query =  $query->join('e.summit', 's')
-            ->leftJoin('e.member', 'm');
+            ->leftJoin('e.member', 'm')
+           ->leftJoin('e.tickets', 't');
 
         if($filter->hasFilter("presentation_votes_count")){
             $query = $query->leftJoin("e.presentation_votes","pv");
@@ -63,8 +62,6 @@ final class DoctrineSummitAttendeeRepository
         }
 
         if(
-            $filter->hasFilter("has_tickets") ||
-            $filter->hasFilter("tickets_count") ||
             $filter->hasFilter("ticket_type") ||
             $filter->hasFilter("badge_type") ||
             $filter->hasFilter("badge_type_id") ||
@@ -74,8 +71,7 @@ final class DoctrineSummitAttendeeRepository
             $filter->hasFilter('access_levels_ids') ||
             $filter->hasFilter('ticket_type_id')
         ) {
-            $query = $query->leftJoin('e.tickets', 't')
-                ->leftJoin('t.badge', 'b')
+            $query = $query->leftJoin('t.badge', 'b')
                 ->leftJoin('b.type', 'bt')
                 ->leftJoin('t.ticket_type', 'tt');
         }
@@ -165,7 +161,15 @@ final class DoctrineSummitAttendeeRepository
                     ),
                 ]
             ),
-            'tickets_count' => new DoctrineHavingFilterMapping("", "t.owner", "count(t.id) :operator :value"),
+            'tickets_count' => new DoctrineHavingFilterMapping
+            (
+                "",
+                "t.owner",
+                sprintf
+                (
+                    "COUNT(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END)  :operator :value", IOrderConstants::PaidStatus
+                )
+            ),
             'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
             'ticket_type_id' => new DoctrineFilterMapping("tt.id :operator :value"),
             'badge_type' => new DoctrineFilterMapping("bt.name :operator :value"),
@@ -203,6 +207,19 @@ final class DoctrineSummitAttendeeRepository
         ];
     }
 
+    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
+        $query = $query->addSelect
+        (
+            sprintf
+            (
+                "COUNT(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END) AS HIDDEN HIDDEN_TICKETS_QTY",
+                IOrderConstants::PaidStatus
+            )
+        );
+        $query->groupBy("e");
+        return $query;
+    }
+
     /**
      * @return array
      */
@@ -224,6 +241,7 @@ COALESCE(LOWER(m.email), LOWER(e.email))
 SQL,
             'presentation_votes_count' => 'COUNT(pv.id)',
             'summit_hall_checked_in_date' => 'e.summit_hall_checked_in_date',
+            'tickets_count' => 'HIDDEN_TICKETS_QTY',
         ];
     }
 

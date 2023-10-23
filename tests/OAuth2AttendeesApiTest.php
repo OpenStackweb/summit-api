@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
+
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +16,31 @@
 
 class OAuth2AttendeesApiTest extends ProtectedApiTest
 {
-    public function testGetAttendees($summit_id=31){
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
+
+    public function testGetAttendees(){
 
         $params = [
 
-            'id'       => $summit_id,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+id',

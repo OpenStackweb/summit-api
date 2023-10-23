@@ -2166,6 +2166,16 @@ Route::group(['prefix' => 'summit-administrator-groups'], function () {
 // elections
 
 Route::group(['prefix' => 'elections'], function () {
+    Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getAll']);
+    Route::group(['prefix'=>'{election_id}'], function(){
+        Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getById']);
+        Route::group(['prefix'=>'candidates'], function(){
+            Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getElectionCandidates']);
+            Route::group(['prefix'=>'gold'], function(){
+                Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getElectionGoldCandidates']);
+            });
+        });
+    });
     Route::group(['prefix' => 'current'], function () {
         Route::group(['prefix' => 'candidates'], function () {
             Route::group(['prefix' => 'me'], function () {

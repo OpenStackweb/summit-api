@@ -717,6 +717,11 @@ final class ApiScopesSeeder extends Seeder
 
         $scopes = [
             [
+                'name' => ElectionScopes::ReadAllElections,
+                'short_description' => 'Read All Election Data',
+                'description' => 'Read All Election Data',
+            ],
+            [
                 'name' => ElectionScopes::WriteMyCandidateProfile,
                 'short_description' => 'Writes my candidate profile',
                 'description' => 'Writes my candidate profile',

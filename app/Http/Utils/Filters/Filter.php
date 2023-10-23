@@ -13,7 +13,6 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\Filters\FiltersParams;
 use App\Http\Utils\Filters\IQueryApplyable;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\QueryBuilder;
@@ -634,4 +633,32 @@ final class Filter
     {
         return $this->originalExp;
     }
+
+    /**
+     * @param string $filter_name
+     * @return array
+     */
+    public function getValue(string $filter_name): array {
+        $e = $this->getFilter($filter_name);
+        $v = [];
+        foreach($e as $f){
+            if(is_array($f->getValue())){
+                foreach ($f->getValue() as $iv){
+                    $v[] = $iv;
+                }
+            }
+            else
+                $v[] = $f->getValue();
+        }
+        return $v;
+    }
+
+    public static function buildEpochDefaultOperators():array{
+        return  ['>', '<', '<=', '>=', '==','[]'];
+    }
+
+    public static function buildStringDefaultOperators():array{
+        return  ['=@', '@@', '=='];
+    }
+
 }

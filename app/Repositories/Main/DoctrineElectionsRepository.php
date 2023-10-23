@@ -16,9 +16,9 @@ use App\Models\Foundation\Elections\Candidate;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\IElectionsRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use utils\DoctrineFilterMapping;
 use utils\Filter;
+use utils\FilterElement;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
@@ -34,6 +34,28 @@ final class DoctrineElectionsRepository
     protected function getBaseEntity()
     {
         return Election::class;
+    }
+
+    protected function getFilterMappings()
+    {
+        return [
+            'name' => Filter::buildStringField('e.name'),
+            'opens' =>  Filter::buildDateTimeEpochField('e.opens'),
+            'closes' =>  Filter::buildDateTimeEpochField('e.closes'),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'name' => 'e.name',
+            'id' => 'e.id',
+            'opens' => 'e.opens',
+            'closes' => 'e.closes',
+        ];
     }
 
     public function getCurrent(): ?Election

@@ -9731,6 +9731,38 @@ class ApiEndpointsSeeder extends Seeder
 
         $this->seedApiEndpoints('elections', [
                 [
+                    'name' => 'get-all-elections',
+                    'route' => '/api/v1/elections',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        ElectionScopes::ReadAllElections
+                    ],
+                ],
+                [
+                    'name' => 'get-election-by-id',
+                    'route' => '/api/v1/elections/{election_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        ElectionScopes::ReadAllElections
+                    ],
+                ],
+                [
+                    'name' => 'get-election-by-id-candidates',
+                    'route' => '/api/v1/elections/{election_id}/candidates',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        ElectionScopes::ReadAllElections
+                    ],
+                ],
+                [
+                    'name' => 'get-election-by-id-gold-candidates',
+                    'route' => '/api/v1/elections/{election_id}/candidates/gold',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        ElectionScopes::ReadAllElections
+                    ],
+                ],
+                [
                     'name' => 'update-my-candidate-profile',
                     'route' => '/api/v1/elections/current/candidates/me',
                     'http_method' => 'PUT',

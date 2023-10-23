@@ -653,4 +653,12 @@ final class Filter
         }
         return $v;
     }
+
+    public static function buildEpochDefaultOperators():array{
+        return  ['>', '<', '<=', '>=', '==','[]'];
+    }
+
+    public static function buildStringDefaultOperators():array{
+        return  ['=@', '@@', '=='];
+    }
 }

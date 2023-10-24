@@ -381,6 +381,16 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'Allow Attendee Vote on Presentation',
                 'description' => 'Allow Attendee Vote on Presentation',
             ],
+            [
+                'name' => sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm),
+                'short_description' => 'Read Attendee Notes Data',
+                'description' => 'Grants read access for Attendee Notes Data',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm),
+                'short_description' => 'Write Attendee Notes Data',
+                'description' => 'Grants write access for Attendee Notes Data',
+            ]
         ];
 
         foreach ($scopes as $scope_info) {

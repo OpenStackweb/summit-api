@@ -3122,6 +3122,79 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
+            // attendee notes
+            [
+                'name' => 'get-all-attendee-notes',
+                'route' => '/api/v1/summits/{id}/attendees/all/notes',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-attendee-notes',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-attendee-note',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'add-attendee-note',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'update-attendee-note',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'delete-attendee-note',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
             // submitters
             [
                 'name' => 'get-submitters',

@@ -48,6 +48,7 @@ use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
+use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
@@ -426,6 +427,10 @@ trait InsertSummitTestData
             $ticket->activate();
             $attendee->addTicket($ticket);
             $order->addTicket($ticket);
+
+            $attendeeNote = new SummitAttendeeNote('Test attendee note', $attendee);
+            $attendee->addNote($attendeeNote);
+
             self::$summit->addAttendee($attendee);
             self::$summit->addOrder($order);
             $order->setPaid();

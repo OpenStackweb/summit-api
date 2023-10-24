@@ -64,6 +64,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitAccessLevelTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeNoteRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeTypeRepository;
@@ -147,6 +148,7 @@ use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeBadgePrint;
 use models\summit\SummitAttendeeBadgePrintRule;
+use models\summit\SummitAttendeeNote;
 use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
@@ -904,6 +906,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitAttendeeBadgePrintRepository::class,
             function (){
                 return EntityManager::getRepository(SummitAttendeeBadgePrint::class);
+            }
+        );
+
+        App::singleton(
+            ISummitAttendeeNoteRepository::class,
+            function (){
+                return EntityManager::getRepository(SummitAttendeeNote::class);
             }
         );
     }

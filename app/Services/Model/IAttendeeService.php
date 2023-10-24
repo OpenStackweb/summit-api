@@ -16,6 +16,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use utils\Filter;
 
@@ -126,4 +127,19 @@ interface IAttendeeService
     public function updateAttendeesByMemberId(int $member_id):void;
 
     public function resynchAttendeesStatusBySummit(int $summit_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $attendee_id
+     * @param int|null $note_id
+     * @param array $payload
+     */
+    public function upsertAttendeeNote(Summit $summit, int $attendee_id, ?int $note_id, array $payload): SummitAttendeeNote;
+
+    /**
+     * @param Summit $summit
+     * @param int $attendee_id
+     * @param int $note_id
+     */
+    public function deleteAttendeeNote(Summit $summit, int $attendee_id, int $note_id): void;
 }

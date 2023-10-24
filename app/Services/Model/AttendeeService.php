@@ -27,6 +27,7 @@ use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\factories\SummitAttendeeFactory;
+use models\summit\factories\SummitAttendeeNoteFactory;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
@@ -35,6 +36,7 @@ use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
+use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
@@ -767,5 +769,61 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         }
 
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees", $summit_id, $count));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function upsertAttendeeNote(Summit $summit, int $attendee_id, ?int $note_id, array $payload): SummitAttendeeNote {
+        return $this->tx_service->transaction(function () use ($summit, $attendee_id, $note_id, $payload) {
+            Log::debug(sprintf("AttendeeService::upsertAttendeeNote summit id %s, attendee id %s, payload: %s",
+                $summit->getId(), $attendee_id, json_encode($payload)));
+
+            $attendee = $summit->getAttendeeById($attendee_id);
+            $note = null;
+
+            if (is_null($attendee))
+                throw new EntityNotFoundException(sprintf("Attendee does not belong to summit id %s.", $summit->getId()));
+
+            if (!is_null($note_id)) {
+                $note = $attendee->getNoteById($note_id);
+                if (is_null($note))
+                    throw new EntityNotFoundException(sprintf("Attendee note id %s does not belong to attendee id %s.", $note_id, $attendee_id));
+            }
+
+            if (is_null($note)) {
+                Log::debug(sprintf("AttendeeService::upsertAttendeeNote adding new note. Summit id %s, attendee id %s.",
+                    $summit->getId(), $attendee_id));
+                $note = SummitAttendeeNoteFactory::build($attendee, $payload);
+                $attendee->addNote($note);
+            } else {    //update
+                Log::debug(sprintf("AttendeeService::upsertAttendeeNote updating note with id %s. Summit id %s, attendee id %s.",
+                    $note_id, $summit->getId(), $attendee_id));
+                $note = SummitAttendeeNoteFactory::populate($attendee, $note, $payload);
+                $note->setContent($payload['content']);
+            }
+
+            return $note;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteAttendeeNote(Summit $summit, int $attendee_id, int $note_id): void {
+        $this->tx_service->transaction(function () use ($summit, $attendee_id, $note_id) {
+            Log::debug(sprintf("AttendeeService::deleteAttendeeNote summit id %s, attendee id %s, note id %s",
+                $summit->getId(), $attendee_id, $note_id));
+
+            $attendee = $summit->getAttendeeById($attendee_id);
+            if (is_null($attendee))
+                throw new EntityNotFoundException(sprintf("Attendee does not belong to summit id %s.", $summit->getId()));
+
+            $note = $attendee->getNoteById($note_id);
+            if (is_null($note))
+                throw new EntityNotFoundException(sprintf("Attendee note id %s does not belong to attendee id %s.", $note_id, $attendee_id));
+
+            $attendee->removeNote($note);
+        });
     }
 }

@@ -492,58 +492,58 @@ final class DoctrineSpeakerRepository
                 ),
             'has_media_upload_with_type' =>  new DoctrineFilterMapping(
                 "EXISTS (
-                            SELECT __pm10_3.id 
-                            FROM models\summit\PresentationMediaUpload __pm10_3
-                            JOIN __pm10_3.media_upload_type __mut10_3
-                            JOIN __pm10_3.presentation __p10_3
-                            JOIN __p10_3.speakers __spk10_3 WITH __spk10_3.speaker = e.id 
-                            JOIN __p10_3.selection_plan __sel_plan10_3
-                            JOIN __p10_3.category __tr10_3
-                            JOIN __p10_3.type __type10_3
+                            SELECT __pm10_3:i.id 
+                            FROM models\summit\PresentationMediaUpload __pm10_3:i
+                            JOIN __pm10_3:i.media_upload_type __mut10_3:i
+                            JOIN __pm10_3:i.presentation __p10_3:i
+                            JOIN __p10_3:i.speakers __spk10_3:i WITH __spk10_3:i.speaker = e.id 
+                            JOIN __p10_3:i.selection_plan __sel_plan10_3:i
+                            JOIN __p10_3:i.category __tr10_3:i
+                            JOIN __p10_3:i.type __type10_3:i
                             WHERE 
-                            __p10_3.summit = :summit AND
-                            __mut10_3.id :operator :value ".
+                            __p10_3:i.summit = :summit AND
+                            __mut10_3:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_3'): ' ').")".
-                          "OR EXISTS (
-                            SELECT __pm10_4.id 
-                            FROM models\summit\PresentationMediaUpload __pm10_4
-                            JOIN __pm10_4.media_upload_type __mut10_4
-                            JOIN __pm10_4.presentation __p10_4
-                            JOIN __p10_4.moderator __md10_4 WITH __md10_4.id = e.id 
-                            JOIN __p10_4.selection_plan __sel_plan10_4
-                            JOIN __p10_4.category __tr10_4
-                            JOIN __p10_4.type __type10_4
+                          " OR EXISTS (
+                            SELECT __pm10_4:i.id 
+                            FROM models\summit\PresentationMediaUpload __pm10_4:i
+                            JOIN __pm10_4:i.media_upload_type __mut10_4:i
+                            JOIN __pm10_4:i.presentation __p10_4:i
+                            JOIN __p10_4:i.moderator __md10_4:i WITH __md10_4:i.id = e.id 
+                            JOIN __p10_4:i.selection_plan __sel_plan10_4:i
+                            JOIN __p10_4:i.category __tr10_4:i
+                            JOIN __p10_4:i.type __type10_4:i
                             WHERE 
-                            __p10_4.summit = :summit AND
-                            __mut10_4.id :operator :value ".
+                            __p10_4:i.summit = :summit AND
+                            __mut10_4:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_4'): ' ').")"
                 ),
             'has_not_media_upload_with_type' =>  new DoctrineFilterMapping(
                 "NOT EXISTS (
-                            SELECT __pm10_3.id 
-                            FROM models\summit\PresentationMediaUpload __pm10_3
-                            JOIN __pm10_3.media_upload_type __mut10_3
-                            JOIN __pm10_3.presentation __p10_3
-                            JOIN __p10_3.speakers __spk10_3 WITH __spk10_3.speaker = e.id 
-                            JOIN __p10_3.selection_plan __sel_plan10_3
-                            JOIN __p10_3.category __tr10_3
-                            JOIN __p10_3.type __type10_3
+                            SELECT __pm10_3:i.id 
+                            FROM models\summit\PresentationMediaUpload __pm10_3:i
+                            JOIN __pm10_3:i.media_upload_type __mut10_3:i
+                            JOIN __pm10_3:i.presentation __p10_3:i
+                            JOIN __p10_3:i.speakers __spk10_3:i WITH __spk10_3:i.speaker = e.id 
+                            JOIN __p10_3:i.selection_plan __sel_plan10_3:i
+                            JOIN __p10_3:i.category __tr10_3:i
+                            JOIN __p10_3:i.type __type10_3:i
                             WHERE 
-                            __p10_3.summit = :summit AND
-                            __mut10_3.id :operator :value ".
+                            __p10_3:i.summit = :summit AND
+                            __mut10_3:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_3'): ' ').")".
-                        "AND NOT EXISTS (
-                            SELECT __pm10_4.id 
-                            FROM models\summit\PresentationMediaUpload __pm10_4
-                            JOIN __pm10_4.media_upload_type __mut10_4
-                            JOIN __pm10_4.presentation __p10_4
-                            JOIN __p10_4.moderator __md10_4 WITH __md10_4.id = e.id 
-                            JOIN __p10_4.selection_plan __sel_plan10_4
-                            JOIN __p10_4.category __tr10_4
-                            JOIN __p10_4.type __type10_4
+                        " AND NOT EXISTS (
+                            SELECT __pm10_4:i.id 
+                            FROM models\summit\PresentationMediaUpload __pm10_4:i
+                            JOIN __pm10_4:i.media_upload_type __mut10_4:i
+                            JOIN __pm10_4:i.presentation __p10_4:i
+                            JOIN __p10_4:i.moderator __md10_4:i WITH __md10_4:i.id = e.id 
+                            JOIN __p10_4:i.selection_plan __sel_plan10_4:i
+                            JOIN __p10_4:i.category __tr10_4:i
+                            JOIN __p10_4:i.type __type10_4:i
                             WHERE 
-                            __p10_4.summit = :summit AND
-                            __mut10_4.id :operator :value ".
+                            __p10_4:i.summit = :summit AND
+                            __mut10_4:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_4'): ' ').")"
                 ),
         ];

@@ -124,6 +124,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'final_amount' => ['==', '<>', '>=', '>'],
                     'is_printable' => ['=='],
                     'badge_type_id' => ['=='],
+                    'has_badge_prints' => ['=='],
+                    'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
                 ];
             },
             function () {
@@ -157,6 +159,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'final_amount' => 'sometimes|numeric',
                     'is_printable' => ['sometimes', new Boolean()],
                     'badge_type_id' => 'sometimes|integer',
+                    'has_badge_prints' => ['sometimes', new Boolean()],
+                    'badge_prints_count' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -177,6 +181,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'final_amount_adjusted',
                     'badge_type_id',
                     'badge_type',
+                    'badge_prints_count',
                 ];
             },
             function ($filter) use ($summit) {
@@ -278,6 +283,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'final_amount' => ['==', '<>', '>=', '>'],
                     'is_printable' => ['=='],
                     'badge_type_id' => ['=='],
+                    'has_badge_prints' => ['=='],
+                    'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
                 ];
             },
             function () {
@@ -311,6 +318,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'final_amount' => 'sometimes|numeric',
                     'is_printable' => ['sometimes', new Boolean()],
                     'badge_type_id' => 'sometimes|integer',
+                    'has_badge_prints' => ['sometimes', new Boolean()],
+                    'badge_prints_count' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -331,6 +340,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'final_amount_adjusted',
                     'badge_type_id',
                     'badge_type',
+                    'badge_prints_count',
                 ];
             },
             function ($filter) use ($summit) {

@@ -26,6 +26,7 @@ use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationAction;
 use models\summit\PresentationExtraQuestionAnswer;
+use models\summit\SummitAttendeeBadgePrint;
 use models\summit\SummitEvent;
 
 /**
@@ -59,6 +60,10 @@ class AuditLogStrategy
             return $subject->getPresentation();
         }
 
+        if ($subject instanceof SummitAttendeeBadgePrint) {
+            return $subject->getBadge();
+        }
+
         return null;
     }
 
@@ -72,9 +77,12 @@ class AuditLogStrategy
         try {
             $entity = $this->resolveAuditableEntity($subject);
 
-            if ($entity == null) return;
+            if (is_null($entity))
+                return;
 
-            $logger = new SummitEventAuditLogger();
+            $logger = AuditLoggerFactory::build($entity);
+            if(is_null($logger))
+                return;
 
             $formatter = null;
 
@@ -94,7 +102,8 @@ class AuditLogStrategy
                     $formatter = new EntityCreationAuditLogFormatter();
                     break;
                 case self::EVENT_ENTITY_DELETION:
-                    $formatter = new EntityDeletionAuditLogFormatter();
+                    $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
+                    $formatter = new EntityDeletionAuditLogFormatter($child_entity_formatter);
                     break;
                 case self::EVENT_ENTITY_UPDATE:
                     $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
@@ -102,11 +111,12 @@ class AuditLogStrategy
                     break;
             }
 
-            if ($formatter == null) return;
+            if (is_null($formatter))
+                return;
 
             $description = $formatter->format($subject, $change_set);
 
-            if ($description != null) {
+            if (!empty($description)) {
                 $logger->createAuditLogEntry($this->em, $entity, $description);
             }
         } catch (\Exception $ex){

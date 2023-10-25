@@ -17,9 +17,9 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepositor
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use services\model\ISummitAttendeeBadgePrintService;
 use utils\Filter;
 use utils\FilterElement;
-
 
 /**
  * Class OAuth2SummitAttendeeBadgePrintApiController
@@ -28,16 +28,23 @@ use utils\FilterElement;
 final class OAuth2SummitAttendeeBadgePrintApiController
     extends OAuth2ProtectedController
 {
+    /**
+     * @var ISummitAttendeeBadgePrintService
+     */
+    private $service;
+
     public function __construct
     (
-        ISummitRepository               $summit_repository,
+        ISummitRepository                   $summit_repository,
         ISummitAttendeeBadgePrintRepository $repository,
-        IResourceServerContext          $resource_server_context
+        ISummitAttendeeBadgePrintService    $service,
+        IResourceServerContext              $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
+        $this->service = $service;
     }
 
     use ParametrizedGetAll;
@@ -146,5 +153,22 @@ final class OAuth2SummitAttendeeBadgePrintApiController
             },
             'badge-prints-'
         );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $ticket_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteBadgePrints($summit_id, $ticket_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $ticket_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $this->service->deleteBadgePrintsByTicket($summit, intval($ticket_id));
+
+            return $this->deleted();
+        });
     }
 }

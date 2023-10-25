@@ -13,9 +13,11 @@
  **/
 
 use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
+use models\main\SummitAttendeeBadgeAuditLog;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
 use models\oauth2\IResourceServerContext;
+use models\summit\SummitAttendeeBadge;
 use ModelSerializers\SerializerRegistry;
 
 /**
@@ -53,6 +55,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'user_id'   => ['=='],
                     'summit_id' => ['=='],
                     'event_id'  => ['=='],
+                    'entity_id'  => ['=='],
                     'user_email' => ['==', '=@'],
                     'user_full_name'  => ['==', '=@'],
                     'action'  => ['=@'],
@@ -60,10 +63,11 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
             },
             function () {
                 return [
-                    'class_name' => 'required|string|in:' . implode(',', [SummitAuditLog::ClassName, SummitEventAuditLog::ClassName]),
+                    'class_name' => 'required|string|in:' . implode(',', [SummitAuditLog::ClassName, SummitEventAuditLog::ClassName, SummitAttendeeBadgeAuditLog::ClassName]),
                     'user_id'   => 'sometimes|integer',
                     'summit_id' => 'sometimes|integer',
                     'event_id'  => 'sometimes|integer',
+                    'entity_id'  => 'sometimes|integer',
                     'user_email' => 'sometimes|string',
                     'user_full_name' => 'sometimes|string',
                     'action' => 'sometimes|string',
@@ -74,6 +78,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'id',
                     'user_id',
                     'event_id',
+                    'entity_id',
                     'created',
                     'user_email',
                     'user_full_name',

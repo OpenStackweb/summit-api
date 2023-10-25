@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Audit\SummitAttendeeBadgeAuditLogSerializer;
 use App\ModelSerializers\Audit\SummitAuditLogSerializer;
 use App\ModelSerializers\Audit\SummitEventAuditLogSerializer;
 use App\ModelSerializers\CCLA\TeamSerializer;
@@ -178,6 +179,7 @@ final class SerializerRegistry
 
         $this->registry['SummitAuditLog'] = SummitAuditLogSerializer::class;
         $this->registry['SummitEventAuditLog'] = SummitEventAuditLogSerializer::class;
+        $this->registry['SummitAttendeeBadgeAuditLog'] = SummitAttendeeBadgeAuditLogSerializer::class;
 
         // elections
 

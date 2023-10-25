@@ -1372,6 +1372,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // tickets
         Route::group(['prefix' => 'tickets'], function () {
+
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAllBySummit']);
             Route::get('external', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAllBySummitExternal']);
 
@@ -1383,12 +1384,15 @@ Route::group(array('prefix' => 'summits'), function () {
 
             Route::post('ingest', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@ingestExternalTicketData']);
 
-            Route::group(['prefix' => '{ticket_id}'], function () {
+            Route::group(['prefix' => '{ticket_id}', 'where' => ['ticket_id' => '[0-9]+']], function () {
+
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@get']);
                 // badge endpoints
                 Route::group(['prefix' => 'badge'], function () {
+
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@createAttendeeBadge']);
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAttendeeBadge']);
+
                     Route::group(['prefix' => 'current'], function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@deleteAttendeeBadge']);
 
@@ -1397,8 +1401,8 @@ Route::group(array('prefix' => 'summits'), function () {
 
                         Route::group(['prefix' => 'prints'], function () {
                             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@getAllBySummitAndTicket']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@deleteBadgePrints']);
                             Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeBadgePrintApiController@getAllBySummitAndTicketCSV']);
-
                         });
 
                         // legacy ( default )

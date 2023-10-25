@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -133,5 +134,4 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
     public function getViewTypeName():string{
         return $this->view_type->getName();
     }
-
 }

@@ -18,8 +18,10 @@ use Doctrine\ORM\QueryBuilder;
 use models\main\AuditLog;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\main\Member;
+use models\main\SummitAttendeeBadgeAuditLog;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitEvent;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
@@ -53,11 +55,17 @@ final class DoctrineAuditLogRepository
         if ($filter instanceof Filter) {
             $e = $filter->getFilter("class_name");
             foreach($e as $f){
-                if ($f->getValue() === "SummitAuditLog" || $f->getValue() === "SummitEventAuditLog") {
+                if ($f->getValue() === SummitAuditLog::ClassName ||
+                    $f->getValue() === SummitEventAuditLog::ClassName ||
+                    $f->getValue() === SummitAttendeeBadgeAuditLog::ClassName)
+                {
                     $query = $query->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id');
-                    if ($f->getValue() === "SummitEventAuditLog") {
+                    if ($f->getValue() === SummitEventAuditLog::ClassName) {
                         $query = $query->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
-                                    ->leftJoin(SummitEvent::class, 'ev', 'WITH', 'ev.id = seal.event');
+                            ->leftJoin(SummitEvent::class, 're', 'WITH', 're.id = seal.related_entity');
+                    } else if ($f->getValue() === SummitAttendeeBadgeAuditLog::ClassName) {
+                        $query = $query->leftJoin(SummitAttendeeBadgeAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
+                            ->leftJoin(SummitAttendeeBadge::class, 're', 'WITH', 're.id = seal.related_entity');
                     }
                     break;
                 }
@@ -76,12 +84,14 @@ final class DoctrineAuditLogRepository
             'class_name' => new DoctrineInstanceOfFilterMapping(
                 "e",
                 [
-                    SummitAuditLog::ClassName => SummitAuditLog::class,
-                    SummitEventAuditLog::ClassName => SummitEventAuditLog::class,
+                    SummitAuditLog::ClassName               => SummitAuditLog::class,
+                    SummitEventAuditLog::ClassName          => SummitEventAuditLog::class,
+                    SummitAttendeeBadgeAuditLog::ClassName  => SummitAttendeeBadgeAuditLog::class,
                 ]
             ),
             'summit_id'      => new DoctrineFilterMapping("sal.summit :operator :value"),
-            'event_id'       => new DoctrineFilterMapping("seal.event :operator :value"),
+            'event_id'       => new DoctrineFilterMapping("seal.related_entity :operator :value"),  //REMARK: backward compatibility
+            'entity_id'      => new DoctrineFilterMapping("seal.related_entity :operator :value"),
             'user_id'        => new DoctrineFilterMapping("u.id :operator :value"),
             'user_email'     => new DoctrineFilterMapping("u.email :operator :value"),
             'user_full_name' => new DoctrineFilterMapping("concat(u.first_name, ' ', u.last_name) :operator :value"),
@@ -109,8 +119,11 @@ SQL,
         if($filter instanceof Filter && $filter->hasFilter("class_name")){
             $e = $filter->getFilter("class_name");
             foreach($e as $f){
-                if ($f->getValue() === "SummitEventAuditLog") {
-                    $order_mappings['event_id'] = 'ev.id';
+                if ($f->getValue() === SummitEventAuditLog::ClassName) {
+                    $order_mappings['event_id'] = 're.id';
+                    break;
+                } else if ($f->getValue() === SummitAttendeeBadgeAuditLog::ClassName) {
+                    $order_mappings['entity_id'] = 're.id';
                     break;
                 }
             }

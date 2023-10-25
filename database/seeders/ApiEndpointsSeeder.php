@@ -371,6 +371,21 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'delete-badge-prints',
+                'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
                 'name' => 'get-badge-prints-csv',
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints/csv',
                 'http_method' => 'GET',

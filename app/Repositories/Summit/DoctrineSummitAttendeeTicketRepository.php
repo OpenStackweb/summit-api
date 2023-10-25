@@ -58,6 +58,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $query = $query->addSelect("(e.raw_cost - e.discount) AS HIDDEN HIDDEN_FINAL_AMOUNT");
         $query = $query->addSelect("COALESCE(SUM(rr.refunded_amount),0) AS HIDDEN HIDDEN_REFUNDED_AMOUNT");
         $query = $query->addSelect("( (e.raw_cost - e.discount) - COALESCE(SUM(rr.refunded_amount),0) ) AS HIDDEN HIDDEN_FINAL_AMOUNT_ADJUSTED");
+        $query = $query->addSelect("COUNT(prt.id) AS HIDDEN HIDDEN_BADGE_PRINTS_COUNT");
         $query->groupBy("e");
         return $query;
     }
@@ -161,6 +162,18 @@ final class DoctrineSummitAttendeeTicketRepository
                     ]
                 ),
             'badge_type_id' => 'bt.id:json_int',
+            'has_badge_prints' =>  new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "SIZE(prt) > 0"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "SIZE(prt) = 0"
+                    ),
+                ]
+            ),
+            'badge_prints_count' => 'SIZE(prt) :operator :value',
         ];
     }
 
@@ -175,6 +188,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $query = $query->leftJoin("o.owner", "ord_m");
         $query = $query->leftJoin("e.owner", "a");
         $query = $query->leftJoin("e.badge", "b");
+        $query = $query->leftJoin("b.prints", "prt");
         $query = $query->leftJoin("b.type", "bt");
         $query = $query->leftJoin("bt.access_levels", "al");
         $query = $query->leftJoin("a.member", "m");
@@ -219,6 +233,7 @@ SQL,
             'final_amount_adjusted' => 'HIDDEN_FINAL_AMOUNT_ADJUSTED',
             'badge_type_id' => 'bt.id',
             'badge_type' => 'bt.name',
+            'badge_prints_count' => 'HIDDEN_BADGE_PRINTS_COUNT',
         ];
     }
 

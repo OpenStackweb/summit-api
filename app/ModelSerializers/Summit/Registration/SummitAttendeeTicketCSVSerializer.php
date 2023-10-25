@@ -48,6 +48,7 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         'FinalAmount' => 'amount_paid:json_float',
         'RefundedAmount' => 'refunded_amount:json_float',
         'FinalAmountAdjusted' => 'amount_paid_adjusted:json_float',
+        'BadgePrintsCount' => 'badge_prints_count:json_int',
     ];
 
     /**

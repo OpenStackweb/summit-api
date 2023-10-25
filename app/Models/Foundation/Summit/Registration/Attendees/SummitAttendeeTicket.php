@@ -1215,4 +1215,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             'ticket_number'  => $fields[1],
         ];
     }
+
+    public function getBadgePrintsCount():int{
+        if(!$this->hasBadge()) return 0;
+        return $this->badge->getPrintedTimes();
+    }
 }

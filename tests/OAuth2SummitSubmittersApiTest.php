@@ -207,13 +207,19 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
 
     public function testGetSubmittersWithSubmittedMediaUploadsWithType()
     {
+        $media_upload_ids = array_map(function($v){
+            return $v->getId();
+        }, self::$media_uploads_types);
+
         $params = [
             'id'        => self::$summit->getId(),
             'page'      => 1,
             'per_page'  => 10,
             'filter'    => [
                 'has_accepted_presentations==true',
-                'has_media_upload_with_type==59'
+                'has_alternate_presentations==false',
+                'has_rejected_presentations==false',
+                sprintf('has_media_upload_with_type==%s', implode("||", $media_upload_ids) ),
             ],
             'expand' => 'presentations,accepted_presentations',
             'order'     => '+id'

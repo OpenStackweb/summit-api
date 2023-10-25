@@ -13,7 +13,6 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\Filters\FiltersParams;
 use App\Http\Utils\Filters\IQueryApplyable;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\QueryBuilder;

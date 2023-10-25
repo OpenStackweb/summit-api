@@ -96,19 +96,19 @@ class Member extends SilverstripeBaseModel
     private $membership_type;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventFeedback", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitEventFeedback", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitEventFeedback[]
      */
     private $feedback;
 
     /**
-     * @ORM\OneToMany(targetEntity="Affiliation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="Affiliation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Affiliation[]
      */
     private $affiliations;
 
     /**
-     * @ORM\OneToMany(targetEntity="LegalAgreement", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="LegalAgreement", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var LegalAgreement[]
      */
     protected $legal_agreements;
@@ -254,37 +254,37 @@ class Member extends SilverstripeBaseModel
     private $external_pic;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitMemberSchedule", mappedBy="member", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitMemberSchedule", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMemberSchedule[]
      */
     private $schedule;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\CalendarSync\ScheduleCalendarSyncInfo", mappedBy="member", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\CalendarSync\ScheduleCalendarSyncInfo", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ScheduleCalendarSyncInfo[]
      */
     private $schedule_sync_info;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\CalendarSync\CalendarSyncInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\CalendarSync\CalendarSyncInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var CalendarSyncInfo[]
      */
     private $calendars_sync;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\RSVP", mappedBy="owner", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="models\summit\RSVP", mappedBy="owner", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var RSVP[]
      */
     private $rsvp;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\Sponsor", mappedBy="members")
+     * @ORM\ManyToMany(targetEntity="models\summit\Sponsor", mappedBy="members", fetch="EXTRA_LAZY")
      * @var Sponsor[]
      */
     private $sponsor_memberships;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Group", inversedBy="members", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity="models\main\Group", inversedBy="members", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="Group_Members",
      *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="GroupID", referencedColumnName="ID")}
@@ -294,7 +294,7 @@ class Member extends SilverstripeBaseModel
     private $groups;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Models\Foundation\Main\CCLA\Team", inversedBy="members")
+     * @ORM\ManyToMany(targetEntity="Models\Foundation\Main\CCLA\Team", inversedBy="members", fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="Team_Members",
      *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="TeamID", referencedColumnName="ID")}
@@ -304,31 +304,31 @@ class Member extends SilverstripeBaseModel
     private $ccla_teams;
 
     /**
-     * @ORM\OneToMany(targetEntity="ChatTeamMember", mappedBy="member", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="ChatTeamMember", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ChatTeamMember[]
      */
     private $team_memberships;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitMemberFavorite", mappedBy="member", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitMemberFavorite", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMemberFavorite[]
      */
     private $favorites;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitRoomReservation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitRoomReservation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRoomReservation[]
      */
     private $reservations;
 
     /**
      * @var PresentationSpeaker
-     * @ORM\OneToOne(targetEntity="models\summit\PresentationSpeaker", mappedBy="member", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\OneToOne(targetEntity="models\summit\PresentationSpeaker", mappedBy="member", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $speaker;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PersonalCalendarShareInfo[]
      */
     private $schedule_shareable_links;
@@ -340,37 +340,37 @@ class Member extends SilverstripeBaseModel
     private $summit_registration_orders;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\SummitAdministratorPermissionGroup", mappedBy="members")
+     * @ORM\ManyToMany(targetEntity="models\main\SummitAdministratorPermissionGroup", mappedBy="members", fetch="EXTRA_LAZY")
      * @var SummitAdministratorPermissionGroup[]
      */
     private $summit_permission_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMetric[]
      */
     protected $summit_attendance_metrics;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitTrackChair[]
      */
     private $track_chairs;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="candidate", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="candidate", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Nomination[]
      */
     private $election_applications;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="nominator", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="nominator", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Nomination[]
      */
     private $election_nominations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Candidate", mappedBy="member", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Candidate", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Candidate[]
      */
     private $candidate_profiles;
@@ -382,7 +382,7 @@ class Member extends SilverstripeBaseModel
     private $company;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="created_by", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="created_by", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var Presentation[]
      */
     private $created_presentations;
@@ -2574,11 +2574,22 @@ SQL;
             if ($filter->hasFilter("presentations_type_id")) {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $extraWhere .= " AND mut.id IN (:media_upload_type_id)";
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
+            }
         }
         $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.created_by cb
             LEFT JOIN p.selection_plan sel_p
+            LEFT JOIN p.materials m
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
+            LEFT JOIN pmu.media_upload_type mut
             JOIN p.type t
             JOIN p.category cat
             LEFT JOIN p.selected_presentations ssp 
@@ -2607,40 +2618,26 @@ SQL;
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_track_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_type_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_type_id");
                 $query = $query->setParameter("type_id", $v);
+            }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $v = $filter->getValue("has_media_upload_with_type");
+                $query = $query->setParameter("media_upload_type_id", $v);
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $v = $filter->getValue("has_not_media_upload_with_type");
+                $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
         return $query->getResult();
@@ -2717,12 +2714,23 @@ SQL;
             if ($filter->hasFilter("presentations_type_id")) {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $extraWhere .= " AND mut.id IN (:media_upload_type_id)";
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
+            }
         }
 
         $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.created_by cb
             LEFT JOIN p.selection_plan sel_p
+            LEFT JOIN p.materials m
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
+            LEFT JOIN pmu.media_upload_type mut
             JOIN p.type t
             JOIN p.category cat
             WHERE s.id = :summit_id 
@@ -2734,40 +2742,26 @@ SQL;
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_track_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_type_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_type_id");
                 $query = $query->setParameter("type_id", $v);
+            }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $v = $filter->getValue("has_media_upload_with_type");
+                $query = $query->setParameter("media_upload_type_id", $v);
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $v = $filter->getValue("has_not_media_upload_with_type");
+                $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
 
@@ -2839,11 +2833,22 @@ SQL;
             if ($filter->hasFilter("presentations_type_id")) {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $extraWhere .= " AND mut.id IN (:media_upload_type_id)";
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
+            }
         }
 
         $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             LEFT JOIN p.selection_plan sel_p
+            LEFT JOIN p.materials m
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
+            LEFT JOIN pmu.media_upload_type mut
             JOIN p.type t
             JOIN p.category cat
             JOIN p.created_by cb 
@@ -2857,40 +2862,26 @@ SQL;
 
         if (!is_null($filter)) {
             if ($filter->hasFilter("presentations_selection_plan_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_selection_plan_id");
                 $query = $query->setParameter("selection_plan_id", $v);
             }
             if ($filter->hasFilter("presentations_track_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_track_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id")) {
-                $v = [];
-                foreach ($filter->getFilter("presentations_type_id") as $f) {
-                    if (is_array($f->getValue())) {
-                        foreach ($f->getValue() as $iv) {
-                            $v[] = $iv;
-                        }
-                    } else
-                        $v[] = $f->getValue();
-                }
+                $v = $filter->getValue("presentations_type_id");
                 $query = $query->setParameter("type_id", $v);
+            }
+            if($filter->hasFilter("has_media_upload_with_type"))
+            {
+                $v = $filter->getValue("has_media_upload_with_type");
+                $query = $query->setParameter("media_upload_type_id", $v);
+            }
+            if($filter->hasFilter("has_not_media_upload_with_type"))
+            {
+                $v = $filter->getValue("has_not_media_upload_with_type");
+                $query = $query->setParameter("media_upload_type_id", $v);
             }
         }
 

@@ -441,7 +441,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
                 sprintf('presentations_selection_plan_id==%s',
                     self::$default_selection_plan2->getId()),
                 sprintf('presentations_track_id==%s',
-                    self::$defaultTrack->getId())
+                    self::$defaultTrack->getId()),
             ]
         ];
 
@@ -467,6 +467,45 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
         $speakers = $speakers_response->data;
         $this->assertTrue(count($speakers) >= 1);
         $this->assertTrue(count($speakers[0]->accepted_presentations) == 20);
+    }
+
+    public function testGetCurrentSummitSpeakersOrderByIDAndFilteredByMediaUploadType()
+    {
+        $media_upload_ids =array_map(function($v){
+            return $v->getId();
+        }, self::$media_uploads_types);
+        $params = [
+
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'order' => '+id',
+            'filter' => [
+                sprintf('has_not_media_upload_with_type==%s', join("&&", $media_upload_ids))
+            ]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers_response = json_decode($content);
+        $this->assertTrue(!is_null($speakers_response));
+        $speakers = $speakers_response->data;
+        $this->assertTrue(count($speakers) == 0);
     }
 
     /**

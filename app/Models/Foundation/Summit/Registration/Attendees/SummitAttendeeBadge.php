@@ -210,6 +210,14 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return SummitAttendeeBadgePrint[]
+     */
+    public function getPrints()
+    {
+        return $this->prints;
+    }
+
+    /**
      * @return array
      */
     public function getAllFeatures(){

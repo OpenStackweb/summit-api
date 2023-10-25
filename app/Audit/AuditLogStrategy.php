@@ -108,7 +108,7 @@ class AuditLogStrategy
                     break;
             }
 
-            if ($formatter == null) return;
+            if ($formatter == null || $logger == null) return;
 
             $description = $formatter->format($subject, $change_set);
 

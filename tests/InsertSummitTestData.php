@@ -50,6 +50,7 @@ use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
+use models\summit\SummitBadgeViewType;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
 use models\summit\SummitMediaFileType;
@@ -240,14 +241,19 @@ trait InsertSummitTestData
     static $default_media_file_type;
 
     static $media_file_type_repository;
+
+    static $default_badge_view_type;
     /**
      * @throws Exception
      */
     protected static function insertSummitTestData(){
 
         DB::setDefaultConnection("model");
+
+        DB::delete("DELETE FROM SummitBadgeViewType");
         DB::delete("DELETE FROM SummitMediaFileType");
         DB::delete("DELETE FROM Summit");
+
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {
             self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
@@ -391,6 +397,15 @@ trait InsertSummitTestData
         self::$summit->addEventType(self::$defaultEventType);
         
         self::$summit->addEventType(self::$allow2VotePresentationType);
+
+        // badge view types
+
+        self::$default_badge_view_type = new SummitBadgeViewType();
+        self::$default_badge_view_type ->setName("VIEW 1");
+        self::$default_badge_view_type ->setDescription("VIEW 1");
+        self::$default_badge_view_type ->setDefault(true);
+
+        self::$summit->addBadgeViewType(self::$default_badge_view_type );
 
         if (self::$defaultMember != null) {
             $attendee = new SummitAttendee();

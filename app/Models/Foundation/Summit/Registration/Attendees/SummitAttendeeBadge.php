@@ -380,6 +380,26 @@ SQL;
         return $res;
     }
 
+    public function backupPrints(): void
+    {
+        try {
+            $sql = <<<SQL
+INSERT INTO SummitAttendeeBadgePrintBackUp (Created, LastEdited, PrintDate, BadgeID, RequestorID, SummitBadgeViewTypeID) 
+SELECT Created, LastEdited, PrintDate, BadgeID, RequestorID, SummitBadgeViewTypeID
+FROM SummitAttendeeBadgePrint
+WHERE BadgeID = :badge_id;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'badge_id' => $this->getId(),
+                ]
+            );
+        } catch (\Exception $ex) {
+            Log::error($ex);
+        }
+    }
+
     public function clearPrints()
     {
         return $this->prints->clear();

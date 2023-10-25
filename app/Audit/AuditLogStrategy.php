@@ -77,9 +77,12 @@ class AuditLogStrategy
         try {
             $entity = $this->resolveAuditableEntity($subject);
 
-            if ($entity == null) return;
+            if (is_null($entity))
+                return;
 
             $logger = AuditLoggerFactory::build($entity);
+            if(is_null($logger))
+                return;
 
             $formatter = null;
 
@@ -108,11 +111,12 @@ class AuditLogStrategy
                     break;
             }
 
-            if ($formatter == null || $logger == null) return;
+            if (is_null($formatter))
+                return;
 
             $description = $formatter->format($subject, $change_set);
 
-            if ($description != null) {
+            if (!empty($description)) {
                 $logger->createAuditLogEntry($this->em, $entity, $description);
             }
         } catch (\Exception $ex){

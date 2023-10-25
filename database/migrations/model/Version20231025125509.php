@@ -34,7 +34,7 @@ class Version20231025125509 extends AbstractMigration
         if (!$builder->hasTable(self::TableName)) {
             $builder->create(self::TableName, function (Table $table) {
 
-                $table->integer('ID', false, false);
+                $table->integer('ID', true, false);
                 $table->primary('ID');
                 $table->timestamp('Created');
                 $table->timestamp('LastEdited');

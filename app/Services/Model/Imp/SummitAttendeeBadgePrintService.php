@@ -20,8 +20,6 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\Summit;
-use models\summit\SummitAttendeeBadgePrint;
-use models\summit\SummitAttendeeBadgePrintBackUp;
 use models\summit\SummitAttendeeTicket;
 
 /**
@@ -54,17 +52,6 @@ final class SummitAttendeeBadgePrintService
         $this->ticket_repository = $ticket_repository;
     }
 
-    public function backUpBadgePrint(SummitAttendeeBadgePrint $print):void {
-        $view_type = $print->getViewType();
-        $back_up = new SummitAttendeeBadgePrintBackUp(
-            $print->getPrintDate(),
-            $print->getBadge()->getId(),
-            $print->getRequestor()->getId(),
-            $view_type != null ? $view_type->getId() : null
-        );
-
-    }
-
     /**
      * @inheritDoc
      */
@@ -84,9 +71,7 @@ final class SummitAttendeeBadgePrintService
 
             $badge = $ticket->getBadge();
             if (!is_null($badge)) {
-                foreach($badge->getPrints() as $print){
-                    $this->backUpBadgePrint($print);
-                }
+                $badge->backupPrints();
                 $badge->clearPrints();
             }
         });

@@ -22,12 +22,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class PresentationVideo extends PresentationMaterial
 {
+    const ClassName = 'PresentationVideo';
 
     /**
      * @return string
      */
     public function getClassName(){
-        return 'PresentationVideo';
+        return self::ClassName;
     }
 
     /**
@@ -147,5 +148,19 @@ class PresentationVideo extends PresentationMaterial
     public function setExternalUrl(?string $external_url): void
     {
         $this->external_url = $external_url;
+    }
+
+    /**
+     * @return PresentationMaterial
+     */
+    public function clone(): PresentationMaterial {
+        $clone = new PresentationVideo();
+        $clone->setYoutubeId($this->getYoutubeId());
+        $clone->setDateUploaded($this->getDateUploaded());
+        $clone->setHighlighted($this->getHighlighted());
+        $clone->setViews($this->getViews());
+        $clone->setExternalUrl($this->getExternalUrl());
+
+        return parent::populate($clone);
     }
 }

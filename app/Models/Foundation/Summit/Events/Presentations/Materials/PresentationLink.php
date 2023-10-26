@@ -20,11 +20,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class PresentationLink extends PresentationMaterial
 {
+    const ClassName = 'PresentationLink';
+
     /**
      * @return string
      */
     public function getClassName(){
-        return 'PresentationLink';
+        return self::ClassName;
     }
 
     /**
@@ -48,4 +50,13 @@ class PresentationLink extends PresentationMaterial
      */
     private $link;
 
+    /**
+     * @return PresentationMaterial
+     */
+    public function clone(): PresentationMaterial {
+        $clone = new PresentationLink();
+        $clone->setLink($this->getLink());
+
+        return parent::populate($clone);
+    }
 }

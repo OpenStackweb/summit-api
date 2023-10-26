@@ -1832,7 +1832,11 @@ final class SummitService
             $event_clone->setRSVPLink($event->getRSVPLink());
             $event_clone->setRSVPMaxUserNumber($event->getRSVPMaxUserNumber());
             $event_clone->setRSVPMaxUserWaitListNumber($event->getRSVPMaxUserWaitListNumber());
-            $event_clone->setOccupancy($event->getOccupancy());
+
+            $occupancy = $event->getOccupancy();
+            if ($occupancy != null) {
+                $event_clone->setOccupancy($occupancy);
+            }
 
             $external_id = $event->getExternalId();
             if ($external_id != null) {
@@ -1952,6 +1956,13 @@ final class SummitService
 
                 foreach ($event->getPresentationActions() as $action) {
                     $event_clone->setActionByType($action->getType());
+                }
+
+                foreach ($event->getMaterials() as $material) {
+                    $material_clone = $material->clone();
+                    if ($material_clone != null) {
+                        $event_clone->addMaterial($material_clone);
+                    }
                 }
             }
             $this->event_repository->add($event_clone);

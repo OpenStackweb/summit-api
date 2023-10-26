@@ -25,11 +25,13 @@ use Illuminate\Support\Facades\Log;
  */
 class PresentationMediaUpload extends PresentationMaterial
 {
+    const ClassName = 'PresentationMediaUpload';
+
     /**
      * @return string
      */
     public function getClassName(){
-        return 'PresentationMediaUpload';
+        return self::ClassName;
     }
 
     /**
@@ -155,4 +157,18 @@ class PresentationMediaUpload extends PresentationMaterial
         $this->legacy_path_format = true;
     }
 
+    /**
+     * @return PresentationMaterial
+     */
+    public function clone(): PresentationMaterial {
+        $clone = new PresentationMediaUpload();
+        $file_name = $this->getFilename();
+        if (!empty($file_name ))
+            $clone->setFilename($file_name);
+        $media_upload_type = $this->getMediaUploadType();
+        if ($media_upload_type != null)
+            $clone->setMediaUploadType($media_upload_type);
+
+        return parent::populate($clone);
+    }
 }

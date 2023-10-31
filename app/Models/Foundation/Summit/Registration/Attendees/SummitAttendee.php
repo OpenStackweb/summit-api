@@ -173,10 +173,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     private $status;
 
-    /**
-     * @ORM\Column(name="AdminNotes", type="string")
-     * @var string
-     */
+
     private $admin_notes;
 
     /**

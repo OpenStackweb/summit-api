@@ -103,9 +103,6 @@ final class SummitAttendeeFactory
             }
         }
 
-        if (isset($payload['admin_notes']) && !empty($payload['admin_notes']))
-            $attendee->setAdminNotes(trim($payload['admin_notes']));
-
         if (isset($payload['shared_contact_info']))
             $attendee->setShareContactInfo(boolval($payload['shared_contact_info']));
 

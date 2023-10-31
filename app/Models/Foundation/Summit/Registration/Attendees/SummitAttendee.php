@@ -174,6 +174,10 @@ class SummitAttendee extends SilverstripeBaseModel
     private $status;
 
 
+    /**
+     * @var string
+     * @deprecated
+     */
     private $admin_notes;
 
     /**
@@ -882,6 +886,7 @@ SQL;
 
     /**
      * @return string
+     * @deprecated
      */
     public function getAdminNotes(): ?string
     {
@@ -890,6 +895,7 @@ SQL;
 
     /**
      * @param string $admin_notes
+     * @deprecated
      */
     public function setAdminNotes(string $admin_notes): void
     {

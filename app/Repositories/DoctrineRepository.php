@@ -11,23 +11,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\LazyCriteriaCollection;
 use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
-use models\exceptions\ValidationException;
 use models\utils\IBaseRepository;
 use models\utils\IEntity;
-use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use Doctrine\ORM\Tools\Pagination\Paginator;
-use Doctrine\ORM\LazyCriteriaCollection;
+
 /**
  * Class DoctrineRepository
  * @package App\Repositories
@@ -180,12 +182,25 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
+        Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage DQL %s", $query->getDQL()));
+        $start  = time();
+
         $paginator = new Paginator($query, $fetchJoinCollection = true);
         $total     = $paginator->count();
+        $end = time();
+        $delta = $end - $start;
+
+        Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage count %s time %s", $total, $delta));
         $data      = [];
 
+        $start  = time();
+
         foreach($paginator as $entity)
-            array_push($data, $entity);
+            $data[] = $entity;
+
+        $end = time();
+        $delta = $end - $start;
+        Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage entities hydratation time %s", $delta));
 
         return new PagingResponse
         (

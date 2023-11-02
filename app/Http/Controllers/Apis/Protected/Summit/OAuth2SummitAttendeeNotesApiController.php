@@ -239,7 +239,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             $member = $this->resource_server_context->getCurrentUser();
             if (is_null($member)) return $this->error403();
 
-            $payload = $this->getJsonPayload(SummitAttendeeNoteValidationRulesFactory::buildForAdd(Request::all()));
+            $payload = $this->getJsonPayload(SummitAttendeeNoteValidationRulesFactory::buildForAdd(), true);
 
             $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), null, $payload);
 
@@ -261,7 +261,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             $member = $this->resource_server_context->getCurrentUser();
             if (is_null($member)) return $this->error403();
 
-            $payload = $this->getJsonPayload(SummitAttendeeNoteValidationRulesFactory::buildForUpdate(Request::all()));
+            $payload = $this->getJsonPayload(SummitAttendeeNoteValidationRulesFactory::buildForUpdate(), true);
 
             $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), intval($note_id), $payload);
 

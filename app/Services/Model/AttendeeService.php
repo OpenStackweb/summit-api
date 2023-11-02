@@ -774,8 +774,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     /**
      * @inheritDoc
      */
-    public function upsertAttendeeNote(Summit $summit, int $attendee_id, ?int $note_id, array $payload): SummitAttendeeNote {
-        return $this->tx_service->transaction(function () use ($summit, $attendee_id, $note_id, $payload) {
+    public function upsertAttendeeNote(
+        Summit $summit, Member $author, int $attendee_id, ?int $note_id, array $payload): SummitAttendeeNote {
+
+        return $this->tx_service->transaction(function () use ($summit, $author, $attendee_id, $note_id, $payload) {
             Log::debug(sprintf("AttendeeService::upsertAttendeeNote summit id %s, attendee id %s, payload: %s",
                 $summit->getId(), $attendee_id, json_encode($payload)));
 
@@ -794,12 +796,12 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             if (is_null($note)) {
                 Log::debug(sprintf("AttendeeService::upsertAttendeeNote adding new note. Summit id %s, attendee id %s.",
                     $summit->getId(), $attendee_id));
-                $note = SummitAttendeeNoteFactory::build($attendee, $payload);
+                $note = SummitAttendeeNoteFactory::build($attendee, $author, $payload);
                 $attendee->addNote($note);
             } else {    //update
                 Log::debug(sprintf("AttendeeService::upsertAttendeeNote updating note with id %s. Summit id %s, attendee id %s.",
                     $note_id, $summit->getId(), $attendee_id));
-                $note = SummitAttendeeNoteFactory::populate($attendee, $note, $payload);
+                $note = SummitAttendeeNoteFactory::populate($attendee, $author, $note, $payload);
                 $note->setContent($payload['content']);
             }
 

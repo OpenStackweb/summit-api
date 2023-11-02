@@ -180,7 +180,6 @@ class OAuth2SummitAttendeeNotesApiTest extends ProtectedApiTest
 
         $data = [
             'content' => $new_content,
-            'author_id' => self::$defaultMember->getId(),
         ];
 
         $headers = [

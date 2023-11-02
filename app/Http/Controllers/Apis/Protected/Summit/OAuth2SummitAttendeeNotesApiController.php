@@ -236,9 +236,12 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $member = $this->resource_server_context->getCurrentUser();
+            if (is_null($member)) return $this->error403();
+
             $payload = $this->getJsonPayload(SummitAttendeeNoteValidationRulesFactory::buildForAdd(Request::all()));
 
-            $note = $this->attendee_service->upsertAttendeeNote($summit, intval($attendee_id), null, $payload);
+            $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), null, $payload);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($note)->serialize());
         });
@@ -255,9 +258,12 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $member = $this->resource_server_context->getCurrentUser();
+            if (is_null($member)) return $this->error403();
+
             $payload = $this->getJsonPayload(SummitAttendeeNoteValidationRulesFactory::buildForUpdate(Request::all()));
 
-            $note = $this->attendee_service->upsertAttendeeNote($summit, intval($attendee_id), intval($note_id), $payload);
+            $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), intval($note_id), $payload);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($note)->serialize());
         });

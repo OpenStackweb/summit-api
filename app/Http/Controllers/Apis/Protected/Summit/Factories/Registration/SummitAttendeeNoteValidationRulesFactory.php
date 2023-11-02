@@ -29,7 +29,6 @@ final class SummitAttendeeNoteValidationRulesFactory extends AbstractValidationR
         return [
             'content'   => 'required|string|max:1024',
             'ticket_id' => 'sometimes|integer',
-            'author_id' => 'sometimes|integer',
         ];
     }
 
@@ -42,7 +41,6 @@ final class SummitAttendeeNoteValidationRulesFactory extends AbstractValidationR
         return [
             'content'   => 'sometimes|string|max:1024',
             'ticket_id' => 'sometimes|integer',
-            'author_id' => 'sometimes|integer',
         ];
     }
 }

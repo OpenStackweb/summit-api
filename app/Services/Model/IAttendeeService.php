@@ -130,11 +130,14 @@ interface IAttendeeService
 
     /**
      * @param Summit $summit
+     * @param Member $author
      * @param int $attendee_id
      * @param int|null $note_id
      * @param array $payload
+     * @return SummitAttendeeNote
      */
-    public function upsertAttendeeNote(Summit $summit, int $attendee_id, ?int $note_id, array $payload): SummitAttendeeNote;
+    public function upsertAttendeeNote(
+        Summit $summit, Member $author, int $attendee_id, ?int $note_id, array $payload): SummitAttendeeNote;
 
     /**
      * @param Summit $summit

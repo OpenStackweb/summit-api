@@ -12,12 +12,8 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Log;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\exceptions\EntityNotFoundException;
-use models\main\Company;
 use models\main\Member;
-use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeNote;
 
@@ -33,13 +29,14 @@ final class SummitAttendeeNoteFactory
      * @return SummitAttendeeNote
      * @throws EntityNotFoundException
      */
-    public static function build(SummitAttendee $attendee, array $payload)
+    public static function build(SummitAttendee $attendee, Member $author, array $payload)
     {
-        return self::populate($attendee, new SummitAttendeeNote($payload['content'], $attendee), $payload);
+        return self::populate($attendee, $author, new SummitAttendeeNote($payload['content'], $attendee), $payload);
     }
 
     /**
      * @param SummitAttendee $attendee
+     * @param Member $author
      * @param SummitAttendeeNote $attendee_note
      * @param array $payload
      * @return SummitAttendeeNote
@@ -48,6 +45,7 @@ final class SummitAttendeeNoteFactory
     public static function populate
     (
         SummitAttendee      $attendee,
+        Member              $author,
         SummitAttendeeNote  $attendee_note,
         array               $payload
     )
@@ -61,16 +59,7 @@ final class SummitAttendeeNoteFactory
 
             $attendee_note->setTicket($ticket);
         }
-
-        if (isset($payload['author_id'])) {
-            $member_repository = EntityManager::getRepository(Member::class);
-            $author = $member_repository->getById(intval($payload['author_id']));
-            if (!$author instanceof Member)
-                throw new EntityNotFoundException("Member not found.");
-
-            $attendee_note->setAuthor($author);
-        }
-
+        $attendee_note->setAuthor($author);
         return $attendee_note;
     }
 }

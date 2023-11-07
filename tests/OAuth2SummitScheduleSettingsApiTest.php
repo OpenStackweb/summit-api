@@ -52,6 +52,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'is_default' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
         ];
 
@@ -123,6 +124,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'is_default' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -192,6 +194,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'is_enabled' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -257,6 +260,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'is_default' => false,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -321,6 +325,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'is_default' => false,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -386,6 +391,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'is_enabled' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -472,9 +478,11 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
 
         $data = [
             'key' => 'my-schedule-config',
+            'is_default' => true,
             'is_enabled' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -532,9 +540,11 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
 
         $data = [
             'key' => 'my-schedule-config2',
+            'is_default' => true,
             'is_enabled' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
+            'hide_past_events_with_show_always_on_schedule' => false,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
             'filters' => [
                 [
@@ -617,11 +627,11 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
     public function testGetAllSimple(){
 
         $params = [
-            'id' => 1025,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => [
-                'key=@schedule-main'
+                'key=@my-schedule-config'
             ],
             'order'    => '+key'
         ];
@@ -646,6 +656,6 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $res = json_decode($content);
         $this->assertTrue(!is_null($res));
         $this->assertTrue($res->total > 0);
-        return $config;
+        return $res;
     }
 }

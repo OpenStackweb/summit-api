@@ -29,6 +29,7 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
         'ColorSource' => 'color_source:json_string',
         'Enabled' => 'is_enabled:json_boolean',
         'Default' => 'is_default:json_boolean',
+        'HidePastEventsWithShowAlwaysOnSchedule' => 'hide_past_events_with_show_always_on_schedule:json_boolean',
     ];
 
     protected static $allowed_relations = [

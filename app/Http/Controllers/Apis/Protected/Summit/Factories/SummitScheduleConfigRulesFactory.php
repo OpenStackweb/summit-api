@@ -31,6 +31,7 @@ final class SummitScheduleConfigRulesFactory
             'is_default' => 'required|boolean',
             'is_my_schedule' => 'required|boolean',
             'only_events_with_attendee_access' => 'required|boolean',
+            'hide_past_events_with_show_always_on_schedule' => 'required|boolean',
             'color_source' => 'required|string|in:'.implode(',', SummitScheduleConfig::AllowedColorSource),
             'filters' => 'sometimes|summit_schedule_config_filter_dto_array',
             'pre_filters' => 'sometimes|summit_schedule_config_pre_filter_dto_array',

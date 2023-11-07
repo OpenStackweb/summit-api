@@ -88,6 +88,12 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      */
     private $pre_filters;
 
+    /**
+     * @ORM\Column(name="HidePastEventsWithShowAlwaysOnSchedule", type="boolean")
+     * @var bool
+     */
+    private $hide_past_events_with_show_always_on_schedule;
+
     public function __construct()
     {
         parent::__construct();
@@ -96,6 +102,7 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $this->only_events_with_attendee_access = false;
         $this->color_source = self::ColorSource_EventType;
         $this->is_default = false;
+        $this->hide_past_events_with_show_always_on_schedule = false;
         $this->filters = new ArrayCollection();
         $this->pre_filters = new ArrayCollection();
     }
@@ -293,5 +300,21 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     public function recalculateFilterOrder(SummitScheduleFilterElementConfig $filter, int $new_order)
     {
         self::recalculateOrderForSelectable($this->filters, $filter, $new_order);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHidePastEventsWithShowAlwaysOnSchedule(): bool
+    {
+        return $this->hide_past_events_with_show_always_on_schedule;
+    }
+
+    /**
+     * @param bool $hide_past_events_with_show_always_on_schedule
+     */
+    public function setHidePastEventsWithShowAlwaysOnSchedule(bool $hide_past_events_with_show_always_on_schedule): void
+    {
+        $this->hide_past_events_with_show_always_on_schedule = $hide_past_events_with_show_always_on_schedule;
     }
 }

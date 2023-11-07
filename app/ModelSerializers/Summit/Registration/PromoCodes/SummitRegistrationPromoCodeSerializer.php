@@ -30,6 +30,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
         'CreatorId'         => 'creator_id:json_int',
         'QuantityAvailable' => 'quantity_available:json_int',
         'QuantityUsed'      => 'quantity_used:json_int',
+        'QuantityRemaining' => 'quantity_remaining:json_int',
         'ValidSinceDate'    => 'valid_since_date:datetime_epoch',
         'ValidUntilDate'    => 'valid_until_date:datetime_epoch',
         'ClassName'         => 'class_name:json_string',

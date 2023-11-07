@@ -512,6 +512,14 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getQuantityRemaining(): int
+    {
+        return $this->getQuantityAvailable() - $this->getQuantityUsed();
+    }
+
+    /**
      * @param int $quantity_available
      * @throws ValidationException
      */

@@ -63,6 +63,7 @@ use App\ModelSerializers\Software\OpenStackReleaseComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
 use App\ModelSerializers\Summit\AdminLawPayPaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminStripePaymentProfileSerializer;
+use App\ModelSerializers\Summit\AdminSummitAttendeeNoteSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
 use App\ModelSerializers\Summit\AssignedSelectionPlanExtraQuestionTypeSerializer;
 use App\ModelSerializers\Summit\LawPayPaymentProfileSerializer;
@@ -457,7 +458,11 @@ final class SerializerRegistry
             self::SerializerType_CSV => SummitAttendeeBadgePrintCSVSerializer::class,
         ];
 
-        $this->registry['SummitAttendeeNote'] = SummitAttendeeNoteSerializer::class;
+        $this->registry['SummitAttendeeNote'] = [
+            self::SerializerType_Public => SummitAttendeeNoteSerializer::class,
+            self::SerializerType_CSV => AdminSummitAttendeeNoteSerializer::class,
+            self::SerializerType_Private => AdminSummitAttendeeNoteSerializer::class,
+        ];
 
         $this->registry['SponsorBadgeScan'] = [
             self::SerializerType_Public => SponsorBadgeScanSerializer::class,

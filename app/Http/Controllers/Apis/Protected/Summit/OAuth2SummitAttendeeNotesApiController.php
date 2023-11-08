@@ -243,7 +243,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
 
             $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), null, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($note)->serialize(
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($note, SerializerRegistry::SerializerType_Private)->serialize(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations(),
@@ -270,7 +270,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
 
             $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), intval($note_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($note)->serialize(
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($note, SerializerRegistry::SerializerType_Private)->serialize(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations(),

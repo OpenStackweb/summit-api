@@ -15,14 +15,12 @@
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeNoteRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
-use Illuminate\Support\Facades\Request;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
-use utils\PagingInfo;
 
 /**
  * Class OAuth2SummitAttendeeNotesApiController
@@ -62,10 +60,10 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
     public function __construct
     (
         ISummitAttendeeNoteRepository $attendee_notes_repository,
-        ISummitAttendeeRepository $attendee_repository,
-        ISummitRepository $summit_repository,
-        IAttendeeService $attendee_service,
-        IResourceServerContext $resource_server_context
+        ISummitAttendeeRepository     $attendee_repository,
+        ISummitRepository             $summit_repository,
+        IAttendeeService              $attendee_service,
+        IResourceServerContext        $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -123,7 +121,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
                 ];
             },
             function ($filter) use ($summit) {
-                if($filter instanceof Filter){
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                 }
                 return $filter;
@@ -180,7 +178,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
                 ];
             },
             function ($filter) use ($summit, $attendee) {
-                if($filter instanceof Filter){
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $attendee->getId()));
                 }
@@ -198,8 +196,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
      * @param $note_id
      * @return mixed
      */
-    public function getAttendeeNote($summit_id, $attendee_id, $note_id) {
-        return $this->processRequest(function() use($summit_id, $attendee_id, $note_id) {
+    public function getAttendeeNote($summit_id, $attendee_id, $note_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $attendee_id, $note_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -231,8 +230,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
      * @param $attendee_id
      * @return mixed
      */
-    public function addAttendeeNote($summit_id, $attendee_id) {
-        return $this->processRequest(function() use($summit_id, $attendee_id) {
+    public function addAttendeeNote($summit_id, $attendee_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -243,7 +243,11 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
 
             $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), null, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($note)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($note)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
         });
     }
 
@@ -253,8 +257,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
      * @param $note_id
      * @return mixed
      */
-    public function updateAttendeeNote($summit_id, $attendee_id, $note_id) {
-        return $this->processRequest(function() use($summit_id, $attendee_id, $note_id) {
+    public function updateAttendeeNote($summit_id, $attendee_id, $note_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $attendee_id, $note_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -265,7 +270,11 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
 
             $note = $this->attendee_service->upsertAttendeeNote($summit, $member, intval($attendee_id), intval($note_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($note)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($note)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
         });
     }
 
@@ -275,8 +284,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
      * @param $note_id
      * @return mixed
      */
-    public function deleteAttendeeNote($summit_id, $attendee_id, $note_id) {
-        return $this->processRequest(function() use($summit_id, $attendee_id, $note_id) {
+    public function deleteAttendeeNote($summit_id, $attendee_id, $note_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $attendee_id, $note_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 

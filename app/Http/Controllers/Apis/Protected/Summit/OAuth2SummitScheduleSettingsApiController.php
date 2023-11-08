@@ -145,7 +145,8 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             'key'        => ['=@', '=='],
             'is_enabled' => ['=='],
             'is_my_schedule' => ['=='],
-            'only_events_with_attendee_access' =>  ['=='],
+            'only_events_with_attendee_access' => ['=='],
+            'hide_past_events_with_show_always_on_schedule' => ['=='],
             'color_source' => ['==']
         ];
     }
@@ -158,7 +159,8 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             'key' => 'sometimes|required|string',
             'is_enabled' => 'sometimes|required|boolean',
             'is_my_schedule' => 'sometimes|required|boolean',
-            'only_events_with_attendee_access'=> 'sometimes|required|boolean',
+            'only_events_with_attendee_access' => 'sometimes|required|boolean',
+            'hide_past_events_with_show_always_on_schedule' => 'sometimes|required|boolean',
             'color_source' => 'sometimes|string|in:'.implode(',', SummitScheduleConfig::AllowedColorSource),
         ];
     }

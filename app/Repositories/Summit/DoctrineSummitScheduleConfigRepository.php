@@ -47,7 +47,8 @@ class DoctrineSummitScheduleConfigRepository
             'is_my_schedule' => 'e.is_my_schedule',
             'only_events_with_attendee_access' => 'e.only_events_with_attendee_access',
             'color_source' => 'e.color_source',
-            'summit_id' => 's.id'
+            'summit_id' => 's.id',
+            'hide_past_events_with_show_always_on_schedule' => 'e.hide_past_events_with_show_always_on_schedule'
         ];
     }
 

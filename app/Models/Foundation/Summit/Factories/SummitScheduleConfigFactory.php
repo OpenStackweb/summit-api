@@ -54,6 +54,8 @@ final class SummitScheduleConfigFactory
             $config->setOnlyEventsWithAttendeeAccess(boolval($payload['only_events_with_attendee_access']));
         if(isset($payload['color_source']))
             $config->setColorSource(trim($payload['color_source']));
+        if(isset($payload['hide_past_events_with_show_always_on_schedule']))
+            $config->setHidePastEventsWithShowAlwaysOnSchedule(boolval($payload['hide_past_events_with_show_always_on_schedule']));
         if(isset($payload['filters'])){
             $filters_dto = $payload['filters'];
             if(!is_null($repository) && !$config->isNew()){

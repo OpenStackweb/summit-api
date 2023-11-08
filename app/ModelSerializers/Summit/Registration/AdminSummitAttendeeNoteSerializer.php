@@ -1,5 +1,5 @@
 <?php namespace App\ModelSerializers\Summit;
-/**
+/*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,14 @@
 
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SerializerRegistry;
-use ModelSerializers\SilverStripeSerializer;
+
 
 /**
- * Class SummitAttendeeNoteSerializer
- * @package ModelSerializers
+ * Class AdminSummitAttendeeNoteSerializer
+ * @package App\ModelSerializers\Summit\Registration
  */
-class SummitAttendeeNoteSerializer extends SilverStripeSerializer
+final class AdminSummitAttendeeNoteSerializer extends SummitAttendeeNoteSerializer
 {
-    protected static $array_mappings = [
-        'Content'   => 'content:json_string',
-        'AuthorId'  => 'author_id:json_int',
-        'OwnerId'   => 'owner_id:json_int',
-        'TicketId'  => 'ticket_id:json_int',
-    ];
-
 
     protected static $expand_mappings = [
         'author' => [
@@ -36,12 +29,14 @@ class SummitAttendeeNoteSerializer extends SilverStripeSerializer
             'original_attribute' => 'author_id',
             'getter' => 'getAuthor',
             'has' => 'hasAuthor',
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
         ],
         'owner' => [
             'type' => One2ManyExpandSerializer::class,
             'original_attribute' => 'owner_id',
             'getter' => 'getOwner',
             'has' => 'hasOwner',
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
         ],
         'ticket' => [
             'type' => One2ManyExpandSerializer::class,

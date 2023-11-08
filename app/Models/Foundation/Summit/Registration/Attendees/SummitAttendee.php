@@ -149,6 +149,12 @@ class SummitAttendee extends SilverstripeBaseModel
     private $presentation_votes;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitAttendeeNote", mappedBy="owner", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitAttendeeNote[]
+     */
+    private $notes;
+
+    /**
      * @ORM\Column(name="Company", type="string")
      * @var string
      */
@@ -167,9 +173,10 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     private $status;
 
+
     /**
-     * @ORM\Column(name="AdminNotes", type="string")
      * @var string
+     * @deprecated
      */
     private $admin_notes;
 
@@ -315,6 +322,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->public_edition_email_sent_date = null;
         $this->status = self::StatusIncomplete;
         $this->presentation_votes = new ArrayCollection();
+        $this->notes = new ArrayCollection();
     }
 
     public function isVirtualCheckedIn(): bool
@@ -878,6 +886,7 @@ SQL;
 
     /**
      * @return string
+     * @deprecated
      */
     public function getAdminNotes(): ?string
     {
@@ -886,6 +895,7 @@ SQL;
 
     /**
      * @param string $admin_notes
+     * @deprecated
      */
     public function setAdminNotes(string $admin_notes): void
     {
@@ -1275,5 +1285,52 @@ SQL;
 
     public function hasAllowedExtraQuestions():bool{
         return count($this->getExtraQuestions()) > 0;
+    }
+
+    /**
+     * @return SummitAttendeeNote[]
+     */
+    public function getNotes()
+    {
+        return $this->notes;
+    }
+
+    /**
+     * @param SummitAttendeeNote[] $notes
+     */
+    public function setNotes(array $notes): void
+    {
+        $this->notes = $notes;
+    }
+
+    /**
+     * @param SummitAttendeeNote $note
+     */
+    public function addNote(SummitAttendeeNote $note): void
+    {
+        $note->setOwner($this);
+        $this->notes->add($note);
+    }
+
+    /**
+     * @param int $note_id
+     * @return SummitAttendeeNote|null
+     */
+    public function getNoteById(int $note_id): ?SummitAttendeeNote
+    {
+        $note = $this->notes->matching(
+            Criteria::create()
+                ->where(Criteria::expr()->eq("id", $note_id))
+        )->first();
+        return $note ? $note : null;
+    }
+
+    /**
+     * @param SummitAttendeeNote $note
+     * @return void
+     */
+    public function removeNote(SummitAttendeeNote $note)
+    {
+        $this->notes->removeElement($note);
     }
 }

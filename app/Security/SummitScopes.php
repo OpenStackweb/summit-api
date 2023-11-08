@@ -114,4 +114,7 @@ final class SummitScopes
     const Allow2PresentationAttendeeVote = '%s/presentations/attendee-vote';
 
     const ReadAuditLogs = '%s/audit-logs/read';
+
+    const WriteAttendeeNotesData = '%s/attendee/notes/write';
+    const ReadAttendeeNotesData = '%s/attendee/notes/read';
 }

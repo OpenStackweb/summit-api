@@ -100,6 +100,7 @@ use App\ModelSerializers\Summit\SponsorSocialNetworkSerializer;
 use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
+use App\ModelSerializers\Summit\SummitAttendeeNoteSerializer;
 use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitEventSecureStreamSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
@@ -455,6 +456,8 @@ final class SerializerRegistry
             self::SerializerType_Public => SummitAttendeeBadgePrintSerializer::class,
             self::SerializerType_CSV => SummitAttendeeBadgePrintCSVSerializer::class,
         ];
+
+        $this->registry['SummitAttendeeNote'] = SummitAttendeeNoteSerializer::class;
 
         $this->registry['SponsorBadgeScan'] = [
             self::SerializerType_Public => SponsorBadgeScanSerializer::class,

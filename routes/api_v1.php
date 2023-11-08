@@ -1442,6 +1442,7 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(array('prefix' => 'attendees'), function () {
 
             Route::group(['prefix' => 'all'], function () {
+                Route::get('notes', 'OAuth2SummitAttendeeNotesApiController@getAllAttendeeNotes');
                 Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@send']);
             });
 
@@ -1488,6 +1489,17 @@ Route::group(array('prefix' => 'summits'), function () {
                 // allowed extra questions
                 Route::group(array('prefix' => 'allowed-extra-questions'), function () {
                     Route::get('', [ 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions']);
+                });
+
+                // attendee notes
+                Route::group(['prefix' => 'notes', 'where' => ['note_id' => '[0-9]+']], function () {
+                    Route::get('', 'OAuth2SummitAttendeeNotesApiController@getAttendeeNotes');
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeNotesApiController@addAttendeeNote']);
+                    Route::group(array('prefix' => '{note_id}'), function () {
+                        Route::get('', 'OAuth2SummitAttendeeNotesApiController@getAttendeeNote');
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeNotesApiController@updateAttendeeNote']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeNotesApiController@deleteAttendeeNote']);
+                    });
                 });
             });
         });

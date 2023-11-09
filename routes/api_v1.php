@@ -1442,7 +1442,10 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(array('prefix' => 'attendees'), function () {
 
             Route::group(['prefix' => 'all'], function () {
-                Route::get('notes', 'OAuth2SummitAttendeeNotesApiController@getAllAttendeeNotes');
+                Route::group(['prefix' => 'notes'], function () {
+                    Route::get('', 'OAuth2SummitAttendeeNotesApiController@getAllAttendeeNotes');
+                    Route::get('csv', 'OAuth2SummitAttendeeNotesApiController@getAllAttendeeNotesCSV');
+                });
                 Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@send']);
             });
 
@@ -1494,6 +1497,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 // attendee notes
                 Route::group(['prefix' => 'notes', 'where' => ['note_id' => '[0-9]+']], function () {
                     Route::get('', 'OAuth2SummitAttendeeNotesApiController@getAttendeeNotes');
+                    Route::get('csv', 'OAuth2SummitAttendeeNotesApiController@getAttendeeNotesCSV');
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeNotesApiController@addAttendeeNote']);
                     Route::group(array('prefix' => '{note_id}'), function () {
                         Route::get('', 'OAuth2SummitAttendeeNotesApiController@getAttendeeNote');

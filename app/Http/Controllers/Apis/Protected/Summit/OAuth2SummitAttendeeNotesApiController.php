@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeNoteRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
@@ -134,6 +135,75 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
 
     /**
      * @param $summit_id
+     * @return mixed
+     */
+    public function getAllAttendeeNotesCSV($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'owner_id' => ['=='],
+                    'owner_fullname' => ['=@', '==', '@@'],
+                    'owner_email' => ['=@', '==', '@@'],
+                    'ticket_id' => ['=='],
+                    'content' => ['=@', '@@'],
+                    'author_fullname' => ['=@', '==', '@@'],
+                    'author_email' => ['=@', '==', '@@'],
+                    'created' => ['==', '>=', '<=', '>', '<'],
+                    'edited' => ['==', '>=', '<=', '>', '<'],
+                ];
+            },
+            function () {
+                return [
+                    'owner_id' => 'sometimes|integer',
+                    'owner_fullname' => 'sometimes|string',
+                    'owner_email' => 'sometimes|string',
+                    'ticket_id' => 'sometimes|integer',
+                    'content' => 'sometimes|string',
+                    'author_fullname' => 'sometimes|string',
+                    'author_email' => 'sometimes|string',
+                    'created' => 'sometimes|required|date_format:U',
+                    'edited' => 'sometimes|required|date_format:U',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'created',
+                    'author_fullname',
+                    'author_email',
+                    'owner_id',
+                    'owner_fullname',
+                    'owner_email',
+                ];
+            },
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function () {
+                return [
+                    'created' => new EpochCellFormatter(),
+                    'last_edited' => new EpochCellFormatter(),
+                ];
+            },
+            function () {
+                return [];
+            },
+            'attendees-notes-'
+        );
+    }
+
+    /**
+     * @param $summit_id
      * @param $attendee_id
      * @return mixed
      */
@@ -187,6 +257,74 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             function () {
                 return SerializerRegistry::SerializerType_Private;
             }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $attendee_id
+     * @return mixed
+     */
+    public function getAttendeeNotesCSV($summit_id, $attendee_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $attendee = $this->attendee_repository->getById(intval($attendee_id));
+        if (is_null($attendee)) return $this->error404();
+
+        if ($attendee->getSummit()->getId() != intval($summit_id))
+            return $this->error412("Attendee id {$attendee_id} does not belong to summit {$summit_id}.");
+
+        return $this->_getAllCSV(
+            function () {
+                return [
+                    'ticket_id' => ['=='],
+                    'content' => ['=@', '@@'],
+                    'author_fullname' => ['=@', '==', '@@'],
+                    'author_email' => ['=@', '==', '@@'],
+                    'created' => ['==', '>=', '<=', '>', '<'],
+                    'edited' => ['==', '>=', '<=', '>', '<'],
+                ];
+            },
+            function () {
+                return [
+                    'ticket_id' => 'sometimes|integer',
+                    'content' => 'sometimes|string',
+                    'author_fullname' => 'sometimes|string',
+                    'author_email' => 'sometimes|string',
+                    'created' => 'sometimes|required|date_format:U',
+                    'edited' => 'sometimes|required|date_format:U',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'created',
+                    'author_fullname',
+                    'author_email',
+                ];
+            },
+            function ($filter) use ($summit, $attendee) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $attendee->getId()));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function () {
+                return [
+                    'created' => new EpochCellFormatter(),
+                    'last_edited' => new EpochCellFormatter(),
+                ];
+            },
+            function () {
+                return [];
+            },
+            sprintf('attendee-%s-notes-', $attendee_id)
         );
     }
 

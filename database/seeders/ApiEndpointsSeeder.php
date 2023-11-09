@@ -3133,8 +3133,26 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-all-attendee-notes-csv',
+                'route' => '/api/v1/summits/{id}/attendees/all/notes/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-attendee-notes',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-attendee-notes-csv',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/csv',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),

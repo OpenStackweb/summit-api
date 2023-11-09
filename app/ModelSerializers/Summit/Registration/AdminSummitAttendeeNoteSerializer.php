@@ -20,7 +20,7 @@ use ModelSerializers\SerializerRegistry;
  * Class AdminSummitAttendeeNoteSerializer
  * @package App\ModelSerializers\Summit\Registration
  */
-final class AdminSummitAttendeeNoteSerializer extends SummitAttendeeNoteSerializer
+class AdminSummitAttendeeNoteSerializer extends SummitAttendeeNoteSerializer
 {
 
     protected static $expand_mappings = [

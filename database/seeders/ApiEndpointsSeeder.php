@@ -7637,6 +7637,7 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                     IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
                 ]
@@ -7651,6 +7652,7 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                     IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
                 ]
@@ -7665,6 +7667,7 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                     IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
                 ]
@@ -7679,6 +7682,7 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                     IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
                 ]
@@ -7693,6 +7697,7 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                     IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
                 ]

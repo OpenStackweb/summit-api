@@ -107,10 +107,14 @@ class PresentationSlide extends PresentationMaterial
      * @return PresentationMaterial
      */
     public function clone(): PresentationMaterial {
-        $clone = new PresentationSlide();
+        $clone = parent::clone();
         $clone->setLink($this->getLink());
         $clone->setSlide($this->getSlide());
+        return $clone;
+    }
 
-        return parent::populate($clone);
+    protected function createInstance(): PresentationMaterial
+    {
+        return new PresentationSlide();
     }
 }

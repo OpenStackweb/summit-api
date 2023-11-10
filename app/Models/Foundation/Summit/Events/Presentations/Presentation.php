@@ -1246,6 +1246,15 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         return $this->slug;
     }
 
+    /**
+     * @param string $slug
+     * @return void
+     */
+    public function setSlug(string $slug): void
+    {
+        $this->slug = $slug;
+    }
+
     protected static $default_replacements = [
         '/\s/' => '-', // remove whitespace
         '/_/' => '-', // underscores to dashes
@@ -1263,6 +1272,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             $this->slug = preg_replace($regex, $replace, $this->slug);
         }
     }
+
 
     /**
      * @param string $title

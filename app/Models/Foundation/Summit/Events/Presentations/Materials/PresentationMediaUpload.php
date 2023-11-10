@@ -161,14 +161,21 @@ class PresentationMediaUpload extends PresentationMaterial
      * @return PresentationMaterial
      */
     public function clone(): PresentationMaterial {
-        $clone = new PresentationMediaUpload();
+        $clone = parent::clone();
+
         $file_name = $this->getFilename();
-        if (!empty($file_name ))
+        if (!empty($file_name))
             $clone->setFilename($file_name);
+
         $media_upload_type = $this->getMediaUploadType();
-        if ($media_upload_type != null)
+        if (!is_null($media_upload_type))
             $clone->setMediaUploadType($media_upload_type);
 
-        return parent::populate($clone);
+        return $clone;
+    }
+
+    protected function createInstance(): PresentationMaterial
+    {
+        return new PresentationMediaUpload();
     }
 }

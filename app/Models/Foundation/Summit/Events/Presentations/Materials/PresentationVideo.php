@@ -154,13 +154,17 @@ class PresentationVideo extends PresentationMaterial
      * @return PresentationMaterial
      */
     public function clone(): PresentationMaterial {
-        $clone = new PresentationVideo();
+        $clone = parent::clone();
         $clone->setYoutubeId($this->getYoutubeId());
         $clone->setDateUploaded($this->getDateUploaded());
         $clone->setHighlighted($this->getHighlighted());
         $clone->setViews($this->getViews());
         $clone->setExternalUrl($this->getExternalUrl());
+        return $clone;
+    }
 
-        return parent::populate($clone);
+    protected function createInstance(): PresentationMaterial
+    {
+        return new PresentationVideo();
     }
 }

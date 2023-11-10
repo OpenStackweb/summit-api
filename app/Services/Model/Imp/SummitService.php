@@ -1924,10 +1924,9 @@ final class SummitService
                 }
             }
 
-            if ($event instanceof Presentation) {
+            if ($event_clone instanceof Presentation && $event instanceof Presentation) {
                 $event_clone->setStatus($event->getStatus());
                 $event_clone->setProgress($event->getProgress());
-                $event_clone->setViewsCount($event->getViewsCount());
                 $event_clone->setProblemAddressed($event->getProblemAddressed());
                 $event_clone->setAttendeesExpectedLearnt($event->getAttendeesExpectedLearnt());
                 $event_clone->setToRecord($event->getToRecord());

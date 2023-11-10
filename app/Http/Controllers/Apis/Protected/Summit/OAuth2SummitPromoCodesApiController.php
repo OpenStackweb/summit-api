@@ -124,6 +124,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'sponsor' => ['@@', '=@', '=='],
                     'class_name' => ['=='],
                     'type' => ['=='],
+                    'tags' => ['@@','=@', '=='],
+                    'tags_id' => ['=='],
                 ];
             },
             function () {
@@ -139,6 +141,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'speaker_email' => 'sometimes|string',
                     'sponsor' => 'sometimes|string',
                     'type' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::getValidTypes())),
+                    'tags' => 'sometimes|required|string',
+                    'tags_id' => 'sometimes|integer',
                 ];
             },
             function () {

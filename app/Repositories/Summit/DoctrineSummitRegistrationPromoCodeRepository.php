@@ -27,6 +27,7 @@ use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
+use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -147,7 +148,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
                    SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
                    SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class
                ]
-           )
+            ),
+            //'tags' => new DoctrineLeftJoinFilterMapping("pc.tags", "t","t.tag :operator :value"),
+            //'tags_id' => new DoctrineLeftJoinFilterMapping("pc.tags", "t","t.id :operator :value"),
         ];
     }
 

@@ -519,10 +519,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function addVideo(PresentationVideo $video)
     {
-        $this->materials->add($video);
-        $video->setPresentation($this);
-        $video->setOrder($this->getMaterialsMaxOrder() + 1);
-        return $this;
+        return $this->addMaterial($video);
     }
 
     public function getVideosWithExternalUrls()
@@ -649,10 +646,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function addSlide(PresentationSlide $slide)
     {
-        $this->materials->add($slide);
-        $slide->setPresentation($this);
-        $slide->setOrder($this->getMaterialsMaxOrder() + 1);
-        return $this;
+        return $this->addMaterial($slide);
     }
 
     /**
@@ -683,10 +677,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function addMediaUpload(PresentationMediaUpload $mediaUpload)
     {
-        $this->materials->add($mediaUpload);
-        $mediaUpload->setPresentation($this);
-        $mediaUpload->setOrder($this->getMaterialsMaxOrder() + 1);
-        return $this;
+        return $this->addMaterial($mediaUpload);
     }
 
     /**
@@ -732,10 +723,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function addLink(PresentationLink $link)
     {
-        $this->materials->add($link);
-        $link->setPresentation($this);
-        $link->setOrder($this->getMaterialsMaxOrder() + 1);
-        return $this;
+        return $this->addMaterial($link);
     }
 
     /**
@@ -892,6 +880,18 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function setMaterials($materials)
     {
         $this->materials = $materials;
+    }
+
+    /**
+     * @param PresentationMaterial $material
+     * @return Presentation
+     */
+    public function addMaterial(PresentationMaterial $material)
+    {
+        $this->materials->add($material);
+        $material->setPresentation($this);
+        $material->setOrder($this->getMaterialsMaxOrder() + 1);
+        return $this;
     }
 
     /**
@@ -1246,6 +1246,15 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         return $this->slug;
     }
 
+    /**
+     * @param string $slug
+     * @return void
+     */
+    public function setSlug(string $slug): void
+    {
+        $this->slug = $slug;
+    }
+
     protected static $default_replacements = [
         '/\s/' => '-', // remove whitespace
         '/_/' => '-', // underscores to dashes
@@ -1263,6 +1272,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             $this->slug = preg_replace($regex, $replace, $this->slug);
         }
     }
+
 
     /**
      * @param string $title

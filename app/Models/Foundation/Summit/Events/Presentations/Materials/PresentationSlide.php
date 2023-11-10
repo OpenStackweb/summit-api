@@ -21,12 +21,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class PresentationSlide extends PresentationMaterial
 {
+    const ClassName = 'PresentationSlide';
 
     /**
      * @return string
      */
     public function getClassName(){
-        return 'PresentationSlide';
+        return self::ClassName;
     }
 
     /**
@@ -100,5 +101,20 @@ class PresentationSlide extends PresentationMaterial
         catch(\Exception $ex){
             return 0;
         }
+    }
+
+    /**
+     * @return PresentationMaterial
+     */
+    public function clone(): PresentationMaterial {
+        $clone = parent::clone();
+        $clone->setLink($this->getLink());
+        $clone->setSlide($this->getSlide());
+        return $clone;
+    }
+
+    protected function createInstance(): PresentationMaterial
+    {
+        return new PresentationSlide();
     }
 }

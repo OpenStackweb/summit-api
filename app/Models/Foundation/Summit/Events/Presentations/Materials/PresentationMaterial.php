@@ -200,4 +200,18 @@ abstract class PresentationMaterial
     }
 
     use ScheduleEntity;
+
+    // factory method
+    protected abstract function createInstance():PresentationMaterial;
+
+    public function clone(): PresentationMaterial{
+        $clone = $this->createInstance();
+        $clone->setName($this->getName());
+        $clone->setDescription($this->getDescription());
+        $clone->setFeatured($this->getFeatured());
+        $clone->setDisplayOnSite($this->getDisplayOnSite());
+        $clone->setPresentation($this->getPresentation());
+        $clone->setOrder($this->getOrder());
+        return $clone;
+    }
 }

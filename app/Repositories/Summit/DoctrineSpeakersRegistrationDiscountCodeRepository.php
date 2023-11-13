@@ -66,6 +66,19 @@ class DoctrineSpeakersRegistrationDiscountCodeRepository
     }
 
     /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'id'         => 'o.id',
+            'email'      => 'm.email',
+            'email_sent' => 'o.sent',
+            'redeemed'   => 'o.redeemed'
+        ];
+    }
+
+    /**
      * @inheritDoc
      */
     public function getDiscountCodeSpeakers(

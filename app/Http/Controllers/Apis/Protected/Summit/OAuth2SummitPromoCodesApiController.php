@@ -536,7 +536,9 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'id',
                     'email',
-                    'full_name'
+                    'full_name',
+                    'email_sent',
+                    'redeemed'
                 ];
             },
             function ($filter) {
@@ -599,6 +601,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'id',
                     'email',
+                    'email_sent',
+                    'redeemed'
                 ];
             },
             function ($filter) {

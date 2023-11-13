@@ -66,6 +66,7 @@ class DoctrineSummitEmailEventFlowRepository
         return [
             'id'   => 'e.id',
             'email_template_identifier' => 'e.email_template_identifier',
+            'flow_name' =>  'f.name',
         ];
     }
 

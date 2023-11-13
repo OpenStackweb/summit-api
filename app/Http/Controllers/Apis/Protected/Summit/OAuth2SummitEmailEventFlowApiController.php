@@ -129,6 +129,7 @@ class OAuth2SummitEmailEventFlowApiController extends OAuth2ProtectedController
         return [
             'id',
             'email_template_identifier',
+            'flow_name'
         ];
     }
 

@@ -12,14 +12,21 @@
  * limitations under the License.
  **/
 
-
+use DateTime;
 /**
  * Class FormatUtils
  * @package libs\utils
  */
 final class FormatUtils
 {
-    public static function getNiceFloat(float $val):string{
-        return number_format(floatval($val), 2 , ".", '');
+    public static function getNiceFloat(float $val): string
+    {
+        return number_format(floatval($val), 2, ".", '');
+    }
+
+    public static function getNiceDateMonthDayYearTextual(?DateTime $val): string
+    {
+        if(is_null($val)) return '';
+        return $val->format("F d, Y");
     }
 }

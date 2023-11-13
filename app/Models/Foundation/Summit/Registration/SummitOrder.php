@@ -666,9 +666,9 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|null
      */
-    public function getApprovedPaymentDate(): \DateTime
+    public function getApprovedPaymentDate(): ?\DateTime
     {
         return $this->approved_payment_date;
     }

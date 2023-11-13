@@ -79,6 +79,8 @@ interface IMailTemplatesConstants
     const old_category = 'old_category';
     const order_amount = 'order_amount';
     const order_amount_adjusted = 'order_amount_adjusted';
+
+    const order_purchase_date= 'order_purchase_date';
     const order_credit_card_type = 'order_credit_card_type';
     const order_credit_card_4number = 'order_credit_card_4number';
     const order_currency = 'order_currency';

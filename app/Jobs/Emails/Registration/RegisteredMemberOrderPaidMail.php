@@ -56,6 +56,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
 
         $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
         $payload[IMailTemplatesConstants::order_qr_value] = $order->getQRCode();
+        $payload[IMailTemplatesConstants::order_purchase_date] = FormatUtils::getNiceDateMonthDayYearTextual($order->getApprovedPaymentDate());
         $payload[IMailTemplatesConstants::order_credit_card_type] = $order->getCreditCardType();
         $payload[IMailTemplatesConstants::order_credit_card_4number] = $order->getCreditCard4Number();
 
@@ -135,6 +136,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_credit_card_type]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_purchase_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_credit_card_4number]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';

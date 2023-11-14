@@ -13,6 +13,7 @@
  **/
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
@@ -66,92 +67,179 @@ class DoctrineSummitRegistrationPromoCodeRepository
         return $query->getQuery()->getOneOrNullResult();
     }
 
-    protected function getFilterMappings()
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+
+        if (!is_null($filter)) {
+
+            if ($filter->hasFilter("creator") || $filter->hasFilter("creator_email")) {
+                $query = $query->leftJoin('pc.creator', 'ct');
+            }
+
+            if ($filter->hasFilter("owner") || $filter->hasFilter("owner_email")) {
+                $query = $query
+                    ->leftJoin("mpc.owner", "owr")
+                    ->leftJoin("mdc.owner", "owr2");
+            }
+
+            if ($filter->hasFilter("speaker") || $filter->hasFilter("speaker_email")) {
+                $query = $query
+                    ->leftJoin("spkpc.speaker", "spkr")
+                    ->leftJoin("spkdc.speaker", "spkr2")
+                    ->leftJoin("spksdc.owners", "spksdc_owr")
+                    ->leftJoin("spksdc_owr.speaker", "spksdc_owr_speaker")
+                    ->leftJoin("spkspc.owners", "spkspc_owr")
+                    ->leftJoin("spkspc_owr.speaker", "spkspc_owr_speaker");
+
+                if ($filter->hasFilter("speaker_email")) {
+                    $query = $query
+                        ->leftJoin('spkr.member', "spmm", Join::LEFT_JOIN)
+                        ->leftJoin('spkr2.member', "spmm2", Join::LEFT_JOIN)
+                        ->leftJoin('spksdc_owr_speaker.member', "spmm3", Join::LEFT_JOIN)
+                        ->leftJoin('spkspc_owr_speaker.member', "spmm4", Join::LEFT_JOIN)
+                        ->leftJoin('spkr.registration_request', "sprr", Join::LEFT_JOIN)
+                        ->leftJoin('spkr2.registration_request', "sprr2", Join::LEFT_JOIN)
+                        ->leftJoin('spksdc_owr_speaker.registration_request', "sprr3", Join::LEFT_JOIN)
+                        ->leftJoin('spkspc_owr_speaker.registration_request', "sprr4", Join::LEFT_JOIN);
+                }
+            }
+
+            if ($filter->hasFilter("sponsor")) {
+                $query = $query
+                    ->leftJoin("spc.sponsor", "spnr")
+                    ->leftJoin("spdc.sponsor", "spnr2");
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings(): array
     {
-        return [
+        $args  = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+
+        $res = [
             'code'          => 'pc.code:json_string',
             'description'   => 'pc.description:json_string',
-            'sponsor' => new DoctrineFilterMapping
-            (
-                "(spnr.name :operator :value) OR (spnr2.name :operator :value)"
-            ),
-            'creator'       => new DoctrineFilterMapping
-            (
-                "( concat(ct.first_name, ' ', ct.last_name) :operator :value ".
-                "OR ct.first_name :operator :value ".
-                "OR ct.last_name :operator :value ) "
-            ),
-            'creator_email' => new DoctrineFilterMapping
-            (
-                "(ct.email :operator :value)"
-            ),
-            'owner'       => new DoctrineFilterMapping
-            (
-                "( concat(owr.first_name, ' ', owr.last_name) :operator :value ".
-                "OR owr.first_name :operator :value ".
-                "OR owr.last_name :operator :value ) ".
-                "OR ( concat(owr2.first_name, ' ', owr2.last_name) :operator :value ".
-                "OR owr2.first_name :operator :value ".
-                "OR owr2.last_name :operator :value ) "
-            ),
-            'owner_email' => new DoctrineFilterMapping
-            (
-                "(owr.email :operator :value) ".
-                "OR (owr2.email :operator :value) "
-            ),
-            'speaker'       => new DoctrineFilterMapping
-            (
-                "( ".
-                "concat(spkr.first_name, ' ', spkr.last_name) :operator :value ".
-                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value ".
-                "OR spkr.first_name :operator :value ".
-                "OR spkr.last_name :operator :value ".
-                "OR spmm.first_name :operator :value ".
-                "OR spmm.last_name :operator :value ) ".
-                "OR ( concat(spkr2.first_name, ' ', spkr2.last_name) :operator :value ".
-                "OR concat(spmm2.first_name, ' ', spmm2.last_name) :operator :value ".
-                "OR spkr2.first_name :operator :value ".
-                "OR spkr2.last_name :operator :value ".
-                "OR spmm2.first_name :operator :value ".
-                "OR spmm2.last_name :operator :value ".
-                "OR concat(spksdc_owr_speaker.first_name, ' ', spksdc_owr_speaker.last_name) :operator :value ".
-                "OR concat(spkspc_owr_speaker.first_name, ' ', spkspc_owr_speaker.last_name) :operator :value ".
-                "OR spksdc_owr_speaker.first_name :operator :value ".
-                "OR spksdc_owr_speaker.last_name :operator :value ".
-                "OR spkspc_owr_speaker.first_name :operator :value ".
-                "OR spkspc_owr_speaker.last_name :operator :value ".
-                ")"
-            ),
-            'speaker_email' => new DoctrineFilterMapping
-            (
-                "( sprr.email :operator :value OR spmm.email :operator :value ) ".
-                "OR ( sprr2.email :operator :value OR spmm2.email :operator :value) ".
-                "OR ( sprr3.email :operator :value OR spmm3.email :operator :value ) ".
-                "OR ( sprr4.email :operator :value OR spmm4.email :operator :value )"
-            ),
             'type' => new DoctrineFilterMapping
             (
-                "(mpc.type :operator :value OR spkpc.type :operator :value) ".
-                        " OR (mdc.type :operator :value OR spkdc.type :operator :value) "
+                "(mpc.type :operator :value OR spkpc.type :operator :value ".
+                "OR mdc.type :operator :value OR spkdc.type :operator :value ".
+                "OR spkspc.type :operator :value OR spksdc.type :operator :value) "
             ),
-           'class_name' => new DoctrineInstanceOfFilterMapping(
-               "pc",
-               [
-                   SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
-                   SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
-                   MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
-                   SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
-                   SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
-                   MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
-                   SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
-                   SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
-                   SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
-                   SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class
-               ]
-            ),
-            //'tags' => new DoctrineLeftJoinFilterMapping("pc.tags", "t","t.tag :operator :value"),
-            //'tags_id' => new DoctrineLeftJoinFilterMapping("pc.tags", "t","t.id :operator :value"),
+            'class_name' => new DoctrineInstanceOfFilterMapping(
+                "pc",
+                [
+                    SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
+                    SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
+                    MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
+                    SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
+                    SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
+                    MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
+                    SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
+                    SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
+                    SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
+                    SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class
+                ]
+            )
         ];
+
+        if ($filter instanceof Filter) {
+
+            if ($filter->hasFilter("creator")) {
+                $res['creator'] = new DoctrineFilterMapping
+                (
+                    "( concat(ct.first_name, ' ', ct.last_name) :operator :value " .
+                    "OR ct.first_name :operator :value " .
+                    "OR ct.last_name :operator :value ) "
+                );
+            }
+
+            if ($filter->hasFilter("creator_email")) {
+                $res['creator_email'] = new DoctrineFilterMapping("(ct.email :operator :value)");
+            }
+
+            if ($filter->hasFilter("owner")) {
+                $res['owner'] = new DoctrineFilterMapping
+                (
+                    "( concat(owr.first_name, ' ', owr.last_name) :operator :value ".
+                    "OR owr.first_name :operator :value ".
+                    "OR owr.last_name :operator :value ) ".
+                    "OR ( concat(owr2.first_name, ' ', owr2.last_name) :operator :value ".
+                    "OR owr2.first_name :operator :value ".
+                    "OR owr2.last_name :operator :value ) "
+                );
+            }
+
+            if ($filter->hasFilter("owner_email")) {
+                $res['owner_email'] = new DoctrineFilterMapping
+                (
+                    "(owr.email :operator :value) ".
+                    "OR (owr2.email :operator :value) "
+                );
+            }
+
+            if ($filter->hasFilter("speaker")) {
+                $res['speaker'] = new DoctrineFilterMapping
+                (
+                    "( " .
+                    "concat(spkr.first_name, ' ', spkr.last_name) :operator :value " .
+                    "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value " .
+                    "OR spkr.first_name :operator :value " .
+                    "OR spkr.last_name :operator :value " .
+                    "OR spmm.first_name :operator :value " .
+                    "OR spmm.last_name :operator :value ) " .
+                    "OR ( concat(spkr2.first_name, ' ', spkr2.last_name) :operator :value " .
+                    "OR concat(spmm2.first_name, ' ', spmm2.last_name) :operator :value " .
+                    "OR spkr2.first_name :operator :value " .
+                    "OR spkr2.last_name :operator :value " .
+                    "OR spmm2.first_name :operator :value " .
+                    "OR spmm2.last_name :operator :value " .
+                    "OR concat(spksdc_owr_speaker.first_name, ' ', spksdc_owr_speaker.last_name) :operator :value " .
+                    "OR concat(spkspc_owr_speaker.first_name, ' ', spkspc_owr_speaker.last_name) :operator :value " .
+                    "OR spksdc_owr_speaker.first_name :operator :value " .
+                    "OR spksdc_owr_speaker.last_name :operator :value " .
+                    "OR spkspc_owr_speaker.first_name :operator :value " .
+                    "OR spkspc_owr_speaker.last_name :operator :value " .
+                    ")"
+                );
+            }
+
+            if ($filter->hasFilter("speaker_email")) {
+                $res['speaker_email'] = new DoctrineFilterMapping
+                (
+                    "(sprr.email :operator :value OR spmm.email :operator :value " .
+                    "OR sprr2.email :operator :value OR spmm2.email :operator :value " .
+                    "OR sprr3.email :operator :value OR spmm3.email :operator :value " .
+                    "OR sprr4.email :operator :value OR spmm4.email :operator :value)"
+                );
+            }
+
+            if ($filter->hasFilter("sponsor")) {
+                $res['sponsor'] = new DoctrineFilterMapping(
+                    "(spnr.name :operator :value) OR (spnr2.name :operator :value)");
+            }
+
+            if ($filter->hasFilter("tag")) {
+                $res['tag'] = new DoctrineLeftJoinFilterMapping(
+                    "pc.tags", "t","t.tag :operator :value");
+            }
+
+            if ($filter->hasFilter("tag_id")) {
+                $res['tag_id'] = new DoctrineLeftJoinFilterMapping(
+                    "pc.tags", "t","t.id :operator :value");
+            }
+        }
+
+        return $res;
     }
 
     /**
@@ -180,7 +268,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
         Order $order   = null
     )
     {
-        $query  =  $this->getEntityManager()
+        $query = $this->getEntityManager()
                     ->createQueryBuilder()
                     ->select("pc")
                     ->from($this->getBaseEntity(), "pc")
@@ -193,32 +281,16 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     ->leftJoin(SponsorSummitRegistrationPromoCode::class, 'spc', 'WITH', 'mpc.id = spc.id')
                     ->leftJoin(SpeakerSummitRegistrationPromoCode::class, 'spkpc', 'WITH', 'spkpc.id = pc.id')
                     ->leftJoin(SpeakersSummitRegistrationPromoCode::class, 'spkspc', 'WITH', 'spkspc.id = pc.id')
-                    ->leftJoin('pc.summit', 's')
-                    ->leftJoin('pc.creator', 'ct')
-                    ->leftJoin("spkpc.speaker", "spkr")
-                    ->leftJoin("spkdc.speaker", "spkr2")
-                    ->leftJoin('spkr.member', "spmm", Join::LEFT_JOIN)
-                    ->leftJoin('spkr2.member', "spmm2", Join::LEFT_JOIN)
-                    ->leftJoin('spkr.registration_request', "sprr", Join::LEFT_JOIN)
-                    ->leftJoin('spkr2.registration_request', "sprr2", Join::LEFT_JOIN)
-                    ->leftJoin("mpc.owner", "owr")
-                    ->leftJoin("mdc.owner", "owr2")
-                    ->leftJoin("spc.sponsor", "spnr")
-                    ->leftJoin("spdc.sponsor", "spnr2")
-                    ->leftJoin("spksdc.owners","spksdc_owr")
-                    ->leftJoin("spkspc.owners","spkspc_owr")
-                    ->leftJoin("spksdc_owr.speaker","spksdc_owr_speaker")
-                    ->leftJoin("spkspc_owr.speaker","spkspc_owr_speaker")
-                    ->leftJoin('spksdc_owr_speaker.member', "spmm3", Join::LEFT_JOIN)
-                    ->leftJoin('spkspc_owr_speaker.member', "spmm4", Join::LEFT_JOIN)
-                    ->leftJoin('spksdc_owr_speaker.registration_request', "sprr3", Join::LEFT_JOIN)
-                    ->leftJoin('spkspc_owr_speaker.registration_request', "sprr4", Join::LEFT_JOIN)
-                    ->where("s.id = :summit_id");
+                    ->leftJoin('pc.summit', 's');
+
+        $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $query->where("s.id = :summit_id");
 
         $query->setParameter("summit_id", $summit->getId());
 
         if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
         }
 
         if (!is_null($order)) {
@@ -229,8 +301,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
         }
 
         $query = $query
-        ->setFirstResult($paging_info->getOffset())
-        ->setMaxResults($paging_info->getPerPage());
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
         $total     = $paginator->count();

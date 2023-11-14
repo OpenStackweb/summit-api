@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
@@ -20,13 +22,34 @@ use models\summit\SpeakersSummitRegistrationPromoCode;
  */
 final class OAuth2PromoCodesApiTest extends ProtectedApiTest
 {
-    /**
-     * @param int $summit_id
-     */
-    public function testGetPromoCodesDiscount($summit_id=27){
-        $params = [
+    use InsertSummitTestData;
 
-            'id'       => $summit_id,
+    use InsertMemberTestData;
+
+    static $summit_id = 3769;
+
+//    protected function setUp():void
+//    {
+//        parent::setUp();
+//        self::insertSummitTestData();
+//        self::insertMemberTestData(IGroup::TrackChairs);
+//        self::$summit_permission_group->addMember(self::$member);
+//        self::$em->persist(self::$summit);
+//        self::$em->persist(self::$summit_permission_group);
+//        self::$em->flush();
+//
+//        self::$summit_id = self::$summit->getId();
+//    }
+//
+//    protected function tearDown():void
+//    {
+//        self::clearSummitTestData();
+//        parent::tearDown();
+//    }
+
+    public function testGetPromoCodesDiscount(){
+        $params = [
+            'id'       => self::$summit_id,
             'page'     => 1,
             'per_page' => 10,
             //'filter'   => 'code=@DISCOUNT_',
@@ -54,40 +77,9 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($promo_codes));
     }
 
-    public function testGetPromoCodesByClassNameSpeakerSummitRegistrationPromoCode(){
-        $params = [
-
-            'id'       => 23,
-            'page'     => 1,
-            'per_page' => 10,
-            'filter'   => 'class_name=='.\models\summit\SpeakerSummitRegistrationPromoCode::ClassName,
-            'order'    => '+code'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitPromoCodesApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $promo_codes = json_decode($content);
-        $this->assertTrue(!is_null($promo_codes));
-    }
-
     public function testGetPromoCodesByClassNameSpeakersSummitRegistrationPromoCodeOrSpeakersRegistrationDiscountCode(){
         $params = [
-            'id'       => 3607,
+            'id'       => self::$summit_id,
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'class_name=='.SpeakersSummitRegistrationPromoCode::ClassName.'||'.SpeakersRegistrationDiscountCode::ClassName,
@@ -118,7 +110,7 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
     public function testGetPromoCodesByClassNameSpeakerSummitRegistrationPromoCodeCSV(){
         $params = [
 
-            'id'       => 25,
+            'id'       => self::$summit_id,
             //'filter'   => 'class_name=='.\models\summit\SpeakerSummitRegistrationPromoCode::ClassName,
             'order'    => '+code',
             'columns'  => 'code,type,owner_name,owner_email,sponsor_name,redeemed,email_sent',
@@ -145,10 +137,10 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($content));
     }
 
-    public function testGetPromoCodesByClassNameOR($summit_id=27){
+    public function testGetPromoCodesByClassNameOR(){
         $params = [
 
-            'id'       => $summit_id,
+            'id'       => self::$summit_id,
             'page'     => 1,
             'per_page' => 10,
             'filter'   => [
@@ -180,7 +172,7 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
 
     public function testGetPromoCodesByClassNameORInvalidClassName(){
         $params = [
-            'id'       => 23,
+            'id'       => self::$summit_id,
             'page'     => 1,
             'per_page' => 10,
             'filter'   => [
@@ -208,16 +200,14 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(412);
     }
 
-    public function testGetPromoCodesFilterByEmailOwner(){
+    protected function getPromoCodesFilterBy($filter){
         $params = [
-            'id'       => 23,
+            'id'       => self::$summit_id,
             'page'     => 1,
             'per_page' => 10,
-            'filter'   => [
-                'speaker_email=@muroi',
-            ],
+            //'filter'   => $filter,
             'order'    => '+code',
-            'expand'   => 'speaker,creator'
+            'expand'   => 'speaker,creator,tags'
         ];
 
         $headers = [
@@ -241,9 +231,32 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($promo_codes));
     }
 
+    public function testGetPromoCodesFilterByTag(){
+        //$code       = str_random(16).'_PROMOCODE_TEST';
+        //$promo_code = $this->testAddSpeakersRegistrationPromoCode($code);
+        //$this->getPromoCodesFilterBy(['tag==' . $promo_code->getTags()[0]]);
+        $this->getPromoCodesFilterBy(['tag=@Artificial']);
+    }
+
+    public function testGetPromoCodesFilterByCreator(){
+        $this->getPromoCodesFilterBy(['creator=@Marcet']);
+    }
+
+    public function testGetPromoCodesFilterByType(){
+        $this->getPromoCodesFilterBy(['type==ACCEPTED']);
+    }
+
+    public function testGetPromoCodesFilterByOwnerEmail(){
+        $this->getPromoCodesFilterBy(['speaker_email=@jpmaxman@tipit.net']);
+    }
+
+    public function testGetPromoCodesByClassNameSpeakerSummitRegistrationPromoCode(){
+        $this->getPromoCodesFilterBy('class_name=='.\models\summit\SpeakerSummitRegistrationPromoCode::ClassName);
+    }
+
     public function testGetPromoCodesMetadata(){
         $params = [
-            'id'       => 27,
+            'id' => self::$summit_id,
         ];
 
         $headers = [
@@ -267,19 +280,18 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($metadata));
     }
 
-    public function testAddGenericDiscountCode( $summit_id = 27){
+    public function testAddGenericDiscountCode(){
         $code = str_random(16).'_DISCOUNT_CODE';
         $params = ['rate' => 50.00];
         return $this->testAddPromoCode
         (
-            $summit_id,
             $code,
             \models\summit\SummitRegistrationDiscountCode::ClassName,
             $params
         );
     }
 
-    public function testAddMemberDiscountCode( $summit_id = 27){
+    public function testAddMemberDiscountCode(){
         $code = str_random(16).'_MEMBER_DISCOUNT_CODE';
         $params = [
             'amount' => 100.00,
@@ -290,7 +302,6 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
          ];
         return $this->testAddPromoCode
         (
-            $summit_id,
             $code,
             \models\summit\MemberSummitRegistrationDiscountCode::ClassName,
             $params
@@ -298,13 +309,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
     }
 
     public function testAddPromoCode(
-        $summit_id = 27,
         $code = "PROMOCODE",
         $class_name =\models\summit\SummitRegistrationPromoCode::ClassName,
         array $extra_params = []
     ){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit_id,
         ];
 
         $data = [
@@ -340,13 +350,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
     }
 
     public function testAddSpeakersRegistrationPromoCode(
-        $summit_id = 3609,
         $code = "SPSPROMOCODE",
         $class_name =\models\summit\SpeakersSummitRegistrationPromoCode::ClassName,
         array $extra_params = []
     ){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit_id,
         ];
 
         $data = [
@@ -383,16 +392,14 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
     }
 
     public function testUpdateSpeakersRegistrationPromoCode(
-        $summit_id = 3609,
-        $code = "SPSPROMOCODE",
         $class_name =\models\summit\SpeakersSummitRegistrationPromoCode::ClassName,
         array $extra_params = []
     ){
         $code       = str_random(16).'_PROMOCODE_TEST';
-        $promo_code = $this->testAddSpeakersRegistrationPromoCode($summit_id, $code);
+        $promo_code = $this->testAddSpeakersRegistrationPromoCode($code);
 
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code->id
         ];
 
@@ -429,13 +436,13 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    public function testAddDiscountSpeakerCode($summit_id = 27, $code = ""){
+    public function testAddDiscountSpeakerCode($code = ""){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit_id,
         ];
 
         if(empty($code))
-            $code       = str_random(16).'_PROMOCODE';
+            $code = str_random(16).'_PROMOCODE';
         $data = [
             'code'       => $code,
             'class_name' => \models\summit\SpeakerSummitRegistrationDiscountCode::ClassName,
@@ -467,7 +474,8 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    public function testAddDiscountSpeakerCodeTicketRule($summit_id = 27){
+    public function testAddDiscountSpeakerCodeTicketRule(){
+        $summit_id = self::$summit_id;
         $promo_code = $this->testAddDiscountSpeakerCode($summit_id);
         $params = [
             'id' => $summit_id,
@@ -502,12 +510,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    public function testUpdatePromoCode($summit_id  = 27){
+    public function testUpdatePromoCode(){
 
         $code       = str_random(16).'_PROMOCODE_TEST';
-        $promo_code = $this->testAddPromoCode($summit_id, $code);
+        $promo_code = $this->testAddPromoCode($code);
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code->id
         ];
 
@@ -543,12 +551,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    public function testDeletePromoCode($summit_id  = 23){
+    public function testDeletePromoCode(){
 
         $code       = str_random(16).'_PROMOCODE_TEST';
-        $promo_code = $this->testAddPromoCode($summit_id, $code);
+        $promo_code = $this->testAddPromoCode($code);
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code->id
         ];
 
@@ -572,12 +580,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testGetPromoCodeById($summit_id  = 23){
+    public function testGetPromoCodeById(){
 
         $code       = str_random(16).'_PROMOCODE_TEST';
-        $promo_code = $this->testAddPromoCode($summit_id, $code);
+        $promo_code = $this->testAddPromoCode($code);
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code->id
         ];
 
@@ -604,12 +612,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    public function testEmailPromoCode($summit_id  = 23){
+    public function testEmailPromoCode(){
 
         $code       = str_random(16).'_PROMOCODE_TEST';
-        $promo_code = $this->testAddPromoCode($summit_id, $code);
+        $promo_code = $this->testAddPromoCode($code);
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code->id
         ];
 
@@ -633,12 +641,12 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testEmailPromoCodeSendTwice($summit_id  = 23){
+    public function testEmailPromoCodeSendTwice(){
 
         $code       = str_random(16).'_PROMOCODE_TEST';
-        $promo_code = $this->testAddPromoCode($summit_id, $code);
+        $promo_code = $this->testAddPromoCode($code);
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code->id
         ];
 
@@ -676,23 +684,17 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(412);
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $promo_code_id
-     * @param int $ticket_type_id
-     * @return mixed
-     */
-    public function testAddDiscountCodeTicketRule($summit_id = 8 , $promo_code_id = 7 , $ticket_type_id = 7){
+    public function testAddDiscountCodeTicketRule($promo_code_id = 7 , $ticket_type_id = 7){
         $params = [
-            'id'            => $summit_id,
-            'promo_code_id' => $promo_code_id,
+            'id'             => self::$summit_id,
+            'promo_code_id'  => $promo_code_id,
             'ticket_type_id' => $ticket_type_id,
             'expand' => 'ticket_types_rules,ticket_types_rules.discount_code'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $data = [
@@ -717,26 +719,16 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $promo_code_id
-     * @param int $ticket_type_id
-     * @return mixed
-     */
-    public function testDeleteDiscountCodeTicketRule($summit_id = 8 , $promo_code_id = 7 , $ticket_type_id = 7){
+    public function testDeleteDiscountCodeTicketRule($promo_code_id = 7 , $ticket_type_id = 7){
         $params = [
-            'id'            => $summit_id,
-            'promo_code_id' => $promo_code_id,
+            'id'             => self::$summit_id,
+            'promo_code_id'  => $promo_code_id,
             'ticket_type_id' => $ticket_type_id
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $data = [
-
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
@@ -747,7 +739,6 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
             [],
             [],
             $headers
-        //        json_encode($data)
         );
         $content = $response->getContent();
         $this->assertResponseStatus(201);
@@ -756,17 +747,17 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
-    public function testAddTagsToPromoCode($summit_id  = 3343, $promo_code_id = 1, $track_id = 39330){
+    public function testAddTagsToPromoCode($promo_code_id = 1){
 
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit_id,
             'promo_code_id' => $promo_code_id,
             'expand'        => 'creator,tags,allowed_ticket_types,badge_features'
         ];
 
         $data = [
             'class_name' => \models\summit\SummitRegistrationPromoCode::ClassName,
-            'tags'           => ['Artificial Intelligence']
+            'tags'       => ['Artificial Intelligence']
         ];
 
         $headers = [
@@ -790,38 +781,5 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $promo_code = json_decode($content);
         $this->assertTrue(!is_null($promo_code));
         return $promo_code;
-    }
-
-    /**
-     * @param int $summit_id
-     */
-    public function testGetPromoCodesByTags($summit_id=3759){
-        $params = [
-            'id'       => $summit_id,
-            'page'     => 1,
-            'per_page' => 10,
-            //'filter'   => 'tags==tag2',
-            'order'    => '-code'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitPromoCodesApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $promo_codes = json_decode($content);
-        $this->assertTrue(!is_null($promo_codes));
     }
 }

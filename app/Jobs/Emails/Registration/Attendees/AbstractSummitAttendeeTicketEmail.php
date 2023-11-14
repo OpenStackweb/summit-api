@@ -39,6 +39,9 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
         if(!isset($this->payload[IMailTemplatesConstants::raw_summit_marketing_site_url]))
             $this->payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = '';
 
+        if(!isset($this->payload[IMailTemplatesConstants::edit_ticket_link]))
+            $this->payload[IMailTemplatesConstants::edit_ticket_link] = '';
+
         if
         (
             isset($this->payload[IMailTemplatesConstants::raw_summit_marketing_site_url]) &&

@@ -277,7 +277,8 @@ final class ReserveOrderTask extends AbstractTask
                 throw new ValidationException(sprintf("Owner email differs from logged user email."));
             }
 
-            $should_auto_assign_first_ticket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit);
+            // auto assign should only happen when the user has not paid any order and the order has more than one ticket....
+            $should_auto_assign_first_ticket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit) && count($tickets) > 1;
 
             $payment_gateway = $this->summit->getPaymentGateWayPerApp
             (
@@ -332,7 +333,7 @@ final class ReserveOrderTask extends AbstractTask
 
                 $type_id = $ticket_dto['type_id'];
 
-                $promo_code_value = isset($ticket_dto['promo_code']) ? $ticket_dto['promo_code'] : null;
+                $promo_code_value = $ticket_dto['promo_code'] ?? null;
                 // attendee data
                 if ($index === 0 && $should_auto_assign_first_ticket) {
                     Log::debug("ReserveOrderTask::run auto assigning first ticket");
@@ -342,10 +343,10 @@ final class ReserveOrderTask extends AbstractTask
                     $attendee_company = $this->owner->getCompany();
                 } else {
                     // use what we have on payload
-                    $attendee_first_name = isset($ticket_dto['attendee_first_name']) ? $ticket_dto['attendee_first_name'] : null;
-                    $attendee_last_name = isset($ticket_dto['attendee_last_name']) ? $ticket_dto['attendee_last_name'] : null;
-                    $attendee_email = isset($ticket_dto['attendee_email']) ? $ticket_dto['attendee_email'] : null;
-                    $attendee_company = isset($ticket_dto['attendee_company']) ? $ticket_dto['attendee_company'] : null;
+                    $attendee_first_name = $ticket_dto['attendee_first_name'] ?? null;
+                    $attendee_last_name = $ticket_dto['attendee_last_name'] ?? null;
+                    $attendee_email = $ticket_dto['attendee_email'] ?? null;
+                    $attendee_company = $ticket_dto['attendee_company'] ?? null;
                 }
 
                 // if attendee is order owner , and company is null , set the company order
@@ -2562,7 +2563,7 @@ final class SummitOrderService
 
             $ticket = $strategy->find();
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
+            if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException("Ticket not found.");
 
             if ($ticket->getOrder()->getSummitId() != $summit->getId()) {

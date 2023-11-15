@@ -13,6 +13,9 @@
  **/
 
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategy;
+use Illuminate\Support\Facades\Log;
+use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
 
 /**
@@ -23,9 +26,61 @@ final class TicketFinderByNumberStrategy
     extends AbstractTicketFinderStrategy
     implements ITicketFinderStrategy
 {
+    private $ticket_attendee_email;
+    /**
+     * @param ISummitAttendeeTicketRepository $repository
+     * @param Summit $summit
+     * @param $ticket_criteria
+     * @param string|null $ticket_attendee_email
+     */
+    public function __construct
+    (
+        ISummitAttendeeTicketRepository $repository,
+        Summit $summit,
+        $ticket_criteria,
+        ?string $ticket_attendee_email = null
+    )
+    {
+        parent::__construct($repository, $summit, $ticket_criteria);
+        $this->ticket_attendee_email = $ticket_attendee_email;
+    }
 
+    /**
+     * @return SummitAttendeeTicket|null
+     */
     public function find(): ?SummitAttendeeTicket
     {
-        return $this->repository->getByNumber(strval($this->ticket_criteria));
+        $ticket = $this->repository->getByNumber(strval($this->ticket_criteria));
+        if(!empty($this->ticket_attendee_email) && !is_null($ticket)){
+            if(!$ticket->hasOwner()) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "TicketFinderByNumberStrategy::find ticket %s has no owner but QR is assigned to %s",
+                        $ticket->getId(),
+                        $this->ticket_attendee_email
+                    )
+                );
+
+                return null;
+            }
+            $owner = $ticket->getOwner();
+            if($owner->getEmail() != $this->ticket_attendee_email){
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "TicketFinderByNumberStrategy::find ticket %s has owner %s but QR is assigned to %s",
+                        $ticket->getId(),
+                        $owner->getEmail(),
+                        $this->ticket_attendee_email
+                    )
+                );
+
+                return null;
+            }
+        }
+        return $ticket;
     }
 }

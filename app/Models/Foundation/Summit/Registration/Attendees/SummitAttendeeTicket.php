@@ -566,10 +566,16 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             throw new ValidationException("Ticket has not order set.");
         }
 
-        $this->qr_code = $this->generateQRFromFields([
+        $fields = [
             $this->order->getSummit()->getTicketQRPrefix(),
             $this->number
-        ]);
+        ];
+        // add email owner so we could verify by QR code if the ticket
+        // was re assigned to someone else
+        if($this->hasOwner())
+            $fields[] = $this->owner->getEmail();
+
+        $this->qr_code = $this->generateQRFromFields($fields);
 
         return $this->qr_code;
     }
@@ -1208,12 +1214,18 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     static public function parseQRCode(string $qr_code):array{
         $fields = explode(IQREntity::QRRegistryFieldDelimiterChar, $qr_code);
-        if(count($fields) != 2) throw new ValidationException("Invalid Ticket QR code.");
+        if(count($fields) < 2)
+            throw new ValidationException("Invalid Ticket QR code.");
 
-        return [
+        $payload = [
             'prefix'         => $fields[0],
             'ticket_number'  => $fields[1],
         ];
+
+        if(count($fields) > 2)
+            $payload['ticket_attendee_email'] = $fields[2];
+
+        return $payload;
     }
 
     public function getBadgePrintsCount():int{

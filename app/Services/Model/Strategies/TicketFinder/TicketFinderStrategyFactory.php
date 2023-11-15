@@ -211,13 +211,16 @@ final class TicketFinderStrategyFactory
                     }
 
                     $ticket_number = $fields['ticket_number'];
+                    $ticket_attendee_email = $fields['ticket_attendee_email'] ?? null;
+
                     Log::debug
                     (
                         sprintf
                         (
-                            "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByNumberStrategy",
+                            "TicketFinderStrategyFactory::build summit %s ticket_criteria %s (%s)using TicketFinderByNumberStrategy",
                             $summit->getId(),
-                            $ticket_number
+                            $ticket_number,
+                            $ticket_attendee_email
                         )
                     );
 
@@ -225,7 +228,8 @@ final class TicketFinderStrategyFactory
                     (
                         $this->ticket_repository,
                         $summit,
-                        $ticket_number
+                        $ticket_number,
+                        $ticket_attendee_email
                     );
                 }
                 catch(ValidationException $ex){

@@ -15,6 +15,7 @@ use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitDocumentFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitDocumentService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -97,15 +98,17 @@ final class SummitDocumentService
             if(!$document->isShowAlways() && $document->getEventTypes()->count() == 0)
                 throw new ValidationException("You need to to set at least one Activity Type.");
 
-            $file = $payload['file'];
-            $attachment = $this->file_uploader->build
-            (
-                $file,
-                sprintf('summits/%s/documents', $summit->getId()),
-                false
-            );
+            if(isset($payload['file'])) {
+                $file = $payload['file'];
+                $attachment = $this->file_uploader->build
+                (
+                    $file,
+                    sprintf('summits/%s/documents', $summit->getId()),
+                    false
+                );
 
-            $document->setFile($attachment);
+                $document->setFile($attachment);
+            }
 
             if(isset($payload['selection_plan_id'])){
                 $document->clearSelectionPlan();
@@ -158,6 +161,9 @@ final class SummitDocumentService
 
             $document = SummitDocumentFactory::populate($summit, $document, $payload);
 
+            if (empty($document->getWebLink()) && !$document->hasFile())
+                throw new ValidationException("The document must have a file or a web link");
+
             if(!$document->isShowAlways() && isset($payload['event_types'])){
                 $document->clearEventTypes();
                 foreach($payload['event_types'] as $event_type_id){
@@ -171,26 +177,6 @@ final class SummitDocumentService
 
             if(!$document->isShowAlways() && $document->getEventTypes()->count() == 0)
                 throw new ValidationException("You need to to set at least one Activity Type.");
-
-            if(isset($payload['file'])){
-
-                if($document->hasFile()){
-                    // drop file
-                    $attachment = $document->getFile();
-                    $this->folder_repository->delete($attachment);
-                    $document->clearFile();
-                    $attachment = null;
-                }
-
-                $attachment = $this->file_uploader->build
-                (
-                    $payload['file'],
-                    sprintf('summits/%s/documents', $summit->getId()),
-                    false
-                );
-
-                $document->setFile($attachment);
-            }
 
             if(isset($payload['selection_plan_id'])){
                 Log::debug(sprintf("SummitDocumentService::updateSummitDocument document %s selection plan id %s", $document_id, $payload['selection_plan_id'] ));
@@ -268,6 +254,55 @@ final class SummitDocumentService
                 throw new EntityNotFoundException();
 
             $document->removeEventType($event_type);
+
+            return $document;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addFile2SummitDocument(
+        Summit $summit, int $document_id, UploadedFile $file, int $max_file_size = 10485760): SummitDocument
+    {
+        return $this->tx_service->transaction(function() use($summit, $document_id, $file, $max_file_size){
+            $document = $summit->getSummitDocumentById($document_id);
+            if(is_null($document))
+                throw new EntityNotFoundException();
+
+            if ($file->getSize() > $max_file_size)
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+
+            $attachment = $this->file_uploader->build
+            (
+                $file,
+                sprintf('summits/%s/documents', $summit->getId()),
+                false
+            );
+
+            $document->setFile($attachment);
+
+            return $document;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeFileFromSummitDocument(Summit $summit, int $document_id): SummitDocument
+    {
+        return $this->tx_service->transaction(function() use($summit, $document_id){
+            $document = $summit->getSummitDocumentById($document_id);
+            if(is_null($document))
+                throw new EntityNotFoundException();
+
+            if($document->hasFile()){
+                // drop file
+                $attachment = $document->getFile();
+                $this->folder_repository->delete($attachment);
+                $document->clearFile();
+                $attachment = null;
+            }
 
             return $document;
         });

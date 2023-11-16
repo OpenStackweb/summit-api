@@ -105,7 +105,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
 
     public function testAddSummitDocument(){
         $params = [
-            'id'       => self::$summit->getId(),
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -116,6 +116,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
         $payload = [
             'name' => 'doc3',
             'label' => 'doc3',
+            'event_types' => [self::$summit->getEventTypes()[0]->getId()]
         ];
 
         $response = $this->action(
@@ -138,7 +139,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
 
     public function testAddSummitDocumentFail412(){
         $params = [
-            'id'       => self::$summit->getId(),
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -172,7 +173,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
         $document = self::$summit->getSummitDocuments()[0];
         $params = [
             'id'       => self::$summit->getId(),
-            'document_id' => $document->getId(),
+            'document_id' => $document->getId()
         ];
 
         $headers = [
@@ -181,7 +182,8 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
         ];
 
         $payload = [
-            'label' => 'doc 4',
+            'event_types' => [self::$summit->getEventTypes()[0]->getId()],
+            'label' => 'doc 4'
         ];
 
         $response = $this->action(
@@ -190,9 +192,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
             $params,
             [],
             [],
-            [
-                'file' => UploadedFile::fake()->image('slide2.pdf'),
-            ],
+            [],
             $headers,
             json_encode($payload)
         );
@@ -204,7 +204,6 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
     }
 
     public function testDeleteDocument(){
-
         $document = self::$summit->getSummitDocuments()[0];
         $params = [
             'id'       => self::$summit->getId(),
@@ -222,16 +221,13 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
             $params,
             [],
             [],
-            [
-
-            ],
+            [],
             $headers
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
-
 
     public function testAddEventType2SummitDocument(){
         $document = self::$summit->getSummitDocuments()[0];
@@ -253,9 +249,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
             $params,
             [],
             [],
-            [
-
-            ],
+            [],
             $headers
         );
 
@@ -283,13 +277,66 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
             $params,
             [],
             [],
-            [
+            [],
+            $headers
+        );
 
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+    }
+
+    public function testAddFile2SummitDocument(){
+        $document = self::$summit->getSummitDocuments()[0];
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'document_id' => $document->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitDocumentsApiController@addFile",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('slide2.pdf'),
             ],
             $headers
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
+    }
+
+    public function testRemoveFileFromSummitDocument(){
+        $document = self::$summit->getSummitDocuments()[0];
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'document_id' => $document->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitDocumentsApiController@removeFile",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
     }
 }

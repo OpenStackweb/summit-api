@@ -184,8 +184,8 @@ interface IPresentationService
      * @param int $presentation_id
      * @param int $media_upload_id
      * @param array $payload
+     * @param Member|null $current_user
      * @return PresentationMediaUpload
-     * @throws Exception
      */
     public function updateMediaUploadFrom
     (
@@ -193,16 +193,18 @@ interface IPresentationService
         Summit         $summit,
         int            $presentation_id,
         int            $media_upload_id,
-        array          $payload
+        array          $payload,
+        Member $current_user = null
     ): PresentationMediaUpload;
 
     /**
      * @param Summit $summit
      * @param int $presentation_id
      * @param int $media_upload_id
-     * @throws EntityNotFoundException
+     * @param Member|null $current_user
+     * @return void
      */
-    public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id): void;
+    public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id, Member $current_user = null): void;
 
     /**
      * @param Summit $summit

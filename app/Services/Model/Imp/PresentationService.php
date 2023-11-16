@@ -1128,6 +1128,7 @@ final class PresentationService
      * @param int $presentation_id
      * @param int $media_upload_id
      * @param array $payload
+     * @param Member|null $current_user
      * @return PresentationMediaUpload
      * @throws \Exception
      */
@@ -1137,7 +1138,8 @@ final class PresentationService
         Summit         $summit,
         int            $presentation_id,
         int            $media_upload_id,
-        array          $payload
+        array          $payload,
+        Member $current_user = null
     ): PresentationMediaUpload
     {
         return $this->tx_service->transaction(function () use (
@@ -1145,7 +1147,8 @@ final class PresentationService
             $summit,
             $presentation_id,
             $media_upload_id,
-            $payload
+            $payload,
+            $current_user
         ) {
 
             Log::debug(sprintf("PresentationService::updateMediaUploadFrom summit %s presentation %s", $summit->getId(), $presentation_id));
@@ -1162,7 +1165,13 @@ final class PresentationService
 
             $mediaUploadType = $mediaUpload->getMediaUploadType();
 
-            if(!$mediaUploadType->isEditable()){
+            // check edit permissions
+            $canEdit = !is_null($current_user) && $current_user->isSummitAllowed($summit);
+            if(!$canEdit){
+                $canEdit = $mediaUploadType->isEditable();
+            }
+
+            if(!$canEdit){
                 throw new ValidationException(sprintf("Media Upload Type %s is not editable.", $mediaUploadType->getName()));
             }
 
@@ -1208,12 +1217,13 @@ final class PresentationService
     /**
      * @inheritDoc
      */
-    public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id): void
+    public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id, Member $current_user = null): void
     {
         $this->tx_service->transaction(function () use (
             $summit,
             $presentation_id,
-            $media_upload_id
+            $media_upload_id,
+            $current_user
         ) {
             Log::debug(sprintf("PresentationService::deleteMediaUpload summit %s presentation %s", $summit->getId(), $presentation_id));
 
@@ -1229,7 +1239,13 @@ final class PresentationService
 
             $mediaUploadType = $mediaUpload->getMediaUploadType();
 
-            if(!$mediaUploadType->isEditable()){
+            // check edit permissions
+            $canEdit = !is_null($current_user) && $current_user->isSummitAllowed($summit);
+            if(!$canEdit){
+                $canEdit = $mediaUploadType->isEditable();
+            }
+
+            if(!$canEdit){
                 throw new ValidationException(sprintf("Media Upload Type %s is not editable.", $mediaUploadType->getName()));
             }
 

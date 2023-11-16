@@ -988,7 +988,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $summit,
                 intval($presentation_id),
                 intval($media_upload_id),
-                $data
+                $data,
+                $current_member
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer
@@ -1015,7 +1016,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1029,7 +1031,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     return $this->error403();
             }
 
-            $this->presentation_service->deleteMediaUpload($summit, intval($presentation_id), intval($media_upload_id));
+            $this->presentation_service->deleteMediaUpload($summit, intval($presentation_id), intval($media_upload_id), $current_member);
 
             return $this->deleted();
 

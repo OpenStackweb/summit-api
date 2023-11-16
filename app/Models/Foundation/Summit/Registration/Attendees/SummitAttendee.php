@@ -18,7 +18,6 @@ use App\Jobs\Emails\SummitAttendeeTicketEmail;
 use App\libs\Utils\PunnyCodeHelper;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
-use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
@@ -149,7 +148,7 @@ class SummitAttendee extends SilverstripeBaseModel
     private $presentation_votes;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeNote", mappedBy="owner", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitAttendeeNote", mappedBy="owner", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitAttendeeNote[]
      */
     private $notes;
@@ -1293,6 +1292,11 @@ SQL;
     public function getNotes()
     {
         return $this->notes;
+    }
+
+    public function getOrderedNotes(){
+        $criteria = Criteria::create()->orderBy(["created" => Criteria::ASC]);
+        return $this->notes->matching($criteria);
     }
 
     /**

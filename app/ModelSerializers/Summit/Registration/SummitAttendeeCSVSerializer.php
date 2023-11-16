@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\SummitAttendee;
 use ModelSerializers\SilverStripeSerializer;
 /**
  * Class SummitAttendeeCSVSerializer
@@ -30,5 +32,28 @@ final class SummitAttendeeCSVSerializer extends SilverStripeSerializer
         'Status'                  => 'status:json_string',
         'VirtualCheckedIn'        => 'has_virtual_check_in:json_boolean',
     ];
+
+    /**
+     * @param $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        $attendee = $this->object;
+        if (!$attendee instanceof SummitAttendee) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        $notes = [];
+        foreach ($attendee->getOrderedNotes() as $note){
+            $notes[] = $note->getContent();
+        }
+
+        $values['notes'] = implode("|", $notes);
+
+        return $values;
+    }
     
 }

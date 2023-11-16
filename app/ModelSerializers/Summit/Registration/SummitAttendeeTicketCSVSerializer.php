@@ -100,6 +100,12 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
             $values['promo_code_tags'] = implode('|', $tags );
         }
 
+        $notes = [];
+        foreach ($ticket->getOrderedNotes() as $note){
+            $notes[] = $note->getContent();
+        }
+        $values['notes'] = implode("|", $notes);
+
         return $values;
     }
 }

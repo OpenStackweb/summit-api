@@ -108,6 +108,12 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     private $promo_code;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitAttendeeNote", mappedBy="ticket", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitAttendeeNote[]
+     */
+    private $notes;
+
+    /**
      * @ORM\Column(name="Hash", type="string")
      * @var string
      */
@@ -184,6 +190,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->applied_taxes = new ArrayCollection();
         $this->former_hashes = new ArrayCollection();
         $this->refund_requests = new ArrayCollection();
+        $this->notes = new ArrayCollection();
         $this->raw_cost = 0.0;
         $this->discount = 0.0;
         $this->is_active = true;
@@ -1231,5 +1238,18 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function getBadgePrintsCount():int{
         if(!$this->hasBadge()) return 0;
         return $this->badge->getPrintedTimes();
+    }
+
+    /**
+     * @return SummitAttendeeNote[]
+     */
+    public function getNotes()
+    {
+        return $this->notes;
+    }
+
+    public function getOrderedNotes(){
+        $criteria = Criteria::create()->orderBy(["created" => Criteria::ASC]);
+        return $this->notes->matching($criteria);
     }
 }

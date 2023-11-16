@@ -1771,7 +1771,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $this->location_service->copySummitLocations($source_summit, $target_summit);
 
-            return $this->created();
+            return $this->ok();
         });
     }
 }

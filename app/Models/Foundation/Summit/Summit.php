@@ -1251,7 +1251,7 @@ class Summit extends SilverstripeBaseModel
      */
     public function addLocation(SummitAbstractLocation $location)
     {
-        if ($this->locations->contains($location)) return;
+        if ($this->locations->contains($location)) return $this;
         $location->setOrder($this->getLocationMaxOrder() + 1);
         $this->locations->add($location);
         $location->setSummit($this);
@@ -1270,7 +1270,7 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
-     * @return ArrayCollection
+     * @return SummitAbstractLocation[]
      */
     public function getLocations()
     {
@@ -1353,13 +1353,40 @@ class Summit extends SilverstripeBaseModel
 
     /**
      * @param Summit $source_summit
-     * @return $this
      */
-    public function copyLocationsFrom(Summit $source_summit)
+    public function copyLocationsFrom(Summit $source_summit):void
     {
-        foreach($source_summit->getLocations() as $location) {
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::copyLocationsFrom copying locations from summit %s to summit %s",
+                $source_summit->getId(),
+                $this->getId()
+            )
+        );
+
+        foreach($source_summit->getVenues() as $location) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::copyLocationsFrom copying venue %s (%s) to summit %s",
+                    $location->getName(),
+                    $location->getId(),
+                    $this->getId(),
+                )
+            );
+
             $new_location = clone $location;
             $this->addLocation($new_location);
+
+            if($new_location instanceof SummitVenue){
+                foreach($new_location->getRooms() as $room){
+                    $this->addLocation($room);
+                    $room->setSummit($this);
+                }
+            }
         }
     }
 

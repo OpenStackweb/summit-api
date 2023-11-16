@@ -15,6 +15,7 @@ use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
  * @ORM\Entity
@@ -214,5 +215,44 @@ class SummitVenue extends SummitGeoLocatedLocation
 
     public function hasFloors():bool{
         return $this->floors->count() > 0;
+    }
+
+    public function clearFloors():void{
+        $this->floors->clear();
+    }
+
+    public function clearRooms():void{
+        $this->rooms->clear();
+    }
+
+    // @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/cookbook/implementing-wakeup-or-clone.html
+    public function __clone(){
+
+        if($this->id){
+
+            Log::debug(sprintf("SummitVenue::__clone id %s", $this->id));
+            $floors_clones = [];
+            $floors = $this->floors;
+            $this->floors = new ArrayCollection();
+            if(!$floors->isEmpty()){
+                foreach ($floors as $floor) {
+                    $floor_clone = clone $floor;
+                    $floors_clones[$floor_clone->getNumber()] = $floor_clone;
+                    $this->addFloor($floor_clone);
+                }
+            }
+
+            // rooms
+            $rooms = $this->rooms;
+            $this->rooms = new ArrayCollection();
+            if(!$rooms->isEmpty()){
+                foreach ($rooms as $room) {
+                    $room_clone = clone $room;
+                    $room_clone->clearSummit();
+                    $room_clone->setFloor($floors_clones[$room_clone->getFloor()->getNumber()]);
+                    $this->addRoom($room_clone);
+                }
+            }
+        }
     }
 }

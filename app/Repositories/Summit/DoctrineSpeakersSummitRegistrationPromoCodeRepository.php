@@ -58,7 +58,9 @@ class DoctrineSpeakersSummitRegistrationPromoCodeRepository
             'email'     => 'm.email',
             'full_name' => <<<SQL
 LOWER(CONCAT(m.first_name, ' ', m.last_name))
-SQL
+SQL,
+            'email_sent' => 'o.sent',
+            'redeemed'   => 'o.redeemed'
         ];
     }
 

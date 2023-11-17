@@ -524,12 +524,16 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'email' => ['@@', '=@', '=='],
                     'full_name' => ['@@', '=@', '=='],
+                    'first_name' => ['@@', '=@', '=='],
+                    'last_name' => ['@@', '=@', '=='],
                 ];
             },
             function () {
                 return [
                     'email' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
                 ];
             },
             function () {
@@ -593,6 +597,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             function () {
                 return [
                     'email' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
                     'first_name' => 'sometimes|string',
                     'last_name' => 'sometimes|string',
                 ];
@@ -601,6 +606,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'id',
                     'email',
+                    'full_name',
                     'email_sent',
                     'redeemed'
                 ];

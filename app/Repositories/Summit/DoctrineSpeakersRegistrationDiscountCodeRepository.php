@@ -74,7 +74,10 @@ class DoctrineSpeakersRegistrationDiscountCodeRepository
             'id'         => 'o.id',
             'email'      => 'm.email',
             'email_sent' => 'o.sent',
-            'redeemed'   => 'o.redeemed'
+            'redeemed'   => 'o.redeemed',
+            "full_name" => <<<SQL
+COALESCE(LOWER(CONCAT(s.first_name, ' ', s.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
+SQL,
         ];
     }
 

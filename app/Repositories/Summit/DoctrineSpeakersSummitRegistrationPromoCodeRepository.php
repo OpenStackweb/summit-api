@@ -43,8 +43,25 @@ class DoctrineSpeakersSummitRegistrationPromoCodeRepository
     protected function getFilterMappings(): array
     {
         return [
-            'email'     => new DoctrineFilterMapping("m.email :operator :value"),
-            'full_name' => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
+            'first_name' => new DoctrineFilterMapping(
+                "( LOWER(m.first_name) :operator LOWER(:value) )".
+                "OR ( LOWER(s.first_name) :operator LOWER(:value) )"
+            ),
+            'last_name' => new DoctrineFilterMapping(
+                "( LOWER(m.last_name) :operator LOWER(:value) )".
+                " OR ( LOWER(s.last_name) :operator LOWER(:value) )"
+            ),
+            'email' => [
+                Filter::buildEmailField('m.email'),
+                Filter::buildEmailField('m.second_email'),
+                Filter::buildEmailField('m.third_email'),
+                Filter::buildEmailField('rr.email'),
+            ],
+            'full_name' => new DoctrineFilterMapping
+            (
+                "( CONCAT(LOWER(m.first_name), ' ', LOWER(m.last_name)) :operator LOWER(:value) )".
+                " OR ( CONCAT(LOWER(s.first_name), ' ', LOWER(s.last_name)) :operator LOWER(:value) )"
+            ),
         ];
     }
 
@@ -56,19 +73,21 @@ class DoctrineSpeakersSummitRegistrationPromoCodeRepository
         return [
             'id'        => 'o.id',
             'email'     => 'm.email',
-            'full_name' => <<<SQL
-LOWER(CONCAT(m.first_name, ' ', m.last_name))
-SQL,
             'email_sent' => 'o.sent',
-            'redeemed'   => 'o.redeemed'
+            'redeemed'   => 'o.redeemed',
+            "full_name" => <<<SQL
+COALESCE(LOWER(CONCAT(s.first_name, ' ', s.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
+SQL,
         ];
     }
 
     /**
      * @inheritDoc
      */
-    public function getPromoCodeSpeakers(
-        SpeakersSummitRegistrationPromoCode $promo_code, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function getPromoCodeSpeakers
+    (
+        SpeakersSummitRegistrationPromoCode $promo_code, PagingInfo $paging_info, Filter $filter = null, Order $order = null
+    )
     {
         return $this->getParametrizedAllByPage(function () use ($promo_code) {
             return $this->getEntityManager()
@@ -77,6 +96,7 @@ SQL,
                 ->from(AssignedPromoCodeSpeaker::class, "o")
                 ->join('o.registration_promo_code', 'p')
                 ->join('o.speaker', 's')
+                ->leftJoin("s.registration_request", "rr")
                 ->join('s.member', 'm')
                 ->where("p.id = :promo_code")
                 ->setParameter("promo_code", $promo_code);

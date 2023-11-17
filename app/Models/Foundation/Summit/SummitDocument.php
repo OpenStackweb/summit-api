@@ -148,6 +148,8 @@ class SummitDocument extends SilverstripeBaseModel
      */
     public function setFile(File $file)
     {
+        //clear web_link as it's no longer required when a file is added
+        $this->web_link = null;
         $this->file = $file;
     }
 

@@ -14,6 +14,7 @@
 
 use App\Http\Utils\MultipartFormDataCleaner;
 use App\Models\Foundation\Summit\Repositories\ISummitDocumentRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitDocumentService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +40,8 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
     use GetSummitChildElementById;
 
     use DeleteSummitChildElement;
+
+    use RequestProcessor;
 
     /**
      * @var ISummitRepository
@@ -85,13 +88,13 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             $payload = $request->all();
 
             $rules = [
-                'file'            => 'required',
+                'file'            => 'required_without:web_link',
                 'name'            => 'required|string:512',
                 'label'           => 'required|string:512',
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
                 'show_always'     => 'sometimes|boolean',
-                'web_link'        => 'sometimes|url|max:256',
+                'web_link'        => 'required_without:file|url|max:256',
                 'selection_plan_id' => 'sometimes|nullable|integer',
             ];
 
@@ -152,7 +155,6 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             $payload = $request->all();
 
             $rules = [
-                'file'            => 'sometimes',
                 'name'            => 'nullable|string:255',
                 'label'           => 'nullable|string:255',
                 'description'     => 'nullable|string',
@@ -343,4 +345,44 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @param $document_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addFile(LaravelRequest $request, $summit_id, $document_id){
+        return $this->processRequest(function () use ($request, $summit_id, $document_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $document = $this->service->addFile2SummitDocument($summit, intval($document_id), $file);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($document)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $document_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeFile($summit_id, $document_id){
+        return $this->processRequest(function () use ($summit_id, $document_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->service->removeFileFromSummitDocument($summit, intval($document_id));
+            return $this->deleted();
+        });
+    }
 }

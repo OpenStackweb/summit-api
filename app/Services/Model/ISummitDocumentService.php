@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Summit;
@@ -67,4 +69,23 @@ interface ISummitDocumentService
      * @throws ValidationException
      */
     public function removeEventTypeFromSummitDocument(Summit $summit, int $document_id, int $event_type_id):SummitDocument;
+
+    /**
+     * @param Summit $summit
+     * @param int $document_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return SummitDocument
+     * @throws \Exception
+     */
+    public function addFile2SummitDocument(
+        Summit $summit, int $document_id, UploadedFile $file, int $max_file_size = 10485760): SummitDocument;
+
+    /**
+     * @param Summit $summit
+     * @param int $document_id
+     * @return SummitDocument
+     * @throws \Exception
+     */
+    public function removeFileFromSummitDocument(Summit $summit, int $document_id): SummitDocument;
 }

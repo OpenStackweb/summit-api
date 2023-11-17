@@ -1039,10 +1039,16 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'summit-documents'], function () {
             Route::get('', 'OAuth2SummitDocumentsApiController@getAllBySummit');
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@add']);
-            Route::group(['prefix' => '{document_id}'], function () {
+            Route::group(['prefix' => '{document_id}', 'where' => ['document_id' => '[0-9]+']], function () {
                 Route::get('', 'OAuth2SummitDocumentsApiController@get');
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@update']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@delete']);
+
+                Route::group(['prefix' => 'file'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@addFile']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@removeFile']);
+                });
+
                 Route::group(['prefix' => 'event-types'], function () {
                     Route::group(['prefix' => '{event_type_id}'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@addEventType']);

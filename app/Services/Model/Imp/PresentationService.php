@@ -34,8 +34,10 @@ use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use libs\utils\FileUtils;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -690,6 +692,7 @@ final class PresentationService
         });
     }
 
+    use FileUtils;
     /**
      * @param LaravelRequest $request
      * @param int $presentation_id
@@ -745,14 +748,35 @@ final class PresentationService
                     throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
                 }
 
+                $file = $fileInfo->getFile();
+                $localPath = null;
+                if(is_null($file)){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "PresentationService::addSlideTo file %s is not local, trying to retrieving from remote...",
+                            $fileInfo->getFileName()
+                        )
+                    );
+                    // is not local storage we need to retrieve it
+                    $localPath = self::getFileFromRemoteStorageOnTempStorage($fileInfo->getFileName(), $fileInfo->getFilePath());
+                    $file = new UploadedFile($localPath, $fileInfo->getFileName());
+                }
+
                 $slideFile = $this->file_uploader->build
                 (
-                    $fileInfo->getFile(),
+                    $file,
                     sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id),
                     false
                 );
 
                 $slide->setSlide($slideFile);
+
+                if(!empty($localPath)){
+                    self::cleanLocalAndRemoteFile($localPath, $fileInfo->getFilePath());
+                }
+
             }
 
             $presentation->addSlide($slide);
@@ -784,6 +808,17 @@ final class PresentationService
     )
     {
 
+        Log::debug
+        (
+            sprintf
+            (
+                "PresentationService::updateSlide presentation %s slide %s payload %s",
+                $presentation_id,
+                $slide_id,
+                json_encode($slide_data)
+            )
+        );
+
         $slide = $this->tx_service->transaction(function () use (
             $request,
             $presentation_id,
@@ -796,15 +831,15 @@ final class PresentationService
             $presentation = $this->presentation_repository->getById($presentation_id);
 
             if (is_null($presentation))
-                throw new EntityNotFoundException('presentation not found!');
+                throw new EntityNotFoundException('Presentation not found.');
 
             if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException('presentation not found!');
+                throw new EntityNotFoundException('Presentation not found.');
 
             $slide = $presentation->getSlideBy($slide_id);
 
             if (is_null($slide))
-                throw new EntityNotFoundException('slide not found!');
+                throw new EntityNotFoundException('Slide not found.');
 
             if (!$slide instanceof PresentationSlide)
                 throw new EntityNotFoundException('slide not found!');
@@ -815,11 +850,11 @@ final class PresentationService
             $hasFile = !is_null($fileInfo);
 
             if ($hasFile && $hasLink) {
-                throw new ValidationException("you must provide a file or a link, not both.");
+                throw new ValidationException("You must provide a file or a link, not both.");
             }
 
             if (!$hasLink && !$hasFile && !$slide->hasSlide()) {
-                throw new ValidationException("you must provide a file or a link.");
+                throw new ValidationException("You must provide a file or a link.");
             }
 
             PresentationSlideFactory::populate($slide, $slide_data);
@@ -835,22 +870,41 @@ final class PresentationService
             if ($hasFile) {
                 if (!in_array($fileInfo->getFileExt(), $allowed_extensions)) {
                     throw new ValidationException(
-                        sprintf("file does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));
+                        sprintf("File does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));
                 }
 
                 if ($fileInfo->getSize(FileSizeUtil::B) > $max_file_size) {
-                    throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+                    throw new ValidationException(sprintf("File exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+                }
+
+                $file = $fileInfo->getFile();
+                $localPath = null;
+                if(is_null($file)){
+                    // is not local storage we need to retrieve it
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "PresentationService::updateSlide file %s is not local, trying to retrieving from remote...",
+                            $fileInfo->getFileName()
+                        )
+                    );
+                    $localPath = self::getFileFromRemoteStorageOnTempStorage($fileInfo->getFileName(), $fileInfo->getFilePath());
+                    $file = new UploadedFile($localPath, $fileInfo->getFileName());
                 }
 
                 $slideFile = $this->file_uploader->build
                 (
-                    $fileInfo->getFile(),
+                    $file,
                     sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id),
                     false
                 );
 
                 $slide->setSlide($slideFile);
                 $slide->clearLink();
+
+                if(!empty($localPath))
+                    self::cleanLocalAndRemoteFile($localPath, $fileInfo->getFilePath());
             }
 
             if (isset($data['order']) && intval($slide_data['order']) != $slide->getOrder()) {
@@ -1587,24 +1641,8 @@ final class PresentationService
                 throw new EntityNotFoundException(sprintf("Media Upload Type %s not found.", $media_upload_type_id));
             }
 
-            $disk = Storage::disk(FileUploadInfo::getStorageDriver());
 
-            if (!$disk->exists($path))
-                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", FileUploadInfo::getStorageDriver(), $path));
-
-            $stream = $disk->readStream($path);
-
-            if (!is_resource($stream)) {
-                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", FileUploadInfo::getStorageDriver(), $path));
-            }
-            //process file per chunks and copy to local
-            $localPath = "/tmp/" . $file_name;
-            $out = fopen($localPath, 'w');
-            while ($chunk = fread($stream, self::LocalChunkSize)) {
-                fwrite($out, $chunk);
-            }
-            fclose($stream);
-            fclose($out);
+            $localPath = self::getFileFromRemoteStorageOnTempStorage($file_name, $path);
 
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
             if (!is_null($strategy)) {
@@ -1629,10 +1667,7 @@ final class PresentationService
                 );
             }
 
-            Log::debug(sprintf("PresentationService::processMediaUpload deleting original file %s from storage %s", $file_name, FileUploadInfo::getStorageDriver()));
-            $disk->delete($path);
-            Log::debug(sprintf("PresentationService::processMediaUpload deleting local file %s", $localPath));
-            unlink($localPath);
+            self::cleanLocalAndRemoteFile($localPath, $path);
         });
     }
 

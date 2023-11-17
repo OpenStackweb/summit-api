@@ -2973,6 +2973,15 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'get-my-related-attendees',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/me',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'delete-attendee',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}',
                 'http_method' => 'DELETE',

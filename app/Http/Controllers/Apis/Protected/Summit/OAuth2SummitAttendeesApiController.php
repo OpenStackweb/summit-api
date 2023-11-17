@@ -1018,4 +1018,59 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $attendee_id
+     * @return mixed
+     */
+    public function getMyRelatedAttendee($summit_id, $attendee_id)
+    {
+        return $this->processRequest(function() use($summit_id, $attendee_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $attendee = $summit->getAttendeeById(intval($attendee_id));
+            if ($attendee instanceof SummitAttendee) return $this->error404();
+
+            // check permissions
+
+            $current_user = $this->getResourceServerContext()->getCurrentUser();
+
+            if (is_null($current_user))
+                return $this->error403();
+
+            // check ownership
+            $isOrderOwner = true;
+            foreach($attendee->getTickets() as $ticket) {
+                if(!$ticket->isPaid() || !$ticket->isActive()) continue;
+                $order = $ticket->getOrder();
+                if ($order->getOwnerEmail() != $current_user->getEmail())
+                    $isOrderOwner = false;
+            }
+
+            $isAttendeeOwner = true;
+            if($attendee->getEmail() != $current_user->getEmail())
+                $isAttendeeOwner = false;
+
+            if(!$isOrderOwner && !$isAttendeeOwner)
+                throw new EntityNotFoundException("Atteende not found.");
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()->getSerializer
+                (
+                    $attendee,
+                    SerializerRegistry::SerializerType_Private
+                )->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                )
+            );
+        });
+    }
+
 }

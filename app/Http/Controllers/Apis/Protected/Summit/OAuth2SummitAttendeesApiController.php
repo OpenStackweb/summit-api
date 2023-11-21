@@ -1028,10 +1028,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         return $this->processRequest(function() use($summit_id, $attendee_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404("Summit not found.");
 
             $attendee = $summit->getAttendeeById(intval($attendee_id));
-            if ($attendee instanceof SummitAttendee) return $this->error404();
+            if (!$attendee instanceof SummitAttendee)
+                return $this->error404("Attendee not found.");
 
             // check permissions
 
@@ -1054,7 +1056,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 $isAttendeeOwner = false;
 
             if(!$isOrderOwner && !$isAttendeeOwner)
-                throw new EntityNotFoundException("Atteende not found.");
+                throw new EntityNotFoundException("Attendee not found.");
 
             return $this->ok
             (

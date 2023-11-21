@@ -36,7 +36,6 @@ use App\Services\Model\IFolderService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use libs\utils\FileUtils;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;

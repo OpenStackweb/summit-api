@@ -26,8 +26,9 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
         'SummitId' => 'summit_id:json_int',
         'Accepted' => 'is_accepted:json_boolean',
         'Sent'     => 'is_sent:json_boolean',
-        'AcceptedDate' => 'accepted_date:datetime_epoch',
+        'ActionDate' => 'action_date:datetime_epoch',
         'AcceptanceCriteria' => 'acceptance_criteria:json_string',
+        'Status' => 'status:json_string',
     ];
 
     protected static $allowed_relations = [

@@ -32,6 +32,7 @@ use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\Member;
 use models\main\SummitMemberSchedule;
+use models\main\Tag;
 use models\oauth2\IResourceServerContext;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
@@ -196,6 +197,16 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
+     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="SummitAttendee_Tags",
+     *      joinColumns={@ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
+     *      )
+     * @var Tag[]
+     */
+    private $tags;
+
+    /**
      * @param bool $summit_hall_checked_in
      */
     public function setSummitHallCheckedIn(bool $summit_hall_checked_in): void
@@ -322,6 +333,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->status = self::StatusIncomplete;
         $this->presentation_votes = new ArrayCollection();
         $this->notes = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     public function isVirtualCheckedIn(): bool
@@ -1336,5 +1348,34 @@ SQL;
     public function removeNote(SummitAttendeeNote $note)
     {
         $this->notes->removeElement($note);
+    }
+
+    /**
+     * @param string $tag_name
+     * @return Tag|null
+     */
+    public function getTagByName(string $tag_name): ?Tag
+    {
+        $tag = $this->notes->matching(
+            Criteria::create()
+                ->where(Criteria::expr()->eq("tag", $tag_name))
+        )->first();
+        return $tag ? $tag : null;
+    }
+
+    /**
+     * @return Tag[]
+     */
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param Tag $tag
+     */
+    public function addTag(Tag $tag): void
+    {
+        $this->tags->add($tag);
     }
 }

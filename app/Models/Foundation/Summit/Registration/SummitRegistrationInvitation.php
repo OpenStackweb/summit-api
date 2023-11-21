@@ -82,9 +82,18 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         self::AcceptanceCriteria_AllTicketTypes
     ];
 
+    const Status_Pending = 'Pending';
+    const Status_Accepted = 'Accepted';
+    const Status_Rejected = 'Rejected';
+
+    const AllowedStatus = [
+        self::Status_Pending,
+        self::Status_Accepted,
+        self::Status_Rejected
+    ];
+
     /**
-     * @var \DateTime
-     * @ORM\Column(name="AcceptedDate", type="datetime")
+     * @deprecated moved to action_date
      */
     private $accepted_date;
 
@@ -130,6 +139,18 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      */
     private $tags;
 
+    /**
+     * @ORM\Column(name="Status", type="string")
+     * @var string
+     */
+    private $status;
+
+    /**
+     * @var \DateTime
+     * @ORM\Column(name="ActionDate", type="datetime")
+     */
+    private $action_date;
+
 
     public function __construct()
     {
@@ -139,7 +160,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->tags = new ArrayCollection();
         $this->member = null;
         $this->acceptance_criteria = self::AcceptanceCriteria_AllTicketTypes;
-        $this->accepted_date = null;
     }
 
     /**
@@ -204,19 +224,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     public function setHash(string $hash): void
     {
         $this->hash = $hash;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getAcceptedDate(): ?\DateTime
-    {
-        return $this->accepted_date;
-    }
-
-    public function setAccepted(bool $accepted)
-    {
-        $this->accepted_date = $accepted ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
     }
 
     public function isSent(): bool
@@ -513,13 +520,8 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
         }
 
-        $this->accepted_date = $should_accept ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
+        $this->action_date = $should_accept ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
 
-    }
-
-    public function isAccepted(): bool
-    {
-        return !is_null($this->accepted_date);
     }
 
     public function addOrder(SummitOrder $order){
@@ -700,5 +702,50 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         if(!in_array($acceptance_criteria,self::AllowedAcceptanceCriteria))
             throw new ValidationException(sprintf("acceptance_criteria %s is not allowed.", $acceptance_criteria));
         $this->acceptance_criteria = $acceptance_criteria;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status
+     * @throws ValidationException
+     */
+    public function setStatus(string $status): void
+    {
+        if(!in_array($status,self::AllowedStatus))
+            throw new ValidationException(sprintf("status %s is not allowed.", $status));
+        $this->status = $status;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAccepted(): bool
+    {
+        return $this->status === self::Status_Accepted;
+    }
+
+    /**
+     * @param bool $accepted
+     * @throws \Exception
+     */
+    public function setAccepted(bool $accepted)
+    {
+        $this->status = $accepted ? self::Status_Accepted : self::Status_Rejected;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getActionDate(): ?\DateTime
+    {
+        return $this->action_date;
     }
 }

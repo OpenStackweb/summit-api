@@ -66,11 +66,11 @@ class DoctrineSummitRegistrationInvitationRepository
             'is_accepted' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
-                        "e.accepted_date is not null"
+                        sprintf("e.status = '%s'", SummitRegistrationInvitation::Status_Accepted)
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
-                        "e.accepted_date is null"
+                        sprintf("e.status <> '%s'", SummitRegistrationInvitation::Status_Accepted)
                     ),
                 ]
             ),
@@ -89,6 +89,7 @@ class DoctrineSummitRegistrationInvitationRepository
             'ticket_types_id' => new DoctrineLeftJoinFilterMapping("e.ticket_types", "tt" ,"tt.id :operator :value"),
             'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
             'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
+            'status' => "e.status :operator :value",
         ];
     }
 

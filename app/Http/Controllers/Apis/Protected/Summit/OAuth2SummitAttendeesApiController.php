@@ -384,6 +384,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_track_group_id' => ['=='],
             'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
+            'tags' => ['=@', '==', '@@'],
+            'tags_id' => ['=='],
         ];
 
         if (Request::has('filter')) {
@@ -442,6 +444,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'features_id'=> 'sometimes|integer',
                     'access_levels_id' => 'sometimes|integer',
                     'summit_hall_checked_in_date' => 'sometimes|date_format:U',
+                    'tags' => 'sometimes|string',
+                    'tags_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -515,6 +519,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'access_levels' => ['=@', '==', '@@'],
                     'access_levels_id' => ['=='],
                     'summit_hall_checked_in_date' =>  ['==', '>=', '<=', '>', '<', '[]'],
+                    'tags' => ['=@', '==', '@@'],
+                    'tags_id' => ['=='],
                 ];
             },
             function () {
@@ -544,6 +550,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'features_id'=> 'sometimes|integer',
                     'access_levels_id' => 'sometimes|integer',
                     'summit_hall_checked_in_date' => 'sometimes|date_format:U',
+                    'tags' => 'sometimes|string',
+                    'tags_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -949,6 +957,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
                     'presentation_votes_track_group_id' => ['=='],
                     'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
+                    'tags' => ['=@', '==', '@@'],
+                    'tags_id' => ['=='],
                 ]);
             }
 
@@ -984,6 +994,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'features_id'=> 'sometimes|integer',
                 'access_levels_id' => 'sometimes|integer',
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U',
+                'tags' => 'sometimes|string',
+                'tags_id' => 'sometimes|integer',
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, FiltersParams::getFilterParam());

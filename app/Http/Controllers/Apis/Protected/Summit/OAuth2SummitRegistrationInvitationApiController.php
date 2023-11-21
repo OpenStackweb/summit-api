@@ -176,6 +176,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
+                    'status' => ['=='],
                 ];
             },
             function () {
@@ -191,6 +192,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => 'sometimes|integer',
                     'tags' => 'sometimes|required|string',
                     'tags_id' => 'sometimes|integer',
+                    'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
                 ];
             },
             function () {
@@ -238,6 +240,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
+                    'status' => ['=='],
                 ];
             },
             function () {
@@ -253,6 +256,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => 'sometimes|integer',
                     'tags' => 'sometimes|required|string',
                     'tags_id' => 'sometimes|integer',
+                    'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
                 ];
             },
             function () {
@@ -295,6 +299,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'is_sent',
                     'allowed_ticket_types',
                     'tags',
+                    'status',
                 ];
 
                 $columns_param = Request::input("columns", "");
@@ -426,6 +431,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
+                    'status' => ['=='],
                 ]);
             }
 
@@ -444,6 +450,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 'ticket_types_id' => 'sometimes|integer',
                 'tags' => 'sometimes|required|string',
                 'tags_id' => 'sometimes|integer',
+                'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
             ]);
 
             $this->service->triggerSend($summit, $payload, Request::input('filter'));

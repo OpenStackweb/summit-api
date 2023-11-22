@@ -44,8 +44,8 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+tickets_count',
-            'filter'   => 'has_tickets==true',
-            'expand'   => 'member,schedule,rsvp,tickets, tickets.ticket_type'
+            'filter'   => 'tags==tools',
+            'expand'   => 'member,schedule,rsvp,tickets,tags,tickets.ticket_type'
         ];
 
         $headers = [
@@ -72,7 +72,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
     public function testGetOwnAttendee(){
 
         $params = [
-            'id' => 23,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -99,7 +99,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
     public function testGetAttendeeByID($attendee_id = 1){
 
         $params = [
-            'id'          => 3109,
+            'id'          => self::$summit->getId(),
             'attendee_id' => $attendee_id,
             'expand'      => 'member,schedule,tickets,groups,rsvp,all_affiliations'
         ];
@@ -131,7 +131,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
 
         $params = [
 
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+external_order_id',
@@ -160,13 +160,14 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($attendees));
     }
 
-    public function testAddAttendee($member_id = 1){
+    public function testAddAttendee(){
         $params = [
-            'id' => 23,
+            'id' => self::$summit->getId(),
         ];
 
         $data = [
-           'member_id' => $member_id,
+            'member_id' => self::$defaultMember->getId(),
+            'tags' => ['tag#1', 'tag#2']
         ];
 
         $headers = [
@@ -196,7 +197,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $attendee = $this->testAddAttendee(3);
 
         $params = [
-            'id' => 23,
+            'id' => self::$summit->getId(),
             'attendee_id' => $attendee->id
         ];
 
@@ -219,12 +220,12 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testUpdateAttendee($summit_id = 3109, $attendee_id = 1){
-
+    public function testUpdateAttendee(){
+        $attendee = $this->testAddAttendee(3);
 
         $params = [
-            'id' => $summit_id,
-            'attendee_id' => $attendee_id
+            'id' => self::$summit->getId(),
+            'attendee_id' => $attendee->id
         ];
 
         $data = [
@@ -236,7 +237,8 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
                 ['question_id' => 3, 'answer' => 'XL'],
                 ['question_id' => 4, 'answer' => 'None'],
                 ['question_id' => 5, 'answer' => 'None'],
-            ]
+            ],
+            'tags' => ['tag#2','tag#3', 'tag#4']
         ];
 
         $headers = [
@@ -262,12 +264,14 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         return $attendee;
     }
 
-    public function testUpdateAttendeeNotesUnicode($summit_id = 3315, $attendee_id = 1){
+    public function testUpdateAttendeeNotesUnicode($attendee_id = 1){
+        $attendee = $this->testAddAttendee(3);
+
         $admin_notes = '嘗試特殊字符';
 
         $params = [
-            'id' => $summit_id,
-            'attendee_id' => $attendee_id,
+            'id' => self::$summit->getId(),
+            'attendee_id' => $attendee->id,
             'expand'   => 'admin_notes'
         ];
 
@@ -303,9 +307,11 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
     }
 
     public function testAddAttendeeTicket(){
+        $attendee = $this->testAddAttendee(3);
+
         $params = [
-            'id'          => 23,
-            'attendee_id' => 12642
+            'id'          => self::$summit->getId(),
+            'attendee_id' => $attendee->id,
         ];
 
         $data = [
@@ -338,8 +344,9 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
     }
 
     public function testDeleteAttendeeTicket(){
+
         $params = [
-            'id'          => 23,
+            'id'          => self::$summit->getId(),
             'attendee_id' => 12642,
             'ticket_id'   => 14161
         ];
@@ -362,9 +369,9 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testReassignAttendeeTicket($summit_id = 25){
+    public function testReassignAttendeeTicket(){
         $params = [
-            'id'          => $summit_id,
+            'id'          => self::$summit->getId(),
             'attendee_id' => 14938,
             'ticket_id'   => 15070,
             'other_member_id' => 13867,

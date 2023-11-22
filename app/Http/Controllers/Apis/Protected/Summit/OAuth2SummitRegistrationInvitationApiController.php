@@ -202,6 +202,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'first_name',
                     'last_name',
                     'full_name',
+                    'status',
                 ];
             },
             function ($filter) use ($summit) {
@@ -266,6 +267,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'first_name',
                     'last_name',
                     'full_name',
+                    'status',
                 ];
             },
             function ($filter) use ($summit) {

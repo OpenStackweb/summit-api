@@ -215,6 +215,7 @@ final class SummitRegistrationInvitationService
             }
 
             $invitation = SummitRegistrationInvitationFactory::build($payload);
+
             foreach ($allowed_ticket_types as $ticket_type_id) {
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
                 Log::debug(sprintf("SummitRegistrationInvitationService::add trying to add ticket %s for invitation email %s", $ticket_type_id, $email));

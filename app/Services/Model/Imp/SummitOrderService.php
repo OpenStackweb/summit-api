@@ -16,6 +16,7 @@ use App\Events\CreatedSummitRegistrationOrder;
 use App\Events\MemberUpdated;
 use App\Events\TicketUpdated;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
+use App\Jobs\CopyInvitationTagsToAttendees;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
@@ -61,6 +62,7 @@ use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
+use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use utils\PagingInfo;
@@ -4280,7 +4282,36 @@ final class SummitOrderService
         Log::debug(sprintf("SummitOrderService::processInvitation trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
         $invitation->markAsAccepted();
 
+        $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $order->getOwnerEmail());
+
+        if (!is_null($attendee)) {
+            CopyInvitationTagsToAttendees::dispatch($summit->getId(), $invitation->getId(), $attendee->getId());
+        }
+
         return $order;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function copyInvitationTagsToAttendee(int $summit_id, int $invitation_id, int $attendee_id):void {
+        $this->tx_service->transaction(function () use ($summit_id, $invitation_id, $attendee_id) {
+            $summit = $this->summit_repository->getById($summit_id);
+            if (!$summit instanceof Summit)
+                throw new EntityNotFoundException();
+
+            $attendee = $this->attendee_repository->getById($attendee_id);
+            if (!$attendee instanceof SummitAttendee)
+                throw new EntityNotFoundException();
+
+            $invitation = $summit->getSummitRegistrationInvitationById($invitation_id);
+            if (!$invitation instanceof SummitRegistrationInvitation)
+                throw new EntityNotFoundException();
+
+            foreach ($invitation->getTags() as $tag) {
+                $attendee->addTag($tag);
+            }
+        });
     }
 
     /**

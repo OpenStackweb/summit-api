@@ -1376,6 +1376,12 @@ SQL;
      */
     public function addTag(Tag $tag): void
     {
+        if ($this->tags->contains($tag)) return;
         $this->tags->add($tag);
+    }
+
+    public function clearTags()
+    {
+        return $this->tags->clear();
     }
 }

@@ -617,6 +617,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'email' => 'required_without:member_id|string|max:255|email',
                 'member_id' => 'required_without:email|integer',
                 'extra_questions' => 'sometimes|extra_question_dto_array',
+                'tags' => 'sometimes|string_array',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -699,6 +700,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'member_id' => 'required_without:email|integer',
                 'extra_questions' => 'sometimes|extra_question_dto_array',
                 'admin_notes' => 'nullable|sometimes|string|max:1024',
+                'tags' => 'sometimes|string_array',
             ];
 
             // Creates a Validator instance and validates the data.

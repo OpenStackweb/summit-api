@@ -32,6 +32,7 @@ extends AbstractValidationRulesFactory
             'allowed_ticket_types' => 'sometimes|int_array',
             'tags' => 'sometimes|string_array',
             'acceptance_criteria' => sprintf('required|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedAcceptanceCriteria)),
+            'status' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedStatus)),
         ];
     }
 
@@ -45,6 +46,7 @@ extends AbstractValidationRulesFactory
             'tags' => 'sometimes|string_array',
             'is_accepted' => 'sometimes|boolean',
             'acceptance_criteria' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedAcceptanceCriteria)),
+            'status' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedStatus)),
         ];
     }
 }

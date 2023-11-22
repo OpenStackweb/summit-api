@@ -25,7 +25,9 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
+use models\main\ITagRepository;
 use models\main\Member;
+use models\main\Tag;
 use models\summit\factories\SummitAttendeeFactory;
 use models\summit\factories\SummitAttendeeNoteFactory;
 use models\summit\ISummitAttendeeRepository;
@@ -95,6 +97,11 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     private $company_repository;
 
     /**
+     * @var ITagRepository
+     */
+    private $tag_repository;
+
+    /**
      * @param ISummitAttendeeRepository $attendee_repository
      * @param IMemberRepository $member_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
@@ -104,6 +111,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      * @param ISummitAttendeeBadgeRepository $badge_repository
      * @param IEventbriteAPI $eventbrite_api
      * @param ICompanyRepository $company_repository
+     * @param ITagRepository $tag_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -117,6 +125,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         ISummitAttendeeBadgeRepository         $badge_repository,
         IEventbriteAPI                         $eventbrite_api,
         ICompanyRepository                     $company_repository,
+        ITagRepository                         $tag_repository,
         ITransactionService                    $tx_service
     )
     {
@@ -130,6 +139,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $this->summit_repository = $summit_repository;
         $this->badge_repository = $badge_repository;
         $this->company_repository = $company_repository;
+        $this->tag_repository = $tag_repository;
     }
 
     /**
@@ -172,6 +182,19 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             }
 
             $attendee = SummitAttendeeFactory::build($summit, $data, $member);
+
+            // tags
+            if (isset($data['tags'])) {
+                $attendee->clearTags();
+                foreach ($data['tags'] as $val) {
+                    $tag = $this->tag_repository->getByTag($val);
+                    if ($tag == null) {
+                        Log::debug(sprintf("AttendeeService::addAttendee creating tag %s", $val));
+                        $tag = new Tag($val);
+                    }
+                    $attendee->addTag($tag);
+                }
+            }
 
             $this->attendee_repository->add($attendee);
 
@@ -240,6 +263,19 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 Log::debug(sprintf("SummitAttendeeService::updateAttendee attendee %s does not have allowed extra questions.", $attendee->getId()));
                 // dont not overwrite extra questions
                 unset($data['extra_questions']);
+            }
+
+            // tags
+            if (isset($data['tags'])) {
+                $attendee->clearTags();
+                foreach ($data['tags'] as $val) {
+                    $tag = $this->tag_repository->getByTag($val);
+                    if ($tag == null) {
+                        Log::debug(sprintf("AttendeeService::updateAttendee creating tag %s", $val));
+                        $tag = new Tag($val);
+                    }
+                    $attendee->addTag($tag);
+                }
             }
 
             SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false);

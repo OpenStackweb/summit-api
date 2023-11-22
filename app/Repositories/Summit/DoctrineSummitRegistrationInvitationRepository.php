@@ -104,6 +104,7 @@ class DoctrineSummitRegistrationInvitationRepository
             'first_name' => 'e.first_name',
             'last_name' => 'e.last_name',
             'full_name'=> Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
+            'status' => 'e.status',
         ];
     }
 

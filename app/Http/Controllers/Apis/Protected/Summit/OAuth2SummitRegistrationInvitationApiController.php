@@ -490,4 +490,45 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             ));
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $token
+     * @return mixed
+     */
+    function getInvitationBySummitAndToken($summit_id, $token)
+    {
+        return $this->processRequest(function () use ($summit_id, $token) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $invitation = $this->service->getInvitationBySummitAndToken($summit, $token);
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $token
+     * @return mixed
+     */
+    function rejectInvitationBySummitAndToken($summit_id, $token)
+    {
+        return $this->processRequest(function () use ($summit_id, $token) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->service->rejectInvitationBySummitAndToken($summit, $token);
+
+            return $this->deleted();
+        });
+    }
 }

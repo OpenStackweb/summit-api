@@ -161,6 +161,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->member = null;
         $this->acceptance_criteria = self::AcceptanceCriteria_AllTicketTypes;
         $this->status = self::Status_Pending;
+        $this->action_date = null;
     }
 
     /**
@@ -722,8 +723,8 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         if(!in_array($status,self::AllowedStatus))
             throw new ValidationException(sprintf("status %s is not allowed.", $status));
 
-        if ($this->status === self::Status_Pending)
-            $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->action_date = $status == self::Status_Pending ?
+            null : new \DateTime('now', new \DateTimeZone('UTC'));
 
         $this->status = $status;
     }

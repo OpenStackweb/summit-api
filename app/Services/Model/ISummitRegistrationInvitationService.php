@@ -75,6 +75,22 @@ interface ISummitRegistrationInvitationService
 
     /**
      * @param Summit $summit
+     * @param string $token
+     * @return SummitRegistrationInvitation
+     * @throws \Exception
+     */
+    public function getInvitationBySummitAndToken(Summit $summit, string $token):SummitRegistrationInvitation;
+
+    /**
+     * @param Summit $summit
+     * @param string $token
+     * @return SummitRegistrationInvitation
+     * @throws \Exception
+     */
+    public function rejectInvitationBySummitAndToken(Summit $summit, string $token): SummitRegistrationInvitation;
+
+    /**
+     * @param Summit $summit
      * @param string $email
      * @return SummitRegistrationInvitation|null
      * @throws EntityNotFoundException

@@ -136,12 +136,13 @@ class DoctrineSummitRegistrationInvitationRepository
      * @param string $hash
      * @param Summit $summit
      * @return SummitRegistrationInvitation|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function getByHashAndSummit(string $hash, Summit $summit): ?SummitRegistrationInvitation
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("e.id")
+            ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->join("e.summit","s")
             ->where('e.hash = :hash')

@@ -455,6 +455,51 @@ final class SummitRegistrationInvitationService
 
     /**
      * @param Summit $summit
+     * @param string $token
+     * @return SummitRegistrationInvitation
+     * @throws \Exception
+     */
+    public function getInvitationBySummitAndToken(Summit $summit, string $token): SummitRegistrationInvitation
+    {
+        return $this->tx_service->transaction(function () use ($summit, $token) {
+
+            $invitation = $this->invitation_repository->getByHashAndSummit(
+                SummitRegistrationInvitation::HashConfirmationToken($token), $summit);
+
+            if (is_null($invitation))
+                throw new EntityNotFoundException("Invitation not found.");
+
+            return $invitation;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $token
+     * @return SummitRegistrationInvitation
+     * @throws \Exception
+     */
+    public function rejectInvitationBySummitAndToken(Summit $summit, string $token): SummitRegistrationInvitation
+    {
+        return $this->tx_service->transaction(function () use ($summit, $token) {
+
+            $invitation = $this->invitation_repository->getByHashAndSummit(
+                SummitRegistrationInvitation::HashConfirmationToken($token), $summit);
+
+            if (is_null($invitation))
+                throw new EntityNotFoundException("Invitation not found.");
+
+            if ($invitation->getStatus() === SummitRegistrationInvitation::Status_Rejected)
+                throw new ValidationException("This Invitation is already rejected.");
+
+            $invitation->setStatus(SummitRegistrationInvitation::Status_Rejected);
+
+            return $invitation;
+        });
+    }
+
+    /**
+     * @param Summit $summit
      * @param string $email
      * @return SummitRegistrationInvitation|null
      * @throws \Exception

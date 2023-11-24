@@ -143,6 +143,24 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     }
 
     /**
+     * @param SummitAttendee $attendee
+     * @param array $payload
+     * @return mixed|SummitAttendee
+     */
+    private function populateTags(SummitAttendee $attendee, array $payload): SummitAttendee {
+        $attendee->clearTags();
+        foreach ($payload['tags'] as $val) {
+            $tag = $this->tag_repository->getByTag($val);
+            if ($tag == null) {
+                Log::debug(sprintf("AttendeeService::populateTags creating tag %s", $val));
+                $tag = new Tag($val);
+            }
+            $attendee->addTag($tag);
+        }
+        return $attendee;
+    }
+
+    /**
      * @param Summit $summit
      * @param array $data
      * @return mixed|SummitAttendee
@@ -185,15 +203,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             // tags
             if (isset($data['tags'])) {
-                $attendee->clearTags();
-                foreach ($data['tags'] as $val) {
-                    $tag = $this->tag_repository->getByTag($val);
-                    if ($tag == null) {
-                        Log::debug(sprintf("AttendeeService::addAttendee creating tag %s", $val));
-                        $tag = new Tag($val);
-                    }
-                    $attendee->addTag($tag);
-                }
+                $attendee = $this->populateTags($attendee, $data);
             }
 
             $this->attendee_repository->add($attendee);
@@ -267,15 +277,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             // tags
             if (isset($data['tags'])) {
-                $attendee->clearTags();
-                foreach ($data['tags'] as $val) {
-                    $tag = $this->tag_repository->getByTag($val);
-                    if ($tag == null) {
-                        Log::debug(sprintf("AttendeeService::updateAttendee creating tag %s", $val));
-                        $tag = new Tag($val);
-                    }
-                    $attendee->addTag($tag);
-                }
+                $attendee = $this->populateTags($attendee, $data);
             }
 
             SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false);

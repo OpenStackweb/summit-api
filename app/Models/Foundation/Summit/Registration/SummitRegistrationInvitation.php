@@ -526,6 +526,10 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     }
 
+    public function markAsRejected(): void {
+        $this->setStatus(SummitRegistrationInvitation::Status_Rejected);
+    }
+
     public function addOrder(SummitOrder $order){
         if ($this->orders->contains($order)) return;
         $this->orders->add($order);

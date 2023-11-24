@@ -4300,7 +4300,7 @@ final class SummitOrderService
             if (!$summit instanceof Summit)
                 throw new EntityNotFoundException();
 
-            $attendee = $this->attendee_repository->getById($attendee_id);
+            $attendee = $summit->getAttendeeById($attendee_id);
             if (!$attendee instanceof SummitAttendee)
                 throw new EntityNotFoundException();
 

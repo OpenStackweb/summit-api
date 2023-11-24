@@ -492,7 +492,7 @@ final class SummitRegistrationInvitationService
             if ($invitation->getStatus() === SummitRegistrationInvitation::Status_Rejected)
                 throw new ValidationException("This Invitation is already rejected.");
 
-            $invitation->setStatus(SummitRegistrationInvitation::Status_Rejected);
+            $invitation->markAsRejected();
 
             return $invitation;
         });

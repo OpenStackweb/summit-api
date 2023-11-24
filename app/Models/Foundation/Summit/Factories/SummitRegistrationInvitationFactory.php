@@ -41,8 +41,6 @@ final class SummitRegistrationInvitationFactory
         }
         if(isset($data['status'])) {
             $invitation->setStatus($data['status']);
-        } else if(isset($data['is_accepted'])){     //backward compatibility
-            $invitation->setAccepted(boolval($data['is_accepted']));
         }
         if(isset($data['acceptance_criteria'])){
             $invitation->setAcceptanceCriteria(trim($data['acceptance_criteria']));

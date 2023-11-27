@@ -139,7 +139,8 @@ final class StripeApi implements IPaymentGatewayAPI
         $request = [
             'amount' => intval($amount),
             'currency' => $currency,
-            'payment_method_types' => ['card'],
+            //'payment_method_types' => ['card'],
+            'automatic_payment_methods[enabled]' => true,
         ];
 
         // check setting to send stripe invoice

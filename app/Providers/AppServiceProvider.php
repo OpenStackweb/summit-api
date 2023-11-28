@@ -83,7 +83,7 @@ class AppServiceProvider extends ServiceProvider
     ];
     static $extra_question_dto_validation_rules = [
         'question_id' => 'required|int',
-        'answer' => 'nullable|string|max:512',
+        'answer' => 'nullable|string|max:1024',
     ];
     static $event_dto_fields = [
         'id',

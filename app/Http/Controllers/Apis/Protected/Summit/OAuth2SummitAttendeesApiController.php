@@ -1043,12 +1043,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 return $this->error403();
 
             // check ownership
-            $isOrderOwner = true;
+            $isOrderOwner = false;
             foreach($attendee->getTickets() as $ticket) {
                 if(!$ticket->isPaid() || !$ticket->isActive()) continue;
                 $order = $ticket->getOrder();
-                if ($order->getOwnerEmail() != $current_user->getEmail())
-                    $isOrderOwner = false;
+                if ($order->getOwnerEmail() === $current_user->getEmail())
+                    $isOrderOwner = true;
             }
 
             $isAttendeeOwner = true;

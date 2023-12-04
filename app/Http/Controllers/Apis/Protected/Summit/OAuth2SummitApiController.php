@@ -726,6 +726,61 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return JsonResponse|mixed
+     */
+    public function addSummitSecondaryLogo(LaravelRequest $request, $summit_id)
+    {
+        return $this->processRequest(function () use ($request, $summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
+            $photo = $this->summit_service->addSummitSecondaryLogo($summit_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @return JsonResponse|mixed
+     */
+    public function deleteSummitSecondaryLogo($summit_id)
+    {
+        return $this->processRequest(function() use($summit_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
+            $this->summit_service->deleteSummitSecondaryLogo($summit_id);
+
+            return $this->deleted();
+
+        });
+    }
+
+    /**
      * @param $summit_id
      * @param $speaker_id
      * @return JsonResponse|mixed

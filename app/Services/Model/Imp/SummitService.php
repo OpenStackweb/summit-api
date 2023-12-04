@@ -2129,7 +2129,6 @@ final class SummitService
         });
     }
 
-
     /**
      * @param int $summit_id
      * @param UploadedFile $file
@@ -2146,8 +2145,8 @@ final class SummitService
 
             $summit = $this->summit_repository->getById($summit_id);
 
-            if (is_null($summit) || !$summit instanceof Summit) {
-                throw new EntityNotFoundException('summit not found!');
+            if (!$summit instanceof Summit) {
+                throw new EntityNotFoundException('Summit not found.');
             }
 
             if (!in_array($file->extension(), $allowed_extensions)) {
@@ -2176,11 +2175,65 @@ final class SummitService
 
             $summit = $this->summit_repository->getById($summit_id);
 
-            if (is_null($summit) || !$summit instanceof Summit) {
-                throw new EntityNotFoundException('summit not found!');
+            if (!$summit instanceof Summit) {
+                throw new EntityNotFoundException('Summit not found.');
             }
 
             $summit->clearLogo();
+        });
+    }
+
+    /**
+     * @param int $summit_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSummitSecondaryLogo(int $summit_id, UploadedFile $file, $max_file_size = 10485760)
+    {
+        return $this->tx_service->transaction(function () use ($summit_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'jfif'];
+
+            $summit = $this->summit_repository->getById($summit_id);
+
+            if (!$summit instanceof Summit) {
+                throw new EntityNotFoundException('Summit not found.');
+            }
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException(sprintf("file does not has a valid extension (%s).", implode(",", $allowed_extensions)));
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $photo = $this->file_uploader->build($file, sprintf('summits/%s', $summit->getId()), true);
+            $summit->setSecondaryLogo($photo);
+
+            return $photo;
+        });
+    }
+
+    /**
+     * @param int $summit_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteSummitSecondaryLogo(int $summit_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit_id) {
+
+            $summit = $this->summit_repository->getById($summit_id);
+
+            if (!$summit instanceof Summit) {
+                throw new EntityNotFoundException('Summit not found.');
+            }
+
+            $summit->clearSecondaryLogo();
         });
     }
 

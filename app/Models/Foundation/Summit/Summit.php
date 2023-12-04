@@ -602,6 +602,13 @@ class Summit extends SilverstripeBaseModel
     private $logo;
 
     /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="SecondaryLogoID", referencedColumnName="ID")
+     * @var File
+     */
+    private $secondary_logo;
+
+    /**
      * @ORM\Column(name="ApiFeedType", type="string")
      * @var string
      */
@@ -1476,6 +1483,47 @@ class Summit extends SilverstripeBaseModel
     {
         try {
             return !is_null($this->logo) ? $this->logo->getId() : 0;
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    /**
+     * @return File
+     */
+    public function getSecondaryLogo()
+    {
+        return $this->secondary_logo;
+    }
+
+    /**
+     * @param File $secondary_logo
+     */
+    public function setSecondaryLogo(File $secondary_logo): void
+    {
+        $this->secondary_logo = $secondary_logo;
+    }
+
+    public function clearSecondaryLogo(): void
+    {
+        $this->secondary_logo = null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSecondaryLogo()
+    {
+        return $this->getSecondaryLogoId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSecondaryLogoId()
+    {
+        try {
+            return !is_null($this->secondary_logo) ? $this->secondary_logo->getId() : 0;
         } catch (\Exception $ex) {
             return 0;
         }
@@ -3980,6 +4028,19 @@ SQL;
     {
         $logoUrl = null;
         if ($this->hasLogo() && $logo = $this->getLogo()) {
+            $logoUrl = $logo->getUrl();
+        }
+        return $logoUrl;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getSecondaryLogoUrl(): ?string
+    {
+        $logoUrl = null;
+        if ($this->hasSecondaryLogo() && $logo = $this->getSecondaryLogo()) {
             $logoUrl = $logo->getUrl();
         }
         return $logoUrl;

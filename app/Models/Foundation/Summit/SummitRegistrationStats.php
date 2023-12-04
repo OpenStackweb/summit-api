@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\IStatsConstants;
+use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
@@ -248,8 +249,9 @@ SQL;
     public function getTotalRefundAmountEmitted(?DateTime $startDate  = null, ?DateTime $endDate = null): float
     {
         try {
-            $sql = <<<SQL
-      SELECT SUM(SummitRefundRequest.RefundedAmount) FROM `SummitRefundRequest`
+            $inner_sql = <<<SQL
+SELECT LEAST(SummitAttendeeTicket.RawCost, SUM(SummitRefundRequest.RefundedAmount)) AS RefundedAmountWithoutTaxesPerTicket
+FROM SummitRefundRequest
 INNER JOIN SummitAttendeeTicketRefundRequest on SummitAttendeeTicketRefundRequest.ID = SummitRefundRequest.ID
 INNER JOIN SummitAttendeeTicket on SummitAttendeeTicket.ID = SummitAttendeeTicketRefundRequest.TicketID
 INNER JOIN SummitOrder on SummitOrder.ID = SummitAttendeeTicket.OrderID
@@ -257,7 +259,13 @@ WHERE
       SummitRefundRequest.Status='Approved' AND 
       SummitOrder.SummitID = :summit_id
 SQL;
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitRefundRequest", "Created", $startDate, $endDate);
+
+            $inner_sql = self::addDatesFilteringWithTimeZone($inner_sql, "SummitRefundRequest", "Created", $startDate, $endDate);
+
+            $sql = <<<SQL
+SELECT SUM(t.RefundedAmountWithoutTaxesPerTicket) AS TotalRefundedAmountWithoutTaxes 
+FROM ({$inner_sql} GROUP BY SummitAttendeeTicket.ID) t
+SQL;
 
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);

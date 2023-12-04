@@ -51,7 +51,7 @@ class SummitSerializer extends SilverStripeSerializer
         'BeginAllowBookingDate' => 'begin_allow_booking_date:datetime_epoch',
         'EndAllowBookingDate' => 'end_allow_booking_date:datetime_epoch',
         'LogoUrl' => 'logo:json_url',
-
+        'SecondaryLogoUrl' => 'secondary_logo:json_url',
         // registration
         'OrderQRPrefix' => 'order_qr_prefix:json_string',
         'TicketQRPrefix' => 'ticket_qr_prefix:json_string',

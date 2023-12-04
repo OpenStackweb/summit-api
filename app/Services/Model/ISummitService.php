@@ -378,6 +378,23 @@ interface ISummitService
     public function deleteSummitLogo(int $summit_id):void;
 
     /**
+     * @param int $summit_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return File
+     */
+    public function addSummitSecondaryLogo(int $summit_id, UploadedFile $file,  $max_file_size = 10485760);
+
+    /**
+     * @param int $summit
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteSummitSecondaryLogo(int $summit_id):void;
+
+    /**
      * @param Summit $summit
      * @param Member $member
      * @param int $event_id

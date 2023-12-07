@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\AllowedCurrencies;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Utils\Traits\FinancialTrait;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +40,8 @@ class SummitTicketType extends SilverstripeBaseModel
     use SummitOwned;
 
     use FinancialTrait;
+
+    use ScheduleEntity;
 
     const USD_Currency = 'USD';
     const EUR_Currency = 'EUR';

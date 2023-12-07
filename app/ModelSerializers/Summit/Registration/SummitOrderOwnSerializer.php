@@ -51,11 +51,17 @@ final class SummitOrderOwnSerializer
                       $attendees_status = $attendee_current_status;
                   }
             }
-            $ticket_type_name = $ticket->getTicketTypeName();
-            if(!isset($tickets_excerpt_by_ticket_type[$ticket_type_name]))
-                $tickets_excerpt_by_ticket_type[$ticket_type_name] = 0;
+            $ticket_type_id = $ticket->getTicketTypeId();
 
-            $tickets_excerpt_by_ticket_type[$ticket_type_name] = $tickets_excerpt_by_ticket_type[$ticket_type_name] + 1;
+            if(!isset($tickets_excerpt_by_ticket_type[$ticket_type_id])) {
+                $tickets_excerpt_by_ticket_type[$ticket_type_id] = [
+                    'name' => $ticket->getTicketTypeName(),
+                    'qty'  => 0
+                ];
+            }
+
+            $tickets_excerpt_by_ticket_type[$ticket_type_id]['qty'] =
+                $tickets_excerpt_by_ticket_type[$ticket_type_id]['qty'] + 1;
         }
 
         $values['attendees_status'] = $attendees_status;

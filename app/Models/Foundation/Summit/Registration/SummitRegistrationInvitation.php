@@ -522,7 +522,8 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
         }
 
-        $this->action_date = $should_accept ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
+        if($should_accept)
+            $this->setStatus(SummitRegistrationInvitation::Status_Accepted);
 
     }
 

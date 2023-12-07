@@ -515,6 +515,21 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins
                 ]
             ],
+            [
+                'name' => 'get-order-confirmation-email-pdf',
+                'route' => '/api/v1/summits/{id}/orders/{order_id}/pdf',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
             // purchase flow
             [
                 'name' => 'reserve-registration-order',

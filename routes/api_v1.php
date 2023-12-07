@@ -1368,6 +1368,7 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::get('pdf', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@getTicketPDFBySummit']);
                     });
                 });
+                Route::get('pdf', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@getOrderConfirmationEmailPDF']);
             });
             Route::post('reserve', 'OAuth2SummitOrdersApiController@reserve');
             Route::group(['prefix' => '{hash}', 'where' => [

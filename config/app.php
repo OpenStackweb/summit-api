@@ -224,5 +224,5 @@ return [
 
     'app_name'    => env('APP_NAME', 'Open Infrastructure Summit'),
     'tenant_name' => env('TENANT_NAME', 'OpenStack'),
-    "default_profile_image" => env('DEFAULT_PROFILE_IMAGE', null),
+    'default_profile_image' => env('DEFAULT_PROFILE_IMAGE', null),
 ];

@@ -13,8 +13,10 @@
  **/
 use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
+use App\Services\Apis\EmailTemplatesApi;
 use App\Services\Apis\ExternalUserApi;
 use App\Services\Apis\GoogleGeoCodingAPI;
+use App\Services\Apis\IEmailTemplatesApi;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Apis\IGeoCodingAPI;
 use App\Services\Apis\IMailApi;
@@ -158,6 +160,11 @@ final class BaseServicesProvider extends ServiceProvider
                 return new MUXApi();
             }
         );
+
+        App::singleton(
+            IEmailTemplatesApi::class,
+            EmailTemplatesApi::class
+        );
     }
 
     /**
@@ -183,6 +190,7 @@ final class BaseServicesProvider extends ServiceProvider
             IPasswordlessAPI::class,
             ISamsungRegistrationAPI::class,
             IMUXApi::class,
+            IEmailTemplatesApi::class,
         ];
     }
 }

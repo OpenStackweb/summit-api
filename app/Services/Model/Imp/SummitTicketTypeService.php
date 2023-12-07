@@ -382,12 +382,12 @@ final class SummitTicketTypeService
                     )
                 );
 
-                if ($invitation->isAccepted()) {
+                if (!$invitation->isPending()) {
                     Log::debug
                     (
                         sprintf
                         (
-                            "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s invitation already accepted.",
+                            "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s invitation already accepted or rejected.",
                             $summit->getId(),
                             $member->getId()
                         )

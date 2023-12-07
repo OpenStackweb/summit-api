@@ -582,6 +582,11 @@ final class SummitRegistrationInvitationService
                             if (!$invitation instanceof SummitRegistrationInvitation)
                                 return null;
 
+                            if($invitation->isRejected()) {
+                                Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is rejected", $invitation_id));
+                                return null;
+                            }
+
                             $summit = $invitation->getSummit();
 
                             while (true) {

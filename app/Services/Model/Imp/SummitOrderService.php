@@ -281,10 +281,11 @@ final class ReserveOrderTask extends AbstractTask
 
             // auto assign should only happen when the user has not paid any order and the order has more than one ticket....
             $should_auto_assign_first_ticket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit) && count($tickets) > 1;
+            // try to get invitation
+            $invitation = $this->summit->getSummitRegistrationInvitationByEmail($owner_email);
             // or the order owner has an invitation
             if (!$should_auto_assign_first_ticket) {
-                $invitation = $this->summit->getSummitRegistrationInvitationByEmail($owner_email);
-                $should_auto_assign_first_ticket = !is_null($invitation) && !$this->owner->hasPaidRegistrationOrderForSummit($this->summit);
+                $should_auto_assign_first_ticket = !is_null($invitation) && $invitation->isPending() && !$this->owner->hasPaidRegistrationOrderForSummit($this->summit);
             }
 
             $payment_gateway = $this->summit->getPaymentGateWayPerApp
@@ -473,8 +474,7 @@ final class ReserveOrderTask extends AbstractTask
             // generate the key to access
             $order->generateHash();
             $order->generateQRCode();
-            $invitation = $this->summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-            if(!is_null($invitation)){
+            if(!is_null($invitation) && $invitation->isPending()){
                 // add the order to the corresponding invitation , if does exist to avoid user
                 // to purchase multiple tickets for the same invitation
                 Log::debug

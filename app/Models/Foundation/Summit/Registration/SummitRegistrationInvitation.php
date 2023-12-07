@@ -606,7 +606,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             )
         );
 
-        if($this->isAccepted()) return false;
+        if(!$this->isPending()) return false;
 
         $ticket_type = $this->summit->getTicketTypeById($ticket_type_id);
         if(is_null($ticket_type) || $ticket_type->getAudience() !== SummitTicketType::Audience_With_Invitation) return false;
@@ -740,6 +740,14 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     public function isAccepted(): bool
     {
         return $this->status === self::Status_Accepted;
+    }
+
+    public function isPending():bool{
+        return $this->status === self::Status_Pending;
+    }
+
+    public function isRejected():bool{
+        return $this->status === self::Status_Rejected;
     }
 
     /**

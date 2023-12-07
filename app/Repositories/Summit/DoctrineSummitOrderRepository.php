@@ -78,13 +78,17 @@ final class DoctrineSummitOrderRepository
             'number' => 'e.number',
             'id'     => 'e.id',
             'status' => 'e.status',
-        /*    'owner_name' =>  <<<SQL
-    CASE WHEN o IS NOT NULL THEN LOWER(CONCAT(o.first_name, ' ', o.last_name))
-    ELSE LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)) END 
-SQL*/
-                'owner_name' =>  <<<SQL
+            'created' => 'e.created',
+            'owner_name' =>  <<<SQL
 COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname))) 
-SQL
+SQL,
+            'owner_email' =>  <<<SQL
+COALESCE(LOWER(o.email), LOWER(e.owner_email))
+SQL,
+            'owner_company' => <<<SQL
+COALESCE(LOWER(e.owner_company_name), LOWER(oc.name))
+SQL,
+
         ];
     }
 

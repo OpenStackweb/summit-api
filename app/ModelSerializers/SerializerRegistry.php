@@ -151,6 +151,7 @@ final class SerializerRegistry
     const SerializerType_Admin_Voteable_CSV = "ADMIN_VOTEABLE_CSV";
     const SerializerType_CSV = 'CSV';
     const SerializerType_Admin_Registration_Stats = 'ADMIN_REG_STATS';
+    const SerializerType_Admin_Email_Preview = 'ADMIN_EMAIL_PREVIEW';
 
     private function __clone()
     {
@@ -429,6 +430,7 @@ final class SerializerRegistry
 
         $this->registry['SummitOrder'] = [
             self::SerializerType_Public => SummitOrderBaseSerializer::class,
+            self::SerializerType_Admin_Email_Preview => SummitOrderConfirmationEmailPreviewSerializer::class,
             ISummitOrderSerializerTypes::CheckOutType => SummitOrderBaseSerializer::class,
             ISummitOrderSerializerTypes::ReservationType => SummitOrderReservationSerializer::class,
             ISummitOrderSerializerTypes::AdminType => SummitOrderAdminSerializer::class,

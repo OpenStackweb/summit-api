@@ -18,6 +18,7 @@ use models\summit\IPaymentConstants;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitBadgeTypeFactory;
 use services\model\ISummitService;
+use TCPDF_STATIC;
 
 /**
  * Class OAuth2SummitOrdersApiTest
@@ -58,54 +59,54 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
     use InsertOrdersTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
-        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
-        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
-        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
-
-        self::insertSummitTestData();
-        self::InsertOrdersTestData();
-        // build payment profile and attach to summit
-        self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
-            'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
-            'is_test_mode'         => true,
-            'test_publishable_key' => self::$test_public_key,
-            'test_secret_key'      => self::$test_secret_key,
-            'is_active'            => false,
-        ]);
-
-        // build default badge type
-
-        $defaultBadge = SummitBadgeTypeFactory::build([
-            'name' => 'DEFAULT',
-            'is_default' => true,
-        ]);
-
-        // build ticket type
-
-        self::$ticketType = SummitTicketTypeFactory::build(self::$summit, [
-            'name'            => 'TICKET_1',
-            'cost'            => 100,
-            'quantity_2_sell' => 1000,
-        ]);
-
-        self::$summit->addPaymentProfile(self::$profile);
-        self::$summit->addBadgeType($defaultBadge);
-        self::$summit->addTicketType(self::$ticketType);
-
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-
-    }
-
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+//    protected function setUp():void
+//    {
+//        parent::setUp();
+//        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
+//        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
+//        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
+//        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
+//
+//        self::insertSummitTestData();
+//        self::InsertOrdersTestData();
+//        // build payment profile and attach to summit
+//        self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
+//            'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
+//            'is_test_mode'         => true,
+//            'test_publishable_key' => self::$test_public_key,
+//            'test_secret_key'      => self::$test_secret_key,
+//            'is_active'            => false,
+//        ]);
+//
+//        // build default badge type
+//
+//        $defaultBadge = SummitBadgeTypeFactory::build([
+//            'name' => 'DEFAULT',
+//            'is_default' => true,
+//        ]);
+//
+//        // build ticket type
+//
+//        self::$ticketType = SummitTicketTypeFactory::build(self::$summit, [
+//            'name'            => 'TICKET_1',
+//            'cost'            => 100,
+//            'quantity_2_sell' => 1000,
+//        ]);
+//
+//        self::$summit->addPaymentProfile(self::$profile);
+//        self::$summit->addBadgeType($defaultBadge);
+//        self::$summit->addTicketType(self::$ticketType);
+//
+//        self::$em->persist(self::$summit);
+//        self::$em->flush();
+//
+//    }
+//
+//    protected function tearDown():void
+//    {
+//        self::clearSummitTestData();
+//        parent::tearDown();
+//    }
 
     /**
      * @return mixed
@@ -929,5 +930,37 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         $order = json_decode($content);
         $this->assertTrue(!is_null($order));
         return $order;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testGetOrderConfirmationEmailPDF(){
+        $params = [
+            'id'        => 3783, //self::$summit->getId(),
+            'order_id'  => 6658
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrdersApiController@getOrderConfirmationEmailPDF",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $f = TCPDF_STATIC::fopenLocal("/tmp/order_confirmation_email.pdf", 'wb');
+        fwrite($f, $content, strlen($content));
+        fclose($f);
     }
 }

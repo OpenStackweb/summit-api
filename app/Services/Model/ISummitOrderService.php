@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\File;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -406,4 +408,11 @@ interface ISummitOrderService extends IProcessPaymentService
      */
     public function cancelRequestRefundTicket(int $order_id, int $ticket_id, Member $currentUser, ?string $notes = null): SummitAttendeeTicket;
 
+    /**
+     * @param Summit $summit
+     * @param int $order_id
+     * @return string
+     * @throws \Exception
+     */
+    public function renderOrderConfirmationEmail(Summit $summit, int $order_id): string;
 }

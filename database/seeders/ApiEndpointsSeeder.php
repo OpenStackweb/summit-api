@@ -1225,7 +1225,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'add-summit-logo-secondary',
-                'route' => '/api/v1/summits/{id}/secondary',
+                'route' => '/api/v1/summits/{id}/logo/secondary',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),

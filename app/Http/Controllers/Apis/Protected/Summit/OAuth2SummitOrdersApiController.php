@@ -285,7 +285,10 @@ final class OAuth2SummitOrdersApiController
                     'id',
                     'number',
                     'status',
-                    'owner_name'
+                    'owner_name',
+                    'owner_email',
+                    'owner_company',
+                    'created',
                 ];
             },
             function ($filter) use ($summit) {
@@ -344,6 +347,10 @@ final class OAuth2SummitOrdersApiController
                     'id',
                     'number',
                     'status',
+                    'owner_name',
+                    'owner_email',
+                    'owner_company',
+                    'created',
                 ];
             },
             function ($filter) use ($summit) {
@@ -403,6 +410,10 @@ final class OAuth2SummitOrdersApiController
                     'id',
                     'number',
                     'status',
+                    'owner_name',
+                    'owner_email',
+                    'owner_company',
+                    'created',
                 ];
             },
             function ($filter) use ($owner, $summit_id) {

@@ -264,8 +264,8 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'logo'], function () {
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummitLogo']);
             Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummitLogo']);
-            Route::post('secondary', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummitLogo']);
-            Route::delete('secondary', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummitLogo']);
+            Route::post('secondary', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummitSecondaryLogo']);
+            Route::delete('secondary', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummitSecondaryLogo']);
         });
 
         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummit']);

@@ -40,7 +40,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'badge_features',
         'allowed_ticket_types',
-        'tags',
+        'tags'
     ];
 
     /**
@@ -81,6 +81,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
             }
             $values['tags'] = $tags;
         }
+
         return $values;
     }
 

@@ -13,6 +13,8 @@
  **/
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
@@ -75,6 +77,14 @@ final class SummitPromoCodeFactory
             break;
             case SpeakersRegistrationDiscountCode::ClassName:{
                 $promo_code = new SpeakersRegistrationDiscountCode();
+            }
+            break;
+            case PrePaidSummitRegistrationPromoCode::ClassName:{
+                $promo_code = new PrePaidSummitRegistrationPromoCode();
+            }
+            break;
+            case PrePaidSummitRegistrationDiscountCode::ClassName:{
+                $promo_code = new PrePaidSummitRegistrationDiscountCode();
             }
             break;
         }

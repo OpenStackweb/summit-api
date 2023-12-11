@@ -35,7 +35,9 @@ use Doctrine\ORM\Mapping as ORM;
  *     "SpeakerSummitRegistrationDiscountCode" = "SpeakerSummitRegistrationDiscountCode",
  *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode",
  *     "SpeakersRegistrationDiscountCode" = "SpeakersRegistrationDiscountCode",
- *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode"
+ *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode",
+ *     "PrePaidSummitRegistrationPromoCode" = "PrePaidSummitRegistrationPromoCode",
+ *     "PrePaidSummitRegistrationDiscountCode" = "PrePaidSummitRegistrationDiscountCode"
  * })
  * Class SummitRegistrationPromoCode
  * @package models\summit
@@ -145,6 +147,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @var Tag[]
      */
     private $tags;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SummitAttendeeTicket", mappedBy="promo_code", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitAttendeeTicket[]
+     */
+    private $tickets;
 
     public function setSummit($summit)
     {
@@ -274,6 +282,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
         $this->tags = new ArrayCollection();
+        $this->tickets = new ArrayCollection();
     }
 
     /**
@@ -666,5 +675,22 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     public function clearTags()
     {
         $this->tags->clear();
+    }
+
+    /**
+     * @return SummitAttendeeTicket[]
+     */
+    public function getTickets()
+    {
+        return $this->tickets;
+    }
+
+    /**
+     * @param SummitAttendeeTicket $ticket
+     */
+    public function addTicket(SummitAttendeeTicket $ticket): void
+    {
+        if ($this->tickets->contains($ticket)) return;
+        $this->tickets->add($ticket);
     }
 }

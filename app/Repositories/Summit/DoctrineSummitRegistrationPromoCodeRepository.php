@@ -17,6 +17,8 @@ use Doctrine\ORM\QueryBuilder;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
@@ -147,7 +149,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
                     SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
                     SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
-                    SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class
+                    SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
+                    PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
+                    PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
                 ]
             )
         ];
@@ -281,6 +285,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     ->leftJoin(SponsorSummitRegistrationPromoCode::class, 'spc', 'WITH', 'mpc.id = spc.id')
                     ->leftJoin(SpeakerSummitRegistrationPromoCode::class, 'spkpc', 'WITH', 'spkpc.id = pc.id')
                     ->leftJoin(SpeakersSummitRegistrationPromoCode::class, 'spkspc', 'WITH', 'spkspc.id = pc.id')
+                    ->leftJoin(PrePaidSummitRegistrationPromoCode::class, 'pppc', 'WITH', 'pppc.id = pc.id')
+                    ->leftJoin(PrePaidSummitRegistrationDiscountCode::class, 'ppdc', 'WITH', 'ppdc.id = pc.id')
                     ->leftJoin('pc.summit', 's');
 
         $query = $this->applyExtraJoins($query, $filter);
@@ -337,7 +343,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
            SpeakerSummitRegistrationDiscountCode::getMetadata(),
            MemberSummitRegistrationDiscountCode::getMetadata(),
            SpeakersSummitRegistrationPromoCode::getMetadata(),
-           SpeakersRegistrationDiscountCode::getMetadata()
+           SpeakersRegistrationDiscountCode::getMetadata(),
+           PrePaidSummitRegistrationPromoCode::getMetadata(),
+           PrePaidSummitRegistrationDiscountCode::getMetadata()
        ];
     }
 

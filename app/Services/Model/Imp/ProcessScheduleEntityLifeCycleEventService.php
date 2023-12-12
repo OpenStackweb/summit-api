@@ -25,6 +25,7 @@ use libs\utils\ITransactionService;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
 use models\summit\Summit;
+use models\summit\SummitTicketType;
 
 /**
  * Class ProcessScheduleEntityLifeCycleEventService
@@ -219,6 +220,24 @@ final class ProcessScheduleEntityLifeCycleEventService
                             'entity_operator' => 'UPDATE'
                         ]);
                 }
+                return;
+            }
+
+            if ($entity_type === 'SummitTicketType') {
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit) return;
+
+                $ticket_type = $summit->getTicketTypeById($entity_id);
+                if (!$ticket_type instanceof SummitTicketType) return;
+
+                $this->rabbit_service->publish(
+                    [
+                        'summit_id' => $summit->getId(),
+                        'entity_id' => $summit->getId(),
+                        'entity_type' => 'Summit',
+                        'entity_operator' => 'UPDATE'
+                    ]);
+
                 return;
             }
 

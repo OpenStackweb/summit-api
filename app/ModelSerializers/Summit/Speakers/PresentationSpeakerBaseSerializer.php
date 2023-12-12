@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use libs\utils\JsonUtils;
 use models\summit\PresentationSpeaker;
 
 /**
@@ -33,7 +34,6 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
         'FundedTravel' => 'funded_travel:json_boolean',
         'WillingToTravel' => 'willing_to_travel:json_boolean',
         'WillingToPresentVideo' => 'willing_to_present_video:json_boolean',
-        'Email' => 'email:json_null_email',
         'MemberID' => 'member_id:json_int',
         'RegistrationRequestId' => 'registration_request_id:json_int',
         'ProfilePhotoUrl' => 'pic:json_url',
@@ -70,6 +70,14 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
             $values['first_name'] = $first_name;
             $values['last_name'] = $last_name;
         }
+
+
+        $currentUser = $this->resource_server_context->getCurrentUser();
+        // choose email serializer depending on user permissions
+        // is current user is null then is a service account
+        $values['email'] = is_null($currentUser) ?
+            JsonUtils::toNullEmail($speaker->getEmail()) :
+            JsonUtils::toObfuscatedEmail($speaker->getEmail());
 
         return $values;
     }

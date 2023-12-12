@@ -4361,7 +4361,7 @@ final class SummitOrderService
             $order = $summit->getOrderById($order_id);
 
             if (!$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             $payload = SerializerRegistry::getInstance()
                 ->getSerializer($order, SerializerRegistry::SerializerType_Admin_Email_Preview)
@@ -4370,16 +4370,23 @@ final class SummitOrderService
             $template_id = $summit->getEmailIdentifierPerEmailEventFlowSlug(RegisteredMemberOrderPaidMail::EVENT_SLUG);
 
             if (is_null($template_id))
-                throw new EntityNotFoundException("order confirmation email template not found");
+                throw new EntityNotFoundException("Order confirmation email template not found.");
 
             $template = $this->email_templates_api->getEmailTemplate($template_id);
 
+            if (is_null($template))
+                throw new EntityNotFoundException("Could not retrieve the order confirmation email template.");
+
             $preview = $this->email_templates_api->getEmailPreview($payload, $template['html_content']);
 
+            //Only the HTML body content is needed to create the PDF
             preg_match("/<body[^>]*>(.*?)<\/body>/is", $preview['html_content'], $matches);
 
-            $renderer = new HTML2PDFRenderer(trim($matches[1]));
-            return $renderer->render();
+            if (!is_null($matches) && count($matches) > 1) {
+                $renderer = new HTML2PDFRenderer(trim($matches[1]));
+                return $renderer->render();
+            }
+            return "";
         } catch (\Exception $ex) {
             Log::warning($ex);
             throw $ex;

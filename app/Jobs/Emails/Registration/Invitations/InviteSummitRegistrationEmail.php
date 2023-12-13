@@ -56,6 +56,8 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+        $payload[IMailTemplatesConstants::invitation_token] = $invitation->getToken();
+
         $ticket_types = [];
 
         foreach ($invitation->getRemainingAllowedTicketTypes() as $ticketType){
@@ -113,6 +115,7 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::invitation_token]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
 
         $ticket_type_schema = [];

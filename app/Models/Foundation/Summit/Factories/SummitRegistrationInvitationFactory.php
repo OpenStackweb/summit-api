@@ -39,8 +39,8 @@ final class SummitRegistrationInvitationFactory
         if(isset($data['last_name'])){
             $invitation->setLastName(trim($data['last_name']));
         }
-        if(isset($data['is_accepted'])){;
-            $invitation->setAccepted(boolval($data['is_accepted']));
+        if(isset($data['status'])) {
+            $invitation->setStatus($data['status']);
         }
         if(isset($data['acceptance_criteria'])){
             $invitation->setAcceptanceCriteria(trim($data['acceptance_criteria']));

@@ -26,6 +26,7 @@ use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
+use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -205,6 +206,8 @@ final class DoctrineSummitAttendeeRepository
             'access_levels' => 'bac.name :operator :value',
             'access_levels_id' => 'bac.id :operator :value',
             'summit_hall_checked_in_date' => Filter::buildDateTimeEpochField("e.summit_hall_checked_in_date"),
+            'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "tags","tags.tag :operator :value"),
+            'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "tags","tags.id :operator :value"),
         ];
     }
 

@@ -176,6 +176,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
+                    'status' => ['=='],
                 ];
             },
             function () {
@@ -191,6 +192,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => 'sometimes|integer',
                     'tags' => 'sometimes|required|string',
                     'tags_id' => 'sometimes|integer',
+                    'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
                 ];
             },
             function () {
@@ -200,6 +202,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'first_name',
                     'last_name',
                     'full_name',
+                    'status',
                 ];
             },
             function ($filter) use ($summit) {
@@ -238,6 +241,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
+                    'status' => ['=='],
                 ];
             },
             function () {
@@ -253,6 +257,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => 'sometimes|integer',
                     'tags' => 'sometimes|required|string',
                     'tags_id' => 'sometimes|integer',
+                    'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
                 ];
             },
             function () {
@@ -262,6 +267,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'first_name',
                     'last_name',
                     'full_name',
+                    'status',
                 ];
             },
             function ($filter) use ($summit) {
@@ -295,6 +301,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'is_sent',
                     'allowed_ticket_types',
                     'tags',
+                    'status',
                 ];
 
                 $columns_param = Request::input("columns", "");
@@ -426,6 +433,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
+                    'status' => ['=='],
                 ]);
             }
 
@@ -444,6 +452,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 'ticket_types_id' => 'sometimes|integer',
                 'tags' => 'sometimes|required|string',
                 'tags_id' => 'sometimes|integer',
+                'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
             ]);
 
             $this->service->triggerSend($summit, $payload, Request::input('filter'));
@@ -479,6 +488,47 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations(),
             ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $token
+     * @return mixed
+     */
+    function getInvitationBySummitAndToken($summit_id, $token)
+    {
+        return $this->processRequest(function () use ($summit_id, $token) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $invitation = $this->service->getInvitationBySummitAndToken($summit, $token);
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $token
+     * @return mixed
+     */
+    function rejectInvitationBySummitAndToken($summit_id, $token)
+    {
+        return $this->processRequest(function () use ($summit_id, $token) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->service->rejectInvitationBySummitAndToken($summit, $token);
+
+            return $this->deleted();
         });
     }
 }

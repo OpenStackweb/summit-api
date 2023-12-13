@@ -218,6 +218,15 @@ Route::group(['prefix' => 'summits'], function () {
                 Route::get('', 'OAuth2SummitsTicketTypesApiController@getAllBySummit');
             });
         }
+
+        // registration-invitations
+
+        Route::group(['prefix' => 'registration-invitations'], function () {
+            Route::group(['prefix' => '{token}'], function () {
+                Route::get('', ['uses' => 'OAuth2SummitRegistrationInvitationApiController@getInvitationBySummitAndToken']);
+                Route::delete('reject', ['uses' => 'OAuth2SummitRegistrationInvitationApiController@rejectInvitationBySummitAndToken']);
+            });
+        });
     });
 });
 

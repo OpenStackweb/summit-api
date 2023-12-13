@@ -215,6 +215,7 @@ final class SummitRegistrationInvitationService
             }
 
             $invitation = SummitRegistrationInvitationFactory::build($payload);
+
             foreach ($allowed_ticket_types as $ticket_type_id) {
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
                 Log::debug(sprintf("SummitRegistrationInvitationService::add trying to add ticket %s for invitation email %s", $ticket_type_id, $email));
@@ -454,6 +455,51 @@ final class SummitRegistrationInvitationService
 
     /**
      * @param Summit $summit
+     * @param string $token
+     * @return SummitRegistrationInvitation
+     * @throws \Exception
+     */
+    public function getInvitationBySummitAndToken(Summit $summit, string $token): SummitRegistrationInvitation
+    {
+        return $this->tx_service->transaction(function () use ($summit, $token) {
+
+            $invitation = $this->invitation_repository->getByHashAndSummit(
+                SummitRegistrationInvitation::HashConfirmationToken($token), $summit);
+
+            if (is_null($invitation))
+                throw new EntityNotFoundException("Invitation not found.");
+
+            return $invitation;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $token
+     * @return SummitRegistrationInvitation
+     * @throws \Exception
+     */
+    public function rejectInvitationBySummitAndToken(Summit $summit, string $token): SummitRegistrationInvitation
+    {
+        return $this->tx_service->transaction(function () use ($summit, $token) {
+
+            $invitation = $this->invitation_repository->getByHashAndSummit(
+                SummitRegistrationInvitation::HashConfirmationToken($token), $summit);
+
+            if (is_null($invitation))
+                throw new EntityNotFoundException("Invitation not found.");
+
+            if ($invitation->getStatus() === SummitRegistrationInvitation::Status_Rejected)
+                throw new ValidationException("This Invitation is already rejected.");
+
+            $invitation->markAsRejected();
+
+            return $invitation;
+        });
+    }
+
+    /**
+     * @param Summit $summit
      * @param string $email
      * @return SummitRegistrationInvitation|null
      * @throws \Exception
@@ -535,6 +581,11 @@ final class SummitRegistrationInvitationService
                             $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
                             if (!$invitation instanceof SummitRegistrationInvitation)
                                 return null;
+
+                            if($invitation->isRejected()) {
+                                Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is rejected", $invitation_id));
+                                return null;
+                            }
 
                             $summit = $invitation->getSummit();
 

@@ -66,11 +66,11 @@ class DoctrineSummitRegistrationInvitationRepository
             'is_accepted' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
-                        "e.accepted_date is not null"
+                        sprintf("e.status = '%s'", SummitRegistrationInvitation::Status_Accepted)
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
-                        "e.accepted_date is null"
+                        sprintf("e.status <> '%s'", SummitRegistrationInvitation::Status_Accepted)
                     ),
                 ]
             ),
@@ -89,6 +89,7 @@ class DoctrineSummitRegistrationInvitationRepository
             'ticket_types_id' => new DoctrineLeftJoinFilterMapping("e.ticket_types", "tt" ,"tt.id :operator :value"),
             'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
             'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
+            'status' => "e.status :operator :value",
         ];
     }
 
@@ -103,6 +104,7 @@ class DoctrineSummitRegistrationInvitationRepository
             'first_name' => 'e.first_name',
             'last_name' => 'e.last_name',
             'full_name'=> Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
+            'status' => 'e.status',
         ];
     }
 
@@ -134,12 +136,13 @@ class DoctrineSummitRegistrationInvitationRepository
      * @param string $hash
      * @param Summit $summit
      * @return SummitRegistrationInvitation|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function getByHashAndSummit(string $hash, Summit $summit): ?SummitRegistrationInvitation
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("e.id")
+            ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->join("e.summit","s")
             ->where('e.hash = :hash')

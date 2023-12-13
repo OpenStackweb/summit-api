@@ -406,4 +406,10 @@ interface ISummitOrderService extends IProcessPaymentService
      */
     public function cancelRequestRefundTicket(int $order_id, int $ticket_id, Member $currentUser, ?string $notes = null): SummitAttendeeTicket;
 
+    /**
+     * @param int $summit_id
+     * @param int $invitation_id
+     * @param int $attendee_id
+     */
+    public function copyInvitationTagsToAttendee(int $summit_id, int $invitation_id, int $attendee_id):void;
 }

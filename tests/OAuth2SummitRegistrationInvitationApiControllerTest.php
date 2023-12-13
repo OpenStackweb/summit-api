@@ -24,19 +24,19 @@ class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTe
 
     use InsertSummitTestData;
 
-    public function setUp():void
-    {
-        parent::setUp();
-
-        self::insertSummitTestData();
-        self::$summit->seedDefaultEmailFlowEvents();
-    }
-
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+//    public function setUp():void
+//    {
+//        parent::setUp();
+//
+//        self::insertSummitTestData();
+//        self::$summit->seedDefaultEmailFlowEvents();
+//    }
+//
+//    protected function tearDown():void
+//    {
+//        self::clearSummitTestData();
+//        parent::tearDown();
+//    }
 
     public function testIngestInvitationsAndGet(){
         $csv_content = <<<CSV
@@ -351,8 +351,9 @@ CSV;
 
     public function testGetInvitationsByAllowedTicketTypes(){
         $params = [
-            'id' => '3109',
-            'filter' => ['ticket_types_id==2046||2047']
+            'id' => 3775,
+            'filter' => ['ticket_types_id==2046||2047'],
+            'order' => '-status'
         ];
 
         $headers = [
@@ -404,8 +405,8 @@ CSV;
 
     public function testAcceptInvitation(){
         $params = [
-            'id'            => 3589, //self::$summit->getId(),
-            'invitation_id' => 18, //self::$summit->getRegistrationInvitations()->first()->getId()
+            'id'            => self::$summit->getId(),
+            'invitation_id' => self::$summit->getRegistrationInvitations()->first()->getId()
         ];
 
         $data = [
@@ -434,5 +435,57 @@ CSV;
         $invitation = json_decode($content);
         $this->assertTrue($invitation->is_accepted);
         $this->assertNotNull($invitation->accepted_date);
+    }
+
+    public function testGetInvitationBySummitAndToken(){
+        $params = [
+            'id' => 3775,
+            'token' => 'TestTesttest@gmail.come93b5b4b95eae02707762ef11f4e447bab7549c6156e94549e906171c2182e37d000248847a900acc5dce3dd6f469d6fe909ad60aee9bfd4c718d278a7b62300',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRegistrationInvitationApiController@getInvitationBySummitAndToken",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $invitations = json_decode($content);
+        $this->assertNotEmpty($invitations);
+        $this->assertResponseStatus(200);
+    }
+
+    public function testRejectInvitationBySummitAndToken(){
+        $params = [
+            'id' => 3775,
+            'token' => 'TestTesttest@gmail.come93b5b4b95eae02707762ef11f4e447bab7549c6156e94549e906171c2182e37d000248847a900acc5dce3dd6f469d6fe909ad60aee9bfd4c718d278a7b62300',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitRegistrationInvitationApiController@rejectInvitationBySummitAndToken",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
     }
 }

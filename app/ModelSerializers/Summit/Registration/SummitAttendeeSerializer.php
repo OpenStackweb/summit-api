@@ -45,6 +45,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         'ticket_types',
         'allowed_access_levels',
         'allowed_features',
+        'tags'
     ];
 
     use RequestScopedCache;
@@ -152,6 +153,14 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                     $allowed_features[] = $f->getId();
                 }
                 $values['allowed_features'] = $allowed_features;
+            }
+
+            if (in_array('tags', $relations)) {
+                $tags = [];
+                foreach($attendee->getTags() as $t){
+                    $tags[] = $t->getId();
+                }
+                $values['tags'] = $tags;
             }
 
             if (!empty($expand)) {
@@ -271,6 +280,21 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                                 }
                             }
                             break;
+                        case 'tags':
+                            if (!in_array('tags', $relations)) break;
+                            unset($values['tags']);
+                            $tags = [];
+                            foreach($attendee->getTags() as $t){
+                                $tags[] = SerializerRegistry::getInstance()
+                                    ->getSerializer($t)
+                                    ->serialize(
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
+                            }
+                            $values['tags'] = $tags;
                     }
                 }
             }

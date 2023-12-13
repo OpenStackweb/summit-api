@@ -152,7 +152,8 @@ final class SummitPromoCodeFactory
         }
 
         switch ($data['class_name']){
-            case SummitRegistrationDiscountCode::ClassName:{
+            case SummitRegistrationDiscountCode::ClassName:
+            case PrePaidSummitRegistrationDiscountCode::ClassName:{
                 if(isset($data['amount']))
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))

@@ -26,9 +26,6 @@ final class OAuth2SummitPromoCodesApiTest
 {
     use InsertSummitTestData;
 
-    /**
-     * @throws \Exception
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -418,11 +415,15 @@ final class OAuth2SummitPromoCodesApiTest
             'id' => self::$summit->getId(),
         ];
 
+        $discount_amount = 8;
+        $quantity_available = 10;
+
         $data = [
             'type'          => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate,
             'class_name'    => PrePaidSummitRegistrationDiscountCode::ClassName,
             'code'          => 'TEST_PPDC_' . rand(),
             'description'   => 'TEST PRE PAID DISCOUNT CODE',
+            'amount'           => $discount_amount,
             'quantity_available'   => 10,
             'allowed_ticket_types' => [],
             'badge_features' => [],
@@ -450,6 +451,36 @@ final class OAuth2SummitPromoCodesApiTest
         $promo_code = json_decode($content);
         $this->assertResponseStatus(201);
         $this->assertTrue(!is_null($promo_code));
+        $this->assertEquals($discount_amount, $promo_code->amount);
+        $this->assertEquals($quantity_available, $promo_code->quantity_available);
         return $promo_code;
+    }
+
+    public function testRemovePrePaidDiscountCodeBySummit()
+    {
+        $discount_code = $this->testAddPrePaidDiscountCodeBySummit();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'promo_code_id' => $discount_code->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitPromoCodesApiController@deletePromoCodeBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
     }
 }

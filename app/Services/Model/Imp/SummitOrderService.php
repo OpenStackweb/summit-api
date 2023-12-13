@@ -22,6 +22,7 @@ use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
 use App\Jobs\Emails\UnregisteredMemberOrderPaidMail;
 use App\Jobs\IngestSummitExternalRegistrationData;
 use App\Jobs\ProcessTicketDataImport;
+use App\Jobs\SendAttendeeInvitationEmail;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
@@ -34,6 +35,7 @@ use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -4047,9 +4049,37 @@ final class SummitOrderService
                     Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail ticket %s has not owner set", $ticket->getNumber()));
                     continue;
                 }
+                $attendee = $ticket->getOwner();
                 $ticket->generateQRCode();
                 $ticket->generateHash();
-                $ticket->getOwner()->sendInvitationEmail($ticket);
+                $delay = 0;
+                if($order->isSingleTicket() && $attendee->getEmail() !== $order->getOwnerEmail()){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::sendAttendeesInvitationEmail ticket %s attendee %s is not the same as order owner %s (SOMEONE_ELSE_FLOW)",
+                            $ticket->getId(),
+                            $attendee->getEmail(),
+                            $order->getOwnerEmail()
+                        )
+                    );
+                    // delay invitation by N Minutes ....
+                    $delay = Config::get("registration.attendee_invitation_email_delay", 10);
+                }
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::sendAttendeesInvitationEmail ticket %s sending invitation email to attendee %s with delay %s minutes",
+                        $ticket->getNumber(),
+                        $attendee->getEmail(),
+                        $delay
+                    )
+                );
+
+                SendAttendeeInvitationEmail::dispatch($ticket->getId())->delay(now()->addMinutes($delay));
+
             } catch (\Exception $ex) {
                 Log::warning($ex);
             }

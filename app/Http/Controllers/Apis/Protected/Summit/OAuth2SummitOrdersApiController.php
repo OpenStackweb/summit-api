@@ -1183,4 +1183,20 @@ final class OAuth2SummitOrdersApiController
                 ));
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $order_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getOrderConfirmationEmailPDF($summit_id, $order_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $order_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $content = $this->service->renderOrderConfirmationEmail($summit, intval($order_id));
+            return $this->pdf("order_{$order_id}_confirmation_email.pdf", $content);
+        });
+    }
 }

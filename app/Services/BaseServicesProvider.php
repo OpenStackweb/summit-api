@@ -15,12 +15,13 @@ use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
 use App\Services\Apis\ExternalUserApi;
 use App\Services\Apis\GoogleGeoCodingAPI;
+use App\Services\Apis\IEmailTemplatesApi;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Apis\IGeoCodingAPI;
 use App\Services\Apis\IMailApi;
 use App\Services\Apis\IMUXApi;
 use App\Services\Apis\IPasswordlessAPI;
-use App\Services\Apis\MailApi;
+use App\Services\Apis\MailService;
 use App\Services\Apis\MUXApi;
 use App\Services\Apis\MuxCredentials;
 use App\Services\Apis\PasswordlessAPI;
@@ -128,7 +129,12 @@ final class BaseServicesProvider extends ServiceProvider
 
         App::singleton(
             IMailApi::class,
-            MailApi::class
+            MailService::class
+        );
+
+        App::singleton(
+            IEmailTemplatesApi::class,
+            MailService::class
         );
 
         App::singleton(
@@ -183,6 +189,7 @@ final class BaseServicesProvider extends ServiceProvider
             IPasswordlessAPI::class,
             ISamsungRegistrationAPI::class,
             IMUXApi::class,
+            IEmailTemplatesApi::class,
         ];
     }
 }

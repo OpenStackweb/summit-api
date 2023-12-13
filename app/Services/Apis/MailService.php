@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
@@ -22,10 +23,10 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
 use models\exceptions\ValidationException;
 /**
- * Class MailApi
+ * Class MailService
  * @package App\Services\Apis
  */
-final class MailApi extends AbstractOAuth2Api implements IMailApi
+final class MailService extends AbstractOAuth2Api implements IMailApi, IEmailTemplatesApi
 {
 
     /**
@@ -107,7 +108,7 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
         (
             sprintf
             (
-                "MailApi::sendEmail template_identifier %s to_email %s payload %s",
+                "MailService::sendEmail template_identifier %s to_email %s payload %s",
                 $template_identifier,
                 $to_email,
                 json_encode($payload)
@@ -132,12 +133,12 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
             ];
 
             if(!empty($cc_email)){
-                Log::debug(sprintf("MailApi::sendEmail setting cc_email %s", $cc_email));
+                Log::debug(sprintf("MailService::sendEmail setting cc_email %s", $cc_email));
                 $payload['cc_email'] = trim($cc_email);
             }
 
             if(!empty($bcc_email)){
-                Log::debug(sprintf("MailApi::sendEmail setting bcc_email %s", $bcc_email));
+                Log::debug(sprintf("MailService::sendEmail setting bcc_email %s", $bcc_email));
                 $payload['bcc_email'] = trim($bcc_email);
             }
 
@@ -152,7 +153,7 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
             (
                 sprintf
                 (
-                    "MailApi::sendEmail template_identifier %s to_email %s body %s",
+                    "MailService::sendEmail template_identifier %s to_email %s body %s",
                     $template_identifier,
                     $to_email,
                     $body
@@ -173,7 +174,7 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
             (
                 sprintf
                 (
-                    "MailApi::sendEmail template_identifier %s to_email %s payload %s error %s",
+                    "MailService::sendEmail template_identifier %s to_email %s payload %s error %s",
                     $template_identifier,
                     $to_email,
                     json_encode($payload),
@@ -183,6 +184,65 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
             throw $ex;
         }
         catch (\Exception $ex) {
+            $this->cleanAccessToken();
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param string $template_id
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
+     */
+    public function getEmailTemplate(string $template_id) {
+        Log::debug("MailService::getEmailTemplate");
+
+        try {
+            $query = [
+                'access_token' => $this->getAccessToken()
+            ];
+
+            $response = $this->client->get("/api/v1/mail-templates/{$template_id}", [
+                    'query' => $query,
+                ]
+            );
+            return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (Exception $ex) {
+            $this->cleanAccessToken();
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param array $payload
+     * @param string $html_template
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException|\League\OAuth2\Client\Provider\Exception\IdentityProviderException
+     */
+    public function getEmailPreview(array $payload, string $html_template)
+    {
+        Log::debug("MailService::getEmailPreview");
+
+        try {
+            $query = [
+                'access_token' => $this->getAccessToken()
+            ];
+
+            $response = $this->client->put('/api/v1/mail-templates/all/render', [
+                    'query' => $query,
+                    RequestOptions::JSON => [
+                        "html"    => $html_template,
+                        "payload" => $payload
+                    ]
+                ]
+            );
+            return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
             throw $ex;

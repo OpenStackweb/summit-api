@@ -16,6 +16,7 @@ use App\Events\CreatedSummitRegistrationOrder;
 use App\Events\MemberUpdated;
 use App\Events\TicketUpdated;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
+use App\Http\Renderers\HTML2PDFRenderer;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
@@ -27,6 +28,7 @@ use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfile
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Services\Apis\IEmailTemplatesApi;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
@@ -63,6 +65,7 @@ use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
+use ModelSerializers\SerializerRegistry;
 use utils\PagingInfo;
 
 /**
@@ -1066,6 +1069,11 @@ final class SummitOrderService
     private $ticket_finder_strategy_factory;
 
     /**
+     * @var IEmailTemplatesApi
+     */
+    private $email_templates_api;
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -1084,6 +1092,7 @@ final class SummitOrderService
      * @param ITicketFinderStrategyFactory $ticket_finder_strategy_factory
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
+     * @param IEmailTemplatesApi $email_templates_api
      */
     public function __construct
     (
@@ -1104,7 +1113,8 @@ final class SummitOrderService
         ICompanyService                            $company_service,
         ITicketFinderStrategyFactory               $ticket_finder_strategy_factory,
         ITransactionService                        $tx_service,
-        ILockManagerService                        $lock_service
+        ILockManagerService                        $lock_service,
+        IEmailTemplatesApi                         $email_templates_api
     )
     {
         parent::__construct($tx_service);
@@ -1125,6 +1135,7 @@ final class SummitOrderService
         $this->company_repository = $company_repository;
         $this->company_service = $company_service;
         $this->ticket_finder_strategy_factory = $ticket_finder_strategy_factory;
+        $this->email_templates_api = $email_templates_api;
     }
 
     /**
@@ -4337,5 +4348,48 @@ final class SummitOrderService
 
             return $ticket;
         });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function renderOrderConfirmationEmail(Summit $summit, int $order_id): string
+    {
+        try {
+            Log::debug("SummitOrderService::renderOrderConfirmationEmail order id {$order_id}");
+
+            $order = $summit->getOrderById($order_id);
+
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException("Order not found.");
+
+            $payload = SerializerRegistry::getInstance()
+                ->getSerializer($order, SerializerRegistry::SerializerType_Admin_Email_Preview)
+                ->serialize();
+
+            $template_id = $summit->getEmailIdentifierPerEmailEventFlowSlug(RegisteredMemberOrderPaidMail::EVENT_SLUG);
+
+            if (is_null($template_id))
+                throw new EntityNotFoundException("Order confirmation email template not found.");
+
+            $template = $this->email_templates_api->getEmailTemplate($template_id);
+
+            if (is_null($template))
+                throw new EntityNotFoundException("Could not retrieve the order confirmation email template.");
+
+            $preview = $this->email_templates_api->getEmailPreview($payload, $template['html_content']);
+
+            //Only the HTML body content is needed to create the PDF
+            preg_match("/<body[^>]*>(.*?)<\/body>/is", $preview['html_content'], $matches);
+
+            if (!is_null($matches) && count($matches) > 1) {
+                $renderer = new HTML2PDFRenderer(trim($matches[1]));
+                return $renderer->render();
+            }
+            return "";
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+            throw $ex;
+        }
     }
 }

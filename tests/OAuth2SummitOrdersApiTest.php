@@ -18,6 +18,7 @@ use models\summit\IPaymentConstants;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitBadgeTypeFactory;
 use services\model\ISummitService;
+use TCPDF_STATIC;
 
 /**
  * Class OAuth2SummitOrdersApiTest
@@ -929,5 +930,37 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         $order = json_decode($content);
         $this->assertTrue(!is_null($order));
         return $order;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testGetOrderConfirmationEmailPDF(){
+        $params = [
+            'id'        => 3783, //self::$summit->getId(),
+            'order_id'  => 6658
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrdersApiController@getOrderConfirmationEmailPDF",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $f = TCPDF_STATIC::fopenLocal("/tmp/order_confirmation_email.pdf", 'wb');
+        fwrite($f, $content, strlen($content));
+        fclose($f);
     }
 }

@@ -280,13 +280,11 @@ final class ReserveOrderTask extends AbstractTask
             }
 
             // auto assign should only happen when the user has not paid any order and the order has more than one ticket....
-            $should_auto_assign_first_ticket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit) && count($tickets) > 1;
+            $shouldAutoAssignFirstTicket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit) && count($tickets) > 1;
+
             // try to get invitation
             $invitation = $this->summit->getSummitRegistrationInvitationByEmail($owner_email);
-            // or the order owner has an invitation
-            if (!$should_auto_assign_first_ticket) {
-                $should_auto_assign_first_ticket = !is_null($invitation) && $invitation->isPending() && !$this->owner->hasPaidRegistrationOrderForSummit($this->summit);
-            }
+            $hasPendingInvitation = !is_null($invitation) && $invitation->isPending();
 
             $payment_gateway = $this->summit->getPaymentGateWayPerApp
             (
@@ -314,7 +312,7 @@ final class ReserveOrderTask extends AbstractTask
                     $owner_first_name,
                     $owner_last_name,
                     $owner_company_name,
-                    $should_auto_assign_first_ticket
+                    $shouldAutoAssignFirstTicket
                 )
             );
 
@@ -333,6 +331,7 @@ final class ReserveOrderTask extends AbstractTask
             $local_attendees = [];
             $index = 0;
             // tickets
+
             foreach ($tickets as $ticket_dto) {
 
                 Log::debug(sprintf("ReserveOrderTask::run Processing ticket #%s payload %s", $index, json_encode($ticket_dto)));
@@ -340,15 +339,35 @@ final class ReserveOrderTask extends AbstractTask
                     throw new ValidationException('type_id is mandatory');
 
                 $type_id = $ticket_dto['type_id'];
+                $ticket_type = $this->summit->getTicketTypeById(intval($type_id));
+
+                if (is_null($ticket_type)) {
+                    throw new EntityNotFoundException('Ticket type not found.');
+                }
+
+                // if the ticket type is an invitation one, it needs always be auto-assigned
+                $shouldAutoAssignInvitationTicket = $hasPendingInvitation &&  $invitation->isTicketTypeAllowed($type_id);
 
                 $promo_code_value = $ticket_dto['promo_code'] ?? null;
                 // attendee data
-                if ($index === 0 && $should_auto_assign_first_ticket) {
-                    Log::debug("ReserveOrderTask::run auto assigning first ticket");
+                if (($index === 0 && $shouldAutoAssignFirstTicket) || $shouldAutoAssignInvitationTicket) {
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "ReserveOrderTask::run auto assign ticket index %s shouldAutoAssignFirstTicket %b shouldAutoAssignInvitationTicket %b",
+                            $index,
+                            $shouldAutoAssignFirstTicket,
+                            $shouldAutoAssignInvitationTicket
+                        )
+                    );
+
                     $attendee_first_name = $this->owner->getFirstName();
                     $attendee_last_name = $this->owner->getLastName();
                     $attendee_email = $this->owner->getEmail();
                     $attendee_company = $this->owner->getCompany();
+
                 } else {
                     // use what we have on payload
                     $attendee_first_name = $ticket_dto['attendee_first_name'] ?? null;
@@ -365,11 +384,6 @@ final class ReserveOrderTask extends AbstractTask
                         $attendee_first_name = $owner_first_name;
                     if (empty($attendee_last_name))
                         $attendee_last_name = $owner_last_name;
-                }
-
-                $ticket_type = $this->summit->getTicketTypeById($type_id);
-                if (is_null($ticket_type)) {
-                    throw new EntityNotFoundException('ticket type not found');
                 }
 
                 $ticket = new SummitAttendeeTicket();
@@ -474,14 +488,14 @@ final class ReserveOrderTask extends AbstractTask
             // generate the key to access
             $order->generateHash();
             $order->generateQRCode();
-            if(!is_null($invitation) && $invitation->isPending()){
+            if($hasPendingInvitation){
                 // add the order to the corresponding invitation , if does exist to avoid user
                 // to purchase multiple tickets for the same invitation
                 Log::debug
                 (
                     sprintf
                     (
-                        "ReserveOrderTask::run got invitation %s for email %s",
+                        "ReserveOrderTask::run has a pending invitation %s for email %s",
                         $invitation->getId(),
                         $order->getOwnerEmail()
                     )

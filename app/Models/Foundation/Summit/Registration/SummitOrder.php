@@ -753,6 +753,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->tickets;
     }
 
+    public function isSingleTicket():bool{
+        return $this->tickets->count() === 1;
+    }
+
     /**
      * @param SummitAttendeeTicket $ticket
      */

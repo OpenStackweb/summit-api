@@ -16,6 +16,8 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitTicketType;
+use utils\Filter;
+
 /**
  * Interface ISummitTicketTypeService
  * @package App\Services\Model
@@ -60,8 +62,9 @@ interface ISummitTicketTypeService
     /**
      * @param Summit $summit
      * @param Member $member
+     * @param string|null $promocode_code
      * @return SummitTicketType[]
      * @throws \Exception
      */
-    public function getAllowedTicketTypes(Summit $summit, Member $member): array;
+    public function getAllowedTicketTypes(Summit $summit, Member $member, ?string $promocode_code = null): array;
 }

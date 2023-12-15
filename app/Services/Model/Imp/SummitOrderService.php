@@ -605,23 +605,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $qty = intval($info['qty']);
 
-                $promo_code->checkSubject($owner_email, $owner_company_name);
-
-                if (!$promo_code->hasQuantityAvailable()) {
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "Promo code %s has reached max. usage (%s).",
-                            $promo_code->getCode(),
-                            $promo_code->getQuantityAvailable()
-                        )
-                    );
-                }
-
-                if (!$promo_code->isLive()) {
-                    throw new ValidationException(sprintf('The Promo Code “%s” is not a valid code.', $promo_code->getCode()));
-                }
+                $promo_code->validate($owner_email, $owner_company_name);
 
                 foreach ($info['types'] as $ticket_type_id) {
                     $ticket_type = $this->summit->getTicketTypeById($ticket_type_id);

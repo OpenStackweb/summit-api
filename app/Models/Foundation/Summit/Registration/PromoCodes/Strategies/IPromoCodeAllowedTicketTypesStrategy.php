@@ -1,5 +1,5 @@
-<?php namespace ModelSerializers;
-/**
+<?php namespace App\Models\Foundation\Summit\Registration\PromoCodes\Strategies;
+/*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,11 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use models\summit\SummitTicketType;
 
 /**
- * Class PrePaidSummitRegistrationPromoCodeSerializer
- * @package ModelSerializers
+ * Interface IPromoCodeAllowedTicketTypesStrategy
+ * @package App\Models\Foundation\Summit\Registration\PromoCodes\Strategies
  */
-class PrePaidSummitRegistrationPromoCodeSerializer extends SummitRegistrationPromoCodeSerializer
+interface IPromoCodeAllowedTicketTypesStrategy
 {
+    /**
+     * @return SummitTicketType[]
+     */
+    public function getTicketTypes(): array;
 }

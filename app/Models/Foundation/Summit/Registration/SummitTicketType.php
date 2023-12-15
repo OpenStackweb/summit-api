@@ -35,7 +35,7 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitTicketType
  * @package models\summit
  */
-class SummitTicketType extends SilverstripeBaseModel
+class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketType
 {
     use SummitOwned;
 
@@ -67,6 +67,14 @@ class SummitTicketType extends SilverstripeBaseModel
         self::Audience_All,
         self::Audience_With_Invitation,
         self::Audience_Without_Invitation,
+    ];
+
+    const Subtype_Regular = 'Regular';
+    const Subtype_PrePaid = 'PrePaid';
+
+    const SubTypes = [
+        self::Subtype_Regular,
+        self::Subtype_PrePaid,
     ];
 
     /**
@@ -653,5 +661,9 @@ class SummitTicketType extends SilverstripeBaseModel
 
     public function isFree():bool{
         return $this->getCost() === 0.0;
+    }
+
+    public function getSubType(): string {
+        return self::Subtype_Regular;
     }
 }

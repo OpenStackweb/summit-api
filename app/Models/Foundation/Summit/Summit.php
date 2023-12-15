@@ -471,6 +471,12 @@ class Summit extends SilverstripeBaseModel
     private $support_email;
 
     /**
+     * @ORM\Column(name="SpeakersSupportEmail", type="string")
+     * @var string
+     */
+    private $speakers_support_email;
+
+    /**
      * @ORM\Column(name="RegistrationAllowUpdateAttendeeExtraQuestions", type="boolean")
      * @var bool
      */
@@ -5698,6 +5704,22 @@ SQL;
     public function setSupportEmail(?string $support_email): void
     {
         $this->support_email = $support_email;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getSpeakersSupportEmail(): ?string
+    {
+        return $this->speakers_support_email;
+    }
+
+    /**
+     * @param string $speakers_support_email
+     */
+    public function setSpeakersSupportEmail(?string $speakers_support_email): void
+    {
+        $this->speakers_support_email = $speakers_support_email;
     }
 
     /**

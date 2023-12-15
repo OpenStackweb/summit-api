@@ -1,6 +1,6 @@
 <?php namespace ModelSerializers;
 /**
- * Copyright 2016 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,16 +12,17 @@
  * limitations under the License.
  **/
 
-use App\ModelSerializers\Traits\RequestScopedCache;
-use Libs\ModelSerializers\AbstractSerializer;
-use models\summit\SummitTicketType;
+use models\summit\ISummitTicketType;
+use models\summit\SummitTicketTypeWithPromo;
 
 /**
- * Class SummitTicketTypeSerializer
+ * Class SummitTicketTypeWithPromoSerializer
  * @package ModelSerializers
  */
-class SummitTicketTypeSerializer extends SilverStripeSerializer
+class SummitTicketTypeWithPromoSerializer extends SilverStripeSerializer
 {
+    use SummitTicketTypeCommonSerializer;
+
     protected static $array_mappings = [
         'Name' => 'name:json_string',
         'Description' => 'description:json_string',
@@ -39,13 +40,15 @@ class SummitTicketTypeSerializer extends SilverStripeSerializer
         'Audience' => 'audience:json_string',
     ];
 
-    protected static $allowed_relations = [
-        'applied_taxes',
-    ];
-
-    use RequestScopedCache;
-
-    use SummitTicketTypeCommonSerializer;
+    /**
+     * @param $entity
+     * @param array $values
+     * @return array
+     */
+    protected function serializeCustomFields($entity, $values): array {
+        $values["cost_with_applied_discount"] = $entity->getCostWithAppliedDiscount();
+        return $values;
+    }
 
     /**
      * @param null $expand
@@ -56,22 +59,11 @@ class SummitTicketTypeSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
-        return $this->cache(
-            $this->getRequestKey
-            (
-                "SummitTicketTypeSerializer",
-                $this->object->getIdentifier(),
-                $expand,
-                $fields,
-                $relations
-            ), function () use ($expand, $fields, $relations, $params) {
+        $ticket_type = $this->object;
+        if (!$ticket_type instanceof SummitTicketTypeWithPromo) return [];
 
-            $ticket_type = $this->object;
-            if (!$ticket_type instanceof SummitTicketType) return [];
-            $values = parent::serialize($expand, $fields, $relations, $params);
-
-            return self::serializeCommonFields($ticket_type, $values, $expand, $fields, $relations, $params);
-        });
-
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        $values = self::serializeCommonFields($ticket_type, $values, $expand, $fields, $relations, $params);
+        return $this->serializeCustomFields($ticket_type, $values);
     }
 }

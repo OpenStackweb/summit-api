@@ -13,15 +13,22 @@
  **/
 
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
+use App\Models\Foundation\Summit\Registration\PromoCodes\Strategies\PromoCodeAllowedTicketTypesStrategyFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
+use models\summit\SummitTicketTypePrePaid;
+use models\summit\SummitTicketTypeWithPromo;
 use services\apis\IEventbriteAPI;
+use utils\Filter;
 
 /**
  * Class SummitTicketTypeService
@@ -333,12 +340,13 @@ final class SummitTicketTypeService
     /**
      * @param Summit $summit
      * @param Member $member
+     * @param string|null $promocode_code
      * @return SummitTicketType[]
      * @throws \Exception
      */
-    public function getAllowedTicketTypes(Summit $summit, Member $member): array
+    public function getAllowedTicketTypes(Summit $summit, Member $member, ?string $promocode_code = null): array
     {
-        return $this->tx_service->transaction(function () use ($summit, $member) {
+        return $this->tx_service->transaction(function () use ($summit, $member, $promocode_code) {
 
             Log::debug
             (
@@ -350,82 +358,14 @@ final class SummitTicketTypeService
                 )
             );
 
-            $all_ticket_types = [];
+            $promocode = null;
+            $factory = new PromoCodeAllowedTicketTypesStrategyFactory();
 
-            // check if we can sell ticket type
-            foreach ($summit->getTicketTypesByAudience(SummitTicketType::Audience_All) as $ticket_type) {
-                if (!$ticket_type->canSell()) {
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitTicketTypeService::getAllowedTicketTypes ticket type %s can not be sell.",
-                            $ticket_type->getId()
-                        )
-                    );
-                    continue;
-                }
-                $all_ticket_types[] = $ticket_type;
+            if (!is_null($promocode_code)) {
+                $promocode = $summit->getPromoCodeByCode($promocode_code);
             }
 
-            $invitation = $summit->getSummitRegistrationInvitationByEmail($member->getEmail());
-
-            if (!is_null($invitation)) {
-
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s has an invitation.",
-                        $summit->getId(),
-                        $member->getId()
-                    )
-                );
-
-                if (!$invitation->isPending()) {
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s invitation already accepted or rejected.",
-                            $summit->getId(),
-                            $member->getId()
-                        )
-                    );
-                    // only all
-                    return $all_ticket_types;
-                }
-
-                return array_merge($all_ticket_types, $invitation->getRemainingAllowedTicketTypes());
-            }
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s do not has an invitation.",
-                    $summit->getId(),
-                    $member->getId()
-                )
-            );
-
-            $without_invitation_tickets_types = [];
-            foreach ($summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation) as $ticket_type) {
-                if (!$ticket_type->canSell()) {
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitTicketTypeService::getAllowedTicketTypes ticket type %s can not be sell",
-                            $ticket_type->getId()
-                        )
-                    );
-                    continue;
-                }
-                $without_invitation_tickets_types[] = $ticket_type;
-            }
-            // we do not have invitation
-            return array_merge($all_ticket_types, $without_invitation_tickets_types);
+            return $factory->build($summit, $member, $promocode)->getTicketTypes();
         });
     }
 }

@@ -14,6 +14,7 @@
 use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTicketTypeService;
+use Illuminate\Support\Facades\Request;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -21,6 +22,7 @@ use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
 
@@ -248,7 +250,17 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             $member = $this->resource_server_context->getCurrentUser();
             if (is_null($member)) return $this->error403();
 
-            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member);
+            $promocode_code = null;
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'promo_code' => ['=='],
+                ]);
+
+                $element = $filter->getUniqueFilter('promo_code');
+                $promocode_code = $element->getRawValue();
+            }
+
+            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member, $promocode_code);
 
             $resp = new PagingResponse(count($ticket_types), count($ticket_types), 1, 1, $ticket_types);
 

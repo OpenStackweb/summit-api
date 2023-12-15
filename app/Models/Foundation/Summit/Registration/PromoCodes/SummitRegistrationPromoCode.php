@@ -317,11 +317,35 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @param string $email
      * @param null|string $company
      * @return bool
-     * @throw ValidationException
      */
     public function checkSubject(string $email, ?string $company): bool
     {
         return true;
+    }
+
+    /**
+     * @param string $email
+     * @param null|string $company
+     * @throws ValidationException
+     */
+    public function validate(string $email, ?string $company)
+    {
+        $this->checkSubject($email, $company);
+
+        if (!$this->hasQuantityAvailable()) {
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Promo code %s has reached max. usage (%s).",
+                    $this->getCode(),
+                    $this->getQuantityAvailable()
+                )
+            );
+        }
+        if (!$this->isLive()) {
+            throw new ValidationException(sprintf("The Promo Code %s is not a valid code.", $this->getCode()));
+        }
     }
 
     /**
@@ -686,11 +710,22 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     /**
+     * @return SummitAttendeeTicket[]
+     */
+    public function getUnassignedTickets()
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->isNull('owner'));
+        return $this->tickets->matching($criteria);
+    }
+
+    /**
      * @param SummitAttendeeTicket $ticket
      */
     public function addTicket(SummitAttendeeTicket $ticket): void
     {
         if ($this->tickets->contains($ticket)) return;
+        $ticket->setPromoCode($this);
         $this->tickets->add($ticket);
     }
 }

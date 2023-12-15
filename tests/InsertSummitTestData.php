@@ -33,6 +33,8 @@ use models\main\SummitAdministratorPermissionGroup;
 use models\main\Tag;
 use models\summit\ISponsorshipTypeConstants;
 use models\summit\ISummitEventType;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\Presentation;
 use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
@@ -57,6 +59,7 @@ use models\summit\SummitEventType;
 use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitOrder;
+use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
 use models\summit\SummitVenue;
@@ -134,6 +137,11 @@ trait InsertSummitTestData
      * @var SummitTicketType
      */
     static $default_ticket_type_2;
+
+    /**
+     * @var SummitTicketType
+     */
+    static $default_ticket_type_3;
 
     /**
      * @var SummitBadgeType
@@ -244,6 +252,13 @@ trait InsertSummitTestData
     static $media_file_type_repository;
 
     static $default_badge_view_type;
+
+    static $default_prepaid_promo_code;
+
+    static $default_prepaid_discount_code;
+
+    static $default_discount_code;
+
     /**
      * @throws Exception
      */
@@ -313,6 +328,15 @@ trait InsertSummitTestData
         self::$default_ticket_type_2->setBadgeType(self::$default_badge_type);
         self::$default_ticket_type_2->setAudience(SummitTicketType::Audience_Without_Invitation);
         self::$ticket_types[] = self::$default_ticket_type_2;
+
+        self::$default_ticket_type_3 = new SummitTicketType();
+        self::$default_ticket_type_3->setCost(100);
+        self::$default_ticket_type_3->setCurrency("USD");
+        self::$default_ticket_type_3->setName("TICKET TYPE 1");
+        self::$default_ticket_type_3->setQuantity2Sell(100);
+        self::$default_ticket_type_3->setBadgeType(self::$default_badge_type);
+        self::$default_ticket_type_3->setAudience(SummitTicketType::Audience_With_Invitation);
+        self::$ticket_types[] = self::$default_ticket_type_3;
 
         $ticket_type_names = [
             'Invited Attendee', 'Chaperone', 'Press', 'Speaker', 'Roblox Core Staff', 'Roblox Volunteer Staff',
@@ -786,6 +810,39 @@ trait InsertSummitTestData
             self::$summit->addSummitSponsor($s);
             self::$sponsors[] = $s;
         }
+
+        //Promo codes
+
+        $prepaid_promo_code = new PrePaidSummitRegistrationPromoCode();
+        $prepaid_promo_code->setCode('TEST_PPPC_' . rand());
+        $prepaid_promo_code->setDescription('TEST PREPAID PROMO CODE');
+        $prepaid_promo_code->setValidSinceDate(null);
+        $prepaid_promo_code->setValidUntilDate(null);
+
+        self::$summit->addPromoCode($prepaid_promo_code);
+        self::$default_prepaid_promo_code = $prepaid_promo_code;
+
+        $prepaid_discount_code = new PrePaidSummitRegistrationDiscountCode();
+        $prepaid_discount_code->setCode('TEST_PPDC_' . rand());
+        $prepaid_discount_code->setDescription('TEST PREPAID DISCOUNT CODE');
+        $prepaid_discount_code->setValidSinceDate(null);
+        $prepaid_discount_code->setValidUntilDate(null);
+        $prepaid_discount_code->setAmount(12);
+        $prepaid_discount_code->setQuantityAvailable(10);
+
+        self::$summit->addPromoCode($prepaid_discount_code);
+        self::$default_prepaid_discount_code = $prepaid_discount_code;
+
+        $discount_code = new SummitRegistrationDiscountCode();
+        $discount_code->setCode('TEST_DC_' . rand());
+        $discount_code->setDescription('TEST DISCOUNT CODE');
+        $discount_code->setValidSinceDate(null);
+        $discount_code->setValidUntilDate(null);
+        $discount_code->setAmount(15);
+        $discount_code->setQuantityAvailable(10);
+
+        self::$summit->addPromoCode($discount_code);
+        self::$default_discount_code = $discount_code;
 
         for($i = 0 ; $i < 20; $i++){
             $c = new Company();

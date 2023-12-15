@@ -198,6 +198,24 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
     }
 
     /**
+     * @param SummitRegistrationDiscountCode $discount_code
+     * @param SummitTicketType $ticket_type
+     * @param float $original_amount
+     * @return float
+     */
+    public function getDiscountAmount(SummitTicketType $ticket_type, float $original_amount): float
+    {
+        if ($this->amount > 0.0) return $this->amount;
+        if ($this->rate > 0.0) return ($original_amount * $this->rate) / 100.00;
+
+        $rule = $this->getRuleByTicketType($ticket_type);
+        if (!is_null($rule) && $rule->getAmount() > 0.0) return $rule->getAmount();
+        if (!is_null($rule) && $rule->getRate() > 0.0) return ($original_amount * $rule->getRate()) / 100.00;
+
+        return 0.0;
+    }
+
+    /**
      * @param SummitAttendeeTicket $ticket
      * @return SummitAttendeeTicket
      * @throws ValidationException
@@ -206,21 +224,7 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
         $ticket = parent::applyTo($ticket);
 
         if(!$ticket->isFree()) {
-            $amount2Discount = 0.0;
-
-            if ($this->amount > 0.0) {
-                $amount2Discount = $this->amount;
-            } else if ($this->rate > 0.0) {
-                $amount2Discount = ($ticket->getRawCost() * $this->rate) / 100.00;
-            } else {
-                $rule = $this->getRuleByTicketType($ticket->getTicketType());
-                if (!is_null($rule) && $rule->getAmount() > 0.0) {
-                    $amount2Discount = $rule->getAmount();
-                } else if (!is_null($rule) && $rule->getRate() > 0.0) {
-                    $amount2Discount = ($ticket->getRawCost() * $rule->getRate()) / 100.00;
-                }
-            }
-
+            $amount2Discount = $this->getDiscountAmount($ticket->getTicketType(), $ticket->getRawCost());
             $ticket->setDiscount($amount2Discount);
         }
         return $ticket;

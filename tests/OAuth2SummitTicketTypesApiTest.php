@@ -1,4 +1,5 @@
 <?php namespace Tests;
+use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitTicketType;
 
 /**
@@ -22,14 +23,21 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
+    use InsertOrdersTestData;
+
+    use InsertMemberTestData;
+
     protected function setUp(): void
     {
         parent::setUp();
         self::insertSummitTestData();
+        self::InsertOrdersTestData();
+        self::insertMemberTestData(IGroup::TrackChairs);
     }
 
     protected function tearDown(): void
     {
+        self::clearMemberTestData();
         self::clearSummitTestData();
         parent::tearDown();
     }
@@ -154,6 +162,176 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
         return $ticket_types;
     }
 
+    public function testGetAllowedTicketTypesApplyingPrePaidPromoCode(){
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        if (!is_null($ticket)) {
+            $ticket->setPromoCode(self::$default_prepaid_discount_code);
+            self::$default_prepaid_discount_code->addTicket($ticket);
+            self::$em->persist(self::$default_prepaid_discount_code);
+            self::$em->flush();
+        }
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            'filter'   => 'promo_code==' . self::$default_prepaid_discount_code->getCode(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket_types = json_decode($content);
+        $this->assertTrue(!is_null($ticket_types));
+        $this->assertNotEmpty($ticket_types->data);
+        $this->assertEquals(0, $ticket_types->data[0]->cost);
+        $this->assertEquals(SummitTicketType::Subtype_PrePaid, $ticket_types->data[0]->sub_type);
+        return $ticket_types;
+    }
+
+    public function testGetAllowedTicketTypesApplyingRegularDiscountCodeToSomeOfThem(){
+        self::$default_discount_code->addAllowedTicketType(self::$default_ticket_type);
+        self::$em->persist(self::$default_discount_code);
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            'filter'   => 'promo_code==' . self::$default_discount_code->getCode(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket_types = json_decode($content);
+        $this->assertTrue(!is_null($ticket_types));
+
+        $list_with_discount_applied = array_column($ticket_types->data, 'cost_with_applied_discount');
+
+        $this->assertNotEmpty($list_with_discount_applied);
+        $this->assertTrue(count($list_with_discount_applied) < count($ticket_types->data));
+
+        return $ticket_types;
+    }
+
+    public function testGetAllowedTicketTypesApplyingRegularDiscountCodeToAllOfThem(){
+        self::$default_discount_code->removeAllowedTicketType(self::$default_ticket_type);
+        self::$default_discount_code->removeAllowedTicketType(self::$default_ticket_type_2);
+        self::$default_discount_code->removeAllowedTicketType(self::$default_ticket_type_3);
+        self::$em->persist(self::$default_discount_code);
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            'filter'   => 'promo_code==' . self::$default_discount_code->getCode(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket_types = json_decode($content);
+        $this->assertTrue(!is_null($ticket_types));
+        $this->assertNotEmpty($ticket_types->data);
+        $this->assertLessThan($ticket_types->data[0]->cost, $ticket_types->data[0]->cost_with_applied_discount);
+        $this->assertEquals(SummitTicketType::Subtype_Regular, $ticket_types->data[0]->sub_type);
+        return $ticket_types;
+    }
+
+    public function testGetInvitationTicketTypesApplyingDiscountCode(){
+        $invitation = new SummitRegistrationInvitation();
+        $invitation->setFirstName(self::$member->getFirstName());
+        $invitation->setLastName(self::$member->getLastName());
+        $invitation->setEmail(self::$member->getEmail());
+        $invitation->addTicketType(self::$default_ticket_type_3);
+        self::$summit->addRegistrationInvitation($invitation);
+
+        self::$default_discount_code->addAllowedTicketType(self::$default_ticket_type_3);
+        self::$em->persist(self::$default_discount_code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            'filter'   => 'promo_code==' . self::$default_discount_code->getCode(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket_types = json_decode($content);
+        $this->assertTrue(!is_null($ticket_types));
+        $this->assertNotEmpty($ticket_types->data);
+        $this->assertLessThan($ticket_types->data[0]->cost, $ticket_types->data[0]->cost_with_applied_discount);
+        $this->assertEquals(SummitTicketType::Subtype_Regular, $ticket_types->data[0]->sub_type);
+        return $ticket_types;
+    }
+
     public function testAddTicketType(){
         $params = [
             'id' => self::$summit->getId(),
@@ -232,7 +410,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
         $this->assertTrue($ticket_type->audience == $audience);
         return $ticket_type;
     }
-
 
     public function testSeedDefaultTicketTypes(){
         $params = [

@@ -46,6 +46,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
+use models\main\ITagRepository;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\factories\SummitAttendeeFactory;
@@ -1089,6 +1090,11 @@ final class SummitOrderService
     private $ticket_finder_strategy_factory;
 
     /**
+     * @var ITagRepository
+     */
+    private $tags_repository;
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -1103,6 +1109,7 @@ final class SummitOrderService
      * @param IFileUploadStrategy $upload_strategy
      * @param IFileDownloadStrategy $download_strategy
      * @param ICompanyRepository $company_repository
+     * @param ITagRepository $tags_repository
      * @param ICompanyService $company_service
      * @param ITicketFinderStrategyFactory $ticket_finder_strategy_factory
      * @param ITransactionService $tx_service
@@ -1124,6 +1131,7 @@ final class SummitOrderService
         IFileUploadStrategy                        $upload_strategy,
         IFileDownloadStrategy                      $download_strategy,
         ICompanyRepository                         $company_repository,
+        ITagRepository                             $tags_repository,
         ICompanyService                            $company_service,
         ITicketFinderStrategyFactory               $ticket_finder_strategy_factory,
         ITransactionService                        $tx_service,
@@ -1148,6 +1156,7 @@ final class SummitOrderService
         $this->company_repository = $company_repository;
         $this->company_service = $company_service;
         $this->ticket_finder_strategy_factory = $ticket_finder_strategy_factory;
+        $this->tags_repository = $tags_repository;
     }
 
     /**
@@ -3473,6 +3482,7 @@ final class SummitOrderService
             * attendee_email ( mandatory if id and number are missing)
             * attendee_first_name (mandatory)
             * attendee_last_name (mandatory)
+            * attendee_tags (optional)
             * attendee_company (optional)
             * attendee_company_id (optional)
             * ticket_type_name ( mandatory if id and number are missing)
@@ -3605,8 +3615,18 @@ final class SummitOrderService
 
                         Log::debug(sprintf("SummitOrderService::processTicketData creating attendee with payload %s", json_encode($payload)));
 
+
                         $attendee = SummitAttendeeFactory::build($summit, $payload, $member);
 
+                        if ($reader->hasColumn('attendee_tags')) {
+                            $tags = explode('|', $row['attendee_tags']);
+                            $attendee->clearTags();
+                            foreach ($tags as $tag_val) {
+                                $tag = $this->tags_repository->getByTag($tag_val);
+                                if(is_null($tag)) continue;
+                                $attendee->addTag($tag);
+                            }
+                        }
                         $this->attendee_repository->add($attendee);
                     }
                 }

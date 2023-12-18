@@ -457,6 +457,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
              * attendee_first_name (optional)
              * attendee_last_name (optional)
              * attendee_company (optional)
+             * attendee_tags (optional)
              * ticket_type_name ( mandatory if id and number are missing)
              * ticket_type_id ( mandatory if id and number are missing)
              * promo_code_id (optional)
@@ -477,6 +478,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 'attendee_first_name' => '',
                 'attendee_last_name' => '',
                 'attendee_company' => '',
+                'attendee_tags' => '',
                 'ticket_type_name' => '',
                 'ticket_type_id' => '',
                 'promo_code_id' => '',

@@ -19,7 +19,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 
 /**
@@ -44,15 +46,22 @@ final class SendAttendeeInvitationEmail implements ShouldQueue
         $this->ticket_id = $ticket_id;
     }
 
+    /**
+     * @param ISummitAttendeeTicketRepository $ticketRepository
+     * @param ISummitAttendeeRepository $attendeeRepository
+     * @return void
+     * @throws EntityNotFoundException
+     */
     public function handle
     (
-        ISummitAttendeeTicketRepository $ticketRepository
+        ISummitAttendeeTicketRepository $ticketRepository,
+        ISummitAttendeeRepository $attendeeRepository
     )
     {
         Log::debug(sprintf( "SendAttendeeInvitationEmail::handle ticket_id %s", $this->ticket_id));
 
         try {
-            $ticket = $ticketRepository->getById($this->ticket_id);
+            $ticket = $ticketRepository->getByIdRefreshed($this->ticket_id);
 
             if (!$ticket instanceof SummitAttendeeTicket) {
 
@@ -74,6 +83,28 @@ final class SendAttendeeInvitationEmail implements ShouldQueue
             }
 
             $attendee = $ticket->getOwner();
+
+            $attendee = $attendeeRepository->getByIdRefreshed($attendee->getId());
+
+            if(!$attendee instanceof SummitAttendee){
+                Log::warning
+                (
+
+                        "SendAttendeeInvitationEmail::handle attendee not found",
+                );
+                return;
+            }
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SendAttendeeInvitationEmail::handle sendInvitationEmail to attendee %s (%s) status %s",
+                    $attendee->getEmail(),
+                    $attendee->getId(),
+                    $attendee->getStatus()
+                )
+            );
 
             $attendee->sendInvitationEmail($ticket);
         }

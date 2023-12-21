@@ -18,7 +18,7 @@ use models\summit\SponsorSummitRegistrationPromoCode;
  * Class SponsorSummitRegistrationPromoCodeSerializer
  * @package ModelSerializers
  */
-final class SponsorSummitRegistrationPromoCodeSerializer
+class SponsorSummitRegistrationPromoCodeSerializer
 extends MemberSummitRegistrationPromoCodeSerializer
 {
     protected static $array_mappings = [

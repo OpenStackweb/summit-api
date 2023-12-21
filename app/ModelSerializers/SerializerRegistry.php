@@ -369,7 +369,6 @@ final class SerializerRegistry
         $this->registry['RSVPMemberEmailQuestionTemplate'] = RSVPSingleValueTemplateQuestionSerializer::class;
         $this->registry['RSVPMemberFirstNameQuestionTemplate'] = RSVPSingleValueTemplateQuestionSerializer::class;
         $this->registry['RSVPMemberLastNameQuestionTemplate'] = RSVPSingleValueTemplateQuestionSerializer::class;
-        $this->registry['RSVPMemberLastNameQuestionTemplate'] = RSVPSingleValueTemplateQuestionSerializer::class;
 
         $this->registry['RSVPCheckBoxListQuestionTemplate'] = RSVPMultiValueQuestionTemplateSerializer::class;
         $this->registry['RSVPRadioButtonListQuestionTemplate'] = RSVPMultiValueQuestionTemplateSerializer::class;
@@ -388,20 +387,64 @@ final class SerializerRegistry
         $this->registry['SummitScheduleEmptySpot'] = SummitScheduleEmptySpotSerializer::class;
 
         // promo codes
-        $this->registry['SummitRegistrationPromoCode'] = SummitRegistrationPromoCodeSerializer::class;
-        $this->registry['MemberSummitRegistrationPromoCode'] = MemberSummitRegistrationPromoCodeSerializer::class;
-        $this->registry['SpeakerSummitRegistrationPromoCode'] = SpeakerSummitRegistrationPromoCodeSerializer::class;
-        $this->registry['SponsorSummitRegistrationPromoCode'] = SponsorSummitRegistrationPromoCodeSerializer::class;
+
+        $this->registry['SummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => SummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => SummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => SummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => SummitRegistrationDiscountCodeCSVSerializer::class,
+        ];
+
+        $this->registry['MemberSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => MemberSummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => MemberSummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['MemberSummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => MemberSummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => MemberSummitRegistrationDiscountCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SpeakerSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => SpeakerSummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => SpeakerSummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SpeakerSummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => SpeakerSummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => SpeakerSummitRegistrationDiscountCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SponsorSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => SponsorSummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => SponsorSummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SponsorSummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => SponsorSummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => SponsorSummitRegistrationDiscountCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SpeakersSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => SpeakersSummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => SpeakersSummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['SpeakersRegistrationDiscountCode'] = [
+            self::SerializerType_Public => SpeakersRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => SpeakersRegistrationDiscountCodeCSVSerializer::class,
+        ];
+
+
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;
         $this->registry['SummitRegistrationDiscountCodeTicketTypeRule'] = SummitRegistrationDiscountCodeTicketTypeRuleSerializer::class;
-        $this->registry['SummitRegistrationDiscountCode'] = SummitRegistrationDiscountCodeSerializer::class;
-        $this->registry['MemberSummitRegistrationDiscountCode'] = MemberSummitRegistrationDiscountCodeSerializer::class;
-        $this->registry['SpeakerSummitRegistrationDiscountCode'] = SpeakerSummitRegistrationDiscountCodeSerializer::class;
-        $this->registry['SponsorSummitRegistrationDiscountCode'] = SponsorSummitRegistrationDiscountCodeSerializer::class;
-        $this->registry['SpeakersSummitRegistrationPromoCode'] = SpeakersSummitRegistrationPromoCodeSerializer::class;
-        $this->registry['SpeakersRegistrationDiscountCode'] = SpeakersRegistrationDiscountCodeSerializer::class;
+
         $this->registry['AssignedPromoCodeSpeaker'] = AssignedPromoCodeSpeakerSerializer::class;
         $this->registry['SummitRegistrationFeedMetadata'] = SummitRegistrationFeedMetadataSerializer::class;
+
         // submission invitations
         $this->registry['SummitSubmissionInvitation'] = [
             self::SerializerType_Public => SummitSubmissionInvitationSerializer::class,

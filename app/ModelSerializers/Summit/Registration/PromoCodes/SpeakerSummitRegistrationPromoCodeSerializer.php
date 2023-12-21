@@ -16,7 +16,7 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
  * Class SpeakerSummitRegistrationPromoCodeSerializer
  * @package ModelSerializers
  */
-final class SpeakerSummitRegistrationPromoCodeSerializer
+class SpeakerSummitRegistrationPromoCodeSerializer
     extends SummitRegistrationPromoCodeSerializer
 {
     protected static $array_mappings = [

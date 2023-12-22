@@ -440,6 +440,15 @@ final class SerializerRegistry
             self::SerializerType_CSV => SpeakersRegistrationDiscountCodeCSVSerializer::class,
         ];
 
+        $this->registry['PrePaidSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => SummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => SummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['PrePaidSummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => SummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => SummitRegistrationDiscountCodeCSVSerializer::class,
+        ];
 
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;
         $this->registry['SummitRegistrationDiscountCodeTicketTypeRule'] = SummitRegistrationDiscountCodeTicketTypeRuleSerializer::class;

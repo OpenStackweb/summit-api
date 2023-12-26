@@ -14,6 +14,7 @@
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -44,6 +45,8 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class SummitRegistrationPromoCode extends SilverstripeBaseModel
 {
+    const LOCK_SKEW_TIME = 5;
+
     /**
      * @ORM\Column(name="Code", type="string")
      * @var string
@@ -330,6 +333,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     public function validate(string $email, ?string $company)
     {
+        Log::debug(sprintf("SummitRegistrationPromoCode::validate - email: %s, company: %s", $email, $company ?? ''));
+
         $this->checkSubject($email, $company);
 
         if (!$this->hasQuantityAvailable()) {
@@ -727,5 +732,55 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         if ($this->tickets->contains($ticket)) return;
         $ticket->setPromoCode($this);
         $this->tickets->add($ticket);
+    }
+
+    /**
+     * @param SummitTicketType $ticket_type
+     * @return SummitAttendeeTicket|null
+     */
+    public function getNextAvailableTicketPerType(SummitTicketType $ticket_type): ?SummitAttendeeTicket
+    {
+        Log::debug(sprintf(
+            "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s, promo_code id: %s",
+            $ticket_type->getId(), $this->getId()));
+
+        $excluded_ids = [];
+
+        do {
+            $query = <<<DQL
+SELECT e  
+FROM models\summit\SummitAttendeeTicket e
+WHERE e.ticket_type = :type
+AND e.promo_code = :promo_code
+AND e.owner IS NULL
+AND e.id NOT IN (:excluded_ids)
+DQL;
+
+            $dql_query = $this->getEM()->createQuery($query);
+            $dql_query->setParameter("type", $ticket_type);
+            $dql_query->setParameter("promo_code", $this);
+            $dql_query->setParameter("excluded_ids", implode(',', $excluded_ids));
+            $result =  $dql_query->getResult();
+
+            if (count($result) === 0) break;
+
+            $ticket = $result[0];
+
+            $key = sprintf("prepaid.ticket.%s.lock", $ticket->getId());
+            if (Cache::has($key)) {
+                $excluded_ids[] = $ticket->getId();
+                continue;
+            }
+            // lock
+            Cache::put($key, $key, now()->addMinutes(self::LOCK_SKEW_TIME));
+            return $ticket;
+        } while(1);
+
+        return null;
+    }
+
+    public function clearTickets()
+    {
+        $this->tickets->clear();
     }
 }

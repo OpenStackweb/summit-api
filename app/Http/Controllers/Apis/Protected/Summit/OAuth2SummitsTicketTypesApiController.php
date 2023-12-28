@@ -238,6 +238,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         );
     }
 
+    use ParseAndGetFilter;
     /**
      * @param $summit_id
      * @return mixed
@@ -251,18 +252,24 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             $member = $this->resource_server_context->getCurrentUser();
             if (is_null($member)) return $this->error403();
 
-            $promocode_code = null;
-            if (Request::has('filter')) {
-                Log::debug(sprintf("OAuth2SummitsTicketTypesApiController::getAllowedBySummitAndCurrentMember filter %s", Request::input('filter')));
-                $filter = FilterParser::parse(Request::input('filter'), [
+            $filter = self::getFilter(function(){
+                return [
                     'promo_code' => ['=='],
-                ]);
+                ];
 
-                $element = $filter->getUniqueFilter('promo_code');
-                $promocode_code = $element->getRawValue();
+            }, function(){
+                return [
+                    'promo_code' => 'sometimes|required|string',
+                ];
+            });
+
+            $promocode_val = null;
+            if ($filter->hasFilter('promo_code')) {
+                $promocode_val = $filter->getValue('promo_code')[0];
+                Log::debug(sprintf("OAuth2SummitsTicketTypesApiController::getAllowedBySummitAndCurrentMember promo_code %s", $promocode_val));
             }
 
-            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member, $promocode_code);
+            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member, $promocode_val);
 
             $resp = new PagingResponse(count($ticket_types), count($ticket_types), 1, 1, $ticket_types);
 

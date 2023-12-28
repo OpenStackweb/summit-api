@@ -740,13 +740,31 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     public function getNextAvailableTicketPerType(SummitTicketType $ticket_type): ?SummitAttendeeTicket
     {
-        Log::debug(sprintf(
-            "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s, promo_code id: %s",
-            $ticket_type->getId(), $this->getId()));
+        Log::debug
+        (
+            sprintf
+            (
+            "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s promo_code: %s",
+                $ticket_type->getId(),
+                $this->getCode()
+            )
+        );
 
         $excluded_ids = [];
 
         do {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s promo_code : %s running with exclude ids %s",
+                    $ticket_type->getId(),
+                    $this->getCode(),
+                    json_encode($excluded_ids)
+                )
+            );
+
             $query = <<<DQL
 SELECT e  
 FROM models\summit\SummitAttendeeTicket e
@@ -762,17 +780,60 @@ DQL;
             $dql_query->setParameter("excluded_ids", implode(',', $excluded_ids));
             $result =  $dql_query->getResult();
 
-            if (count($result) === 0) break;
+            if (count($result) === 0) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s promo_code: %s exclude ids %s returned empty set.",
+                        $ticket_type->getId(),
+                        $this->getCode(),
+                        json_encode($excluded_ids)
+                    )
+                );
+                break;
+            }
 
             $ticket = $result[0];
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s promo_code : %s got available ticket %s",
+                    $ticket_type->getId(),
+                    $this->getCode(),
+                    $ticket->getId()
+                )
+            );
 
             $key = sprintf("prepaid.ticket.%s.lock", $ticket->getId());
             if (Cache::has($key)) {
                 $excluded_ids[] = $ticket->getId();
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s  promo_code: %s ticket %s is already locked",
+                        $ticket_type->getId(),
+                        $this->getCode(),
+                        $ticket->getId()
+                    )
+                );
                 continue;
             }
             // lock
             Cache::put($key, $key, now()->addMinutes(self::LOCK_SKEW_TIME));
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationPromoCode::getNextAvailableTicketPerType - ticket_type id: %s  promo_code: %s available ticket %s locked.",
+                    $ticket_type->getId(),
+                    $this->getCode(),
+                    $ticket->getId()
+                )
+            );
             return $ticket;
         } while(1);
 

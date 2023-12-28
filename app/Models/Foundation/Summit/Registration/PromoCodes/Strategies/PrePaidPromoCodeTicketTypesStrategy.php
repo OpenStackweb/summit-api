@@ -13,7 +13,13 @@
  **/
 
 use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\ISummitTicketType;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
+use models\summit\Summit;
+use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use models\summit\SummitTicketTypePrePaid;
 
@@ -25,21 +31,45 @@ class PrePaidPromoCodeTicketTypesStrategy
     extends RegularPromoCodeTicketTypesStrategy
     implements IPromoCodeAllowedTicketTypesStrategy
 {
+    private $prepaid_promo_code;
     /**
-     * @param SummitTicketType $type
-     * @return ISummitTicketType
+     * @param Summit $summit
+     * @param Member $member
+     * @param SummitRegistrationPromoCode|null $promo_code
      */
-    private function applyPromo2TicketType(SummitTicketType $type): ISummitTicketType {
+    public function __construct(Summit $summit, Member $member, ?SummitRegistrationPromoCode $promo_code)
+    {
+        if(!$promo_code instanceof PrePaidSummitRegistrationPromoCode && !$promo_code instanceof PrePaidSummitRegistrationDiscountCode)
+            throw new ValidationException("You need to provide a pre paid promo code!");
+
         Log::debug
         (
             sprintf
             (
-                "PrePaidPromoCodeTicketTypesStrategy::applyPromo2TicketType applying promocode %s to ticket type %s",
-                !is_null($this->promo_code) ? $this->promo_code->getCode(): 'NONE',
+                "PrePaidPromoCodeTicketTypesStrategy::build summit %s member %s promo code %s",
+                $summit->getId(),
+                $member->getId(),
+                !is_null($promo_code) ? $promo_code->getCode() : 'NONE'
+            )
+        );
+       parent::__construct($summit, $member, null);
+       $this->prepaid_promo_code = $promo_code;
+    }
+    /**
+     * @param SummitTicketType $type
+     * @return ISummitTicketType
+     */
+    private function applyPrePaidPromo2TicketType(SummitTicketType $type): ISummitTicketType {
+        Log::debug
+        (
+            sprintf
+            (
+                "PrePaidPromoCodeTicketTypesStrategy::applyPrePaidPromo2TicketType applying prepaid_promocode %s to ticket type %s",
+                !is_null($this->prepaid_promo_code) ? $this->prepaid_promo_code->getCode(): 'NONE',
                 $type->getId()
             )
         );
-        return new SummitTicketTypePrePaid($type, $this->promo_code);
+        return new SummitTicketTypePrePaid($type, $this->prepaid_promo_code);
     }
 
     /**
@@ -51,19 +81,19 @@ class PrePaidPromoCodeTicketTypesStrategy
 
         Log::debug(
             sprintf(
-                "PrePaidPromoCodeTicketTypesStrategy::getTicketTypes applying promocode %s to ticket types",
-                $this->promo_code->getCode()
+                "PrePaidPromoCodeTicketTypesStrategy::getTicketTypes applying prepaid promocode %s to ticket types",
+                $this->prepaid_promo_code->getCode()
             )
         );
 
-        $unassigned_tickets = $this->promo_code->getUnassignedTickets();
-        $prepaid_ticket_types = array();
+        $unassigned_tickets = $this->prepaid_promo_code->getUnassignedTickets();
+        $prepaid_ticket_types = [];
         foreach ($unassigned_tickets as $unassigned_ticket) {
             if (!$unassigned_ticket->getOrder()->isOfflineOrder()) continue;
 
             $type = $unassigned_ticket->getTicketType();
             if (!array_key_exists($type->getId(), $prepaid_ticket_types)) {
-                $prepaid_ticket_types[$type->getId()] = $this->applyPromo2TicketType($type);
+                $prepaid_ticket_types[$type->getId()] = $this->applyPrePaidPromo2TicketType($type);
             }
         }
         return array_merge($regular_ticket_types, array_values($prepaid_ticket_types));

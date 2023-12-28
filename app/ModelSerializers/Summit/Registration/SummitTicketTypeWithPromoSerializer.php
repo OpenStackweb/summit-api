@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\AbstractSerializer;
 use libs\utils\JsonUtils;
 use models\summit\SummitTicketTypeWithPromo;
 
@@ -19,11 +20,12 @@ use models\summit\SummitTicketTypeWithPromo;
  * Class SummitTicketTypeWithPromoSerializer
  * @package ModelSerializers
  */
-class SummitTicketTypeWithPromoSerializer extends SilverStripeSerializer
+class SummitTicketTypeWithPromoSerializer extends AbstractSerializer
 {
     use SummitTicketTypeCommonSerializer;
 
     protected static $array_mappings = [
+        'Id'   => 'id:json_int',
         'Name' => 'name:json_string',
         'Description' => 'description:json_string',
         'ExternalId' => 'external_id:json_string',

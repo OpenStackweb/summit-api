@@ -136,9 +136,9 @@ final class SummitPromoCodeService
         if (isset($data['allowed_ticket_types'])) {
             $allowed_ticket_types = [];
             foreach ($data['allowed_ticket_types'] as $ticket_type_id) {
+                if(empty($ticket_type_id)) continue;
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
-                if (is_null($ticket_type))
-                    throw new EntityNotFoundException(sprintf("ticket type %s not found", $ticket_type_id));
+                if (is_null($ticket_type)) continue;
                 $allowed_ticket_types[] = $ticket_type;
             }
             $params['allowed_ticket_types'] = $allowed_ticket_types;
@@ -147,9 +147,9 @@ final class SummitPromoCodeService
         if (isset($data['badge_features'])) {
             $badge_features = [];
             foreach ($data['badge_features'] as $feature_id) {
+                if(empty($feature_id)) continue;
                 $feature = $summit->getFeatureTypeById(intval($feature_id));
-                if (is_null($feature))
-                    throw new EntityNotFoundException(sprintf("badge feature %s not found", $feature_id));
+                if (is_null($feature)) continue;
                 $badge_features[] = $feature;
 
             }
@@ -165,16 +165,14 @@ final class SummitPromoCodeService
 
         if (isset($data['speaker_id'])) {
             $speaker = $this->speaker_repository->getById(intval($data['speaker_id']));
-            if (is_null($speaker))
-                throw new EntityNotFoundException(sprintf("speaker_id %s not found", $data['speaker_id']));
-            $params['speaker'] = $speaker;
+            if (!is_null($speaker))
+                $params['speaker'] = $speaker;
         }
 
         if (isset($data['sponsor_id'])) {
             $sponsor = $this->company_repository->getById(intval($data['sponsor_id']));
-            if (is_null($sponsor))
-                throw new EntityNotFoundException(sprintf("sponsor_id %s not found", $data['sponsor_id']));
-            $params['sponsor'] = $sponsor;
+            if (!is_null($sponsor))
+                $params['sponsor'] = $sponsor;
         }
 
         return $params;
@@ -236,6 +234,7 @@ final class SummitPromoCodeService
                 );
 
                 foreach ($data['speaker_ids'] as $speaker_id) {
+                    if(empty($speaker_id)) continue;
                     Log::debug
                     (
                         sprintf
@@ -267,6 +266,7 @@ final class SummitPromoCodeService
                 $promo_code->clearTags();
 
                 foreach ($data['tags'] as $tag_value) {
+                    if(empty($tag_value)) continue;
                     $tag = $this->tag_repository->getByTag($tag_value);
 
                     if (is_null($tag)) {

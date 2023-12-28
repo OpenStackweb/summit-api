@@ -13,7 +13,6 @@
  **/
 
 use libs\utils\JsonUtils;
-use models\summit\ISummitTicketType;
 use models\summit\SummitTicketTypeWithPromo;
 
 /**

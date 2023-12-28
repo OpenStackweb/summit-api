@@ -30,6 +30,15 @@ class PrePaidPromoCodeTicketTypesStrategy
      * @return ISummitTicketType
      */
     private function applyPromo2TicketType(SummitTicketType $type): ISummitTicketType {
+        Log::debug
+        (
+            sprintf
+            (
+                "PrePaidPromoCodeTicketTypesStrategy::applyPromo2TicketType applying promocode %s to ticket type %s",
+                !is_null($this->promo_code) ? $this->promo_code->getCode(): 'NONE',
+                $type->getId()
+            )
+        );
         return new SummitTicketTypePrePaid($type, $this->promo_code);
     }
 

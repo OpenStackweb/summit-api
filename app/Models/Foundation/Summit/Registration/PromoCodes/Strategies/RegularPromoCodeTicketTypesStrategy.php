@@ -69,9 +69,20 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
      * @return ISummitTicketType
      */
     private function applyPromo2TicketType(SummitTicketType $type): ISummitTicketType {
+        Log::debug
+        (
+            sprintf
+            (
+                "RegularPromoCodeTicketTypesStrategy::applyPromo2TicketType applying promocode %s to ticket type %s",
+                !is_null($this->promo_code) ? $this->promo_code->getCode() : 'NONE',
+                $type->getId()
+            )
+        );
+
         if (!is_null($this->promo_code) && $this->promo_code->canBeAppliedTo($type)) {
             return new SummitTicketTypeWithPromo($type, $this->promo_code);
         }
+
         return $type;
     }
 

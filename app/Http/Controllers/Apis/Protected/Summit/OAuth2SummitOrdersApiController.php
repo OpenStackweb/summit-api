@@ -140,7 +140,7 @@ final class OAuth2SummitOrdersApiController
                 }
             }
 
-            $payload = $this->getJsonPayload($validation_rules);
+            $payload = $this->getJsonPayload($validation_rules, true);
 
             if (!is_null($owner)) {
                 // if we have owner then set up the email

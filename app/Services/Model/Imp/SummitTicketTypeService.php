@@ -352,9 +352,10 @@ final class SummitTicketTypeService
             (
                 sprintf
                 (
-                    "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s.",
+                    "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s promo code %s.",
                     $summit->getId(),
-                    $member->getId()
+                    $member->getId(),
+                    !empty($promocode_code) ? $promocode_code : 'NONE'
                 )
             );
 
@@ -362,6 +363,7 @@ final class SummitTicketTypeService
             $factory = new PromoCodeAllowedTicketTypesStrategyFactory();
 
             if (!is_null($promocode_code)) {
+                Log::debug(sprintf("SummitTicketTypeService::getAllowedTicketTypes trying to get promocode %s", $promocode_code));
                 $promocode = $summit->getPromoCodeByCode($promocode_code);
             }
 

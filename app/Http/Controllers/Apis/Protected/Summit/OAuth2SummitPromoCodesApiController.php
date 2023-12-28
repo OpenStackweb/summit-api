@@ -130,7 +130,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             },
             function () {
                 return [
-                    'class_name' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
+                    'class_name' => sprintf('sometimes|required|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
                     'code' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'creator' => 'sometimes|string',

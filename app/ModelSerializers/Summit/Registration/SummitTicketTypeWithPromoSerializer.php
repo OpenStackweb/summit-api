@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use libs\utils\JsonUtils;
 use models\summit\ISummitTicketType;
 use models\summit\SummitTicketTypeWithPromo;
 
@@ -46,7 +47,7 @@ class SummitTicketTypeWithPromoSerializer extends SilverStripeSerializer
      * @return array
      */
     protected function serializeCustomFields($entity, $values): array {
-        $values["cost_with_applied_discount"] = $entity->getCostWithAppliedDiscount();
+        $values["cost_with_applied_discount"] = JsonUtils::toJsonFloat($entity->getCostWithAppliedDiscount());
         return $values;
     }
 

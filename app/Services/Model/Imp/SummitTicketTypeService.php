@@ -340,13 +340,13 @@ final class SummitTicketTypeService
     /**
      * @param Summit $summit
      * @param Member $member
-     * @param string|null $promocode_code
+     * @param string|null $promocode_val
      * @return SummitTicketType[]
      * @throws \Exception
      */
-    public function getAllowedTicketTypes(Summit $summit, Member $member, ?string $promocode_code = null): array
+    public function getAllowedTicketTypes(Summit $summit, Member $member, ?string $promocode_val = null): array
     {
-        return $this->tx_service->transaction(function () use ($summit, $member, $promocode_code) {
+        return $this->tx_service->transaction(function () use ($summit, $member, $promocode_val) {
 
             Log::debug
             (
@@ -355,19 +355,35 @@ final class SummitTicketTypeService
                     "SummitTicketTypeService::getAllowedTicketTypes summit %s member %s promo code %s.",
                     $summit->getId(),
                     $member->getId(),
-                    !empty($promocode_code) ? $promocode_code : 'NONE'
+                    !empty($promocode_val) ? $promocode_val : 'NONE'
                 )
             );
 
-            $promocode = null;
+            $promo_code = null;
             $factory = new PromoCodeAllowedTicketTypesStrategyFactory();
 
-            if (!is_null($promocode_code)) {
-                Log::debug(sprintf("SummitTicketTypeService::getAllowedTicketTypes trying to get promocode %s", $promocode_code));
-                $promocode = $summit->getPromoCodeByCode($promocode_code);
+            if (!empty($promocode_val)) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitTicketTypeService::getAllowedTicketTypes trying to get promocode_val %s from summit %s",
+                        $promocode_val,
+                        $summit->getId()
+                    )
+                );
+                $promo_code = $summit->getPromoCodeByCode($promocode_val);
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitTicketTypeService::getAllowedTicketTypes got promo code %s",
+                        !is_null($promo_code) ? $promo_code->getCode() : "NONE"
+                    )
+                );
             }
 
-            return $factory->build($summit, $member, $promocode)->getTicketTypes();
+            return $factory->build($summit, $member, $promo_code)->getTicketTypes();
         });
     }
 }

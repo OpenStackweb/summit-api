@@ -14,8 +14,6 @@
 
 use models\exceptions\ValidationException;
 use models\main\Company;
-use models\main\Member;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Trait SponsorPromoCodeTrait

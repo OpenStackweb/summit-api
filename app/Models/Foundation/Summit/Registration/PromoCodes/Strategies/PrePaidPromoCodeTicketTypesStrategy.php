@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -39,7 +40,7 @@ class PrePaidPromoCodeTicketTypesStrategy
      */
     public function __construct(Summit $summit, Member $member, ?SummitRegistrationPromoCode $promo_code)
     {
-        if(!$promo_code instanceof PrePaidSummitRegistrationPromoCode && !$promo_code instanceof PrePaidSummitRegistrationDiscountCode)
+        if(!PromoCodesUtils::isPrePaidPromoCode( $promo_code ))
             throw new ValidationException("You need to provide a pre paid promo code!");
 
         Log::debug

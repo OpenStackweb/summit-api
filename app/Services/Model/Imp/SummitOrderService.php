@@ -1240,11 +1240,27 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
             $type_id = $ticket_dto['type_id'];
             $order = $this->lock_service->lock('ticket_type.' . $type_id . 'promo_code.' . $promo_code_val .'.sell.lock',
                 function () use ($promo_code_val, $type_id) {
+
+                    $attendee_email = $this->owner->getEmail();
+                    $attendee_company = $this->owner->getCompany();
+
                     $promo_code = $this->summit->getPromoCodeByCode($promo_code_val);
                     if (!PromoCodesUtils::isPrePaidPromoCode($promo_code))
                         throw new EntityNotFoundException("Promo code is not found.");
 
-                    if($promo_code->hasPrePaidTicketsAssignedBy($this->owner->getEmail())){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AutoAssignPrePaidTicketTask::run - validating promo code %s for attendee %s",
+                            $promo_code->getCode(),
+                            $attendee_email
+                        )
+                    );
+
+                    $promo_code->validate($attendee_email, $attendee_company);
+
+                    if($promo_code->hasPrePaidTicketsAssignedBy($attendee_email)){
                         throw new ValidationException
                         (
                             sprintf
@@ -1276,7 +1292,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     if(!$order->isOfflineOrder())
                         throw new ValidationException(sprintf("Order %s is not an offline order.", $order->getId()));
 
-                    $attendee_email = $this->owner->getEmail();
+
                     Log::debug(sprintf("AutoAssignPrePaidTicketTask::run - processing attendee_email %s", $attendee_email));
                     // assign attendee
                     // check if we have already an attendee on this summit
@@ -1288,7 +1304,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                             'first_name' => $this->owner->getFirstName(),
                             'last_name' => $this->owner->getLastName(),
                             'email' => $attendee_email,
-                            'company' => $this->owner->getCompany()
+                            'company' => $attendee_company
                         ], $this->owner);
                     }
                     $attendee->updateStatus();

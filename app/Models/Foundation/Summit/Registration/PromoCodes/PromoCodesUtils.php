@@ -23,10 +23,10 @@ use models\summit\SummitRegistrationPromoCode;
 final class PromoCodesUtils
 {
     /**
-     * @param SummitRegistrationPromoCode $promo_code
+     * @param SummitRegistrationPromoCode|null $promo_code
      * @return bool
      */
-    public static function isPrePaidPromoCode(SummitRegistrationPromoCode $promo_code):bool{
+    public static function isPrePaidPromoCode(?SummitRegistrationPromoCode $promo_code):bool{
         return $promo_code instanceof PrePaidSummitRegistrationPromoCode ||
             $promo_code instanceof PrePaidSummitRegistrationDiscountCode;
     }

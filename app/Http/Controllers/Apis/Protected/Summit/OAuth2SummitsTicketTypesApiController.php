@@ -14,6 +14,7 @@
 use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTicketTypeService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -252,6 +253,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
 
             $promocode_code = null;
             if (Request::has('filter')) {
+                Log::debug(sprintf("OAuth2SummitsTicketTypesApiController::getAllowedBySummitAndCurrentMember filter %s", Request::input('filter')));
                 $filter = FilterParser::parse(Request::input('filter'), [
                     'promo_code' => ['=='],
                 ]);

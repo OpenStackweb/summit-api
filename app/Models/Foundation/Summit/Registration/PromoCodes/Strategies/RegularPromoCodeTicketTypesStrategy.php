@@ -49,6 +49,16 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
      */
     public function __construct(Summit $summit, Member $member, ?SummitRegistrationPromoCode $promo_code)
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "RegularPromoCodeTicketTypesStrategy::build summit %s member %s promo code %s",
+                $summit->getId(),
+                $member->getId(),
+                !is_null($promo_code) ? $promo_code->getCode() : 'NONE'
+            )
+        );
         $this->summit = $summit;
         $this->promo_code = $promo_code;
         $this->member = $member;

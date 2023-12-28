@@ -276,7 +276,7 @@ final class SagaFactory {
     }
 
     public function build(Member $owner, Summit $summit, array $payload): Saga {
-        Log::debug(sprintf("SagaFactory::build - summit id %s", $summit->getId()));
+        Log::debug(sprintf("SagaFactory::build - summit id %s payload %s", $summit->getId(), json_encode($payload)));
 
         $tickets = $payload['tickets'];
 
@@ -1242,6 +1242,11 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     if (is_null($ticket))
                         throw new ValidationException(sprintf("No more available PrePaid Tickets for Promo Code %s", $promo_code->getCode()));
 
+                    $order = $ticket->getOrder();
+
+                    if(!$order->isOfflineOrder())
+                        throw new ValidationException(sprintf("Order %s is not an offline order.", $order->getId()));
+
                     $attendee_email = $this->owner->getEmail();
                     Log::debug(sprintf("AutoAssignPrePaidTicketTask::run - processing attendee_email %s", $attendee_email));
                     // assign attendee
@@ -1258,7 +1263,8 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                         ], $this->owner);
                     }
                     $attendee->updateStatus();
-                    $order = $ticket->getOrder();
+
+
                     $ticket->setOwner($attendee);
                     return $order;
                 });
@@ -1446,6 +1452,16 @@ final class SummitOrderService
      */
     public function reserve(?Member $owner, Summit $summit, array $payload): SummitOrder
     {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::reserve owner %s summit %s payload %s", !is_null($owner) ? $owner->getId() :'N/A',
+                $summit->getId(),
+                json_encode($payload)
+            )
+        );
 
         try {
             // update owner data

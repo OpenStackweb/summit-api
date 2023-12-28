@@ -27,6 +27,7 @@ use App\Jobs\ProcessTicketDataImport;
 use App\Jobs\SendAttendeeInvitationEmail;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
+use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
@@ -289,8 +290,7 @@ final class SagaFactory {
                 $promo_code = $summit->getPromoCodeByCode($promo_code_val);
                 Log::debug(sprintf("SagaFactory::build - summit id %s, promo_code %s", $summit->getId(), $promo_code_val));
 
-                if ($promo_code instanceof PrePaidSummitRegistrationDiscountCode ||
-                    $promo_code instanceof PrePaidSummitRegistrationPromoCode) {
+                if (PromoCodesUtils::isPrePaidPromoCode($promo_code)) {
                     return $this->buildPrePaidSaga($owner, $summit, $payload);
                 }
             }
@@ -1216,7 +1216,15 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 
     public function run(array $formerState): array
     {
-        Log::debug("AutoAssignPrePaidTicketTask::run");
+        Log::debug
+        (
+            sprintf
+            (
+                "AutoAssignPrePaidTicketTask::run former state %s payload %s",
+                json_encode($formerState),
+                json_encode($this->payload)
+            )
+        );
 
         $this->formerState = $formerState;
 
@@ -1233,14 +1241,35 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
             $order = $this->lock_service->lock('ticket_type.' . $type_id . 'promo_code.' . $promo_code_val .'.sell.lock',
                 function () use ($promo_code_val, $type_id) {
                     $promo_code = $this->summit->getPromoCodeByCode($promo_code_val);
-                    if (is_null($promo_code)) throw new EntityNotFoundException("Promo code is not found.");
+                    if (!PromoCodesUtils::isPrePaidPromoCode($promo_code))
+                        throw new EntityNotFoundException("Promo code is not found.");
+
+                    if($promo_code->hasPrePaidTicketsAssignedBy($this->owner->getEmail())){
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Promo Code %s already has a ticket assigned to %s",
+                                $promo_code->getCode(),
+                                $this->owner->getEmail()
+                            )
+                        );
+                    }
 
                     $ticket_type = $this->summit->getTicketTypeById($type_id);
-                    if (is_null($ticket_type)) throw new EntityNotFoundException("Ticket Type is not found.");
+                    if (is_null($ticket_type))
+                        throw new EntityNotFoundException("Ticket Type is not found.");
 
                     $ticket = $promo_code->getNextAvailableTicketPerType($ticket_type);
                     if (is_null($ticket))
-                        throw new ValidationException(sprintf("No more available PrePaid Tickets for Promo Code %s", $promo_code->getCode()));
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "No more available PrePaid Tickets for Promo Code %s",
+                                $promo_code->getCode()
+                            )
+                        );
 
                     $order = $ticket->getOrder();
 

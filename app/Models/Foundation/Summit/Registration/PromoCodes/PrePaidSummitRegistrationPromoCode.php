@@ -23,6 +23,7 @@ use Doctrine\ORM\Mapping AS ORM;
 class PrePaidSummitRegistrationPromoCode
     extends SummitRegistrationPromoCode
 {
+    use PrePaidPromoCodeTrait;
     const ClassName = 'PRE_PAID_PROMO_CODE';
 
     public static $metadata = [

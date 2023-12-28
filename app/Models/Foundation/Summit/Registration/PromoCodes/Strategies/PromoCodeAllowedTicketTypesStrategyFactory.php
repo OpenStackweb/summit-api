@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\summit\PrePaidSummitRegistrationDiscountCode;
@@ -31,8 +32,7 @@ class PromoCodeAllowedTicketTypesStrategyFactory implements IPromoCodeAllowedTic
     public function build(
         Summit $summit, Member $member, ?SummitRegistrationPromoCode $promo_code): IPromoCodeAllowedTicketTypesStrategy
     {
-        if ($promo_code instanceof PrePaidSummitRegistrationPromoCode ||
-            $promo_code instanceof PrePaidSummitRegistrationDiscountCode) {
+        if (PromoCodesUtils::isPrePaidPromoCode($promo_code)){
             Log::debug(
                 sprintf(
                     "PromoCodeAllowedTicketTypesStrategyFactory::build applying prepaid promo code %s to ticket types for summit id %s and member %s",

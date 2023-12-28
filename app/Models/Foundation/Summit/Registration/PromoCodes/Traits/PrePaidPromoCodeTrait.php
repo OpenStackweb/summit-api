@@ -149,4 +149,60 @@ DQL;
 
         return null;
     }
+
+    /**
+     * @return int
+     */
+    public function getQuantityUsed(): int
+    {
+        $query = <<<DQL
+SELECT COUNT(e.id)  
+FROM models\summit\SummitAttendeeTicket e
+JOIN e.order ord
+WHERE e.promo_code = :promo_code
+AND e.owner IS NOT NULL
+AND ( ord.status = :status) 
+AND (ord.payment_method = :payment_method)
+DQL;
+
+        $dql_query = $this->getEM()->createQuery($query)->setCacheable(false);
+
+        $dql_query->setParameter("promo_code", $this);
+        $dql_query->setParameter("status", IOrderConstants::PaidStatus);
+        $dql_query->setParameter("payment_method", IOrderConstants::OfflinePaymentMethod);
+
+        return $dql_query->getSingleScalarResult();
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuantityAvailable(): int
+    {
+        $query = <<<DQL
+SELECT COUNT(e.id)  
+FROM models\summit\SummitAttendeeTicket e
+JOIN e.order ord
+WHERE e.promo_code = :promo_code
+AND e.owner IS NULL
+AND ( ord.status = :status) 
+AND (ord.payment_method = :payment_method)
+DQL;
+
+        $dql_query = $this->getEM()->createQuery($query)->setCacheable(false);
+
+        $dql_query->setParameter("promo_code", $this);
+        $dql_query->setParameter("status", IOrderConstants::PaidStatus);
+        $dql_query->setParameter("payment_method", IOrderConstants::OfflinePaymentMethod);
+
+        return $dql_query->getSingleScalarResult();
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuantityRemaining(): int
+    {
+        return $this->getQuantityAvailable() - $this->getQuantityUsed();
+    }
 }

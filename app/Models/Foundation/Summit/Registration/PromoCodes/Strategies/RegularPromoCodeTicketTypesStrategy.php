@@ -86,6 +86,8 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
             $this->promo_code = null;
         }
 
+        $all_ticket_types = [];
+
         // check if we can sell ticket type
         foreach ($this->summit->getTicketTypesByAudience(SummitTicketType::Audience_All) as $ticket_type) {
             if (!$ticket_type->canSell()) {

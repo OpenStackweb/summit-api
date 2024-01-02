@@ -1,6 +1,4 @@
 <?php namespace models\summit;
-use Doctrine\Common\Collections\ArrayCollection;
-
 /**
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,11 @@ use Doctrine\Common\Collections\ArrayCollection;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Doctrine\Common\Collections\ArrayCollection;
+/**
+ * Class SummitTicketTypeWithPromo
+ * @package models\summit
+ */
 class SummitTicketTypeWithPromo implements ISummitTicketType
 {
     /**
@@ -257,7 +260,7 @@ class SummitTicketTypeWithPromo implements ISummitTicketType
      */
     public function getSalesEndDate(): ?\DateTime
     {
-        return $this->type->getSalesStartDate();
+        return $this->type->getSalesEndDate();
     }
 
     /**

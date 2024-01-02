@@ -284,6 +284,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'accepted_date' => new EpochCellFormatter(),
                     'is_accepted' => new BooleanCellFormatter(),
                     'is_sent' => new BooleanCellFormatter(),
+                    'created' => new EpochCellFormatter(),
+                    'last_edited' => new EpochCellFormatter(),
                 ];
             },
             function () {

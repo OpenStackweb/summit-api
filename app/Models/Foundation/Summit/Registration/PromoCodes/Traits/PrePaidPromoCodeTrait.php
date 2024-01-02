@@ -171,7 +171,9 @@ DQL;
         $dql_query->setParameter("status", IOrderConstants::PaidStatus);
         $dql_query->setParameter("payment_method", IOrderConstants::OfflinePaymentMethod);
 
-        return $dql_query->getSingleScalarResult();
+        $res = $dql_query->getSingleScalarResult();
+        Log::debug(sprintf("PrePaidPromoCodeTrait::getQuantityUsed promo_code %s quantityUsed %s", $this->getCode(), $res));
+        return $res;
     }
 
     /**
@@ -195,7 +197,9 @@ DQL;
         $dql_query->setParameter("status", IOrderConstants::PaidStatus);
         $dql_query->setParameter("payment_method", IOrderConstants::OfflinePaymentMethod);
 
-        return $dql_query->getSingleScalarResult();
+        $res =  $dql_query->getSingleScalarResult();
+        Log::debug(sprintf("PrePaidPromoCodeTrait::getQuantityAvailable promo_code %s quantityAvailable %s", $this->getCode(), $res));
+        return $res;
     }
 
     /**

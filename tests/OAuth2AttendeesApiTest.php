@@ -69,6 +69,35 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($attendees));
     }
 
+    public function testGetAttendeesCSV(){
+
+        $params = [
+
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendeesBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertTrue(!is_null($content));
+    }
+
     public function testGetOwnAttendee(){
 
         $params = [

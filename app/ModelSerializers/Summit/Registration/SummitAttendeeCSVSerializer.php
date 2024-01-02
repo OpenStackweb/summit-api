@@ -53,6 +53,13 @@ final class SummitAttendeeCSVSerializer extends SilverStripeSerializer
 
         $values['notes'] = implode("|", $notes);
 
+        $tags = [];
+        foreach ($attendee->getTags() as $tag){
+            $tags[] = $tag->getTag();
+        }
+
+        $values['tags'] = implode("|", $tags);
+
         return $values;
     }
     

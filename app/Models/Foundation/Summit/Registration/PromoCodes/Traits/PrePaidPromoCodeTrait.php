@@ -14,6 +14,7 @@
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 
 const LOCK_SKEW_TIME = 5;
 /**
@@ -78,15 +79,20 @@ DQL;
             $query = <<<DQL
 SELECT e  
 FROM models\summit\SummitAttendeeTicket e
+JOIN e.order ord
 WHERE e.ticket_type = :type
 AND e.promo_code = :promo_code
 AND e.owner IS NULL
 AND e.id NOT IN (:excluded_ids)
+AND ( ord.status = :status) 
+AND (ord.payment_method = :payment_method)
 DQL;
 
             $dql_query = $this->getEM()->createQuery($query)->setCacheable(false);
             $dql_query->setParameter("type", $ticket_type);
             $dql_query->setParameter("promo_code", $this);
+            $dql_query->setParameter("status", IOrderConstants::PaidStatus);
+            $dql_query->setParameter("payment_method", IOrderConstants::OfflinePaymentMethod);
             $dql_query->setParameter("excluded_ids", implode(',', $excluded_ids));
             $result =  $dql_query->getResult();
 
@@ -186,7 +192,6 @@ SELECT COUNT(e.id)
 FROM models\summit\SummitAttendeeTicket e
 JOIN e.order ord
 WHERE e.promo_code = :promo_code
-AND e.owner IS NULL
 AND ( ord.status = :status) 
 AND (ord.payment_method = :payment_method)
 DQL;
@@ -223,4 +228,34 @@ DQL;
 
         return $quantityAvailable - $quantityUsed;
     }
+
+    /**
+     * @param string|null $ownerEmail
+     * @param int $usage
+     * @throws ValidationException
+     */
+    public function addUsage(string $ownerEmail, int $usage = 1)
+    {
+       // no op
+    }
+
+    /**
+     * @param int $to_restore
+     * @param string|null $owner_email
+     * @throws ValidationException
+     */
+    public function removeUsage(int $to_restore, ?string $owner_email = null)
+    {
+       // no op
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @return bool
+     */
+    public function canBeAppliedToOrder(SummitOrder $order):bool{
+        if($order->isPrePaid()) return true;
+        return false;
+    }
+
 }

@@ -737,4 +737,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     {
         $this->tickets->clear();
     }
+
+    public function canBeAppliedToOrder(SummitOrder $order):bool{
+        return true;
+    }
 }

@@ -946,7 +946,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
     public function isPrePaid(): bool
     {
-        return $this->isPaid();
+        return $this->isPaid() && $this->isOfflineOrder();
     }
 
     /**

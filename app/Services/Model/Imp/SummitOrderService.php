@@ -2782,6 +2782,16 @@ final class SummitOrderService
                     }
                     Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $pc->getCode()));
                     $owner_email = !is_null($attendee) ? $attendee->getEmail() : $order->getOwnerEmail();
+                    // todo: create a better approach for this
+                    if(!$pc->canBeAppliedToOrder($order))
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Promo code %s is not valid for this order.", $pc->getCode()
+                            )
+                        );
+
                     $pc->addUsage($owner_email);
                     $pc->applyTo($ticket);
                 }
@@ -3336,11 +3346,11 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
-            if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException("Order not found.");
 
             if ($summit->getId() != $order->getSummitId())
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
 
@@ -3351,7 +3361,13 @@ final class SummitOrderService
 
             $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
 
-            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty, $payload['promo_code'] ?? null);
+            $order = $this->createTicketsForOrder
+            (
+                $order,
+                $ticket_type,
+                $ticket_qty,
+                    $payload['promo_code'] ?? null
+            );
 
             return $order;
         });

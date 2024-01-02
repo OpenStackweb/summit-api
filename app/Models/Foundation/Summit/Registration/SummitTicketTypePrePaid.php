@@ -37,6 +37,14 @@ final class SummitTicketTypePrePaid extends SummitTicketTypeWithPromo
     }
 
     /**
+     * @return bool
+     */
+    public function isSoldOut(): bool
+    {
+        return false;
+    }
+
+    /**
      * @return int
      */
     public function getCostInCents(): int

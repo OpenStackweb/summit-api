@@ -252,7 +252,7 @@ final class SummitPromoCodeService
                         (
                             sprintf("SummitPromoCodeService::addPromoCode Speaker %s not found.", $speaker_id)
                         );
-                        throw new EntityNotFoundException(sprintf("Speaker %s not found.", $speaker_id));
+                        continue;
                     }
 
                     $promo_code->assignSpeaker($speaker);

@@ -203,6 +203,20 @@ DQL;
      */
     public function getQuantityRemaining(): int
     {
-        return $this->getQuantityAvailable() - $this->getQuantityUsed();
+        $quantityAvailable = $this->getQuantityAvailable();
+        $quantityUsed = $this->getQuantityUsed();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "PrePaidPromoCodeTrait::getQuantityRemaining promo_code %s quantityAvailable %s quantityUsed %s",
+                $this->getCode(),
+                $quantityAvailable,
+                $quantityUsed
+            )
+        );
+
+        return $quantityAvailable - $quantityUsed;
     }
 }

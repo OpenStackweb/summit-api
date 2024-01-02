@@ -1612,6 +1612,10 @@ final class SummitOrderService
                 return $order;
             }
 
+            if($order->isPrePaid()){
+                return $order;
+            }
+
             // validation of zip code its only for paid events
             if (!$order->isFree() && empty($order->getBillingAddressZipCode()))
                 throw new ValidationException("Zip Code is mandatory.");

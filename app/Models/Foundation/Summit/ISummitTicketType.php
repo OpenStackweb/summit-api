@@ -55,6 +55,11 @@ interface ISummitTicketType extends IEntity
     /**
      * @return string
      */
+    public function getCurrency(): ?string;
+
+    /**
+     * @return string
+     */
     public function getCurrencySymbol(): ?string;
 
     /**

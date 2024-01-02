@@ -270,4 +270,12 @@ class SummitTicketTypeWithPromo implements ISummitTicketType
     {
         return $this->type->getAppliedTaxes();
     }
+
+    /**
+     * @return string|null
+     */
+    public function getCurrency(): ?string
+    {
+        return $this->type->getCurrency();
+    }
 }

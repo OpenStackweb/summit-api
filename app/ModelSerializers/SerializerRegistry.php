@@ -249,6 +249,8 @@ final class SerializerRegistry
         $this->registry['SummitEventType'] = SummitEventTypeSerializer::class;
         $this->registry['PresentationType'] = PresentationTypeSerializer::class;
         $this->registry['SummitTicketType'] = SummitTicketTypeSerializer::class;
+        $this->registry['SummitTicketTypePrePaid'] = SummitTicketTypePrePaidSerializer::class;
+        $this->registry['SummitTicketTypeWithPromo'] = SummitTicketTypeWithPromoSerializer::class;
         $this->registry['PresentationCategory'] = PresentationCategorySerializer::class;
         $this->registry['PresentationCategoryGroup'] = PresentationCategoryGroupSerializer::class;
         $this->registry['PrivatePresentationCategoryGroup'] = PrivatePresentationCategoryGroupSerializer::class;
@@ -438,6 +440,15 @@ final class SerializerRegistry
             self::SerializerType_CSV => SpeakersRegistrationDiscountCodeCSVSerializer::class,
         ];
 
+        $this->registry['PrePaidSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => SummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => SummitRegistrationPromoCodeCSVSerializer::class,
+        ];
+
+        $this->registry['PrePaidSummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => SummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => SummitRegistrationDiscountCodeCSVSerializer::class,
+        ];
 
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;
         $this->registry['SummitRegistrationDiscountCodeTicketTypeRule'] = SummitRegistrationDiscountCodeTicketTypeRuleSerializer::class;

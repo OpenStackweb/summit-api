@@ -35,13 +35,17 @@ use Doctrine\ORM\Mapping as ORM;
  *     "SpeakerSummitRegistrationDiscountCode" = "SpeakerSummitRegistrationDiscountCode",
  *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode",
  *     "SpeakersRegistrationDiscountCode" = "SpeakersRegistrationDiscountCode",
- *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode"
+ *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode",
+ *     "PrePaidSummitRegistrationPromoCode" = "PrePaidSummitRegistrationPromoCode",
+ *     "PrePaidSummitRegistrationDiscountCode" = "PrePaidSummitRegistrationDiscountCode"
  * })
  * Class SummitRegistrationPromoCode
  * @package models\summit
  */
 class SummitRegistrationPromoCode extends SilverstripeBaseModel
 {
+    const LOCK_SKEW_TIME = 5;
+
     /**
      * @ORM\Column(name="Code", type="string")
      * @var string
@@ -145,6 +149,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @var Tag[]
      */
     private $tags;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SummitAttendeeTicket", mappedBy="promo_code", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitAttendeeTicket[]
+     */
+    private $tickets;
 
     public function setSummit($summit)
     {
@@ -274,6 +284,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
         $this->tags = new ArrayCollection();
+        $this->tickets = new ArrayCollection();
     }
 
     /**
@@ -308,11 +319,37 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @param string $email
      * @param null|string $company
      * @return bool
-     * @throw ValidationException
      */
     public function checkSubject(string $email, ?string $company): bool
     {
         return true;
+    }
+
+    /**
+     * @param string $email
+     * @param null|string $company
+     * @throws ValidationException
+     */
+    public function validate(string $email, ?string $company)
+    {
+        Log::debug(sprintf("SummitRegistrationPromoCode::validate - email: %s, company: %s", $email, $company ?? ''));
+
+        $this->checkSubject($email, $company);
+
+        if (!$this->hasQuantityAvailable()) {
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Promo code %s has reached max. usage (%s).",
+                    $this->getCode(),
+                    $this->getQuantityAvailable()
+                )
+            );
+        }
+        if (!$this->isLive()) {
+            throw new ValidationException(sprintf("The Promo Code %s is not a valid code.", $this->getCode()));
+        }
     }
 
     /**
@@ -666,5 +703,42 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     public function clearTags()
     {
         $this->tags->clear();
+    }
+
+    /**
+     * @return SummitAttendeeTicket[]
+     */
+    public function getTickets()
+    {
+        return $this->tickets;
+    }
+
+    /**
+     * @return SummitAttendeeTicket[]
+     */
+    public function getUnassignedTickets()
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->isNull('owner'));
+        return $this->tickets->matching($criteria);
+    }
+
+    /**
+     * @param SummitAttendeeTicket $ticket
+     */
+    public function addTicket(SummitAttendeeTicket $ticket): void
+    {
+        if ($this->tickets->contains($ticket)) return;
+        $ticket->setPromoCode($this);
+        $this->tickets->add($ticket);
+    }
+
+    public function clearTickets()
+    {
+        $this->tickets->clear();
+    }
+
+    public function canBeAppliedToOrder(SummitOrder $order):bool{
+        return true;
     }
 }

@@ -13,6 +13,8 @@
  **/
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
@@ -75,6 +77,14 @@ final class SummitPromoCodeFactory
             break;
             case SpeakersRegistrationDiscountCode::ClassName:{
                 $promo_code = new SpeakersRegistrationDiscountCode();
+            }
+            break;
+            case PrePaidSummitRegistrationPromoCode::ClassName:{
+                $promo_code = new PrePaidSummitRegistrationPromoCode();
+            }
+            break;
+            case PrePaidSummitRegistrationDiscountCode::ClassName:{
+                $promo_code = new PrePaidSummitRegistrationDiscountCode();
             }
             break;
         }
@@ -142,7 +152,8 @@ final class SummitPromoCodeFactory
         }
 
         switch ($data['class_name']){
-            case SummitRegistrationDiscountCode::ClassName:{
+            case SummitRegistrationDiscountCode::ClassName:
+            case PrePaidSummitRegistrationDiscountCode::ClassName:{
                 if(isset($data['amount']))
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))

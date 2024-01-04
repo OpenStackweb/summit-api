@@ -14,6 +14,8 @@
 use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTicketTypeService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -21,6 +23,7 @@ use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
 
@@ -235,6 +238,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         );
     }
 
+    use ParseAndGetFilter;
     /**
      * @param $summit_id
      * @return mixed
@@ -248,7 +252,24 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             $member = $this->resource_server_context->getCurrentUser();
             if (is_null($member)) return $this->error403();
 
-            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member);
+            $filter = self::getFilter(function(){
+                return [
+                    'promo_code' => ['=='],
+                ];
+
+            }, function(){
+                return [
+                    'promo_code' => 'sometimes|required|string',
+                ];
+            });
+
+            $promocode_val = null;
+            if ($filter->hasFilter('promo_code')) {
+                $promocode_val = $filter->getValue('promo_code')[0];
+                Log::debug(sprintf("OAuth2SummitsTicketTypesApiController::getAllowedBySummitAndCurrentMember promo_code %s", $promocode_val));
+            }
+
+            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member, $promocode_val);
 
             $resp = new PagingResponse(count($ticket_types), count($ticket_types), 1, 1, $ticket_types);
 

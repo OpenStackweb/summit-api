@@ -15,6 +15,7 @@
 use App\Events\CreatedSummitRegistrationOrder;
 use App\Events\MemberUpdated;
 use App\Events\TicketUpdated;
+use App\Facades\ResourceServerContext;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
 use App\Jobs\CopyInvitationTagsToAttendees;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
@@ -26,6 +27,7 @@ use App\Jobs\ProcessTicketDataImport;
 use App\Jobs\SendAttendeeInvitationEmail;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
+use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
@@ -56,6 +58,8 @@ use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
@@ -146,6 +150,155 @@ final class Saga
     }
 }
 
+final class SagaFactory {
+
+    /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
+     * @var ISummitTicketTypeRepository
+     */
+    private $ticket_type_repository;
+
+    /**
+     * @var ISummitRegistrationPromoCodeRepository
+     */
+    private $promo_code_repository;
+
+    /**
+     * @var ISummitAttendeeRepository
+     */
+    private $attendee_repository;
+
+    /**
+     * @var ISummitAttendeeTicketRepository
+     */
+    private $ticket_repository;
+
+    /**
+     * @var IBuildDefaultPaymentGatewayProfileStrategy
+     */
+    private $default_payment_gateway_strategy;
+
+    /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
+     * @var ICompanyService
+     */
+    private $company_service;
+
+    /**
+     * @var ICompanyRepository
+     */
+    private $company_repository;
+
+    /**
+     * @var ITransactionService
+     */
+    protected $tx_service;
+
+    /**
+     * @param IMemberRepository $member_repository
+     * @param ISummitTicketTypeRepository $ticket_type_repository
+     * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
+     * @param ISummitAttendeeRepository $attendee_repository
+     * @param ISummitAttendeeTicketRepository $ticket_repository
+     * @param IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy
+     * @param ILockManagerService $lock_service
+     * @param ICompanyService $company_service
+     * @param ICompanyRepository $company_repository
+     * @param ITransactionService $tx_service
+     */
+    public function __construct(
+        IMemberRepository $member_repository,
+        ISummitTicketTypeRepository $ticket_type_repository,
+        ISummitRegistrationPromoCodeRepository $promo_code_repository,
+        ISummitAttendeeRepository $attendee_repository,
+        ISummitAttendeeTicketRepository $ticket_repository,
+        IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
+        ILockManagerService $lock_service,
+        ICompanyService $company_service,
+        ICompanyRepository $company_repository,
+        ITransactionService $tx_service)
+    {
+        $this->member_repository = $member_repository;
+        $this->ticket_type_repository = $ticket_type_repository;
+        $this->promo_code_repository = $promo_code_repository;
+        $this->attendee_repository = $attendee_repository;
+        $this->ticket_repository = $ticket_repository;
+        $this->default_payment_gateway_strategy = $default_payment_gateway_strategy;
+        $this->lock_service = $lock_service;
+        $this->company_service = $company_service;
+        $this->company_repository = $company_repository;
+        $this->tx_service = $tx_service;
+    }
+
+    private function buildRegularSaga(Member $owner, Summit $summit, array $payload): Saga {
+        Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
+        return Saga::start()
+            ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
+            ->addTask(new PreProcessReservationTask($payload))
+            ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
+            ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
+            ->addTask(new ReserveOrderTask(
+                $owner,
+                $summit,
+                $payload,
+                $this->default_payment_gateway_strategy,
+                $this->member_repository,
+                $this->attendee_repository,
+                $this->ticket_repository,
+                $this->company_repository,
+                $this->company_service,
+                $this->tx_service
+            ));
+    }
+
+    private function buildPrePaidSaga(Member $owner, Summit $summit, array $payload): Saga {
+        Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
+        return Saga::start()
+            ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
+            ->addTask(new PreProcessReservationTask($payload))
+            ->addTask(new AutoAssignPrePaidTicketTask(
+                $owner,
+                $summit,
+                $payload,
+                $this->member_repository,
+                $this->attendee_repository,
+                $this->ticket_type_repository,
+                $this->tx_service,
+                $this->lock_service
+            ));
+    }
+
+    public function build(Member $owner, Summit $summit, array $payload): Saga {
+        Log::debug(sprintf("SagaFactory::build - summit id %s payload %s", $summit->getId(), json_encode($payload)));
+
+        $tickets = $payload['tickets'];
+
+        //Precondition: for PrePaid case, only one ticket at a time
+        if(count($tickets) === 1) {
+            $ticket_dto = $tickets[0];
+            $promo_code_val = $ticket_dto['promo_code'] ?? null;
+            if(!empty($promo_code_val)) {
+                // get promo code
+                $promo_code = $summit->getPromoCodeByCode($promo_code_val);
+                Log::debug(sprintf("SagaFactory::build - summit id %s, promo_code %s", $summit->getId(), $promo_code_val));
+
+                if (PromoCodesUtils::isPrePaidPromoCode($promo_code)) {
+                    return $this->buildPrePaidSaga($owner, $summit, $payload);
+                }
+            }
+        }
+        return $this->buildRegularSaga($owner, $summit, $payload);
+    }
+}
+
 /**
  * Class TaskUtils
  * @package App\Services\Model
@@ -154,7 +307,6 @@ final class TaskUtils
 {
     public static function getOwnerCompanyName($summit, $payload): ?string
     {
-
         $owner_company_id = $payload['owner_company_id'] ?? null;
         if (!is_null($owner_company_id)) {
             $company = $summit->getRegistrationCompanyById(intval($owner_company_id));
@@ -235,6 +387,7 @@ final class ReserveOrderTask extends AbstractTask
      * @param ISummitAttendeeTicketRepository $ticket_repository
      * @param ICompanyRepository $company_repository
      * @param ICompanyService $company_service
+     * @param ITransactionService $tx_service
      */
     public function __construct
     (
@@ -605,23 +758,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $qty = intval($info['qty']);
 
-                $promo_code->checkSubject($owner_email, $owner_company_name);
-
-                if (!$promo_code->hasQuantityAvailable()) {
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "Promo code %s has reached max. usage (%s).",
-                            $promo_code->getCode(),
-                            $promo_code->getQuantityAvailable()
-                        )
-                    );
-                }
-
-                if (!$promo_code->isLive()) {
-                    throw new ValidationException(sprintf('The Promo Code “%s” is not a valid code.', $promo_code->getCode()));
-                }
+                $promo_code->validate($owner_email, $owner_company_name);
 
                 foreach ($info['types'] as $ticket_type_id) {
                     $ticket_type = $this->summit->getTicketTypeById($ticket_type_id);
@@ -993,6 +1130,197 @@ final class PreOrderValidationTask extends AbstractTask
 }
 
 /**
+ * Class AutoAssignPrePaidTicketTask
+ * @package App\Services\Model
+ */
+final class AutoAssignPrePaidTicketTask extends AbstractTask
+{
+
+    /**
+     * @var ITransactionService
+     */
+    private $tx_service;
+
+    /**
+     * @var Member
+     */
+    private $owner;
+
+    /**
+     * @var Summit
+     */
+    private $summit;
+
+    /**
+     * @var array
+     */
+    private $formerState;
+
+    /**
+     * @var array
+     */
+    private $payload;
+
+    /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
+     * @var ISummitAttendeeRepository
+     */
+    private $attendee_repository;
+
+    /**
+     * @var ISummitTicketTypeRepository
+     */
+    private $ticket_type_repository;
+
+    /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
+     * AutoAssignPrePaidTicketTask constructor.
+     * @param Member|null $owner
+     * @param Summit $summit
+     * @param array $payload
+     * @param IMemberRepository $member_repository
+     * @param ISummitAttendeeRepository $attendee_repository
+     * @param ISummitTicketTypeRepository $ticket_type_repository
+     * @param ITransactionService $tx_service
+     * @param ILockManagerService $lock_service
+     */
+    public function __construct
+    (
+        ?Member $owner,
+        Summit $summit,
+        array $payload,
+        IMemberRepository $member_repository,
+        ISummitAttendeeRepository $attendee_repository,
+        ISummitTicketTypeRepository $ticket_type_repository,
+        ITransactionService $tx_service,
+        ILockManagerService $lock_service
+    )
+    {
+        $this->tx_service = $tx_service;
+        $this->lock_service = $lock_service;
+        $this->owner = $owner;
+        $this->summit = $summit;
+        $this->payload = $payload;
+        $this->member_repository = $member_repository;
+        $this->attendee_repository = $attendee_repository;
+        $this->ticket_type_repository = $ticket_type_repository;
+    }
+
+    public function run(array $formerState): array
+    {
+        Log::debug
+        (
+            sprintf
+            (
+                "AutoAssignPrePaidTicketTask::run former state %s payload %s",
+                json_encode($formerState),
+                json_encode($this->payload)
+            )
+        );
+
+        $this->formerState = $formerState;
+
+        return $this->tx_service->transaction(function () {
+            if (is_null($this->owner)) throw new ValidationException("Ticket owner can't be null.");
+
+            $tickets = $this->payload['tickets'];
+            $ticket_dto = $tickets[0];
+
+            $promo_code_val = $ticket_dto['promo_code'] ?? null;
+            if (empty($promo_code_val)) throw new ValidationException("Promo code is required.");
+
+            $type_id = $ticket_dto['type_id'];
+            $order = $this->lock_service->lock('ticket_type.' . $type_id . 'promo_code.' . $promo_code_val .'.sell.lock',
+                function () use ($promo_code_val, $type_id) {
+
+                    $attendee_email = $this->owner->getEmail();
+                    $attendee_company = $this->owner->getCompany();
+
+                    $promo_code = $this->summit->getPromoCodeByCode($promo_code_val);
+                    if (!PromoCodesUtils::isPrePaidPromoCode($promo_code))
+                        throw new EntityNotFoundException("Promo code is not found.");
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AutoAssignPrePaidTicketTask::run - validating promo code %s for attendee %s",
+                            $promo_code->getCode(),
+                            $attendee_email
+                        )
+                    );
+
+                    $promo_code->validate($attendee_email, $attendee_company);
+
+                    if($promo_code->hasPrePaidTicketsAssignedBy($attendee_email)){
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Promo Code %s already has a ticket assigned to %s",
+                                $promo_code->getCode(),
+                                $this->owner->getEmail()
+                            )
+                        );
+                    }
+
+                    $ticket_type = $this->summit->getTicketTypeById($type_id);
+                    if (is_null($ticket_type))
+                        throw new EntityNotFoundException("Ticket Type is not found.");
+
+                    $ticket = $promo_code->getNextAvailableTicketPerType($ticket_type);
+                    if (is_null($ticket))
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "No more available PrePaid Tickets for Promo Code %s",
+                                $promo_code->getCode()
+                            )
+                        );
+
+                    $order = $ticket->getOrder();
+
+                    if(!$order->isOfflineOrder())
+                        throw new ValidationException(sprintf("Order %s is not an offline order.", $order->getId()));
+
+
+                    Log::debug(sprintf("AutoAssignPrePaidTicketTask::run - processing attendee_email %s", $attendee_email));
+                    // assign attendee
+                    // check if we have already an attendee on this summit
+                    $attendee = $this->attendee_repository->getBySummitAndEmail($this->summit, $attendee_email);
+
+                    if (is_null($attendee)) {
+                        Log::debug(sprintf("AutoAssignPrePaidTicketTask::run - creating attendee %s for summit %s", $attendee_email, $this->summit->getId()));
+                        $attendee = SummitAttendeeFactory::build($this->summit, [
+                            'first_name' => $this->owner->getFirstName(),
+                            'last_name' => $this->owner->getLastName(),
+                            'email' => $attendee_email,
+                            'company' => $attendee_company
+                        ], $this->owner);
+                    }
+                    $attendee->updateStatus();
+
+
+                    $ticket->setOwner($attendee);
+                    return $order;
+                });
+            return ['order' => $order];
+        });
+    }
+
+    public function undo() {}
+}
+
+/**
  * Class SummitOrderService
  * @package App\Services\Model
  */
@@ -1170,6 +1498,16 @@ final class SummitOrderService
     public function reserve(?Member $owner, Summit $summit, array $payload): SummitOrder
     {
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::reserve owner %s summit %s payload %s", !is_null($owner) ? $owner->getId() :'N/A',
+                $summit->getId(),
+                json_encode($payload)
+            )
+        );
+
         try {
             // update owner data
             $owner = $this->tx_service->transaction(function () use ($owner, $payload) {
@@ -1217,26 +1555,19 @@ final class SummitOrderService
             if (!is_null($owner) && $owner instanceof Member)
                 Log::debug(sprintf("SummitOrderService::reserve owner %s %s %s", $owner->getId(), $owner->getFirstName(), $owner->getLastName()));
 
-            $state = Saga::start()
-                ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-                ->addTask(new PreProcessReservationTask($payload))
-                ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
-                ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
-                ->addTask(new ReserveOrderTask
-                    (
-                        $owner,
-                        $summit,
-                        $payload,
-                        $this->default_payment_gateway_strategy,
-                        $this->member_repository,
-                        $this->attendee_repository,
-                        $this->ticket_repository,
-                        $this->company_repository,
-                        $this->company_service,
-                        $this->tx_service
-                    )
-                )
-                ->run();
+            $saga_factory = new SagaFactory(
+                $this->member_repository,
+                $this->ticket_type_repository,
+                $this->promo_code_repository,
+                $this->attendee_repository,
+                $this->ticket_repository,
+                $this->default_payment_gateway_strategy,
+                $this->lock_service,
+                $this->company_service,
+                $this->company_repository,
+                $this->tx_service);
+
+            $state = $saga_factory->build($owner, $summit, $payload)->run();
 
             return $state['order'];
         } catch (ValidationException $ex) {
@@ -1278,6 +1609,10 @@ final class SummitOrderService
             if ($order->isFree()) {
                 // free order
                 $order->setPaid();
+                return $order;
+            }
+
+            if($order->isPrePaid()){
                 return $order;
             }
 
@@ -2447,6 +2782,16 @@ final class SummitOrderService
                     }
                     Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $pc->getCode()));
                     $owner_email = !is_null($attendee) ? $attendee->getEmail() : $order->getOwnerEmail();
+                    // todo: create a better approach for this
+                    if(!$pc->canBeAppliedToOrder($order))
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Promo code %s is not valid for this order.", $pc->getCode()
+                            )
+                        );
+
                     $pc->addUsage($owner_email);
                     $pc->applyTo($ticket);
                 }
@@ -3001,11 +3346,11 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
-            if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException("Order not found.");
 
             if ($summit->getId() != $order->getSummitId())
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
 
@@ -3016,7 +3361,13 @@ final class SummitOrderService
 
             $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
 
-            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty, $payload['promo_code'] ?? null);
+            $order = $this->createTicketsForOrder
+            (
+                $order,
+                $ticket_type,
+                $ticket_qty,
+                    $payload['promo_code'] ?? null
+            );
 
             return $order;
         });

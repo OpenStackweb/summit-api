@@ -72,10 +72,10 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
         }
 
 
-        $currentUser = $this->resource_server_context->getCurrentUser();
+        $applicationType = $this->resource_server_context->getApplicationType();
         // choose email serializer depending on user permissions
         // is current user is null then is a service account
-        $values['email'] = is_null($currentUser) ?
+        $values['email'] = $applicationType === "SERVICE"  ?
             JsonUtils::toNullEmail($speaker->getEmail()) :
             JsonUtils::toObfuscatedEmail($speaker->getEmail());
 

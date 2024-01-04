@@ -571,4 +571,95 @@ final class OAuth2SummitPromoCodesApiTest
 
         $this->assertResponseStatus(412);
     }
+
+    public function testGetAllBySummitFilterByTerm(string $term = 'intel')
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => "code=@{$term},creator=@{$term},creator_email=@{$term},owner=@{$term},owner_email=@{$term},speaker=@{$term},speaker_email=@{$term},sponsor=@{$term}",
+            'expand' => 'owners'
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $promo_codes = json_decode($content);
+        $this->assertTrue(!is_null($promo_codes));
+        $this->assertResponseStatus(200);
+    }
+
+    private function getPromoCodeBySummitAndFilter(int $summit_id, string $filter, string $expand = '')
+    {
+        $params = [
+            'id' => $summit_id,
+            'filter' => $filter,
+            'expand' => $expand
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        return json_decode($content);
+    }
+
+    public function testGetByClassName()
+    {
+        $summit_id = self::$summit->getId();
+        $class_name = PrePaidSummitRegistrationDiscountCode::ClassName;
+        $promo_codes = $this->getPromoCodeBySummitAndFilter($summit_id, "class_name=={$class_name}");
+        $this->assertNotNull($promo_codes);
+        $this->assertTrue($promo_codes->total > 0);
+        $this->assertEquals($class_name, $promo_codes->data[0]->class_name);
+    }
+
+    public function testGetByCode()
+    {
+        $summit_id = self::$summit->getId();
+        $code = 'TEST_';
+        $promo_codes = $this->getPromoCodeBySummitAndFilter($summit_id, "code=@{$code}");
+        $this->assertNotNull($promo_codes);
+        $this->assertTrue($promo_codes->total > 0);
+        $this->assertStringStartsWith($code, $promo_codes->data[0]->code);
+    }
+
+    public function testGetByDescription()
+    {
+        $summit_id = self::$summit->getId();
+        $description = 'TEST';
+        $promo_codes = $this->getPromoCodeBySummitAndFilter($summit_id, "description=@{$description}");
+        $this->assertNotNull($promo_codes);
+        $this->assertTrue($promo_codes->total > 0);
+        $this->assertStringStartsWith($description, $promo_codes->data[0]->description);
+    }
+
+    public function testGetByTag()
+    {
+        $summit_id = self::$summit->getId();
+        $tag = 'TEST';
+        $promo_codes = $this->getPromoCodeBySummitAndFilter($summit_id, "tag=@{$tag}", "tags");
+        $this->assertNotNull($promo_codes);
+        $this->assertTrue($promo_codes->total > 0);
+        $this->assertNotEmpty($promo_codes->data[0]->tags);
+        $this->assertStringStartsWith($tag, $promo_codes->data[0]->tags[0]->tag);
+    }
 }

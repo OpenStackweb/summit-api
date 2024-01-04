@@ -840,6 +840,7 @@ trait InsertSummitTestData
         $discount_code->setValidUntilDate(null);
         $discount_code->setAmount(15);
         $discount_code->setQuantityAvailable(10);
+        $discount_code->addTag(new Tag('TEST TAG'));
 
         self::$summit->addPromoCode($discount_code);
         self::$default_discount_code = $discount_code;

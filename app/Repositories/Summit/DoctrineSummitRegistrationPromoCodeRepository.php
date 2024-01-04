@@ -35,7 +35,6 @@ use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 /**
  * Class DoctrineSummitRegistrationPromoCodeRepository
  * @package App\Repositories\Summit
@@ -44,6 +43,22 @@ class DoctrineSummitRegistrationPromoCodeRepository
     extends SilverStripeDoctrineRepository
     implements ISummitRegistrationPromoCodeRepository
 {
+    private function getClassNameMapping(): array {
+        return [
+            SummitRegistrationPromoCode::ClassName           => 'SummitRegistrationPromoCode',
+            SummitRegistrationDiscountCode::ClassName        => 'SummitRegistrationDiscountCode',
+            MemberSummitRegistrationPromoCode::ClassName     => 'MemberSummitRegistrationPromoCode',
+            SpeakerSummitRegistrationPromoCode::ClassName    => 'SpeakerSummitRegistrationPromoCode',
+            SponsorSummitRegistrationPromoCode::ClassName    => 'SponsorSummitRegistrationPromoCode',
+            MemberSummitRegistrationDiscountCode::ClassName  => 'MemberSummitRegistrationDiscountCode',
+            SpeakerSummitRegistrationDiscountCode::ClassName => 'SpeakerSummitRegistrationDiscountCode',
+            SponsorSummitRegistrationDiscountCode::ClassName => 'SponsorSummitRegistrationDiscountCode',
+            SpeakersSummitRegistrationPromoCode::ClassName   => 'SpeakersSummitRegistrationPromoCode',
+            SpeakersRegistrationDiscountCode::ClassName      => 'SpeakersRegistrationDiscountCode',
+            PrePaidSummitRegistrationPromoCode::ClassName    => 'PrePaidSummitRegistrationPromoCode',
+            PrePaidSummitRegistrationDiscountCode::ClassName => 'PrePaidSummitRegistrationDiscountCode'
+        ];
+    }
 
     /**
      * @return string
@@ -263,6 +278,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
      * @param Filter|null $filter
      * @param Order|null $order
      * @return mixed
+     * @throws \Doctrine\DBAL\Exception
      */
     public function getBySummit
     (
@@ -272,59 +288,174 @@ class DoctrineSummitRegistrationPromoCodeRepository
         Order $order   = null
     )
     {
-        $query = $this->getEntityManager()
-                    ->createQueryBuilder()
-                    ->select("pc")
-                    ->from($this->getBaseEntity(), "pc")
-                    ->leftJoin(SummitRegistrationDiscountCode::class, 'dc', 'WITH', 'pc.id = dc.id')
-                    ->leftJoin(MemberSummitRegistrationDiscountCode::class, 'mdc', 'WITH', 'pc.id = mdc.id')
-                    ->leftJoin(SpeakerSummitRegistrationDiscountCode::class, 'spkdc', 'WITH', 'pc.id = spkdc.id')
-                    ->leftJoin(SpeakersRegistrationDiscountCode::class, 'spksdc', 'WITH', 'pc.id = spksdc.id')
-                    ->leftJoin(SponsorSummitRegistrationDiscountCode::class, 'spdc', 'WITH', 'pc.id = spdc.id')
-                    ->leftJoin(MemberSummitRegistrationPromoCode::class, 'mpc', 'WITH', 'pc.id = mpc.id')
-                    ->leftJoin(SponsorSummitRegistrationPromoCode::class, 'spc', 'WITH', 'mpc.id = spc.id')
-                    ->leftJoin(SpeakerSummitRegistrationPromoCode::class, 'spkpc', 'WITH', 'spkpc.id = pc.id')
-                    ->leftJoin(SpeakersSummitRegistrationPromoCode::class, 'spkspc', 'WITH', 'spkspc.id = pc.id')
-                    ->leftJoin(PrePaidSummitRegistrationPromoCode::class, 'pppc', 'WITH', 'pppc.id = pc.id')
-                    ->leftJoin(PrePaidSummitRegistrationDiscountCode::class, 'ppdc', 'WITH', 'ppdc.id = pc.id')
-                    ->leftJoin('pc.summit', 's');
+        $extra_filters = sprintf(" WHERE pc.SummitID = %s", $summit->getId());
 
-        $query = $this->applyExtraJoins($query, $filter);
+        if ($filter->hasFilter("class_name")) {
+            $val = $filter->getUniqueFilter("class_name")->getValue();
+            $class_name_mapping = $this->getClassNameMapping();
+            if (array_key_exists($val, $class_name_mapping)) {
+                $class_name = $class_name_mapping[$val];
+                $extra_filters .= " AND pc.ClassName = '{$class_name}'";
+            }
+        }
 
-        $query = $query->where("s.id = :summit_id");
+        $extra_orders = '';
+        $bindings = [];
 
-        $query->setParameter("summit_id", $summit->getId());
+        if ($filter instanceof Filter) {
+            $where_conditions = $filter->toRawSQL([
+                'code'          => 'pc.Code',
+                'description'   => 'pc.Description',
+                'tag'           => 't.Tag',
+                'tag_id'        => 't.ID',
+                'type' => [
+                    "mpc.Type :operator :value",
+                    "mdc.Type :operator :value",
+                    "spkpc.Type :operator :value",
+                    "spkdc.type :operator :value",
+                    "spkspc.type :operator :value",
+                    "spksdc.type :operator :value"
+                ],
+                'creator' => [
+                    Filter::buildConcatStringFields(["ct.FirstName", "ct.Surname"]),
+                    "ct.FirstName :operator :value",
+                    "ct.Surname :operator :value"
+                ],
+                'creator_email' => Filter::buildEmailField('ct.Email'),
+                'owner' => [
+                    Filter::buildConcatStringFields(["owr.FirstName", "owr.Surname"]),
+                    "owr.FirstName :operator :value",
+                    "owr.Surname :operator :value",
+                    Filter::buildConcatStringFields(["owr2.FirstName", "owr2.Surname"]),
+                    "owr2.FirstName :operator :value",
+                    "owr2.Surname :operator :value",
+                ],
+                'owner_email' => [
+                    Filter::buildEmailField('owr.Email'),
+                    Filter::buildEmailField('owr2.Email'),
+                ],
+                'speaker' => [
+                    Filter::buildConcatStringFields(["ps3.FirstName", "ps3.LastName"]),
+                    "ps3.FirstName :operator :value",
+                    "ps3.LastName :operator :value",
+                    Filter::buildConcatStringFields(["mps3.FirstName", "mps3.Surname"]),
+                    "mps3.FirstName :operator :value",
+                    "mps3.Surname :operator :value )",
+                    Filter::buildConcatStringFields(["ps4.FirstName", "ps4.LastName"]),
+                    "ps4.FirstName :operator :value",
+                    "ps4.LastName :operator :value",
+                    Filter::buildConcatStringFields(["mps4.FirstName", "mps4.Surname"]),
+                    "mps4.FirstName :operator :value",
+                    "mps4.Surname :operator :value",
+                    Filter::buildConcatStringFields(["ps2.FirstName", "ps2.LastName"]),
+                    "ps2.FirstName :operator :value",
+                    "ps2.LastName :operator :value",
+                    Filter::buildConcatStringFields(["ps1.FirstName", "ps1.LastName"]),
+                    "ps1.FirstName :operator :value",
+                    "ps1.LastName :operator :value"
+                ],
+                'speaker_email' => [
+                    Filter::buildEmailField('mps1.Email'),
+                    Filter::buildEmailField('mps2.Email'),
+                    Filter::buildEmailField('mps3.Email'),
+                    Filter::buildEmailField('mps4.Email'),
+                    Filter::buildEmailField('rrps1.Email'),
+                    Filter::buildEmailField('rrps2.Email'),
+                    Filter::buildEmailField('rrps3.Email'),
+                    Filter::buildEmailField('rrps4.Email')
+                ],
+                'sponsor' => [
+                    "spn1.Name :operator :value",
+                    "spn2.Name :operator :value"
+                ],
+            ]);
 
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
+            if (!empty($where_conditions)) {
+                $extra_filters .= " AND {$where_conditions}";
+                $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
         }
 
         if (!is_null($order)) {
-            $order->apply2Query($query, $this->getOrderMappings());
-        } else {
-            //default order
-            $query = $query->addOrderBy("pc.code",'ASC');
+            $extra_orders = $order->toRawSQL(array
+            (
+                'code' => 'Code',
+                'id'   => 'Id',
+            ));
         }
 
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
+        $query_from = <<<SQL
+FROM SummitRegistrationPromoCode pc
+LEFT JOIN SummitRegistrationDiscountCode dc ON pc.ID = dc.ID
+LEFT JOIN SpeakerSummitRegistrationPromoCode spkpc ON pc.ID = spkpc.ID
+LEFT JOIN SpeakerSummitRegistrationDiscountCode spkdc ON pc.ID = spkdc.ID
+LEFT JOIN MemberSummitRegistrationPromoCode mpc ON pc.ID = mpc.ID
+LEFT JOIN MemberSummitRegistrationDiscountCode mdc ON pc.ID = mdc.ID
+LEFT JOIN SponsorSummitRegistrationPromoCode spnpc ON pc.ID = spnpc.ID
+LEFT JOIN SponsorSummitRegistrationDiscountCode spndc ON pc.ID = spndc.ID
+LEFT JOIN SpeakersSummitRegistrationPromoCode spkspc ON pc.ID = spkspc.ID
+LEFT JOIN SpeakersRegistrationDiscountCode spksdc ON pc.ID = spksdc.ID
+LEFT JOIN PrePaidSummitRegistrationPromoCode pppc ON pc.ID = pppc.ID
+LEFT JOIN PrePaidSummitRegistrationDiscountCode ppdc ON pc.ID = ppdc.ID
+LEFT JOIN AssignedPromoCodeSpeaker aspkrdc ON spksdc.ID = aspkrdc.RegistrationPromoCodeID
+LEFT JOIN AssignedPromoCodeSpeaker aspkrpc ON spkspc.ID = aspkrpc.RegistrationPromoCodeID
+LEFT JOIN PresentationSpeaker ps1 ON aspkrdc.SpeakerID = ps1.ID
+LEFT JOIN PresentationSpeaker ps2 ON aspkrpc.SpeakerID = ps2.ID
+LEFT JOIN PresentationSpeaker ps3 ON spkpc.SpeakerID = ps3.ID
+LEFT JOIN PresentationSpeaker ps4 ON spkdc.SpeakerID = ps4.ID
+LEFT JOIN `Member` mps1 ON ps1.MemberID = mps1.ID
+LEFT JOIN `Member` mps2 ON ps2.MemberID = mps2.ID
+LEFT JOIN `Member` mps3 ON ps3.MemberID = mps3.ID
+LEFT JOIN `Member` mps4 ON ps4.MemberID = mps4.ID
+LEFT JOIN `Member` ct ON pc.CreatorID = ct.ID
+LEFT JOIN `Member` owr ON mpc.OwnerID = owr.ID
+LEFT JOIN `Member` owr2 ON mdc.OwnerID = owr2.ID
+LEFT JOIN SpeakerRegistrationRequest rrps1 ON ps1.RegistrationRequestID = rrps1.ID
+LEFT JOIN SpeakerRegistrationRequest rrps2 ON ps2.RegistrationRequestID = rrps2.ID
+LEFT JOIN SpeakerRegistrationRequest rrps3 ON ps3.RegistrationRequestID = rrps3.ID
+LEFT JOIN SpeakerRegistrationRequest rrps4 ON ps4.RegistrationRequestID = rrps4.ID
+LEFT JOIN Company spn1 ON spnpc.SponsorID = spn1.ID
+LEFT JOIN Company spn2 ON spndc.SponsorID = spn2.ID
+LEFT JOIN SummitRegistrationPromoCode_Tags pct ON pct.SummitRegistrationPromoCodeID = pc.ID
+LEFT JOIN Tag t ON pct.TagID = t.ID
+SQL;
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
 
-        foreach($paginator as $entity)
-            $data[] = $entity;
+        $query_count = <<<SQL
+SELECT COUNT(DISTINCT(pc.ID)) AS QTY
+{$query_from}
+{$extra_filters}
+SQL;
 
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+        $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
+
+        $total = intval($stm->fetchColumn(0));
+
+        $limit = $paging_info->getPerPage();
+        $offset = $paging_info->getOffset();
+
+        $query = <<<SQL
+SELECT DISTINCT pc.ID
+{$query_from}
+{$extra_filters} 
+{$extra_orders} LIMIT {$limit} OFFSET {$offset};
+SQL;
+
+        $stm = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
+
+        $promo_code_ids = $stm->fetchAll(\PDO::FETCH_COLUMN);
+
+        $promo_codes = $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.id in (:ids)")
+            ->setParameter("ids", $promo_code_ids)
+            ->getQuery()
+            ->getResult();
+
+        $last_page = (int)ceil($total / $paging_info->getPerPage());
+
+        return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $promo_codes);
     }
 
     /**
@@ -333,20 +464,20 @@ class DoctrineSummitRegistrationPromoCodeRepository
      */
     public function getMetadata(Summit $summit)
     {
-       return [
-           SummitRegistrationPromoCode::getMetadata(),
-           SummitRegistrationDiscountCode::getMetadata(),
-           MemberSummitRegistrationPromoCode::getMetadata(),
-           SpeakerSummitRegistrationPromoCode::getMetadata(),
-           SponsorSummitRegistrationPromoCode::getMetadata(),
-           SponsorSummitRegistrationDiscountCode::getMetadata(),
-           SpeakerSummitRegistrationDiscountCode::getMetadata(),
-           MemberSummitRegistrationDiscountCode::getMetadata(),
-           SpeakersSummitRegistrationPromoCode::getMetadata(),
-           SpeakersRegistrationDiscountCode::getMetadata(),
-           PrePaidSummitRegistrationPromoCode::getMetadata(),
-           PrePaidSummitRegistrationDiscountCode::getMetadata()
-       ];
+        return [
+            SummitRegistrationPromoCode::getMetadata(),
+            SummitRegistrationDiscountCode::getMetadata(),
+            MemberSummitRegistrationPromoCode::getMetadata(),
+            SpeakerSummitRegistrationPromoCode::getMetadata(),
+            SponsorSummitRegistrationPromoCode::getMetadata(),
+            SponsorSummitRegistrationDiscountCode::getMetadata(),
+            SpeakerSummitRegistrationDiscountCode::getMetadata(),
+            MemberSummitRegistrationDiscountCode::getMetadata(),
+            SpeakersSummitRegistrationPromoCode::getMetadata(),
+            SpeakersRegistrationDiscountCode::getMetadata(),
+            PrePaidSummitRegistrationPromoCode::getMetadata(),
+            PrePaidSummitRegistrationDiscountCode::getMetadata()
+        ];
     }
 
     /**

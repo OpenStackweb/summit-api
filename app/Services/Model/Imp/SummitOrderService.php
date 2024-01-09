@@ -2690,7 +2690,7 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s", $order->getNumber()));
 
             $order->setPaymentMethodOffline();
-
+            $order->setPaidStatus();
             // create tickets
             $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
 

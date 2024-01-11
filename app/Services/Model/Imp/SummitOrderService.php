@@ -748,7 +748,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $promo_code_value);
 
-                if (is_null($promo_code) || !$promo_code instanceof SummitRegistrationPromoCode) {
+                if (!$promo_code instanceof SummitRegistrationPromoCode || PromoCodesUtils::isPrePaidPromoCode($promo_code)) {
                     throw new EntityNotFoundException(sprintf('The Promo Code “%s” is not a valid code.', $promo_code_value));
                 }
 

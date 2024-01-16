@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use libs\utils\FormatUtils;
@@ -23,7 +23,7 @@ use models\summit\SummitAttendeeTicketRefundRequest;
  * Class SummitTicketRefundRequestOwner
  * @package App\Jobs\Emails\Registration\Refunds
  */
-class SummitTicketRefundRequestOwner extends AbstractEmailJob
+class SummitTicketRefundRequestOwner extends AbstractSummitEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -52,12 +52,6 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
         $payload[IMailTemplatesConstants::owner_email] = $order->getOwnerEmail();
         $payload[IMailTemplatesConstants::owner_company] = $order->getOwnerCompanyName();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $payload[IMailTemplatesConstants::ticket_number] = $ticket->getNumber();
         $payload[IMailTemplatesConstants::ticket_type_name] = $ticket->getTicketType()->getName();
@@ -84,14 +78,16 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_amount]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
@@ -99,12 +95,6 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_number]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_type_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_currency]['type'] = 'string';

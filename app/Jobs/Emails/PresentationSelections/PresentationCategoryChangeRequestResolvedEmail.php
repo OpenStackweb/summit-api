@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\SummitCategoryChange;
 
@@ -19,7 +19,7 @@ use models\summit\SummitCategoryChange;
  * Class PresentationCategoryChangeRequestResolvedEmail
  * @package App\Jobs\Emails\PresentationSelections
  */
-class PresentationCategoryChangeRequestResolvedEmail extends AbstractEmailJob
+class PresentationCategoryChangeRequestResolvedEmail extends AbstractSummitEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -49,9 +49,6 @@ class PresentationCategoryChangeRequestResolvedEmail extends AbstractEmailJob
 
         $summit = $presentation->getSummit();
         $payload = [];
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_date] = $summit->getMonthYear();
         $payload[IMailTemplatesConstants::aprover_fullname] = $aprover->getFullName();
         $payload[IMailTemplatesConstants::aprover_email] = $aprover->getEmail();
         $payload[IMailTemplatesConstants::requester_fullname] = $requester->getFullName();
@@ -65,17 +62,16 @@ class PresentationCategoryChangeRequestResolvedEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::approval_date] = $request->getApprovalDate()->format('d F, Y');
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, implode(",", $to_emails));
+        parent::__construct($summit, $payload, $template_identifier, implode(",", $to_emails));
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_date]['type'] = 'string';
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::aprover_fullname]['type'] = 'string';
         $payload[IMailTemplatesConstants::aprover_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::requester_fullname]['type'] = 'string';

@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
@@ -20,7 +21,7 @@ use models\summit\Summit;
  * Class SuccessfulIIngestionEmail
  * @package App\Jobs\Emails\Registration\ExternalIngestion
  */
-class SuccessfulIIngestionEmail extends AbstractEmailJob
+class SuccessfulIIngestionEmail extends AbstractSummitEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -56,7 +57,7 @@ class SuccessfulIIngestionEmail extends AbstractEmailJob
             )
         );
 
-        parent::__construct($payload, $template_identifier, $email_to);
+        parent::__construct($summit, $payload, $template_identifier, $email_to);
     }
 
     /**

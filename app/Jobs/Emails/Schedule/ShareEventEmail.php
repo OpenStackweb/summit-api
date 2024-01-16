@@ -11,14 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\SummitEvent;
 /**
  * Class ShareEventEmail
  * @package App\Jobs\Emails\Schedule
  */
-class ShareEventEmail extends AbstractEmailJob
+class ShareEventEmail extends AbstractSummitEmailJob
 {
 
     /**
@@ -34,14 +34,13 @@ class ShareEventEmail extends AbstractEmailJob
         $payload = [];
         $payload[IMailTemplatesConstants::from_email]        = $from_email;
         $payload[IMailTemplatesConstants::to_email]          = $to_email;
-        $payload[IMailTemplatesConstants::summit_name]       = $summit->getName();
         $payload[IMailTemplatesConstants::event_title]       = $event->getTitle();
         $payload[IMailTemplatesConstants::event_description] = $event->getAbstract();
         $payload[IMailTemplatesConstants::event_url]         = $event_url;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::to_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::to_email]);
     }
 
     /**

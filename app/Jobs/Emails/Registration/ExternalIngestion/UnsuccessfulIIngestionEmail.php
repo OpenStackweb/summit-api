@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\Summit;
 
@@ -20,7 +20,7 @@ use models\summit\Summit;
  * Class UnsuccessfulIIngestionEmail
  * @package App\Jobs\Emails\Registration\ExternalIngestion
  */
-class UnsuccessfulIIngestionEmail extends AbstractEmailJob
+class UnsuccessfulIIngestionEmail extends AbstractSummitEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -50,7 +50,7 @@ class UnsuccessfulIIngestionEmail extends AbstractEmailJob
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $email_to);
+        parent::__construct($summit, $payload, $template_identifier, $email_to);
     }
 
     /**

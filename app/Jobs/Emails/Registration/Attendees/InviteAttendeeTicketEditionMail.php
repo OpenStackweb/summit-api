@@ -73,12 +73,6 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
 
         $payload[IMailTemplatesConstants::hash] = $ticket->getHash();
 
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id] = $summit->getVirtualSiteOAuth2ClientId();
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id] = $summit->getMarketingSiteOAuth2ClientId();
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes] = $summit->getMarketingSiteOauth2ClientScopes();
@@ -133,14 +127,15 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
 
         }
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_email]['type'] = 'string';
@@ -151,12 +146,6 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_reassign_ticket_till_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::hash]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes]['type'] = 'string';

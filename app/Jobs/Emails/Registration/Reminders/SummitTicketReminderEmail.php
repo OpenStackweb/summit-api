@@ -58,12 +58,6 @@ class SummitTicketReminderEmail extends AbstractSummitAttendeeTicketEmail
 
         $support_email = $summit->getSupportEmail();
         $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id] = $summit->getVirtualSiteOAuth2ClientId();
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id] = $summit->getMarketingSiteOAuth2ClientId();
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes] = $summit->getMarketingSiteOauth2ClientScopes();
@@ -73,14 +67,16 @@ class SummitTicketReminderEmail extends AbstractSummitAttendeeTicketEmail
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::summit_reassign_ticket_till_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';
@@ -89,12 +85,6 @@ class SummitTicketReminderEmail extends AbstractSummitAttendeeTicketEmail
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
 
         return $payload;
     }

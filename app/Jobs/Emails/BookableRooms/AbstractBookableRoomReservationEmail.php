@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use libs\utils\FormatUtils;
 use models\summit\SummitRoomReservation;
@@ -21,7 +21,7 @@ use models\summit\SummitRoomReservation;
  * Class AbstractBookableRoomReservationEmail
  * @package App\Jobs\Emails\BookableRooms
  */
-abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
+abstract class AbstractBookableRoomReservationEmail extends AbstractSummitEmailJob
 {
 
     protected function getTo(SummitRoomReservation $reservation):string {
@@ -59,19 +59,19 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::reservation_currency] = $reservation->getCurrency();
         $payload[IMailTemplatesConstants::reservation_id] = $reservation->getId();
         $payload[IMailTemplatesConstants::room_capacity] = $room->getCapacity();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
         $payload[IMailTemplatesConstants::reservation_refunded_amount] = $reservation->getRefundedAmount();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-        parent::__construct($payload, $template_identifier, $this->getTo($reservation));
+        parent::__construct($summit, $payload, $template_identifier, $this->getTo($reservation));
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::room_complete_name]['type'] = 'string';
@@ -82,8 +82,6 @@ abstract class AbstractBookableRoomReservationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::reservation_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_id]['type'] = 'int';
         $payload[IMailTemplatesConstants::room_capacity]['type'] = 'int';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
         $payload[IMailTemplatesConstants::reservation_refunded_amount]['type'] = 'string';
 
         return $payload;

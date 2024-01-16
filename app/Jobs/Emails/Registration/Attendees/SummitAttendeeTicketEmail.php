@@ -53,18 +53,11 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
             $payload[IMailTemplatesConstants::order_owner_full_name] = $payload[IMailTemplatesConstants::order_owner_email];
         }
 
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
         if (!is_null($summit_reassign_ticket_till_date)) {
             $payload[IMailTemplatesConstants::summit_reassign_ticket_till_date] = $summit_reassign_ticket_till_date->format("l j F Y h:i A T");
         }
 
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id] = $summit->getVirtualSiteOAuth2ClientId();
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id] = $summit->getMarketingSiteOAuth2ClientId();
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes] = $summit->getMarketingSiteOauth2ClientScopes();
@@ -155,24 +148,20 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
 
         }
 
-        parent::__construct($payload, $template_identifier, $owner_email);
+        parent::__construct($summit, $payload, $template_identifier, $owner_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = AbstractSummitAttendeeTicketEmail::getEmailTemplateSchema();
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::hash]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_virtual_site_oauth2_client_id]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_client_id]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_oauth2_scopes]['type'] = 'string';

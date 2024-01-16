@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +25,7 @@ use utils\Filter;
  * Class PresentationSubmitterSelectionProcessEmail
  * @package App\Jobs\Emails\PresentationSubmissions
  */
-abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJob
+abstract class PresentationSubmitterSelectionProcessEmail extends AbstractSummitEmailJob
 {
     protected $filter;
 
@@ -68,8 +68,6 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJ
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SubmitterEmails)->serialize();
         }
 
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
         $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
         $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
         $payload[IMailTemplatesConstants::submitter_full_name] = $submitter->getFullName();
@@ -99,16 +97,16 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJ
         $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/profile", $submitter_management_base_url);
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::submitter_email], null,null);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::submitter_email], null,null);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::submitter_full_name]['type'] = 'string';

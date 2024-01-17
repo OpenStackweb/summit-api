@@ -1821,7 +1821,7 @@ Route::group(array('prefix' => 'summits'), function () {
             });
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@addPromoCodeBySummit']);
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getMetadata']);
-            Route::group(['prefix' => '{promo_code_id}'], function () {
+            Route::group(['prefix' => '{promo_code_id}', 'where' => ['source' => '[0-9]+']], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getPromoCodeBySummit']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@updatePromoCodeBySummit']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@deletePromoCodeBySummit']);
@@ -1840,6 +1840,8 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
             });
+
+            Route::get('{promo_code_val}/apply', ['middleware' => ['auth.user', 'rate.limit'], 'uses' => 'OAuth2SummitPromoCodesApiController@preValidatePromoCode']);
         });
 
         // speakers promo codes

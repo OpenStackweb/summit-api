@@ -688,4 +688,14 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             return $this->deleted();
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $promo_code_val
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function preValidatePromoCode($summit_id, $promo_code_val)
+    {
+        return $this->ok();
+    }
 }

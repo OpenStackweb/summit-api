@@ -106,6 +106,7 @@ final class SummitPromoCodeFactory
         // common members
 
         if(isset($params['allowed_ticket_types'])){
+            $promo_code->clearTicketTypes();
             foreach ($params['allowed_ticket_types'] as $ticket_type){
                 $promo_code->addAllowedTicketType($ticket_type);
             }

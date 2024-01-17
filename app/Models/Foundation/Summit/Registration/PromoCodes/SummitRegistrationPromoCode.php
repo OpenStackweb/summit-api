@@ -617,6 +617,11 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->allowed_ticket_types->removeElement($ticket_type);
     }
 
+    public function clearTicketTypes()
+    {
+        $this->allowed_ticket_types->clear();
+    }
+
     /**
      * @param SummitBadgeFeatureType $feature_type
      */

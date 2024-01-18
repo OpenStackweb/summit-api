@@ -4,6 +4,7 @@ use models\summit\PrePaidSummitRegistrationDiscountCode;
 use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\summit\SummitTicketType;
 
 /**
  * Copyright 2023 OpenStack Foundation
@@ -482,5 +483,92 @@ final class OAuth2SummitPromoCodesApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(204);
+    }
+
+    public function testPreValidatePromoCodeSuccess()
+    {
+        $type_id = self::$default_ticket_type->getId();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'promo_code_val' => self::$default_prepaid_discount_code->getCode(),
+            'filter' => [
+                'ticket_type_id==' . $type_id,
+                'ticket_type_qty==1',
+                'ticket_type_subtype==' . SummitTicketType::Subtype_PrePaid
+            ]
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@preValidatePromoCode",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
+    public function testPreValidatePromoCodeInvalid()
+    {
+        $type_id = self::$default_ticket_type->getId();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'promo_code_val' => self::$default_prepaid_discount_code->getCode(),
+            'filter' => [
+                'ticket_type_id==' . $type_id,
+                'ticket_type_qty==2',
+                'ticket_type_subtype=='  . SummitTicketType::Subtype_Regular
+            ]
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@preValidatePromoCode",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testPreValidatePromoCodeAppliedTooManyTimes()
+    {
+        $type_id = self::$default_ticket_type->getId();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'promo_code_val' => self::$default_discount_code->getCode(),
+            'filter' => [
+                'ticket_type_id==' . $type_id,
+                'ticket_type_qty==20',
+                'ticket_type_subtype=='  . SummitTicketType::Subtype_Regular
+            ]
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@preValidatePromoCode",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
     }
 }

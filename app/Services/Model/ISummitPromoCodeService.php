@@ -18,6 +18,8 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use utils\Filter;
+
 /**
  * Interface ISummitPromoCodeService
  * @package services\model
@@ -132,4 +134,14 @@ interface ISummitPromoCodeService
      * @throws \Exception
      */
     public function removePromoCodeSpeaker(SummitRegistrationPromoCode $promo_code, int $speaker_id): SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param Member $owner
+     * @param string $promo_code_value
+     * @param Filter $filter
+     * @return SummitRegistrationPromoCode
+     * @throws \Exception
+     */
+    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter);
 }

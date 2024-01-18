@@ -16,7 +16,10 @@ use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
 use App\Jobs\ReApplyPromoCodeRetroActively;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitRegistrationDiscountCodeTicketTypeRuleFactory;
+use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
+use App\Services\Model\Strategies\PromoCodes\PromoCodeValidationStrategyFactory;
 use App\Services\Utils\CSVReader;
+use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -92,6 +95,11 @@ final class SummitPromoCodeService
     private $tag_repository;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISpeakerRepository $speaker_repository
@@ -100,6 +108,7 @@ final class SummitPromoCodeService
      * @param ITagRepository $tag_repository
      * @param ISummitRegistrationPromoCodeRepository $repository
      * @param ITransactionService $tx_service
+     * @param ILockManagerService $lock_service
      */
     public function __construct
     (
@@ -110,7 +119,8 @@ final class SummitPromoCodeService
         ISummitAttendeeTicketRepository $ticket_repository,
         ITagRepository      $tag_repository,
         ISummitRegistrationPromoCodeRepository $repository,
-        ITransactionService $tx_service
+        ITransactionService $tx_service,
+        ILockManagerService $lock_service
     )
     {
         parent::__construct($tx_service);
@@ -121,6 +131,7 @@ final class SummitPromoCodeService
         $this->ticket_repository = $ticket_repository;
         $this->tag_repository = $tag_repository;
         $this->repository = $repository;
+        $this->lock_service = $lock_service;
     }
 
     /**
@@ -738,6 +749,42 @@ final class SummitPromoCodeService
             $promo_code->unassignSpeaker($speaker);
 
             return $promo_code;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $owner
+     * @param string $promo_code_value
+     * @param Filter $filter
+     * @return SummitRegistrationPromoCode
+     * @throws \Exception
+     */
+    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter)
+    {
+        $this->tx_service->transaction(function () use ($summit, $owner, $promo_code_value, $filter) {
+
+            $ticket_type_id = intval($filter->getUniqueFilter('ticket_type_id')->getValue());
+
+            $ticket_type = $summit->getTicketTypeById($ticket_type_id);
+            if (is_null($ticket_type)) {
+                throw new ValidationException(sprintf("Ticket Type %s not found on summit %s.", $ticket_type_id, $summit->getId()));
+            }
+
+            $ticket_type_subtype = $filter->getUniqueFilter('ticket_type_subtype')->getValue();
+            $qty = intval($filter->getUniqueFilter('ticket_type_qty')->getValue());
+
+            $validator = PromoCodeValidationStrategyFactory::createStrategy($ticket_type, $ticket_type_subtype, $qty, $owner);
+
+            $promo_code = $this->repository->getByValueExclusiveLock($summit, $promo_code_value);
+
+            if ($promo_code->getSummitId() != $summit->getId()) {
+                throw new EntityNotFoundException(sprintf("Promo Code %s not found on summit %s.", $promo_code->getCode(), $summit->getId()));
+            }
+
+            if (!$promo_code instanceof SummitRegistrationPromoCode || !$validator->isValid($promo_code)) {
+                throw new ValidationException(sprintf('The Promo Code "%s" is not a valid code.', $promo_code_value));
+            }
         });
     }
 }

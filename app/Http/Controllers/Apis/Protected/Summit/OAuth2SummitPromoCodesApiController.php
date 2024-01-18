@@ -14,11 +14,13 @@
 
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRegistrationPromoCodeRepository;
@@ -26,8 +28,11 @@ use models\summit\ISummitRepository;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SummitRegistrationPromoCode;
+use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitPromoCodeService;
+use utils\Filter;
+use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
 use utils\PagingInfo;
@@ -696,6 +701,42 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function preValidatePromoCode($summit_id, $promo_code_val)
     {
-        return $this->ok();
+        return $this->processRequest(function () use ($summit_id, $promo_code_val) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404("Summit not found.");
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'ticket_type_id'      => ['=='],
+                    'ticket_type_qty'     => ['=='],
+                    'ticket_type_subtype' => ['=='],
+                ]);
+            }
+
+            if (is_null($filter)) $filter = new Filter();
+
+            $filter->validate([
+                'ticket_type_id'      => 'required|integer',
+                'ticket_type_qty'     => [
+                    'required',
+                    'integer',
+                    function ($attribute, $value, $fail) use ($filter) {
+                        $ticket_type_subtype = $filter->getUniqueFilter('ticket_type_subtype')->getValue();
+                        if ($ticket_type_subtype === SummitTicketType::Subtype_PrePaid && $value != 1) {
+                            $fail('The ticket_type_qty must be 1 for prepaid promo codes.');
+                        }
+                    },
+                ],
+                'ticket_type_subtype' => 'required|string|in:'.join(",", SummitTicketType::SubTypes),
+            ]);
+
+            $this->promo_code_service
+                ->preValidatePromoCode($summit, $this->resource_server_context->getCurrentUser(), $promo_code_val, $filter);
+
+            return $this->ok();
+        });
     }
 }

@@ -1841,7 +1841,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
             });
 
-            Route::get('{promo_code_val}/apply', ['middleware' => ['auth.user', 'rate.limit'], 'uses' => 'OAuth2SummitPromoCodesApiController@preValidatePromoCode']);
+            Route::get('{promo_code_val}/apply', ['middleware' => ['rate.limit'], 'uses' => 'OAuth2SummitPromoCodesApiController@preValidatePromoCode']);
         });
 
         // speakers promo codes

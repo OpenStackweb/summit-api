@@ -6940,12 +6940,6 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // speakers promo codes

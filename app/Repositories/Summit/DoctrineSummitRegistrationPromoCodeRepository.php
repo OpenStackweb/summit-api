@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\Filters\SQL\SQLInstanceOfFilterMapping;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -43,22 +45,6 @@ class DoctrineSummitRegistrationPromoCodeRepository
     extends SilverStripeDoctrineRepository
     implements ISummitRegistrationPromoCodeRepository
 {
-    private function getClassNameMapping(): array {
-        return [
-            SummitRegistrationPromoCode::ClassName           => 'SummitRegistrationPromoCode',
-            SummitRegistrationDiscountCode::ClassName        => 'SummitRegistrationDiscountCode',
-            MemberSummitRegistrationPromoCode::ClassName     => 'MemberSummitRegistrationPromoCode',
-            SpeakerSummitRegistrationPromoCode::ClassName    => 'SpeakerSummitRegistrationPromoCode',
-            SponsorSummitRegistrationPromoCode::ClassName    => 'SponsorSummitRegistrationPromoCode',
-            MemberSummitRegistrationDiscountCode::ClassName  => 'MemberSummitRegistrationDiscountCode',
-            SpeakerSummitRegistrationDiscountCode::ClassName => 'SpeakerSummitRegistrationDiscountCode',
-            SponsorSummitRegistrationDiscountCode::ClassName => 'SponsorSummitRegistrationDiscountCode',
-            SpeakersSummitRegistrationPromoCode::ClassName   => 'SpeakersSummitRegistrationPromoCode',
-            SpeakersRegistrationDiscountCode::ClassName      => 'SpeakersRegistrationDiscountCode',
-            PrePaidSummitRegistrationPromoCode::ClassName    => 'PrePaidSummitRegistrationPromoCode',
-            PrePaidSummitRegistrationDiscountCode::ClassName => 'PrePaidSummitRegistrationDiscountCode'
-        ];
-    }
 
     /**
      * @return string
@@ -290,15 +276,6 @@ class DoctrineSummitRegistrationPromoCodeRepository
     {
         $extra_filters = sprintf(" WHERE pc.SummitID = %s", $summit->getId());
 
-        if ($filter->hasFilter("class_name")) {
-            $val = $filter->getUniqueFilter("class_name")->getValue();
-            $class_name_mapping = $this->getClassNameMapping();
-            if (array_key_exists($val, $class_name_mapping)) {
-                $class_name = $class_name_mapping[$val];
-                $extra_filters .= " AND pc.ClassName = '{$class_name}'";
-            }
-        }
-
         $extra_orders = '';
         $bindings = [];
 
@@ -308,6 +285,23 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 'description'   => 'pc.Description',
                 'tag'           => 't.Tag',
                 'tag_id'        => 't.ID',
+                'class_name'    =>
+                new SQLInstanceOfFilterMapping(
+                    "pc",
+                    [
+                        SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
+                        SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
+                        MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
+                        SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
+                        SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
+                        MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
+                        SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
+                        SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
+                        SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
+                        SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
+                        PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
+                        PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
+                    ]),
                 'type' => [
                     "mpc.Type :operator :value",
                     "mdc.Type :operator :value",

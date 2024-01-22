@@ -285,7 +285,11 @@ final class Filter
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 $condition = '';
                 $mapping = $mappings[$filter->getField()];
-                if (is_array($mapping)) {
+                if ($mapping instanceof FilterMapping) {
+                    Log::debug(sprintf("Filter::toRawSQL single filter idx %s field %s mapping is IQueryApplyable", $idx, $filter->getField()));
+                    $condition = $mapping->toRawSQL($filter);
+                }
+                else if (is_array($mapping)) {
                     foreach ($mapping as $mapping_or) {
                         if (!empty($condition)) $condition .= ' OR ';
                         $condition .= $this->applyCondition($filter, $mapping_or, $param_idx);

@@ -56,7 +56,6 @@ abstract class BrowserKitTestCase extends BaseTestCase
         DB::setDefaultConnection("model");
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force' => '']);
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force' => '']);
-        Mail::pretend(true);
         $this->seed(TestSeeder::class);
     }
 }

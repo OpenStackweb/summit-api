@@ -13,7 +13,7 @@
  **/
 
 use LaravelDoctrine\ORM\Facades\EntityManager;
-use models\summit\Summit;
+use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use utils\FilterParser;
 use utils\Order;
@@ -46,7 +46,9 @@ class SummitRegistrationPromoCodeRepositoryTest extends ProtectedApiTest
         $term = "test";
 
         $filter = FilterParser::parse(
-            ["filter" => "code=@{$term},creator=@{$term},creator_email=@{$term},owner=@{$term},owner_email=@{$term},speaker=@{$term},speaker_email=@{$term},sponsor=@{$term}"],
+            [
+                "code=@{$term},creator=@{$term},creator_email=@{$term},owner=@{$term},owner_email=@{$term},speaker=@{$term},speaker_email=@{$term},sponsor=@{$term}"
+            ],
             [
                 "code"          => ['=@'],
                 "creator"       => ['=@'],
@@ -56,6 +58,43 @@ class SummitRegistrationPromoCodeRepositoryTest extends ProtectedApiTest
                 "speaker"       => ['=@'],
                 "speaker_email" => ['=@'],
                 "sponsor"       => ['=@'],
+            ]
+        );
+
+        $order = new Order([
+            OrderElement::buildDescFor("id"),
+        ]);
+
+        $page = $repository->getBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
+
+        self::assertNotNull($page);
+        self::assertNotEmpty($page->getItems());
+    }
+
+    public function testGetBySummitAndClassNameFilter(){
+        $repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
+
+        $term = "test";
+
+        $filter = FilterParser::parse(
+            [
+                sprintf("or(class_name==%s||%s)", SummitRegistrationPromoCode::ClassName, SummitRegistrationDiscountCode::ClassName),
+                "or(code=@{$term})",
+            ],
+            [
+                'code' => ['@@', '=@', '=='],
+                'description' => ['@@', '=@'],
+                'creator' => ['@@', '=@', '=='],
+                'creator_email' => ['@@', '=@', '=='],
+                'owner' => ['@@', '=@', '=='],
+                'owner_email' => ['@@', '=@', '=='],
+                'speaker' => ['@@', '=@', '=='],
+                'speaker_email' => ['@@', '=@', '=='],
+                'sponsor' => ['@@', '=@', '=='],
+                'class_name' => ['=='],
+                'type' => ['=='],
+                'tag' => ['@@','=@', '=='],
+                'tag_id' => ['=='],
             ]
         );
 

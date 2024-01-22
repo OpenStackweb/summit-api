@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use libs\utils\JsonUtils;
 use models\summit\PresentationSpeaker;
 /**
  * Class AdminPresentationSpeakerCSVSerializer
@@ -19,7 +21,6 @@ use models\summit\PresentationSpeaker;
 final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBaseSerializer
 {
     protected static $array_mappings = [
-        'Email' => 'email:json_string',
         'Notes' => 'notes:json_string',
     ];
 
@@ -44,6 +45,7 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         if(!$speaker instanceof PresentationSpeaker) return [];
 
         $values = parent::serialize($expand, $fields, $relations, $params);
+        $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
         $summit = isset($params['summit'])? $params['summit']:null;
 
         if(isset($values['bio'])){

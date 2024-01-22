@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use libs\utils\JsonUtils;
 use models\summit\PresentationSpeaker;
 /**
  * Class AdminPresentationSpeakerSerializer
@@ -20,7 +22,6 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 {
     protected static $array_mappings = [
         'Notes' => 'notes:json_string',
-        'Email' => 'email:json_string',
     ];
 
     protected static $allowed_relations = [
@@ -53,6 +54,7 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 
         $values          = parent::serialize($expand, $fields, $relations, $params);
         $summit          = isset($params['summit'])? $params['summit']:null;
+        $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
 
         if(!is_null($summit)){
             if(in_array('summit_assistance', $relations)) {

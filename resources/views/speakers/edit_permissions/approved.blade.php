@@ -3,7 +3,7 @@
 @section('content')
     <div class="content">
         <p>
-            Your Speaker Edit Profile Permission Request was Approved!.
+            Thank you for approving the request to grant the speaker edit permission.
         </p>
     </div>
 @stop

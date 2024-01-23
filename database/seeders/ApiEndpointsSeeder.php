@@ -6934,6 +6934,15 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
+            [
+                'name' => 'pre-validate-promo-code',
+                'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_val}/apply',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ]
+            ],
             // speakers promo codes
             [
                 'name' => 'get-promo-code-speakers',

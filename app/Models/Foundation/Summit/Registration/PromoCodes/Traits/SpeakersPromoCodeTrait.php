@@ -306,9 +306,11 @@ trait SpeakersPromoCodeTrait
     public function isRedeemed():bool
     {
         try {
+            if(!$this->owners->count()) return false;
+
             $query = $this->createQuery("SELECT COUNT(e.id) from models\summit\AssignedPromoCodeSpeaker e 
             JOIN e.registration_promo_code pc 
-            WHERE pc.id = :promo_code_id and e.redeemed is null");
+            WHERE pc.id = :promo_code_id AND e.redeemed is null");
 
             $query->setParameter('promo_code_id', $this->getId());
             $res = $query->getSingleScalarResult();

@@ -274,10 +274,16 @@ class DoctrineSummitRegistrationPromoCodeRepository
         Order $order   = null
     )
     {
-        $extra_filters = sprintf(" WHERE pc.SummitID = %s", $summit->getId());
+        /*
+         * we perform raw sql query because doctrine is generating a very complex query
+         * over ( 61 joins) and that breaks mysql max join limit (SQLSTATE[HY000]: General error:
+1116     * Too many tables; MySQL can only use 61 tables in a join in)
+         */
 
+        $bindings = ['param_summit_id' => $summit->getId()];
+        $extra_filters = " WHERE pc.SummitID = :param_summit_id";
         $extra_orders = '';
-        $bindings = [];
+
 
         if ($filter instanceof Filter) {
             $where_conditions = $filter->toRawSQL([
@@ -423,7 +429,7 @@ SQL;
 
         $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchOne());
 
         $limit = $paging_info->getPerPage();
         $offset = $paging_info->getOffset();
@@ -437,19 +443,24 @@ SQL;
 
         $stm = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
 
-        $promo_code_ids = $stm->fetchAll(\PDO::FETCH_COLUMN);
+        $ids = $stm->fetchFirstColumn(\PDO::FETCH_COLUMN);
 
-        $promo_codes = $this->getEntityManager()->createQueryBuilder()
+        $data = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->where("e.id in (:ids)")
-            ->setParameter("ids", $promo_code_ids)
+            ->setParameter("ids", $ids)
             ->getQuery()
             ->getResult();
 
-        $last_page = (int)ceil($total / $paging_info->getPerPage());
-
-        return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $promo_codes);
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
     }
 
     /**

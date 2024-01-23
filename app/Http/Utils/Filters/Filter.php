@@ -285,7 +285,10 @@ final class Filter
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 $condition = '';
                 $mapping = $mappings[$filter->getField()];
-                if (is_array($mapping)) {
+                if ($mapping instanceof FilterMapping) {
+                    $condition = $mapping->toRawSQL($filter);
+                }
+                else if (is_array($mapping)) {
                     foreach ($mapping as $mapping_or) {
                         if (!empty($condition)) $condition .= ' OR ';
                         $condition .= $this->applyCondition($filter, $mapping_or, $param_idx);
@@ -294,16 +297,19 @@ final class Filter
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
                 }
 
-                if (!empty($sql) && !empty($condition)) $sql .= sprintf(" %s ", $this->getMainOp($idx));
-                $sql .= $condition;
+                if (!empty($sql) && !empty($condition))
+                    $sql .= sprintf(" %s ", $this->getMainOp($idx));
+                if(!empty($condition)) $sql .= '('. $condition. ')';
             } else if (is_array($filter)) {
                 // an array is a OR
                 $condition = '';
                 foreach ($filter as $e) {
                     if ($e instanceof FilterElement && isset($mappings[$e->getField()])) {
                         $mapping = $mappings[$e->getField()];
-
-                        if (is_array($mapping)) {
+                        if ($mapping instanceof FilterMapping) {
+                            $condition = $mapping->toRawSQL($e);
+                        }
+                        else if (is_array($mapping)) {
                             foreach ($mapping as $mapping_or) {
 
                                 if (!empty($condition)) $condition .= ' OR ';
@@ -316,8 +322,8 @@ final class Filter
                     }
                 }
 
-                if (!empty($sql)) $sql .= sprintf(" %s ", $this->getMainOp($idx));
-                $sql .= '( ' . $condition . ' )';
+                if (!empty($sql) && !empty($condition)) $sql .= sprintf(" %s ", $this->getMainOp($idx));
+                if(!empty($condition)) $sql .= '('. $condition. ')';
             }
         }
 

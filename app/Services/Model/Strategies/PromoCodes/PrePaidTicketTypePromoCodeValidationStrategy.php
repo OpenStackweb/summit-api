@@ -14,6 +14,7 @@
  **/
 
 use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
+use Illuminate\Support\Facades\Log;
 use models\summit\SummitRegistrationPromoCode;
 
 /**
@@ -24,6 +25,15 @@ final class PrePaidTicketTypePromoCodeValidationStrategy implements IPromoCodeVa
 {
     public function isValid(SummitRegistrationPromoCode $promo_code): bool
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "PrePaidTicketTypePromoCodeValidationStrategy::isValid promo code %s",
+                $promo_code->getId()
+            )
+        );
+
         return PromoCodesUtils::isPrePaidPromoCode($promo_code);
     }
 }

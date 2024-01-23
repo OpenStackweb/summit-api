@@ -48,6 +48,17 @@ final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeVa
      */
     public function __construct(SummitTicketType $ticket_type, Member $owner, int $qty)
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "RegularTicketTypePromoCodeValidationStrategy::construct ticket type %s owner %s qty %s",
+                $ticket_type->getId(),
+                $owner->getId(),
+                $qty
+            )
+        );
+
         $this->ticket_type = $ticket_type;
         $this->owner = $owner;
         $this->qty = $qty;
@@ -58,6 +69,18 @@ final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeVa
      */
     public function isValid(SummitRegistrationPromoCode $promo_code): bool
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "RegularTicketTypePromoCodeValidationStrategy::isValid promo_code %s ticket type %s owner %s qty %s",
+                $promo_code->getCode(),
+                $this->ticket_type->getId(),
+                $this->owner->getId(),
+                $this->qty
+            )
+        );
+
         $owner_email = $this->owner->getEmail();
         $owner_company_name = $this->owner->getCompany();
 

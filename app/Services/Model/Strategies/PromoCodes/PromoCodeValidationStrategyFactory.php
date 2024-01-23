@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\summit\SummitTicketType;
 /**
@@ -29,6 +30,18 @@ final class PromoCodeValidationStrategyFactory
      */
     public static function createStrategy(SummitTicketType $ticket_type, string $ticket_type_subtype, int $qty, Member $owner): IPromoCodeValidationStrategy
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "PromoCodeValidationStrategyFactory::createStrategy ticket type %s subtype %s qty %s owner %s",
+                $ticket_type->getId(),
+                $ticket_type_subtype,
+                $qty,
+                $owner->getId()
+            )
+        );
+
         return $ticket_type_subtype === SummitTicketType::Subtype_Regular ?
             new RegularTicketTypePromoCodeValidationStrategy($ticket_type, $owner, $qty) :
             new PrePaidTicketTypePromoCodeValidationStrategy();

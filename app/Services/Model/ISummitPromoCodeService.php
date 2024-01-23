@@ -140,8 +140,8 @@ interface ISummitPromoCodeService
      * @param Member $owner
      * @param string $promo_code_value
      * @param Filter $filter
-     * @return SummitRegistrationPromoCode
+     * @return void
      * @throws \Exception
      */
-    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter);
+    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):void;
 }

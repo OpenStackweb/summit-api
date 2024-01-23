@@ -14,7 +14,6 @@
 
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
-use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;

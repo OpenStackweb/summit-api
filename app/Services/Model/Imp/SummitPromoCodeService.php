@@ -757,10 +757,10 @@ final class SummitPromoCodeService
      * @param Member $owner
      * @param string $promo_code_value
      * @param Filter $filter
-     * @return SummitRegistrationPromoCode
+     * @return void
      * @throws \Exception
      */
-    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter)
+    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):void
     {
         $this->tx_service->transaction(function () use ($summit, $owner, $promo_code_value, $filter) {
 
@@ -768,7 +768,7 @@ final class SummitPromoCodeService
 
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
             if (is_null($ticket_type)) {
-                throw new ValidationException(sprintf("Ticket Type %s not found on summit %s.", $ticket_type_id, $summit->getId()));
+                throw new EntityNotFoundException(sprintf("Ticket Type %s not found on summit %s.", $ticket_type_id, $summit->getId()));
             }
 
             $ticket_type_subtype = $filter->getUniqueFilter('ticket_type_subtype')->getValue();

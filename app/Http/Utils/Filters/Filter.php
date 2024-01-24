@@ -205,7 +205,11 @@ final class Filter
     {
         $filter_key_values = $this->getFiltersKeyValues();
         foreach ($rules as $field => $rule) {
-            if (!isset($filter_key_values[$field])) continue;
+            if (!isset($filter_key_values[$field])) {
+                if(str_contains($rule, 'required') )
+                    throw new ValidationException(sprintf("field %s is required", $field));
+                continue;
+            }
             $values = $filter_key_values[$field];
             if (!is_array($values)) $values = [$values];
             foreach ($values as $val) {

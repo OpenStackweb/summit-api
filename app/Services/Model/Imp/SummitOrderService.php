@@ -50,6 +50,7 @@ use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\ITagRepository;
 use models\main\Member;
+use models\main\Tag;
 use models\oauth2\IResourceServerContext;
 use models\summit\factories\SummitAttendeeFactory;
 use models\summit\IPaymentConstants;
@@ -3973,8 +3974,13 @@ final class SummitOrderService
                             $tags = explode('|', $row['attendee_tags']);
                             $attendee->clearTags();
                             foreach ($tags as $tag_val) {
+                                $tag_val = trim($tag_val);
                                 $tag = $this->tags_repository->getByTag($tag_val);
-                                if(is_null($tag)) continue;
+                                if(is_null($tag)){
+                                    // create tag
+                                    $tag = new Tag($tag_val);
+                                    $this->tags_repository->add($tag);
+                                }
                                 $attendee->addTag($tag);
                             }
                         }

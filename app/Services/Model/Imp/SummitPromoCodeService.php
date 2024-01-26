@@ -778,13 +778,10 @@ final class SummitPromoCodeService
 
             $promo_code = $this->repository->getByValueExclusiveLock($summit, $promo_code_value);
 
-            if ($promo_code->getSummitId() != $summit->getId()) {
-                throw new EntityNotFoundException(sprintf("Promo Code %s not found on summit %s.", $promo_code->getCode(), $summit->getId()));
-            }
-
-            if (!$promo_code instanceof SummitRegistrationPromoCode || !$validator->isValid($promo_code)) {
+            if (!$promo_code instanceof SummitRegistrationPromoCode || $promo_code->getSummitId() != $summit->getId() || !$validator->isValid($promo_code)){
                 throw new ValidationException(sprintf('The Promo Code "%s" is not a valid code.', $promo_code_value));
             }
+
         });
     }
 }

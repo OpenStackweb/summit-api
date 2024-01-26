@@ -442,6 +442,10 @@ final class ReserveOrderTask extends AbstractTask
             // try to get invitation
             $invitation = $this->summit->getSummitRegistrationInvitationByEmail($owner_email);
             $hasPendingInvitation = !is_null($invitation) && $invitation->isPending();
+            if($hasPendingInvitation){
+                // cancel previous reserved orders
+                $invitation->cancelReservedOrders();
+            }
 
             $payment_gateway = $this->summit->getPaymentGateWayPerApp
             (
@@ -1556,7 +1560,8 @@ final class SummitOrderService
             if (!is_null($owner) && $owner instanceof Member)
                 Log::debug(sprintf("SummitOrderService::reserve owner %s %s %s", $owner->getId(), $owner->getFirstName(), $owner->getLastName()));
 
-            $saga_factory = new SagaFactory(
+            $saga_factory = new SagaFactory
+            (
                 $this->member_repository,
                 $this->ticket_type_repository,
                 $this->promo_code_repository,
@@ -1566,7 +1571,8 @@ final class SummitOrderService
                 $this->lock_service,
                 $this->company_service,
                 $this->company_repository,
-                $this->tx_service);
+                $this->tx_service
+            );
 
             $state = $saga_factory->build($owner, $summit, $payload)->run();
 
@@ -1597,13 +1603,13 @@ final class SummitOrderService
             $order = $this->order_repository->getByHashLockExclusive($order_hash);
 
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
-                throw new EntityNotFoundException("order not found.");
+                throw new EntityNotFoundException("Order not found.");
 
             if ($order->isCancelled())
-                throw new ValidationException("order is canceled, please retry it.");
+                throw new ValidationException("Order is canceled, please retry it.");
 
             if ($order->isVoid())
-                throw new ValidationException("order is canceled, please retry it.");
+                throw new ValidationException("Order is canceled, please retry it.");
 
             SummitOrderFactory::populate($summit, $order, $payload);
 
@@ -2259,6 +2265,64 @@ final class SummitOrderService
     }
 
     /**
+     * @param int $order_id
+     * @return void
+     * @throws \Exception
+     */
+    public function processOrder2Revoke(int $order_id):void {
+        $this->tx_service->transaction(function () use ($order_id) {
+
+            try {
+
+                $order = $this->order_repository->getByIdExclusiveLock($order_id);
+                if (!$order instanceof SummitOrder) return;
+                $summit = $order->getSummit();
+                Log::debug(sprintf("SummitOrderService::processOrder2Revoke processing order %s summit %s", $order->getId(), $summit->getId()));
+                $payment_gateway = $summit->getPaymentGateWayPerApp
+                (
+                    IPaymentConstants::ApplicationTypeRegistration,
+                    $this->default_payment_gateway_strategy
+                );
+
+                if (is_null($payment_gateway)) {
+                    Log::warning(sprintf("SummitOrderService::processOrder2Revoke Payment configuration is not set for summit %s", $summit->getId()));
+                    return;
+                }
+
+                Log::warning(sprintf("SummitOrderService::processOrder2Revoke cancelling order reservation %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
+
+                $cart_id = $order->getPaymentGatewayCartId();
+                if (!empty($cart_id)) {
+
+                    $status = $payment_gateway->getCartStatus($cart_id);
+                    if (!is_null($status)) {
+                        if (!$payment_gateway->canAbandon($status)) {
+                            Log::warning(sprintf("SummitOrderService::processOrder2Revoke reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
+                            if ($payment_gateway->isSucceeded($status)) {
+                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                // invoke now to avoid delays
+                                $this->processInvitation($order);
+                            }
+                            return;
+                        }
+                        $payment_gateway->abandonCart($cart_id);
+                    }
+                }
+
+                list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
+                $order->setCancelled();
+
+                Log::warning(sprintf("SummitOrderService::processOrder2Revoke order %s got cancelled", $order->getId()));
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+            }
+        });
+    }
+
+    /**
      * @param Summit $summit
      * @param string $order_hash
      * @return SummitOrder
@@ -2327,6 +2391,7 @@ final class SummitOrderService
         });
     }
 
+
     /**
      * @param int $minutes
      * @param int $max
@@ -2386,7 +2451,6 @@ final class SummitOrderService
             });
         }
     }
-
     /**
      * @param int $minutes
      * @param int $max
@@ -2404,57 +2468,7 @@ final class SummitOrderService
         Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes got %s orders to revoke", count($orders)));
 
         foreach ($orders as $order) {
-            $this->tx_service->transaction(function () use ($order) {
-
-                try {
-                    if (!$order instanceof SummitOrder) return;
-
-                    $order = $this->order_repository->getByIdExclusiveLock($order->getId());
-                    if (!$order instanceof SummitOrder) return;
-                    $summit = $order->getSummit();
-                    Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes processing order %s summit %s", $order->getId(), $summit->getId()));
-                    $payment_gateway = $summit->getPaymentGateWayPerApp
-                    (
-                        IPaymentConstants::ApplicationTypeRegistration,
-                        $this->default_payment_gateway_strategy
-                    );
-
-                    if (is_null($payment_gateway)) {
-                        Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes Payment configuration is not set for summit %s", $summit->getId()));
-                        return;
-                    }
-
-                    Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes cancelling order reservation %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
-
-                    $cart_id = $order->getPaymentGatewayCartId();
-                    if (!empty($cart_id)) {
-
-                        $status = $payment_gateway->getCartStatus($cart_id);
-                        if (!is_null($status)) {
-                            if (!$payment_gateway->canAbandon($status)) {
-                                Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
-                                if ($payment_gateway->isSucceeded($status)) {
-                                    $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
-                                    // invoke now to avoid delays
-                                    $this->processInvitation($order);
-                                }
-                                return;
-                            }
-                            $payment_gateway->abandonCart($cart_id);
-                        }
-                    }
-
-                    list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
-
-                    $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
-
-                    $order->setCancelled();
-
-                    Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes order %s got cancelled", $order->getId()));
-                } catch (\Exception $ex) {
-                    Log::warning($ex);
-                }
-            });
+           $this->processOrder2Revoke($order->getId());
         }
     }
 

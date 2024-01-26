@@ -412,4 +412,11 @@ interface ISummitOrderService extends IProcessPaymentService
      * @param int $attendee_id
      */
     public function copyInvitationTagsToAttendee(int $summit_id, int $invitation_id, int $attendee_id):void;
+
+    /**
+     * @param int $order_id
+     * @return void
+     * @throws \Exception
+     */
+    public function processOrder2Revoke(int $order_id):void;
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\RevokeSummitOrder;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -327,6 +328,15 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->set_password_link = $set_password_link;
     }
 
+    public function cancelReservedOrders():void{
+        foreach ($this->orders as $order){
+            if($order->isReserved()){
+                Log::debug(sprintf("SummitRegistrationInvitation::cancelReservedOrders id %s cancelling order id %s", $this->id, $order->getId()));
+                RevokeSummitOrder::dispatch($order->getId());
+            }
+        }
+    }
+
     public function getBoughtTicketTypesExcerpt():array{
 
         Log::debug(sprintf("SummitRegistrationInvitation::getBoughtTicketTypesExcerpt id %s", $this->id));
@@ -347,7 +357,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
                 )
             );
 
-            if($order->isPaid() || $order->isReserved() || $order->isConfirmed()) {
+            if($order->isPaid() || $order->isConfirmed()) {
                 foreach ($order->getTickets() as $ticket) {
                     $type = $ticket->getTicketType();
                     if (!isset($bought_tickets[$type->getId()])) {

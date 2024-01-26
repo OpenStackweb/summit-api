@@ -767,7 +767,7 @@ final class ApplyPromoCodeTask extends AbstractTask
                         throw new ValidationException(sprintf("Ticket Type %s not found on summit %s.", $ticket_type_id, $this->summit->getId()));
                     }
                     if (!$promo_code->canBeAppliedTo($ticket_type)) {
-                        Log::debug(sprintf("Promo code %s can not be applied to ticket type %s", $promo_code->getCode(), $ticket_type->getName()));
+                        Log::debug(sprintf("Promo code %s can not be applied to Ticket Type %s", $promo_code->getCode(), $ticket_type->getName()));
                         throw new ValidationException(sprintf("Promo code %s can not be applied to Ticket Type %s.", $promo_code->getCode(), $ticket_type->getName()));
                     }
                 }

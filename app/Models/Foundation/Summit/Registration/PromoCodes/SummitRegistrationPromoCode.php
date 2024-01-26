@@ -365,6 +365,11 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return true;
     }
 
+    public function isInfinite(): bool
+    {
+        return $this->quantity_available == 0;
+    }
+
     /**
      * @param string|null $ownerEmail
      * @param int $usage

@@ -92,8 +92,8 @@ final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeVa
             throw new ValidationException($error);
         }
 
-        if ($this->qty > $promo_code->getQuantityAvailable()) {
-            $error = sprintf("Promo code %s can not be applied to ticket type %s more than %s times",
+        if (!$promo_code->isInfinite() && $this->qty > $promo_code->getQuantityAvailable()) {
+            $error = sprintf("Promo code %s can not be applied to Ticket Type %s more than %s times.",
                 $promo_code->getCode(), $this->ticket_type->getName(), $promo_code->getQuantityAvailable());
             Log::debug($error);
             throw new ValidationException($error);

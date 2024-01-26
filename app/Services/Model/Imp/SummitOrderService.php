@@ -3942,17 +3942,18 @@ final class SummitOrderService
                 }
                 // process attendee data  ( try to get an existent attendee or create a new one)
                 if ($attendee_data_present) {
-                    Log::debug(sprintf("SummitOrderService::processTicketData - has attendee data present ... trying to get attendee %s", $row['attendee_email']));
+                    $attendee_email = $row['attendee_email'] ?? '';
+                    Log::debug(sprintf("SummitOrderService::processTicketData - has attendee data present ... trying to get attendee %s", $attendee_email));
                     // check if attendee exists
-                    $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $row['attendee_email']);
-                    $member = $this->member_repository->getByEmail($row['attendee_email']);
+                    $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+                    $member = $this->member_repository->getByEmail($attendee_email);
 
-                    if (is_null($attendee)) {
+                    if (is_null($attendee) && !empty($attendee_email)){
 
-                        Log::debug(sprintf("SummitOrderService::processTicketData - attendee %s does not exists", $row['attendee_email']));
+                        Log::debug(sprintf("SummitOrderService::processTicketData - attendee %s does not exists", $attendee_email));
                         // create attendee ( populate payload)
                         $payload = [
-                            'email' => $row['attendee_email'],
+                            'email' => $attendee_email,
                             'first_name' => $row['attendee_first_name'],
                             'last_name' => $row['attendee_last_name'],
                         ];

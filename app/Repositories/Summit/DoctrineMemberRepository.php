@@ -470,6 +470,7 @@ SQL,
     public function getByEmail($email): ?Member
     {
         $email = PunnyCodeHelper::encodeEmail($email);
+        if(empty($email)) return null;
         return $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")

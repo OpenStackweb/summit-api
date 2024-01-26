@@ -717,8 +717,17 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
             if (is_null($filter)) $filter = new Filter();
 
+            if (!$filter->hasFilter('ticket_type_id'))
+                return $this->error412("Type ID is required.");
+
+            if (!$filter->hasFilter('ticket_type_qty'))
+                return $this->error412("Quantity is required.");
+
+            if (!$filter->hasFilter('ticket_type_subtype'))
+                return $this->error412("Subtype is required.");
+
             $filter->validate([
-                'ticket_type_id'      => 'required|integer',
+                'ticket_type_id'      => 'integer',
                 'ticket_type_qty'     => [
                     'required',
                     'integer',
@@ -729,11 +738,16 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                         }
                     },
                 ],
-                'ticket_type_subtype' => 'required|string|in:'.join(",", SummitTicketType::SubTypes),
+                'ticket_type_subtype' => 'string|in:'.join(",", SummitTicketType::SubTypes),
             ]);
 
-            $this->promo_code_service
-                ->preValidatePromoCode($summit, $this->resource_server_context->getCurrentUser(), $promo_code_val, $filter);
+            $this->promo_code_service->preValidatePromoCode(
+                $summit,
+                $this->resource_server_context->getCurrentUser(),
+                $promo_code_val,
+                intval($filter->getUniqueFilter('ticket_type_id')->getValue()),
+                $filter->getUniqueFilter('ticket_type_subtype')->getValue(),
+                intval($filter->getUniqueFilter('ticket_type_qty')->getValue()));
 
             return $this->ok();
         });

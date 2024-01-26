@@ -139,9 +139,12 @@ interface ISummitPromoCodeService
      * @param Summit $summit
      * @param Member $owner
      * @param string $promo_code_value
-     * @param Filter $filter
+     * @param int $ticket_type_id
+     * @param string $ticket_type_subtype
+     * @param int $qty
      * @return void
      * @throws \Exception
      */
-    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):void;
+    public function preValidatePromoCode(
+        Summit $summit, Member $owner, string $promo_code_value, int $ticket_type_id, string $ticket_type_subtype, int $qty):void;
 }

@@ -3931,12 +3931,51 @@ final class SummitOrderService
                     }
 
                     if (!is_null($ticket) && !$ticket->isPaid()) {
-                        Log::warning("SummitOrderService::processTicketData - ticket is not paid");
+                        Log::warning
+                        (
+                            sprintf
+                            (
+                                "SummitOrderService::processTicketData - ticket %s is not paid",
+                                $ticket->getId(),
+                            )
+                        );
                         return;
                     }
 
                     if (!is_null($ticket) && !$ticket->isActive()) {
-                        Log::warning("SummitOrderService::processTicketData - ticket is not active");
+                        Log::warning
+                        (
+                            sprintf
+                            (
+                                "SummitOrderService::processTicketData - ticket %s is not active",
+                                $ticket->getId()
+                            )
+                        );
+                        return;
+                    }
+
+                    if (!is_null($ticket) && !$ticket->hasOrder()) {
+                        Log::warning
+                        (
+                            sprintf
+                            (
+                                "SummitOrderService::processTicketData - ticket %s does not belongs to an order.",
+                                $ticket->getId()
+                            )
+                        );
+                        return;
+                    }
+
+                    if (!is_null($ticket) && !$ticket->getOrder()->getSummitId() != $summit->getId()) {
+                        Log::warning
+                        (
+                            sprintf
+                            (
+                                "SummitOrderService::processTicketData - ticket %s does not belongs to summit %s",
+                                $ticket->getId(),
+                                $summit->getId()
+                            )
+                        );
                         return;
                     }
                 }
@@ -4070,7 +4109,6 @@ final class SummitOrderService
                         }
                     }
                 }
-
 
                 if (is_null($ticket)) {
                     Log::warning("SummitOrderService::processTicketData ticket is null stop current row processing.");

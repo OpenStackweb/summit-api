@@ -69,6 +69,8 @@ final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeVa
      */
     public function isValid(SummitRegistrationPromoCode $promo_code): bool
     {
+        if(PromoCodesUtils::isPrePaidPromoCode($promo_code)) return false;
+
         Log::debug
         (
             sprintf
@@ -99,6 +101,6 @@ final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeVa
             throw new ValidationException($error);
         }
 
-        return !PromoCodesUtils::isPrePaidPromoCode($promo_code);
+        return true;
     }
 }

@@ -96,7 +96,8 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
                 $query->innerJoin($this->table, $this->alias, Join::WITH);
 
             foreach ($this->joins as $join => $join_alias){
-                $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
+                if (!in_array($join_alias, $query->getAllAliases()))
+                    $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
             }
 
             $inner_where = sprintf("( %s )", $inner_where);
@@ -115,7 +116,8 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
             $query->innerJoin($this->table, $this->alias, Join::WITH);
 
         foreach ($this->joins as $join => $join_alias){
-            $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
+            if (!in_array($join_alias, $query->getAllAliases()))
+                $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
         }
 
         if($this->main_operator === Filter::MainOperatorAnd)
@@ -151,7 +153,8 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
                 $query->innerJoin($this->table, $this->alias, Join::WITH);
 
             foreach ($this->joins as $join => $join_alias){
-                $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
+                if (!in_array($join_alias, $query->getAllAliases()))
+                    $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
             }
 
             return $inner_where;
@@ -165,7 +168,8 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
             $query->innerJoin($this->table, $this->alias, Join::WITH);
 
         foreach ($this->joins as $join => $join_alias){
-            $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
+            if (!in_array($join_alias, $query->getAllAliases()))
+                $query->innerJoin(sprintf("%s.%s", $this->alias, $join), $join_alias, Join::WITH);
         }
 
         return $where;

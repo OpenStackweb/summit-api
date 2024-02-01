@@ -15,6 +15,7 @@
 
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
+use models\summit\PresentationType;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitTicketType;
@@ -186,19 +187,29 @@ DQL;
     {
         $filters_input = [
             'actions==type_id==1&&is_completed==0,actions==type_id==2&&is_completed==1',
+            'summit_id==123',
         ];
 
         $filter = FilterParser::parse($filters_input, [
             'actions' => ['=='],
-            'type_id' => ['==']
+            'type_id' => ['=='],
+            'summit_id' => ['=='],
         ]);
 
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $query = new QueryBuilder($em);
 
-        $query->select("e")
+        $query
+            ->distinct("e")
+            ->select("e")
             ->from(\models\summit\SummitEvent::class, "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
+        $query = $query->innerJoin("e.type", "et", Join::ON);
+        $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
+        // if we delete the track, its set to null
+        $query = $query->leftJoin("e.category", "c", Join::ON);
+        $query = $query->leftJoin("p.attendees_votes", 'av', Join::ON);
+        $query = $query->leftJoin("e.tags", "t", Join::ON);
 
         $filter->apply2Query($query, [
             'actions' => new DoctrineCollectionFieldsFilterMapping
@@ -212,7 +223,13 @@ DQL;
                     'type_id' => 'at.id',
                     'is_completed' => 'a.is_completed'
                 ]
-            )
+            ),
+            'summit_id' => new DoctrineJoinFilterMapping
+            (
+                'e.summit',
+                's',
+                "s.id  :operator :value"
+            ),
         ]);
 
         $dql = $query->getDQL();

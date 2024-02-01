@@ -1312,8 +1312,22 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                             'company' => $attendee_company
                         ], $this->owner);
                     }
-                    $attendee->updateStatus();
 
+                    // update data ( in case that exists )
+                    $attendee = SummitAttendeeFactory::populate
+                    (
+                        $this->summit,
+                        $attendee,
+                        [
+                            'first_name' => $this->owner->getFirstName(),
+                            'last_name' => $this->owner->getLastName(),
+                            'email' => $attendee_email,
+                            'company' => $attendee_company
+                        ],
+                        $this->owner
+                    );
+
+                    $attendee->updateStatus();
 
                     $ticket->setOwner($attendee);
 

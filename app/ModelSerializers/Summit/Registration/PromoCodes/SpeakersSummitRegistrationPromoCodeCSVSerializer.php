@@ -32,10 +32,22 @@ class SpeakersSummitRegistrationPromoCodeCSVSerializer
 
         $code            = $this->object;
         if(!$code instanceof SpeakersSummitRegistrationPromoCode) return [];
-        return self::serializeFields2CSV
+        $values = self::serializeFields2CSV
         (
             $code,
             parent::serialize($expand, $fields, $relations, $params)
         );
+
+        $owner_name = [];
+        $owner_email = [];
+        foreach($code->getOwners() as $owner){
+            $owner_name[] = $owner->getSpeaker()->getFullName();
+            $owner_email[] = $owner->getSpeaker()->getEmail();
+
+        }
+
+        $values['owner_name'] = implode('|', $owner_name);
+        $values['owner_email'] = implode('|', $owner_email);
+        return $values;
     }
 }

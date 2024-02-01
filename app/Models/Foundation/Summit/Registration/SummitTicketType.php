@@ -48,6 +48,8 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     const GBP_Currency = 'GBP';
     const CAD_Currency = 'CAD';
 
+    const WON_Currency = 'KRW';
+
     const AmountFree = 0.0;
 
     const QtyInfinite = 0;
@@ -57,6 +59,7 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
         self::EUR_Currency,
         self::GBP_Currency,
         self::CAD_Currency,
+        self::WON_Currency,
     ];
 
     const Audience_All = 'All';
@@ -435,6 +438,10 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
                 return '€';
             case self::GBP_Currency:
                 return '£';
+            case self::WON_Currency:
+                return '₩';
+            case self::CAD_Currency:
+                return 'C$';
             default:
                 return '$';
         }

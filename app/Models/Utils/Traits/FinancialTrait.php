@@ -27,22 +27,22 @@ trait FinancialTrait
     static function isZeroDecimalCurrency(string $currency): bool
     {
         $zeroDecimalCurrencies = [
-            'JPY',
-            'BIF',
-            'CLP',
-            'DJF',
-            'GNF',
-            'KMF',
-            'KRW',
-            'MGA',
-            'PYG',
-            'RWF',
-            'UGX',
-            'VND',
-            'VUV',
-            'XAF',
-            'XOF',
-            'XPF',
+            'JPY', // Japanese Yen
+            'BIF', // Burundian Franc
+            'CLP', // Chilean Peso
+            'DJF',// Djiboutian Franc
+            'GNF',// Guinean Franc
+            'KMF',// Comorian Franc
+            'KRW', // South Korean Won
+            'MGA',// Malagasy Ariary
+            'PYG',// Paraguayan Guarani
+            'RWF',// Rwandan Franc
+            'UGX',// Ugandan Shilling
+            'VND',// Vietnamese Dong
+            'VUV',// Vanuatu Vatu
+            'XAF',// Central African CFA Franc
+            'XOF',// West African CFA Franc
+            'XPF',// CFP Franc
         ];
 
         return in_array($currency, $zeroDecimalCurrencies);

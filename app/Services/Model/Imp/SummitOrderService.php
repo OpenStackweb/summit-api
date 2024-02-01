@@ -1316,6 +1316,23 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 
 
                     $ticket->setOwner($attendee);
+
+                    // delay invitation by N Minutes ....
+                    $delay = Config::get("registration.attendee_invitation_email_delay", 10);
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AutoAssignPrePaidTicketTask::run ticket %s sending invitation email to attendee %s with delay %s minutes",
+                            $ticket->getNumber(),
+                            $attendee->getEmail(),
+                            $delay
+                        )
+                    );
+
+                    SendAttendeeInvitationEmail::dispatch($ticket->getId())->delay(now()->addMinutes($delay));
+
                     return $order;
                 });
             return ['order' => $order];

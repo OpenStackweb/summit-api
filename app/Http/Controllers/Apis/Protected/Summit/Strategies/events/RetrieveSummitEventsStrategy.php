@@ -211,6 +211,7 @@ abstract class RetrieveSummitEventsStrategy
             'type_show_always_on_schedule' => ['=='],
             'has_media_upload_with_type' => ['=='],
             'has_not_media_upload_with_type' => ['=='],
+            'actions' => ['=='],
         ];
     }
 
@@ -262,6 +263,7 @@ abstract class RetrieveSummitEventsStrategy
             'type_show_always_on_schedule' => ['sometimes', new Boolean],
             'has_media_upload_with_type' => 'sometimes|integer',
             'has_not_media_upload_with_type' => 'sometimes|integer',
+            'actions' => 'sometimes|string',
         ];
     }
 }

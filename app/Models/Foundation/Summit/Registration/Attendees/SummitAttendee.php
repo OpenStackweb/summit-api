@@ -755,6 +755,7 @@ SQL;
      */
     public function setCompanyName(?string $company_name): void
     {
+        Log::debug(sprintf("SummitAttendee::setCompanyName attendee %s company_name %s", $this->getId(), $company_name));
         $this->company_name = TextUtils::trim($company_name);
     }
 
@@ -771,6 +772,7 @@ SQL;
      */
     public function setCompany(Company $company): void
     {
+        Log::debug(sprintf("SummitAttendee::setCompany attendee %s company %s", $this->getId(), $company->getId()));
         $this->company = $company;
     }
 

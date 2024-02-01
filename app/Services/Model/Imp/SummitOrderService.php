@@ -1247,7 +1247,20 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                 function () use ($promo_code_val, $type_id) {
 
                     $attendee_email = $this->owner->getEmail();
-                    $attendee_company = $this->owner->getCompany();
+                    // use what we have on payload first
+                    // company
+                    $attendee_company = $ticket_dto['attendee_company'] ?? null;
+                    if(empty($attendee_company)) {
+                        $attendee_company = $this->payload['owner_company'] ?? $this->owner->getCompany();
+                    }
+                    // first name
+                    $attendee_first_name = $ticket_dto['attendee_first_name'] ?? null;
+                    if(empty($attendee_first_name))
+                        $attendee_first_name = $this->payload['owner_first_name'] ?? $this->owner->getFirstName();
+                    // last name
+                    $attendee_last_name = $ticket_dto['attendee_last_name'] ?? null;
+                    if(empty($attendee_last_name))
+                        $attendee_last_name = $this->payload['owner_last_name'] ?? $this->owner->getLastName();
 
                     $promo_code = $this->summit->getPromoCodeByCode($promo_code_val);
                     if (!PromoCodesUtils::isPrePaidPromoCode($promo_code))
@@ -1257,9 +1270,10 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     (
                         sprintf
                         (
-                            "AutoAssignPrePaidTicketTask::run - validating promo code %s for attendee %s",
+                            "AutoAssignPrePaidTicketTask::run - validating promo code %s for attendee %s company %s",
                             $promo_code->getCode(),
-                            $attendee_email
+                            $attendee_email,
+                            $attendee_company
                         )
                     );
 
@@ -1306,11 +1320,13 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     if (is_null($attendee)) {
                         Log::debug(sprintf("AutoAssignPrePaidTicketTask::run - creating attendee %s for summit %s", $attendee_email, $this->summit->getId()));
                         $attendee = SummitAttendeeFactory::build($this->summit, [
-                            'first_name' => $this->owner->getFirstName(),
-                            'last_name' => $this->owner->getLastName(),
+                            'first_name' => $attendee_first_name,
+                            'last_name' => $attendee_last_name,
                             'email' => $attendee_email,
                             'company' => $attendee_company
                         ], $this->owner);
+
+                        $this->attendee_repository->add($attendee, true);
                     }
 
                     // update data ( in case that exists )
@@ -1319,8 +1335,8 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                         $this->summit,
                         $attendee,
                         [
-                            'first_name' => $this->owner->getFirstName(),
-                            'last_name' => $this->owner->getLastName(),
+                            'first_name' => $attendee_first_name,
+                            'last_name' => $attendee_last_name,
                             'email' => $attendee_email,
                             'company' => $attendee_company
                         ],
@@ -1329,7 +1345,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 
                     $attendee->updateStatus();
 
-                    $ticket->setOwner($attendee);
+                    $attendee->addTicket($ticket);
 
                     // delay invitation by N Minutes ....
                     $delay = Config::get("registration.attendee_invitation_email_delay", 10);
@@ -1346,6 +1362,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     );
 
                     SendAttendeeInvitationEmail::dispatch($ticket->getId())->delay(now()->addMinutes($delay));
+
 
                     return $order;
                 });
@@ -1642,15 +1659,15 @@ final class SummitOrderService
             if ($order->isVoid())
                 throw new ValidationException("Order is canceled, please retry it.");
 
+            if($order->isPrePaid()){
+                return $order;
+            }
+
             SummitOrderFactory::populate($summit, $order, $payload);
 
             if ($order->isFree()) {
                 // free order
                 $order->setPaid();
-                return $order;
-            }
-
-            if($order->isPrePaid()){
                 return $order;
             }
 

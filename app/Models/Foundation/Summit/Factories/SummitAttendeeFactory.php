@@ -19,6 +19,7 @@ use models\main\Company;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use function Psy\debug;
 
 /**
  * Class SummitAttendeeFactory
@@ -56,6 +57,17 @@ final class SummitAttendeeFactory
         bool           $validate_extra_questions = true
     )
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendeeFactory::populate summit %s attendee %s payload %s",
+                $summit->getId(),
+                $attendee->getId(),
+                json_encode($payload)
+            )
+        );
+
         $company_repository = EntityManager::getRepository(Company::class);
 
         if (!is_null($member)) {
@@ -83,7 +95,7 @@ final class SummitAttendeeFactory
         // company by name
         if (isset($payload['company'])) {
             $attendee->clearCompany();
-            if( !empty($payload['company'])) {
+            if(!empty($payload['company'])) {
                 $attendee->setCompanyName(trim($payload['company']));
                 $company = $company_repository->getByName(trim($payload['company']));
                 if (!is_null($company)) {

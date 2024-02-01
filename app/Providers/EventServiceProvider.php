@@ -160,7 +160,8 @@ final class EventServiceProvider extends ServiceProvider
             if (!$event instanceof MemberUpdated) return;
             Log::debug(sprintf("EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
 
-            UpdateIDPMemberInfo::dispatch(
+            UpdateIDPMemberInfo::dispatch
+            (
                 $event->getEmail(),
                 $event->getFirstName(),
                 $event->getLastName(),

@@ -212,7 +212,16 @@ final class ExternalUserApi extends AbstractOAuth2Api
      */
     public function updateUser(int $id, ?string $first_name, ?string $last_name, ?string $company_name)
     {
-        Log::debug(sprintf("ExternalUserApi::updateUser first_name %s last_name %s", $first_name, $last_name));
+        Log::debug
+        (
+            sprintf
+            (
+                "ExternalUserApi::updateUser first_name %s last_name %s company_name %s",
+                $first_name,
+                $last_name,
+                $company_name
+            )
+        );
 
         try {
             $query = [
@@ -222,9 +231,9 @@ final class ExternalUserApi extends AbstractOAuth2Api
             $response = $this->client->put(sprintf('/api/v1/users/%s', $id), [
                     'query' => $query,
                     RequestOptions::JSON => [
-                        'first_name'    => $first_name,
-                        'last_name'     => $last_name,
-                        'company_name'  => $company_name
+                        'first_name' => $first_name,
+                        'last_name'  => $last_name,
+                        'company'   => $company_name
                     ]
                 ]
             );

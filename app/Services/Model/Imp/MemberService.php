@@ -663,8 +663,22 @@ final class MemberService
     }
 
     public function updateExternalUser(int $member_id, ?string $first_name, ?string $last_name, ?string $company_name):void {
-        Log::debug(sprintf("MemberService::updateExternalUser - sending new profile info to user api for member %s", $member_id));
-        $this->external_user_api->updateUser($member_id, $first_name, $last_name, $company_name);
+        Log::debug
+        (
+            sprintf
+            (
+                "MemberService::updateExternalUser - sending new profile info to user api for member %s fname %s lname %s company %s",
+                $member_id,
+                $first_name,
+                $last_name,
+                $company_name
+
+            )
+        );
+
+        $res = $this->external_user_api->updateUser($member_id, $first_name, $last_name, $company_name);
+
+        Log::debug(sprintf("MemberService::updateExternalUser res %s", json_encode($res)));
     }
 
     public function updatePendingRegistrationRequest(string $email, bool $is_redeemed, ?string $first_name, ?string $last_name,

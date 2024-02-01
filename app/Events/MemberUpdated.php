@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
 /**
  * Class MemberUpdated
  * @package App\Events
@@ -52,15 +54,32 @@ final class MemberUpdated
      * @param string $last_name
      * @param string $company
      */
-    public function __construct(int $member_id,
-                                string $email,
-                                ?string $first_name, ?string $last_name, ?string $company)
+    public function __construct
+    (
+        int $member_id,
+        string $email,
+        ?string $first_name,
+        ?string $last_name,
+        ?string $company
+    )
     {
         $this->member_id = $member_id;
         $this->email = $email;
         $this->first_name = $first_name;
         $this->last_name = $last_name;
         $this->company = $company;
+        Log::debug
+        (
+            sprintf
+            (
+                "MemberUpdated::construct member_id %s email %s first_name %s last_name %s company %s",
+                $member_id,
+                $email,
+                $first_name,
+                $last_name,
+                $company
+            )
+        );
     }
 
 

@@ -756,23 +756,21 @@ final class SummitPromoCodeService
      * @param Summit $summit
      * @param Member $owner
      * @param string $promo_code_value
-     * @param Filter $filter
+     * @param int $ticket_type_id
+     * @param string $ticket_type_subtype
+     * @param int $qty
      * @return void
      * @throws \Exception
      */
-    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):void
+    public function preValidatePromoCode(
+        Summit $summit, Member $owner, string $promo_code_value, int $ticket_type_id, string $ticket_type_subtype, int $qty):void
     {
-        $this->tx_service->transaction(function () use ($summit, $owner, $promo_code_value, $filter) {
-
-            $ticket_type_id = intval($filter->getUniqueFilter('ticket_type_id')->getValue());
+        $this->tx_service->transaction(function () use ($summit, $owner, $promo_code_value, $ticket_type_id, $ticket_type_subtype, $qty) {
 
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
             if (is_null($ticket_type)) {
                 throw new EntityNotFoundException(sprintf("Ticket Type %s not found on summit %s.", $ticket_type_id, $summit->getId()));
             }
-
-            $ticket_type_subtype = $filter->getUniqueFilter('ticket_type_subtype')->getValue();
-            $qty = intval($filter->getUniqueFilter('ticket_type_qty')->getValue());
 
             $validator = PromoCodeValidationStrategyFactory::createStrategy($ticket_type, $ticket_type_subtype, $qty, $owner);
 
@@ -781,7 +779,6 @@ final class SummitPromoCodeService
             if (!$promo_code instanceof SummitRegistrationPromoCode || $promo_code->getSummitId() != $summit->getId() || !$validator->isValid($promo_code)){
                 throw new ValidationException(sprintf('The Promo Code "%s" is not a valid code.', $promo_code_value));
             }
-
         });
     }
 }

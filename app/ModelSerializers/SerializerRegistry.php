@@ -191,8 +191,12 @@ final class SerializerRegistry
         $this->registry['Nomination'] = NominationSerializer::class;
 
         // extra questions base
+
         $this->registry['ExtraQuestionTypeValue'] = ExtraQuestionTypeValueSerializer::class;
         $this->registry['SubQuestionRule'] = SubQuestionRuleSerializer::class;
+
+        $this->registry['SummitSponsorExtraQuestionType'] = SummitSponsorExtraQuestionTypeSerializer::class;
+
         // metrics
 
         $this->registry['SummitMetric'] = SummitMetricSerializer::class;
@@ -523,6 +527,8 @@ final class SerializerRegistry
             self::SerializerType_Public => SponsorBadgeScanSerializer::class,
             self::SerializerType_CSV => SponsorBadgeScanCSVSerializer::class,
         ];
+
+        $this->registry['SponsorBadgeScanExtraQuestionAnswer'] = SponsorBadgeScanExtraQuestionAnswerSerializer::class;
 
         $this->registry['SponsorUserInfoGrant'] = [
             self::SerializerType_Public => SponsorUserInfoGrantSerializer::class,

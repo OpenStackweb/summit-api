@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\SponsorBadgeScan;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
@@ -21,15 +22,17 @@ use ModelSerializers\SilverStripeSerializer;
  */
 final class SponsorBadgeScanSerializer extends SilverStripeSerializer
 {
-
-
     protected static $array_mappings = [
         'ScanDate'     => 'scan_date:datetime_epoch',
         'QRCode'       => 'qr_code:json_string',
         'SponsorId'    => 'sponsor_id:json_int',
         'UserId'       => 'scanned_by_id:json_int',
         'BadgeId'      => 'badge_id:json_int',
-        'Notes'        => 'notes:json_string',
+        'Notes'        => 'notes:json_string'
+    ];
+
+    protected static $allowed_relations = [
+        'extra_question_answers',
     ];
 
     /**
@@ -43,7 +46,17 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
     {
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];
+
+        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if(in_array('extra_question_answers', $relations) && !isset($values['extra_question_answers'])){
+            $extra_question_answers = [];
+            foreach ($scan->getExtraQuestionAnswers() as $extra_question_answer){
+                $extra_question_answers[] = $extra_question_answer->getId();
+            }
+            $values['extra_question_answers'] = $extra_question_answers;
+        }
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
@@ -73,4 +86,11 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
         }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'extra_question_answers' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getExtraQuestionAnswers',
+        ]
+    ];
 }

@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
 use App\Jobs\Emails\AbstractSummitAttendeeTicketEmail;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;

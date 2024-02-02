@@ -68,8 +68,6 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractSummit
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SubmitterEmails)->serialize();
         }
 
-        $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
-        $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
         $payload[IMailTemplatesConstants::submitter_full_name] = $submitter->getFullName();
         $payload[IMailTemplatesConstants::submitter_email] = $submitter->getEmail();
 
@@ -91,9 +89,6 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractSummit
         if(empty($submitter_management_base_url))
             throw new \InvalidArgumentException('cfp.base_url is null.');
 
-        $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
-        $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
-
         $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/profile", $submitter_management_base_url);
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
@@ -107,12 +102,8 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractSummit
 
         $payload = parent::getEmailTemplateSchema();
 
-        $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::submitter_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
 
         $track_schema = [];

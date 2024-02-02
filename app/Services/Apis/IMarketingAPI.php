@@ -23,7 +23,7 @@ interface IMarketingAPI
      * @param string $search_pattern
      * @param int $page
      * @param int $per_page
-     * @return mixed
+     * @return array
      */
-    public function getConfigValues(int $summit_id, string $search_pattern, int $page = 1, int $per_page = 5): array;
+    public function getConfigValues(int $summit_id, string $search_pattern, int $page = 1, int $per_page = 100): array;
 }

@@ -18,7 +18,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
-use models\summit\Summit;
 use services\model\ISpeakerService;
 use utils\FilterParser;
 /**

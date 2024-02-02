@@ -49,9 +49,6 @@ class UnsubmitForReviewEmail extends AbstractSummitEmailJob
     public static function getEmailTemplateSchema(): array{
 
         $payload = parent::getEmailTemplateSchema();
-
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
         $payload[IMailTemplatesConstants::submitter_fullname]['type'] = 'string';
         $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::track]['type'] = 'string';

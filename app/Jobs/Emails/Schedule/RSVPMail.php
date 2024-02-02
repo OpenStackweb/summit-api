@@ -60,14 +60,15 @@ abstract class RSVPMail extends AbstractSummitEmailJob
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::confirmation_number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_uri]['type'] = 'string';
 

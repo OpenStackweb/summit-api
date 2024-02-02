@@ -47,10 +47,10 @@ class ShareEventEmail extends AbstractSummitEmailJob
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::from_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::to_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_description]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_url]['type'] = 'string';

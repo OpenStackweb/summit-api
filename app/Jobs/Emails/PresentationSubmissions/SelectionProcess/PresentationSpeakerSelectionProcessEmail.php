@@ -116,8 +116,6 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
             $payload[IMailTemplatesConstants::cc_email] = implode(',', $cc_email);
         }
 
-        $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
-        $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
         $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName();
         $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
 
@@ -143,8 +141,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
         $payload[IMailTemplatesConstants::promo_code] = '';
         $payload[IMailTemplatesConstants::promo_code_until_date] = '';
         $payload[IMailTemplatesConstants::ticket_type] = '';
-        $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
-        $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
+
 
         if(!is_null($promo_code)){
             $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
@@ -170,15 +167,11 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
         $payload = parent::getEmailTemplateSchema();
 
         $payload[IMailTemplatesConstants::cc_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::speaker_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::promo_code]['type'] = 'string';
         $payload[IMailTemplatesConstants::promo_code_until_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_type]['type'] = 'string';
-        $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::speaker_confirmation_link]['type'] = 'string';
 

@@ -54,7 +54,7 @@ final class MarketingAPI implements IMarketingAPI
     {
         $this->base_url = Config::get('marketing.base_url');
         if (is_null($this->base_url))
-            throw new ValidationException("Config entry marketing.base_url not setted");
+            throw new ValidationException("Config entry marketing.base_url not set.");
 
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory());
@@ -83,6 +83,7 @@ final class MarketingAPI implements IMarketingAPI
             foreach ($params as $param => $value) {
                 $query[$param] = $value;
             }
+
             $response = $this->client->get($api_url, ['query' => $query]);
 
             if ($response->getStatusCode() !== 200)
@@ -96,8 +97,7 @@ final class MarketingAPI implements IMarketingAPI
             if ($content_type !== 'application/json')
                 throw new Exception('invalid content type!');
 
-            $json = $response->getBody()->getContents();
-            return json_decode($json, true);
+            return json_decode($response->getBody()->getContents(), true);
         }
         catch(RequestException $ex){
             Log::warning($ex->getMessage());
@@ -110,19 +110,66 @@ final class MarketingAPI implements IMarketingAPI
      */
     public function getConfigValues(int $summit_id, string $search_pattern, int $page = 1, int $per_page = 100): array
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s",
+                $summit_id,
+                $search_pattern,
+                $page,
+                $per_page
+            )
+        );
+
         try {
             $cache_key = "show_{$summit_id}_email_templates_marketing_vars";
             $cached_data = $this->cache_service->getSingleValue($cache_key);
-            if (!is_null($cached_data)) return json_decode($cached_data);
+            if (!is_null($cached_data)) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache hit",
+                        $summit_id,
+                        $search_pattern,
+                        $page,
+                        $per_page
+                    )
+                );
+                return json_decode($cached_data, true);
+            }
 
             $res = $this->getEntity("/api/public/v1/config-values/all/shows/{$summit_id}",
-                ['page' => $page, 'per_page' => $per_page, 'key__contains' => $search_pattern]);
+                [
+                    'page' => $page,
+                    'per_page' => $per_page,
+                    'key__contains' => trim($search_pattern)
+                ]
+            );
 
-            $this->cache_service->setSingleValue($cache_key, json_encode($res), $this->cache_ttl);
-            return $res;
+            $payload = [];
+
+            foreach ($res['data'] as $setting) {
+                $payload[$setting['key']] =$setting['type'] === 'FILE' ? $setting['file'] : $setting['value'];
+            }
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache miss",
+                    $summit_id,
+                    $search_pattern,
+                    $page,
+                    $per_page
+                )
+            );
+            $this->cache_service->setSingleValue($cache_key, json_encode($payload), $this->cache_ttl);
+            return $payload;
         } catch (\Exception $ex){
             Log::error($ex);
-            return ['data' => []];
+            return [];
         }
     }
 }

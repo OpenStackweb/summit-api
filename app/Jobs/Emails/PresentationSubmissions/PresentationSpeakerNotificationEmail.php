@@ -13,7 +13,6 @@
  **/
 use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
-use App\Jobs\Emails\Traits\SummitEmailJob;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;

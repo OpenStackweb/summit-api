@@ -13,6 +13,7 @@
  **/
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
 use services\apis\IMarketingAPI;
 
@@ -42,6 +43,19 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         ?string $bcc_email = null
     )
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "AbstractSummitEmailJob::construct summit %s payload %s to_email %s",
+                $summit->getId(),
+                json_encode($payload),
+                $to_email
+            )
+        );
+
+        // inject summit common data
+        $payload[IMailTemplatesConstants::summit_id]   = $summit->getId();
         $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
         $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
         $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
@@ -52,14 +66,25 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $summitBeginDate = $summit->getLocalBeginDate();
         $payload[IMailTemplatesConstants::summit_date] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
         $payload[IMailTemplatesConstants::summit_dates_label] = $summit->getDatesLabel();
+        $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
+        $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
+        $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
+        $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
 
         $marketing_api = App::make(IMarketingApi::class);
-        $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_')['data'];
-
-        foreach ($marketing_vars as $marketing_var) {
-            $payload[$marketing_var['key']] = $marketing_var['value'];
+        $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
+        if(count($marketing_vars) > 0) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "AbstractSummitEmailJob::construct summit %s injecting marketing_vars %s",
+                    $summit->getId(),
+                    json_encode($marketing_vars)
+                )
+            );
+            $payload = array_merge($payload, $marketing_vars);
         }
-
         parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
     }
 
@@ -68,6 +93,7 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
      */
     public static function getEmailTemplateSchema(): array{
         $payload = [];
+        $payload[IMailTemplatesConstants::summit_id]['type'] = 'int';
         $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
@@ -76,6 +102,10 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_dates_label]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
+        $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
 
         return $payload;
     }

@@ -84,7 +84,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         $params = [
             'id'    =>  self::$summit->getId(),
             'filter'=> 'attendee_email=@santi',
-            'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner'
+            'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
         ];
 
         $headers = [

@@ -45,6 +45,7 @@ final class SponsorSerializer extends SilverStripeSerializer
     ];
 
     protected static $allowed_relations = [
+        'extra_questions',
         'members',
     ];
 
@@ -61,6 +62,14 @@ final class SponsorSerializer extends SilverStripeSerializer
         if (!$sponsor instanceof Sponsor) return [];
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if (in_array('extra_questions', $relations)) {
+            $extra_questions = [];
+            foreach ($sponsor->getExtraQuestions() as $extra_question) {
+                $extra_questions[] = $extra_question->getId();
+            }
+            $values['extra_questions'] = $extra_questions;
+        }
 
         if (in_array('members', $relations)) {
             $members = [];
@@ -98,6 +107,17 @@ final class SponsorSerializer extends SilverStripeSerializer
                             $values['summit'] = SerializerRegistry::getInstance()
                                 ->getSerializer($sponsor->getSummit(), $serializer_type)
                                 ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit'), $fields, ['none']);
+                        }
+                        break;
+                    case 'extra_questions':
+                        {
+                            unset($values['extra_questions']);
+                            $extra_questions = [];
+                            foreach ($sponsor->getExtraQuestions() as $extra_question) {
+                                $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($extra_question)
+                                    ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'extra_questions'));
+                            }
+                            $values['extra_questions'] = $extra_questions;
                         }
                         break;
                     case 'members':

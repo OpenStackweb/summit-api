@@ -12,9 +12,9 @@
  * limitations under the License.
  **/
 
-use App\Http\Controllers\SponsorMaterialValidationRulesFactory;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
@@ -219,6 +219,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     private $show_logo_in_event_page;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType", mappedBy="sponsor",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitSponsorExtraQuestionType[]
+     */
+    private $extra_questions;
+
+    /**
      * Sponsor constructor.
      */
     public function __construct()
@@ -231,6 +237,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->ads = new ArrayCollection();
         $this->is_published = true;
         $this->show_logo_in_event_page = true;
+        $this->extra_questions = new ArrayCollection;
     }
 
     /**
@@ -809,5 +816,36 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->show_logo_in_event_page = $show_logo_in_event_page;
     }
 
+    /**
+     * @return SummitSponsorExtraQuestionType[]
+     */
+    public function getExtraQuestions()
+    {
+        return $this->extra_questions;
+    }
 
+    /**
+     * @param SummitSponsorExtraQuestionType $extra_question
+     */
+    public function addExtraQuestion(SummitSponsorExtraQuestionType $extra_question): void
+    {
+        if ($this->extra_questions->contains($extra_question)) return;
+        $this->extra_questions->add($extra_question);
+        $extra_question->setSponsor($this);
+    }
+
+    public function clearExtraQuestions()
+    {
+        $this->extra_questions->clear();
+    }
+
+    /**
+     * @param SummitSponsorExtraQuestionType $extra_question
+     */
+    public function removeExtraQuestion(SummitSponsorExtraQuestionType $extra_question)
+    {
+        if (!$this->extra_questions->contains($extra_question)) return;
+        $this->extra_questions->removeElement($extra_question);
+        $extra_question->clearSponsor();
+    }
 }

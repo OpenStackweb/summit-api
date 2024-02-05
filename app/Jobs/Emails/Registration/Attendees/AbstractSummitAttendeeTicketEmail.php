@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Log;
  * Class AbstractSummitAttendeeTicketEmail
  * @package App\Jobs\Emails\Registration
  */
-abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
+abstract class AbstractSummitAttendeeTicketEmail extends AbstractSummitEmailJob
 {
 
     public function handle
@@ -195,11 +195,10 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
     }
 
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
 
         $payload[IMailTemplatesConstants::summit_marketing_site_url_magic_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::edit_ticket_link]['type'] = 'string';
 

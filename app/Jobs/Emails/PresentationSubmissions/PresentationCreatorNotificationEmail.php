@@ -11,18 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
-use App\Jobs\Emails\Traits\SummitEmailJob;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
 /**
  * Class PresentationCreatorNotificationEmail
  * @package App\Jobs\Emails\PresentationSubmissions
  */
-class PresentationCreatorNotificationEmail extends AbstractEmailJob
+class PresentationCreatorNotificationEmail extends AbstractSummitEmailJob
 {
-    use SummitEmailJob;
     protected function getEmailEventSlug(): string
     {
         return self::EVENT_SLUG;
@@ -35,7 +33,6 @@ class PresentationCreatorNotificationEmail extends AbstractEmailJob
 
     public function __construct(Presentation $presentation)
     {
-
         $summit = $presentation->getSummit();
         $creator = $presentation->getCreator();
         $selection_plan = $presentation->getSelectionPlan();
@@ -58,7 +55,6 @@ class PresentationCreatorNotificationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload = $this->emitSummitTemplateVars($payload, $summit);
 
         $payload[IMailTemplatesConstants::creator_full_name] = $creator->getFullName();
         $payload[IMailTemplatesConstants::creator_email] = $creator->getEmail();
@@ -79,14 +75,16 @@ class PresentationCreatorNotificationEmail extends AbstractEmailJob
         $template_identifier =  !empty($selectionPlanTemplateName) ?
             $selectionPlanTemplateName : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::creator_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::creator_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::creator_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::creator_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';

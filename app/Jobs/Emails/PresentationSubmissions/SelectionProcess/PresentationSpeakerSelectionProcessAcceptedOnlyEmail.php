@@ -71,9 +71,8 @@ class PresentationSpeakerSelectionProcessAcceptedOnlyEmail extends PresentationS
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = PresentationSpeakerSelectionProcessEmail::getEmailTemplateSchema();
+        $payload = parent::getEmailTemplateSchema();
         $payload[IMailTemplatesConstants::speaker_confirmation_link]['type'] = 'string';
-
         return $payload;
     }
 }

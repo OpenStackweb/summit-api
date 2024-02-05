@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use libs\utils\FormatUtils;
@@ -24,7 +24,7 @@ use models\summit\SummitRegistrationDiscountCode;
  * Class SummitOrderReminderEmail
  * @package App\Jobs\Emails\Registration\Reminders
  */
-class SummitOrderReminderEmail extends AbstractEmailJob
+class SummitOrderReminderEmail extends AbstractSummitEmailJob
 {
 
     /**
@@ -52,13 +52,6 @@ class SummitOrderReminderEmail extends AbstractEmailJob
 
         $support_email = $summit->getSupportEmail();
         $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
-
-        $payload[IMailTemplatesConstants::summit_name] = $order->getSummit()->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $order->getSummit()->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         if (empty($payload[IMailTemplatesConstants::support_email]))
             throw new \InvalidArgumentException("missing support_email value");
@@ -112,25 +105,21 @@ class SummitOrderReminderEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::manage_orders_url] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $owner_email);
+        parent::__construct($summit, $payload, $template_identifier, $owner_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_reassign_ticket_till_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::manage_orders_url]['type'] = 'string';
 
         $promo_code_schema = [];

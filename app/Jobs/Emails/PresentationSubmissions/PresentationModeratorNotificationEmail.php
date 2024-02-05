@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
-use App\Jobs\Emails\Traits\SummitEmailJob;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
@@ -21,9 +20,8 @@ use models\summit\PresentationSpeaker;
  * Class PresentationModeratorNotificationEmail
  * @package App\Jobs\Emails\PresentationSubmissions
  */
-class PresentationModeratorNotificationEmail extends AbstractEmailJob
+class PresentationModeratorNotificationEmail extends AbstractSummitEmailJob
 {
-    use SummitEmailJob;
     protected function getEmailEventSlug(): string
     {
         return self::EVENT_SLUG;
@@ -41,7 +39,6 @@ class PresentationModeratorNotificationEmail extends AbstractEmailJob
      */
     public function __construct(PresentationSpeaker $moderator, Presentation $presentation)
     {
-
         $summit = $presentation->getSummit();
         $creator = $presentation->getCreator();
         $selection_plan = $presentation->getSelectionPlan();
@@ -65,7 +62,6 @@ class PresentationModeratorNotificationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload = $this->emitSummitTemplateVars($payload, $summit);
 
         $payload[IMailTemplatesConstants::speaker_full_name] = $moderator->getFullName(" ");
         $payload[IMailTemplatesConstants::speaker_email] = $moderator->getEmail();
@@ -88,14 +84,16 @@ class PresentationModeratorNotificationEmail extends AbstractEmailJob
         $template_identifier =  !empty($selectionPlanTemplateName) ?
             $selectionPlanTemplateName : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::speaker_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::speaker_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::speaker_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::creator_full_name]['type'] = 'string';

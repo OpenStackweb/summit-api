@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +21,7 @@ use models\summit\SummitRegistrationInvitation;
  * Class InviteSummitRegistrationEmail
  * @package App\Jobs\Emails\Registration\Invitations
  */
-class InviteSummitRegistrationEmail extends AbstractEmailJob
+class InviteSummitRegistrationEmail extends AbstractSummitEmailJob
 {
 
     /**
@@ -50,12 +50,6 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_email] = $owner_email;
         $payload[IMailTemplatesConstants::first_name] = $invitation->getFirstName();
         $payload[IMailTemplatesConstants::last_name] = $invitation->getLastName();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::invitation_token] = $invitation->getToken();
 
         $ticket_types = [];
@@ -98,23 +92,19 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
             $payload[IMailTemplatesConstants::cc_email] = '';
         }
 
-        parent::__construct($payload, $template_identifier, $owner_email);
+        parent::__construct($summit, $payload, $template_identifier, $owner_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::first_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::last_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::invitation_token]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
 

@@ -59,7 +59,7 @@ class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = RegisteredMemberOrderPaidMail::getEmailTemplateSchema();
+        $payload = parent::getEmailTemplateSchema();
         $payload[IMailTemplatesConstants::set_password_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::set_password_link_to_registration]['type'] = 'string';
         $payload[IMailTemplatesConstants::manage_orders_url]['type'] = 'string';

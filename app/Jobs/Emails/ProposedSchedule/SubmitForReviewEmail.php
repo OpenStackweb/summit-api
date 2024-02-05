@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
 use models\exceptions\ValidationException;
@@ -20,7 +20,7 @@ use models\exceptions\ValidationException;
  * Class SubmitForReviewEmail
  * @package App\Jobs\Emails\Schedule
  */
-class SubmitForReviewEmail extends AbstractEmailJob
+class SubmitForReviewEmail extends AbstractSummitEmailJob
 {
 
     /**
@@ -33,8 +33,6 @@ class SubmitForReviewEmail extends AbstractEmailJob
         $submitter = $lock->getCreatedBy()->getMember();
         $payload = [];
 
-        $payload[IMailTemplatesConstants::summit_name]         = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo]         = $summit->getLogoUrl();
         $payload[IMailTemplatesConstants::submitter_fullname]  = $submitter->getFullName();
         $payload[IMailTemplatesConstants::submitter_email]     = $submitter->getEmail();
         $payload[IMailTemplatesConstants::track]               = $lock->getTrack()->getTitle();
@@ -47,16 +45,16 @@ class SubmitForReviewEmail extends AbstractEmailJob
         if (is_null($to_email))
             throw new ValidationException("There is no registered recipient to send the email.");
 
-        parent::__construct($payload, $template_identifier, $to_email);
+        parent::__construct($summit, $payload, $template_identifier, $to_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::submitter_fullname]['type'] = 'string';
         $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::track]['type'] = 'string';

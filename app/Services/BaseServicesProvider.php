@@ -46,7 +46,9 @@ use ModelSerializers\ISerializerTypeSelector;
 use services\apis\EventbriteAPI;
 use services\apis\FireBaseGCMApi;
 use services\apis\IEventbriteAPI;
+use services\apis\IMarketingAPI;
 use services\apis\IPushNotificationApi;
+use services\apis\MarketingAPI;
 use services\utils\DoctrineTransactionService;
 use services\utils\EncryptionService;
 use services\utils\RedisCacheService;
@@ -158,6 +160,11 @@ final class BaseServicesProvider extends ServiceProvider
                 return new MUXApi();
             }
         );
+
+        App::singleton(
+            IMarketingAPI::class,
+            MarketingAPI::class
+        );
     }
 
     /**
@@ -183,6 +190,7 @@ final class BaseServicesProvider extends ServiceProvider
             IPasswordlessAPI::class,
             ISamsungRegistrationAPI::class,
             IMUXApi::class,
+            IMarketingAPI::class
         ];
     }
 }

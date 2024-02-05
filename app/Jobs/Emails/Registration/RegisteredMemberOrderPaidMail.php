@@ -20,7 +20,7 @@ use models\summit\SummitRegistrationDiscountCode;
  * Class RegisteredMemberOrderPaidMail
  * @package App\Jobs\Emails
  */
-class RegisteredMemberOrderPaidMail extends AbstractEmailJob
+class RegisteredMemberOrderPaidMail extends AbstractSummitEmailJob
 {
 
     /**
@@ -59,13 +59,6 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::order_purchase_date] = FormatUtils::getNiceDateMonthDayYearTextual($summit->convertDateFromUTC2TimeZone($order->getCreatedUTC()));
         $payload[IMailTemplatesConstants::order_credit_card_type] = $order->getCreditCardType();
         $payload[IMailTemplatesConstants::order_credit_card_4number] = $order->getCreditCard4Number();
-
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
         if(!is_null($summit_reassign_ticket_till_date)) {
@@ -122,14 +115,16 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::manage_orders_url] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("RegisteredMemberOrderPaidMail::__construct template_identifier %s", $template_identifier));
-        parent::__construct($payload, $template_identifier, $owner_email);
+        parent::__construct($summit, $payload, $template_identifier, $owner_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::owner_first_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
@@ -148,12 +143,6 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::order_amount_adjusted]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_qr_value]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_reassign_ticket_till_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::manage_orders_url]['type'] = 'string';

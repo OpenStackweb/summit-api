@@ -18,7 +18,7 @@ use models\summit\SummitAttendeeTicket;
  * Class RevocationTicketEmail
  * @package App\Jobs\Emails
  */
-class RevocationTicketEmail extends AbstractEmailJob
+class RevocationTicketEmail extends AbstractSummitEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -58,15 +58,8 @@ class RevocationTicketEmail extends AbstractEmailJob
             $payload[IMailTemplatesConstants::order_owner_full_name] = $payload[IMailTemplatesConstants::order_owner_email];
         }
 
-
         $payload[IMailTemplatesConstants::ticket_number] = $ticket->getNumber();
         $payload[IMailTemplatesConstants::ticket_type_name] = $ticket->getTicketTypeName();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $support_email = $summit->getSupportEmail();
         $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
@@ -76,14 +69,16 @@ class RevocationTicketEmail extends AbstractEmailJob
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $owner_email);
+        parent::__construct($summit, $payload, $template_identifier, $owner_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::order_owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_owner_email]['type'] = 'string';
@@ -94,12 +89,6 @@ class RevocationTicketEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_number]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_type_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
 
         return $payload;

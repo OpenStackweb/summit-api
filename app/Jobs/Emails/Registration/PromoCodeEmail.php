@@ -11,16 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
-use Illuminate\Support\Facades\Config;
 use models\summit\IOwnablePromoCode;
 use models\summit\SummitRegistrationPromoCode;
 /**
  * Class PromoCodeEmail
  * @package App\Jobs\Emails\Registration
  */
-abstract class PromoCodeEmail extends AbstractEmailJob
+abstract class PromoCodeEmail extends AbstractSummitEmailJob
 {
 
     /**
@@ -34,12 +33,6 @@ abstract class PromoCodeEmail extends AbstractEmailJob
 
         $summit = $promo_code->getSummit();
         $payload = [];
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
 
         $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
 
@@ -50,22 +43,18 @@ abstract class PromoCodeEmail extends AbstractEmailJob
         }
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::promo_code]['type'] = 'string';
 
         return $payload;

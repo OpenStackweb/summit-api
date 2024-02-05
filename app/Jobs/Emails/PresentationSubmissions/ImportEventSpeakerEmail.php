@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
@@ -21,7 +21,7 @@ use models\summit\PresentationSpeaker;
  * Class ImportEventSpeakerEmail
  * @package App\Jobs\Emails\PresentationSubmissions
  */
-class ImportEventSpeakerEmail extends AbstractEmailJob
+class ImportEventSpeakerEmail extends AbstractSummitEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -61,8 +61,6 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
         $payload[IMailTemplatesConstants::creator_full_name] = is_null($creator) ? '' : $creator->getFullName();
         $payload[IMailTemplatesConstants::creator_email] = is_null($creator) ? '': $creator->getEmail();
         $payload[IMailTemplatesConstants::presentation_name] = $presentation->getTitle();
@@ -72,7 +70,6 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
 
         $payload[IMailTemplatesConstants::selection_plan_name] = is_null($selection_plan) ? '': $selection_plan->getName();
         $payload[IMailTemplatesConstants::presentation_edit_link] = $presentation->getEditLink();
-        $payload[IMailTemplatesConstants::summit_date] = $summit->getMonthYear();
         $payload[IMailTemplatesConstants::until_date] =is_null($selection_plan) ? '' : $selection_plan->getSubmissionEndDate()->format('d F, Y');
         $payload[IMailTemplatesConstants::selection_process_link] = sprintf("%s/app/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug());
         $payload[IMailTemplatesConstants::speaker_management_link] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
@@ -90,16 +87,16 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::speaker_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::speaker_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::creator_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::creator_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::presentation_name]['type'] = 'string';
@@ -108,7 +105,6 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::presentation_location]['type'] = 'string';
         $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::presentation_edit_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::until_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::selection_process_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::speaker_management_link]['type'] = 'string';

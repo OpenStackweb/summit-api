@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\RSVP;
 
@@ -20,7 +20,7 @@ use models\summit\RSVP;
  * Class RSVPMail
  * @package App\Jobs\Emails\Schedule
  */
-abstract class RSVPMail extends AbstractEmailJob
+abstract class RSVPMail extends AbstractSummitEmailJob
 {
     /**
      * RSVPMail constructor.
@@ -37,7 +37,6 @@ abstract class RSVPMail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::event_title] = $event->getTitle();
         $payload[IMailTemplatesConstants::event_date] = $event->getDateNice();
         $payload[IMailTemplatesConstants::confirmation_number] = $rsvp->getConfirmationNumber();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
         $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url] = $summit->getScheduleDefaultEventDetailUrl();
         $event_uri = $rsvp->getEventUri();
 
@@ -54,21 +53,22 @@ abstract class RSVPMail extends AbstractEmailJob
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::confirmation_number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_uri]['type'] = 'string';
 

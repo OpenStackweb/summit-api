@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use http\Exception\InvalidArgumentException;
 use Illuminate\Support\Facades\Config;
@@ -24,7 +24,7 @@ use models\summit\SummitSubmissionInvitation;
  * @package App\Jobs\Emails\PresentationSubmissions\Invitations
  */
 class InviteSubmissionEmail
-    extends AbstractEmailJob
+    extends AbstractSummitEmailJob
 {
 
     /**
@@ -51,8 +51,6 @@ class InviteSubmissionEmail
         $payload[IMailTemplatesConstants::owner_email] = $owner_email;
         $payload[IMailTemplatesConstants::first_name] = $invitation->getFirstName();
         $payload[IMailTemplatesConstants::last_name] = $invitation->getLastName();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
 
         $base_url = Config::get('cfp.base_url', null);
 
@@ -107,19 +105,19 @@ class InviteSubmissionEmail
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $owner_email);
+        parent::__construct($summit, $payload, $template_identifier, $owner_email);
     }
 
     /**
      * @return array
      */
     public static function getEmailTemplateSchema(): array{
-        $payload = [];
+
+        $payload = parent::getEmailTemplateSchema();
+
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::first_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::last_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
         $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::selection_plan_id]['type'] = 'int';
         $payload[IMailTemplatesConstants::selection_plan_submission_start_date]['type'] = 'string';

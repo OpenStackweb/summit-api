@@ -1,6 +1,4 @@
 <?php namespace App\Http\Controllers;
-use models\summit\SummitEvent;
-
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +11,7 @@ use models\summit\SummitEvent;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\summit\SummitEvent;
 /**
  * Class SummitEventValidationRulesFactory
  * @package App\Http\Controllers
@@ -70,6 +68,7 @@ final class SummitEventValidationRulesFactory
                 'custom_order' => 'sometimes|integer',
                 'duration' => 'sometimes|integer|min:0',
                 'stream_is_secure' =>  'sometimes|boolean',
+                'allowed_ticket_types' => 'sometimes|int_array',
             ];
         }
 
@@ -112,6 +111,7 @@ final class SummitEventValidationRulesFactory
             'show_sponsors' => 'sometimes|boolean',
             'duration' => 'sometimes|integer|min:0',
             'stream_is_secure' =>  'sometimes|boolean',
+            'allowed_ticket_types' => 'sometimes|int_array',
         ];
     }
 

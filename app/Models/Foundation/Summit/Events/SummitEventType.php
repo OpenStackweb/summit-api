@@ -122,6 +122,15 @@ class SummitEventType extends SilverstripeBaseModel
     protected $summit_documents;
 
     /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="SummitEventType_SummitTicketType",
+     *      joinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
+     *      )
+     */
+    protected $allowed_ticket_types;
+
+    /**
      * @return string
      */
     public function getType()
@@ -288,6 +297,7 @@ class SummitEventType extends SilverstripeBaseModel
         $this->allows_location_timeframe_collision = false;
         $this->show_always_on_schedule = false;
         $this->summit_documents        = new ArrayCollection();
+        $this->allowed_ticket_types = new ArrayCollection();
 
     }
 
@@ -456,4 +466,22 @@ SQL;
     }
 
     use ScheduleEntity;
+
+    public function getAllowedTicketTypes(){
+        return $this->allowed_ticket_types;
+    }
+
+    public function addAllowedTicketType(SummitTicketType $ticket_type){
+        if($this->allowed_ticket_types->contains($ticket_type)) return;
+        $this->allowed_ticket_types->add($ticket_type);
+    }
+
+    public function clearAllowedTicketTypes(){
+        $this->allowed_ticket_types->clear();
+    }
+
+    public function isPublic():bool{
+        return $this->allowed_ticket_types->isEmpty();
+    }
+
 }

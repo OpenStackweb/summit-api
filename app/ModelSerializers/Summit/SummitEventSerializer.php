@@ -105,6 +105,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'tags',
         'feedback',
         'current_attendance',
+        'allowed_ticket_types',
     ];
 
     /**
@@ -165,6 +166,14 @@ class SummitEventSerializer extends SilverStripeSerializer
                 $values['streaming_type'] = $event->getStreamingType();
             if(in_array("etherpad_link",$fields))
                 $values['etherpad_link'] = $event->getEtherpadLink();
+        }
+
+        if(!isset($values['allowed_ticket_types'])) {
+            $allowed_ticket_types = [];
+            foreach ($event->getAllowedTicketTypes() as $ticket_type) {
+                $allowed_ticket_types[] = $ticket_type->getId();
+            }
+            $values['allowed_ticket_types'] = $allowed_ticket_types;
         }
 
         if (!empty($expand)) {
@@ -253,6 +262,15 @@ class SummitEventSerializer extends SilverStripeSerializer
                                 break;
                             unset($values['updated_by_id']);
                             $values['updated_by'] = SerializerRegistry::getInstance()->getSerializer($event->getUpdatedBy(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        break;
+                    case 'allowed_ticket_types':
+                        {
+                            $allowed_ticket_types = [];
+                            foreach ($event->getAllowedTicketTypes() as $ticket_type) {
+                                $allowed_ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket_type, $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                            $values['allowed_ticket_types'] = $allowed_ticket_types;
                         }
                         break;
                 }

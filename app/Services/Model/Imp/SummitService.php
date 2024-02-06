@@ -1630,32 +1630,40 @@ final class SummitService
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
-                throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($current_speaker))
-                throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s does not has a speaker profile.", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
             if (is_null($presentation))
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
+                throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
                     $current_member_id,
                     $presentation_id
                 ));
 
-            $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
-                throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (!($speaker instanceof PresentationSpeaker))
+                throw new EntityNotFoundException(sprintf('Speaker %s not found.', $speaker_id));
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->addSpeaker($speaker);
+
+            // check is selection plan is private, if so add moderator to allowed members
+
+            $selection_plan = $presentation->getSelectionPlan();
+
+            if(!is_null($selection_plan) && $selection_plan->isPrivate() && !$selection_plan->containsMember($speaker->getEmail())){
+                $selection_plan->addAllowedMember($speaker->getEmail());
+            }
 
             if ($speaker->getMemberId() != $presentation->getCreatedById())
                 PresentationSpeakerNotificationEmail::dispatch($speaker, $presentation);
@@ -1678,28 +1686,28 @@ final class SummitService
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
-                throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($current_speaker))
-                throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s does not has a speaker profile.", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
             if (is_null($presentation))
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
+                throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
                     $current_member_id,
                     $presentation_id
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
-                throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+            if ($speaker instanceof PresentationSpeaker)
+                throw new EntityNotFoundException(sprintf('Speaker %s not found.', $speaker_id));
 
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
@@ -1723,33 +1731,41 @@ final class SummitService
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
-                throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($current_speaker))
-                throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s does not has a speaker profile.", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
             if (is_null($presentation))
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
+                throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
                     $current_member_id,
                     $presentation_id
                 ));
 
-            $speaker = $this->speaker_repository->getById(intval($speaker_id));
+            $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
-                throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+                throw new EntityNotFoundException(sprintf('Speaker %s not found.', $speaker_id));
 
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->setModerator($speaker);
+
+            // check is selection plan is private, if so add moderator to allowed members
+
+            $selection_plan = $presentation->getSelectionPlan();
+
+            if(!is_null($selection_plan) && $selection_plan->isPrivate() && !$selection_plan->containsMember($speaker->getEmail())){
+                $selection_plan->addAllowedMember($speaker->getEmail());
+            }
 
             if ($speaker->getMemberId() != $presentation->getCreatedById())
                 PresentationModeratorNotificationEmail::dispatch($speaker, $presentation);
@@ -1772,28 +1788,28 @@ final class SummitService
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
-                throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($current_speaker))
-                throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
+                throw new EntityNotFoundException(sprintf("Member %s does not has a speaker profile.", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
             if (is_null($presentation))
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
+                throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
                     $current_member_id,
                     $presentation_id
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
-                throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+                throw new EntityNotFoundException(sprintf('Speaker %s not found.', $speaker_id));
 
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
@@ -1817,7 +1833,7 @@ final class SummitService
 
             $event = $this->event_repository->getById($event_id);
             if (is_null($event))
-                throw new EntityNotFoundException(sprintf("event %s not found!", $event_id));
+                throw new EntityNotFoundException(sprintf("Event %s not found.", $event_id));
 
             $event_clone = SummitEventFactory::build($event->getType(), $summit);
 

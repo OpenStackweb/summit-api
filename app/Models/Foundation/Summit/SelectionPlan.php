@@ -1390,7 +1390,7 @@ class SelectionPlan extends SilverstripeBaseModel
             (
                 sprintf
                 (
-                    "email %s already allowed for selection plan %s",
+                    "Email %s already allowed for selection plan %s.",
                     $email,
                     $this->id
                 )
@@ -1466,6 +1466,10 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getType(): string
     {
         return $this->allowed_members->count() > 0 ? self::PrivateType : self::PublicType;
+    }
+
+    public function isPrivate(): bool{
+        return $this->getType() === self::PrivateType;
     }
 
     /**

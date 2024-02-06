@@ -63,6 +63,7 @@ final class EventTypeValidationRulesFactory
             'is_default'              => 'sometimes|boolean',
             'allows_location_timeframe_collision' => 'sometimes|boolean',
             'show_always_on_schedule' => 'sometimes|boolean',
+            'allowed_ticket_types' => 'sometimes|int_array',
         ];
 
         $specific_rules = [];

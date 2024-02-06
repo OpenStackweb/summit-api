@@ -715,7 +715,7 @@ final class SummitService
                 if (!is_null($event_type))
                     $event->setType($event_type);
 
-                SummitEventFactory::populate($event, $data);
+                SummitEventFactory::populate($summit, $event, $data);
             }
 
             $created_by = null;

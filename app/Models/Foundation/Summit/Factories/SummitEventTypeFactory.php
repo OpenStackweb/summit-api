@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\EntityNotFoundException;
 use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEventType;
@@ -157,6 +159,24 @@ final class SummitEventTypeFactory
 
         if(isset($data['show_always_on_schedule']))
             $event_type->setShowAlwaysOnSchedule(boolval($data['show_always_on_schedule']));
+
+        if(isset($payload['allowed_ticket_types']) && count($payload['allowed_ticket_types']) > 0){
+            $event_type->clearAllowedTicketTypes();;
+
+            foreach ($payload['allowed_ticket_types'] as $ticket_type_id){
+                $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                if(is_null($ticket_type))
+                    throw new EntityNotFoundException
+                    (
+                        sprintf
+                        (
+                            "Ticket type %s not found.",
+                            $ticket_type_id
+                        )
+                    );
+                $event_type->addAllowedTicketType($ticket_type);
+            }
+        }
 
         $summit->addEventType($event_type);
         return $event_type;

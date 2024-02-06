@@ -13,6 +13,7 @@
  **/
 
 use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 /**
  * Class SummitEventFactory
@@ -44,16 +45,17 @@ final class SummitEventFactory
         $event->setSummit($summit);
         $event->setType($type);
 
-        return self::populate($event, $payload);
+        return self::populate($summit, $event, $payload);
     }
 
     /**
+     * @param Summit $summit
      * @param SummitEvent $event
      * @param array $payload
      * @return SummitEvent
      * @throws ValidationException
      */
-    static public function populate(SummitEvent $event, array $payload):SummitEvent{
+    static public function populate(Summit $summit, SummitEvent $event, array $payload):SummitEvent{
 
         // selection plan
 
@@ -172,6 +174,24 @@ final class SummitEventFactory
 
         if(isset($payload['show_sponsors'])) {
             $event->setShowSponsors(filter_var($payload['show_sponsors'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if(isset($payload['allowed_ticket_types']) && count($payload['allowed_ticket_types']) > 0){
+            $event_type->clearAllowedTicketTypes();;
+
+            foreach ($payload['allowed_ticket_types'] as $ticket_type_id){
+                $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                if(is_null($ticket_type))
+                    throw new EntityNotFoundException
+                    (
+                        sprintf
+                        (
+                            "Ticket type %s not found.",
+                            $ticket_type_id
+                        )
+                    );
+                $event_type->addAllowedTicketType($ticket_type);
+            }
         }
 
         return $event;

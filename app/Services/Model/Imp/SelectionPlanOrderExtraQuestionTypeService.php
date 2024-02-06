@@ -270,22 +270,55 @@ final class SelectionPlanOrderExtraQuestionTypeService
      */
     public function removeExtraQuestion(int $selection_plan_id, int $question_id): void
     {
-        $this->tx_service->transaction(function () use ($selection_plan_id, $question_id) {
+       $this->tx_service->transaction(function () use ($selection_plan_id, $question_id) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SelectionPlanOrderExtraQuestionTypeService::removeExtraQuestion selection_plan_id %s question_id %s",
+                    $selection_plan_id,
+                    $question_id
+                )
+            );
 
             $selection_plan = $this->selection_plan_repository->getById($selection_plan_id);
             if(is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
             $question = $selection_plan->getExtraQuestionById($question_id);
-            if (is_null($question))
+            if (!$question instanceof SummitSelectionPlanExtraQuestionType)
                 throw new EntityNotFoundException("Question not found.");
 
             $selection_plan->removeExtraQuestion($question);
 
-            if(!$question->hasAssignedPlans()){
+        });
+
+        $this->tx_service->transaction(function () use ($selection_plan_id, $question_id) {
+
+            $selection_plan = $this->selection_plan_repository->getById($selection_plan_id);
+            if(is_null($selection_plan))
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            $summit = $selection_plan->getSummit();
+            if(is_null($summit))
+                throw new EntityNotFoundException("Summit not found.");
+
+            $question = $summit->getSelectionPlanExtraQuestionById($question_id);
+            if (!$question instanceof SummitSelectionPlanExtraQuestionType)
+                throw new EntityNotFoundException("Question not found.");
+
+            if (!$question->hasAssignedPlans()) {
                 // remove question from summit
-                Log::debug(sprintf("SelectionPlanOrderExtraQuestionTypeService::removeExtraQuestion removing question %s from summit", $question->getId()));
-                $summit = $selection_plan->getSummit();
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SelectionPlanOrderExtraQuestionTypeService::removeExtraQuestion removing question %s from summit",
+                        $question->getId()
+                    )
+                );
+
                 $summit->removeSelectionPlanExtraQuestion($question);
             }
         });

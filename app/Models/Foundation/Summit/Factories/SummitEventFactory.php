@@ -176,7 +176,7 @@ final class SummitEventFactory
             $event->setShowSponsors(filter_var($payload['show_sponsors'], FILTER_VALIDATE_BOOLEAN));
         }
 
-        if(isset($payload['allowed_ticket_types']) && count($payload['allowed_ticket_types']) > 0){
+        if(isset($payload['allowed_ticket_types'])){
             $event_type->clearAllowedTicketTypes();;
 
             foreach ($payload['allowed_ticket_types'] as $ticket_type_id){

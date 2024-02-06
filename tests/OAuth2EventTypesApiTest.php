@@ -259,11 +259,16 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         $params = [
             'id'            => self::$summit->getId(),
             'event_type_id' => $new_event_type->id,
+            'expand' => 'allowed_ticket_types'
         ];
 
         $data = [
             'color'       => "FFAAFF",
             'class_name' => \models\summit\SummitEventType::ClassName,
+            'allowed_ticket_types' => [
+                self::$summit->getTicketTypes()[0]->getId(),
+                self::$summit->getTicketTypes()[1]->getId(),
+            ]
         ];
 
         $headers = [
@@ -287,6 +292,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         $event_type = json_decode($content);
         $this->assertTrue(!is_null($event_type));
         $this->assertTrue($event_type->color == '#FFAAFF');
+        $this->assertTrue(count($event_type->allowed_ticket_types) == 2);
         return $event_type;
     }
 

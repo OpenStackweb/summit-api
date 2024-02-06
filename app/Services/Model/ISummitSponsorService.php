@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\IFileConstants;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -238,9 +239,40 @@ interface ISummitSponsorService
      * @param Summit $summit
      * @param int $sponsor_id
      * @param int $social_network_id
-     * @return SponsorSocialNetwork
+     * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
     public function deleteSponsorSocialNetwork(Summit $summit, int $sponsor_id, int $social_network_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SummitSponsorExtraQuestionType
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSponsorExtraQuestion(Summit $summit, int $sponsor_id, array $payload):SummitSponsorExtraQuestionType;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $extra_question_id
+     * @param array $payload
+     * @return SummitSponsorExtraQuestionType
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updateSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id, array $payload):SummitSponsorExtraQuestionType;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $extra_question_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id):void;
 }

@@ -1212,7 +1212,16 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSocialNetwork']);
                     });
                 });
-
+                // extra questions
+                Route::group(['prefix' => 'extra-questions'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getExtraQuestions']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addExtraQuestion']);
+                    Route::group(['prefix' => '{extra_question_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getExtraQuestion']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateExtraQuestion']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteExtraQuestion']);
+                    });
+                });
             });
         });
 

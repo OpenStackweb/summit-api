@@ -32,6 +32,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTr
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedDay;
@@ -56,6 +57,7 @@ use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleReposito
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
@@ -817,6 +819,12 @@ final class RepositoriesProvider extends ServiceProvider
             ISponsorSocialNetworkRepository::class,
             function(){
                 return EntityManager::getRepository(SponsorSocialNetwork::class);
+            });
+
+        App::singleton(
+            ISponsorExtraQuestionTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitSponsorExtraQuestionType::class);
             });
 
         App::singleton(

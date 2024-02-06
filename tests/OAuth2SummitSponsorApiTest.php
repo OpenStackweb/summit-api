@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 use Mockery;
@@ -355,5 +356,177 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTest
         $sponsor = json_decode($content);
         $this->assertTrue(!is_null($sponsor));
         return $sponsor;
+    }
+
+    public function testAddSponsorExtraQuestions(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+        ];
+
+        $name = 'ADDED_EXTRA_QUESTION_TYPE_' . str_random(5);
+
+        $data = [
+            'name'  => $name,
+            'type' => ExtraQuestionTypeConstants::CheckBoxQuestionType,
+            'label' => 'Added extra question type',
+            'mandatory' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorApiController@addExtraQuestion",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $question = json_decode($content);
+        $this->assertTrue(!is_null($question));
+        $this->assertTrue($question->name === $name);
+        return $question;
+    }
+
+    public function testGetAllSponsorExtraQuestionsBySponsor(){
+        $question = $this->testAddSponsorExtraQuestions();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'filter'=> 'label=='.$question->label,
+            'order' => '+order',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorApiController@getExtraQuestions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertNotEmpty($page->data);
+        return $page;
+    }
+
+    public function testGetSponsorExtraQuestionsBySponsor(){
+        $q = $this->testAddSponsorExtraQuestions();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'extra_question_id' => $q->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorApiController@getExtraQuestion",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $question = json_decode($content);
+        $this->assertEquals($q->id, $question->id);
+        return $question;
+    }
+
+    public function testUpdateSponsorExtraQuestionsBySponsor(){
+        $q = $this->testAddSponsorExtraQuestions();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'extra_question_id' => $q->id
+        ];
+
+        $upd_label = 'Updated label';
+        $upd_type = ExtraQuestionTypeConstants::RadioButtonListQuestionType;
+
+        $data = [
+            'label' => $upd_label,
+            'type'  => $upd_type,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@updateExtraQuestion",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $question = json_decode($content);
+        $this->assertEquals($upd_label, $question->label);
+        $this->assertEquals($upd_type, $question->type);
+        return $question;
+    }
+
+    public function testDeleteSponsorExtraQuestionsBySponsor(){
+        $q = $this->testAddSponsorExtraQuestions();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'extra_question_id' => $q->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSponsorApiController@deleteExtraQuestion",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
     }
 }

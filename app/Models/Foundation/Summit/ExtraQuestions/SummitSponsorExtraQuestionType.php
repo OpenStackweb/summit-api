@@ -18,7 +18,7 @@ use models\summit\Sponsor;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorExtraQuestionTypeRepository")
  * @ORM\Table(name="SummitSponsorExtraQuestionType")
  * Class SummitSponsorExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions

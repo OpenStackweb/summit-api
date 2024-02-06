@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
@@ -825,9 +826,21 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
-     * @param SummitSponsorExtraQuestionType $extra_question
+     * @param int $extra_question_id
+     * @return SponsorSocialNetwork|null
      */
-    public function addExtraQuestion(SummitSponsorExtraQuestionType $extra_question): void
+    public function getExtraQuestionById(int $extra_question_id): ?SummitSponsorExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($extra_question_id)));
+        $extra_questions = $this->extra_questions->matching($criteria)->first();
+        return $extra_questions === false ? null : $extra_questions;
+    }
+
+    /**
+     * @param ExtraQuestionType $extra_question
+     */
+    public function addExtraQuestion(ExtraQuestionType $extra_question): void
     {
         if ($this->extra_questions->contains($extra_question)) return;
         $this->extra_questions->add($extra_question);

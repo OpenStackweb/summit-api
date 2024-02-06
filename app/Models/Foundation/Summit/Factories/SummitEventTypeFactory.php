@@ -13,6 +13,7 @@
  **/
 
 use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEventType;
@@ -160,10 +161,14 @@ final class SummitEventTypeFactory
         if(isset($data['show_always_on_schedule']))
             $event_type->setShowAlwaysOnSchedule(boolval($data['show_always_on_schedule']));
 
-        if(isset($payload['allowed_ticket_types']) && count($payload['allowed_ticket_types']) > 0){
-            $event_type->clearAllowedTicketTypes();;
-
-            foreach ($payload['allowed_ticket_types'] as $ticket_type_id){
+        if(isset($data['allowed_ticket_types'])){
+            $event_type->clearAllowedTicketTypes();
+            if($event_type->isShowAlwaysOnSchedule() && count($data['allowed_ticket_types']) > 0)
+                throw new ValidationException
+                (
+                    "allowed_ticket_types can not be set on show_always_on_schedule event types."
+                );
+            foreach ($data['allowed_ticket_types'] as $ticket_type_id){
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
                 if(is_null($ticket_type))
                     throw new EntityNotFoundException

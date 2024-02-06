@@ -281,6 +281,13 @@ final class SelectionPlanOrderExtraQuestionTypeService
                 throw new EntityNotFoundException("Question not found.");
 
             $selection_plan->removeExtraQuestion($question);
+
+            if(!$question->hasAssignedPlans()){
+                // remove question from summit
+                Log::debug(sprintf("SelectionPlanOrderExtraQuestionTypeService::removeExtraQuestion removing question %s from summit", $question->getId()));
+                $summit = $selection_plan->getSummit();
+                $summit->removeSelectionPlanExtraQuestion($question);
+            }
         });
     }
 

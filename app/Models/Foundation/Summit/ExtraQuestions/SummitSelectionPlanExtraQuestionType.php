@@ -48,6 +48,10 @@ class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
         return $this->assigned_selection_plans;
     }
 
+    public function hasAssignedPlans():bool{
+        return $this->assigned_selection_plans->count() > 0;
+    }
+
     /**
      * @param int $selection_plan_id
      * @return int|null

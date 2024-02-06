@@ -61,29 +61,43 @@ final class SummitEventTypeService
 
     /**
      * @param Summit $summit
-     * @param array $data
+     * @param array $payload
      * @return SummitEventType
      * @throws EntityNotFoundException
      * @throws ValidationException
      * @throws \Exception
      */
-    public function addEventType(Summit $summit, array $data)
+    public function addEventType(Summit $summit, array $payload)
     {
-        $event_type = $this->tx_service->transaction(function () use ($summit, $data) {
+        $event_type = $this->tx_service->transaction(function () use ($summit, $payload) {
 
-            $type = trim($data['name']);
+            $type = trim($payload['name']);
 
             if ($summit->hasEventType($type)) {
-                throw new ValidationException(sprintf("event type %s already exist on summit id %s", $type, $summit->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Event type %s already exist on summit id %s.",
+                        $type,
+                        $summit->getId()
+                    )
+                );
             }
 
-            $event_type = SummitEventTypeFactory::build($summit, $data);
+            $event_type = SummitEventTypeFactory::build($summit, $payload);
 
             if (is_null($event_type))
-                throw new ValidationException(sprintf("class_name %s is invalid", $data['class_name']));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "class_name %s is invalid.",
+                        $payload['class_name']
+                    )
+                );
 
-            return $event_type;
-
+               return $event_type;
         });
 
         return $event_type;
@@ -98,25 +112,41 @@ final class SummitEventTypeService
      * @throws ValidationException
      * @throws \Exception
      */
-    public function updateEventType(Summit $summit, $event_type_id, array $data)
+    public function updateEventType(Summit $summit, $event_type_id, array $payload)
     {
-        return $this->tx_service->transaction(function () use ($summit, $event_type_id, $data) {
+        return $this->tx_service->transaction(function () use ($summit, $event_type_id, $payload) {
 
-            $type = isset($data['name']) ? trim($data['name']) : null;
+            $type = isset($payload['name']) ? trim($payload['name']) : null;
 
             $event_type = $summit->getEventType($event_type_id);
 
             if (is_null($event_type))
-                throw new EntityNotFoundException(sprintf("event type id %s does not belongs to summit id %s", $event_type_id, $summit->getId()));
+                throw new EntityNotFoundException
+                (
+                    sprintf
+                    (
+                        "event type id %s does not belongs to summit id %s",
+                        $event_type_id,
+                        $summit->getId()
+                    )
+                );
 
             if (!empty($type)) {
                 $old_event_type = $summit->getEventTypeByType($type);
                 if (!is_null($old_event_type) && $old_event_type->getId() != $event_type->getId()) {
-                    throw new ValidationException(sprintf("name %s already belongs to another event type id %s", $type, $old_event_type->getId()));
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "name %s already belongs to another event type id %s",
+                            $type,
+                            $old_event_type->getId()
+                        )
+                    );
                 }
             }
 
-            return SummitEventTypeFactory::populate($event_type, $summit, $data);
+            return SummitEventTypeFactory::populate($event_type, $summit, $payload);
 
         });
     }

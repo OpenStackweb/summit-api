@@ -343,6 +343,15 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     protected $duration;
 
     /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="SummitEvent_SummitTicketType",
+     *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
+     *      )
+     */
+    protected $allowed_ticket_types;
+
+    /**
      * SummitEvent constructor.
      */
     public function __construct()
@@ -364,6 +373,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->rsvp = new ArrayCollection();
         $this->attendance_metrics = new ArrayCollection();
         $this->stream_is_secure = false;
+        $this->allowed_ticket_types = new ArrayCollection();
     }
 
     use SummitOwned;
@@ -1616,6 +1626,23 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 
         if($this->hasSummit() && $this->stream_is_secure && !$this->summit->hasMuxPrivateKey())
             CreateMUXURLSigningKeyForSummit::dispatch($this->summit->getId());
+    }
+
+    public function getAllowedTicketTypes(){
+        return $this->allowed_ticket_types;
+    }
+
+    public function addAllowedTicketType(SummitTicketType $ticket_type){
+        if($this->allowed_ticket_types->contains($ticket_type)) return;
+        $this->allowed_ticket_types->add($ticket_type);
+    }
+
+    public function clearAllowedTicketTypes(){
+        $this->allowed_ticket_types->clear();
+    }
+
+    public function isPublic():bool{
+        return $this->allowed_ticket_types->isEmpty() && $this->type->isPublic();
     }
 
 }

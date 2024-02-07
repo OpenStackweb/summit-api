@@ -118,6 +118,7 @@ final class SponsoredProjectService
     public function update(int $project_id, array $payload): SponsoredProject
     {
         return $this->tx_service->transaction(function() use ($project_id, $payload){
+
             if(isset($payload['name'])) {
                 $name = trim($payload['name']);
                 $formerProject = $this->repository->getByName($name);
@@ -128,20 +129,30 @@ final class SponsoredProjectService
 
             $sponsoredProject = $this->repository->getById($project_id);
 
-            if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
+            if(!$sponsoredProject instanceof SponsoredProject)
                 throw new EntityNotFoundException(sprintf("sponsored project %s not found.", $project_id));
 
             SponsoredProjectFactory::populate($sponsoredProject, $payload);
 
-            if(array_key_exists('parent_project_id', $payload) && is_null($payload['parent_project_id'])) {
+            if(isset($payload['parent_project_id'])) {
+
+                $parent_project_id = intval($payload['parent_project_id']);
                 $sponsoredProject->clearParentProject();
-            } else if(isset($payload['parent_project_id'])) {
-                $parentProject = $this->repository->getById(intval($payload['parent_project_id']));
+                if($parent_project_id > 0) {
+                    $parentProject = $this->repository->getById(intval($payload['parent_project_id']));
 
-                if(is_null($parentProject) || !$parentProject instanceof SponsoredProject)
-                    throw new EntityNotFoundException(sprintf("sponsored project parent %s not found.", $project_id));
+                    if (!$parentProject instanceof SponsoredProject)
+                        throw new EntityNotFoundException
+                        (
+                            sprintf
+                            (
+                                "sponsored project parent %s not found.",
+                                $parent_project_id
+                            )
+                        );
 
-                $sponsoredProject->setParentProject($parentProject);
+                    $sponsoredProject->setParentProject($parentProject);
+                }
             }
 
             return $sponsoredProject;

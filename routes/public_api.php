@@ -133,6 +133,7 @@ Route::group(['prefix' => 'summits'], function () {
         });
 
         Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+
         // members
         Route::group(['prefix' => 'members'], function () {
             Route::group(['prefix' => 'all'], function () {
@@ -143,6 +144,7 @@ Route::group(['prefix' => 'summits'], function () {
                 });
             });
         });
+
         // events
         Route::group(['prefix' => 'events'], function () {
             Route::group(['prefix' => 'published'], function () {
@@ -159,6 +161,14 @@ Route::group(['prefix' => 'summits'], function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
                 });
+            });
+        });
+
+
+        // event types
+        Route::group(['prefix' => 'event-types'], function () {
+            Route::group(['prefix' => '{event_type_id}'], function () {
+                Route::get('', 'OAuth2SummitsEventTypesApiController@getEventTypeBySummit');
             });
         });
         // locations

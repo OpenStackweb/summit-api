@@ -442,19 +442,20 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testUpdateEvent()
     {
-        /*$event = $this->testPostEvent();
-        unset($event->tags);*/
-        $params = array
-        (
-            'id' => 3343,
-            'event_id' => 107221,
-        );
 
-        $data = array
-        (
+        $params = [
+            'id' => self::$summit->getId(),
+            'event_id' => self::$summit->getPresentations()[0]->getId(),
+            'expand' => 'allowed_ticket_types'
+        ];
+
+        $data =[
             'title' => 'Using HTTPS to Secure OpenStack Services Update',
-            'speakers' => [210, 9161, 202]
-        );
+            'allowed_ticket_types' => [
+                self::$summit->getTicketTypes()[0]->getId(),
+                self::$summit->getTicketTypes()[1]->getId(),
+            ]
+        ];
 
 
         $headers = array
@@ -479,6 +480,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $event = json_decode($content);
         $this->assertTrue($event->id > 0);
+        $this->assertTrue(count($event->allowed_ticket_types) == 2);
         return $event;
 
     }

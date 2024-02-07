@@ -177,7 +177,7 @@ final class SummitEventFactory
         }
 
         if(isset($payload['allowed_ticket_types'])){
-            $event_type->clearAllowedTicketTypes();;
+            $event->clearAllowedTicketTypes();;
 
             foreach ($payload['allowed_ticket_types'] as $ticket_type_id){
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
@@ -190,7 +190,7 @@ final class SummitEventFactory
                             $ticket_type_id
                         )
                     );
-                $event_type->addAllowedTicketType($ticket_type);
+                $event->addAllowedTicketType($ticket_type);
             }
         }
 

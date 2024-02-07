@@ -140,7 +140,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      */
     protected function updateEntity($id, array $payload): IEntity
     {
-        return $this->service->update($id, HTMLCleaner::cleanData($payload, ['description']));
+        return $this->service->update(intval($id), HTMLCleaner::cleanData($payload, ['description']));
     }
 
     /**

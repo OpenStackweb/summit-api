@@ -297,8 +297,7 @@ class SummitEventType extends SilverstripeBaseModel
         $this->allows_location_timeframe_collision = false;
         $this->show_always_on_schedule = false;
         $this->summit_documents        = new ArrayCollection();
-        $this->allowed_ticket_types = new ArrayCollection();
-
+        $this->allowed_ticket_types    = new ArrayCollection();
     }
 
     /**

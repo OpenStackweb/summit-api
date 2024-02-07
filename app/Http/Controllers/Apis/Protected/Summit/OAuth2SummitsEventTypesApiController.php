@@ -276,10 +276,13 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
     {
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
+
             $event_type = $summit->getEventType(intval($event_type_id));
             if (is_null($event_type))
                 return $this->error404();
+
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($event_type)
                 ->serialize
                 (

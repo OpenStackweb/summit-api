@@ -53,6 +53,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         $event_type = $this->object;
         if (!$event_type instanceof SummitEventType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
+
         if(!isset($values['summit_documents'])) {
             $summit_documents = [];
             if ($event_type->hasSummitDocuments()) {

@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
@@ -25,6 +24,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
+use models\summit\Sponsor;
 use models\summit\SponsorMaterial;
 use models\summit\Summit;
 use models\utils\IEntity;
@@ -1014,14 +1014,14 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 return [
                     'name' => ['==', '=@'],
                     'label' => ['==', '=@'],
-                    'class' => ['==']
+                    'type' => ['==']
                 ];
             },
             function () {
                 return [
                     'name' => 'sometimes|string',
                     'label' => 'sometimes|string',
-                    'class' => 'sometimes|string|in:'.join(",", ExtraQuestionTypeConstants::AllowedQuestionClass)
+                    'type' => sprintf('sometimes|in:%s', implode(',', Sponsor::getAllowedQuestionTypes())),
                 ];
             },
             function () {
@@ -1029,7 +1029,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                     'id',
                     'name',
                     'label',
-                    'order'
+                    'order',
+                    'type'
                 ];
             },
             function ($filter) use ($sponsor) {
@@ -1051,6 +1052,21 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                     $order
                 );
             }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getMetadata($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->ok
+        (
+            $this->sponsor_extra_question_repository->getQuestionsMetadata()
         );
     }
 

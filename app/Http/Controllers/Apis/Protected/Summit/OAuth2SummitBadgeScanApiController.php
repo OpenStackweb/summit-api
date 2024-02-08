@@ -16,7 +16,6 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\exceptions\ValidationException;
@@ -92,6 +91,7 @@ final class OAuth2SummitBadgeScanApiController
             'qr_code'   => 'required|string',
             'scan_date' => 'required|date_format:U',
             'notes' => 'sometimes|string|max:1024',
+            'extra_questions' => 'sometimes|extra_question_dto_array',
         ];
     }
 
@@ -123,6 +123,7 @@ final class OAuth2SummitBadgeScanApiController
     function getUpdateValidationRules(array $payload): array{
         return [
             'notes' => 'sometimes|string|max:1024',
+            'extra_questions' => 'sometimes|extra_question_dto_array',
         ];
     }
 
@@ -409,7 +410,7 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_last_name',
                     'attendee_email',
                     'attendee_company',
-                    'notes'
+                    'notes',
                 ];
 
                 foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question){
@@ -435,7 +436,8 @@ final class OAuth2SummitBadgeScanApiController
             'attendees-badge-scans-',
             [
                 'features_types'   => $summit->getBadgeFeaturesTypes(),
-                'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage)
+                'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage),
+                'sponsor_questions' => !is_null($sponsor) ? $sponsor->getExtraQuestions() : []
             ]
         );
     }

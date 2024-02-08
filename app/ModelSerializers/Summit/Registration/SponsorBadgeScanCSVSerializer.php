@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SponsorBadgeScan;
@@ -35,6 +36,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         'AttendeeEmail' => 'attendee_email:json_string',
         'AttendeeCompany' => 'attendee_company:json_string',
     ];
+
 
     /**
      * @param null $expand
@@ -69,6 +71,20 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
                     if(is_null($value)) continue;
                     $values[$label] = $question->getNiceValue($value);
                 }
+            }
+        }
+
+        if (isset($params['sponsor_questions'])) {
+
+            foreach ($params['sponsor_questions'] as $question) {
+                if (!$question instanceof SummitSponsorExtraQuestionType) continue;
+
+                $label = $question->getCSVLabel();
+                $values[$label] = '';
+
+                $value = $scan->getExtraQuestionAnswerValueByQuestion($question);
+                if(is_null($value)) continue;
+                $values[$label] = $question->getNiceValue($value);
             }
         }
 

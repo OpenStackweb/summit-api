@@ -808,6 +808,11 @@ final class SummitSponsorService
             if(!$extra_question instanceof SummitSponsorExtraQuestionType)
                 throw new EntityNotFoundException("Sponsor extra question not found.");
 
+            if (isset($payload['order']) && intval($payload['order']) != $extra_question->getOrder()) {
+                // request to update order
+                $summit_sponsor->recalculateQuestionOrder($extra_question, intval($payload['order']));
+            }
+
             return SponsorExtraQuestionFactory::populate($extra_question, $payload);
         });
     }

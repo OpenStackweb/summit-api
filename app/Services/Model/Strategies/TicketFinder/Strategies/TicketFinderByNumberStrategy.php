@@ -14,6 +14,7 @@
 
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategy;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
@@ -47,6 +48,7 @@ final class TicketFinderByNumberStrategy
 
     /**
      * @return SummitAttendeeTicket|null
+     * @throws ValidationException
      */
     public function find(): ?SummitAttendeeTicket
     {
@@ -63,8 +65,13 @@ final class TicketFinderByNumberStrategy
                     )
                 );
 
-                return null;
+                throw new
+                ValidationException
+                (
+                    "Your ticket has been reassigned to someone else. Please see the help desk for assistance."
+                );
             }
+
             $owner = $ticket->getOwner();
             if($owner->getEmail() != $this->ticket_attendee_email){
                 Log::warning
@@ -77,8 +84,11 @@ final class TicketFinderByNumberStrategy
                         $this->ticket_attendee_email
                     )
                 );
-
-                return null;
+                throw new
+                ValidationException
+                (
+                    "Your ticket has been reassigned to someone else. Please see the help desk for assistance."
+                );
             }
         }
         return $ticket;

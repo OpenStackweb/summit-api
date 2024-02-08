@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractSummitEmailJob;
+use App\Jobs\Emails\EmailUtils;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -76,7 +77,7 @@ class PresentationSpeakerNotificationEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::until_date] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
 
         $payload[IMailTemplatesConstants::selection_process_link] = sprintf("%s/app/%s/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
-        $payload[IMailTemplatesConstants::speaker_management_link] = sprintf("%s/app/%s/%s", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
+        $payload[IMailTemplatesConstants::speaker_management_link] = EmailUtils::getSpeakerManagementLink($summit, $selection_plan);
         $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
         $payload[IMailTemplatesConstants::reset_password_link] = sprintf("%s/auth/password/reset", $idp_base_url);
         $payload[IMailTemplatesConstants::support_email] = $support_email;

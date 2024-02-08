@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\EmailUtils;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use Illuminate\Support\Facades\Config;
@@ -41,7 +42,7 @@ class SpeakerEditPermissionRejectedEmail extends AbstractEmailJob
         $payload = [];
         $payload[IMailTemplatesConstants::requested_by_full_name] = $request->getRequestedBy()->getFullName();
         $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
-        $payload[IMailTemplatesConstants::speaker_management_link] =
+        $payload[IMailTemplatesConstants::speaker_management_link] = EmailUtils::getSpeakerManagementLink();
         $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");
         $payload[IMailTemplatesConstants::requested_by_email] = $request->getRequestedBy()->getEmail();
         parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload[IMailTemplatesConstants::requested_by_email]);

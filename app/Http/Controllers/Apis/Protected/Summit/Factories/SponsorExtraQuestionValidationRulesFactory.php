@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use models\summit\Sponsor;
+
 /**
  * Class SponsorExtraQuestionValidationRulesFactory
  * @package App\Http\Controllers
@@ -26,7 +28,14 @@ final class SponsorExtraQuestionValidationRulesFactory
      */
     public static function buildForAdd(array $payload = []): array
     {
-        return parent::build($payload);
+        return [
+            'name'        => 'required|string',
+            'type'        => 'required|string|in:'.implode(",", Sponsor::getAllowedQuestionTypes()),
+            'label'       => 'required|string',
+            'mandatory'   => 'required|boolean',
+            'placeholder' => 'sometimes|nullable|string',
+            'max_selected_values' => 'sometimes|integer|min:0',
+        ];
     }
 
     /**
@@ -35,6 +44,14 @@ final class SponsorExtraQuestionValidationRulesFactory
      */
     public static function buildForUpdate(array $payload = []): array
     {
-        return parent::build($payload, true);
+        return [
+            'name'        => 'sometimes|string',
+            'type'        => 'sometimes|string|in:'.implode(",", Sponsor::getAllowedQuestionTypes()),
+            'label'       => 'sometimes|string',
+            'mandatory'   => 'sometimes|boolean',
+            'placeholder' => 'sometimes|nullable|string',
+            'order'       => 'sometimes|integer|min:1',
+            'max_selected_values' => 'sometimes|integer|min:0',
+        ];
     }
 }

@@ -15,13 +15,11 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
-use models\oauth2\IResourceServerContext;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -273,5 +271,33 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
     {
         return new SponsorBadgeScanExtraQuestionAnswer();
+    }
+
+    /**
+     * @param SummitSponsorExtraQuestionType $question
+     * @return string|null
+     */
+    public function getExtraQuestionAnswerValueByQuestion(SummitSponsorExtraQuestionType $question): ?string
+    {
+        try {
+            $sql = <<<SQL
+SELECT ExtraQuestionAnswer.Value FROM `SponsorBadgeScanExtraQuestionAnswer`
+INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SponsorBadgeScanExtraQuestionAnswer.ID
+WHERE SponsorBadgeScanExtraQuestionAnswer.SponsorBadgeScanID = :scan_id AND ExtraQuestionAnswer.QuestionID = :question_id
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'scan_id'     => $this->getId(),
+                    'question_id' => $question->getId()
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : null;
+            return !is_null($res) ? $res : null;
+        } catch (\Exception $ex) {
+            Log::debug($ex);
+        }
+        return null;
     }
 }

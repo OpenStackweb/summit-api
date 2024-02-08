@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
@@ -43,6 +44,10 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     use SummitOwned;
 
     use One2ManyPropertyTrait;
+
+    use OrderableChilds;
+
+    const max_sponsor_extra_questions = 5;
 
     protected $getIdMappings = [
         'getSideImageId' => 'side_image',
@@ -239,6 +244,15 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->is_published = true;
         $this->show_logo_in_event_page = true;
         $this->extra_questions = new ArrayCollection;
+    }
+
+    public static function getAllowedQuestionTypes(): array
+    {
+        return [
+            ExtraQuestionTypeConstants::RadioButtonQuestionType,
+            ExtraQuestionTypeConstants::CheckBoxQuestionType,
+            ExtraQuestionTypeConstants::TextQuestionType
+        ];
     }
 
     /**
@@ -839,12 +853,29 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @param ExtraQuestionType $extra_question
+     * @throws ValidationException
      */
     public function addExtraQuestion(ExtraQuestionType $extra_question): void
     {
+        if ($this->extra_questions->count() >= self::max_sponsor_extra_questions) {
+            throw new ValidationException(sprintf('Sponsor %s cannot have more than %s extra questions.',
+                $this->id, self::max_sponsor_extra_questions));
+        }
         if ($this->extra_questions->contains($extra_question)) return;
+        $extra_question->setOrder($this->getSponsorExtraQuestionMaxOrder() + 1);
         $this->extra_questions->add($extra_question);
         $extra_question->setSponsor($this);
+    }
+
+    /**
+     * @return int
+     */
+    private function getSponsorExtraQuestionMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $question = $this->extra_questions->matching($criteria)->first();
+        return $question === false ? 0 : $question->getOrder();
     }
 
     public function clearExtraQuestions()
@@ -860,5 +891,15 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         if (!$this->extra_questions->contains($extra_question)) return;
         $this->extra_questions->removeElement($extra_question);
         $extra_question->clearSponsor();
+    }
+
+    /**
+     * @param SummitSponsorExtraQuestionType $question
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateQuestionOrder(SummitSponsorExtraQuestionType $question, int $new_order)
+    {
+        self::recalculateOrderForSelectable($this->extra_questions, $question, $new_order);
     }
 }

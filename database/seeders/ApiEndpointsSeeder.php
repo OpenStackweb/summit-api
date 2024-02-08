@@ -2466,6 +2466,20 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'get-sponsor-extra-questions-metadata',
+                'route' => '/api/v1/summits/{id}/sponsors/all/extra-questions/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //
             [
                 'name' => 'add-sponsor-user',

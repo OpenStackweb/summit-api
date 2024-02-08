@@ -15,6 +15,7 @@
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
+use models\summit\Sponsor;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -35,9 +36,12 @@ final class DoctrineSponsorExtraQuestionTypeRepository
      */
     protected function getFilterMappings()
     {
-        return array_merge(parent::getFilterMappings() , [
+        return [
             'sponsor_id' => new DoctrineLeftJoinFilterMapping("e.sponsor", "s" ,"s.id :operator :value"),
-        ]);
+            'name'       => 'e.name:json_string',
+            'label'      => 'e.label:json_string',
+            'type'       => 'e.type:json_string',
+        ];
     }
 
     /**
@@ -45,7 +49,23 @@ final class DoctrineSponsorExtraQuestionTypeRepository
      */
     protected function getOrderMappings()
     {
-        return parent::getOrderMappings();
+        return array_merge(parent::getOrderMappings() , [
+            'type' => 'e.type',
+        ]);
+    }
+
+    /**
+     * @return array
+     */
+    public function getQuestionsMetadata()
+    {
+        $metadata = [];
+        foreach (Sponsor::getAllowedQuestionTypes() as $type){
+            $metadata[] = [
+                'type' => $type,
+            ];
+        }
+        return $metadata;
     }
 
     /**

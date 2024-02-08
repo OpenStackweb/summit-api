@@ -1140,6 +1140,11 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'sponsors'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@add']);
+            Route::group(['prefix' => 'all'], function () {
+                Route::group(['prefix' => 'extra-questions'], function () {
+                    Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getMetadata']);
+                });
+            });
             Route::group(['prefix' => '{sponsor_id}'], function () {
 
                 // side image

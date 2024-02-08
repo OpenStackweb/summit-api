@@ -146,7 +146,18 @@ final class SponsorUserInfoGrantService
             $scan->setUser($current_member);
             $scan->setBadge($badge);
             $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
+
             $sponsor->addUserInfoGrant($scan);
+
+            // extra questions
+            $extra_questions = $data['extra_questions'] ?? [];
+
+            if (count($extra_questions)) {
+                $res = $scan->hadCompletedExtraQuestions($extra_questions);
+                if (!$res) {
+                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                }
+            }
 
             return $scan;
         });
@@ -176,6 +187,16 @@ final class SponsorUserInfoGrantService
 
             if(isset($data['notes'])){
                 $scan->setNotes(trim($data['notes']));
+            }
+
+            // extra questions
+            $extra_questions = $data['extra_questions'] ?? [];
+
+            if (count($extra_questions)) {
+                $res = $scan->hadCompletedExtraQuestions($extra_questions);
+                if (!$res) {
+                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                }
             }
 
             return $scan;

@@ -363,6 +363,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
+            'expand' => 'sponsor'
         ];
 
         $name = 'ADDED_EXTRA_QUESTION_TYPE_' . str_random(5);
@@ -395,7 +396,36 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTest
         $question = json_decode($content);
         $this->assertTrue(!is_null($question));
         $this->assertTrue($question->name === $name);
+        $this->assertEquals(count($question->sponsor->extra_questions), $question->order);
         return $question;
+    }
+
+    public function testGetAllSponsorExtraQuestionsMetadata(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorApiController@getMetadata",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        return $page;
     }
 
     public function testGetAllSponsorExtraQuestionsBySponsor(){
@@ -469,14 +499,17 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTest
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
             'extra_question_id' => $q->id
+
         ];
 
         $upd_label = 'Updated label';
-        $upd_type = ExtraQuestionTypeConstants::RadioButtonListQuestionType;
+        $upd_type = ExtraQuestionTypeConstants::RadioButtonQuestionType;
+        $upd_order = 2;
 
         $data = [
             'label' => $upd_label,
             'type'  => $upd_type,
+            'order' => $upd_order
         ];
 
         $headers = [
@@ -500,6 +533,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTest
         $question = json_decode($content);
         $this->assertEquals($upd_label, $question->label);
         $this->assertEquals($upd_type, $question->type);
+        $this->assertEquals($upd_order, $question->order);
         return $question;
     }
 

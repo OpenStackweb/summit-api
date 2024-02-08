@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\EmailUtils;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
@@ -75,7 +76,7 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_date] = $summit->getMonthYear();
         $payload[IMailTemplatesConstants::until_date] =is_null($selection_plan) ? '' : $selection_plan->getSubmissionEndDate()->format('d F, Y');
         $payload[IMailTemplatesConstants::selection_process_link] = sprintf("%s/app/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug());
-        $payload[IMailTemplatesConstants::speaker_management_link] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
+        $payload[IMailTemplatesConstants::speaker_management_link] = EmailUtils::getSpeakerManagementLink($summit);
         $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
         if(!empty($setPasswordLink)){
             $payload[IMailTemplatesConstants::bio_edit_link] = $setPasswordLink;

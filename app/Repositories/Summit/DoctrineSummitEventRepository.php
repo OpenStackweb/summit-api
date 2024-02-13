@@ -150,6 +150,14 @@ final class DoctrineSummitEventRepository
 
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
+            if($filter->hasFilter('actions')){
+                // if actions filter is required, we should do an inner join with the allowed
+                // actions of the selection plan of the presentation
+                $query = $query->innerJoin("p.selection_plan","sp_i")
+                    ->innerJoin("sp_i.allowed_presentation_action_types","allowed_at")
+                    ->innerJoin("allowed_at.type","allowed_at_type")
+                    ->andWhere("allowed_at_type = at");
+            }
         }
 
         $shouldPerformRandomOrderingByPage = false;

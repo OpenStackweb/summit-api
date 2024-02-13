@@ -136,6 +136,10 @@ SQL;
             )
         ]);
 
+        $query->innerJoin("p.selection_plan","sp");
+        $query->innerJoin("sp.allowed_presentation_action_types","allowed_at");
+        $query->innerJoin("allowed_at.type","allowed_at_type", Join::ON, "allowed_at_type.id = at.id");
+
         $dql = $query->getDQL();
         $this->assertTrue(!empty($dql));
     }

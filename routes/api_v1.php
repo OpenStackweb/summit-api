@@ -1395,7 +1395,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
             Route::post('ingest', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@ingestExternalTicketData']);
 
-            Route::group(['prefix' => '{ticket_id}', 'where' => ['ticket_id' => '[0-9]+']], function () {
+            Route::group(['prefix' => '{ticket_id}'], function () {
 
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@get']);
                 // badge endpoints

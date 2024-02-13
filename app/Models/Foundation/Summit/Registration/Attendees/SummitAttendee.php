@@ -497,6 +497,8 @@ class SummitAttendee extends SilverstripeBaseModel
         $ticket->generateHash();
 
         if ($this->isComplete()) {
+            // regenerate the QR code if the ticket is complete
+            $ticket->generateQRCode();
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
             // adds a threshold of 20 minutes to avoid duplicates emails
             if (Cache::add(sprintf("%s_emit_ticket", $key), true, now()->addMinutes(20))) {

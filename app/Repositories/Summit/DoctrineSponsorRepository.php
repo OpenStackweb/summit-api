@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\Sponsor;
+use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
@@ -34,6 +35,7 @@ implements ISponsorRepository
     protected function getFilterMappings()
     {
         return [
+            'sponsor_id'        => new DoctrineFilterMapping("e.id :operator :value"),
             'company_name'      => new DoctrineJoinFilterMapping("e.company", "c" ,"c.name :operator :value"),
             'sponsorship_name'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.name :operator :value"),
             'sponsorship_label' => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.label :operator :value"),

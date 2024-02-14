@@ -14,6 +14,7 @@
 
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Main\IFileConstants;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Factories\SponsorAdFactory;
 use App\Models\Foundation\Summit\Factories\SponsorExtraQuestionFactory;

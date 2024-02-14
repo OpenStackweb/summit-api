@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
@@ -47,7 +48,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     use OrderableChilds;
 
-    const max_sponsor_extra_questions = 5;
+    const MaxExtraQuestionCount = 5;
 
     protected $getIdMappings = [
         'getSideImageId' => 'side_image',
@@ -361,10 +362,15 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @param Member $user
+     * @throws ValidationException
      */
     public function addUser(Member $user)
     {
         if ($this->members->contains($user)) return;
+        if (!$user->belongsToGroup(IGroup::Sponsors)) {
+            throw new ValidationException(
+                sprintf("Member %s does not belong to group %s", $user->getId(), IGroup::Sponsors));
+        }
         $this->members->add($user);
     }
 
@@ -857,9 +863,9 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      */
     public function addExtraQuestion(ExtraQuestionType $extra_question): void
     {
-        if ($this->extra_questions->count() >= self::max_sponsor_extra_questions) {
+        if ($this->extra_questions->count() >= self::MaxExtraQuestionCount) {
             throw new ValidationException(sprintf('Sponsor %s cannot have more than %s extra questions.',
-                $this->id, self::max_sponsor_extra_questions));
+                $this->id, self::MaxExtraQuestionCount));
         }
         if ($this->extra_questions->contains($extra_question)) return;
         $extra_question->setOrder($this->getSponsorExtraQuestionMaxOrder() + 1);

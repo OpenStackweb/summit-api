@@ -197,7 +197,9 @@ return [
     | DQL custom string functions
     |--------------------------------------------------------------------------
     */
-    'custom_string_functions'   => [],
+    'custom_string_functions'   => [
+        'FIELD' => DoctrineExtensions\Query\Mysql\Field::class,
+    ],
     /*
     |--------------------------------------------------------------------------
     | Enable query logging with laravel file logging,

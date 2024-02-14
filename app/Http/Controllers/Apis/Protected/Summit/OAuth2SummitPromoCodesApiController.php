@@ -153,6 +153,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'id',
                     'code',
+                    'redeemed',
                 ];
             },
             function ($filter) {

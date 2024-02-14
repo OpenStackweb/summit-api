@@ -34,7 +34,6 @@ final class SponsorExtraQuestionValidationRulesFactory
             'label'       => 'required|string',
             'mandatory'   => 'required|boolean',
             'placeholder' => 'sometimes|nullable|string',
-            'max_selected_values' => 'sometimes|integer|min:0',
         ];
     }
 
@@ -51,7 +50,6 @@ final class SponsorExtraQuestionValidationRulesFactory
             'mandatory'   => 'sometimes|boolean',
             'placeholder' => 'sometimes|nullable|string',
             'order'       => 'sometimes|integer|min:1',
-            'max_selected_values' => 'sometimes|integer|min:0',
         ];
     }
 }

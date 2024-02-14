@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
@@ -152,6 +153,30 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     use DeleteSummitChildElement;
 
     /**
+     * @param Filter $filter
+     * @return Filter
+     */
+    protected function applyExtraFilters(Filter $filter):Filter {
+
+        $current_member = $this->resource_server_context->getCurrentUser();
+
+        if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->belongsToGroup(IGroup::Sponsors)) {
+            $filter->addFilterCondition
+            (
+                FilterElement::makeEqual
+                (
+                    'sponsor_id',
+                    $current_member->getSponsorMembershipIds(),
+                    "OR"
+
+                )
+            );
+        }
+        $filter->addFilterCondition(FilterElement::makeEqual("summit_id", intval($this->summit_id)));
+        return $filter;
+    }
+
+    /**
      * @param array $payload
      * @return array
      */
@@ -190,7 +215,16 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
-        return $summit->getSummitSponsorById($child_id);
+        $current_member = $this->resource_server_context->getCurrentUser();
+        $sponsor = $summit->getSummitSponsorById($child_id);
+
+        if (is_null($sponsor)) return null;
+
+        if (is_null($current_member)) return $sponsor;
+
+        if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($sponsor)) return null;
+
+        return $sponsor;
     }
 
     /**

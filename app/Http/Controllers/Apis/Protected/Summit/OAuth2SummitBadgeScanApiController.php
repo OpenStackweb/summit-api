@@ -13,6 +13,7 @@
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -308,10 +309,21 @@ final class OAuth2SummitBadgeScanApiController
                     'scan_date'
                 ];
             },
-            function($filter) use($summit, $sponsor){
+            function($filter) use($summit, $sponsor, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    if(!is_null($sponsor)){
+
+                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->belongsToGroup(IGroup::Sponsors)) {
+                        $filter->addFilterCondition
+                        (
+                            FilterElement::makeEqual
+                            (
+                                'sponsor_id',
+                                $current_member->getSponsorMembershipIds(),
+                                "OR"
+                            )
+                        );
+                    } else if(!is_null($sponsor)){
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsor_id', $sponsor->getId()));
                     }
                 }
@@ -381,10 +393,20 @@ final class OAuth2SummitBadgeScanApiController
                     'scan_date'
                 ];
             },
-            function($filter) use($summit, $sponsor){
+            function($filter) use($summit, $sponsor, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    if(!is_null($sponsor)){
+                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->belongsToGroup(IGroup::Sponsors)) {
+                        $filter->addFilterCondition
+                        (
+                            FilterElement::makeEqual
+                            (
+                                'sponsor_id',
+                                $current_member->getSponsorMembershipIds(),
+                                "OR"
+                            )
+                        );
+                    } else if(!is_null($sponsor)){
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsor_id', $sponsor->getId()));
                     }
                 }

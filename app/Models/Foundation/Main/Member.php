@@ -17,6 +17,7 @@ use App\Models\Foundation\Elections\Candidate;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Main\Strategies\MemberSummitStrategyFactory;
 use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
@@ -1708,6 +1709,26 @@ SQL;
     }
 
     /**
+     * @return array
+     */
+    public function getSponsorMembershipIds(): array
+    {
+        $sql = <<<SQL
+SELECT DISTINCT(SponsorID)
+FROM Sponsor_Users
+WHERE MemberID = :member_id;
+SQL;
+
+        $stmt = $this->prepareRawSQL($sql);
+        $stmt->execute(
+            [
+                'member_id' => $this->getId(),
+            ]
+        );
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    /**
      * @return ArrayCollection|SummitOrder[]
      */
     public function getSummitRegistrationOrders()
@@ -1777,13 +1798,27 @@ SQL;
      */
     public function hasSponsorMembershipsFor(Sponsor $sponsor): bool
     {
-        //TODO: Criteria approach must be used here but in order to do that, Sponsor.Order column must be renamed to Sponsor.CustomOrder
+        try {
+            if (!$this->belongsToGroup(IGroup::Sponsors)) return false;
 
-        $memberships_count = $this->sponsor_memberships->filter(function ($entity) use ($sponsor) {
-            return $entity->getId() == $sponsor->getId();
-        })->count();
+            $sql = <<<SQL
+SELECT COUNT(SponsorID)
+FROM Sponsor_Users
+WHERE MemberID = :member_id AND SponsorID = :sponsor_id
+SQL;
 
-        return $memberships_count > 0;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'member_id'  => $this->getId(),
+                    'sponsor_id' => $sponsor->getId(),
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return intval($res[0]) > 0;
+        } catch (\Exception $ex) {
+            return false;
+        }
     }
 
     /**
@@ -1889,21 +1924,8 @@ SQL;
      */
     public function getAllAllowedSummitsIds(): array
     {
-        $sql = <<<SQL
-SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Members 
-INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
-SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
-WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
-SQL;
-
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return MemberSummitStrategyFactory::getMemberSummitStrategy($this)
+            ->getAllAllowedSummitIds();
     }
 
     /**
@@ -2919,27 +2941,7 @@ SQL;
     {
         if ($this->isAdmin()) return true;
 
-        try {
-            $sql = <<<SQL
-SELECT COUNT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Members 
-INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
-SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
-WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id 
-  AND SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
-SQL;
-
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
-                [
-                    'member_id' => $this->getId(),
-                    'summit_id' => $summit->getId(),
-                ]
-            );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return intval($res[0]) > 0;
-        } catch (\Exception $ex) {
-            return false;
-        }
+        return MemberSummitStrategyFactory::getMemberSummitStrategy($this)
+            ->isSummitAllowed($summit);
     }
 }

@@ -31,4 +31,5 @@ interface IGroup
     const SummitRoomAdministrators = 'summit-room-administrators';
     const SummitRegistrationAdmins = 'summit-registration-administrators';
     const Testers                  = 'tester-groups';
+    const Sponsors                 = 'sponsors';
 }

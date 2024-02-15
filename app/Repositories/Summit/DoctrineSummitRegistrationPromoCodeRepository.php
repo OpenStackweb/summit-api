@@ -253,8 +253,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
     protected function getOrderMappings()
     {
         return [
-            'code' => 'pc.code',
             'id'   => 'pc.id',
+            'code' => 'pc.code',
+            'redeemed' => 'pc.redeemed',
         ];
     }
 
@@ -379,8 +380,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
         if (!is_null($order)) {
             $extra_orders = $order->toRawSQL(array
             (
-                'code' => 'Code',
                 'id'   => 'Id',
+                'code' => 'Code',
+                'redeemed' => 'REDEEMED_ORDER',
             ));
         }
 
@@ -420,7 +422,6 @@ LEFT JOIN SummitRegistrationPromoCode_Tags pct ON pct.SummitRegistrationPromoCod
 LEFT JOIN Tag t ON pct.TagID = t.ID
 SQL;
 
-
         $query_count = <<<SQL
 SELECT COUNT(DISTINCT(pc.ID)) AS QTY
 {$query_from}
@@ -435,9 +436,14 @@ SQL;
         $offset = $paging_info->getOffset();
 
         $query = <<<SQL
-SELECT DISTINCT pc.ID
+SELECT pc.ID, pc.Code, CASE 
+WHEN pc.ClassName = 'SpeakersSummitRegistrationPromoCode' THEN COUNT(NOT ISNULL(aspkrpc.RedeemedAt)) - SUM(NOT ISNULL(aspkrpc.RedeemedAt)) = 0
+WHEN pc.ClassName = 'SpeakersRegistrationDiscountCode' THEN COUNT(NOT ISNULL(aspkrdc.RedeemedAt)) - SUM(NOT ISNULL(aspkrdc.RedeemedAt)) = 0
+ELSE pc.redeemed 
+END AS REDEEMED_ORDER
 {$query_from}
 {$extra_filters} 
+GROUP BY pc.ID, pc.Code
 {$extra_orders} LIMIT {$limit} OFFSET {$offset};
 SQL;
 
@@ -446,9 +452,10 @@ SQL;
         $ids = $stm->fetchFirstColumn(\PDO::FETCH_COLUMN);
 
         $data = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("e.id in (:ids)")
+            ->select("pc, FIELD(pc.id, :ids) AS HIDDEN ids")
+            ->from($this->getBaseEntity(), "pc")
+            ->where("pc.id in (:ids)")
+            ->orderBy("ids")
             ->setParameter("ids", $ids)
             ->getQuery()
             ->getResult();

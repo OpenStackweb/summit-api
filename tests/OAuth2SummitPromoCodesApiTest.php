@@ -44,7 +44,8 @@ final class OAuth2SummitPromoCodesApiTest
         $params = [
             'id' => self::$summit->getId(),
             //'filter' => 'owner_email==smarcet+kbxkyjnkyx@gmail.com',
-            'expand' => 'owners'
+            'expand' => 'owners',
+            'order'  => '-redeemed',
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];

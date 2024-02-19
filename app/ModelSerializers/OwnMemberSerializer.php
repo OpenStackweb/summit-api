@@ -115,10 +115,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
 
         if(in_array('sponsor_memberships', $relations)){
             $res = [];
-            foreach ($member->getSponsorMemberships() as $sponsor_membership){
+            $sponsorship_expand = AbstractSerializer::filterExpandByPrefix($expand, "sponsor_memberships");
+            if(empty($sponsorship_expand)) $sponsorship_expand = 'summit,company,sponsorship';
+
+            foreach ($member->getLastNSponsorMemberships() as $sponsor_membership){
                 $res[] = SerializerRegistry::getInstance()
                     ->getSerializer($sponsor_membership)
-                    ->serialize('summit,company,sponsorship', [], [], ['member' => $member]);
+                    ->serialize($sponsorship_expand, [], [], ['member' => $member]);
             }
             $values['sponsor_memberships'] = $res;
         }

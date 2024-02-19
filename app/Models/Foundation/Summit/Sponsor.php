@@ -71,7 +71,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     ];
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     private $order;

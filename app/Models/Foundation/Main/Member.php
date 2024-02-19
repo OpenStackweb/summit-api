@@ -1709,6 +1709,17 @@ SQL;
     }
 
     /**
+     * @return Sponsor[]
+     */
+    public function getLastNSponsorMemberships($last_n = 2)
+    {
+        $criteria = Criteria::create()
+            ->orderBy(['id' => Criteria::DESC])
+            ->setMaxResults($last_n);
+        return $this->sponsor_memberships->matching($criteria);
+    }
+
+    /**
      * @return array
      */
     public function getSponsorMembershipIds(): array

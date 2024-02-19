@@ -19,8 +19,10 @@ use App\Audit\ILogger;
 use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\Member;
 use models\main\SummitAttendeeBadgeAuditLog;
+use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 
 /**
@@ -40,13 +42,23 @@ class SummitAttendeeBadgeAuditLogger implements ILogger
         $user_id = $resource_server_ctx->getCurrentUserId();
         $rep = $entity_manager->getRepository(Member::class);
         $user = $rep->findOneBy(["user_external_id" => $user_id]);
+        $ticket = $entity->getTicket();
+        $order = $ticket->getOrder();
+        $summit = $order->getSummit();
+        if(is_null($summit)){
+           $summit_repository = EntityManager::getRepository(Summit::class);
+           if($order->former_summit_id > 0)
+            $summit = $summit_repository->find($order->former_summit_id);
+        }
 
-        $entry = new SummitAttendeeBadgeAuditLog(
+        $entry = new SummitAttendeeBadgeAuditLog
+        (
             $user,
             $description,
-            $entity->getTicket()->getOrder()->getSummit(),
+            $summit,
             $entity
         );
+
         $entity_manager->persist($entry);
 
         // For the onFlush handler, we need to compute the changeset for new entities manually:

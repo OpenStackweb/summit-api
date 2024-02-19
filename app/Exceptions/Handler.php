@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use Throwable;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -63,6 +65,7 @@ class Handler extends ExceptionHandler
         if (config('app.debug')) {
             return parent::render($request, $e);
         }
+        Log::error($e);
         return response()->view('errors.404', [], 200);
     }
 }

@@ -60,7 +60,7 @@ class SummitAttendeeBadgeAuditLog extends SummitAuditLog
         $this->related_entity = $attendee_badge;
     }
 
-    public function __construct(?Member $user, string $action, Summit $summit, SummitAttendeeBadge $attendee_badge)
+    public function __construct(?Member $user, string $action, ?Summit $summit, SummitAttendeeBadge $attendee_badge)
     {
         parent::__construct($user, $action, $summit);
         $this->related_entity = $attendee_badge;

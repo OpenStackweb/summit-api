@@ -33,7 +33,7 @@ class SummitAuditLog extends AuditLog
         return self::ClassName;
     }
 
-    public function __construct(?Member $user, string $action, Summit $summit)
+    public function __construct(?Member $user, string $action, ?Summit $summit)
     {
         parent::__construct($user, $action);
         $this->summit = $summit;

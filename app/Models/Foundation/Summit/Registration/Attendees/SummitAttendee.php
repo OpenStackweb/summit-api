@@ -500,8 +500,8 @@ class SummitAttendee extends SilverstripeBaseModel
             // regenerate the QR code if the ticket is complete
             $ticket->generateQRCode();
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
-            // adds a threshold of 20 minutes to avoid duplicates emails
-            if (Cache::add(sprintf("%s_emit_ticket", $key), true, now()->addMinutes(20))) {
+            // adds a threshold of 5 minutes to avoid duplicates emails
+            if (Cache::add(sprintf("%s_emit_ticket", $key), true, now()->addMinutes(5))) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending SummitAttendeeTicketEmail", $email, $ticket->getId()));
                 SummitAttendeeTicketEmail::dispatch($ticket, $payload, $test_email_recipient);
                 $ticket->getOwner()->markInvitationEmailSentDate();
@@ -517,8 +517,8 @@ class SummitAttendee extends SilverstripeBaseModel
         // they bought a ticket for themselves.
         if ($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             // no delay
-            // adds a threshold of 20 minutes to avoid duplicates emails
-            if (Cache::add(sprintf("%s_edit_ticket", $key), true, now()->addMinutes(20))) {
+            // adds a threshold of 5 minutes to avoid duplicates emails
+            if (Cache::add(sprintf("%s_edit_ticket", $key), true, now()->addMinutes(5))) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending InviteAttendeeTicketEditionMail", $email, $ticket->getId()));
                 InviteAttendeeTicketEditionMail::dispatch($ticket, $payload, $test_email_recipient);
                 $ticket->getOwner()->markInvitationEmailSentDate();

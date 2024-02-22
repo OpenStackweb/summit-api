@@ -132,12 +132,16 @@ abstract class JsonController extends Controller
      * @param $messages
      * @return mixed
      */
-    protected function error412($messages)
+    protected function error412($messages, int $code = 0)
     {
         if(!is_array($messages)){
             $messages = [$messages];
         }
-        return Response::json(array('message' => 'Validation Failed', 'errors' => $messages), 412);
+        return Response::json([
+            'message' => 'Validation Failed',
+            'errors' => $messages,
+            'code' => $code
+        ], 412);
     }
 
     /**

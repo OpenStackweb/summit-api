@@ -47,9 +47,11 @@ class SummitTicketReminderEmail extends AbstractSummitAttendeeTicketEmail
             $payload[IMailTemplatesConstants::order_owner_full_name] = $payload[IMailTemplatesConstants::order_owner_email];
         }
 
-        $payload[IMailTemplatesConstants::owner_full_name] = $attendee->getFullName();
-        $payload[IMailTemplatesConstants::owner_email] = $attendee->getEmail();
+        $payload[IMailTemplatesConstants::owner_first_name] =$attendee->getFirstName();
+        $payload[IMailTemplatesConstants::owner_last_name] = $attendee->getSurname();
         $payload[IMailTemplatesConstants::owner_company] = $attendee->getCompanyName();
+        $payload[IMailTemplatesConstants::owner_email]  = $attendee->getEmail();
+        $payload[IMailTemplatesConstants::owner_full_name] = $attendee->getFullName();
 
         if(empty($payload[IMailTemplatesConstants::owner_full_name])){
             $payload[IMailTemplatesConstants::owner_full_name] = $payload[IMailTemplatesConstants::owner_email];
@@ -83,6 +85,8 @@ class SummitTicketReminderEmail extends AbstractSummitAttendeeTicketEmail
         $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_first_name]['type'] = 'string';
+        $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
 
         return $payload;

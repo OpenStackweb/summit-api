@@ -25,7 +25,6 @@ use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use App\Services\Model\ITagService;
 use App\Services\Utils\CSVReader;
-use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -466,8 +465,22 @@ final class SummitRegistrationInvitationService
             $invitation = $this->invitation_repository->getByHashAndSummit(
                 SummitRegistrationInvitation::HashConfirmationToken($token), $summit);
 
-            if (is_null($invitation))
+            if (!$invitation instanceof SummitRegistrationInvitation)
                 throw new EntityNotFoundException("Invitation not found.");
+
+            if($invitation->isAccepted())
+                throw new ValidationException
+                (
+                    "This invitation has already been accepted. Please contact the event organizer if you feel this is an error.",
+                    1
+                );
+
+            if($invitation->isRejected())
+                throw new ValidationException
+                (
+                    "This invitation has already been declined. Please contact the event organizer if you feel this is an error.",
+                    2
+                );
 
             return $invitation;
         });
@@ -486,11 +499,22 @@ final class SummitRegistrationInvitationService
             $invitation = $this->invitation_repository->getByHashAndSummit(
                 SummitRegistrationInvitation::HashConfirmationToken($token), $summit);
 
-            if (is_null($invitation))
+            if (!$invitation instanceof SummitRegistrationInvitation)
                 throw new EntityNotFoundException("Invitation not found.");
 
-            if ($invitation->getStatus() === SummitRegistrationInvitation::Status_Rejected)
-                throw new ValidationException("This Invitation is already rejected.");
+            if($invitation->isAccepted())
+                throw new ValidationException
+                (
+                    "This invitation has already been accepted. Please contact the event organizer if you feel this is an error.",
+                    1
+                );
+
+            if($invitation->isRejected())
+                throw new ValidationException
+                (
+                    "This invitation has already been declined. Please contact the event organizer if you feel this is an error.",
+                    2
+                );
 
             $invitation->markAsRejected();
 
@@ -582,8 +606,13 @@ final class SummitRegistrationInvitationService
                             if (!$invitation instanceof SummitRegistrationInvitation)
                                 return null;
 
+                            if($invitation->isAccepted()) {
+                                Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is already accepted", $invitation_id));
+                                return null;
+                            }
+
                             if($invitation->isRejected()) {
-                                Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is rejected", $invitation_id));
+                                Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is already rejected", $invitation_id));
                                 return null;
                             }
 
@@ -606,7 +635,6 @@ final class SummitRegistrationInvitationService
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
-                    EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
             },
             null,

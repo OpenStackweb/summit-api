@@ -297,7 +297,7 @@ final class DoctrineSpeakerRepository
                                         LEFT JOIN __p14.selection_plan __sel_plan14
                                         LEFT JOIN __p14.selected_presentations __sp14 
                                         LEFT JOIN __sp14.list __spl14
-                                        LEFT JOIN models\summit\PresentationMediaUpload __pm14 WITH __pm12.presentation = __p14
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm14 WITH __pm14.presentation = __p14
                                         LEFT JOIN __pm14.media_upload_type __mut14
                                         WHERE 
                                         __p14.summit = :summit AND

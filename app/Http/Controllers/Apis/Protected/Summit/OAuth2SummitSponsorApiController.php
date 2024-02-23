@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
@@ -20,9 +19,6 @@ use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorSocialNetworkRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Sponsor;
@@ -152,27 +148,35 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     use DeleteSummitChildElement;
 
+    use RequestProcessor;
+
     /**
      * @param Filter $filter
      * @return Filter
      */
     protected function applyExtraFilters(Filter $filter):Filter {
 
+        // this is the authz code for sponsors users ...
         $current_member = $this->resource_server_context->getCurrentUser();
 
-        if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->belongsToGroup(IGroup::Sponsors)) {
+        $summit_id = intval($this->summit_id);
+        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($this->summit_id);
+
+        if (!is_null($summit) && !is_null($current_member) && $current_member->isSponsorUser()) {
+
             $filter->addFilterCondition
             (
                 FilterElement::makeEqual
                 (
                     'sponsor_id',
-                    $current_member->getSponsorMembershipIds(),
+                    $current_member->getSponsorMembershipIds($summit),
                     "OR"
 
                 )
             );
         }
-        $filter->addFilterCondition(FilterElement::makeEqual("summit_id", intval($this->summit_id)));
+        // add filter for summit .
+        $filter->addFilterCondition(FilterElement::makeEqual("summit_id",$summit_id));
         return $filter;
     }
 
@@ -218,13 +222,14 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $current_member = $this->resource_server_context->getCurrentUser();
         $sponsor = $summit->getSummitSponsorById($child_id);
 
-        if (is_null($sponsor)) return null;
+        if(is_null($sponsor)) return null;
+        // service account
+        if(is_null($current_member)) return $sponsor;
+        if($current_member->isAdmin()) return $sponsor;
+        if($current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $sponsor;
+        if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit)) return $sponsor;
 
-        if (is_null($current_member)) return $sponsor;
-
-        if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($sponsor)) return null;
-
-        return $sponsor;
+        return null;
     }
 
     /**
@@ -255,22 +260,17 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     public function addSponsorUser($summit_id, $sponsor_id, $member_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $member_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $sponsor = $this->service->addSponsorUser($summit, $sponsor_id, $member_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -281,25 +281,18 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     public function removeSponsorUser($summit_id, $sponsor_id, $member_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $member_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $sponsor = $this->service->removeSponsorUser($summit, $sponsor_id, $member_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
-
-    use RequestProcessor;
 
     /**
      * @param LaravelRequest $request

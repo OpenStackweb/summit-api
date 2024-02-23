@@ -29,6 +29,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         'moderator_company',
         'speaker_ids',
         'speaker_fullnames',
+        'speaker_emails',
         'speaker_titles',
         'speaker_companies',
         'speaker_countries',

@@ -894,6 +894,19 @@ class Member extends SilverstripeBaseModel
         return false;
     }
 
+
+    public function isSponsorUser(): bool
+    {
+        if($this->isAdmin()) return false;
+        if($this->belongsToGroup(IGroup::Sponsors))
+            return true;
+        if ($this->isOnExternalGroup(IGroup::Sponsors))
+            return true;
+        return false;
+    }
+
+
+
     /**
      * @param string $code
      * @return bool
@@ -1722,22 +1735,57 @@ SQL;
     /**
      * @return array
      */
-    public function getSponsorMembershipIds(): array
+    public function getSponsorMembershipIds(Summit $summit): array
     {
         $sql = <<<SQL
 SELECT DISTINCT(SponsorID)
 FROM Sponsor_Users
-WHERE MemberID = :member_id;
+INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
+WHERE MemberID = :member_id AND Sponsor.SummitID = :summit_id
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
         $stmt->execute(
             [
                 'member_id' => $this->getId(),
+                'summit_id' => $summit->getId(),
             ]
         );
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
+
+    public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
+    {
+        try {
+            if(!$this->isSponsorUser()) return false;
+        $sql = <<<SQL
+SELECT COUNT(Sponsor_Users.SponsorID)
+FROM Sponsor_Users
+INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
+WHERE 
+    MemberID = :member_id 
+    AND Sponsor.SummitID = :summit_id
+SQL;
+
+        $params =   [
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ];
+
+        if(!is_null($sponsor)) {
+            $sql .= " AND Sponsor.ID = :sponsor_id";
+            $params['sponsor_id'] = $sponsor->getId();
+        }
+
+        $stmt = $this->prepareRawSQL($sql);
+        $stmt->execute($params);
+        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return intval($res[0]) > 0;
+        } catch (\Exception $ex) {
+            return false;
+        }
+    }
+
 
     /**
      * @return ArrayCollection|SummitOrder[]
@@ -1801,35 +1849,6 @@ SQL;
         })->first();
 
         return $sponsor === false ? null : $sponsor;
-    }
-
-    /**
-     * @param Sponsor $sponsor
-     * @return bool
-     */
-    public function hasSponsorMembershipsFor(Sponsor $sponsor): bool
-    {
-        try {
-            if (!$this->belongsToGroup(IGroup::Sponsors)) return false;
-
-            $sql = <<<SQL
-SELECT COUNT(SponsorID)
-FROM Sponsor_Users
-WHERE MemberID = :member_id AND SponsorID = :sponsor_id
-SQL;
-
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
-                [
-                    'member_id'  => $this->getId(),
-                    'sponsor_id' => $sponsor->getId(),
-                ]
-            );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return intval($res[0]) > 0;
-        } catch (\Exception $ex) {
-            return false;
-        }
     }
 
     /**

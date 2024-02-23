@@ -13,8 +13,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\IGroup;
-use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Member;
 
 class MemberSummitStrategyFactory
@@ -25,7 +23,7 @@ class MemberSummitStrategyFactory
      */
     public static function getMemberSummitStrategy(Member $member): IMemberSummitStrategy
     {
-        if ($member->belongsToGroup(IGroup::Sponsors)) {
+        if ($member->isSponsorUser()) {
             return new SponsorMemberSummitStrategy($member->getId());
         }
         return new MemberSummitStrategy($member->getId());

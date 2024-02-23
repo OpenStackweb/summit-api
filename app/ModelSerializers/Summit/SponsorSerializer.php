@@ -57,7 +57,7 @@ final class SponsorSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $sponsor = $this->object;
         if (!$sponsor instanceof Sponsor) return [];
@@ -100,7 +100,9 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'badge_qr_prefix',
                                 'qr_registry_field_delimiter'
                             ];
-                            if ($current_member instanceof Member && ((!is_null($summit) && $current_member->isSummitAllowed($summit)) || $current_member->hasSponsorMembershipsFor($summit, $sponsor))) {
+                            if ($current_member instanceof Member &&
+                                ((!is_null($summit) && $current_member->isSummitAllowed($summit))
+                                    || $current_member->hasSponsorMembershipsFor($sponsor->getSummit(), $sponsor))) {
                                 $serializer_type = SerializerRegistry::SerializerType_Private;
                                 $fields[] = 'qr_codes_enc_key';
                             }

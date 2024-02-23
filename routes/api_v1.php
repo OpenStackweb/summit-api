@@ -1292,13 +1292,13 @@ Route::group(array('prefix' => 'summits'), function () {
         // badge-scans
         Route::group(['prefix' => 'badge-scans'], function () {
             Route::get('me', 'OAuth2SummitBadgeScanApiController@getAllMyBadgeScans');
-            Route::get('', 'OAuth2SummitBadgeScanApiController@getAllBySummit');
-            Route::get('csv', 'OAuth2SummitBadgeScanApiController@getAllBySummitCSV');
-            Route::post('', "OAuth2SummitBadgeScanApiController@add");
+            Route::get('',['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeScanApiController@getAllBySummit']);
+            Route::get('csv', ['middleware' => 'auth.user', 'uses' =>'OAuth2SummitBadgeScanApiController@getAllBySummitCSV']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' =>"OAuth2SummitBadgeScanApiController@add"]);
             Route::put('checkin', "OAuth2SummitBadgeScanApiController@checkIn");
             Route::group(['prefix' => '{scan_id}'], function () {
-                Route::put('', "OAuth2SummitBadgeScanApiController@update");
-                Route::get('', "OAuth2SummitBadgeScanApiController@get");
+                Route::put('', ['middleware' => 'auth.user', 'uses' =>"OAuth2SummitBadgeScanApiController@update"]);
+                Route::get('', ['middleware' => 'auth.user', 'uses' =>"OAuth2SummitBadgeScanApiController@get"]);
             });
         });
 

@@ -2183,6 +2183,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2277,6 +2278,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2345,6 +2347,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2500,7 +2503,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -8606,7 +8608,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
-                    IGroup::Administrators
+                    IGroup::Administrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -9470,14 +9473,27 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SummitScopes::WriteBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'update-badge-scan',
                     'route' => '/api/v1/summits/{id}/badge-scans/{scan_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        sprintf(SummitScopes::WriteBadgeScan, $current_realm),
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'get-badge-scan',
@@ -9488,6 +9504,12 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm),
                         sprintf(SummitScopes::ReadMyBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'get-my-badge-scans',
@@ -9505,6 +9527,12 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'get-badge-scans-csv',
@@ -9514,6 +9542,12 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'badge-scan-checkin',

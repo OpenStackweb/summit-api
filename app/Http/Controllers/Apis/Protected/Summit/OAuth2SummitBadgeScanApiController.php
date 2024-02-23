@@ -112,7 +112,8 @@ final class OAuth2SummitBadgeScanApiController
     protected function addChild(Summit $summit, array $payload): IEntity
     {
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException();
 
         return $this->service->addBadgeScan($summit, $current_member, $payload);
     }
@@ -137,7 +138,8 @@ final class OAuth2SummitBadgeScanApiController
      */
     protected function updateChild(Summit $summit,int $child_id, array $payload):IEntity{
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException();
 
         return $this->service->updateBadgeScan($summit, $current_member, $child_id, $payload);
     }
@@ -437,7 +439,6 @@ final class OAuth2SummitBadgeScanApiController
             [
                 'features_types'   => $summit->getBadgeFeaturesTypes(),
                 'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage),
-                'sponsor_questions' => !is_null($sponsor) ? $sponsor->getExtraQuestions() : []
             ]
         );
     }
@@ -470,13 +471,6 @@ final class OAuth2SummitBadgeScanApiController
         $current_member = $this->resource_server_context->getCurrentUser();
         if (is_null($current_member))
             throw new HTTP403ForbiddenException();
-
-        if(!$current_member->isSummitAllowed($summit)){
-            $sponsor = $current_member->getSponsorBySummit($summit);
-            if(is_null($sponsor)){
-                throw new HTTP403ForbiddenException();
-            }
-        }
 
         return $this->service->getBadgeScan($summit, $current_member, $child_id);
     }

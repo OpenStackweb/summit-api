@@ -13,10 +13,10 @@
  **/
 
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
-use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SponsorBadgeScan;
 use models\summit\SummitOrderExtraQuestionType;
+
 /**
  * Class SponsorBadgeScanCSVSerializer
  * @package App\ModelSerializers\Summit
@@ -24,13 +24,13 @@ use models\summit\SummitOrderExtraQuestionType;
 final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
-        'Id'           => 'id:json_int',
-        'ScanDate'     => 'scan_date:datetime_epoch',
-        'QRCode'       => 'qr_code:json_string',
-        'Notes'        => 'notes:json_string',
-        'SponsorId'    => 'sponsor_id:json_int',
-        'UserId'       => 'scanned_by_id:json_int',
-        'BadgeId'      => 'badge_id:json_int',
+        'Id' => 'id:json_int',
+        'ScanDate' => 'scan_date:datetime_epoch',
+        'QRCode' => 'qr_code:json_string',
+        'Notes' => 'notes:json_string',
+        'SponsorId' => 'sponsor_id:json_int',
+        'UserId' => 'scanned_by_id:json_int',
+        'BadgeId' => 'badge_id:json_int',
         'AttendeeFirstName' => 'attendee_first_name:json_string',
         'AttendeeLastName' => 'attendee_last_name:json_string',
         'AttendeeEmail' => 'attendee_email:json_string',
@@ -45,18 +45,20 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
+        $sponsor = $scan->getSponsor();
+        $sponsor_questions = $sponsor->getExtraQuestions();
 
         if (isset($params['ticket_questions'])) {
 
             $ticket_owner = null;
             $badge = $scan->getBadge();
 
-            if(!is_null($badge)) {
+            if (!is_null($badge)) {
                 $ticket_owner = $badge->getTicket()->getOwner();
             }
 
@@ -68,24 +70,21 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
 
                 if (!is_null($ticket_owner)) {
                     $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
-                    if(is_null($value)) continue;
+                    if (is_null($value)) continue;
                     $values[$label] = $question->getNiceValue($value);
                 }
             }
         }
 
-        if (isset($params['sponsor_questions'])) {
+        foreach ($sponsor_questions as $question) {
+            if (!$question instanceof SummitSponsorExtraQuestionType) continue;
 
-            foreach ($params['sponsor_questions'] as $question) {
-                if (!$question instanceof SummitSponsorExtraQuestionType) continue;
+            $label = $question->getCSVLabel();
+            $values[$label] = '';
 
-                $label = $question->getCSVLabel();
-                $values[$label] = '';
-
-                $value = $scan->getExtraQuestionAnswerValueByQuestion($question);
-                if(is_null($value)) continue;
-                $values[$label] = $question->getNiceValue($value);
-            }
+            $value = $scan->getExtraQuestionAnswerValueByQuestion($question);
+            if (is_null($value)) continue;
+            $values[$label] = $question->getNiceValue($value);
         }
 
         return $values;

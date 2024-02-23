@@ -167,30 +167,33 @@ final class SponsorUserInfoGrantService
      * @param Summit $summit
      * @param Member $current_member
      * @param int $scan_id
-     * @param array $data
+     * @param array $payload
      * @return SponsorBadgeScan
      * @throws \Exception
      */
-    public function updateBadgeScan(Summit $summit, Member $current_member, int $scan_id, array $data): SponsorBadgeScan
+    public function updateBadgeScan(Summit $summit, Member $current_member, int $scan_id, array $payload): SponsorBadgeScan
     {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $scan_id, $data){
-            $sponsor = $current_member->getSponsorBySummit($summit);
+        return $this->tx_service->transaction(function() use($summit, $current_member, $scan_id, $payload){
 
-            if(is_null($sponsor))
-                throw new ValidationException("Current member does not belongs to any summit sponsor.");
-
-            $scan = $sponsor->getUserInfoGrantById($scan_id);
-
-            if(is_null($scan) || !$scan instanceof SponsorBadgeScan){
+            $scan = $this->repository->getById($scan_id);
+            if( !$scan instanceof SponsorBadgeScan){
                 throw new EntityNotFoundException("Scan not found.");
             }
 
-            if(isset($data['notes'])){
-                $scan->setNotes(trim($data['notes']));
+            $sponsor = $scan->getSponsor();
+
+            if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit))
+                throw new ValidationException("You are not allowed to update this scan.");
+
+            if($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new ValidationException("You are not allowed to update this scan.");
+
+            if(isset($payload['notes'])){
+                $scan->setNotes(trim($payload['notes']));
             }
 
             // extra questions
-            $extra_questions = $data['extra_questions'] ?? [];
+            $extra_questions = $payload['extra_questions'] ?? [];
 
             if (count($extra_questions)) {
                 $res = $scan->hadCompletedExtraQuestions($extra_questions);
@@ -213,16 +216,19 @@ final class SponsorUserInfoGrantService
     public function getBadgeScan(Summit $summit, Member $current_member, int $scan_id): SponsorBadgeScan
     {
         return $this->tx_service->transaction(function() use($summit, $current_member, $scan_id){
-            $sponsor = $current_member->getSponsorBySummit($summit);
 
-            if(is_null($sponsor))
-                throw new ValidationException("Current member does not belongs to any summit sponsor.");
-
-            $scan = $sponsor->getUserInfoGrantById($scan_id);
-
-            if(is_null($scan) || !$scan instanceof SponsorBadgeScan){
+            $scan = $this->repository->getById($scan_id);
+            if( !$scan instanceof SponsorBadgeScan){
                 throw new EntityNotFoundException("Scan not found.");
             }
+
+            $sponsor = $scan->getSponsor();
+
+            if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit))
+                throw new ValidationException("You are not allowed to access to this scan.");
+
+            if($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new ValidationException("You are not allowed to access to this scan.");
 
             return $scan;
         });

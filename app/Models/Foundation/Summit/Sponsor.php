@@ -367,10 +367,29 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function addUser(Member $user)
     {
         if ($this->members->contains($user)) return;
-        if (!$user->belongsToGroup(IGroup::Sponsors)) {
-            throw new ValidationException(
-                sprintf("Member %s does not belong to group %s", $user->getId(), IGroup::Sponsors));
+        if (!$user->isSponsorUser()) {
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Member %s does not belong to group %s",
+                    $user->getId(),
+                    IGroup::Sponsors
+                )
+            );
         }
+
+        if($user->hasSponsorMembershipsFor($this->getSummit()))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Member %s already belongs to an sponsor for summit %s",
+                    $user->getId(),
+                    $this->getSummit()->getId()
+                )
+            );
+
         $this->members->add($user);
     }
 

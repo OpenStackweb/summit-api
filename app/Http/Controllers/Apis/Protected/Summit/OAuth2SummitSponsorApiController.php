@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
@@ -196,6 +197,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         return $this->service->addSponsor($summit, $payload);
     }
 
@@ -214,6 +220,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function deleteChild(Summit $summit, $child_id): void
     {
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         $this->service->deleteSponsor($summit, $child_id);
     }
 
@@ -249,6 +260,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         return $this->service->updateSponsor($summit, $child_id, $payload);
     }
 
@@ -267,8 +283,10 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
 
+            // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $this->error403();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $sponsor = $this->service->addSponsorUser($summit, $sponsor_id, $member_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(
@@ -290,6 +308,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $member_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $sponsor = $this->service->removeSponsorUser($summit, $sponsor_id, $member_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(
@@ -1042,6 +1065,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
         if (is_null($sponsor)) return $this->error404();
 
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+        if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         return $this->_getAll(
             function () {
                 return [
@@ -1117,8 +1147,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
 
+            // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $this->error403();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $payload = $this->getJsonPayload(SponsorExtraQuestionValidationRulesFactory::buildForAdd(), true);
 
@@ -1151,8 +1185,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
 
+            // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $this->error403();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $extra_question = $sponsor->getExtraQuestionById(intval($extra_question_id));
             if (is_null($extra_question)) return $this->error404();
@@ -1183,8 +1221,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
 
+            // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $this->error403();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $payload = $this->getJsonPayload(SponsorExtraQuestionValidationRulesFactory::buildForUpdate(), true);
 
@@ -1217,8 +1259,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
 
+            // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!$current_member->isAdmin() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $this->error403();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $this->service->deleteSponsorExtraQuestion($summit, intval($sponsor_id), intval($extra_question_id));
 

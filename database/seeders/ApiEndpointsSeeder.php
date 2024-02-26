@@ -2009,6 +2009,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2036,6 +2037,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2181,6 +2183,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2275,6 +2278,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2343,6 +2347,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2396,6 +2401,94 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                ]
+            ],
+            // extra questions
+            [
+                'name' => 'get-sponsor-extra-questions',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-extra-question',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-extra-question',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-extra-question',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-extra-question',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-extra-questions-metadata',
+                'route' => '/api/v1/summits/{id}/sponsors/all/extra-questions/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             //
@@ -8515,7 +8608,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
-                    IGroup::Administrators
+                    IGroup::Administrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -9379,14 +9473,27 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SummitScopes::WriteBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'update-badge-scan',
                     'route' => '/api/v1/summits/{id}/badge-scans/{scan_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        sprintf(SummitScopes::WriteBadgeScan, $current_realm),
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'get-badge-scan',
@@ -9397,6 +9504,12 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm),
                         sprintf(SummitScopes::ReadMyBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'get-my-badge-scans',
@@ -9414,6 +9527,12 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'get-badge-scans-csv',
@@ -9423,6 +9542,12 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm)
                     ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::Sponsors
+                    ]
                 ],
                 [
                     'name' => 'badge-scan-checkin',

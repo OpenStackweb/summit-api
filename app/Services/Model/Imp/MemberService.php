@@ -433,7 +433,7 @@ final class MemberService
                         continue;
 
                     // skipping this groups bc are managed by SS side
-                    if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs])){
+                    if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs, IGroup::Sponsors])){
                         Log::debug(sprintf("MemberService::synchronizeGroups skipping group %s removal", $group->getCode()));
                         continue;
                     }

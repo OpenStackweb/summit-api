@@ -11,6 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
@@ -26,6 +34,8 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     const ClassName = 'SponsorBadgeScan';
 
     use One2ManyPropertyTrait;
+
+    use ExtraQuestionAnswerHolder;
 
     protected $getIdMappings = [
         'getUserId'    => 'user',
@@ -72,6 +82,18 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
      * @var string
      */
     private $notes;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SponsorBadgeScanExtraQuestionAnswer", mappedBy="badge_scan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SponsorBadgeScanExtraQuestionAnswer[]
+     */
+    private $extra_question_answers;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->extra_question_answers = new ArrayCollection();
+    }
 
     /**
      * @return string
@@ -173,4 +195,109 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
         $this->notes = $notes;
     }
 
+    /**
+     * @return SponsorBadgeScanExtraQuestionAnswer[]
+     */
+    public function getExtraQuestionAnswers()
+    {
+        return $this->extra_question_answers;
+    }
+
+    public function clearExtraQuestionAnswers()
+    {
+        return $this->extra_question_answers->clear();
+    }
+
+    /**
+     * @param ExtraQuestionAnswer $answer
+     */
+    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer): void
+    {
+        if(!$answer instanceof SponsorBadgeScanExtraQuestionAnswer) return;
+        if ($this->extra_question_answers->contains($answer)) return;
+        $this->extra_question_answers->add($answer);
+        $answer->setBadgeScan($this);
+    }
+
+    /**
+     * @param ExtraQuestionAnswer $answer
+     */
+    public function removeExtraQuestionAnswer(ExtraQuestionAnswer $answer)
+    {
+        if(!$answer instanceof SponsorBadgeScanExtraQuestionAnswer) return;
+        if (!$this->extra_question_answers->contains($answer)) return;
+        $this->extra_question_answers->removeElement($answer);
+        $answer->clearBadgeScan();
+    }
+
+    /**
+     * @return ExtraQuestionType[] | ArrayCollection
+     */
+    public function getExtraQuestions(): array
+    {
+        return $this->sponsor->getExtraQuestions()->toArray();
+    }
+
+    /**
+     * @param int $questionId
+     * @return ExtraQuestionType|null
+     */
+    public function getQuestionById(int $questionId): ?ExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $questionId));
+        $question = $this->sponsor->getExtraQuestions()->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @param ExtraQuestionType $q
+     * @return bool
+     */
+    public function canChangeAnswerValue(ExtraQuestionType $q): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param ExtraQuestionType $q
+     * @return bool
+     */
+    public function isAllowedQuestion(ExtraQuestionType $q): bool
+    {
+        return true;
+    }
+
+    public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
+    {
+        return new SponsorBadgeScanExtraQuestionAnswer();
+    }
+
+    /**
+     * @param SummitSponsorExtraQuestionType $question
+     * @return string|null
+     */
+    public function getExtraQuestionAnswerValueByQuestion(SummitSponsorExtraQuestionType $question): ?string
+    {
+        try {
+            $sql = <<<SQL
+SELECT ExtraQuestionAnswer.Value FROM `SponsorBadgeScanExtraQuestionAnswer`
+INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SponsorBadgeScanExtraQuestionAnswer.ID
+WHERE SponsorBadgeScanExtraQuestionAnswer.SponsorBadgeScanID = :scan_id AND ExtraQuestionAnswer.QuestionID = :question_id
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'scan_id'     => $this->getId(),
+                    'question_id' => $question->getId()
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : null;
+            return !is_null($res) ? $res : null;
+        } catch (\Exception $ex) {
+            Log::debug($ex);
+        }
+        return null;
+    }
 }

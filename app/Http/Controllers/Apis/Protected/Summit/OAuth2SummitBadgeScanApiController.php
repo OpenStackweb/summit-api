@@ -13,10 +13,9 @@
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\EpochCellFormatter;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\exceptions\ValidationException;
@@ -29,7 +28,6 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
-use Exception;
 /**
  * Class OAuth2SummitBadgeScanApiController
  * @package App\Http\Controllers
@@ -92,6 +90,7 @@ final class OAuth2SummitBadgeScanApiController
             'qr_code'   => 'required|string',
             'scan_date' => 'required|date_format:U',
             'notes' => 'sometimes|string|max:1024',
+            'extra_questions' => 'sometimes|extra_question_dto_array',
         ];
     }
 
@@ -113,7 +112,8 @@ final class OAuth2SummitBadgeScanApiController
     protected function addChild(Summit $summit, array $payload): IEntity
     {
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException();
 
         return $this->service->addBadgeScan($summit, $current_member, $payload);
     }
@@ -123,6 +123,7 @@ final class OAuth2SummitBadgeScanApiController
     function getUpdateValidationRules(array $payload): array{
         return [
             'notes' => 'sometimes|string|max:1024',
+            'extra_questions' => 'sometimes|extra_question_dto_array',
         ];
     }
 
@@ -137,7 +138,8 @@ final class OAuth2SummitBadgeScanApiController
      */
     protected function updateChild(Summit $summit,int $child_id, array $payload):IEntity{
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException();
 
         return $this->service->updateBadgeScan($summit, $current_member, $child_id, $payload);
     }
@@ -148,7 +150,7 @@ final class OAuth2SummitBadgeScanApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function addGrant($summit_id, $sponsor_id){
-        try{
+        return $this->processRequest(function() use($summit_id, $sponsor_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -160,29 +162,12 @@ final class OAuth2SummitBadgeScanApiController
             (
                 $grant,
                 $this->addSerializerType()
-            )->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            )->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -202,10 +187,12 @@ final class OAuth2SummitBadgeScanApiController
      */
     public function getAllMyBadgeScans($summit_id){
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) return $this->error403();
+        if (is_null($current_member))
+            return $this->error403();
 
         return $this->_getAll(
             function(){
@@ -255,17 +242,17 @@ final class OAuth2SummitBadgeScanApiController
     public function getAllBySummit($summit_id){
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         // check if we have an user ( not allowed for service accounts )
         $current_member = $this->resource_server_context->getCurrentUser();
         if (is_null($current_member))
             return $this->error403();
 
-        $sponsor = null;
+        // check summit authz access
         if(!$current_member->isSummitAllowed($summit)){
-            $sponsor = $current_member->getSponsorBySummit($summit);
-            if(is_null($sponsor)){
+            if(!$current_member->hasSponsorMembershipsFor($summit)){
                 return $this->error403();
             }
         }
@@ -307,11 +294,20 @@ final class OAuth2SummitBadgeScanApiController
                     'scan_date'
                 ];
             },
-            function($filter) use($summit, $sponsor){
+            function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    if(!is_null($sponsor)){
-                        $filter->addFilterCondition(FilterElement::makeEqual('sponsor_id', $sponsor->getId()));
+
+                    if (!is_null($current_member) && $current_member->isSponsorUser()) {
+                        $filter->addFilterCondition
+                        (
+                            FilterElement::makeEqual
+                            (
+                                'sponsor_id',
+                                $current_member->getSponsorMembershipIds($summit),
+                                "OR"
+                            )
+                        );
                     }
                 }
                 return $filter;
@@ -335,10 +331,9 @@ final class OAuth2SummitBadgeScanApiController
         if (is_null($current_member))
             return $this->error403();
 
-        $sponsor = null;
+        // check summit authz access
         if(!$current_member->isSummitAllowed($summit)){
-            $sponsor = $current_member->getSponsorBySummit($summit);
-            if(is_null($sponsor)){
+            if(!$current_member->hasSponsorMembershipsFor($summit)){
                 return $this->error403();
             }
         }
@@ -380,11 +375,19 @@ final class OAuth2SummitBadgeScanApiController
                     'scan_date'
                 ];
             },
-            function($filter) use($summit, $sponsor){
+            function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    if(!is_null($sponsor)){
-                        $filter->addFilterCondition(FilterElement::makeEqual('sponsor_id', $sponsor->getId()));
+                    if (!is_null($current_member) && $current_member->isSponsorUser()) {
+                        $filter->addFilterCondition
+                        (
+                            FilterElement::makeEqual
+                            (
+                                'sponsor_id',
+                                $current_member->getSponsorMembershipIds($summit),
+                                "OR"
+                            )
+                        );
                     }
                 }
                 return $filter;
@@ -409,7 +412,7 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_last_name',
                     'attendee_email',
                     'attendee_company',
-                    'notes'
+                    'notes',
                 ];
 
                 foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question){
@@ -435,7 +438,7 @@ final class OAuth2SummitBadgeScanApiController
             'attendees-badge-scans-',
             [
                 'features_types'   => $summit->getBadgeFeaturesTypes(),
-                'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage)
+                'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage),
             ]
         );
     }
@@ -468,13 +471,6 @@ final class OAuth2SummitBadgeScanApiController
         $current_member = $this->resource_server_context->getCurrentUser();
         if (is_null($current_member))
             throw new HTTP403ForbiddenException();
-
-        if(!$current_member->isSummitAllowed($summit)){
-            $sponsor = $current_member->getSponsorBySummit($summit);
-            if(is_null($sponsor)){
-                throw new HTTP403ForbiddenException();
-            }
-        }
 
         return $this->service->getBadgeScan($summit, $current_member, $child_id);
     }

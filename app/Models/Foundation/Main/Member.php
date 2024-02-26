@@ -17,6 +17,7 @@ use App\Models\Foundation\Elections\Candidate;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Main\Strategies\MemberSummitStrategyFactory;
 use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
@@ -893,6 +894,19 @@ class Member extends SilverstripeBaseModel
         return false;
     }
 
+
+    public function isSponsorUser(): bool
+    {
+        if($this->isAdmin()) return false;
+        if($this->belongsToGroup(IGroup::Sponsors))
+            return true;
+        if ($this->isOnExternalGroup(IGroup::Sponsors))
+            return true;
+        return false;
+    }
+
+
+
     /**
      * @param string $code
      * @return bool
@@ -1708,6 +1722,72 @@ SQL;
     }
 
     /**
+     * @return Sponsor[]
+     */
+    public function getLastNSponsorMemberships($last_n = 2)
+    {
+        $criteria = Criteria::create()
+            ->orderBy(['id' => Criteria::DESC])
+            ->setMaxResults($last_n);
+        return $this->sponsor_memberships->matching($criteria);
+    }
+
+    /**
+     * @return array
+     */
+    public function getSponsorMembershipIds(Summit $summit): array
+    {
+        $sql = <<<SQL
+SELECT DISTINCT(SponsorID)
+FROM Sponsor_Users
+INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
+WHERE MemberID = :member_id AND Sponsor.SummitID = :summit_id
+SQL;
+
+        $stmt = $this->prepareRawSQL($sql);
+        $stmt->execute(
+            [
+                'member_id' => $this->getId(),
+                'summit_id' => $summit->getId(),
+            ]
+        );
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
+    {
+        try {
+            if(!$this->isSponsorUser()) return false;
+        $sql = <<<SQL
+SELECT COUNT(Sponsor_Users.SponsorID)
+FROM Sponsor_Users
+INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
+WHERE 
+    MemberID = :member_id 
+    AND Sponsor.SummitID = :summit_id
+SQL;
+
+        $params =   [
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ];
+
+        if(!is_null($sponsor)) {
+            $sql .= " AND Sponsor.ID = :sponsor_id";
+            $params['sponsor_id'] = $sponsor->getId();
+        }
+
+        $stmt = $this->prepareRawSQL($sql);
+        $stmt->execute($params);
+        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return intval($res[0]) > 0;
+        } catch (\Exception $ex) {
+            return false;
+        }
+    }
+
+
+    /**
      * @return ArrayCollection|SummitOrder[]
      */
     public function getSummitRegistrationOrders()
@@ -1769,21 +1849,6 @@ SQL;
         })->first();
 
         return $sponsor === false ? null : $sponsor;
-    }
-
-    /**
-     * @param Sponsor $sponsor
-     * @return bool
-     */
-    public function hasSponsorMembershipsFor(Sponsor $sponsor): bool
-    {
-        //TODO: Criteria approach must be used here but in order to do that, Sponsor.Order column must be renamed to Sponsor.CustomOrder
-
-        $memberships_count = $this->sponsor_memberships->filter(function ($entity) use ($sponsor) {
-            return $entity->getId() == $sponsor->getId();
-        })->count();
-
-        return $memberships_count > 0;
     }
 
     /**
@@ -1889,21 +1954,8 @@ SQL;
      */
     public function getAllAllowedSummitsIds(): array
     {
-        $sql = <<<SQL
-SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Members 
-INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
-SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
-WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
-SQL;
-
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return MemberSummitStrategyFactory::getMemberSummitStrategy($this)
+            ->getAllAllowedSummitIds();
     }
 
     /**
@@ -2919,27 +2971,7 @@ SQL;
     {
         if ($this->isAdmin()) return true;
 
-        try {
-            $sql = <<<SQL
-SELECT COUNT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Members 
-INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
-SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
-WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id 
-  AND SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
-SQL;
-
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
-                [
-                    'member_id' => $this->getId(),
-                    'summit_id' => $summit->getId(),
-                ]
-            );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return intval($res[0]) > 0;
-        } catch (\Exception $ex) {
-            return false;
-        }
+        return MemberSummitStrategyFactory::getMemberSummitStrategy($this)
+            ->isSummitAllowed($summit);
     }
 }

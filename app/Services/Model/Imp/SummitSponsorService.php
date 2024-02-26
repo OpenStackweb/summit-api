@@ -14,7 +14,10 @@
 
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Main\IFileConstants;
+use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Factories\SponsorAdFactory;
+use App\Models\Foundation\Summit\Factories\SponsorExtraQuestionFactory;
 use App\Models\Foundation\Summit\Factories\SponsorFactory;
 use App\Models\Foundation\Summit\Factories\SponsorMaterialFactory;
 use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
@@ -770,6 +773,67 @@ final class SummitSponsorService
                 throw new EntityNotFoundException("Sponsor Social network not found.");
 
             $summit_sponsor->removeSocialNetwork($social_network);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addSponsorExtraQuestion(Summit $summit, int $sponsor_id, array $payload): SummitSponsorExtraQuestionType
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = SponsorExtraQuestionFactory::build($payload);
+
+            $summit_sponsor->addExtraQuestion($extra_question);
+
+            return $extra_question;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function updateSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id, array $payload): SummitSponsorExtraQuestionType
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id, $payload) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($extra_question_id);
+
+            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            if (isset($payload['order']) && intval($payload['order']) != $extra_question->getOrder()) {
+                // request to update order
+                $summit_sponsor->recalculateQuestionOrder($extra_question, intval($payload['order']));
+            }
+
+            return SponsorExtraQuestionFactory::populate($extra_question, $payload);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($extra_question_id);
+
+            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            $summit_sponsor->removeExtraQuestion($extra_question);
         });
     }
 }

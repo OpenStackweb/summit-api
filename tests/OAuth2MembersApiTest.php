@@ -171,7 +171,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
     public function testGetMyMember()
     {
         $params = [
-            'expand' => 'groups,track_chairs'
+            'expand' => 'groups,track_chairs,sponsor_memberships.extra_questions'
         ];
 
         $headers  = array("HTTP_Authorization" => " Bearer " . $this->access_token);

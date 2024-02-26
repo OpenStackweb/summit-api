@@ -53,7 +53,11 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
                 $attendee->getEmail(),
                 $attendee->getFullName(),
             ),
-            "scan_date" => 1572019200,
+            'scan_date' => 1572019200,
+            'extra_questions' => [
+                ['question_id' => 519, 'answer' => 'XL'],
+                ['question_id' => 520, 'answer' => 'None'],
+            ],
         ];
 
         $headers = [
@@ -79,12 +83,49 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         return $scan;
     }
 
+    public function testUpdateBadgeScan(){
+        $scan = $this->testAddBadgeScan();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'scan_id' => $scan->id,
+        ];
+
+        $data = [
+            'extra_questions' => [
+                ['question_id' => 519, 'answer' => 'None'],
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitBadgeScanApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scan = json_decode($content);
+        $this->assertTrue(!is_null($scan));
+        return $scan;
+    }
+
     public function testGetAllMyBadgeScans(){
 
         $params = [
             'id'    =>  self::$summit->getId(),
             'filter'=> 'attendee_email=@santi',
-            'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner'
+            'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
         ];
 
         $headers = [
@@ -150,10 +191,70 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         return $scan;
     }
 
+    public function testGetAllSummitBadgeScans(){
+
+        $params = [
+            'id'    =>  self::$summit->getId(),
+            'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeScanApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        return $page;
+    }
+
+    public function testGetSummitBadgeScan(){
+        $badge_scan = $this->testAddBadgeScan();
+
+        $params = [
+            'id'      =>  self::$summit->getId(),
+            'scan_id' =>  $badge_scan->id,
+            'expand'  => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeScanApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $scan = json_decode($content);
+        $this->assertTrue(!is_null($scan));
+        return $scan;
+    }
+
     public function testExportSummitBadgeScans(){
 
         $params = [
-            'id'    =>  3109,
+            'id'    =>  self::$summit->getId(),
             'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
         ];
 

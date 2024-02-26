@@ -12,17 +12,17 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorSocialNetworkRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
+use models\summit\Sponsor;
 use models\summit\SponsorMaterial;
 use models\summit\Summit;
 use models\utils\IEntity;
@@ -64,23 +64,30 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     private $sponsor_social_network_repository;
 
     /**
+     * @var ISponsorExtraQuestionTypeRepository
+     */
+    private $sponsor_extra_question_repository;
+
+    /**
      * @param ISponsorRepository $repository
      * @param ISummitRepository $summit_repository
      * @param ISponsorAdRepository $sponsor_ads_repository
      * @param ISponsorMaterialRepository $sponsor_materials_repository
      * @param ISponsorSocialNetworkRepository $sponsor_social_network_repository
+     * @param ISponsorExtraQuestionTypeRepository $sponsor_extra_question_repository
      * @param ISummitSponsorService $service
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
     (
-        ISponsorRepository              $repository,
-        ISummitRepository               $summit_repository,
-        ISponsorAdRepository            $sponsor_ads_repository,
-        ISponsorMaterialRepository      $sponsor_materials_repository,
-        ISponsorSocialNetworkRepository $sponsor_social_network_repository,
-        ISummitSponsorService           $service,
-        IResourceServerContext          $resource_server_context
+        ISponsorRepository                  $repository,
+        ISummitRepository                   $summit_repository,
+        ISponsorAdRepository                $sponsor_ads_repository,
+        ISponsorMaterialRepository          $sponsor_materials_repository,
+        ISponsorSocialNetworkRepository     $sponsor_social_network_repository,
+        ISponsorExtraQuestionTypeRepository $sponsor_extra_question_repository,
+        ISummitSponsorService               $service,
+        IResourceServerContext              $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -88,6 +95,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $this->sponsor_ads_repository = $sponsor_ads_repository;
         $this->sponsor_materials_repository = $sponsor_materials_repository;
         $this->sponsor_social_network_repository = $sponsor_social_network_repository;
+        $this->sponsor_extra_question_repository = $sponsor_extra_question_repository;
         $this->service = $service;
         $this->repository = $repository;
     }
@@ -141,6 +149,38 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     use DeleteSummitChildElement;
 
+    use RequestProcessor;
+
+    /**
+     * @param Filter $filter
+     * @return Filter
+     */
+    protected function applyExtraFilters(Filter $filter):Filter {
+
+        // this is the authz code for sponsors users ...
+        $current_member = $this->resource_server_context->getCurrentUser();
+
+        $summit_id = intval($this->summit_id);
+        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($this->summit_id);
+
+        if (!is_null($summit) && !is_null($current_member) && $current_member->isSponsorUser()) {
+
+            $filter->addFilterCondition
+            (
+                FilterElement::makeEqual
+                (
+                    'sponsor_id',
+                    $current_member->getSponsorMembershipIds($summit),
+                    "OR"
+
+                )
+            );
+        }
+        // add filter for summit .
+        $filter->addFilterCondition(FilterElement::makeEqual("summit_id",$summit_id));
+        return $filter;
+    }
+
     /**
      * @param array $payload
      * @return array
@@ -157,6 +197,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         return $this->service->addSponsor($summit, $payload);
     }
 
@@ -175,12 +220,27 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function deleteChild(Summit $summit, $child_id): void
     {
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         $this->service->deleteSponsor($summit, $child_id);
     }
 
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
-        return $summit->getSummitSponsorById($child_id);
+        $current_member = $this->resource_server_context->getCurrentUser();
+        $sponsor = $summit->getSummitSponsorById($child_id);
+
+        if(is_null($sponsor)) return null;
+        // service account
+        if(is_null($current_member)) return $sponsor;
+        if($current_member->isAdmin()) return $sponsor;
+        if($current_member->hasSponsorMembershipsFor($summit, $sponsor)) return $sponsor;
+        if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit)) return $sponsor;
+
+        return null;
     }
 
     /**
@@ -200,6 +260,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
         return $this->service->updateSponsor($summit, $child_id, $payload);
     }
 
@@ -211,22 +276,25 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     public function addSponsorUser($summit_id, $sponsor_id, $member_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $member_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
             $sponsor = $this->service->addSponsorUser($summit, $sponsor_id, $member_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -237,25 +305,23 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     public function removeSponsorUser($summit_id, $sponsor_id, $member_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $member_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $sponsor = $this->service->removeSponsorUser($summit, $sponsor_id, $member_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
-    use RequestProcessor;
+            $sponsor = $this->service->removeSponsorUser($summit, $sponsor_id, $member_id);
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
 
     /**
      * @param LaravelRequest $request
@@ -978,6 +1044,229 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $this->service->deleteSponsorSocialNetwork($summit, intval($sponsor_id), intval($social_network_id));
+
+            return $this->deleted();
+
+        });
+    }
+
+    // Extra Questions
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getExtraQuestions($summit_id, $sponsor_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+        if (is_null($sponsor)) return $this->error404();
+
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+        if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['==', '=@'],
+                    'label' => ['==', '=@'],
+                    'type' => ['==']
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'label' => 'sometimes|string',
+                    'type' => sprintf('sometimes|in:%s', implode(',', Sponsor::getAllowedQuestionTypes())),
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'label',
+                    'order',
+                    'type'
+                ];
+            },
+            function ($filter) use ($sponsor) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('sponsor_id', $sponsor->getId()));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Private;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->sponsor_extra_question_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getMetadata($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->ok
+        (
+            $this->sponsor_extra_question_repository->getQuestionsMetadata()
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addExtraQuestion($summit_id, $sponsor_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            $payload = $this->getJsonPayload(SponsorExtraQuestionValidationRulesFactory::buildForAdd(), true);
+
+            $extra_question = $this->service->addSponsorExtraQuestion($summit, intval($sponsor_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($extra_question, SerializerRegistry::SerializerType_Private)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @param $extra_question_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getExtraQuestion($summit_id, $sponsor_id, $extra_question_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $extra_question_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            $extra_question = $sponsor->getExtraQuestionById(intval($extra_question_id));
+            if (is_null($extra_question)) return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($extra_question, SerializerRegistry::SerializerType_Private)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @param $social_network_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateExtraQuestion($summit_id, $sponsor_id, $extra_question_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $extra_question_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            $payload = $this->getJsonPayload(SponsorExtraQuestionValidationRulesFactory::buildForUpdate(), true);
+
+            $extra_question = $this->service->updateSponsorExtraQuestion($summit, intval($sponsor_id), intval($extra_question_id), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($extra_question, SerializerRegistry::SerializerType_Private)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @param $social_network_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteExtraQuestion($summit_id, $sponsor_id, $extra_question_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $extra_question_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            $this->service->deleteSponsorExtraQuestion($summit, intval($sponsor_id), intval($extra_question_id));
 
             return $this->deleted();
 

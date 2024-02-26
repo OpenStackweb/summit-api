@@ -12,9 +12,12 @@
  * limitations under the License.
  **/
 
-use App\Http\Controllers\SponsorMaterialValidationRulesFactory;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
@@ -43,6 +46,10 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     use One2ManyPropertyTrait;
 
+    use OrderableChilds;
+
+    const MaxExtraQuestionCount = 5;
+
     protected $getIdMappings = [
         'getSideImageId' => 'side_image',
         'getHeaderImageId' => 'header_image',
@@ -64,7 +71,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     ];
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     private $order;
@@ -219,6 +226,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     private $show_logo_in_event_page;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType", mappedBy="sponsor",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitSponsorExtraQuestionType[]
+     */
+    private $extra_questions;
+
+    /**
      * Sponsor constructor.
      */
     public function __construct()
@@ -231,6 +244,16 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->ads = new ArrayCollection();
         $this->is_published = true;
         $this->show_logo_in_event_page = true;
+        $this->extra_questions = new ArrayCollection;
+    }
+
+    public static function getAllowedQuestionTypes(): array
+    {
+        return [
+            ExtraQuestionTypeConstants::RadioButtonQuestionType,
+            ExtraQuestionTypeConstants::CheckBoxQuestionType,
+            ExtraQuestionTypeConstants::TextQuestionType
+        ];
     }
 
     /**
@@ -339,10 +362,34 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @param Member $user
+     * @throws ValidationException
      */
     public function addUser(Member $user)
     {
         if ($this->members->contains($user)) return;
+        if (!$user->isSponsorUser()) {
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Member %s does not belong to group %s",
+                    $user->getId(),
+                    IGroup::Sponsors
+                )
+            );
+        }
+
+        if($user->hasSponsorMembershipsFor($this->getSummit()))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Member %s already belongs to an sponsor for summit %s",
+                    $user->getId(),
+                    $this->getSummit()->getId()
+                )
+            );
+
         $this->members->add($user);
     }
 
@@ -809,5 +856,75 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->show_logo_in_event_page = $show_logo_in_event_page;
     }
 
+    /**
+     * @return SummitSponsorExtraQuestionType[]
+     */
+    public function getExtraQuestions()
+    {
+        return $this->extra_questions;
+    }
 
+    /**
+     * @param int $extra_question_id
+     * @return SponsorSocialNetwork|null
+     */
+    public function getExtraQuestionById(int $extra_question_id): ?SummitSponsorExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($extra_question_id)));
+        $extra_questions = $this->extra_questions->matching($criteria)->first();
+        return $extra_questions === false ? null : $extra_questions;
+    }
+
+    /**
+     * @param ExtraQuestionType $extra_question
+     * @throws ValidationException
+     */
+    public function addExtraQuestion(ExtraQuestionType $extra_question): void
+    {
+        if ($this->extra_questions->count() >= self::MaxExtraQuestionCount) {
+            throw new ValidationException(sprintf('Sponsor %s cannot have more than %s extra questions.',
+                $this->id, self::MaxExtraQuestionCount));
+        }
+        if ($this->extra_questions->contains($extra_question)) return;
+        $extra_question->setOrder($this->getSponsorExtraQuestionMaxOrder() + 1);
+        $this->extra_questions->add($extra_question);
+        $extra_question->setSponsor($this);
+    }
+
+    /**
+     * @return int
+     */
+    private function getSponsorExtraQuestionMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $question = $this->extra_questions->matching($criteria)->first();
+        return $question === false ? 0 : $question->getOrder();
+    }
+
+    public function clearExtraQuestions()
+    {
+        $this->extra_questions->clear();
+    }
+
+    /**
+     * @param SummitSponsorExtraQuestionType $extra_question
+     */
+    public function removeExtraQuestion(SummitSponsorExtraQuestionType $extra_question)
+    {
+        if (!$this->extra_questions->contains($extra_question)) return;
+        $this->extra_questions->removeElement($extra_question);
+        $extra_question->clearSponsor();
+    }
+
+    /**
+     * @param SummitSponsorExtraQuestionType $question
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateQuestionOrder(SummitSponsorExtraQuestionType $question, int $new_order)
+    {
+        self::recalculateOrderForSelectable($this->extra_questions, $question, $new_order);
+    }
 }

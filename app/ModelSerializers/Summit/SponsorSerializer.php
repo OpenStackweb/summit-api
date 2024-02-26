@@ -13,6 +13,7 @@
  **/
 
 use Libs\ModelSerializers\AbstractSerializer;
+use models\main\Member;
 use models\summit\Sponsor;
 
 /**
@@ -45,6 +46,7 @@ final class SponsorSerializer extends SilverStripeSerializer
     ];
 
     protected static $allowed_relations = [
+        'extra_questions',
         'members',
     ];
 
@@ -55,12 +57,20 @@ final class SponsorSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $sponsor = $this->object;
         if (!$sponsor instanceof Sponsor) return [];
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if (in_array('extra_questions', $relations)) {
+            $extra_questions = [];
+            foreach ($sponsor->getExtraQuestions() as $extra_question) {
+                $extra_questions[] = $extra_question->getId();
+            }
+            $values['extra_questions'] = $extra_questions;
+        }
 
         if (in_array('members', $relations)) {
             $members = [];
@@ -90,7 +100,9 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'badge_qr_prefix',
                                 'qr_registry_field_delimiter'
                             ];
-                            if (!is_null($current_member) && ((!is_null($summit) && $current_member->isSummitAllowed($summit)) || $current_member->hasSponsorMembershipsFor($sponsor))) {
+                            if ($current_member instanceof Member &&
+                                ((!is_null($summit) && $current_member->isSummitAllowed($summit))
+                                    || $current_member->hasSponsorMembershipsFor($sponsor->getSummit(), $sponsor))) {
                                 $serializer_type = SerializerRegistry::SerializerType_Private;
                                 $fields[] = 'qr_codes_enc_key';
                             }
@@ -98,6 +110,17 @@ final class SponsorSerializer extends SilverStripeSerializer
                             $values['summit'] = SerializerRegistry::getInstance()
                                 ->getSerializer($sponsor->getSummit(), $serializer_type)
                                 ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit'), $fields, ['none']);
+                        }
+                        break;
+                    case 'extra_questions':
+                        {
+                            unset($values['extra_questions']);
+                            $extra_questions = [];
+                            foreach ($sponsor->getExtraQuestions() as $extra_question) {
+                                $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($extra_question)
+                                    ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'extra_questions'));
+                            }
+                            $values['extra_questions'] = $extra_questions;
                         }
                         break;
                     case 'members':

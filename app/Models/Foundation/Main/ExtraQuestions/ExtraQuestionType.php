@@ -35,6 +35,7 @@ use Doctrine\ORM\Mapping AS ORM;
  *     "ExtraQuestionType" = "ExtraQuestionType",
  *     "SummitSelectionPlanExtraQuestionType" = "App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType",
  *     "SummitOrderExtraQuestionType" = "models\summit\SummitOrderExtraQuestionType",
+ *     "SummitSponsorExtraQuestionType" = "App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType",
  * })
  * Class ExtraQuestionType
  * @package App\Models\Foundation\ExtraQuestions

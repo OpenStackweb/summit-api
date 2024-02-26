@@ -25,12 +25,15 @@ use Doctrine\ORM\Mapping AS ORM;
  *     "ExtraQuestionAnswer" = "ExtraQuestionAnswer",
  *     "SummitOrderExtraQuestionAnswer" = "models\summit\SummitOrderExtraQuestionAnswer",
  *     "PresentationExtraQuestionAnswer" = "models\summit\PresentationExtraQuestionAnswer",
+ *     "SponsorBadgeScanExtraQuestionAnswer" = "models\summit\SponsorBadgeScanExtraQuestionAnswer",
  * })
  * Class ExtraQuestionAnswer
  * @package App\Models\Foundation\ExtraQuestionAnswer
  */
 abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
+
     /**
      * @ORM\ManyToOne(targetEntity="ExtraQuestionType")
      * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
@@ -48,8 +51,6 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
      * @var bool
      */
     private $should_delete_it;
-
-    use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
         'getQuestionId' => 'question',

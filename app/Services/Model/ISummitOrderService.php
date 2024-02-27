@@ -238,13 +238,13 @@ interface ISummitOrderService extends IProcessPaymentService
      * @param Summit $summit
      * @param Member $currentUser
      * @param int|string $ticket_id
-     * @param float $amount
+     * @param float $amount_2_refund
      * @param string|null $notes
      * @return SummitAttendeeTicket
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount, ?string $notes): SummitAttendeeTicket;
+    public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount_2_refund, ?string $notes): SummitAttendeeTicket;
 
     /**
      * @param Summit $summit

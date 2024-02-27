@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Registration\Traits\TaxTrait;
 use App\Models\Utils\BaseEntity;
 use App\Models\Utils\Traits\FinancialTrait;
 use models\utils\One2ManyPropertyTrait;
@@ -48,14 +49,6 @@ class SummitAttendeeTicketTax extends BaseEntity
     }
 
     /**
-     * @param SummitAttendeeTicket $ticket
-     */
-    public function setTicket(SummitAttendeeTicket $ticket): void
-    {
-        $this->ticket = $ticket;
-    }
-
-    /**
      * @return SummitTaxType
      */
     public function getTax(): SummitTaxType
@@ -63,13 +56,6 @@ class SummitAttendeeTicketTax extends BaseEntity
         return $this->tax;
     }
 
-    /**
-     * @param SummitTaxType $tax
-     */
-    public function setTax(SummitTaxType $tax): void
-    {
-        $this->tax = $tax;
-    }
 
     /**
      * @return float
@@ -85,14 +71,6 @@ class SummitAttendeeTicketTax extends BaseEntity
     public function getAmountInCents(): int
     {
         return self::convertToCents($this->amount);
-    }
-
-    /**
-     * @param float $amount
-     */
-    public function setAmount(float $amount): void
-    {
-        $this->amount = $amount;
     }
 
     /**
@@ -115,9 +93,24 @@ class SummitAttendeeTicketTax extends BaseEntity
      */
     private $amount;
 
-    public function __construct()
-    {
+    /**
+     * @ORM\Column(name="Rate", type="float")
+     * @var double
+     */
+    private $rate;
 
+    /**
+     * @param SummitTaxType $tax
+     * @param SummitAttendeeTicket $ticket
+     */
+    public function __construct(SummitTaxType $tax, SummitAttendeeTicket $ticket)
+    {
+        $this->tax = $tax;
+        $this->ticket = $ticket;
+        $this->amount = $tax->applyTo($ticket->getNetSellingPrice(), false);
+        $this->rate = $tax->getRate();
     }
+
+    use TaxTrait;
 
 }

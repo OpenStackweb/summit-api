@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Utils\Traits\FinancialTrait;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
@@ -20,7 +22,7 @@ use models\utils\SilverstripeBaseModel;
 
 /**
  * Class SummitRefundRequest
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRefundRequestRepository")
  * @ORM\Table(name="SummitRefundRequest")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
@@ -32,6 +34,8 @@ use models\utils\SilverstripeBaseModel;
  */
 class SummitRefundRequest extends SilverstripeBaseModel
 {
+    const ClassName = 'SummitRefundRequest';
+
     use One2ManyPropertyTrait;
 
     use FinancialTrait;
@@ -67,6 +71,12 @@ class SummitRefundRequest extends SilverstripeBaseModel
     protected $refunded_amount;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitTaxRefund", mappedBy="refund_request", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitTaxRefund[]|Collection
+     */
+    protected $refunded_taxes;
+
+    /**
      * @ORM\Column(name="ActionDate", type="datetime")
      * @var \DateTime
      */
@@ -100,6 +110,7 @@ class SummitRefundRequest extends SilverstripeBaseModel
         $this->requested_by = $requested_by;
         $this->status  = ISummitRefundRequestConstants::RefundRequestedStatus;
         $this->refunded_amount = 0.0;
+        $this->refunded_taxes = new ArrayCollection();
     }
 
     /**
@@ -116,18 +127,19 @@ class SummitRefundRequest extends SilverstripeBaseModel
 
     /**
      * @param Member|null $approvedBy
-     * @param float $amount
+     * @param float $amount_2_refund
      * @param string|null $paymentGatewayResult
      * @param string|null $notes
      * @throws \Exception
      */
-    public function approve(?Member $approvedBy, float $amount, ?string $paymentGatewayResult= null, ?string $notes = null){
+    public function approve(?Member $approvedBy, float $amount_2_refund, ?string $paymentGatewayResult= null, ?string $notes = null){
         $this->status = ISummitRefundRequestConstants::ApprovedStatus;
         $this->action_by = $approvedBy;
         $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
-        $this->refunded_amount = $amount;
+        $this->refunded_amount = $amount_2_refund;
+        $this->refunded_taxes = $this->calculateTaxesRefundedAmountFrom($amount_2_refund);
+        $this->setPaymentGatewayResult($paymentGatewayResult);
         $this->notes = $notes;
-        $this->payment_gateway_result = $paymentGatewayResult;
     }
 
     /**
@@ -209,5 +221,49 @@ class SummitRefundRequest extends SilverstripeBaseModel
     {
         return $this->payment_gateway_result;
     }
+
+    public function setPaymentGatewayResult(?string $payment_gateway_result):void{
+        $this->payment_gateway_result = $payment_gateway_result;
+    }
+
+    /**
+     * @param float $amount_2_refund
+     * @return Collection
+     */
+    protected function calculateTaxesRefundedAmountFrom(float $amount_2_refund):Collection {
+        return $this->refunded_taxes;
+    }
+
+    /*
+     * Total amount refunded Ticket Price + Tax/Fee price
+     *  @return float
+     */
+    public function getTotalAmount(): float {
+        return $this->refunded_amount + $this->getTaxesRefundedAmount();
+    }
+
+    public function getTaxesRefundedAmount():float{
+        $taxes_refund_amount = 0.0;
+        foreach ($this->refunded_taxes as $tax_refund)
+            $taxes_refund_amount += $tax_refund->getRefundedAmount();
+        return $taxes_refund_amount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTaxesRefundedAmountInCents(): int
+    {
+        return self::convertToCents($this->getTaxesRefundedAmount());
+    }
+
+    /**
+     * @return ArrayCollection|Collection|SummitTaxRefund[]
+     */
+    public function getRefundedTaxes()
+    {
+        return $this->refunded_taxes;
+    }
+
 
 }

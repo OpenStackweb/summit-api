@@ -82,6 +82,7 @@ use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleLockSeria
 use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleSerializer;
 use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleSummitEventSerializer;
 use App\ModelSerializers\Summit\Registration\Refunds\SummitAttendeeTicketRefundRequestSerializer;
+use App\ModelSerializers\Summit\Registration\Refunds\SummitTaxRefundSerializer;
 use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
@@ -509,7 +510,9 @@ final class SerializerRegistry
             self::SerializerType_CSV => SummitAttendeeTicketCSVSerializer::class,
         ];
 
+        // refunds requests
         $this->registry['SummitAttendeeTicketRefundRequest'] = SummitAttendeeTicketRefundRequestSerializer::class;
+        $this->registry['SummitTaxRefund'] = SummitTaxRefundSerializer::class;
 
         $this->registry['SummitAttendeeBadge'] = SummitAttendeeBadgeSerializer::class;
         $this->registry['SummitAttendeeBadgePrint'] = [

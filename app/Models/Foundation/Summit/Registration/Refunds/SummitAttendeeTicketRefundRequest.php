@@ -14,7 +14,7 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
-
+use Doctrine\Common\Collections\Collection;
 /**
  * Class SummitAttendeeTicketRefundRequest
  * @ORM\Entity
@@ -23,6 +23,8 @@ use models\utils\One2ManyPropertyTrait;
  */
 class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
 {
+    const ClassName = 'SummitAttendeeTicketRefundRequest';
+
     /**
      * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="refund_requests", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="TicketID", referencedColumnName="ID", onDelete="SET NULL")
@@ -67,6 +69,25 @@ class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
     public function __construct(?Member $requested_by = null)
     {
         parent::__construct($requested_by);
+    }
+
+    /**
+     * @param float $amount_2_refund
+     * @return Collection
+     */
+    protected function calculateTaxesRefundedAmountFrom(float $amount_2_refund):Collection{
+        $this->refunded_taxes->clear();
+        // create a collection of all applied taxes and their refunds components
+        foreach ($this->ticket->getAppliedTaxes() as $applied_tax) {
+             $tax_refund = new SummitTaxRefund
+             (
+                 $this,
+                 $applied_tax->getTaxType(),
+                 $applied_tax->applyTo($amount_2_refund, false)
+             );
+             $this->refunded_taxes->add($tax_refund);
+        }
+        return $this->refunded_taxes;
     }
 
 }

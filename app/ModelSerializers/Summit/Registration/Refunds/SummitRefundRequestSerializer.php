@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
+use models\summit\SummitRefundRequest;
 use ModelSerializers\SilverStripeSerializer;
 
 /**
@@ -27,8 +29,16 @@ class SummitRefundRequestSerializer extends SilverStripeSerializer
         'ActionById' => 'action_by_id:json_int',
         'ActionDate' => 'action_date:datetime_epoch',
         'RefundedAmount' => 'refunded_amount:json_float',
+        'TaxesRefundedAmount' => 'taxes_refunded_amount:json_float',
+        'TotalAmount' => 'total_amount:json_float',
         'Notes' => 'notes:json_string',
         'PaymentGatewayResult' => 'payment_gateway_result:json_string',
+    ];
+
+    protected static $allowed_relations = [
+        'requested_by',
+        'refunded_taxes',
+        'action_by',
     ];
 
     protected static $expand_mappings = [
@@ -44,5 +54,34 @@ class SummitRefundRequestSerializer extends SilverStripeSerializer
             'getter' => 'getActionBy',
             'has' => 'hasActionBy'
         ],
+        'refunded_taxes' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getRefundedTaxes',
+        ],
     ];
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        $request = $this->object;
+        if (!$request instanceof SummitRefundRequest) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if (in_array('refunded_taxes', $relations) && !isset($values['refunded_taxes'])) {
+            $refunded_taxes = [];
+            foreach ($request->getRefundedTaxes() as $refund_tax) {
+                $refunded_taxes[] = $refund_tax->getId();
+            }
+            $values['refunded_taxes'] = $refunded_taxes;
+        }
+
+        return $values;
+    }
 }

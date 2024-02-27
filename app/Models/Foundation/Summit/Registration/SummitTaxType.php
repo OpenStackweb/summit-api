@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Registration\Traits\TaxTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -28,6 +30,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class SummitTaxType extends SilverstripeBaseModel
 {
+    use TaxTrait;
+
     use SummitOwned;
 
     /**
@@ -90,22 +94,6 @@ class SummitTaxType extends SilverstripeBaseModel
         $this->tax_id = $tax_id;
     }
 
-    /**
-     * @return float
-     */
-    public function getRate(): float
-    {
-        return $this->rate;
-    }
-
-    /**
-     * @param float $rate
-     */
-    public function setRate(float $rate): void
-    {
-        $this->rate = $rate;
-    }
-
     public function __construct()
     {
         parent::__construct();
@@ -145,33 +133,6 @@ class SummitTaxType extends SilverstripeBaseModel
     public function mustApplyTo(SummitTicketType $ticket_type):bool{
         if($this->ticket_types->count() == 0) return true;
         return $this->ticket_types->contains($ticket_type);
-    }
-
-    public function getRoundingStrategy():int{
-        return PHP_ROUND_HALF_UP;
-    }
-
-    public function getRoundingPrecision():int{
-        return 2;
-    }
-
-    /**
-     * @param float $amount
-     * @param bool $should_apply_rounding
-     * @return float
-     */
-    public function applyTo(float $amount, bool $should_apply_rounding = true):float{
-        $res = $amount * $this->getRate();
-        return $should_apply_rounding ? $this->round($res) / 100.00 :
-        $res / 100.00;
-    }
-
-    /**
-     * @param float $amount
-     * @return float
-     */
-    public function round(float $amount):float{
-        return round($amount, $this->getRoundingPrecision(), $this->getRoundingStrategy());
     }
 
 }

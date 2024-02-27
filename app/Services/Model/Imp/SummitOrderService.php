@@ -15,7 +15,6 @@
 use App\Events\CreatedSummitRegistrationOrder;
 use App\Events\MemberUpdated;
 use App\Events\TicketUpdated;
-use App\Facades\ResourceServerContext;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
 use App\Jobs\CopyInvitationTagsToAttendees;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
@@ -59,8 +58,6 @@ use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
-use models\summit\PrePaidSummitRegistrationDiscountCode;
-use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
@@ -94,10 +91,6 @@ abstract class AbstractTask
 final class Saga
 {
 
-    private function __construct()
-    {
-    }
-
     /**
      * @var AbstractTask[]
      */
@@ -106,6 +99,10 @@ final class Saga
      * @var AbstractTask[]
      */
     private $already_run_tasks = [];
+
+    private function __construct()
+    {
+    }
 
     public static function start(): Saga
     {
@@ -116,19 +113,6 @@ final class Saga
     {
         $this->tasks[] = $task;
         return $this;
-    }
-
-    private function markAsRan(AbstractTask $task)
-    {
-        $this->already_run_tasks[] = $task;
-    }
-
-
-    private function abort()
-    {
-        foreach (array_reverse($this->already_run_tasks) as $task) {
-            $task->undo();
-        }
     }
 
     /**
@@ -149,59 +133,62 @@ final class Saga
             throw $ex;
         }
     }
+
+    private function markAsRan(AbstractTask $task)
+    {
+        $this->already_run_tasks[] = $task;
+    }
+
+    private function abort()
+    {
+        foreach (array_reverse($this->already_run_tasks) as $task) {
+            $task->undo();
+        }
+    }
 }
 
 final class SagaFactory {
 
     /**
+     * @var ITransactionService
+     */
+    protected $tx_service;
+    /**
      * @var IMemberRepository
      */
     private $member_repository;
-
     /**
      * @var ISummitTicketTypeRepository
      */
     private $ticket_type_repository;
-
     /**
      * @var ISummitRegistrationPromoCodeRepository
      */
     private $promo_code_repository;
-
     /**
      * @var ISummitAttendeeRepository
      */
     private $attendee_repository;
-
     /**
      * @var ISummitAttendeeTicketRepository
      */
     private $ticket_repository;
-
     /**
      * @var IBuildDefaultPaymentGatewayProfileStrategy
      */
     private $default_payment_gateway_strategy;
-
     /**
      * @var ILockManagerService
      */
     private $lock_service;
-
     /**
      * @var ICompanyService
      */
     private $company_service;
-
     /**
      * @var ICompanyRepository
      */
     private $company_repository;
-
-    /**
-     * @var ITransactionService
-     */
-    protected $tx_service;
 
     /**
      * @param IMemberRepository $member_repository
@@ -239,44 +226,6 @@ final class SagaFactory {
         $this->tx_service = $tx_service;
     }
 
-    private function buildRegularSaga(Member $owner, Summit $summit, array $payload): Saga {
-        Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
-        return Saga::start()
-            ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($payload))
-            ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
-            ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
-            ->addTask(new ReserveOrderTask(
-                $owner,
-                $summit,
-                $payload,
-                $this->default_payment_gateway_strategy,
-                $this->member_repository,
-                $this->attendee_repository,
-                $this->ticket_repository,
-                $this->company_repository,
-                $this->company_service,
-                $this->tx_service
-            ));
-    }
-
-    private function buildPrePaidSaga(Member $owner, Summit $summit, array $payload): Saga {
-        Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
-        return Saga::start()
-            ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($payload))
-            ->addTask(new AutoAssignPrePaidTicketTask(
-                $owner,
-                $summit,
-                $payload,
-                $this->member_repository,
-                $this->attendee_repository,
-                $this->ticket_type_repository,
-                $this->tx_service,
-                $this->lock_service
-            ));
-    }
-
     public function build(Member $owner, Summit $summit, array $payload): Saga {
         Log::debug(sprintf("SagaFactory::build - summit id %s payload %s", $summit->getId(), json_encode($payload)));
 
@@ -297,6 +246,44 @@ final class SagaFactory {
             }
         }
         return $this->buildRegularSaga($owner, $summit, $payload);
+    }
+
+    private function buildPrePaidSaga(Member $owner, Summit $summit, array $payload): Saga {
+        Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
+        return Saga::start()
+            ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
+            ->addTask(new PreProcessReservationTask($payload))
+            ->addTask(new AutoAssignPrePaidTicketTask(
+                $owner,
+                $summit,
+                $payload,
+                $this->member_repository,
+                $this->attendee_repository,
+                $this->ticket_type_repository,
+                $this->tx_service,
+                $this->lock_service
+            ));
+    }
+
+    private function buildRegularSaga(Member $owner, Summit $summit, array $payload): Saga {
+        Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
+        return Saga::start()
+            ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
+            ->addTask(new PreProcessReservationTask($payload))
+            ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
+            ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
+            ->addTask(new ReserveOrderTask(
+                $owner,
+                $summit,
+                $payload,
+                $this->default_payment_gateway_strategy,
+                $this->member_repository,
+                $this->attendee_repository,
+                $this->ticket_repository,
+                $this->company_repository,
+                $this->company_service,
+                $this->tx_service
+            ));
     }
 }
 
@@ -2115,6 +2102,25 @@ final class SummitOrderService
     }
 
     /**
+     * @param SummitOrder $order
+     */
+    private function sendExistentSummitOrderOwnerEmail(SummitOrder $order)
+    {
+        Log::debug(sprintf("SummitOrderService::sendExistentSummitOrderOwnerEmail for order %s", $order->getId()));
+        RegisteredMemberOrderPaidMail::dispatch($order);
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @param array $user_registration_request
+     */
+    private function sendSummitOrderOwnerInvitationEmail(SummitOrder $order, array $user_registration_request)
+    {
+        Log::debug(sprintf("SummitOrderService::sendSummitOrderOwnerInvitationEmail for order %s", $order->getId()));
+        UnregisteredMemberOrderPaidMail::dispatch($order, $user_registration_request['set_password_link']);
+    }
+
+    /**
      * @param int $order_id
      * @param int $ticket_id
      * @param Member $currentUser
@@ -2127,57 +2133,15 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($order_id, $ticket_id, $currentUser, $notes) {
 
             $order = $this->order_repository->getById($order_id);
-            if (is_null($order) || !$order instanceof SummitOrder)
+            if (!$order instanceof SummitOrder)
                 throw new EntityNotFoundException('Order not found.');
 
             $ticket = $order->getTicketById($ticket_id);
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
+            if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('Ticket not found.');
 
             $ticket->cancelRefundRequest($currentUser, $notes);
-
-            return $ticket;
-        });
-    }
-
-    /**
-     * @param Member $current_user ,
-     * @param int $order_id
-     * @param int $ticket_id
-     * @return SummitAttendeeTicket
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function requestRefundTicket(Member $current_user, int $order_id, int $ticket_id): SummitAttendeeTicket
-    {
-        return $this->tx_service->transaction(function () use ($current_user, $order_id, $ticket_id) {
-
-            // only owner of the order could request a refund on a ticket
-            $order = $current_user->getSummitRegistrationOrderById($order_id);
-            if (is_null($order))
-                throw new EntityNotFoundException('Order not found.');
-
-            if (!$order->getSummit()->canEmitRefundRequests($current_user)) {
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "Refund Period is over for Summit %s.",
-                        $order->getSummit()->getName()
-                    )
-                );
-            }
-            $ticket
-                = $order->getTicketById($ticket_id);
-            if (is_null($ticket))
-                throw new EntityNotFoundException('Ticket not found.');
-
-            if ($ticket->isFree()) {
-                throw new ValidationException("You can not request a refund because ticket is free.");
-            }
-
-            $ticket->requestRefund($current_user);
 
             return $ticket;
         });
@@ -2220,32 +2184,73 @@ final class SummitOrderService
     }
 
     /**
+     * @param Member $current_user ,
+     * @param int $order_id
+     * @param int $ticket_id
+     * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function requestRefundTicket(Member $current_user, int $order_id, int $ticket_id): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function () use ($current_user, $order_id, $ticket_id) {
+
+            // only owner of the order could request a refund on a ticket
+            $order = $current_user->getSummitRegistrationOrderById($order_id);
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException('Order not found.');
+
+            if (!$order->getSummit()->canEmitRefundRequests($current_user)) {
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Refund Period is over for Summit %s.",
+                        $order->getSummit()->getName()
+                    )
+                );
+            }
+            $ticket = $order->getTicketById($ticket_id);
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
+
+            if ($ticket->isFree()) {
+                throw new ValidationException("You can not request a refund because ticket is free.");
+            }
+
+            $ticket->requestRefund($current_user);
+
+            return $ticket;
+        });
+    }
+
+    /**
      * @param Summit $summit
      * @param Member $currentUser
      * @param int|string $ticket_id
-     * @param float $amount
+     * @param float $amount_2_refund
      * @param string|null $notes
      * @return SummitAttendeeTicket
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount, ?string $notes): SummitAttendeeTicket
+    public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount_2_refund, ?string $notes): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function () use ($summit, $currentUser, $ticket_id, $amount, $notes) {
+        return $this->tx_service->transaction(function () use ($summit, $currentUser, $ticket_id, $amount_2_refund, $notes) {
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
 
-            if (is_null($ticket))
+            if (!$ticket instanceof SummitAttendeeTicket)
                 $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
 
-            if ($amount <= 0.0) {
-                throw new ValidationException("can not refund an amount lower than zero!");
+            if ($amount_2_refund <= 0.0) {
+                throw new ValidationException("Can not refund an amount lower than zero.");
             }
 
-            if (!$ticket->canRefund($amount)) {
+            if (!$ticket->canRefund($amount_2_refund)) {
                 throw new ValidationException
                 (
                     sprintf
@@ -2259,9 +2264,10 @@ final class SummitOrderService
             $order = $ticket->getOrder();
 
             if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             $paymentGatewayRes = null;
+            $request = $ticket->refund($currentUser, $amount_2_refund, $paymentGatewayRes, $notes);
 
             if ($order->hasPaymentInfo()) {
 
@@ -2280,14 +2286,16 @@ final class SummitOrderService
                     (
                         sprintf
                         (
-                            "SummitOrderService::refundTicket trying to refund on payment gateway cart id %s",
-                            $order->getPaymentGatewayCartId()
+                            "SummitOrderService::refundTicket trying to refund on payment gateway cart id %s final amount %s",
+                            $order->getPaymentGatewayCartId(),
+                            $request->getTotalAmount()
                         )
                     );
+
                     $paymentGatewayRes = $payment_gateway->refundPayment
                     (
                         $order->getPaymentGatewayCartId(),
-                        $amount,
+                        $request->getTotalAmount(),
                         $ticket->getCurrency()
                     );
 
@@ -2300,73 +2308,16 @@ final class SummitOrderService
                             $paymentGatewayRes
                         )
                     );
+
+                    $request->setPaymentGatewayResult($paymentGatewayRes);
+
                 } catch (\Exception $ex) {
                     Log::warning($ex);
                     throw new ValidationException($ex->getMessage());
                 }
             }
 
-            $ticket->refund($currentUser, $amount, $paymentGatewayRes, $notes);
-
             return $ticket;
-        });
-    }
-
-    /**
-     * @param int $order_id
-     * @return void
-     * @throws \Exception
-     */
-    public function processOrder2Revoke(int $order_id):void {
-        $this->tx_service->transaction(function () use ($order_id) {
-
-            try {
-
-                $order = $this->order_repository->getByIdExclusiveLock($order_id);
-                if (!$order instanceof SummitOrder) return;
-                $summit = $order->getSummit();
-                Log::debug(sprintf("SummitOrderService::processOrder2Revoke processing order %s summit %s", $order->getId(), $summit->getId()));
-                $payment_gateway = $summit->getPaymentGateWayPerApp
-                (
-                    IPaymentConstants::ApplicationTypeRegistration,
-                    $this->default_payment_gateway_strategy
-                );
-
-                if (is_null($payment_gateway)) {
-                    Log::warning(sprintf("SummitOrderService::processOrder2Revoke Payment configuration is not set for summit %s", $summit->getId()));
-                    return;
-                }
-
-                Log::warning(sprintf("SummitOrderService::processOrder2Revoke cancelling order reservation %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
-
-                $cart_id = $order->getPaymentGatewayCartId();
-                if (!empty($cart_id)) {
-
-                    $status = $payment_gateway->getCartStatus($cart_id);
-                    if (!is_null($status)) {
-                        if (!$payment_gateway->canAbandon($status)) {
-                            Log::warning(sprintf("SummitOrderService::processOrder2Revoke reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
-                            if ($payment_gateway->isSucceeded($status)) {
-                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
-                                // invoke now to avoid delays
-                                $this->processInvitation($order);
-                            }
-                            return;
-                        }
-                        $payment_gateway->abandonCart($cart_id);
-                    }
-                }
-
-                list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
-
-                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
-
-                $order->setCancelled();
-
-                Log::warning(sprintf("SummitOrderService::processOrder2Revoke order %s got cancelled", $order->getId()));
-            } catch (\Exception $ex) {
-                Log::warning($ex);
-            }
         });
     }
 
@@ -2395,6 +2346,55 @@ final class SummitOrderService
 
             return $order;
         });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param $tickets_to_return
+     * @param $promo_codes_to_return
+     * @return void
+     */
+    private function restoreTicketsPromoCodes(Summit $summit, $tickets_to_return, $promo_codes_to_return): void
+    {
+
+        // restore tickets and promo-codes
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::restoreTicketsPromoCodes restoring tickets and promo codes for summit %s tickets_to_return %s promo_codes_to_return %s",
+                $summit->getId(),
+                json_encode($tickets_to_return),
+                json_encode($promo_codes_to_return)
+            )
+        );
+
+        foreach ($tickets_to_return as $ticket_type_id => $qty) {
+            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id);
+            if (!$ticket_type instanceof SummitTicketType) continue;
+            Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating ticket type %s on %s usages", $ticket_type_id, $qty));
+            try {
+                $ticket_type->restore($qty);
+            } catch (ValidationException $ex) {
+                Log::warning($ex);
+            }
+        }
+
+        // compensate promo codes usages
+
+        foreach ($promo_codes_to_return as $code => $value) {
+            $promo_code = $this->promo_code_repository->getByValueExclusiveLock($summit, $code);
+            if (!$promo_code instanceof SummitRegistrationPromoCode) continue;
+            $qty = $value["qty"];
+            Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating promo code %s on %s usages", $code, $qty));
+            try {
+                $promo_code->removeUsage($qty, $value["owner_email"]);
+            } catch (ValidationException $ex) {
+                Log::warning($ex);
+            }
+        }
+
     }
 
     /**
@@ -2438,7 +2438,6 @@ final class SummitOrderService
             $order->setPaymentError($payment_gateway->getPaymentError($payload));
         });
     }
-
 
     /**
      * @param int $minutes
@@ -2499,6 +2498,45 @@ final class SummitOrderService
             });
         }
     }
+
+    /**
+     * @param SummitOrder $order
+     * @return SummitOrder
+     * @throws ValidationException
+     */
+    private function processInvitation(SummitOrder $order): SummitOrder
+    {
+        $summit = $order->getSummit();
+        // we should mark the associated invitation as processed
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::processInvitation: trying to get invitation for email %s order %s.",
+                $order->getOwnerEmail(),
+                $order->getId()
+            )
+        );
+
+        $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
+
+        if (is_null($invitation) || $invitation->isAccepted()) {
+            Log::debug(sprintf("SummitOrderService::processInvitation invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
+            return $order;
+        }
+        $invitation->addOrder($order);
+        Log::debug(sprintf("SummitOrderService::processInvitation trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
+        $invitation->markAsAccepted();
+
+        $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $order->getOwnerEmail());
+
+        if (!is_null($attendee)) {
+            CopyInvitationTagsToAttendees::dispatch($summit->getId(), $invitation->getId(), $attendee->getId());
+        }
+
+        return $order;
+    }
+
     /**
      * @param int $minutes
      * @param int $max
@@ -2518,6 +2556,64 @@ final class SummitOrderService
         foreach ($orders as $order) {
            $this->processOrder2Revoke($order->getId());
         }
+    }
+
+    /**
+     * @param int $order_id
+     * @return void
+     * @throws \Exception
+     */
+    public function processOrder2Revoke(int $order_id):void {
+        $this->tx_service->transaction(function () use ($order_id) {
+
+            try {
+
+                $order = $this->order_repository->getByIdExclusiveLock($order_id);
+                if (!$order instanceof SummitOrder) return;
+                $summit = $order->getSummit();
+                Log::debug(sprintf("SummitOrderService::processOrder2Revoke processing order %s summit %s", $order->getId(), $summit->getId()));
+                $payment_gateway = $summit->getPaymentGateWayPerApp
+                (
+                    IPaymentConstants::ApplicationTypeRegistration,
+                    $this->default_payment_gateway_strategy
+                );
+
+                if (is_null($payment_gateway)) {
+                    Log::warning(sprintf("SummitOrderService::processOrder2Revoke Payment configuration is not set for summit %s", $summit->getId()));
+                    return;
+                }
+
+                Log::warning(sprintf("SummitOrderService::processOrder2Revoke cancelling order reservation %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
+
+                $cart_id = $order->getPaymentGatewayCartId();
+                if (!empty($cart_id)) {
+
+                    $status = $payment_gateway->getCartStatus($cart_id);
+                    if (!is_null($status)) {
+                        if (!$payment_gateway->canAbandon($status)) {
+                            Log::warning(sprintf("SummitOrderService::processOrder2Revoke reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
+                            if ($payment_gateway->isSucceeded($status)) {
+                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                // invoke now to avoid delays
+                                $this->processInvitation($order);
+                            }
+                            return;
+                        }
+                        $payment_gateway->abandonCart($cart_id);
+                    }
+                }
+
+                list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
+                $order->setCancelled();
+
+                Log::warning(sprintf("SummitOrderService::processOrder2Revoke order %s got cancelled", $order->getId()));
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+            }
+        });
     }
 
     /**
@@ -2652,130 +2748,518 @@ final class SummitOrderService
 
     /**
      * @param Summit $summit
+     * @param int $order_id
+     * @param array $payload
+     * @return SummitOrder
+     */
+    public function updateOrder(Summit $summit, int $order_id, array $payload): SummitOrder
+    {
+        return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException("Order not found.");
+
+            // check owner
+            $owner_email = $payload['owner_email'] ?? '';
+            if (!empty($owner_email)) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::updateOrder new owner provided %s",
+                        $owner_email
+                    )
+                );
+
+                $payload['owner'] = $this->member_repository->getByEmail($owner_email);
+            }
+
+            SummitOrderFactory::populate($summit, $order, $payload);
+
+            return $order;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $order_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteOrder(Summit $summit, int $order_id)
+    {
+
+        $this->tx_service->transaction(function () use ($summit, $order_id) {
+
+            Log::debug(sprintf("SummitOrderService::deleteOrder summit %s order id %s", $summit->getId(), $order_id));
+
+            $order = $this->order_repository->getById($order_id);
+
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException("Order not found.");
+
+            list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+            foreach ($order->getTickets() as $ticket) {
+                $ticket->setCancelled();
+            }
+
+            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
+            $summit->removeOrder($order);
+
+        });
+
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param int $type_id
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updateBadgeType(Summit $summit, $ticket_id, int $type_id): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $type_id) {
+            $badge_type = $summit->getBadgeTypeById($type_id);
+            if (is_null($badge_type))
+                throw new EntityNotFoundException("Badge type not found.");
+
+            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+            if (is_null($ticket))
+                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
+
+            $order = $ticket->getOrder();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('Ticket not found.');
+
+            if (!$ticket->hasBadge())
+                throw new EntityNotFoundException('Badge not found.');
+
+            $badge = $ticket->getBadge();
+
+            $badge->setType($badge_type);
+
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $ticket_id
+     * @param int $feature_id
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addAttendeeBadgeFeature(Summit $summit, $ticket_id, int $feature_id): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $feature_id) {
+
+            $feature_type = $summit->getFeatureTypeById($feature_id);
+            if (is_null($feature_type))
+                throw new EntityNotFoundException("Feature type not found.");
+
+            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+            if (is_null($ticket))
+                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
+
+            $order = $ticket->getOrder();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('Ticket not found.');
+
+            if (!$ticket->hasBadge())
+                throw new EntityNotFoundException('Badge not found.');
+
+            $badge = $ticket->getBadge();
+            if ($badge->hasFeature($feature_type))
+                throw new ValidationException(sprintf("Badge already has feature %s.", $feature_type->getName()));
+
+            $badge->addFeature($feature_type);
+
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param int $feature_id
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removeAttendeeBadgeFeature(Summit $summit, $ticket_id, int $feature_id): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $feature_id) {
+            $feature_type = $summit->getFeatureTypeById($feature_id);
+            if (is_null($feature_type))
+                throw new EntityNotFoundException("Feature type not found.");
+
+            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+            if (is_null($ticket))
+                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
+
+            $order = $ticket->getOrder();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('Ticket not found.');
+
+            if (!$ticket->hasBadge())
+                throw new EntityNotFoundException('Badge not found.');
+
+            $badge = $ticket->getBadge();
+
+            if (!$badge->hasFeature($feature_type)) {
+                // check if its an inherited feature
+                if ($badge->isInheritedFeature($feature_type)) {
+                    $badgeType = $badge->getType();
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Feature %s can not be removed from Badge because it is inherited from its Badge Type %s (%s).",
+                            $feature_type->getName(),
+                            $badgeType->getName(),
+                            $badgeType->getId()
+                        )
+                    );
+                }
+                throw new ValidationException(sprintf("Badge does not have feature %s.", $feature_type->getName()));
+            }
+
+            $badge->removeFeature($feature_type);
+
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param string $viewTypeName
+     * @param Member $requestor
+     * @param array $payload
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function printAttendeeBadge(Summit $summit, $ticket_id, string $viewTypeName, Member $requestor, array $payload = []): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewTypeName, $requestor, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::printAttendeeBadge summit %s ticket %s view %s payload %s",
+                    $summit->getId(),
+                    $ticket_id,
+                    $viewTypeName,
+                    json_encode($payload)
+                )
+            );
+
+            $viewType = $summit->getBadgeViewTypeByName($viewTypeName);
+
+            if (is_null($viewType)) {
+
+                $viewType = $summit->getBadgeViewTypeById(intval($viewTypeName));
+                if (is_null($viewType)) {
+                    throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewTypeName));
+                }
+            }
+
+            $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
+
+            $this->checkPrintingRights($requestor, $badge, $viewType);
+
+            $badge->printIt($requestor, $viewType);
+
+            // do checkin on print
+            $attendee = $badge->getTicket()->getOwner();
+
+            $must_check_in = $payload['check_in'] ?? true;
+            if ($must_check_in && !$attendee->hasCheckedIn()) {
+                $attendee->setSummitHallCheckedIn(true);
+            }
+
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param $ticket_id
+     * @param Member $requestor
+     * @return SummitAttendeeBadge|null
+     * @throws \Exception
+     */
+    private function getAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): ?SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
+            $ticket = null;
+            // check by numeric id
+            if (is_numeric($ticket_id))
+                $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+
+            if (is_null($ticket) && is_string($ticket_id)) {
+                // check by ticket number
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                // if not found ... check by external ticket id
+                if (is_null($ticket))
+                    $ticket = $this->ticket_repository->getByExternalAttendeeIdExclusiveLock($summit, strval($ticket_id));
+            }
+
+            if (!$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
+                throw new EntityNotFoundException('Ticket not found.');
+
+            $order = $ticket->getOrder();
+            $summit = $order->getSummit();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('Ticket not found.');
+
+            if (!$ticket->hasBadge())
+                throw new EntityNotFoundException('Badge not found.');
+
+            $badge = $this->badge_repository->getByIdExclusiveLock($ticket->getBadgeId());
+
+            if (is_null($badge) && !$badge instanceof SummitAttendeeBadge)
+                throw new EntityNotFoundException('Badge not found.');
+
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Member $requestor
+     * @param SummitAttendeeBadge $badge
+     * @param SummitBadgeViewType $viewType
+     * @return bool
+     * @throws ValidationException
+     */
+    private function checkPrintingRights(Member $requestor, SummitAttendeeBadge $badge, SummitBadgeViewType $viewType): bool
+    {
+        // check rules
+
+        $type = $badge->getType();
+        $al = $type->getAccessLevelByName(SummitAccessLevelType::IN_PERSON);
+        if (is_null($al)) {
+            throw new ValidationException("You have a Virtual only ticket.");
+        }
+
+        if (!$type->allowsViewType($viewType)) {
+            throw new ValidationException(sprintf("View Type %s is not allowed.", $viewType->getName()));
+        }
+
+        if (!$requestor->isAdmin()) {
+
+            $inPersonCheckedIn = $badge->getTicket()->getOwner()->hasCheckedIn();
+            if ($inPersonCheckedIn) {
+                throw new ValidationException("You are already checked in.");
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param $ticket_id
+     * @return SummitAttendeeTicket|null
+     * @throws \Exception
+     */
+    public function getTicket(Summit $summit, $ticket_id): ?SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id) {
+
+            Log::debug(sprintf("SummitOrderService::getTicket summit %s ticket id %s", $summit->getId(), $ticket_id));
+
+            $strategy = $this->ticket_finder_strategy_factory->build($summit, $ticket_id);
+            if(is_null($strategy))
+                throw new EntityNotFoundException("Ticket not found.");
+
+            $ticket = $strategy->find();
+
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException("Ticket not found.");
+
+            if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
+                throw new ValidationException("Ticket does not belong to summit.");
+            }
+
+            return $ticket;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param string $viewType
+     * @param Member $requestor
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, string $viewType, Member $requestor): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewType, $requestor) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::canPrintAttendeeBadge summit %s ticket_id %s viewType %s",
+                    $summit->getId(),
+                    $ticket_id,
+                    $viewType
+                )
+            );
+
+            $view = $summit->getBadgeViewTypeByName($viewType);
+            if (is_null($view)) {
+                $view = $summit->getBadgeViewTypeById(intval($viewType));
+                if (is_null($view)) {
+                    throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewType));
+                }
+            }
+            $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
+            $this->checkPrintingRights($requestor, $badge, $view);
+            $badge->generateQRCode();
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteBadge(Summit $summit, $ticket_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $ticket_id) {
+            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+            if (is_null($ticket))
+                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+
+            if ( !$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('ticket not found');
+
+            $order = $ticket->getOrder();
+            $summit = $order->getSummit();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('ticket not found');
+
+            if (!$ticket->hasBadge())
+                throw new EntityNotFoundException('badge not found');
+
+            $badge = $this->badge_repository->getByIdExclusiveLock($ticket->getBadgeId());
+
+            $this->badge_repository->delete($badge);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param array $payload
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function createBadge(Summit $summit, $ticket_id, array $payload): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $payload) {
+            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+            if (is_null($ticket))
+                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('ticket not found');
+
+            $order = $ticket->getOrder();
+            $summit = $order->getSummit();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('ticket not found');
+
+            if ($ticket->hasBadge())
+                throw new ValidationException('ticket already has a badge');
+
+            $badge = new SummitAttendeeBadge();
+            $badge_type = $summit->getDefaultBadgeType();
+            if (isset($payload['badge_type_id'])) {
+                $badge_type = $summit->getBadgeTypeById(intval($payload['badge_type_id']));
+
+            }
+            if (is_null($badge_type)) {
+                throw new EntityNotFoundException("badge type not found");
+            }
+            $badge->setType($badge_type);
+            if (isset($payload['features'])) {
+                foreach ($payload['features'] as $feature_id) {
+                    $feature = $summit->getFeatureTypeById($feature_id);
+                    if (is_null($feature))
+                        throw new EntityNotFoundException("feature type not found");
+                    $badge->addFeature($feature);
+                }
+            }
+            $ticket->setBadge($badge);
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $order_id
      * @param array $payload
      * @return SummitOrder
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function createOfflineOrder(Summit $summit, array $payload): SummitOrder
+    public function addTickets(Summit $summit, int $order_id, array $payload): SummitOrder
     {
-        $order = $this->tx_service->transaction(function () use ($summit, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException("Order not found.");
 
-            Log::debug(sprintf("SummitOrderService::createOfflineOrder summit %s payload %s", $summit->getId(), json_encode($payload)));
-            // lock ticket type stock
-            $owner = null;
+            if ($summit->getId() != $order->getSummitId())
+                throw new EntityNotFoundException("Order not found.");
+
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
 
             if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId()) {
-                Log::warning("SummitOrderService::createOfflineOrder ticket type not found");
+                Log::warning("SummitOrderService::addTicket ticket type not found");
                 throw new EntityNotFoundException("ticket type not found");
             }
 
-            // check owner
-            if (isset($payload['owner_id'])) {
-                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get member by id %s", $payload['owner_id']));
-                $owner = $this->member_repository->getById(intval($payload['owner_id']));
-                if (is_null($owner)) {
-                    Log::warning("SummitOrderService::createOfflineOrder owner not found");
-                    throw new EntityNotFoundException("owner not found");
-                }
-            }
-
-            if (is_null($owner) && isset($payload['owner_email'])) {
-                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get member by email %s", $payload['owner_email']));
-                // if not try by email
-                $owner = $this->member_repository->getByEmail(trim($payload['owner_email']));
-            }
-
-            // try to get attendee
-            $attendee = !is_null($owner) ? $summit->getAttendeeByMember($owner) : null;
-
-            if (is_null($attendee) && isset($payload['owner_email'])) {
-                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get attendee by email %s", $payload['owner_email']));
-                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($payload['owner_email']));
-                if (!is_null($attendee))
-                    Log::debug(sprintf("SummitOrderService::createOfflineOrder found attendee %s (%s).", $attendee->getId(), $attendee->getEmail()));
-            }
-
-            if (is_null($attendee) && isset($payload['attendee'])) {
-                $attendee = $payload['attendee'];
-            }
-
-            if (is_null($attendee)) {
-                // create it
-                Log::debug(sprintf("SummitOrderService::createOfflineOrder attendee is null"));
-                //first name
-                $first_name = isset($payload['owner_first_name']) ? trim($payload['owner_first_name']) : null;
-                if (empty($first_name) && !is_null($owner) && !is_null($owner->getFirstName())) $first_name = $owner->getFirstName();
-                if (empty($first_name)) {
-                    Log::warning("SummitOrderService::createOfflineOrder owner firstname is null");
-                    throw new ValidationException("you must provide an owner_first_name or a valid owner_id");
-                }
-                // surname
-                $surname = isset($payload['owner_last_name']) ? trim($payload['owner_last_name']) : null;
-                if (empty($surname) && !is_null($owner) && !is_null($owner->getLastName())) $surname = $owner->getLastName();
-                if (empty($surname)) {
-                    Log::warning("SummitOrderService::createOfflineOrder owner surname is null");
-                    throw new ValidationException("you must provide an owner_last_name or a valid owner_id");
-                }
-                // mail
-                $email = isset($payload['owner_email']) ? trim($payload['owner_email']) : null;
-
-                $company = isset($payload['owner_company']) ? trim($payload['owner_company']) : null;
-
-                if (empty($email) && !is_null($owner)) $email = $owner->getEmail();
-                if (empty($email)) {
-                    Log::warning("SummitOrderService::createOfflineOrder owner email is null");
-                    throw new ValidationException("you must provide an owner_email or a valid owner_id");
-                }
-
-                $attendee = SummitAttendeeFactory::build($summit, [
-                    'first_name' => $first_name,
-                    'last_name' => $surname,
-                    'email' => $email,
-                    'company' => $company
-                ], $owner);
-
-                $this->attendee_repository->add($attendee, true);
-            }
-
-            // create order
-
-            $order = SummitOrderFactory::build($summit, $payload);
-
-            $order->generateNumber();
-            do {
-                if (!$summit->existOrderNumber($order->getNumber()))
-                    break;
-                $order->generateNumber();
-            } while (1);
-
-            Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s", $order->getNumber()));
-
-            $order->setPaymentMethodOffline();
-            $order->setPaidStatus();
-            // create tickets
             $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
 
-            Log::debug(sprintf("SummitOrderService::createOfflineOrder ticket_qty %s", $ticket_qty));
+            $order = $this->createTicketsForOrder
+            (
+                $order,
+                $ticket_type,
+                $ticket_qty,
+                    $payload['promo_code'] ?? null
+            );
 
-            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty, $payload['promo_code'] ?? null, $attendee);
-
-            if (!is_null($owner)) {
-                $owner->addSummitRegistrationOrder($order);
-            }
-
-            $summit->addAttendee($attendee);
-            $summit->addOrder($order);
-            $order->generateHash();
-            $order->generateQRCode();
-
-            return $order;
-        });
-
-        return $this->tx_service->transaction(function () use ($order) {
-            $order->setPaid();
-            Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s mark as paid", $order->getNumber()));
             return $order;
         });
     }
@@ -2870,573 +3354,6 @@ final class SummitOrderService
     }
 
     /**
-     * @param Summit $summit
-     * @param int $order_id
-     * @param array $payload
-     * @return SummitOrder
-     */
-    public function updateOrder(Summit $summit, int $order_id, array $payload): SummitOrder
-    {
-        return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
-            $order = $this->order_repository->getByIdExclusiveLock($order_id);
-            if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("Order not found.");
-
-            // check owner
-            $owner_email = $payload['owner_email'] ?? '';
-            if (!empty($owner_email)) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "SummitOrderService::updateOrder new owner provided %s",
-                        $owner_email
-                    )
-                );
-
-                $payload['owner'] = $this->member_repository->getByEmail($owner_email);
-            }
-
-            SummitOrderFactory::populate($summit, $order, $payload);
-
-            return $order;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param $tickets_to_return
-     * @param $promo_codes_to_return
-     * @return void
-     */
-    private function restoreTicketsPromoCodes(Summit $summit, $tickets_to_return, $promo_codes_to_return): void
-    {
-
-        // restore tickets and promo-codes
-
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitOrderService::restoreTicketsPromoCodes restoring tickets and promo codes for summit %s tickets_to_return %s promo_codes_to_return %s",
-                $summit->getId(),
-                json_encode($tickets_to_return),
-                json_encode($promo_codes_to_return)
-            )
-        );
-
-        foreach ($tickets_to_return as $ticket_type_id => $qty) {
-            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id);
-            if (!$ticket_type instanceof SummitTicketType) continue;
-            Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating ticket type %s on %s usages", $ticket_type_id, $qty));
-            try {
-                $ticket_type->restore($qty);
-            } catch (ValidationException $ex) {
-                Log::warning($ex);
-            }
-        }
-
-        // compensate promo codes usages
-
-        foreach ($promo_codes_to_return as $code => $value) {
-            $promo_code = $this->promo_code_repository->getByValueExclusiveLock($summit, $code);
-            if (!$promo_code instanceof SummitRegistrationPromoCode) continue;
-            $qty = $value["qty"];
-            Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating promo code %s on %s usages", $code, $qty));
-            try {
-                $promo_code->removeUsage($qty, $value["owner_email"]);
-            } catch (ValidationException $ex) {
-                Log::warning($ex);
-            }
-        }
-
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $order_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteOrder(Summit $summit, int $order_id)
-    {
-
-        $this->tx_service->transaction(function () use ($summit, $order_id) {
-
-            Log::debug(sprintf("SummitOrderService::deleteOrder summit %s order id %s", $summit->getId(), $order_id));
-
-            $order = $this->order_repository->getById($order_id);
-
-            if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("Order not found.");
-
-            list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
-
-            foreach ($order->getTickets() as $ticket) {
-                $ticket->setCancelled();
-            }
-
-            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
-
-            $summit->removeOrder($order);
-
-        });
-
-    }
-
-    /**
-     * @param Summit $summit
-     * @param $ticket_id
-     * @return SummitAttendeeTicket|null
-     * @throws \Exception
-     */
-    public function getTicket(Summit $summit, $ticket_id): ?SummitAttendeeTicket
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id) {
-
-            Log::debug(sprintf("SummitOrderService::getTicket summit %s ticket id %s", $summit->getId(), $ticket_id));
-
-            $strategy = $this->ticket_finder_strategy_factory->build($summit, $ticket_id);
-            if(is_null($strategy))
-                throw new EntityNotFoundException("Ticket not found.");
-
-            $ticket = $strategy->find();
-
-            if (!$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException("Ticket not found.");
-
-            if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
-                throw new ValidationException("Ticket does not belong to summit.");
-            }
-
-            return $ticket;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @param int $type_id
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateBadgeType(Summit $summit, $ticket_id, int $type_id): SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $type_id) {
-            $badge_type = $summit->getBadgeTypeById($type_id);
-            if (is_null($badge_type))
-                throw new EntityNotFoundException("Badge type not found.");
-
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-            if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('Ticket not found.');
-
-            $order = $ticket->getOrder();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('Ticket not found.');
-
-            if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('Badge not found.');
-
-            $badge = $ticket->getBadge();
-
-            $badge->setType($badge_type);
-
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $ticket_id
-     * @param int $feature_id
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addAttendeeBadgeFeature(Summit $summit, $ticket_id, int $feature_id): SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $feature_id) {
-
-            $feature_type = $summit->getFeatureTypeById($feature_id);
-            if (is_null($feature_type))
-                throw new EntityNotFoundException("Feature type not found.");
-
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-            if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('Ticket not found.');
-
-            $order = $ticket->getOrder();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('Ticket not found.');
-
-            if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('Badge not found.');
-
-            $badge = $ticket->getBadge();
-            if ($badge->hasFeature($feature_type))
-                throw new ValidationException(sprintf("Badge already has feature %s.", $feature_type->getName()));
-
-            $badge->addFeature($feature_type);
-
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @param int $feature_id
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removeAttendeeBadgeFeature(Summit $summit, $ticket_id, int $feature_id): SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $feature_id) {
-            $feature_type = $summit->getFeatureTypeById($feature_id);
-            if (is_null($feature_type))
-                throw new EntityNotFoundException("Feature type not found.");
-
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-            if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('Ticket not found.');
-
-            $order = $ticket->getOrder();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('Ticket not found.');
-
-            if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('Badge not found.');
-
-            $badge = $ticket->getBadge();
-
-            if (!$badge->hasFeature($feature_type)) {
-                // check if its an inherited feature
-                if ($badge->isInheritedFeature($feature_type)) {
-                    $badgeType = $badge->getType();
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "Feature %s can not be removed from Badge because it is inherited from its Badge Type %s (%s).",
-                            $feature_type->getName(),
-                            $badgeType->getName(),
-                            $badgeType->getId()
-                        )
-                    );
-                }
-                throw new ValidationException(sprintf("Badge does not have feature %s.", $feature_type->getName()));
-            }
-
-            $badge->removeFeature($feature_type);
-
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Member $requestor
-     * @param SummitAttendeeBadge $badge
-     * @param SummitBadgeViewType $viewType
-     * @return bool
-     * @throws ValidationException
-     */
-    private function checkPrintingRights(Member $requestor, SummitAttendeeBadge $badge, SummitBadgeViewType $viewType): bool
-    {
-        // check rules
-
-        $type = $badge->getType();
-        $al = $type->getAccessLevelByName(SummitAccessLevelType::IN_PERSON);
-        if (is_null($al)) {
-            throw new ValidationException("You have a Virtual only ticket.");
-        }
-
-        if (!$type->allowsViewType($viewType)) {
-            throw new ValidationException(sprintf("View Type %s is not allowed.", $viewType->getName()));
-        }
-
-        if (!$requestor->isAdmin()) {
-
-            $inPersonCheckedIn = $badge->getTicket()->getOwner()->hasCheckedIn();
-            if ($inPersonCheckedIn) {
-                throw new ValidationException("You are already checked in.");
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param Summit $summit
-     * @param $ticket_id
-     * @param Member $requestor
-     * @return SummitAttendeeBadge|null
-     * @throws \Exception
-     */
-    private function getAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): ?SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
-            $ticket = null;
-            // check by numeric id
-            if (is_numeric($ticket_id))
-                $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-
-            if (is_null($ticket) && is_string($ticket_id)) {
-                // check by ticket number
-                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-                // if not found ... check by external ticket id
-                if (is_null($ticket))
-                    $ticket = $this->ticket_repository->getByExternalAttendeeIdExclusiveLock($summit, strval($ticket_id));
-            }
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
-                throw new EntityNotFoundException('Ticket not found.');
-
-            $order = $ticket->getOrder();
-            $summit = $order->getSummit();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('Ticket not found.');
-
-            if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('Badge not found.');
-
-            $badge = $this->badge_repository->getByIdExclusiveLock($ticket->getBadgeId());
-
-            if (is_null($badge) && !$badge instanceof SummitAttendeeBadge)
-                throw new EntityNotFoundException('Badge not found.');
-
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @param string $viewTypeName
-     * @param Member $requestor
-     * @param array $payload
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function printAttendeeBadge(Summit $summit, $ticket_id, string $viewTypeName, Member $requestor, array $payload = []): SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewTypeName, $requestor, $payload) {
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitOrderService::printAttendeeBadge summit %s ticket %s view %s payload %s",
-                    $summit->getId(),
-                    $ticket_id,
-                    $viewTypeName,
-                    json_encode($payload)
-                )
-            );
-
-            $viewType = $summit->getBadgeViewTypeByName($viewTypeName);
-
-            if (is_null($viewType)) {
-
-                $viewType = $summit->getBadgeViewTypeById(intval($viewTypeName));
-                if (is_null($viewType)) {
-                    throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewTypeName));
-                }
-            }
-
-            $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
-
-            $this->checkPrintingRights($requestor, $badge, $viewType);
-
-            $badge->printIt($requestor, $viewType);
-
-            // do checkin on print
-            $attendee = $badge->getTicket()->getOwner();
-
-            $must_check_in = $payload['check_in'] ?? true;
-            if ($must_check_in && !$attendee->hasCheckedIn()) {
-                $attendee->setSummitHallCheckedIn(true);
-            }
-
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @param string $viewType
-     * @param Member $requestor
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, string $viewType, Member $requestor): SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewType, $requestor) {
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitOrderService::canPrintAttendeeBadge summit %s ticket_id %s viewType %s",
-                    $summit->getId(),
-                    $ticket_id,
-                    $viewType
-                )
-            );
-
-            $view = $summit->getBadgeViewTypeByName($viewType);
-            if (is_null($view)) {
-                $view = $summit->getBadgeViewTypeById(intval($viewType));
-                if (is_null($view)) {
-                    throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewType));
-                }
-            }
-            $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
-            $this->checkPrintingRights($requestor, $badge, $view);
-            $badge->generateQRCode();
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteBadge(Summit $summit, $ticket_id): void
-    {
-        $this->tx_service->transaction(function () use ($summit, $ticket_id) {
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-            if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
-
-            $order = $ticket->getOrder();
-            $summit = $order->getSummit();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
-
-            if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('badge not found');
-
-            $badge = $this->badge_repository->getByIdExclusiveLock($ticket->getBadgeId());
-
-            $this->badge_repository->delete($badge);
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @param array $payload
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function createBadge(Summit $summit, $ticket_id, array $payload): SummitAttendeeBadge
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $payload) {
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-            if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
-
-            $order = $ticket->getOrder();
-            $summit = $order->getSummit();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
-
-            if ($ticket->hasBadge())
-                throw new ValidationException('ticket already has a badge');
-
-            $badge = new SummitAttendeeBadge();
-            $badge_type = $summit->getDefaultBadgeType();
-            if (isset($payload['badge_type_id'])) {
-                $badge_type = $summit->getBadgeTypeById(intval($payload['badge_type_id']));
-
-            }
-            if (is_null($badge_type)) {
-                throw new EntityNotFoundException("badge type not found");
-            }
-            $badge->setType($badge_type);
-            if (isset($payload['features'])) {
-                foreach ($payload['features'] as $feature_id) {
-                    $feature = $summit->getFeatureTypeById($feature_id);
-                    if (is_null($feature))
-                        throw new EntityNotFoundException("feature type not found");
-                    $badge->addFeature($feature);
-                }
-            }
-            $ticket->setBadge($badge);
-            return $badge;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $order_id
-     * @param array $payload
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTickets(Summit $summit, int $order_id, array $payload): SummitOrder
-    {
-        return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
-            $order = $this->order_repository->getByIdExclusiveLock($order_id);
-            if (!$order instanceof SummitOrder)
-                throw new EntityNotFoundException("Order not found.");
-
-            if ($summit->getId() != $order->getSummitId())
-                throw new EntityNotFoundException("Order not found.");
-
-            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
-
-            if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId()) {
-                Log::warning("SummitOrderService::addTicket ticket type not found");
-                throw new EntityNotFoundException("ticket type not found");
-            }
-
-            $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
-
-            $order = $this->createTicketsForOrder
-            (
-                $order,
-                $ticket_type,
-                $ticket_qty,
-                    $payload['promo_code'] ?? null
-            );
-
-            return $order;
-        });
-    }
-
-    /**
      * @param Member $current_user
      * @param int $ticket_id
      * @param array $payload
@@ -3460,7 +3377,7 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
+            if (!$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
                 throw new EntityNotFoundException("ticket not found");
 
             if (!$ticket->canEditTicket($current_user)) {
@@ -3564,7 +3481,7 @@ final class SummitOrderService
             // lock and get the order
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
-            if (is_null($order) || !$order instanceof SummitOrder)
+            if (!$order instanceof SummitOrder)
                 throw new EntityNotFoundException("order not found");
 
             if ($order->getSummitId() != $summit->getId()) {
@@ -4069,7 +3986,6 @@ final class SummitOrderService
 
                         Log::debug(sprintf("SummitOrderService::processTicketData creating attendee with payload %s", json_encode($payload)));
 
-
                         $attendee = SummitAttendeeFactory::build($summit, $payload, $member);
 
                         if ($reader->hasColumn('attendee_tags')) {
@@ -4256,6 +4172,136 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @param array $payload
+     * @return SummitOrder
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function createOfflineOrder(Summit $summit, array $payload): SummitOrder
+    {
+        $order = $this->tx_service->transaction(function () use ($summit, $payload) {
+
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder summit %s payload %s", $summit->getId(), json_encode($payload)));
+            // lock ticket type stock
+            $owner = null;
+            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
+
+            if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId()) {
+                Log::warning("SummitOrderService::createOfflineOrder ticket type not found");
+                throw new EntityNotFoundException("ticket type not found");
+            }
+
+            // check owner
+            if (isset($payload['owner_id'])) {
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get member by id %s", $payload['owner_id']));
+                $owner = $this->member_repository->getById(intval($payload['owner_id']));
+                if (is_null($owner)) {
+                    Log::warning("SummitOrderService::createOfflineOrder owner not found");
+                    throw new EntityNotFoundException("owner not found");
+                }
+            }
+
+            if (is_null($owner) && isset($payload['owner_email'])) {
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get member by email %s", $payload['owner_email']));
+                // if not try by email
+                $owner = $this->member_repository->getByEmail(trim($payload['owner_email']));
+            }
+
+            // try to get attendee
+            $attendee = !is_null($owner) ? $summit->getAttendeeByMember($owner) : null;
+
+            if (is_null($attendee) && isset($payload['owner_email'])) {
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get attendee by email %s", $payload['owner_email']));
+                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($payload['owner_email']));
+                if (!is_null($attendee))
+                    Log::debug(sprintf("SummitOrderService::createOfflineOrder found attendee %s (%s).", $attendee->getId(), $attendee->getEmail()));
+            }
+
+            if (is_null($attendee) && isset($payload['attendee'])) {
+                $attendee = $payload['attendee'];
+            }
+
+            if (is_null($attendee)) {
+                // create it
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder attendee is null"));
+                //first name
+                $first_name = isset($payload['owner_first_name']) ? trim($payload['owner_first_name']) : null;
+                if (empty($first_name) && !is_null($owner) && !is_null($owner->getFirstName())) $first_name = $owner->getFirstName();
+                if (empty($first_name)) {
+                    Log::warning("SummitOrderService::createOfflineOrder owner firstname is null");
+                    throw new ValidationException("you must provide an owner_first_name or a valid owner_id");
+                }
+                // surname
+                $surname = isset($payload['owner_last_name']) ? trim($payload['owner_last_name']) : null;
+                if (empty($surname) && !is_null($owner) && !is_null($owner->getLastName())) $surname = $owner->getLastName();
+                if (empty($surname)) {
+                    Log::warning("SummitOrderService::createOfflineOrder owner surname is null");
+                    throw new ValidationException("you must provide an owner_last_name or a valid owner_id");
+                }
+                // mail
+                $email = isset($payload['owner_email']) ? trim($payload['owner_email']) : null;
+
+                $company = isset($payload['owner_company']) ? trim($payload['owner_company']) : null;
+
+                if (empty($email) && !is_null($owner)) $email = $owner->getEmail();
+                if (empty($email)) {
+                    Log::warning("SummitOrderService::createOfflineOrder owner email is null");
+                    throw new ValidationException("you must provide an owner_email or a valid owner_id");
+                }
+
+                $attendee = SummitAttendeeFactory::build($summit, [
+                    'first_name' => $first_name,
+                    'last_name' => $surname,
+                    'email' => $email,
+                    'company' => $company
+                ], $owner);
+
+                $this->attendee_repository->add($attendee, true);
+            }
+
+            // create order
+
+            $order = SummitOrderFactory::build($summit, $payload);
+
+            $order->generateNumber();
+            do {
+                if (!$summit->existOrderNumber($order->getNumber()))
+                    break;
+                $order->generateNumber();
+            } while (1);
+
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s", $order->getNumber()));
+
+            $order->setPaymentMethodOffline();
+            $order->setPaidStatus();
+            // create tickets
+            $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
+
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder ticket_qty %s", $ticket_qty));
+
+            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty, $payload['promo_code'] ?? null, $attendee);
+
+            if (!is_null($owner)) {
+                $owner->addSummitRegistrationOrder($order);
+            }
+
+            $summit->addAttendee($attendee);
+            $summit->addOrder($order);
+            $order->generateHash();
+            $order->generateQRCode();
+
+            return $order;
+        });
+
+        return $this->tx_service->transaction(function () use ($order) {
+            $order->setPaid();
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s mark as paid", $order->getNumber()));
+            return $order;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
      * @throws ValidationException
      */
     public function ingestExternalTicketData(Summit $summit, array $payload): void
@@ -4294,7 +4340,6 @@ final class SummitOrderService
             $email_to
         );
     }
-
 
     public function processAllOrderReminder(): void
     {
@@ -4535,76 +4580,6 @@ final class SummitOrderService
     }
 
     /**
-     * @param SummitOrder $order
-     */
-    private function sendAttendeesInvitationEmail(SummitOrder $order): void
-    {
-        Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s", $order->getId()));
-
-        foreach ($order->getTickets() as $ticket) {
-            try {
-                Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s ticket %s", $order->getId(), $ticket->getNumber()));
-                if (!$ticket->hasOwner()) {
-                    Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail ticket %s has not owner set", $ticket->getNumber()));
-                    continue;
-                }
-                $attendee = $ticket->getOwner();
-                $ticket->generateQRCode();
-                $ticket->generateHash();
-                $delay = 0;
-                if($order->isSingleTicket() && $attendee->getEmail() !== $order->getOwnerEmail()){
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitOrderService::sendAttendeesInvitationEmail ticket %s attendee %s is not the same as order owner %s (SOMEONE_ELSE_FLOW)",
-                            $ticket->getId(),
-                            $attendee->getEmail(),
-                            $order->getOwnerEmail()
-                        )
-                    );
-                    // delay invitation by N Minutes ....
-                    $delay = Config::get("registration.attendee_invitation_email_delay", 10);
-                }
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "SummitOrderService::sendAttendeesInvitationEmail ticket %s sending invitation email to attendee %s with delay %s minutes",
-                        $ticket->getNumber(),
-                        $attendee->getEmail(),
-                        $delay
-                    )
-                );
-
-                SendAttendeeInvitationEmail::dispatch($ticket->getId())->delay(now()->addMinutes($delay));
-
-            } catch (\Exception $ex) {
-                Log::warning($ex);
-            }
-        }
-    }
-
-    /**
-     * @param SummitOrder $order
-     */
-    private function sendExistentSummitOrderOwnerEmail(SummitOrder $order)
-    {
-        Log::debug(sprintf("SummitOrderService::sendExistentSummitOrderOwnerEmail for order %s", $order->getId()));
-        RegisteredMemberOrderPaidMail::dispatch($order);
-    }
-
-    /**
-     * @param SummitOrder $order
-     * @param array $user_registration_request
-     */
-    private function sendSummitOrderOwnerInvitationEmail(SummitOrder $order, array $user_registration_request)
-    {
-        Log::debug(sprintf("SummitOrderService::sendSummitOrderOwnerInvitationEmail for order %s", $order->getId()));
-        UnregisteredMemberOrderPaidMail::dispatch($order, $user_registration_request['set_password_link']);
-    }
-
-    /**
      * @param int $orderId
      * @throws \Exception
      */
@@ -4782,40 +4757,53 @@ final class SummitOrderService
 
     /**
      * @param SummitOrder $order
-     * @return SummitOrder
-     * @throws ValidationException
      */
-    private function processInvitation(SummitOrder $order): SummitOrder
+    private function sendAttendeesInvitationEmail(SummitOrder $order): void
     {
-        $summit = $order->getSummit();
-        // we should mark the associated invitation as processed
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitOrderService::processInvitation: trying to get invitation for email %s order %s.",
-                $order->getOwnerEmail(),
-                $order->getId()
-            )
-        );
+        Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s", $order->getId()));
 
-        $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
+        foreach ($order->getTickets() as $ticket) {
+            try {
+                Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s ticket %s", $order->getId(), $ticket->getNumber()));
+                if (!$ticket->hasOwner()) {
+                    Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail ticket %s has not owner set", $ticket->getNumber()));
+                    continue;
+                }
+                $attendee = $ticket->getOwner();
+                $ticket->generateQRCode();
+                $ticket->generateHash();
+                $delay = 0;
+                if($order->isSingleTicket() && $attendee->getEmail() !== $order->getOwnerEmail()){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::sendAttendeesInvitationEmail ticket %s attendee %s is not the same as order owner %s (SOMEONE_ELSE_FLOW)",
+                            $ticket->getId(),
+                            $attendee->getEmail(),
+                            $order->getOwnerEmail()
+                        )
+                    );
+                    // delay invitation by N Minutes ....
+                    $delay = Config::get("registration.attendee_invitation_email_delay", 10);
+                }
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::sendAttendeesInvitationEmail ticket %s sending invitation email to attendee %s with delay %s minutes",
+                        $ticket->getNumber(),
+                        $attendee->getEmail(),
+                        $delay
+                    )
+                );
 
-        if (is_null($invitation) || $invitation->isAccepted()) {
-            Log::debug(sprintf("SummitOrderService::processInvitation invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
-            return $order;
+                SendAttendeeInvitationEmail::dispatch($ticket->getId())->delay(now()->addMinutes($delay));
+
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+            }
         }
-        $invitation->addOrder($order);
-        Log::debug(sprintf("SummitOrderService::processInvitation trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
-        $invitation->markAsAccepted();
-
-        $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $order->getOwnerEmail());
-
-        if (!is_null($attendee)) {
-            CopyInvitationTagsToAttendees::dispatch($summit->getId(), $invitation->getId(), $attendee->getId());
-        }
-
-        return $order;
     }
 
     /**

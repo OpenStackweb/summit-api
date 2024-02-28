@@ -82,7 +82,7 @@ class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
              $tax_refund = new SummitTaxRefund
              (
                  $this,
-                 $applied_tax->getTaxType(),
+                 $applied_tax->getTax(),
                  $applied_tax->applyTo($amount_2_refund, false)
              );
              $this->refunded_taxes->add($tax_refund);

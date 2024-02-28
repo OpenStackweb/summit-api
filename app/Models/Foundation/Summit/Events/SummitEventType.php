@@ -122,7 +122,7 @@ class SummitEventType extends SilverstripeBaseModel
     protected $summit_documents;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="SummitEventType_SummitTicketType",
      *      joinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}

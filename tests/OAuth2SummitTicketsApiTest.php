@@ -196,7 +196,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'ticket_id' => $ticket->getId(),
-            'expand' => 'order,refund_requests,refund_requests.requested_by,refund_requests.ticket,refund_requests.ticket.ticket_type,refund_requests.ticket.refund_requests'
+            'expand' => 'order,refund_requests,refund_requests.requested_by,refund_requests.ticket,refund_requests.ticket.ticket_type,refund_requests.ticket.refund_requests,refund_requests.refunded_taxes'
         ];
 
         $data = [
@@ -226,7 +226,33 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($ticket));
         $this->assertTrue($ticket->refunded_amount == 1.5);
         $this->assertTrue(count($ticket->refund_requests) == 1);
-        $this->assertTrue($ticket->refund_requests[0]->refunded_amount == 1.5);
+        $refund_request = $ticket->refund_requests[0];
+        $this->assertTrue($refund_request->refunded_amount == 1.5);
+        $this->assertTrue($refund_request->taxes_refunded_amount == 0.18);
+        $this->assertTrue($refund_request->total_refunded_amount == 1.68);
+        $this->assertTrue($refund_request->status == 'Approved');
+        $this->assertTrue($refund_request->notes == 'Courtesy refund');
+        $this->assertTrue(count($refund_request->refunded_taxes) == 2);
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrdersApiController@getAllRefundApprovedRequests",
+            [
+                'id' => self::$summit->getId(),
+                'order_id' => $ticket->order->id,
+                'expand' => 'refunded_taxes'
+            ],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $refund_requests = json_decode($content);
+        $this->assertTrue(!is_null($refund_requests));
+        $this->assertTrue($refund_requests->total == 1);
     }
 
     public function testRejectRefund(){
@@ -434,7 +460,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         ];
 
         $data = [
-            'amount' => $ticket->getFinalAmount() + 10.0,
+            'amount' => $ticket->getNetSellingPrice() + 10.0,
             'notes' => 'Courtesy refund'
         ];
 

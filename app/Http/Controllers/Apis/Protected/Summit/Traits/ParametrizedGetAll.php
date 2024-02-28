@@ -35,6 +35,8 @@ trait ParametrizedGetAll
 
     use ParseAndGetFilter;
 
+    use ParseAndGetPaginationParams;
+
     /**
      * @param int $page
      * @param int $per_page
@@ -104,16 +106,7 @@ trait ParametrizedGetAll
             }
 
             // default values
-            $page = 1;
-            $per_page = is_null($defaultPageSize) ? PaginationValidationRules::PerPageMin : call_user_func($defaultPageSize);
-
-            if (Request::has('page')) {
-                $page = intval(Request::get('page'));
-            }
-
-            if (Request::has('per_page')) {
-                $per_page = intval(Request::get('per_page'));
-            }
+            list($page, $per_page) = self::getPaginationParams();
 
             $filter = self::getFilter($getFilterRules, $getFilterValidatorRules);
 

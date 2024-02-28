@@ -43,6 +43,8 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
         'DiscountInCents' => 'discount_in_cents:json_int',
         'RefundedAmount' => 'refunded_amount:json_money',
         'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
+        'TotalRefundedAmount' => 'total_refunded_amount:json_money',
+        'TotalRefundedAmountInCents' => 'total_refunded_amount_in_cents:json_int',
         'Currency' => 'currency:json_string',
         'CurrencySymbol' => 'currency_symbol:json_string',
         'TaxesAmount' => 'taxes_amount:json_money',

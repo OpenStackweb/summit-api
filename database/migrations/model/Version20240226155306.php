@@ -26,9 +26,10 @@ final class Version20240226155306 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $sql = <<<SQL
-UPDATE A SET A.Rate = B.Rate
-FROM SummitAttendeeTicketTax A INNER JOIN SummitTaxType B ON A.SummitTaxTypeID = B.ID;
-WHERE A.Rate = '0.00';
+UPDATE SummitAttendeeTicket_Taxes
+INNER JOIN SummitTaxType  ON SummitAttendeeTicket_Taxes.SummitTaxTypeID = SummitTaxType.ID
+SET SummitAttendeeTicket_Taxes.Rate = SummitTaxType.Rate
+WHERE SummitAttendeeTicket_Taxes.Rate = '0.00';
 SQL;
 
         $this->addSql($sql);

@@ -218,6 +218,21 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'get-order-approved-refunds',
+                'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/all/refund-requests/approved',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
                 'name' => 'get-ticket-by-id-or-number-badge',
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
                 'http_method' => 'GET',

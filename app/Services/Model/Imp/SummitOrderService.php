@@ -2288,14 +2288,14 @@ final class SummitOrderService
                         (
                             "SummitOrderService::refundTicket trying to refund on payment gateway cart id %s final amount %s",
                             $order->getPaymentGatewayCartId(),
-                            $request->getTotalAmount()
+                            $request->getTotalRefundedAmount()
                         )
                     );
 
                     $paymentGatewayRes = $payment_gateway->refundPayment
                     (
                         $order->getPaymentGatewayCartId(),
-                        $request->getTotalAmount(),
+                        $request->getTotalRefundedAmount(),
                         $ticket->getCurrency()
                     );
 

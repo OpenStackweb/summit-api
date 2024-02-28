@@ -30,7 +30,7 @@ class SummitRefundRequestSerializer extends SilverStripeSerializer
         'ActionDate' => 'action_date:datetime_epoch',
         'RefundedAmount' => 'refunded_amount:json_float',
         'TaxesRefundedAmount' => 'taxes_refunded_amount:json_float',
-        'TotalAmount' => 'total_amount:json_float',
+        'TotalRefundedAmount' => 'total_refunded_amount:json_float',
         'Notes' => 'notes:json_string',
         'PaymentGatewayResult' => 'payment_gateway_result:json_string',
     ];

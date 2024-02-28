@@ -30,7 +30,7 @@ class SummitTaxRefund extends SilverstripeBaseModel
     use FinancialTrait;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\SummitRefundRequest", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitRefundRequest", inversedBy="refunded_taxes", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SummitRefundRequestID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitRefundRequest
      */
@@ -51,7 +51,7 @@ class SummitTaxRefund extends SilverstripeBaseModel
 
     protected $getIdMappings = [
         'getRefundRequestId' => 'refund_request',
-        'getTax' => 'tax',
+        'getTaxId' => 'tax',
     ];
 
     protected $hasPropertyMappings = [

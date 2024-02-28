@@ -238,7 +238,7 @@ class SummitRefundRequest extends SilverstripeBaseModel
      * Total amount refunded Ticket Price + Tax/Fee price
      *  @return float
      */
-    public function getTotalAmount(): float {
+    public function getTotalRefundedAmount(): float {
         return $this->refunded_amount + $this->getTaxesRefundedAmount();
     }
 

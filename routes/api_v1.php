@@ -1381,6 +1381,12 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'tickets'], function () {
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@addTicket']);
+                    Route::group(['prefix' => 'all'], function () {
+                        Route::group(['prefix' => 'refund-requests'], function () {
+                            Route::get('approved', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@getAllRefundApprovedRequests']);
+                        });
+
+                    });
                     Route::group(['prefix' => '{ticket_id}'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@updateTicket']);
                         Route::group(['prefix' => 'activate'], function () {

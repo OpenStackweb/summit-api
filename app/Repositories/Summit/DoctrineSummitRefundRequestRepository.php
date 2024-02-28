@@ -40,8 +40,8 @@ final class DoctrineSummitRefundRequestRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
-        $query = $query->leftJoin(SummitAttendeeTicketRefundRequest::class, 'trr', 'WITH', 'e.id = trr.id');
-        $query = $query->leftJoin("ttr.ticket", "t");
+        $query = $query->leftJoin(SummitAttendeeTicketRefundRequest::class, 'e2', 'WITH', 'e.id = e2.id');
+        $query = $query->leftJoin("e2.ticket", "t");
         $query = $query->leftJoin("t.order", "o");
         return $query->leftJoin("o.summit", "s");
     }
@@ -73,7 +73,9 @@ final class DoctrineSummitRefundRequestRepository
     {
         return [
             'id'   => 'e.id',
+            'created' => 'e.created',
             'action_date' => 'e.action_date',
+            'ticket_id' => 't.id',
         ];
     }
 }

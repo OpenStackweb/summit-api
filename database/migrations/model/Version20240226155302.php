@@ -28,8 +28,8 @@ final class Version20240226155302 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if($builder->hasTable("SummitAttendeeTicketTax") && !$builder->hasColumns("SummitAttendeeTicketTax", ["Rate"])) {
-            $builder->table("SummitAttendeeTicketTax", function (Table $table) {
+        if($builder->hasTable("SummitAttendeeTicket_Taxes") && !$builder->hasColumns("SummitAttendeeTicket_Taxes", ["Rate"])) {
+            $builder->table("SummitAttendeeTicket_Taxes", function (Table $table) {
                 $table->decimal("Rate", 9, 2)->setDefault('0.00');
             });
         }
@@ -41,8 +41,8 @@ final class Version20240226155302 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if($builder->hasTable("SummitAttendeeTicketTax") && $builder->hasColumns("SummitAttendeeTicketTax", ["Rate"])) {
-            $builder->table("SummitAttendeeTicketTax", function (Table $table) {
+        if($builder->hasTable("SummitAttendeeTicket_Taxes") && $builder->hasColumns("SummitAttendeeTicket_Taxes", ["Rate"])) {
+            $builder->table("SummitAttendeeTicket_Taxes", function (Table $table) {
                 $table->dropColumn("Rate");
             });
         }

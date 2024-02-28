@@ -14,7 +14,7 @@
 
 use Database\Seeders\TestSeeder;
 use Illuminate\Support\Facades\Artisan;
-
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +51,8 @@ abstract class BrowserKitTestCase extends BaseTestCase
      */
     protected function prepareForTests()
     {
+        // see https://laravel.com/docs/9.x/mocking#mail-fake
+        Mail::fake();
         Model::unguard();
         // clean up
         DB::setDefaultConnection("model");

@@ -14,22 +14,22 @@
 
 use App\Http\Renderers\IRenderersFormats;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Routing\ResourceRegistrar;
 use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\ISummitRefundRequestConstants;
 use models\summit\ISummitRepository;
-use Exception;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitAttendeeTicketRefundRequest;
 use models\summit\SummitOrder;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -75,10 +75,15 @@ final class OAuth2SummitOrdersApiController
     private $ticket_repository;
 
     /**
-     * OAuth2SummitOrdersApiController constructor.
+     * @var ISummitRefundRequestRepository
+     */
+    private $refund_request_repository;
+
+    /**
      * @param ISummitOrderRepository $repository
      * @param ISummitRepository $summit_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
+     * @param ISummitRefundRequestRepository $refund_request_repository
      * @param ISummitOrderService $service
      * @param IResourceServerContext $resource_server_context
      */
@@ -87,6 +92,7 @@ final class OAuth2SummitOrdersApiController
         ISummitOrderRepository          $repository,
         ISummitRepository               $summit_repository,
         ISummitAttendeeTicketRepository $ticket_repository,
+        ISummitRefundRequestRepository  $refund_request_repository,
         ISummitOrderService             $service,
         IResourceServerContext          $resource_server_context
     )
@@ -96,6 +102,7 @@ final class OAuth2SummitOrdersApiController
         $this->summit_repository = $summit_repository;
         $this->service = $service;
         $this->ticket_repository = $ticket_repository;
+        $this->refund_request_repository = $refund_request_repository;
     }
 
     /**
@@ -1182,5 +1189,56 @@ final class OAuth2SummitOrdersApiController
                     SerializerUtils::getRelations()
                 ));
         });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $order_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllRefundApprovedRequests($summit_id, $order_id){
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                ];
+            },
+            function () {
+                return [
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'created',
+                    'action_date',
+                    'ticket_id',
+                ];
+            },
+            function ($filter) use ($summit, $order_id) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('class_name', SummitAttendeeTicketRefundRequest::ClassName));
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('order_id', intval($order_id)));
+                    $filter->addFilterCondition(FilterElement::makeEqual('status', ISummitRefundRequestConstants::ApprovedStatus));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Admin;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->refund_request_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+        );
     }
 }

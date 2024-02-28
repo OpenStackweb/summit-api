@@ -101,7 +101,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     private $refund_requests;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitRegistrationPromoCode")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitRegistrationPromoCode", inversedBy="tickets")
      * @ORM\JoinColumn(name="PromoCodeID", referencedColumnName="ID", nullable=true)
      * @var SummitRegistrationPromoCode
      */
@@ -712,9 +712,28 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $amount;
     }
 
+    /**
+     * @return float
+     */
+    public function getTotalRefundedAmount(): float
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
+        $amount = 0.0;
+        foreach ($this->refund_requests->matching($criteria) as $request) {
+            if (!$request instanceof SummitAttendeeTicketRefundRequest) continue;
+            $amount += $request->getTotalRefundedAmount();
+        }
+        return $amount;
+    }
+
     public function getRefundedAmountInCents(): int
     {
         return self::convertToCents($this->getRefundedAmount());
+    }
+
+    public function getTotalRefundedAmountInCents():int{
+        return self::convertToCents($this->getTotalRefundedAmount());
     }
 
     /**
@@ -742,7 +761,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             )
         );
 
-        if ($net_price < ($alreadyRefundedAmount + $amount)) {
+        if ($net_price < ($alreadyRefundedAmount + $amount_2_refund)) {
             throw new ValidationException("Can not refund an amount greater than Amount Paid.");
         }
 

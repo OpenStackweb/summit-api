@@ -32,7 +32,7 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
     ];
 
     protected static $allowed_relations = [
-        'extra_question_answers',
+        'extra_questions',
     ];
 
     /**
@@ -50,12 +50,12 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('extra_question_answers', $relations) && !isset($values['extra_question_answers'])){
+        if(in_array('extra_questions', $relations) && !isset($values['extra_questions'])){
             $extra_question_answers = [];
             foreach ($scan->getExtraQuestionAnswers() as $extra_question_answer){
                 $extra_question_answers[] = $extra_question_answer->getId();
             }
-            $values['extra_question_answers'] = $extra_question_answers;
+            $values['extra_questions'] = $extra_question_answers;
         }
 
         if (!empty($expand)) {
@@ -88,7 +88,7 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
     }
 
     protected static $expand_mappings = [
-        'extra_question_answers' => [
+        'extra_questions' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getExtraQuestionAnswers',
         ]

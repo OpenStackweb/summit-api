@@ -727,6 +727,21 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $amount;
     }
 
+    /**
+     * @return float
+     */
+    public function getRefundedTaxesAmount(): float
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
+        $amount = 0.0;
+        foreach ($this->refund_requests->matching($criteria) as $request) {
+            if (!$request instanceof SummitAttendeeTicketRefundRequest) continue;
+            $amount += $request->getTaxesRefundedAmount();
+        }
+        return $amount;
+    }
+
     public function getRefundedAmountInCents(): int
     {
         return self::convertToCents($this->getRefundedAmount());

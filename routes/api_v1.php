@@ -1225,6 +1225,14 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getExtraQuestion']);
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateExtraQuestion']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteExtraQuestion']);
+                        // multi values
+                        Route::group(['prefix' => 'values'], function () {
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addExtraQuestionValue']);
+                            Route::group(['prefix' => '{value_id}'], function () {
+                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateExtraQuestionValue']);
+                                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteExtraQuestionValue']);
+                            });
+                        });
                     });
                 });
             });

@@ -22,7 +22,6 @@ use App\Rules\Boolean;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISummitSelectionPlanService;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Request;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
@@ -34,7 +33,6 @@ use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
 use utils\PagingInfo;
-use utils\PagingResponse;
 
 /**
  * Class OAuth2SummitSelectionPlansApiController

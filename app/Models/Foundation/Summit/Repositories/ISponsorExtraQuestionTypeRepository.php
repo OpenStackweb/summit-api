@@ -12,13 +12,12 @@
  * limitations under the License.
  **/
 
-use models\utils\IBaseRepository;
-
+use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
 /**
  * Interface ISponsorExtraQuestionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISponsorExtraQuestionTypeRepository extends IBaseRepository
+interface ISponsorExtraQuestionTypeRepository extends IExtraQuestionTypeRepository
 {
 
 }

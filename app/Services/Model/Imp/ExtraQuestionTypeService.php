@@ -45,7 +45,7 @@ abstract class ExtraQuestionTypeService
      * @return ExtraQuestionTypeValue
      * @throws \Exception
      */
-    protected function _addOrderExtraQuestionValue(ExtraQuestionType $question, array $payload): ExtraQuestionTypeValue
+    protected function _addExtraQuestionValue(ExtraQuestionType $question, array $payload): ExtraQuestionTypeValue
     {
         return $this->tx_service->transaction(function () use ($question, $payload) {
 
@@ -83,7 +83,7 @@ abstract class ExtraQuestionTypeService
      * @return ExtraQuestionTypeValue
      * @throws \Exception
      */
-    protected function _updateOrderExtraQuestionValue(ExtraQuestionType $question, int $value_id, array $payload): ExtraQuestionTypeValue
+    protected function _updateExtraQuestionValue(ExtraQuestionType $question, int $value_id, array $payload): ExtraQuestionTypeValue
     {
         return $this->tx_service->transaction(function () use ($question, $value_id, $payload) {
 
@@ -125,7 +125,7 @@ abstract class ExtraQuestionTypeService
      * @param int $value_id
      * @throws \Exception
      */
-    protected function _deleteOrderExtraQuestionValue(ExtraQuestionType $question, int $value_id): void
+    protected function _deleteExtraQuestionValue(ExtraQuestionType $question, int $value_id): void
     {
         $this->tx_service->transaction(function () use ($question, $value_id) {
 

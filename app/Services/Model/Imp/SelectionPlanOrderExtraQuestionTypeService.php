@@ -160,7 +160,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
             if (is_null($question))
                 throw new EntityNotFoundException("Question not found.");
 
-            return parent::_addOrderExtraQuestionValue($question, $payload);
+            return parent::_addExtraQuestionValue($question, $payload);
         });
     }
 
@@ -217,7 +217,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
             if (is_null($question))
                 throw new EntityNotFoundException("Question not found.");
 
-            return parent::_updateOrderExtraQuestionValue($question, $value_id, $payload);
+            return parent::_updateExtraQuestionValue($question, $value_id, $payload);
         });
     }
 
@@ -231,7 +231,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
             if (is_null($question))
                 throw new EntityNotFoundException("Question not found.");
 
-            parent::_deleteOrderExtraQuestionValue($question, $value_id);
+            parent::_deleteExtraQuestionValue($question, $value_id);
         });
     }
 

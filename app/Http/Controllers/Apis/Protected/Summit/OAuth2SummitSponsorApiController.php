@@ -1272,4 +1272,122 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
         });
     }
+
+    // Question Values
+    use ParametrizedAddEntity;
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @param $extra_question_id
+     * @return mixed
+     */
+    public function addExtraQuestionValue($summit_id, $sponsor_id, $extra_question_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $extra_question_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            $args = [$summit, intval($sponsor_id), intval($extra_question_id)];
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            return $this->_add(
+                function ($payload) {
+                    return ExtraQuestionTypeValueValidationRulesFactory::buildForAdd($payload);
+                },
+                function ($payload, $summit, $sponsor_id,  $question_id) {
+                    return $this->service->addExtraQuestionValue
+                    (
+                        $summit, intval($sponsor_id), intval($question_id), $payload
+                    );
+                },
+                ...$args);
+        });
+    }
+
+    use ParametrizedUpdateEntity;
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @param $extra_question_id
+     * @param $value_id
+     * @return mixed
+     */
+    public function updateExtraQuestionValue($summit_id, $sponsor_id, $extra_question_id, $value_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $extra_question_id, $value_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            $args = [$summit, intval($sponsor_id), intval($extra_question_id)];
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            return $this->_update($value_id, function ($payload) {
+                return ExtraQuestionTypeValueValidationRulesFactory::buildForUpdate($payload);
+            },
+                function ($value_id, $payload, $summit, $sponsor_id,  $extra_question_id) {
+                    return $this->service->updateExtraQuestionValue
+                    (
+                        $summit,
+                        intval($sponsor_id),
+                        intval($extra_question_id),
+                        intval($value_id),
+                        $payload
+                    );
+                }, ...$args);
+        });
+    }
+
+    use ParametrizedDeleteEntity;
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @param $extra_question_id
+     * @param $value_id
+     * @return mixed
+     */
+    public function deleteExtraQuestionValue($summit_id, $sponsor_id, $extra_question_id, $value_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id, $extra_question_id, $value_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            $args = [$summit, intval($sponsor_id), intval($extra_question_id)];
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if ($current_member->isSummitAdmin() && !$current_member->isSummitAllowed($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            if ($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
+            return $this->_delete($value_id, function ($value_id, $summit, $sponsor_id, $extra_question_id) {
+                $this->service->deleteExtraQuestionValue($summit, intval($sponsor_id), intval($extra_question_id), intval($value_id));
+            }
+                , ...$args);
+        });
+
+    }
 }

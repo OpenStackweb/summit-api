@@ -2491,6 +2491,48 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Sponsors,
                 ]
             ],
+            [
+                'name' => 'add-sponsor-extra-question-value',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-extra-question-value',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-extra-question-value',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
             //
             [
                 'name' => 'add-sponsor-user',

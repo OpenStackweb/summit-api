@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
@@ -61,7 +62,10 @@ final class DoctrineSponsorExtraQuestionTypeRepository
     {
         $metadata = [];
         foreach (Sponsor::getAllowedQuestionTypes() as $type){
-            $metadata[] = [
+            $metadata[] = in_array($type, ExtraQuestionTypeConstants::AllowedMultiValueQuestionType)?[
+                'type' => $type,
+                'values' => 'array',
+            ]: [
                 'type' => $type,
             ];
         }

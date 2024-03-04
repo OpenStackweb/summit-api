@@ -13,15 +13,16 @@
  **/
 
 use App\Http\Utils\IFileUploader;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Factories\SponsorAdFactory;
 use App\Models\Foundation\Summit\Factories\SponsorExtraQuestionFactory;
 use App\Models\Foundation\Summit\Factories\SponsorFactory;
 use App\Models\Foundation\Summit\Factories\SponsorMaterialFactory;
 use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
-use App\Services\Model\AbstractService;
+use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
+use App\Services\Model\Imp\ExtraQuestionTypeService;
 use Illuminate\Http\UploadedFile;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -43,7 +44,7 @@ use services\model\ISummitSponsorService;
  * @package App\Services\Model
  */
 final class SummitSponsorService
-    extends AbstractService
+    extends ExtraQuestionTypeService
     implements ISummitSponsorService
 {
     /**
@@ -64,6 +65,7 @@ final class SummitSponsorService
     /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
+     * @param ISponsorExtraQuestionTypeRepository $repository
      * @param IFileUploader $file_uploader
      * @param ITransactionService $tx_service
      */
@@ -71,6 +73,7 @@ final class SummitSponsorService
     (
         IMemberRepository          $member_repository,
         ICompanyRepository         $company_repository,
+        ISponsorExtraQuestionTypeRepository $repository,
         IFileUploader              $file_uploader,
         ITransactionService        $tx_service
     )
@@ -79,6 +82,7 @@ final class SummitSponsorService
         $this->member_repository = $member_repository;
         $this->company_repository = $company_repository;
         $this->file_uploader = $file_uploader;
+        $this->repository = $repository;
     }
 
     /**
@@ -834,6 +838,83 @@ final class SummitSponsorService
                 throw new EntityNotFoundException("Sponsor extra question not found.");
 
             $summit_sponsor->removeExtraQuestion($extra_question);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $question_id
+     * @param array $payload
+     * @return ExtraQuestionTypeValue
+     * @throws \Exception
+     */
+    public function addExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, array $payload): ExtraQuestionTypeValue
+    {
+
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $payload) {
+
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($question_id);
+
+            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            return parent::_addExtraQuestionValue($extra_question, $payload);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $question_id
+     * @param int $value_id
+     * @param array $payload
+     * @return ExtraQuestionTypeValue
+     * @throws \Exception
+     */
+    public function updateExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id, array $payload): ExtraQuestionTypeValue
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id, $payload) {
+
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($question_id);
+
+            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            return parent::_updateExtraQuestionValue($extra_question, $value_id,  $payload);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $question_id
+     * @param int $value_id
+     * @return void
+     * @throws \Exception
+     */
+    public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($question_id);
+
+            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+
+            parent::_deleteExtraQuestionValue($extra_question, $value_id);
         });
     }
 }

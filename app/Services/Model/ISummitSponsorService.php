@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Illuminate\Http\UploadedFile;
@@ -275,4 +276,34 @@ interface ISummitSponsorService
      * @throws ValidationException
      */
     public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $question_id
+     * @param array $payload
+     * @return ExtraQuestionTypeValue
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addExtraQuestionValue(Summit $summit, int $sponsor_id ,int $question_id, array $payload):ExtraQuestionTypeValue;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $question_id
+     * @param int $value_id
+     * @param array $payload
+     * @return ExtraQuestionTypeValue
+     */
+    public function updateExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $question_id
+     * @param int $value_id
+     * @return void
+     */
+    public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id):void;
 }

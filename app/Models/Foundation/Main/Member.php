@@ -897,7 +897,6 @@ class Member extends SilverstripeBaseModel
 
     public function isSponsorUser(): bool
     {
-        if($this->isAdmin()) return false;
         if($this->belongsToGroup(IGroup::Sponsors))
             return true;
         if ($this->isOnExternalGroup(IGroup::Sponsors))

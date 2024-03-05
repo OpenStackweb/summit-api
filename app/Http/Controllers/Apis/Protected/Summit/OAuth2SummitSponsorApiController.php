@@ -163,21 +163,31 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $summit_id = intval($this->summit_id);
         $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($this->summit_id);
 
-        if (!is_null($summit) && !is_null($current_member) && $current_member->isSponsorUser()) {
+        if (!is_null($summit) && !is_null($current_member)) {
 
-            $filter->addFilterCondition
-            (
-                FilterElement::makeEqual
+            // add filter for summit .
+            $filter->addFilterCondition(FilterElement::makeEqual("summit_id",$summit_id));
+            // check AUTHZ for sponsors
+            if($current_member->isAdmin()) return $filter;
+            if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit)) return $filter;
+            // add filter for sponsor user
+            if($current_member->isSponsorUser()) {
+                $list = $current_member->getSponsorMembershipIds($summit);
+                // is allowed sponsors are empty, add dummy value
+                if (!count($list)) $list[] = 0;
+                $filter->addFilterCondition
                 (
-                    'sponsor_id',
-                    $current_member->getSponsorMembershipIds($summit),
-                    "OR"
+                    FilterElement::makeEqual
+                    (
+                        'sponsor_id',
+                        $list,
+                        "OR"
 
-                )
-            );
+                    )
+                );
+            }
         }
-        // add filter for summit .
-        $filter->addFilterCondition(FilterElement::makeEqual("summit_id",$summit_id));
+
         return $filter;
     }
 

@@ -16,15 +16,18 @@
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
 use models\summit\PresentationType;
+use models\summit\Sponsor;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitTicketType;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
+use utils\FilterElement;
 use utils\FilterParser;
 use Doctrine\ORM\QueryBuilder;
 use models\utils\SilverstripeBaseModel;
@@ -632,5 +635,42 @@ DQL;
 
         $this->assertNotEmpty($dql);
         $this->assertEquals($expected_dql, $dql);
+    }
+
+    public function testSponsorAuthz(){
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("e")
+            ->select("e")
+            ->from(Sponsor::class, "e");
+        $filter = new Filter();
+        $list = [];
+        $filter->addFilterCondition
+        (
+            FilterElement::makeEqual
+            (
+                'sponsor_id',
+                $list,
+                "OR"
+            )
+        );
+        $filter->apply2Query($query,
+               [
+                  'sponsor_id'        => new DoctrineFilterMapping("e.id :operator :value"),
+                  'company_name'      => new DoctrineJoinFilterMapping("e.company", "c" ,"c.name :operator :value"),
+                  'sponsorship_name'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.name :operator :value"),
+                  'sponsorship_label' => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.label :operator :value"),
+                  'sponsorship_size'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.size :operator :value"),
+                  'summit_id'         => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
+                  'badge_scans_count' => new DoctrineHavingFilterMapping("", "bs.sponsor", "count(bs.id) :operator :value"),
+                  'is_published' => Filter::buildBooleanField('e.is_published'),
+              ]);
+
+        $dql = $query->getDQL();
+
+        $this->assertNotEmpty($dql);
+
+        $res = $query->getQuery()->getResult();
     }
 }

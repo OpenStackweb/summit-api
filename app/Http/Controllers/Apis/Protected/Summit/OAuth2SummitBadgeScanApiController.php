@@ -299,12 +299,15 @@ final class OAuth2SummitBadgeScanApiController
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
 
                     if (!is_null($current_member) && $current_member->isSponsorUser()) {
+                        $sponsors_ids = $current_member->getSponsorMembershipIds($summit);
+                        // dummy value
+                        if(!count($sponsors_ids)) $sponsors_ids[] = 0;
                         $filter->addFilterCondition
                         (
                             FilterElement::makeEqual
                             (
                                 'sponsor_id',
-                                $current_member->getSponsorMembershipIds($summit),
+                                $sponsors_ids,
                                 "OR"
                             )
                         );
@@ -379,12 +382,15 @@ final class OAuth2SummitBadgeScanApiController
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                     if (!is_null($current_member) && $current_member->isSponsorUser()) {
+                        $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
+                        // dummy value
+                        if(!count($sponsor_ids)) $sponsor_ids[] = 0;
                         $filter->addFilterCondition
                         (
                             FilterElement::makeEqual
                             (
                                 'sponsor_id',
-                                $current_member->getSponsorMembershipIds($summit),
+                                $sponsor_ids,
                                 "OR"
                             )
                         );

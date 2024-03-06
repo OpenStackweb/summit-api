@@ -165,19 +165,21 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             function ($filter) use ($current_member) {
                 if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('available_on_api', '1'));
-                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->hasAllowedSummits()) {
-                        // filter only the ones that we are allowed to see
+                    if(!is_null($current_member)){
+                        if($current_member->isAdmin()) return $filter;
+                        $allowed_summits = $current_member->getAllAllowedSummitsIds();
+                        // allowed summits are empty dummy value
+                        if(!count($allowed_summits)) $allowed_summits[] = 0;
                         $filter->addFilterCondition
                         (
                             FilterElement::makeEqual
                             (
                                 'summit_id',
-                                $current_member->getAllAllowedSummitsIds(),
+                                $allowed_summits,
                                 "OR"
 
                             )
                         );
-
                     }
                 }
                 return $filter;
@@ -263,19 +265,21 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             },
             function ($filter) use ($current_member) {
                 if ($filter instanceof Filter) {
-                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->hasAllowedSummits()) {
-                        // filter only the ones that we are allowed to see
+                    if(!is_null($current_member)){
+                        if($current_member->isAdmin()) return $filter;
+                        $allowed_summits = $current_member->getAllAllowedSummitsIds();
+                        // is allowed summits are empty, add dummy value
+                        if(!count($allowed_summits)) $allowed_summits[] = 0;
                         $filter->addFilterCondition
                         (
                             FilterElement::makeEqual
                             (
                                 'summit_id',
-                                $current_member->getAllAllowedSummitsIds(),
+                                $allowed_summits,
                                 "OR"
 
                             )
                         );
-
                     }
                 }
                 return $filter;

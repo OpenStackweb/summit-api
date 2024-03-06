@@ -172,17 +172,16 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit)) return $filter;
             // add filter for sponsor user
             if($current_member->isSponsorUser()) {
-                $list = $current_member->getSponsorMembershipIds($summit);
+                $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
                 // is allowed sponsors are empty, add dummy value
-                if (!count($list)) $list[] = 0;
+                if (!count($list)) $sponsor_ids[] = 0;
                 $filter->addFilterCondition
                 (
                     FilterElement::makeEqual
                     (
                         'sponsor_id',
-                        $list,
+                        $sponsor_ids,
                         "OR"
-
                     )
                 );
             }

@@ -252,17 +252,17 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     }
 
     /**
-     * @param SummitTicketType $tax
+     * @param SummitTaxType $tax
      */
-    public function addAppliedTax(SummitTicketType $tax){
+    public function addAppliedTax(SummitTaxType $tax){
         if($this->applied_taxes->contains($tax)) return;
         $this->applied_taxes->add($tax);
     }
 
     /**
-     * @param SummitTicketType $tax
+     * @param SummitTaxType $tax
      */
-    public function removeAppliedTax(SummitTicketType $tax){
+    public function removeAppliedTax(SummitTaxType $tax){
         if(!$this->applied_taxes->contains($tax)) return;
         $this->applied_taxes->removeElement($tax);
     }

@@ -13,7 +13,6 @@
  **/
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Query\Expr\Select;
 use Doctrine\ORM\QueryBuilder;
 
 /**
@@ -27,7 +26,7 @@ final class Order
      */
     private $ordering;
 
-    public function __construct($ordering = [])
+    public function __construct(array $ordering = [])
     {
         $this->ordering = $ordering;
     }

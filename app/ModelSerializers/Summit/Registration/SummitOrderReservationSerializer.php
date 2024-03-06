@@ -27,6 +27,7 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         'TaxesAmount' => 'taxes_amount:json_money',
         'TaxesAmountInCents' => 'taxes_amount_in_cents:json_int',
         'DiscountAmount' => 'discount_amount:json_money',
+        'DiscountRate' => 'discount_rate:json_float',
         'DiscountAmountInCents' => 'discount_amount_in_cents:json_int',
         'PaymentGatewayClientToken' => 'payment_gateway_client_token:json_string',
         'PaymentGatewayCartId' => 'payment_gateway_cart_id:json_string',
@@ -37,7 +38,6 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         'CreditCardType' => 'credit_card_type:json_string',
         'CreditCard4Number' => 'credit_card_4number:json_string',
     ];
-
 
     protected static $allowed_relations = [
         'applied_taxes',

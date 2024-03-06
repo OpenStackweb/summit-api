@@ -1031,6 +1031,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return float
+     */
+    public function getDiscountRate(): float
+    {
+        $discount_amount = $this->getDiscountAmountInCents();
+        $raw_amount = $this->getRawAmountInCents();
+        if($this->isFree()) return 0.0;
+        return $discount_amount > 0 ? ($discount_amount  / $raw_amount ) * 100  : 0.0;
+    }
+
+    /**
      * @return int
      */
     public function getDiscountAmountInCents(): int

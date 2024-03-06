@@ -52,23 +52,30 @@ final class MarketingAPI implements IMarketingAPI
      */
     public function __construct(ICacheService $cache_service)
     {
-        $this->base_url = Config::get('marketing.base_url');
-        if (is_null($this->base_url))
-            throw new ValidationException("Config entry marketing.base_url not set.");
+        try {
+            $this->cache_service = $cache_service;
+            $this->cache_ttl = Config::get('marketing.cache_ttl');
+            $this->base_url = Config::get('marketing.base_url');
+            if (is_null($this->base_url))
+                throw new ValidationException("Config entry marketing.base_url not set.");
 
-        $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
+            $stack = HandlerStack::create();
+            $stack->push(GuzzleRetryMiddleware::factory());
 
-        $this->client = new Client([
-            'handler'         => $stack,
-            'base_uri'        => $this->base_url,
-            'timeout'         => Config::get('curl.timeout', 60),
-            'allow_redirects' => Config::get('curl.allow_redirects', false),
-            'verify'          => Config::get('curl.verify_ssl_cert', true),
-        ]);
+            $this->client = new Client([
+                'handler' => $stack,
+                'base_uri' => $this->base_url,
+                'timeout' => Config::get('curl.timeout', 60),
+                'allow_redirects' => Config::get('curl.allow_redirects', false),
+                'verify' => Config::get('curl.verify_ssl_cert', true),
+            ]);
 
-        $this->cache_ttl = Config::get('marketing.cache_ttl');
-        $this->cache_service = $cache_service;
+
+        }
+        catch (Exception $ex){
+            //Log::warning($ex);
+            $this->client = null;
+        }
     }
 
     /**
@@ -80,9 +87,12 @@ final class MarketingAPI implements IMarketingAPI
     protected function getEntity(string $api_url, array $params)
     {
         try {
+            if(is_null($this->client))
+                throw new Exception('invalid client!');
             foreach ($params as $param => $value) {
                 $query[$param] = $value;
             }
+
 
             $response = $this->client->get($api_url, ['query' => $query]);
 
@@ -102,6 +112,10 @@ final class MarketingAPI implements IMarketingAPI
         catch(RequestException $ex){
             Log::warning($ex->getMessage());
             throw $ex;
+        }
+        catch(Exception $ex){
+            Log::warning($ex->getMessage());
+            return ['data' => []];
         }
     }
 

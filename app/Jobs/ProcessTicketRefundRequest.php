@@ -62,18 +62,21 @@ class ProcessTicketRefundRequest implements ShouldQueue
      * @param ITransactionService $tx_service
      * @throws \Exception
      */
-    public function handle(
+    public function handle
+    (
         IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
         ISummitAttendeeTicketRepository $repository,
         ITransactionService $tx_service
     )
     {
+        // todo : move to service layer
         try {
             $tx_service->transaction(function () use ($default_payment_gateway_strategy, $repository) {
+
                 Log::debug(sprintf("ProcessTicketRefundRequest::handle processing ticket %s", $this->ticket_id));
                 $ticket = $repository->getByIdExclusiveLock($this->ticket_id);
 
-                if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isRefundRequested()) return;
+                if (!$ticket instanceof SummitAttendeeTicket || !$ticket->isRefundRequested()) return;
 
                 $order = $ticket->getOrder();
                 $summit = $order->getSummit();
@@ -96,7 +99,7 @@ class ProcessTicketRefundRequest implements ShouldQueue
                 );
 
                 if ($rate <= 0) return;
-                $amount_2_refund = ($rate / 100.00) * $ticket->getFinalAmount();
+                $amount_2_refund = ($rate / 100.00) * $ticket->getNetSellingPrice();
 
                 Log::debug
                 (
@@ -120,8 +123,17 @@ class ProcessTicketRefundRequest implements ShouldQueue
                 }
 
                 $paymentGatewayRes = null;
+                $request = $ticket->refund
+                (
+                    null,
+                    $amount_2_refund,
+                    $paymentGatewayRes,
+                    sprintf
+                    (
+                        "* AUTOMATIC REFUND FROM POLICY %s.", $policy->getId()
+                    )
+                );
 
-                $paymentGatewayRes = null;
                 if ($order->hasPaymentInfo()){
                     try {
 
@@ -141,14 +153,15 @@ class ProcessTicketRefundRequest implements ShouldQueue
                         (
                             sprintf
                             (
-                                "ProcessTicketRefundRequest::handle trying to refund on payment gateway cart id %s",
-                                $order->getPaymentGatewayCartId()
+                                "ProcessTicketRefundRequest::handle trying to refund on payment gateway cart id %s final amount %s",
+                                $order->getPaymentGatewayCartId(),
+                                $request->getTotalRefundedAmount()
                             )
                         );
                         $paymentGatewayRes = $payment_gateway->refundPayment
                         (
                             $order->getPaymentGatewayCartId(),
-                            $amount_2_refund,
+                            $request->getTotalRefundedAmount(),
                             $ticket->getCurrency()
                         );
 
@@ -162,12 +175,13 @@ class ProcessTicketRefundRequest implements ShouldQueue
                             )
                         );
 
+                        $request->setPaymentGatewayResult($paymentGatewayRes);
+
                     } catch (\Exception $ex) {
                         Log::warning($ex);
                         throw new ValidationException($ex->getMessage());
                     }
                 }
-                $ticket->refund(null, $amount_2_refund, $paymentGatewayRes, sprintf("* AUTOMATIC REFUND FROM POLICY %s.", $policy->getId()));
 
             });
         }

@@ -41,14 +41,16 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         'BadgeTypeId' => 'badge_type_id:json_int',
         'BadgeTypeName' => 'badge_type_name:json_string',
         'Active'    => 'is_active:json_bool',
-        'Currency' => 'currency:json_string',
-        'TicketTypeCost' => 'ticket_type_cost:json_float',
-        'RawCost' => 'raw_cost:json_float',
-        'Discount' => 'discounted_amount:json_float',
-        'FinalAmount' => 'amount_paid:json_float',
-        'RefundedAmount' => 'refunded_amount:json_float',
-        'FinalAmountAdjusted' => 'amount_paid_adjusted:json_float',
         'BadgePrintsCount' => 'badge_prints_count:json_int',
+        'Currency' => 'currency:json_string',
+         // cost fields
+        'TicketTypeCost' => 'current_ticket_price:json_float',
+        'RawCost' => 'ticket_price:json_float',
+        'Discount' => 'discount:json_float',
+        'RefundedTaxesAmount' => 'refunded_tax_fee:json_float',
+        'NetSellingPrice' => 'net_price:json_float',
+        'TotalRefundedAmount' => 'total_refunded:json_float',
+        'FinalAmountAdjusted' => 'total_paid:json_float',
     ];
 
     /**
@@ -105,6 +107,13 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
             $notes[] = $note->getContent();
         }
         $values['notes'] = implode("|", $notes);
+
+        // taxes
+
+        foreach($ticket->getAppliedTaxes() as $appliedTax){
+            $values[sprintf("%s_rate", strtolower($appliedTax->getTax()->getName()))] = $appliedTax->getRate();
+            $values[sprintf("%s_price", strtolower($appliedTax->getTax()->getName()))] = $appliedTax->getAmount();
+        }
 
         return $values;
     }

@@ -17,6 +17,7 @@ use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrder;
+use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use Exception;
 /**
@@ -50,13 +51,25 @@ trait InsertOrdersTestData
      */
     static $badge_features = [];
 
-
+    static $taxes = [];
     /**
      * @throws Exception
      */
     protected static function InsertOrdersTestData()
     {
         DB::setDefaultConnection("model");
+
+        // taxes
+
+        $tax1 = new SummitTaxType();
+        $tax1->setName("TAX 1");
+        $tax1->setRate(10.5);
+        self::$summit->addTaxType($tax1);
+        $tax2 = new SummitTaxType();
+        $tax2->setName("TAX 2");
+        $tax2->setRate(1.5);
+        self::$summit->addTaxType($tax2);
+
 
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
@@ -86,7 +99,11 @@ trait InsertOrdersTestData
         self::$default_ticket_type->setName("TICKET TYPE 1");
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
+
         self::$summit->addTicketType(self::$default_ticket_type);
+        $tax1->addTicketType(self::$default_ticket_type);
+        $tax2->addTicketType(self::$default_ticket_type);
+
         self::$em->persist(self::$summit);
         self::$em->flush();
 
@@ -111,6 +128,7 @@ trait InsertOrdersTestData
             self::$default_ticket_type->sell(1);
             $ticket->generateHash();
             $ticket->generateQRCode();
+            $ticket->applyTaxes(self::$summit->getTaxTypes()->toArray());
             $order->generateHash();
             $order->generateQRCode();
             $order->addTicket($ticket);

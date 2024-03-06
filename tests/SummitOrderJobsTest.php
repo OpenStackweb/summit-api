@@ -151,12 +151,4 @@ final class SummitOrderJobsTest extends TestCase
         }
         $this->assertTrue(true);
     }
-
-    public function testDispatchRefund(){
-
-        \App\Jobs\ProcessOrderRefundRequest::dispatch(
-            23,
-            10
-        );
-    }
 }

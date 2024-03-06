@@ -87,6 +87,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitPresentationSpeakerAssignme
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedDayRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationFeedMetadataRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
@@ -166,6 +167,7 @@ use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitPresentationComment;
 use models\summit\SummitRefundPolicyType;
+use models\summit\SummitRefundRequest;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
@@ -921,6 +923,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitAttendeeNoteRepository::class,
             function (){
                 return EntityManager::getRepository(SummitAttendeeNote::class);
+            }
+        );
+
+        App::singleton(
+            ISummitRefundRequestRepository::class,
+            function (){
+                return EntityManager::getRepository(SummitRefundRequest::class);
             }
         );
     }

@@ -343,7 +343,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     protected $duration;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="SummitEvent_SummitTicketType",
      *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}

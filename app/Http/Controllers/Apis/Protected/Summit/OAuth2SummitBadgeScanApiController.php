@@ -17,6 +17,7 @@ use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
+use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -250,13 +251,6 @@ final class OAuth2SummitBadgeScanApiController
         if (is_null($current_member))
             return $this->error403();
 
-        // check summit authz access
-        if(!$current_member->isSummitAllowed($summit)){
-            if(!$current_member->hasSponsorMembershipsFor($summit)){
-                return $this->error403();
-            }
-        }
-
         return $this->_getAll(
             function(){
                 return [
@@ -297,20 +291,23 @@ final class OAuth2SummitBadgeScanApiController
             function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-
-                    if (!is_null($current_member) && $current_member->isSponsorUser()) {
-                        $sponsors_ids = $current_member->getSponsorMembershipIds($summit);
-                        // dummy value
-                        if(!count($sponsors_ids)) $sponsors_ids[] = 0;
-                        $filter->addFilterCondition
-                        (
-                            FilterElement::makeEqual
+                    if (!is_null($current_member)){
+                        if ($current_member->isAuthzFor($summit)) return $filter;
+                        // add filter for sponsor user
+                        if ($current_member->isSponsorUser()) {
+                            $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
+                            // is allowed sponsors are empty, add dummy value
+                            if (!count($sponsor_ids)) $sponsor_ids[] = 0;
+                            $filter->addFilterCondition
                             (
-                                'sponsor_id',
-                                $sponsors_ids,
-                                "OR"
-                            )
-                        );
+                                FilterElement::makeEqual
+                                (
+                                    'sponsor_id',
+                                    $sponsor_ids,
+                                    "OR"
+                                )
+                            );
+                        }
                     }
                 }
                 return $filter;
@@ -381,19 +378,23 @@ final class OAuth2SummitBadgeScanApiController
             function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    if (!is_null($current_member) && $current_member->isSponsorUser()) {
-                        $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
-                        // dummy value
-                        if(!count($sponsor_ids)) $sponsor_ids[] = 0;
-                        $filter->addFilterCondition
-                        (
-                            FilterElement::makeEqual
+                    if (!is_null($current_member)){
+                        if ($current_member->isAuthzFor($summit)) return $filter;
+                        // add filter for sponsor user
+                        if ($current_member->isSponsorUser()) {
+                            $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
+                            // is allowed sponsors are empty, add dummy value
+                            if (!count($sponsor_ids)) $sponsor_ids[] = 0;
+                            $filter->addFilterCondition
                             (
-                                'sponsor_id',
-                                $sponsor_ids,
-                                "OR"
-                            )
-                        );
+                                FilterElement::makeEqual
+                                (
+                                    'sponsor_id',
+                                    $sponsor_ids,
+                                    "OR"
+                                )
+                            );
+                        }
                     }
                 }
                 return $filter;

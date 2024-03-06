@@ -182,11 +182,8 @@ final class SponsorUserInfoGrantService
 
             $sponsor = $scan->getSponsor();
 
-            if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit))
-                throw new ValidationException("You are not allowed to update this scan.");
-
-            if($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
-                throw new ValidationException("You are not allowed to update this scan.");
+            if(!$current_member->isAuthzFor($summit, $sponsor))
+                throw new ValidationException("You are not allowed to access to this scan.");
 
             if(isset($payload['notes'])){
                 $scan->setNotes(trim($payload['notes']));
@@ -224,10 +221,7 @@ final class SponsorUserInfoGrantService
 
             $sponsor = $scan->getSponsor();
 
-            if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit))
-                throw new ValidationException("You are not allowed to access to this scan.");
-
-            if($current_member->isSponsorUser() && !$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+            if(!$current_member->isAuthzFor($summit, $sponsor))
                 throw new ValidationException("You are not allowed to access to this scan.");
 
             return $scan;

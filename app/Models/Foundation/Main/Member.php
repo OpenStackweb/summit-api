@@ -2973,4 +2973,19 @@ SQL;
         return MemberSummitStrategyFactory::getMemberSummitStrategy($this)
             ->isSummitAllowed($summit);
     }
+
+    /**
+     * @param Summit $summit
+     * @param Sponsor|null $sponsor
+     * @return bool
+     */
+    public function isAuthzFor(Summit $summit, Sponsor $sponsor = null):bool{
+        if($this->isAdmin()) return true;
+        // authz check
+        if ($this->isSummitAdmin() && $this->isSummitAllowed($summit))
+            return true;
+        if ($this->isSponsorUser() && !is_null($sponsor) && $this->hasSponsorMembershipsFor($summit, $sponsor))
+            return true;
+        return false;
+    }
 }

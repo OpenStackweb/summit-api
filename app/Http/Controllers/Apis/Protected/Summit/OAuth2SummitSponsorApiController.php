@@ -180,27 +180,28 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $summit_id = intval($this->summit_id);
         $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($this->summit_id);
 
-        if (!is_null($summit) && !is_null($current_member)) {
+        if (!is_null($summit)) {
 
             // add filter for summit .
             $filter->addFilterCondition(FilterElement::makeEqual("summit_id",$summit_id));
-            // check AUTHZ for sponsors
-            if($current_member->isAdmin()) return $filter;
-            if($current_member->isSummitAdmin() && $current_member->isSummitAllowed($summit)) return $filter;
-            // add filter for sponsor user
-            if($current_member->isSponsorUser()) {
-                $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
-                // is allowed sponsors are empty, add dummy value
-                if (!count($list)) $sponsor_ids[] = 0;
-                $filter->addFilterCondition
-                (
-                    FilterElement::makeEqual
+            if(!is_null($current_member)) {
+                // check AUTHZ for sponsors
+                if($this->isCurrentMemberAuthzFor($current_member, $summit)) return $filter;
+                // add filter for sponsor user
+                if ($current_member->isSponsorUser()) {
+                    $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
+                    // is allowed sponsors are empty, add dummy value
+                    if (!count($sponsor_ids)) $sponsor_ids[] = 0;
+                    $filter->addFilterCondition
                     (
-                        'sponsor_id',
-                        $sponsor_ids,
-                        "OR"
-                    )
-                );
+                        FilterElement::makeEqual
+                        (
+                            'sponsor_id',
+                            $sponsor_ids,
+                            "OR"
+                        )
+                    );
+                }
             }
         }
 

@@ -253,7 +253,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
             ExtraQuestionTypeConstants::RadioButtonQuestionType,
             ExtraQuestionTypeConstants::CheckBoxQuestionType,
             ExtraQuestionTypeConstants::CheckBoxListQuestionType,
-            ExtraQuestionTypeConstants::RadioButtonQuestionType,
+            ExtraQuestionTypeConstants::RadioButtonListQuestionType,
             ExtraQuestionTypeConstants::ComboBoxQuestionType,
             ExtraQuestionTypeConstants::TextQuestionType,
         ];

@@ -60,7 +60,7 @@ trait SponsorPromoCodeTrait
         return $this->getSponsorId() > 0;
     }
 
-    public function getContactEmail(): string
+    public function getContactEmail(): ?string
     {
         return $this->contact_email;
     }
@@ -93,7 +93,6 @@ trait SponsorPromoCodeTrait
      * @throw ValidationException
      */
     public function checkSubject(string $email, ?string $company):bool{
-
         return true;
     }
 }

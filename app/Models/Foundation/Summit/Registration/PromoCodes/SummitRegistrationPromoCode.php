@@ -747,7 +747,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return $this->tickets->matching($criteria);
     }
 
-    public function getNotes(): string
+    public function getNotes(): ?string
     {
         return $this->notes;
     }

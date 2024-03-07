@@ -20,7 +20,7 @@ use models\summit\SponsorSummitRegistrationPromoCode;
  * @package ModelSerializers
  */
 class SponsorSummitRegistrationPromoCodeSerializer
-extends MemberSummitRegistrationPromoCodeSerializer
+extends SummitRegistrationPromoCodeSerializer
 {
     protected static $array_mappings = [
         'ContactEmail' => 'contact_email:json_string',

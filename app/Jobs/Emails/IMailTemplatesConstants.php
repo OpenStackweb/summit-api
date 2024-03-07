@@ -179,6 +179,8 @@ interface IMailTemplatesConstants
     const ticket_promo_code = 'ticket_promo_code';
     const ticket_raw_amount = 'ticket_raw_amount';
     const ticket_refund_amount = 'ticket_refund_amount';
+    const ticket_taxes_refund_amount = 'ticket_taxes_refund_amount';
+    const ticket_total_refund_amount = 'ticket_total_refund_amount';
     const ticket_refund_status = 'ticket_refund_status';
     const ticket_taxes = 'ticket_taxes';
     const ticket_type = 'ticket_type';

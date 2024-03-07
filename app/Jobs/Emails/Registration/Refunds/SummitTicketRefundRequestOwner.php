@@ -59,6 +59,8 @@ class SummitTicketRefundRequestOwner extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::ticket_amount] = FormatUtils::getNiceFloat($ticket->getFinalAmount());
         $payload[IMailTemplatesConstants::ticket_currency_symbol] = $ticket->getCurrencySymbol();
         $payload[IMailTemplatesConstants::ticket_refund_amount] = !is_null($request)? FormatUtils::getNiceFloat($request->getRefundedAmount()):'';
+        $payload[IMailTemplatesConstants::ticket_taxes_refund_amount] = !is_null($request)? FormatUtils::getNiceFloat($request->getTaxesRefundedAmount()):'';
+        $payload[IMailTemplatesConstants::ticket_total_refund_amount] = !is_null($request)? FormatUtils::getNiceFloat($request->getTotalRefundedAmount()):'';
         $payload[IMailTemplatesConstants::ticket_refund_status] = !is_null($request)? $request->getStatus(): '';
         $payload[IMailTemplatesConstants::ticket_promo_code] = '';
         if ($ticket->hasPromoCode()) {
@@ -101,6 +103,8 @@ class SummitTicketRefundRequestOwner extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::ticket_amount]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_currency_symbol]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_refund_amount]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_taxes_refund_amount]['type'] = 'string';
+        $payload[IMailTemplatesConstants::ticket_total_refund_amount]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_refund_status]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_promo_code]['type'] = 'string';
         $payload[IMailTemplatesConstants::ticket_owner]['type'] = 'string';

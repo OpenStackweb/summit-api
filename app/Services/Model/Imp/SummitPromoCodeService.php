@@ -181,7 +181,7 @@ final class SummitPromoCodeService
         }
 
         if (isset($data['sponsor_id'])) {
-            $sponsor = $this->company_repository->getById(intval($data['sponsor_id']));
+            $sponsor = $summit->getSummitSponsorById(intval($data['sponsor_id']));
             if (!is_null($sponsor))
                 $params['sponsor'] = $sponsor;
         }
@@ -210,7 +210,6 @@ final class SummitPromoCodeService
                     json_encode($data)
                 )
             );
-
 
             $code = isset($data['code']) ? trim($data['code']) : null;
 
@@ -310,22 +309,38 @@ final class SummitPromoCodeService
 
     /**
      * @param Summit $summit
-     * @param int $promo_code_id
+     * @param $promo_code_id
      * @param array $data
-     * @param Member $current_user
-     * @return SummitRegistrationPromoCode
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @param Member|null $current_user
+     * @return mixed|SummitRegistrationPromoCode
+     * @throws \Exception
      */
     public function updatePromoCode(Summit $summit, $promo_code_id, array $data, Member $current_user = null)
     {
         return $this->tx_service->transaction(function () use ($promo_code_id, $summit, $data, $current_user) {
 
-            Log::debug(sprintf("SummitPromoCodeService::updatePromoCode summit %s promo code %s payload %s", $summit->getId(), $promo_code_id, json_encode($data)));
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitPromoCodeService::updatePromoCode summit %s promo code %s payload %s",
+                    $summit->getId(),
+                    $promo_code_id,
+                    json_encode($data)
+                )
+            );
 
             $promo_code = $summit->getPromoCodeById($promo_code_id);
             if (is_null($promo_code))
-                throw new EntityNotFoundException(sprintf("Promo Code id %s does not belongs to summit id %s.", $promo_code_id, $summit->getId()));
+                throw new EntityNotFoundException
+                (
+                    sprintf
+                    (
+                        "Promo Code id %s does not belongs to summit id %s.",
+                        $promo_code_id,
+                        $summit->getId()
+                    )
+                );
 
             if (isset($data['code'])) {
                 $old_promo_code = $summit->getPromoCodeByCode(trim($data['code']));
@@ -349,7 +364,10 @@ final class SummitPromoCodeService
                 }
             }
 
-            $promo_code = SummitPromoCodeFactory::populate($promo_code, $summit, $data, $this->getPromoCodeParams($summit, $data));
+            $promo_code = SummitPromoCodeFactory::populate
+            (
+                $promo_code, $summit, $data, $this->getPromoCodeParams($summit, $data)
+            );
 
             if (!is_null($current_user) && !$promo_code->hasCreator())
                 $promo_code->setCreator($current_user);
@@ -433,7 +451,7 @@ final class SummitPromoCodeService
             }
 
             PromoCodeEmailFactory::send($promo_code);
-            $promo_code->setEmailSent(true);
+            $promo_code->markSent();
         });
     }
 

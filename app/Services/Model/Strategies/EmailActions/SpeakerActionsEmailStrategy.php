@@ -214,7 +214,7 @@ final class SpeakerActionsEmailStrategy
 
                 // mark the promo code as sent
                 if (!is_null($promo_code))
-                    $promo_code->setEmailSent(true, $speaker->getEmail());
+                    $promo_code->markSent( $speaker->getEmail());
 
                 // generate email proof
                 $proof = new SpeakerAnnouncementSummitEmail();

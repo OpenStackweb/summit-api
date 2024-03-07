@@ -369,6 +369,14 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     "spn1.Name :operator :value",
                     "spn2.Name :operator :value"
                 ],
+                'contact_email' => [
+                    "spnpc.ContactEmail :operator :value",
+                    "spndc.ContactEmail :operator :value"
+                ],
+                'tier' => [
+                    "sp1stt.Name :operator :value",
+                    "sp2stt.Name :operator :value"
+                ],
             ]);
 
             if (!empty($where_conditions)) {
@@ -416,8 +424,14 @@ LEFT JOIN SpeakerRegistrationRequest rrps1 ON ps1.RegistrationRequestID = rrps1.
 LEFT JOIN SpeakerRegistrationRequest rrps2 ON ps2.RegistrationRequestID = rrps2.ID
 LEFT JOIN SpeakerRegistrationRequest rrps3 ON ps3.RegistrationRequestID = rrps3.ID
 LEFT JOIN SpeakerRegistrationRequest rrps4 ON ps4.RegistrationRequestID = rrps4.ID
-LEFT JOIN Company spn1 ON spnpc.SponsorID = spn1.ID
-LEFT JOIN Company spn2 ON spndc.SponsorID = spn2.ID
+LEFT JOIN Sponsor sp1  ON spnpc.SponsorID = sp1.ID
+LEFT JOIN Summit_SponsorshipType sp1st ON sp1.SponsorshipTypeID = sp1st.ID
+LEFT JOIN SponsorshipType sp1stt ON sp1st.SponsorshipTypeID = sp1stt.ID
+LEFT JOIN Company spn1 ON sp1.CompanyID = spn1.ID
+LEFT JOIN Sponsor sp2  ON spndc.SponsorID = sp2.ID
+LEFT JOIN Summit_SponsorshipType sp2st ON sp2.SponsorshipTypeID = sp2st.ID
+LEFT JOIN SponsorshipType sp2stt ON sp2st.SponsorshipTypeID = sp2stt.ID
+LEFT JOIN Company spn2 ON sp2.CompanyID = spn2.ID
 LEFT JOIN SummitRegistrationPromoCode_Tags pct ON pct.SummitRegistrationPromoCodeID = pc.ID
 LEFT JOIN Tag t ON pct.TagID = t.ID
 SQL;

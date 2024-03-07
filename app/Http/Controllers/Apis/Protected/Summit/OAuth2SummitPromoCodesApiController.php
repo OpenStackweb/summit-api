@@ -125,11 +125,13 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'owner_email' => ['@@', '=@', '=='],
                     'speaker' => ['@@', '=@', '=='],
                     'speaker_email' => ['@@', '=@', '=='],
-                    'sponsor' => ['@@', '=@', '=='],
-                    'class_name' => ['=='],
+                     'class_name' => ['=='],
                     'type' => ['=='],
                     'tag' => ['@@','=@', '=='],
                     'tag_id' => ['=='],
+                    'sponsor' => ['@@', '=@', '=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier' =>  ['@@', '=@', '=='],
                 ];
             },
             function () {
@@ -143,10 +145,12 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'owner_email' => 'sometimes|string',
                     'speaker' => 'sometimes|string',
                     'speaker_email' => 'sometimes|string',
-                    'sponsor' => 'sometimes|string',
                     'type' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::getValidTypes())),
                     'tag' => 'sometimes|required|string',
                     'tag_id' => 'sometimes|integer',
+                    'sponsor' => 'sometimes|string',
+                    'contact_email' => 'sometimes|string',
+                    'tier' =>  'sometimes|string',
                 ];
             },
             function () {
@@ -201,11 +205,13 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'owner_email' => ['@@', '=@', '=='],
                     'speaker' => ['@@', '=@', '=='],
                     'speaker_email' => ['@@', '=@', '=='],
-                    'sponsor' => ['@@', '=@', '=='],
                     'class_name' => ['=='],
                     'type' => ['=='],
                     'tag' => ['@@','=@', '=='],
                     'tag_id' => ['=='],
+                    'sponsor' => ['@@', '=@', '=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier' =>  ['@@', '=@', '=='],
                 ];
             },
             function () {
@@ -219,10 +225,12 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'owner_email' => 'sometimes|string',
                     'speaker' => 'sometimes|string',
                     'speaker_email' => 'sometimes|string',
-                    'sponsor' => 'sometimes|string',
                     'type' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::getValidTypes())),
                     'tag' => 'sometimes|required|string',
                     'tag_id' => 'sometimes|integer',
+                    'sponsor' => 'sometimes|string',
+                    'contact_email' => 'sometimes|string',
+                    'tier' =>  'sometimes|string',
                 ];
             },
             function () {

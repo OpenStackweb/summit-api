@@ -14,14 +14,13 @@
 
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\ORM\Mapping AS ORM;
-use models\main\Company;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SponsorSummitRegistrationPromoCode")
  * Class SponsorSummitRegistrationPromoCode
  * @package models\summit
  */
-class SponsorSummitRegistrationPromoCode extends MemberSummitRegistrationPromoCode
+class SponsorSummitRegistrationPromoCode extends SummitRegistrationPromoCode
 {
 
     use SponsorPromoCodeTrait;
@@ -45,6 +44,6 @@ class SponsorSummitRegistrationPromoCode extends MemberSummitRegistrationPromoCo
      * @return array
      */
     public static function getMetadata(){
-        return array_merge(MemberSummitRegistrationPromoCode::getMetadata(), self::$metadata);
+        return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
     }
 }

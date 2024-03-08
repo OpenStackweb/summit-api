@@ -11,8 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
@@ -35,9 +33,9 @@ class SponsorSummitRegistrationPromoCode extends SummitRegistrationPromoCode
     }
 
     public static $metadata = [
-        'class_name' => self::ClassName,
-        'sponsor_id' => 'integer',
-        'type'       => PromoCodesConstants::SponsorSummitRegistrationPromoCodeTypes,
+        'class_name'    => self::ClassName,
+        'sponsor_id'    => 'integer',
+        'contact_email' => 'string',
     ];
 
     /**

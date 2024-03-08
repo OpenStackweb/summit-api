@@ -196,8 +196,6 @@ final class SummitPromoCodeFactory
             }
             break;
             case SponsorSummitRegistrationPromoCode::ClassName:{
-                if(isset($data['type']))
-                    $promo_code->setType($data['type']);
                 if(isset($data['contact_email']))
                     $promo_code->setContactEmail(trim($data['contact_email']));
 
@@ -249,8 +247,6 @@ final class SummitPromoCodeFactory
             }
             break;
             case SponsorSummitRegistrationDiscountCode::ClassName:{
-                if(isset($data['type']))
-                    $promo_code->setType($data['type']);
                 if(isset($data['contact_email']))
                     $promo_code->setContactEmail(trim($data['contact_email']));
                 if(isset($data['amount']))

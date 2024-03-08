@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
@@ -37,7 +36,7 @@ class SponsorSummitRegistrationDiscountCode extends SummitRegistrationDiscountCo
     public static $metadata = [
         'class_name' => self::ClassName,
         'sponsor_id' => 'integer',
-        'type'       => PromoCodesConstants::SponsorSummitRegistrationPromoCodeTypes,
+        'contact_email' => 'string',
     ];
 
     /**

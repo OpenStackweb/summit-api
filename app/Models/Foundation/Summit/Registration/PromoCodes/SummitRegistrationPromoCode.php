@@ -516,6 +516,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         'class_name' => self::ClassName,
         'code' => 'string',
         'description' => 'string',
+        'notes' => 'string',
         'email_sent' => 'boolean',
         'redeemed' => 'boolean',
         'quantity_available' => 'integer',

@@ -485,7 +485,6 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function removeTicketTypeFromPromoCode($summit_id, $promo_code_id, $ticket_type_id)
     {
-
         return $this->processRequest(function () use ($summit_id, $promo_code_id, $ticket_type_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

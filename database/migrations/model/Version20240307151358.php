@@ -30,7 +30,7 @@ final class Version20240307151358 extends AbstractMigration
         if($builder->hasTable("SummitRegistrationPromoCode") && !$builder->hasColumns("SummitRegistrationPromoCode", ["Notes","SentDate"])) {
             $builder->table("SummitRegistrationPromoCode", function (Table $table) {
                 $table->text("Notes")->setNotnull(false)->setDefault(null);
-                $table->timestamp('SentDate');
+                $table->timestamp('SentDate')->setNotnull(false)->setDefault(null);
             });
         }
     }

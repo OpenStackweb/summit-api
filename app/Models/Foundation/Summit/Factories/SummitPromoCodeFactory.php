@@ -129,7 +129,7 @@ final class SummitPromoCodeFactory
             $promo_code->setDescription(trim($data['description']));
 
         if(isset($data['notes']))
-            $promo_code->setDescription(trim($data['notes']));
+            $promo_code->setNotes(trim($data['notes']));
 
         if(isset($data['valid_since_date'])) {
             $val = intval($data['valid_since_date']);

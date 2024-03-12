@@ -106,6 +106,15 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         }
         $values['notes'] = implode("|", $notes);
 
+        $attendee_tags = [];
+        if($ticket->hasOwner()) {
+            foreach ($ticket->getOwner()->getTags() as $tag) {
+                $attendee_tags[] = $tag->getTag();
+            }
+        }
+        $values['attendee_tags'] = implode("|", $attendee_tags);
+
+
         return $values;
     }
 }

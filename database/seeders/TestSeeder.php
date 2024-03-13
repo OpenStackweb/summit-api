@@ -27,6 +27,12 @@ final class TestSeeder extends Seeder
         Model::unguard();
         DB::setDefaultConnection("model");
         if(env('TESTS_CLEAR_EVERYTHING', true)) {
+            DB::delete("DELETE FROM SummitBadgeViewType");
+            DB::delete("DELETE FROM SummitMediaFileType");
+            DB::delete('DELETE FROM SponsorSummitRegistrationDiscountCode');
+            DB::delete("DELETE FROM SummitRegistrationPromoCode");
+            DB::delete("DELETE FROM Sponsor");
+            DB::delete("DELETE FROM Company");
             DB::table('SummitMediaFileType')->delete();
             DB::table('PresentationTrackChairRatingType')->delete();
             DB::table('SummitScheduleConfig')->delete();

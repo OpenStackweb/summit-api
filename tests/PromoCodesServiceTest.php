@@ -13,54 +13,47 @@
  **/
 
 use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
+use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\App;
-use LaravelDoctrine\ORM\Facades\EntityManager;
-use models\summit\Summit;
 use services\model\ISummitPromoCodeService;
 use utils\FilterParser;
 
 /**
  * Class PromoCodesServiceTest
  */
-final class PromoCodesServiceTest extends TestCase
+final class PromoCodesServiceTest extends BrowserKitTestCase
 {
     use InsertSummitTestData;
-
+    use InsertMemberTestData;
     protected function setUp(): void
     {
         parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
     }
 
     protected function tearDown(): void
     {
-        self::clearSummitTestData();
         parent::tearDown();
     }
 
-    public function testSendAllAttendeeTicketsByAttendeeIds() {
-
-        $summit_repository = EntityManager::getRepository(Summit::class);
-        self::$summit = $summit_repository->find(3849);
-
+    public function testSendSponsorPromoCodesWithNotIn() {
 
         $service = App::make(ISummitPromoCodeService::class);
 
         $payload = [
             'email_flow_event'  => SponsorPromoCodeEmail::EVENT_SLUG,
-            'promo_code_ids'    => [495],
-            'excluded_promo_code_ids' => [],
             'test_email_recipient'    => 'test_recip@nomail.com',
-            'outcome_email_recipient' => 'outcome_recip@nomail.com',
         ];
 
         $filterParam = [
-            'id==495',
-            'not_id==496||497',
-            'sponsor==FNTECH',
-            'tier==Default',
-            'code==TEST_PPPC_711111256',
-            'contact_email==test@nomail.com',
+            'not_id=='.implode('||',[
+                    self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->getId(),
+                    self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->getId(),
+                    self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-2]->getId()
+                ]
+            ),
             'email_sent==0',
         ];
 
@@ -76,6 +69,57 @@ final class PromoCodesServiceTest extends TestCase
             ]
         );
 
+        $this->assertFalse(self::$default_sponsors_promo_codes[0]->isEmailSent());
+
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->isEmailSent());
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-2]->isEmailSent());
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->isEmailSent());
+
         $service->sendSponsorPromoCodes(self::$summit->getId(), $payload, $filter);
+
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->isEmailSent());
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-2]->isEmailSent());
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->isEmailSent());
+        $this->assertTrue(self::$default_sponsors_promo_codes[0]->isEmailSent());
+    }
+
+    public function testSendSponsorPromoCodesWithIn() {
+
+        $service = App::make(ISummitPromoCodeService::class);
+
+        $payload = [
+            'email_flow_event'  => SponsorPromoCodeEmail::EVENT_SLUG,
+            'test_email_recipient'    => 'test_recip@nomail.com',
+        ];
+
+        $filterParam = [
+            'id=='.implode('||',[
+                    self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->getId(),
+                    self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->getId(),
+                ]
+            ),
+            'email_sent==0',
+        ];
+
+        $filter = FilterParser::parse($filterParam,
+            [
+                'id'      => ['=='],
+                'not_id'  => ['=='],
+                'sponsor' => ['=@', '@@', '=='],
+                'tier'    => ['=@', '@@', '=='],
+                'code'    => ['=@', '@@', '=='],
+                'contact_email' => ['=@', '@@', '=='],
+                'email_sent'    => ['=='],
+            ]
+        );
+
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->isEmailSent());
+        $this->assertFalse(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->isEmailSent());
+
+        $service->sendSponsorPromoCodes(self::$summit->getId(), $payload, $filter);
+
+        $this->assertTrue(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->isEmailSent());
+        $this->assertTrue(self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->isEmailSent());
+
     }
 }

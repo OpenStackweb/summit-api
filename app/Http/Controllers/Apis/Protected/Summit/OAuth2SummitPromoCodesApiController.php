@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
@@ -125,13 +126,14 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'owner_email' => ['@@', '=@', '=='],
                     'speaker' => ['@@', '=@', '=='],
                     'speaker_email' => ['@@', '=@', '=='],
-                     'class_name' => ['=='],
+                    'class_name' => ['=='],
                     'type' => ['=='],
                     'tag' => ['@@','=@', '=='],
                     'tag_id' => ['=='],
                     'sponsor' => ['@@', '=@', '=='],
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
                 ];
             },
             function () {
@@ -151,6 +153,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'sponsor' => 'sometimes|string',
                     'contact_email' => 'sometimes|string',
                     'tier' =>  'sometimes|string',
+                    'email_sent' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -158,6 +161,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'id',
                     'code',
                     'redeemed',
+                    'tier'
                 ];
             },
             function ($filter) {
@@ -212,6 +216,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'sponsor' => ['@@', '=@', '=='],
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
                 ];
             },
             function () {
@@ -231,12 +236,15 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'sponsor' => 'sometimes|string',
                     'contact_email' => 'sometimes|string',
                     'tier' =>  'sometimes|string',
+                    'email_sent' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
                 return [
                     'id',
                     'code',
+                    'redeemed',
+                    'tier'
                 ];
             },
             function ($filter) use ($summit) {

@@ -50,29 +50,40 @@ class ProcessSponsorPromoCodesJob implements ShouldQueue
         $this->summit_id = $summit->getId();
         $this->payload = $payload;
         $this->filter = $filter;
+
     }
 
     /**
      * @param ISummitPromoCodeService $service
      * @throws \utils\FilterParserException
      */
-    public function handle(ISummitPromoCodeService $service){
+    public function handle(ISummitPromoCodeService $service)
+    {
 
         Log::debug(sprintf("ProcessSponsorPromoCodesJob::handle summit id %s", $this->summit_id));
 
-        $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'id'            => ['=='],
-            'not_id'        => ['=='],
-            'sponsor'       => ['=@', '@@', '=='],
-            'tier'          => ['=@', '@@', '=='],
-            'code'          => ['=@', '@@', '=='],
-            'contact_email' => ['=@', '@@', '=='],
-            'email_sent'    => ['=='],
-        ]) : null;
+        try {
+            $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
+                'id' => ['=='],
+                'not_id' => ['=='],
+                'sponsor' => ['=@', '@@', '=='],
+                'tier' => ['=@', '@@', '=='],
+                'code' => ['=@', '@@', '=='],
+                'contact_email' => ['=@', '@@', '=='],
+                'email_sent' => ['=='],
+            ]) : null;
 
-        $service->sendSponsorPromoCodes($this->summit_id, $this->payload, $filter);
+            $service->sendSponsorPromoCodes($this->summit_id, $this->payload, $filter);
 
-        Log::debug(sprintf("ProcessSponsorPromoCodesJob::handle summit id %s has finished", $this->summit_id));
-
+            Log::debug(sprintf("ProcessSponsorPromoCodesJob::handle summit id %s has finished", $this->summit_id));
+        } catch (\Exception $ex) {
+            Log::error($ex);
+        }
     }
+
+    public function failed(\Throwable $exception)
+    {
+        Log::error(sprintf( "ProcessSponsorPromoCodesJob::failed %s", $exception->getMessage()));
+    }
+
 }

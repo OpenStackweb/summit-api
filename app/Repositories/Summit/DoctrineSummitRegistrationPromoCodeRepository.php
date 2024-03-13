@@ -392,12 +392,12 @@ class DoctrineSummitRegistrationPromoCodeRepository
         }
 
         if (!is_null($order)) {
-            $extra_orders = $order->toRawSQL(array
-            (
+            $extra_orders = $order->toRawSQL([
                 'id'   => 'Id',
                 'code' => 'Code',
                 'redeemed' => 'REDEEMED_ORDER',
-            ));
+                'tier' => ['sp1stt.Name', 'sp2stt.Name']
+            ]);
         }
 
         $query_from = <<<SQL

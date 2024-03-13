@@ -41,6 +41,8 @@ use models\summit\ISummitRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\summit\SponsorSummitRegistrationDiscountCode;
+use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitRegistrationDiscountCode;
@@ -820,11 +822,19 @@ final class SummitPromoCodeService
         $this->_sendEmails(
             $summit_id,
             $payload,
-            "sponsor promo codes",
+            "sponsor_promo_codes",
             function ($summit, $paging_info, $filter, $resetPage) {
 
                 if (!$filter->hasFilter("summit_id"))
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+
+                // we need to force the required types ...
+                if(!$filter->hasFilter("class_name")){
+                    $filter = $filter->addFilterCondition(FilterElement::makeEqual('class_name', [
+                        SponsorSummitRegistrationDiscountCode::ClassName,
+                        SponsorSummitRegistrationPromoCode::ClassName
+                    ], 'OR'));
+                }
 
                 if ($filter->hasFilter("email_sent")) {
                     $isSentFilter = $filter->getUniqueFilter("email_sent");
@@ -854,15 +864,20 @@ final class SummitPromoCodeService
                             Log::debug(sprintf("SummitPromoCodeService::send processing promocode id  %s", $promocode_id));
 
                             $promo_code = $this->repository->getByIdExclusiveLock(intval($promocode_id));
-                            if (!$promo_code instanceof SummitRegistrationPromoCode)
+                            if (!$promo_code instanceof SponsorSummitRegistrationDiscountCode
+                                && !$promo_code instanceof SponsorSummitRegistrationPromoCode)
                                 return null;
 
                             return $promo_code;
                         });
 
+                        if(is_null($promo_code)) return;
+
                         // send email
-                        if ($flow_event == SponsorPromoCodeEmail::EVENT_SLUG && !is_null($promo_code))
+                        if ($flow_event == SponsorPromoCodeEmail::EVENT_SLUG) {
                             SponsorPromoCodeEmail::dispatch($promo_code, $test_email_recipient);
+                            $promo_code->markSent();
+                        }
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);

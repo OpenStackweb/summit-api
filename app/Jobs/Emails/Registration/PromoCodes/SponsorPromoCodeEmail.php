@@ -1,5 +1,4 @@
 <?php namespace App\Jobs\Emails\Registration\PromoCodes;
-
 /**
  * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +15,7 @@
 use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use Illuminate\Support\Facades\Log;
+use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\SummitRegistrationPromoCode;
 
@@ -43,8 +43,9 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
     {
         Log::debug("SponsorPromoCodeEmail::__construct");
 
-        if (!$promo_code instanceof SponsorSummitRegistrationPromoCode)
-            throw new \InvalidArgumentException('promo code is not a sponsor promo code.');
+        if (!$promo_code instanceof SponsorSummitRegistrationPromoCode &&
+            !$promo_code instanceof SponsorSummitRegistrationDiscountCode)
+            throw new \InvalidArgumentException('Promo code is not a sponsor promo code.');
 
         $summit = $promo_code->getSummit();
         $payload = [];
@@ -54,10 +55,15 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
         $company = $promo_code->getSponsor()->getCompany();
         if (!is_null($company))
             $payload[IMailTemplatesConstants::company_name] = $company->getName();
-        $payload[IMailTemplatesConstants::contact_email] = $promo_code->getContactEmail();
+
+        $recipient = $promo_code->getContactEmail();
+        if(empty($recipient))
+            throw new \InvalidArgumentException('promo code contact email is empty.');
+
+        $payload[IMailTemplatesConstants::contact_email] = $recipient;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::contact_email]);
+        parent::__construct($summit, $payload, $template_identifier, $recipient);
         Log::debug(sprintf("SponsorPromoCodeEmail::__construct %s", $this->template_identifier));
     }
 

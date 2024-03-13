@@ -34,6 +34,8 @@ interface IMailTemplatesConstants
     const candidate_nominations_count = 'candidate_nominations_count';
     const cc_email = 'cc_email';
     const code = 'code';
+    const company_name = 'company_name';
+    const contact_email = 'contact_email';
     const content = 'content';
     const confirmation_number = 'confirmation_number';
     const creator_email = 'creator_email';

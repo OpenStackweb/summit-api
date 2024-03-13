@@ -144,4 +144,22 @@ interface ISummitPromoCodeService
      * @throws \Exception
      */
     public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):void;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @param Filter|null $filter
+     * @return void
+     * @throws ValidationException
+     */
+    public function triggerSendSponsorPromoCodes(Summit $summit, array $payload, Filter $filter = null): void;
+
+    /**
+     * @param int $summit_id
+     * @param array $payload
+     * @param Filter|null $filter
+     * @return void
+     * @throws ValidationException
+     */
+    public function sendSponsorPromoCodes(int $summit_id, array $payload, Filter $filter = null): void;
 }

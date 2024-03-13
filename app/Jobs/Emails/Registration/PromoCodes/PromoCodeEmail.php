@@ -1,4 +1,4 @@
-<?php namespace App\Jobs\Emails\Registration;
+<?php namespace App\Jobs\Emails\Registration\PromoCodes;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Jobs\Emails\AbstractSummitEmailJob;
 use App\Jobs\Emails\IMailTemplatesConstants;
 use models\summit\IOwnablePromoCode;
 use models\summit\SummitRegistrationPromoCode;
+
 /**
  * Class PromoCodeEmail
  * @package App\Jobs\Emails\Registration

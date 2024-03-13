@@ -18,7 +18,7 @@ use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRequestedEmail;
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
-use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
+use App\Jobs\Emails\Registration\PromoCodes\PromoCodeEmailFactory;
 use App\Models\Foundation\Main\CountryCodes;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
 use App\Models\Foundation\Summit\Factories\PresentationSpeakerSummitAssistanceConfirmationRequestFactory;

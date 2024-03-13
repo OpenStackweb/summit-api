@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\SQL\SQLInFilterMapping;
 use App\Http\Utils\Filters\SQL\SQLInstanceOfFilterMapping;
+use App\Http\Utils\Filters\SQL\SQLNotInFilterMapping;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -264,21 +266,21 @@ class DoctrineSummitRegistrationPromoCodeRepository
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
-     * @return mixed
+     * @return PagingResponse
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getBySummit
+    public function getIdsBySummit
     (
         Summit $summit,
         PagingInfo $paging_info,
         Filter $filter = null,
         Order $order   = null
-    )
+    ): PagingResponse
     {
         /*
          * we perform raw sql query because doctrine is generating a very complex query
-         * over ( 61 joins) and that breaks mysql max join limit (SQLSTATE[HY000]: General error:
-1116     * Too many tables; MySQL can only use 61 tables in a join in)
+         * over ( 61 joins) and that breaks mysql max join limit (SQLSTATE[HY000]: General error: 1116
+         * Too many tables; MySQL can only use 61 tables in a join in)
          */
 
         $bindings = ['param_summit_id' => $summit->getId()];
@@ -288,27 +290,31 @@ class DoctrineSummitRegistrationPromoCodeRepository
 
         if ($filter instanceof Filter) {
             $where_conditions = $filter->toRawSQL([
+                'id'            => new SQLInFilterMapping('pc.ID'),
+                'not_id'        => new SQLNotInFilterMapping('pc.ID'),
                 'code'          => 'pc.Code',
                 'description'   => 'pc.Description',
+                'email_sent'    => 'pc.EmailSent',
                 'tag'           => 't.Tag',
                 'tag_id'        => 't.ID',
                 'class_name'    =>
-                new SQLInstanceOfFilterMapping(
-                    "pc",
-                    [
-                        SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
-                        SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
-                        MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
-                        SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
-                        SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
-                        MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
-                        SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
-                        SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
-                        SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
-                        SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
-                        PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
-                        PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
-                    ]),
+                    new SQLInstanceOfFilterMapping(
+                        "pc",
+                        [
+                            SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
+                            SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
+                            MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
+                            SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
+                            SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
+                            MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
+                            SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
+                            SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
+                            SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
+                            SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
+                            PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
+                            PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
+                        ]
+                    ),
                 'type' => [
                     "mpc.Type :operator :value",
                     "mdc.Type :operator :value",
@@ -465,12 +471,41 @@ SQL;
 
         $ids = $stm->fetchFirstColumn(\PDO::FETCH_COLUMN);
 
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $ids
+        );
+    }
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return mixed
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getBySummit
+    (
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order   = null
+    )
+    {
+        $page = $this->getIdsBySummit($summit, $paging_info, $filter, $order);
+        $total = $page->getTotal();
+
         $data = $this->getEntityManager()->createQueryBuilder()
             ->select("pc, FIELD(pc.id, :ids) AS HIDDEN ids")
             ->from($this->getBaseEntity(), "pc")
             ->where("pc.id in (:ids)")
             ->orderBy("ids")
-            ->setParameter("ids", $ids)
+            ->setParameter("ids", $page->getItems())
             ->getQuery()
             ->getResult();
 

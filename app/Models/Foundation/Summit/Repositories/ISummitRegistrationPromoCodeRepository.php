@@ -12,6 +12,11 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitOwnedEntityRepository;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISummitRegistrationPromoCodeRepository
  * @package models\summit
@@ -29,6 +34,22 @@ interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepos
      * @return SummitRegistrationPromoCode|null
      */
     public function getByCode(string $code):?SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getIdsBySummit
+    (
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order   = null
+    ): PagingResponse;
 
     /**
      * @param Summit $summit

@@ -12,18 +12,19 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
+use App\Jobs\Emails\Registration\PromoCodes\ProcessSponsorPromoCodesJob;
+use App\Jobs\Emails\Registration\PromoCodes\PromoCodeEmailFactory;
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Jobs\ReApplyPromoCodeRetroActively;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitRegistrationDiscountCodeTicketTypeRuleFactory;
-use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\PromoCodes\PromoCodeValidationStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -34,21 +35,19 @@ use models\main\Member;
 use models\main\Tag;
 use models\summit\IOwnablePromoCode;
 use models\summit\ISpeakerRepository;
+use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\Summit;
-use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use services\model\ISummitPromoCodeService;
-use models\summit\ISummitRegistrationPromoCodeRepository;
-use models\summit\ISummitAttendeeTicketRepository;
 use utils\Filter;
 use utils\FilterElement;
-use utils\FilterParser;
 use utils\PagingInfo;
 
 /**
@@ -801,5 +800,76 @@ final class SummitPromoCodeService
             }
 
         });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function triggerSendSponsorPromoCodes(Summit $summit, array $payload, Filter $filter = null): void
+    {
+        ProcessSponsorPromoCodesJob::dispatch($summit, $payload, $filter);
+    }
+
+    use ParametrizedSendEmails;
+
+    /**
+     * @inheritDoc
+     */
+    public function sendSponsorPromoCodes(int $summit_id, array $payload, Filter $filter = null): void
+    {
+        $this->_sendEmails(
+            $summit_id,
+            $payload,
+            "sponsor promo codes",
+            function ($summit, $paging_info, $filter, $resetPage) {
+
+                if (!$filter->hasFilter("summit_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+
+                if ($filter->hasFilter("email_sent")) {
+                    $isSentFilter = $filter->getUniqueFilter("email_sent");
+                    $email_sent = $isSentFilter->getBooleanValue();
+                    Log::debug(sprintf("SummitPromoCodesService::send is_sent filter value %b", $email_sent));
+                    if (!$email_sent && is_callable($resetPage)) {
+                        // we need to reset the page bc the page processing will mark the current page as "sent"
+                        // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
+                        Log::debug("SummitPromoCodesService::send resetting page bc email_sent filter is false");
+                        $resetPage();
+                    }
+                }
+                return $this->repository->getIdsBySummit($summit, $paging_info, $filter)->getItems();
+            },
+            function ($summit, $flow_event, $promocode_id, $test_email_recipient, $announcement_email_config, $filter) use ($payload) {
+                try {
+                    $this->tx_service->transaction(function () use (
+                        $summit,
+                        $flow_event,
+                        $promocode_id,
+                        $test_email_recipient,
+                        $filter,
+                        $payload
+                    ) {
+                        $promo_code = $this->tx_service->transaction(function () use ($flow_event, $promocode_id) {
+
+                            Log::debug(sprintf("SummitPromoCodeService::send processing promocode id  %s", $promocode_id));
+
+                            $promo_code = $this->repository->getByIdExclusiveLock(intval($promocode_id));
+                            if (!$promo_code instanceof SummitRegistrationPromoCode)
+                                return null;
+
+                            return $promo_code;
+                        });
+
+                        // send email
+                        if ($flow_event == SponsorPromoCodeEmail::EVENT_SLUG && !is_null($promo_code))
+                            SponsorPromoCodeEmail::dispatch($promo_code, $test_email_recipient);
+                    });
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                }
+            },
+            null,
+            $filter
+        );
     }
 }

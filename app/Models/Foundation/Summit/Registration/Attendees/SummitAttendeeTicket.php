@@ -304,10 +304,6 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             $token .= $this->order->getHash();
         }
         $salt = random_bytes(16);
-        if (!empty($this->hash)) {
-            $former_hash = new SummitAttendeeTicketFormerHash($this->hash, $this);
-            $this->former_hashes->add($former_hash);
-        }
         $this->hash = hash('sha256', $token . $salt . time());
         $this->hash_creation_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }

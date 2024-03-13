@@ -25,8 +25,8 @@ class SummitRegistrationInvitationCSVSerializer extends SilverStripeSerializer
         'FirstName' => 'first_name:json_string',
         'LastName' => 'last_name:json_string',
         'Email' => 'email:json_string',
-        'Accepted' => 'is_accepted:jon_boolean',
-        'Sent' => 'is_sent:jon_boolean',
+        'Status' => 'status:json_string',
+        'Sent' => 'is_sent:json_boolean',
     ];
 
     protected static $allowed_relations = [

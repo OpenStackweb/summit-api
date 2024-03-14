@@ -35,6 +35,8 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         'HashCreationDate' => 'hash_creation_date:datetime_epoch',
         'RefundedAmount' => 'refunded_amount:json_money',
         'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
+        'TotalRefundedAmount' => 'total_refunded_amount:json_money',
+        'TotalRefundedAmountInCents' => 'total_refunded_amount_in_cents:json_int',
         'CreditCardType' => 'credit_card_type:json_string',
         'CreditCard4Number' => 'credit_card_4number:json_string',
     ];

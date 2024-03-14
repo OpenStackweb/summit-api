@@ -1200,7 +1200,23 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getRefundedAmountInCents(): int
     {
-       return self::convertToCents($this->getRefundedAmount());
+        return self::convertToCents($this->getRefundedAmount());
+    }
+
+    /**
+     * @return float
+     */
+    public function getTotalRefundedAmount(): float
+    {
+        $amount = 0.0;
+        foreach ($this->tickets as $ticket) {
+            $amount += $ticket->getTotalRefundedAmount();
+        }
+        return $amount;
+    }
+
+    public function getTotalRefundedAmountInCents():int{
+        return self::convertToCents($this->getTotalRefundedAmount());
     }
 
     /**

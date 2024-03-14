@@ -37,11 +37,13 @@ class DoctrineInFilterMapping  extends FilterMapping implements IQueryApplyable
         $this->operator = 'IN';
         parent::__construct("", $condition);
     }
+
     /**
      * @param FilterElement $filter
-     * @throws \Exception
+     * @param array $bindings
+     * @return string
      */
-    public function toRawSQL(FilterElement $filter)
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         throw new \Exception;
     }

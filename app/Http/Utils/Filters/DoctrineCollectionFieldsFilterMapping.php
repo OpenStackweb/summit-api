@@ -47,9 +47,10 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
 
     /**
      * @param FilterElement $filter
-     * @throws \Exception
+     * @param array $bindings
+     * @return string
      */
-    public function toRawSQL(FilterElement $filter)
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         throw new \Exception;
     }

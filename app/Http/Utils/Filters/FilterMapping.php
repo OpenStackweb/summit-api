@@ -1,4 +1,4 @@
-<?php
+<?php namespace utils;
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-namespace utils;
 
 /**
  * Class FilterMapping
@@ -30,6 +28,11 @@ abstract class FilterMapping
     protected $where;
 
     /**
+     * @var array
+     */
+    protected $bindings;
+
+    /**
      * FilterMapping constructor.
      * @param string $table
      * @param string $where
@@ -38,11 +41,18 @@ abstract class FilterMapping
     {
         $this->table = $table;
         $this->where = $where;
+        $this->bindings = [];
     }
 
     /**
      * @param FilterElement $filter
+     * @param array $bindings
      * @return string
      */
-    public abstract function toRawSQL(FilterElement $filter);
+    public abstract function toRawSQL(FilterElement $filter, array $bindings = []):string;
+
+    public function getBindings(): array
+    {
+        return $this->bindings;
+    }
 }

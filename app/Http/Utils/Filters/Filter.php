@@ -288,7 +288,12 @@ final class Filter
                 $condition = '';
                 $mapping = $mappings[$filter->getField()];
                 if ($mapping instanceof FilterMapping) {
-                    $condition = $mapping->toRawSQL($filter);
+                    $condition = $mapping->toRawSQL($filter, $this->bindings);
+                    $local_bindings = $mapping->getBindings();
+                    if(count($local_bindings) > 0 ){
+                        $this->bindings = array_merge($this->bindings, $local_bindings);
+                        $param_idx = count($this->bindings) + 1;
+                    }
                 }
                 else if (is_array($mapping)) {
                     foreach ($mapping as $mapping_or) {
@@ -309,11 +314,15 @@ final class Filter
                     if ($e instanceof FilterElement && isset($mappings[$e->getField()])) {
                         $mapping = $mappings[$e->getField()];
                         if ($mapping instanceof FilterMapping) {
-                            $condition = $mapping->toRawSQL($e);
+                            $condition = $mapping->toRawSQL($e, $this->bindings);
+                            $local_bindings = $mapping->getBindings();
+                            if(count($local_bindings) > 0 ){
+                                $this->bindings = array_merge($this->bindings, $local_bindings);
+                                $param_idx = count($this->bindings) + 1;
+                            }
                         }
                         else if (is_array($mapping)) {
                             foreach ($mapping as $mapping_or) {
-
                                 if (!empty($condition)) $condition .= ' OR ';
                                 $condition .= $this->applyCondition($e, $mapping_or, $param_idx);
                             }

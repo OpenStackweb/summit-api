@@ -36,12 +36,26 @@ class SQLInFilterMapping extends FilterMapping
         parent::__construct($alias, '');
     }
 
-    public function toRawSQL(FilterElement $filter)
+    /**
+     * @param FilterElement $filter
+     * @param array $bindings
+     * @return string
+     */
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         $value = $filter->getValue();
         if (!is_array($value)) {
             $value = [$value];
         }
-        return sprintf("%s %s (%s)", $this->table, $this->operator, implode(",", $value));
+        // construct named params one by one bc raw sql does not support array binding
+        $named_params = [];
+        $param_idx = count($bindings) + 1;
+        foreach($value as $v){
+            $named_params[] = ":".sprintf(Filter::ParamPrefix, $param_idx);
+            $this->bindings[sprintf(Filter::ParamPrefix, $param_idx)] = $v;
+            $param_idx++;
+        }
+
+        return sprintf("%s %s (%s)", $this->table, $this->operator, implode(',', $named_params));
     }
 }

@@ -53,7 +53,9 @@ class DoctrineInFilterMapping  extends FilterMapping implements IQueryApplyable
         if (!is_array($value)) {
             $value = [$value];
         }
-       return sprintf("%s %s (%s)", $this->where, static::Operator, implode(",", $value));
+        $param_count = $query->getParameters()->count() + 1;
+        $query->setParameter(":value_" . $param_count, $value);
+        return sprintf("%s %s ( :value_%s )", $this->where, static::Operator, $param_count);
     }
 
     /**

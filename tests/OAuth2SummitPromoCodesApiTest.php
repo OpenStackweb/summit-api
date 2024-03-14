@@ -1,4 +1,5 @@
 <?php namespace Tests;
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use models\summit\PrePaidSummitRegistrationDiscountCode;
 use models\summit\PrePaidSummitRegistrationPromoCode;
@@ -662,5 +663,43 @@ final class OAuth2SummitPromoCodesApiTest
         $this->assertTrue($promo_codes->total > 0);
         $this->assertNotEmpty($promo_codes->data[0]->tags);
         $this->assertStringStartsWith($tag, $promo_codes->data[0]->tags[0]->tag);
+    }
+
+    public function testSendSponsorPromoCodes()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => [
+                'id=='.implode('||',[
+                        self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->getId(),
+                        self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->getId(),
+                    ]
+                ),
+                'email_sent==0',
+            ]
+        ];
+
+        $data = [
+            'email_flow_event'      => SponsorPromoCodeEmail::EVENT_SLUG,
+            'test_email_recipient'  => 'test_recip@nomail.com',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitPromoCodesApiController@sendSponsorPromoCodes",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
     }
 }

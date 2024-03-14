@@ -7011,6 +7011,21 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'send-sponsor-promo-codes-mail',
+                'route' => '/api/v1/summits/{id}/promo-codes/all/send',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
                 'name' => 'get-promo-codes-metadata',
                 'route' => '/api/v1/summits/{id}/promo-codes/metadata',
                 'http_method' => 'GET',

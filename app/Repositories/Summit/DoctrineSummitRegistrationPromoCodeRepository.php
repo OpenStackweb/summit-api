@@ -371,15 +371,19 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     Filter::buildEmailField('rrps3.Email'),
                     Filter::buildEmailField('rrps4.Email')
                 ],
-                'sponsor' => [
+                'sponsor_company_name' => [
                     "spn1.Name :operator :value",
                     "spn2.Name :operator :value"
+                ],
+                'sponsor_id' => [
+                    "sp1.Name :operator :value",
+                    "sp2.Name :operator :value"
                 ],
                 'contact_email' => [
                     "spnpc.ContactEmail :operator :value",
                     "spndc.ContactEmail :operator :value"
                 ],
-                'tier' => [
+                'tier_name' => [
                     "sp1stt.Name :operator :value",
                     "sp2stt.Name :operator :value"
                 ],
@@ -396,7 +400,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 'id'   => 'Id',
                 'code' => 'Code',
                 'redeemed' => 'REDEEMED_ORDER',
-                'tier' => ['sp1stt.Name', 'sp2stt.Name']
+                'tier_name' => ['sp1stt.Name', 'sp2stt.Name']
             ]);
         }
 

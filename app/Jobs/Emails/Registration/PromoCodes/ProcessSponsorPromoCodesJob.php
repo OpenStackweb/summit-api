@@ -66,10 +66,13 @@ class ProcessSponsorPromoCodesJob implements ShouldQueue
             $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
                 'id' => ['=='],
                 'not_id' => ['=='],
-                'sponsor' => ['=@', '@@', '=='],
-                'tier' => ['=@', '@@', '=='],
+                'sponsor_company_name' => ['=@', '@@', '=='],
+                'tag' => ['@@','=@', '=='],
+                'tag_id' => ['=='],
                 'code' => ['=@', '@@', '=='],
-                'contact_email' => ['=@', '@@', '=='],
+                'sponsor_id' =>  ['=='],
+                'contact_email' =>  ['@@', '=@', '=='],
+                'tier_name' =>  ['@@', '=@', '=='],
                 'email_sent' => ['=='],
             ]) : null;
 

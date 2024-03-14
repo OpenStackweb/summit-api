@@ -49,7 +49,7 @@ final class PromoCodesServiceTest extends BrowserKitTestCase
 
         $filterParam = [
             'email_sent==0',
-            'sponsor=='.self::$default_sponsors_promo_codes[0]->getSponsor()->getCompany()->getName(),
+            'sponsor_company_name=='.self::$default_sponsors_promo_codes[0]->getSponsor()->getCompany()->getName(),
             'not_id=='.implode('||',[
                     self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->getId(),
                     self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->getId(),
@@ -63,7 +63,7 @@ final class PromoCodesServiceTest extends BrowserKitTestCase
                 'id'      => ['=='],
                 'not_id'  => ['=='],
                 'sponsor' => ['=@', '@@', '=='],
-                'tier'    => ['=@', '@@', '=='],
+                'tier_name'    => ['=@', '@@', '=='],
                 'code'    => ['=@', '@@', '=='],
                 'contact_email' => ['=@', '@@', '=='],
                 'email_sent'    => ['=='],
@@ -106,8 +106,8 @@ final class PromoCodesServiceTest extends BrowserKitTestCase
             [
                 'id'      => ['=='],
                 'not_id'  => ['=='],
-                'sponsor' => ['=@', '@@', '=='],
-                'tier'    => ['=@', '@@', '=='],
+                'sponsor_company_name' => ['=@', '@@', '=='],
+                'tier_name'    => ['=@', '@@', '=='],
                 'code'    => ['=@', '@@', '=='],
                 'contact_email' => ['=@', '@@', '=='],
                 'email_sent'    => ['=='],

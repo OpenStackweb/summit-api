@@ -199,4 +199,6 @@ interface IMailTemplatesConstants
     const virtual_event_site_link = 'virtual_event_site_link';
     const summit_marketing_site_url_magic_link = 'summit_marketing_site_url_magic_link';
     const edit_ticket_link = 'edit_ticket_link';
+
+    const sponsor_tier_name = 'sponsor_tier_name';
 }

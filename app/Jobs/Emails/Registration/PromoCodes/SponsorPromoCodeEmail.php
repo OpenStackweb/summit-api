@@ -49,10 +49,11 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
 
         $summit = $promo_code->getSummit();
         $payload = [];
-
+        $sponsor = $promo_code->getSponsor();
+        $payload[IMailTemplatesConstants::sponsor_tier_name] = $sponsor->getSponsorship()->getSponsorshipType()->getName();
         $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
         $payload[IMailTemplatesConstants::company_name] = '';
-        $company = $promo_code->getSponsor()->getCompany();
+        $company = $sponsor->getCompany();
         if (!is_null($company))
             $payload[IMailTemplatesConstants::company_name] = $company->getName();
 
@@ -75,7 +76,7 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::promo_code]['type'] = 'string';
         $payload[IMailTemplatesConstants::company_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::contact_email]['type'] = 'string';
-
+        $payload[IMailTemplatesConstants::sponsor_tier_name]['type'] = 'string';
         return $payload;
     }
 }

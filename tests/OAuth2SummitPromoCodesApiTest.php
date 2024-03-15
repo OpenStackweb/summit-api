@@ -1,12 +1,4 @@
 <?php namespace Tests;
-use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
-use models\summit\PrePaidSummitRegistrationDiscountCode;
-use models\summit\PrePaidSummitRegistrationPromoCode;
-use models\summit\SpeakersRegistrationDiscountCode;
-use models\summit\SpeakersSummitRegistrationPromoCode;
-use models\summit\SummitTicketType;
-
 /**
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +11,13 @@ use models\summit\SummitTicketType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\summit\SummitTicketType;
 /**
  * Class OAuth2SummitPromoCodesApiTest
  */
@@ -54,6 +52,31 @@ final class OAuth2SummitPromoCodesApiTest
         $response = $this->action(
             "GET",
             "OAuth2SummitPromoCodesApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $promo_codes = json_decode($content);
+        $this->assertTrue(!is_null($promo_codes));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetSponsorPromoCodesAllBySummit()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'sponsor,sponsor.company,sponsor.sponsorship,sponsor.sponsorship.type',
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@getAllSponsorPromoCodesBySummit",
             $params,
             [],
             [],

@@ -293,6 +293,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 'id'            => new SQLInFilterMapping('pc.ID'),
                 'not_id'        => new SQLNotInFilterMapping('pc.ID'),
                 'code'          => 'pc.Code',
+                'notes'         => 'pc.Notes',
                 'description'   => 'pc.Description',
                 'email_sent'    => 'pc.EmailSent',
                 'tag'           => 't.Tag',
@@ -577,7 +578,7 @@ SQL;
      */
     public function getByValueExclusiveLock(Summit $summit, string $code): ?SummitRegistrationPromoCode
     {
-        $query  =   $this->getEntityManager()
+        $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")

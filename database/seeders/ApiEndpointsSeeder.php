@@ -6922,6 +6922,34 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'get-sponsor-promo-codes',
+                'route' => '/api/v1/summits/{id}/sponsor-promo-codes',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-promo-codes-csv',
+                'route' => '/api/v1/summits/{id}/sponsor-promo-codes/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
                 'name' => 'ingest-promo-codes-csv',
                 'route' => '/api/v1/summits/{id}/promo-codes/csv',
                 'http_method' => 'POST',

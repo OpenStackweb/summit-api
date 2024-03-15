@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
@@ -773,6 +774,11 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if(!$current_member->isAuthzFor($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+
             $payload = $this->getJsonPayload([
                 'email_flow_event' => 'required|string|in:' . join(',', [
                         SponsorPromoCodeEmail::EVENT_SLUG,
@@ -789,11 +795,14 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 $filter = FilterParser::parse(Request::input('filter'), [
                     'id'            => ['=='],
                     'not_id'        => ['=='],
-                    'sponsor_company_name' => ['=@', '@@', '=='],
-                    'tier_name'     => ['=@', '@@', '=='],
+                    'tag'           => ['@@','=@', '=='],
+                    'tag_id'        => ['=='],
                     'code'          => ['=@', '@@', '=='],
-                    'contact_email' => ['=@', '@@', '=='],
+                    'sponsor_id'    =>  ['=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier_name'     =>  ['@@', '=@', '=='],
                     'email_sent'    => ['=='],
+                    'sponsor_company_name' => ['=@', '@@', '=='],
                 ]);
             }
 
@@ -803,11 +812,14 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             $filter->validate([
                 'id'            => 'sometimes|integer',
                 'not_id'        => 'sometimes|integer',
-                'sponsor_company_name' => 'sometimes|string',
-                'tier_name'     => 'sometimes|string',
+                'tag'           => 'sometimes|required|string',
+                'tag_id'        => 'sometimes|integer',
                 'code'          => 'sometimes|string',
+                'sponsor_id'    => 'sometimes|integer',
                 'contact_email' => 'sometimes|string',
+                'tier_name'     => 'sometimes|string',
                 'email_sent'    => 'sometimes|boolean',
+                'sponsor_company_name' => 'sometimes|string',
             ]);
 
             $this->promo_code_service->triggerSendSponsorPromoCodes($summit, $payload, $filter);

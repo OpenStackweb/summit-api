@@ -70,6 +70,7 @@ final class OAuth2SummitPromoCodesApiTest
         $params = [
             'id' => self::$summit->getId(),
             'expand' => 'sponsor,sponsor.company,sponsor.sponsorship,sponsor.sponsorship.type',
+            'order' => 'tier_name,sponsor_company_name',
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];

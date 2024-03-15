@@ -377,8 +377,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     "spn2.Name :operator :value"
                 ],
                 'sponsor_id' => [
-                    "sp1.Name :operator :value",
-                    "sp2.Name :operator :value"
+                    "sp1.Id :operator :value",
+                    "sp2.Id :operator :value"
                 ],
                 'contact_email' => [
                     "spnpc.ContactEmail :operator :value",
@@ -401,7 +401,11 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 'id'   => 'Id',
                 'code' => 'Code',
                 'redeemed' => 'REDEEMED_ORDER',
-                'tier_name' => ['sp1stt.Name', 'sp2stt.Name']
+                'email_sent'    => 'EMAIL_SENT_ORDER',
+                'quantity_available' => 'pc.QuantityAvailable',
+                'quantity_used' => 'pc.QuantityUsed',
+                'tier_name' => 'TIER_NAME_ORDER',
+                'sponsor_company_name' => 'SPONSOR_COMPANY_NAME_ORDER',
             ]);
         }
 
@@ -465,7 +469,21 @@ SELECT pc.ID, pc.Code, CASE
 WHEN pc.ClassName = 'SpeakersSummitRegistrationPromoCode' THEN COUNT(NOT ISNULL(aspkrpc.RedeemedAt)) - SUM(NOT ISNULL(aspkrpc.RedeemedAt)) = 0
 WHEN pc.ClassName = 'SpeakersRegistrationDiscountCode' THEN COUNT(NOT ISNULL(aspkrdc.RedeemedAt)) - SUM(NOT ISNULL(aspkrdc.RedeemedAt)) = 0
 ELSE pc.redeemed 
-END AS REDEEMED_ORDER
+END AS REDEEMED_ORDER,
+CASE 
+WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN sp1stt.Name
+WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN sp2stt.Name
+ELSE NULL 
+END AS TIER_NAME_ORDER,
+CASE 
+WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN spn1.Name
+WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN spn2.Name
+ELSE NULL 
+END AS SPONSOR_COMPANY_NAME_ORDER,
+CASE 
+WHEN pc.SentDate IS NOT NULL THEN 1
+ELSE 0
+END AS EMAIL_SENT_ORDER
 {$query_from}
 {$extra_filters} 
 GROUP BY pc.ID, pc.Code

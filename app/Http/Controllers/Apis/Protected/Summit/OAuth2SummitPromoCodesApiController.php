@@ -170,7 +170,11 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'id',
                     'code',
                     'redeemed',
-                    'tier'
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
                 ];
             },
             function ($filter) {
@@ -246,7 +250,11 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'id',
                     'code',
                     'redeemed',
-                    'tier'
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
                 ];
             },
             function ($filter) {
@@ -337,7 +345,11 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'id',
                     'code',
                     'redeemed',
-                    'tier'
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
                 ];
             },
             function ($filter) use ($summit) {
@@ -430,7 +442,11 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'id',
                     'code',
                     'redeemed',
-                    'tier'
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
                 ];
             },
             function ($filter) use ($summit) {

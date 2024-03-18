@@ -807,7 +807,7 @@ final class SummitPromoCodeService
     /**
      * @inheritDoc
      */
-    public function triggerSendSponsorPromoCodes(Summit $summit, array $payload, Filter $filter = null): void
+    public function triggerSendSponsorPromoCodes(Summit $summit, array $payload,$filter = null): void
     {
         ProcessSponsorPromoCodesJob::dispatch($summit, $payload, $filter);
     }

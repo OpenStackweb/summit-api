@@ -148,11 +148,11 @@ interface ISummitPromoCodeService
     /**
      * @param Summit $summit
      * @param array $payload
-     * @param Filter|null $filter
+     * @param $filter
      * @return void
      * @throws ValidationException
      */
-    public function triggerSendSponsorPromoCodes(Summit $summit, array $payload, Filter $filter = null): void;
+    public function triggerSendSponsorPromoCodes(Summit $summit, array $payload, $filter = null): void;
 
     /**
      * @param int $summit_id

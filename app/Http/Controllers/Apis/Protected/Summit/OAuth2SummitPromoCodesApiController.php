@@ -15,6 +15,7 @@
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Http\Utils\Filters\FiltersParams;
 use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
@@ -1026,7 +1027,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 'email_sent' => ['sometimes', new Boolean()],
             ]);
 
-            $this->promo_code_service->triggerSendSponsorPromoCodes($summit, $payload, $filter);
+            $this->promo_code_service->triggerSendSponsorPromoCodes($summit, $payload, FiltersParams::getFilterParam());
 
             return $this->ok();
         });

@@ -65,6 +65,22 @@ class Summit extends SilverstripeBaseModel
 
     use GetDefaultValueFromConfig;
 
+    public static $default_report_setting = [
+        'scan_date',
+        'attendee_first_name',
+        'attendee_last_name',
+        'attendee_email',
+        'attendee_company',
+        'attendee_extra_questions' => [
+            'id',
+            'name'
+        ],
+        'extra_questions' => [
+            'id',
+            'name'
+        ]
+    ];
+
     /**
      * @ORM\Column(name="Title", type="string")
      * @var string
@@ -855,6 +871,12 @@ class Summit extends SilverstripeBaseModel
     private $registration_feed_metadata;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitLeadReportSetting", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitLeadReportSetting[]
+     */
+    private $lead_report_settings;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -1201,6 +1223,7 @@ class Summit extends SilverstripeBaseModel
         $this->signs = new ArrayCollection();
         $this->qr_codes_enc_key = null;
         $this->registration_feed_metadata = new ArrayCollection();
+        $this->lead_report_settings = new ArrayCollection();
     }
 
     /**
@@ -6875,4 +6898,55 @@ SQL;
         $metadata->clearSummit();
     }
 
+    /**
+     * @return SummitLeadReportSetting[]
+     */
+    public function getLeadReportSettings()
+    {
+        return $this->lead_report_settings;
+    }
+
+    /**
+     * @param SummitLeadReportSetting $lead_report_setting
+     */
+    public function addLeadReportSetting(SummitLeadReportSetting $lead_report_setting): void
+    {
+        if($this->lead_report_settings->contains($lead_report_setting)) return;
+        $lead_report_setting->setSummit($this);
+        $this->lead_report_settings->add($lead_report_setting);
+    }
+
+    /**
+     * @param SummitLeadReportSetting $lead_report_setting
+     * @return void
+     */
+    public function removeLeadReportSetting(SummitLeadReportSetting $lead_report_setting):void
+    {
+        if(!$this->lead_report_settings->contains($lead_report_setting)) return;
+        $this->lead_report_settings->removeElement($lead_report_setting);
+        $lead_report_setting->clearSummit();
+    }
+
+    /**
+     * @param Sponsor|null $sponsor
+     * @return SummitLeadReportSetting|null
+     */
+    public function getLeadReportSettingFor(?Sponsor $sponsor = null):SummitLeadReportSetting {
+        $criteria = Criteria::create();
+        if (!is_null($sponsor)) {
+            $criteria->where(Criteria::expr()->eq('sponsor', $sponsor));
+            $res = $this->lead_report_settings->matching($criteria)->first();
+            if ($res) return $res;
+        }
+        //if no sponsor is provided or sponsor level setting doesn't exist, uses the one defined at summit level
+        $criteria->where(Criteria::expr()->isNull('sponsor'));
+        $res = $this->lead_report_settings->matching($criteria)->first();
+        if ($res) return $res;
+
+        //default
+        $res = new SummitLeadReportSetting();
+        $res->setSummit($this);
+        $res->setColumns(self::$default_report_setting);
+        return $res;
+    }
 }

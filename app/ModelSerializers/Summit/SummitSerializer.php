@@ -119,6 +119,7 @@ class SummitSerializer extends SilverStripeSerializer
         'schedule_settings',
         'badge_view_types',
         'badge_access_level_types',
+        'lead_report_settings',
     ];
 
     /**
@@ -530,6 +531,15 @@ class SummitSerializer extends SilverStripeSerializer
             }
             $values['schedule_settings'] = $schedule_settings;
         }
+
+        if (in_array('lead_report_settings', $relations) && !isset($values['lead_report_settings'])) {
+            $lead_report_settings = [];
+            foreach ($summit->getLeadReportSettings() as $config) {
+                $lead_report_settings[] = $config->getId();
+            }
+            $values['lead_report_settings'] = $lead_report_settings;
+        }
+
         return $values;
     }
 
@@ -538,6 +548,11 @@ class SummitSerializer extends SilverStripeSerializer
             'serializer_type' => SerializerRegistry::SerializerType_Private,
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getEnableScheduleSettings',
+        ],
+        'lead_report_settings' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getLeadReportSettings',
         ],
     ];
 }

@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitJsonGenerator::class,
         \App\Console\Commands\ChatTeamMessagesSender::class,
         \App\Console\Commands\SummitListJsonGenerator::class,
-        \App\Console\Commands\PromoCodesRedeemProcessor::class,
+        \App\Console\Commands\EventBritePromoCodesRedeemProcessor::class,
         \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
         \App\Console\Commands\ExternalScheduleFeedIngestionCommand::class,
         \App\Console\Commands\SummitEventSetAvgRateProcessor::class,

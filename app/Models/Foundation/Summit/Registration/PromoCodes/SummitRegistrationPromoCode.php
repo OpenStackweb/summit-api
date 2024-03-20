@@ -404,7 +404,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
         $newVal = $quantity_used + $usage;
 
-        if (!!$this->isInfinite() && $newVal > $quantity_available) {
+        if (!$this->isInfinite() && $newVal > $quantity_available) {
             throw new ValidationException
             (
                 sprintf
@@ -460,6 +460,10 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
             );
 
         $this->quantity_used = $newVal;
+
+        if ($quantity_available > $this->quantity_used) {
+            $this->setRedeemed(false);
+        }
 
         Log::info(sprintf("SummitRegistrationPromoCode::removeUsage quantity_used %s", $this->quantity_used));
 

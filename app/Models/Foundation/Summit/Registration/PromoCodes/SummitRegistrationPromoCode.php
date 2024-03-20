@@ -44,7 +44,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class SummitRegistrationPromoCode extends SilverstripeBaseModel
 {
-    const LOCK_SKEW_TIME = 5;
 
     /**
      * @ORM\Column(name="Code", type="string")
@@ -71,6 +70,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     protected $email_sent;
 
     /**
+     * @var \DateTime
+     * @ORM\Column(name="SentDate", type="datetime", nullable=false)
+     */
+    protected $sent_date;
+
+    /**
      * @ORM\Column(name="Redeemed", type="boolean")
      * @var boolean
      */
@@ -87,6 +92,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @var int
      */
     protected $quantity_available;
+
+    /**
+     * @ORM\Column(name="Notes", type="string")
+     * @var string
+     */
+    protected $notes;
 
     /**
      * @ORM\Column(name="QuantityUsed", type="integer")
@@ -207,21 +218,18 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function isEmailSent():bool
-    {
-        return $this->email_sent;
-    }
-
-    /**
      * @param bool $email_sent
      * @param string|null $recipient
      * @return void
      */
-    public function setEmailSent(bool $email_sent, string $recipient = null)
+    public function markSent(string $recipient = null)
     {
-        $this->email_sent = $email_sent;
+        $this->email_sent = true;
+        $this->sent_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function isEmailSent():bool{
+        return !is_null($this->sent_date);
     }
 
     /**
@@ -235,7 +243,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @param bool $redeemed
      */
-    public function setRedeemed($redeemed)
+    public function setRedeemed(bool $redeemed)
     {
         $this->redeemed = $redeemed;
     }
@@ -281,6 +289,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->quantity_used = 0;
         $this->valid_since_date = null;
         $this->valid_until_date = null;
+        $this->sent_date = null;
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
         $this->tags = new ArrayCollection();
@@ -408,10 +417,9 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         }
 
         $this->quantity_used = $newVal;
-
-        if (!$this->isInfinite() && $quantity_available == $this->quantity_used) {
-            $this->setRedeemed(true);
-        }
+        $this->setRedeemed(
+            (!$this->isInfinite() && $this->quantity_available == $quantity_used)
+        );
     }
 
     /**
@@ -458,6 +466,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         }
 
         Log::info(sprintf("SummitRegistrationPromoCode::removeUsage quantity_used %s", $this->quantity_used));
+
+        $this->setRedeemed( false);
     }
 
     public function canBeAppliedTo(SummitTicketType $ticketType): bool
@@ -510,6 +520,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         'class_name' => self::ClassName,
         'code' => 'string',
         'description' => 'string',
+        'notes' => 'string',
         'email_sent' => 'boolean',
         'redeemed' => 'boolean',
         'quantity_available' => 'integer',
@@ -576,7 +587,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     public function setQuantityAvailable(int $quantity_available): void
     {
         if ($quantity_available < 0)
-            throw new ValidationException("quantity_available should be greater than zero.");
+            throw new ValidationException("quantity_available should be greater or equal to zero.");
         $this->quantity_available = $quantity_available;
     }
 
@@ -741,6 +752,16 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return $this->tickets->matching($criteria);
     }
 
+    public function getNotes(): ?string
+    {
+        return $this->notes;
+    }
+
+    public function setNotes(string $notes): void
+    {
+        $this->notes = $notes;
+    }
+
     /**
      * @param SummitAttendeeTicket $ticket
      */
@@ -759,4 +780,13 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     public function canBeAppliedToOrder(SummitOrder $order):bool{
         return true;
     }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getSentDate(): ?\DateTime
+    {
+        return $this->sent_date;
+    }
+
 }

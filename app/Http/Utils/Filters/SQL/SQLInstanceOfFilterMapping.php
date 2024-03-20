@@ -43,7 +43,12 @@ final class SQLInstanceOfFilterMapping extends FilterMapping
         return $value;
     }
 
-    public function toRawSQL(FilterElement $filter)
+    /**
+     * @param FilterElement $filter
+     * @param array $bindings
+     * @return string
+     */
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         $value = $filter->getValue();
 
@@ -54,6 +59,7 @@ final class SQLInstanceOfFilterMapping extends FilterMapping
             }
             return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
         }
+
         return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
     }
 

@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use models\summit\SummitRegistrationPromoCode;
+
 /**
  * Class TestCase
  * @package Tests

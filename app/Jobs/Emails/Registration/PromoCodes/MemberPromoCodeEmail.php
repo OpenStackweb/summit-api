@@ -1,5 +1,5 @@
-<?php
-namespace App\Jobs\Emails\Registration;
+<?php namespace App\Jobs\Emails\Registration\PromoCodes;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +12,13 @@ namespace App\Jobs\Emails\Registration;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 /**
- * Class SpeakerPromoCodeEMail
+ * Class MemberPromoCodeEmail
  * @package App\Jobs\Emails\Registration
  */
-class SpeakerPromoCodeEMail extends PromoCodeEmail
+class MemberPromoCodeEmail extends PromoCodeEmail
 {
-
 
     protected function getEmailEventSlug(): string
     {
@@ -26,7 +26,7 @@ class SpeakerPromoCodeEMail extends PromoCodeEmail
     }
 
     // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
-    const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
+    const EVENT_SLUG = 'SUMMIT_REGISTRATION_MEMBER_PROMO_CODE';
+    const EVENT_NAME = 'SUMMIT_REGISTRATION_MEMBER_PROMO_CODE';
+    const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_MEMBER_PROMO_CODE';
 }

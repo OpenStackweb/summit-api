@@ -37,11 +37,13 @@ class DoctrineInFilterMapping  extends FilterMapping implements IQueryApplyable
         $this->operator = 'IN';
         parent::__construct("", $condition);
     }
+
     /**
      * @param FilterElement $filter
-     * @throws \Exception
+     * @param array $bindings
+     * @return string
      */
-    public function toRawSQL(FilterElement $filter)
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         throw new \Exception;
     }
@@ -51,7 +53,9 @@ class DoctrineInFilterMapping  extends FilterMapping implements IQueryApplyable
         if (!is_array($value)) {
             $value = [$value];
         }
-       return sprintf("%s %s (%s)", $this->where, static::Operator, implode(",", $value));
+        $param_count = $query->getParameters()->count() + 1;
+        $query->setParameter(":value_" . $param_count, $value);
+        return sprintf("%s %s ( :value_%s )", $this->where, static::Operator, $param_count);
     }
 
     /**

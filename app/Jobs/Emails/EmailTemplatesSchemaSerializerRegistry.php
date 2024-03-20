@@ -56,8 +56,10 @@ use App\Jobs\Emails\Registration\ExternalIngestion\SuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\ExternalIngestion\UnsuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
-use App\Jobs\Emails\Registration\MemberPromoCodeEmail;
-use App\Jobs\Emails\Registration\PromoCodeEmail;
+use App\Jobs\Emails\Registration\PromoCodes\MemberPromoCodeEmail;
+use App\Jobs\Emails\Registration\PromoCodes\PromoCodeEmail;
+use App\Jobs\Emails\Registration\PromoCodes\SpeakerPromoCodeEMail;
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestOwner;
@@ -67,7 +69,6 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
-use App\Jobs\Emails\Registration\SpeakerPromoCodeEMail;
 use App\Jobs\Emails\Schedule\RSVPMail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
@@ -183,6 +184,8 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[RegisteredMemberOrderPaidMail::EVENT_SLUG] = RegisteredMemberOrderPaidMail::class;
         $this->registry[SpeakerPromoCodeEMail::EVENT_SLUG] = PromoCodeEmail::class;
         $this->registry[UnregisteredMemberOrderPaidMail::EVENT_SLUG] = UnregisteredMemberOrderPaidMail::class;
+
+        $this->registry[SponsorPromoCodeEmail::EVENT_SLUG] = SponsorPromoCodeEmail::class;
 
         //Schedule
 

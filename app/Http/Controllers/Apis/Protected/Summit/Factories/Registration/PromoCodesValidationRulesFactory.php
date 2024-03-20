@@ -54,6 +54,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
         $base_rules = [
             'code'                 => 'required|string|max:255',
             'description'          => 'sometimes|string|max:1024',
+            'notes'                => 'sometimes|string|max:2048',
             'quantity_available'   => 'sometimes|integer|min:0',
             'valid_since_date'     => 'nullable|date_format:U',
             'valid_until_date'     => 'nullable|required_with:valid_since_date|date_format:U|after:valid_since_date',
@@ -63,8 +64,8 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
 
         $specific_rules = [];
         $discount_code_rules = [
-            'amount'     => 'sometimes|numeric|min:0',
-            'rate'       => 'sometimes|numeric|min:0',
+            'amount'     => 'sometimes|numeric|required_without:rate',
+            'rate'       => 'sometimes|numeric|required_without:amount',
         ];
 
         switch ($class_name){
@@ -96,6 +97,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             case SponsorSummitRegistrationPromoCode::ClassName:
                 {
                     $specific_rules = [
+                        'contact_email'=> 'required|email|max:254',
                         'sponsor_id' => 'required|integer'
                     ];
                 }
@@ -116,8 +118,6 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
                     $specific_rules = array_merge([
                         'type'       => 'required|string|in:'.join(",", PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes),
                         'speaker_id' => 'sometimes|integer',
-                        'amount'     => 'sometimes|required_without:rate',
-                        'rate'       => 'sometimes|required_without:amount',
                     ], $discount_code_rules);
                 }
                 break;
@@ -125,14 +125,13 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
                 {
                     $specific_rules = array_merge([
                         'type'       => 'required|string|in:'.join(",", PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes),
-                        'amount'     => 'sometimes|required_without:rate',
-                        'rate'       => 'sometimes|required_without:amount',
                     ], $discount_code_rules);
                 }
                 break;
             case SponsorSummitRegistrationDiscountCode::ClassName:
                 {
                     $specific_rules = array_merge([
+                        'contact_email'=> 'required|email|max:254',
                         'sponsor_id' => 'required|integer'
                     ],$discount_code_rules);
 
@@ -167,6 +166,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
         $base_rules = [
             'code'                 => 'sometimes|string|max:255',
             'description'          => 'sometimes|string|max:1024',
+            'notes'                => 'sometimes|string|max:2048',
             'quantity_available'   => 'sometimes|integer|min:0',
             'valid_since_date'     => 'nullable|date_format:U',
             'valid_until_date'     => 'nullable|required_with:valid_since_date|date_format:U|after:valid_since_date',
@@ -178,8 +178,8 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
 
         $specific_rules = [];
         $discount_code_rules = [
-            'amount'     => 'sometimes|numeric|min:0',
-            'rate'       => 'sometimes|numeric|min:0',
+            'amount'     => 'sometimes|numeric|required_without:rate',
+            'rate'       => 'sometimes|numeric|required_without:amount',
         ];
 
         switch ($class_name){
@@ -211,7 +211,8 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             case SponsorSummitRegistrationPromoCode::ClassName:
                 {
                     $specific_rules = [
-                        'sponsor_id' => 'required|integer'
+                        'sponsor_id' => 'required|integer',
+                        'contact_email'=> 'required|email|max:254',
                     ];
                 }
                 break;
@@ -231,8 +232,6 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
                     $specific_rules = array_merge([
                         'type'       => 'required|string|in:'.join(",", PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes),
                         'speaker_id' => 'sometimes|integer',
-                        'amount'     => 'sometimes|required_without:rate',
-                        'rate'       => 'sometimes|required_without:amount',
                     ], $discount_code_rules);
                 }
                 break;
@@ -240,15 +239,14 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
                 {
                     $specific_rules = array_merge([
                         'type'       => 'required|string|in:'.join(",", PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes),
-                        'amount'     => 'sometimes|required_without:rate',
-                        'rate'       => 'sometimes|required_without:amount',
                     ], $discount_code_rules);
                 }
                 break;
             case SponsorSummitRegistrationDiscountCode::ClassName:
                 {
                     $specific_rules = array_merge([
-                        'sponsor_id' => 'required|integer'
+                        'sponsor_id' => 'required|integer',
+                        'contact_email'=> 'required|email|max:254',
                     ],$discount_code_rules);
 
                 }

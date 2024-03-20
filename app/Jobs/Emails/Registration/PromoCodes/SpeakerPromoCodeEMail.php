@@ -1,4 +1,6 @@
-<?php namespace App\Jobs\Emails\Registration;
+<?php
+namespace App\Jobs\Emails\Registration\PromoCodes;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\summit\IOwnablePromoCode;
-use models\summit\SummitRegistrationPromoCode;
 /**
- * Class PromoCodeEmailFactory
+ * Class SpeakerPromoCodeEMail
  * @package App\Jobs\Emails\Registration
  */
-final class PromoCodeEmailFactory
+class SpeakerPromoCodeEMail extends PromoCodeEmail
 {
-    /**
-     * @param SummitRegistrationPromoCode $promo_code
-     */
-    public static function send(SummitRegistrationPromoCode $promo_code){
-        if(!$promo_code instanceof IOwnablePromoCode) return;
-        if($promo_code->getOwnerType() == 'MEMBER'){
-            MemberPromoCodeEmail::dispatch($promo_code);
-        }
-        if($promo_code->getOwnerType() == 'SPEAKER'){
-            SpeakerPromoCodeEMail::dispatch($promo_code);
-        }
+
+
+    protected function getEmailEventSlug(): string
+    {
+        return self::EVENT_SLUG;
     }
+
+    // metadata
+    const EVENT_SLUG = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
+    const EVENT_NAME = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
+    const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
 }

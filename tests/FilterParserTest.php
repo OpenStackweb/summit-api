@@ -13,13 +13,14 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
 use models\summit\PresentationType;
 use models\summit\Sponsor;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRoomReservation;
-use models\summit\SummitTicketType;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
@@ -671,6 +672,87 @@ DQL;
 
         $this->assertNotEmpty($dql);
 
+        $res = $query->getQuery()->getResult();
+    }
+
+    public function testFilterRegistrationInvitations(){
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query = $query
+            ->distinct("e")
+            ->select("e")
+            ->from(SummitRegistrationInvitation::class, "e");
+        $filter = new Filter();
+
+        $filter->addFilterCondition
+        (
+            FilterElement::makeEqual
+            (
+                'is_sent',
+                'true',
+            )
+        );
+
+        $filter->addFilterCondition
+        (
+            FilterElement::makeEqual
+            (
+                'not_id',
+                [1,2,3],
+            )
+        );
+
+        $filter->addFilterCondition
+        (
+            FilterElement::makeEqual
+            (
+                'id',
+                [1,2,3],
+            )
+        );
+
+        $filter->apply2Query($query,
+            [
+                'id' => new DoctrineInFilterMapping('e.id'),
+                'not_id' => new DoctrineNotInFilterMapping('e.id'),
+                'email' => 'e.email:json_string',
+                'first_name' => Filter::buildLowerCaseStringField('e.first_name'),
+                'last_name' => Filter::buildLowerCaseStringField('e.last_name'),
+                'full_name' => Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
+                'is_accepted' => new DoctrineSwitchFilterMapping([
+                        'true' => new DoctrineCaseFilterMapping(
+                            'true',
+                            sprintf("e.status = '%s'", SummitRegistrationInvitation::Status_Accepted)
+                        ),
+                        'false' => new DoctrineCaseFilterMapping(
+                            'false',
+                            sprintf("e.status <> '%s'", SummitRegistrationInvitation::Status_Accepted)
+                        ),
+                    ]
+                ),
+                'is_sent' => new DoctrineSwitchFilterMapping([
+                        'true' => new DoctrineCaseFilterMapping(
+                            'true',
+                            "e.hash is not null"
+                        ),
+                        'false' => new DoctrineCaseFilterMapping(
+                            'false',
+                            "e.hash is null"
+                        ),
+                    ]
+                ),
+                'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
+                'ticket_types_id' => new DoctrineLeftJoinFilterMapping("e.ticket_types", "tt" ,"tt.id :operator :value"),
+                'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
+                'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
+                'status' => "e.status :operator :value",
+            ]);
+
+        $dql = $query->getDQL();
+
+        $this->assertNotEmpty($dql);
+
+        $this->assertEquals("SELECT DISTINCT e FROM models\summit\SummitRegistrationInvitation e WHERE  (  ( e.hash is not null )  )  AND e.id NOT IN ( :value_1 ) AND e.id IN ( :value_2 )", $dql);
         $res = $query->getQuery()->getResult();
     }
 }

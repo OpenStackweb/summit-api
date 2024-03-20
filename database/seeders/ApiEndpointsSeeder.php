@@ -6922,6 +6922,34 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'get-sponsor-promo-codes',
+                'route' => '/api/v1/summits/{id}/sponsor-promo-codes',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-promo-codes-csv',
+                'route' => '/api/v1/summits/{id}/sponsor-promo-codes/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
                 'name' => 'ingest-promo-codes-csv',
                 'route' => '/api/v1/summits/{id}/promo-codes/csv',
                 'http_method' => 'POST',
@@ -7008,6 +7036,20 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'send-sponsors-promo-codes-mail',
+                'route' => '/api/v1/summits/{id}/sponsors/all/promo-codes/all/send',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                 ]
             ],
             [

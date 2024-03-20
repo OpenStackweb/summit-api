@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 /**
  * Class SpeakerSummitRegistrationPromoCodeSerializer
@@ -53,7 +55,11 @@ class SpeakerSummitRegistrationPromoCodeSerializer
                             (
                                 $code->getSpeaker(),
                                 $serializer_type
-                            )->serialize($expand);
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation)
+                            );
                         }
                     }
                     case 'owner_name': {
@@ -68,7 +74,7 @@ class SpeakerSummitRegistrationPromoCodeSerializer
                         }
                     }
                         break;
-                    break;
+
                 }
             }
         }

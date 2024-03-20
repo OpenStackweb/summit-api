@@ -1144,6 +1144,12 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::group(['prefix' => 'extra-questions'], function () {
                     Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getMetadata']);
                 });
+
+                Route::group(['prefix' => 'promo-codes'], function () {
+                    Route::group(['prefix' => 'all'], function () {
+                        Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@sendSponsorPromoCodes']);
+                    });
+                });
             });
             Route::group(['prefix' => '{sponsor_id}'], function () {
 
@@ -1871,6 +1877,14 @@ Route::group(array('prefix' => 'summits'), function () {
 
             // 25 requests per minute
             Route::get('{promo_code_val}/apply', ['middleware' => ['rate.limit:25,1'], 'uses' => 'OAuth2SummitPromoCodesApiController@preValidatePromoCode']);
+        });
+
+        // sponsor promo codes
+        Route::group(['prefix' => 'sponsor-promo-codes'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getAllSponsorPromoCodesBySummit']);
+            Route::group(['prefix' => 'csv'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getSponsorPromoCodesAllBySummitCSV']);
+            });
         });
 
         // speakers promo codes

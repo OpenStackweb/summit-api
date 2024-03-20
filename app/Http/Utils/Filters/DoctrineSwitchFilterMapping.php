@@ -40,9 +40,10 @@ class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyab
 
     /**
      * @param FilterElement $filter
+     * @param array $bindings
      * @return string
      */
-    public function toRawSQL(FilterElement $filter)
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         throw new \Exception;
     }

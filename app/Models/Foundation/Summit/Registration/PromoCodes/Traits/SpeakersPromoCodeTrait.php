@@ -250,11 +250,10 @@ trait SpeakersPromoCodeTrait
     }
 
     /**
-     * @param bool $email_sent
      * @param string|null $recipient
      * @return void
      */
-    public function setEmailSent(bool $email_sent, string $recipient = null)
+    public function setEmailSent(string $recipient = null)
     {
         Log::debug
         (
@@ -262,7 +261,6 @@ trait SpeakersPromoCodeTrait
             (
                 "SpeakersPromoCode::setEmailSent promo_code %s email_sent %b recipient %s",
                 $this->getId(),
-                $email_sent,
                 $recipient
             )
         );

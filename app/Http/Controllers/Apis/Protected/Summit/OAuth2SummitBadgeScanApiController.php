@@ -402,9 +402,9 @@ final class OAuth2SummitBadgeScanApiController
             function(){
                 return SerializerRegistry::SerializerType_CSV;
             },
-            function(){
+            function() use($summit) {
                 return [
-                    'scan_date' => new EpochCellFormatter(),
+                    'scan_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone())
                 ];
             },
             function() use($summit) {

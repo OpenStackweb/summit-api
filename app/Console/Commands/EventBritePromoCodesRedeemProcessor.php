@@ -15,10 +15,10 @@ use App\Services\Model\IAttendeeService;
 use Illuminate\Console\Command;
 use models\summit\ISummitRepository;
 /**
- * Class PromoCodesRedeemProcessor
+ * Class EventBritePromoCodesRedeemProcessor
  * @package App\Console\Commands
  */
-final class PromoCodesRedeemProcessor extends Command
+final class EventBritePromoCodesRedeemProcessor extends Command
 {
     /**
      * @var IAttendeeService
@@ -32,7 +32,7 @@ final class PromoCodesRedeemProcessor extends Command
 
 
     /**
-     * PromoCodesRedeemProcessor constructor.
+     * EventBritePromoCodesRedeemProcessor constructor.
      * @param IAttendeeService $service
      * @param ISummitRepository $repository
      */
@@ -52,14 +52,14 @@ final class PromoCodesRedeemProcessor extends Command
      *
      * @var string
      */
-    protected $name = 'summit:promo-codes-redeem-processor';
+    protected $name = 'summit:eventbrite-promo-codes-redeem-processor';
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'summit:promo-codes-redeem-processor {summit_id?}';
+    protected $signature = 'summit:eventbrite-promo-codes-redeem-processor {summit_id?}';
 
 
     /**
@@ -67,7 +67,7 @@ final class PromoCodesRedeemProcessor extends Command
      *
      * @var string
      */
-    protected $description = 'Redeems promo codes per summit';
+    protected $description = 'Redeems EventBrite promo codes per summit';
 
     /**
      * Execute the console command.

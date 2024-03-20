@@ -1,6 +1,6 @@
-<?php namespace App\Jobs\Emails\Registration;
-/**
- * Copyright 2020 OpenStack Foundation
+<?php namespace App\Http\Utils\Filters\SQL;
+/*
+ * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,18 @@
  **/
 
 /**
- * Class MemberPromoCodeEmail
- * @package App\Jobs\Emails\Registration
+ * Class SQLNotInFilterMapping
+ * @package App\Http\Utils\Filters\SQL
  */
-class MemberPromoCodeEmail extends PromoCodeEmail
+final class SQLNotInFilterMapping extends SQLInFilterMapping
 {
-
-    protected function getEmailEventSlug(): string
+    /**
+     * DoctrineFilterMapping constructor.
+     * @param string $alias
+     */
+    public function __construct(string $alias)
     {
-        return self::EVENT_SLUG;
+        parent::__construct($alias, '');
+        $this->operator = 'NOT IN';
     }
-
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_MEMBER_PROMO_CODE';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_MEMBER_PROMO_CODE';
-    const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_MEMBER_PROMO_CODE';
 }

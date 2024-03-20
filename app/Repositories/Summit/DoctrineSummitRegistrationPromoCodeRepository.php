@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\SQL\SQLInFilterMapping;
 use App\Http\Utils\Filters\SQL\SQLInstanceOfFilterMapping;
+use App\Http\Utils\Filters\SQL\SQLNotInFilterMapping;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -264,21 +266,21 @@ class DoctrineSummitRegistrationPromoCodeRepository
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
-     * @return mixed
+     * @return PagingResponse
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getBySummit
+    public function getIdsBySummit
     (
         Summit $summit,
         PagingInfo $paging_info,
         Filter $filter = null,
         Order $order   = null
-    )
+    ): PagingResponse
     {
         /*
          * we perform raw sql query because doctrine is generating a very complex query
-         * over ( 61 joins) and that breaks mysql max join limit (SQLSTATE[HY000]: General error:
-1116     * Too many tables; MySQL can only use 61 tables in a join in)
+         * over ( 61 joins) and that breaks mysql max join limit (SQLSTATE[HY000]: General error: 1116
+         * Too many tables; MySQL can only use 61 tables in a join in)
          */
 
         $bindings = ['param_summit_id' => $summit->getId()];
@@ -288,27 +290,32 @@ class DoctrineSummitRegistrationPromoCodeRepository
 
         if ($filter instanceof Filter) {
             $where_conditions = $filter->toRawSQL([
+                'id'            => new SQLInFilterMapping('pc.ID'),
+                'not_id'        => new SQLNotInFilterMapping('pc.ID'),
                 'code'          => 'pc.Code',
+                'notes'         => 'pc.Notes',
                 'description'   => 'pc.Description',
+                'email_sent'    => 'pc.EmailSent',
                 'tag'           => 't.Tag',
                 'tag_id'        => 't.ID',
                 'class_name'    =>
-                new SQLInstanceOfFilterMapping(
-                    "pc",
-                    [
-                        SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
-                        SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
-                        MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
-                        SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
-                        SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
-                        MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
-                        SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
-                        SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
-                        SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
-                        SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
-                        PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
-                        PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
-                    ]),
+                    new SQLInstanceOfFilterMapping(
+                        "pc",
+                        [
+                            SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
+                            SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
+                            MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
+                            SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
+                            SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
+                            MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
+                            SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
+                            SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
+                            SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
+                            SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
+                            PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
+                            PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
+                        ]
+                    ),
                 'type' => [
                     "mpc.Type :operator :value",
                     "mdc.Type :operator :value",
@@ -365,9 +372,21 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     Filter::buildEmailField('rrps3.Email'),
                     Filter::buildEmailField('rrps4.Email')
                 ],
-                'sponsor' => [
+                'sponsor_company_name' => [
                     "spn1.Name :operator :value",
                     "spn2.Name :operator :value"
+                ],
+                'sponsor_id' => [
+                    "sp1.Id :operator :value",
+                    "sp2.Id :operator :value"
+                ],
+                'contact_email' => [
+                    "spnpc.ContactEmail :operator :value",
+                    "spndc.ContactEmail :operator :value"
+                ],
+                'tier_name' => [
+                    "sp1stt.Name :operator :value",
+                    "sp2stt.Name :operator :value"
                 ],
             ]);
 
@@ -378,12 +397,16 @@ class DoctrineSummitRegistrationPromoCodeRepository
         }
 
         if (!is_null($order)) {
-            $extra_orders = $order->toRawSQL(array
-            (
+            $extra_orders = $order->toRawSQL([
                 'id'   => 'Id',
                 'code' => 'Code',
                 'redeemed' => 'REDEEMED_ORDER',
-            ));
+                'email_sent'    => 'EMAIL_SENT_ORDER',
+                'quantity_available' => 'pc.QuantityAvailable',
+                'quantity_used' => 'pc.QuantityUsed',
+                'tier_name' => 'TIER_NAME_ORDER',
+                'sponsor_company_name' => 'SPONSOR_COMPANY_NAME_ORDER',
+            ]);
         }
 
         $query_from = <<<SQL
@@ -416,8 +439,14 @@ LEFT JOIN SpeakerRegistrationRequest rrps1 ON ps1.RegistrationRequestID = rrps1.
 LEFT JOIN SpeakerRegistrationRequest rrps2 ON ps2.RegistrationRequestID = rrps2.ID
 LEFT JOIN SpeakerRegistrationRequest rrps3 ON ps3.RegistrationRequestID = rrps3.ID
 LEFT JOIN SpeakerRegistrationRequest rrps4 ON ps4.RegistrationRequestID = rrps4.ID
-LEFT JOIN Company spn1 ON spnpc.SponsorID = spn1.ID
-LEFT JOIN Company spn2 ON spndc.SponsorID = spn2.ID
+LEFT JOIN Sponsor sp1  ON spnpc.SponsorID = sp1.ID
+LEFT JOIN Summit_SponsorshipType sp1st ON sp1.SummitSponsorshipTypeID = sp1st.ID
+LEFT JOIN SponsorshipType sp1stt ON sp1st.SponsorshipTypeID = sp1stt.ID
+LEFT JOIN Company spn1 ON sp1.CompanyID = spn1.ID
+LEFT JOIN Sponsor sp2  ON spndc.SponsorID = sp2.ID
+LEFT JOIN Summit_SponsorshipType sp2st ON sp2.SummitSponsorshipTypeID = sp2st.ID
+LEFT JOIN SponsorshipType sp2stt ON sp2st.SponsorshipTypeID = sp2stt.ID
+LEFT JOIN Company spn2 ON sp2.CompanyID = spn2.ID
 LEFT JOIN SummitRegistrationPromoCode_Tags pct ON pct.SummitRegistrationPromoCodeID = pc.ID
 LEFT JOIN Tag t ON pct.TagID = t.ID
 SQL;
@@ -440,7 +469,21 @@ SELECT pc.ID, pc.Code, CASE
 WHEN pc.ClassName = 'SpeakersSummitRegistrationPromoCode' THEN COUNT(NOT ISNULL(aspkrpc.RedeemedAt)) - SUM(NOT ISNULL(aspkrpc.RedeemedAt)) = 0
 WHEN pc.ClassName = 'SpeakersRegistrationDiscountCode' THEN COUNT(NOT ISNULL(aspkrdc.RedeemedAt)) - SUM(NOT ISNULL(aspkrdc.RedeemedAt)) = 0
 ELSE pc.redeemed 
-END AS REDEEMED_ORDER
+END AS REDEEMED_ORDER,
+CASE 
+WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN sp1stt.Name
+WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN sp2stt.Name
+ELSE NULL 
+END AS TIER_NAME_ORDER,
+CASE 
+WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN spn1.Name
+WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN spn2.Name
+ELSE NULL 
+END AS SPONSOR_COMPANY_NAME_ORDER,
+CASE 
+WHEN pc.SentDate IS NOT NULL THEN 1
+ELSE 0
+END AS EMAIL_SENT_ORDER
 {$query_from}
 {$extra_filters} 
 GROUP BY pc.ID, pc.Code
@@ -451,12 +494,41 @@ SQL;
 
         $ids = $stm->fetchFirstColumn(\PDO::FETCH_COLUMN);
 
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $ids
+        );
+    }
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return mixed
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getBySummit
+    (
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order   = null
+    )
+    {
+        $page = $this->getIdsBySummit($summit, $paging_info, $filter, $order);
+        $total = $page->getTotal();
+
         $data = $this->getEntityManager()->createQueryBuilder()
             ->select("pc, FIELD(pc.id, :ids) AS HIDDEN ids")
             ->from($this->getBaseEntity(), "pc")
             ->where("pc.id in (:ids)")
             ->orderBy("ids")
-            ->setParameter("ids", $ids)
+            ->setParameter("ids", $page->getItems())
             ->getQuery()
             ->getResult();
 
@@ -524,7 +596,7 @@ SQL;
      */
     public function getByValueExclusiveLock(Summit $summit, string $code): ?SummitRegistrationPromoCode
     {
-        $query  =   $this->getEntityManager()
+        $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")

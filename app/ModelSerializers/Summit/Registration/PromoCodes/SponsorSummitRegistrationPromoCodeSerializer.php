@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SponsorSummitRegistrationPromoCode;
 
 /**
@@ -19,9 +20,10 @@ use models\summit\SponsorSummitRegistrationPromoCode;
  * @package ModelSerializers
  */
 class SponsorSummitRegistrationPromoCodeSerializer
-extends MemberSummitRegistrationPromoCodeSerializer
+extends SummitRegistrationPromoCodeSerializer
 {
     protected static $array_mappings = [
+        'ContactEmail' => 'contact_email:json_string',
         'SponsorId'  => 'sponsor_id:json_int',
     ];
 
@@ -54,12 +56,16 @@ extends MemberSummitRegistrationPromoCodeSerializer
                             (
                                 $code->getSponsor(),
                                 $serializer_type
-                            )->serialize($expand);
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
                     }
                         break;
                     case 'sponsor_name':{
-                        $values['sponsor_name'] = $code->getSponsor()->getName();
+                        $values['sponsor_name'] = $code->getSponsor()->getCompany()->getName();
                     }
                     break;
                 }

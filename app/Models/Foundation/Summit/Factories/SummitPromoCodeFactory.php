@@ -128,6 +128,9 @@ final class SummitPromoCodeFactory
         if(isset($data['description']))
             $promo_code->setDescription(trim($data['description']));
 
+        if(isset($data['notes']))
+            $promo_code->setNotes(trim($data['notes']));
+
         if(isset($data['valid_since_date'])) {
             $val = intval($data['valid_since_date']);
             if($val > 0) {
@@ -193,16 +196,9 @@ final class SummitPromoCodeFactory
             }
             break;
             case SponsorSummitRegistrationPromoCode::ClassName:{
-                if(isset($params['owner']))
-                    $promo_code->setOwner($params['owner']);
-                if(isset($data['type']))
-                    $promo_code->setType($data['type']);
-                if(isset($data['first_name']))
-                    $promo_code->setFirstName(trim($data['first_name']));
-                if(isset($data['last_name']))
-                    $promo_code->setLastName(trim($data['last_name']));
-                if(isset($data['email']))
-                    $promo_code->setEmail(trim($data['email']));
+                if(isset($data['contact_email']))
+                    $promo_code->setContactEmail(trim($data['contact_email']));
+
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
 
@@ -251,16 +247,8 @@ final class SummitPromoCodeFactory
             }
             break;
             case SponsorSummitRegistrationDiscountCode::ClassName:{
-                if(isset($params['owner']))
-                    $promo_code->setOwner($params['owner']);
-                if(isset($data['type']))
-                    $promo_code->setType($data['type']);
-                if(isset($data['first_name']))
-                    $promo_code->setFirstName(trim($data['first_name']));
-                if(isset($data['last_name']))
-                    $promo_code->setLastName(trim($data['last_name']));
-                if(isset($data['email']))
-                    $promo_code->setEmail(trim($data['email']));
+                if(isset($data['contact_email']))
+                    $promo_code->setContactEmail(trim($data['contact_email']));
                 if(isset($data['amount']))
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))

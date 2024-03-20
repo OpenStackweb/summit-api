@@ -13,7 +13,6 @@
  **/
 
 use models\exceptions\ValidationException;
-use models\main\Company;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Trait SponsorPromoCodeTrait
@@ -22,16 +21,22 @@ use Doctrine\ORM\Mapping AS ORM;
 trait SponsorPromoCodeTrait
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company")
+     * @ORM\Column(name="ContactEmail", type="string")
+     * @var string
+     */
+    protected $contact_email;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
      * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
-     * @var Company
+     * @var Sponsor
      */
     protected $sponsor;
 
     /**
      * @return string
      */
-    public function getType()
+    public function getType():string
     {
         return 'SPONSOR';
     }
@@ -39,7 +44,7 @@ trait SponsorPromoCodeTrait
     /**
      * @return int
      */
-    public function getSponsorId(){
+    public function getSponsorId():int{
         try {
             return is_null($this->sponsor) ? 0: $this->sponsor->getId();
         }
@@ -51,22 +56,32 @@ trait SponsorPromoCodeTrait
     /**
      * @return bool
      */
-    public function hasSponsor(){
+    public function hasSponsor():bool{
         return $this->getSponsorId() > 0;
     }
 
+    public function getContactEmail(): ?string
+    {
+        return $this->contact_email;
+    }
+
+    public function setContactEmail(string $contact_email): void
+    {
+        $this->contact_email = $contact_email;
+    }
+
     /**
-     * @return Company
+     * @return Sponsor
      */
-    public function getSponsor()
+    public function getSponsor():Sponsor
     {
         return $this->sponsor;
     }
 
     /**
-     * @param Company $sponsor
+     * @param Sponsor $sponsor
      */
-    public function setSponsor($sponsor)
+    public function setSponsor(Sponsor $sponsor)
     {
         $this->sponsor = $sponsor;
     }
@@ -78,14 +93,6 @@ trait SponsorPromoCodeTrait
      * @throw ValidationException
      */
     public function checkSubject(string $email, ?string $company):bool{
-
-        if($this->hasOwner() && $this->getOwnerEmail() != $email){
-            throw new ValidationException(sprintf('The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.', $this->getCode(), $email));
-        }
-
-        if(!empty($company) &&$this->hasSponsor() && $this->getSponsor()->getName() != $company){
-            throw new ValidationException(sprintf("The Promo Code %s is not available for Company %s", $this->getCode(), $company));
-        }
         return true;
     }
 }

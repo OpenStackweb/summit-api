@@ -12,17 +12,14 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
-use models\main\Member;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SponsorSummitRegistrationDiscountCode")
  * Class SponsorSummitRegistrationDiscountCode
  * @package models\summit
  */
-class SponsorSummitRegistrationDiscountCode extends MemberSummitRegistrationDiscountCode
+class SponsorSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode
 {
 
     use SponsorPromoCodeTrait;
@@ -39,13 +36,13 @@ class SponsorSummitRegistrationDiscountCode extends MemberSummitRegistrationDisc
     public static $metadata = [
         'class_name' => self::ClassName,
         'sponsor_id' => 'integer',
-        'type'       => PromoCodesConstants::SponsorSummitRegistrationPromoCodeTypes,
+        'contact_email' => 'string',
     ];
 
     /**
      * @return array
      */
     public static function getMetadata(){
-        return array_merge(MemberSummitRegistrationDiscountCode::getMetadata(), self::$metadata);
+        return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
     }
 }

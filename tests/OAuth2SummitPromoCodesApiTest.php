@@ -1,11 +1,4 @@
 <?php namespace Tests;
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
-use models\summit\PrePaidSummitRegistrationDiscountCode;
-use models\summit\PrePaidSummitRegistrationPromoCode;
-use models\summit\SpeakersRegistrationDiscountCode;
-use models\summit\SpeakersSummitRegistrationPromoCode;
-use models\summit\SummitTicketType;
-
 /**
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +11,13 @@ use models\summit\SummitTicketType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use models\summit\PrePaidSummitRegistrationDiscountCode;
+use models\summit\PrePaidSummitRegistrationPromoCode;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\summit\SummitTicketType;
 /**
  * Class OAuth2SummitPromoCodesApiTest
  */
@@ -53,6 +52,32 @@ final class OAuth2SummitPromoCodesApiTest
         $response = $this->action(
             "GET",
             "OAuth2SummitPromoCodesApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $promo_codes = json_decode($content);
+        $this->assertTrue(!is_null($promo_codes));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetSponsorPromoCodesAllBySummit()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'sponsor,sponsor.company,sponsor.sponsorship,sponsor.sponsorship.type',
+            'order' => 'tier_name,sponsor_company_name',
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@getAllSponsorPromoCodesBySummit",
             $params,
             [],
             [],
@@ -662,5 +687,43 @@ final class OAuth2SummitPromoCodesApiTest
         $this->assertTrue($promo_codes->total > 0);
         $this->assertNotEmpty($promo_codes->data[0]->tags);
         $this->assertStringStartsWith($tag, $promo_codes->data[0]->tags[0]->tag);
+    }
+
+    public function testSendSponsorPromoCodes()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => [
+                'id=='.implode('||',[
+                        self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-1]->getId(),
+                        self::$default_sponsors_promo_codes[count(self::$default_sponsors_promo_codes)-3]->getId(),
+                    ]
+                ),
+                'email_sent==0',
+            ]
+        ];
+
+        $data = [
+            'email_flow_event'      => SponsorPromoCodeEmail::EVENT_SLUG,
+            'test_email_recipient'  => 'test_recip@nomail.com',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitPromoCodesApiController@sendSponsorPromoCodes",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
     }
 }

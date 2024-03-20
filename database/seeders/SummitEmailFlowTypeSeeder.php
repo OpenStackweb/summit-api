@@ -47,7 +47,9 @@ use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
-use App\Jobs\Emails\Registration\MemberPromoCodeEmail;
+use App\Jobs\Emails\Registration\PromoCodes\MemberPromoCodeEmail;
+use App\Jobs\Emails\Registration\PromoCodes\SpeakerPromoCodeEMail;
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestOwner;
@@ -57,7 +59,6 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
-use App\Jobs\Emails\Registration\SpeakerPromoCodeEMail;
 use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
@@ -213,6 +214,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => GenericSummitAttendeeEmail::EVENT_NAME,
                 'slug' => GenericSummitAttendeeEmail::EVENT_SLUG,
                 'default_email_template' => GenericSummitAttendeeEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => SponsorPromoCodeEmail::EVENT_NAME,
+                'slug' => SponsorPromoCodeEmail::EVENT_SLUG,
+                'default_email_template' => SponsorPromoCodeEmail::DEFAULT_TEMPLATE
             ],
         ], $flow);
 

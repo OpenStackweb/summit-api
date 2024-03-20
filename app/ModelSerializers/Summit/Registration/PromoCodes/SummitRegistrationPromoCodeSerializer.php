@@ -35,6 +35,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
         'ValidUntilDate'    => 'valid_until_date:datetime_epoch',
         'ClassName'         => 'class_name:json_string',
         'Description'       => 'description:json_string',
+        'Notes'             => 'notes:json_string',
     ];
 
     protected static $allowed_relations = [

@@ -34,6 +34,8 @@ interface IMailTemplatesConstants
     const candidate_nominations_count = 'candidate_nominations_count';
     const cc_email = 'cc_email';
     const code = 'code';
+    const company_name = 'company_name';
+    const contact_email = 'contact_email';
     const content = 'content';
     const confirmation_number = 'confirmation_number';
     const creator_email = 'creator_email';
@@ -197,4 +199,6 @@ interface IMailTemplatesConstants
     const virtual_event_site_link = 'virtual_event_site_link';
     const summit_marketing_site_url_magic_link = 'summit_marketing_site_url_magic_link';
     const edit_ticket_link = 'edit_ticket_link';
+
+    const sponsor_tier_name = 'sponsor_tier_name';
 }

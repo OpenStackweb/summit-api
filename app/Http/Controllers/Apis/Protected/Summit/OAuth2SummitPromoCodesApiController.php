@@ -12,12 +12,16 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Http\Utils\Filters\FiltersParams;
+use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
@@ -26,11 +30,14 @@ use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\summit\SponsorSummitRegistrationDiscountCode;
+use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitPromoCodeService;
 use utils\Filter;
+use utils\FilterElement;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
@@ -119,17 +126,22 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'code' => ['@@', '=@', '=='],
                     'description' => ['@@', '=@'],
+                    'notes' => ['@@', '=@'],
                     'creator' => ['@@', '=@', '=='],
                     'creator_email' => ['@@', '=@', '=='],
                     'owner' => ['@@', '=@', '=='],
                     'owner_email' => ['@@', '=@', '=='],
                     'speaker' => ['@@', '=@', '=='],
                     'speaker_email' => ['@@', '=@', '=='],
-                    'sponsor' => ['@@', '=@', '=='],
                     'class_name' => ['=='],
                     'type' => ['=='],
                     'tag' => ['@@','=@', '=='],
                     'tag_id' => ['=='],
+                    'sponsor_company_name' => ['@@', '=@', '=='],
+                    'sponsor_id' => ['=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier_name' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
                 ];
             },
             function () {
@@ -137,16 +149,21 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'class_name' => sprintf('sometimes|required|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
                     'code' => 'sometimes|string',
                     'description' => 'sometimes|string',
+                    'notes' => 'sometimes|string',
                     'creator' => 'sometimes|string',
                     'creator_email' => 'sometimes|string',
                     'owner' => 'sometimes|string',
                     'owner_email' => 'sometimes|string',
                     'speaker' => 'sometimes|string',
                     'speaker_email' => 'sometimes|string',
-                    'sponsor' => 'sometimes|string',
                     'type' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::getValidTypes())),
                     'tag' => 'sometimes|required|string',
                     'tag_id' => 'sometimes|integer',
+                    'sponsor_company_name' => 'sometimes|string',
+                    'contact_email' => 'sometimes|string',
+                    'sponsor_id' => 'sometimes|integer',
+                    'tier_name' =>  'sometimes|string',
+                    'email_sent' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -154,9 +171,98 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'id',
                     'code',
                     'redeemed',
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
                 ];
             },
             function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Private;
+            },
+            function () {
+                return new Order([
+                    OrderElement::buildAscFor("id"),
+                ]);
+            },
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->repository->getBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllSponsorPromoCodesBySummit($summit_id)
+    {
+
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if(!$current_member->isAuthzFor($summit))
+            return $this->error403();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'code' => ['@@', '=@', '=='],
+                    'notes' => ['@@', '=@', '=='],
+                    'description' => ['@@', '=@'],
+                    'tag' => ['@@','=@', '=='],
+                    'tag_id' => ['=='],
+                    'sponsor_company_name' => ['@@', '=@', '=='],
+                    'sponsor_id' => ['=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier_name' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'code' => 'sometimes|string',
+                    'notes' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'tag' => 'sometimes|required|string',
+                    'tag_id' => 'sometimes|integer',
+                    'sponsor_company_name' => 'sometimes|string',
+                    'contact_email' => 'sometimes|string',
+                    'sponsor_id' => 'sometimes|integer',
+                    'tier_name' =>  'sometimes|string',
+                    'email_sent' => ['sometimes', new Boolean()],
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'code',
+                    'redeemed',
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
+                ];
+            },
+            function ($filter) {
+                $filter = $filter->addFilterCondition(FilterElement::makeEqual('class_name', [
+                    SponsorSummitRegistrationDiscountCode::ClassName,
+                    SponsorSummitRegistrationPromoCode::ClassName
+                ], 'OR'));
                 return $filter;
             },
             function () {
@@ -194,6 +300,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             function () {
                 return [
                     'code' => ['@@', '=@', '=='],
+                    'notes' => ['@@', '=@', '=='],
                     'description' => ['@@', '=@'],
                     'creator' => ['@@', '=@', '=='],
                     'creator_email' => ['@@', '=@', '=='],
@@ -201,11 +308,15 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'owner_email' => ['@@', '=@', '=='],
                     'speaker' => ['@@', '=@', '=='],
                     'speaker_email' => ['@@', '=@', '=='],
-                    'sponsor' => ['@@', '=@', '=='],
                     'class_name' => ['=='],
                     'type' => ['=='],
                     'tag' => ['@@','=@', '=='],
                     'tag_id' => ['=='],
+                    'sponsor_company_name' => ['@@', '=@', '=='],
+                    'sponsor_id' =>  ['=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier_name' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
                 ];
             },
             function () {
@@ -213,22 +324,33 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'class_name' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
                     'code' => 'sometimes|string',
                     'description' => 'sometimes|string',
+                    'notes' => 'sometimes|string',
                     'creator' => 'sometimes|string',
                     'creator_email' => 'sometimes|string',
                     'owner' => 'sometimes|string',
                     'owner_email' => 'sometimes|string',
                     'speaker' => 'sometimes|string',
                     'speaker_email' => 'sometimes|string',
-                    'sponsor' => 'sometimes|string',
                     'type' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::getValidTypes())),
                     'tag' => 'sometimes|required|string',
                     'tag_id' => 'sometimes|integer',
+                    'sponsor_company_name' => 'sometimes|string',
+                    'sponsor_id' => 'sometimes|integer',
+                    'contact_email' => 'sometimes|string',
+                    'tier_name' =>  'sometimes|string',
+                    'email_sent' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
                 return [
                     'id',
                     'code',
+                    'redeemed',
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
                 ];
             },
             function ($filter) use ($summit) {
@@ -265,6 +387,107 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 ];
             },
             'promocodes-',
+            [],
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->repository->getBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    public function getSponsorPromoCodesAllBySummitCSV($summit_id)
+    {
+
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        // authz check
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if(!$current_member->isAuthzFor($summit))
+            return $this->error403();
+
+        return $this->_getAllCSV(
+            function () {
+                return [
+                    'code' => ['@@', '=@', '=='],
+                    'description' => ['@@', '=@'],
+                    'tag' => ['@@','=@', '=='],
+                    'tag_id' => ['=='],
+                    'sponsor_company_name' => ['@@', '=@', '=='],
+                    'sponsor_id' =>  ['=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier_name' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'code' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'tag' => 'sometimes|required|string',
+                    'tag_id' => 'sometimes|integer',
+                    'sponsor_company_name' => 'sometimes|string',
+                    'sponsor_id' => 'sometimes|integer',
+                    'contact_email' => 'sometimes|string',
+                    'tier_name' =>  'sometimes|string',
+                    'email_sent' => ['sometimes', new Boolean()],
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'code',
+                    'redeemed',
+                    'tier_name',
+                    'email_sent',
+                    'quantity_available',
+                    'quantity_used',
+                    'sponsor_company_name',
+                ];
+            },
+            function ($filter) use ($summit) {
+                $filter = $filter->addFilterCondition(FilterElement::makeEqual('class_name', [
+                    SponsorSummitRegistrationDiscountCode::ClassName,
+                    SponsorSummitRegistrationPromoCode::ClassName
+                ], 'OR'));
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function () {
+                return [
+                    'created' => new EpochCellFormatter,
+                    'last_edited' => new EpochCellFormatter,
+                    'redeemed' => new BooleanCellFormatter,
+                    'email_sent' => new BooleanCellFormatter,
+                ];
+            },
+            function () {
+                return [
+                    "id",
+                    "created",
+                    "last_edited",
+                    "code",
+                    "redeemed",
+                    "email_sent",
+                    "source",
+                    "summit_id",
+                    "creator_id",
+                    "class_name",
+                    "type",
+                    "speaker_id",
+                    "owner_name",
+                    "owner_email",
+                    "sponsor_name"
+                ];
+            },
+            'sponsor-promocodes-',
             [],
             function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->repository->getBySummit
@@ -477,7 +700,6 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function removeTicketTypeFromPromoCode($summit_id, $promo_code_id, $ticket_type_id)
     {
-
         return $this->processRequest(function () use ($summit_id, $promo_code_id, $ticket_type_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -735,6 +957,77 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
             $this->promo_code_service
                 ->preValidatePromoCode($summit, $this->resource_server_context->getCurrentUser(), $promo_code_val, $filter);
+
+            return $this->ok();
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function sendSponsorPromoCodes($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+
+            if (!Request::isJson()) return $this->error400();
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            // authz check
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if(!$current_member->isAuthzFor($summit))
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
+
+            $payload = $this->getJsonPayload([
+                'email_flow_event' => 'required|string|in:' . join(',', [
+                        SponsorPromoCodeEmail::EVENT_SLUG,
+                    ]),
+                'promo_code_ids'          => 'sometimes|int_array',
+                'excluded_promo_code_ids' => 'sometimes|int_array',
+                'test_email_recipient'    => 'sometimes|email',
+                'outcome_email_recipient' => 'sometimes|email',
+            ]);
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'id'            => ['=='],
+                    'not_id'        => ['=='],
+                    'code' => ['@@', '=@', '=='],
+                    'notes' => ['@@', '=@', '=='],
+                    'description' => ['@@', '=@'],
+                    'tag' => ['@@','=@', '=='],
+                    'tag_id' => ['=='],
+                    'sponsor_company_name' => ['@@', '=@', '=='],
+                    'sponsor_id' => ['=='],
+                    'contact_email' =>  ['@@', '=@', '=='],
+                    'tier_name' =>  ['@@', '=@', '=='],
+                    'email_sent' => ['=='],
+                ]);
+            }
+
+            if (is_null($filter))
+                $filter = new Filter();
+
+            $filter->validate([
+                'id'            => 'sometimes|integer',
+                'not_id'        => 'sometimes|integer',
+                'code' => 'sometimes|string',
+                'notes' => 'sometimes|string',
+                'description' => 'sometimes|string',
+                'tag' => 'sometimes|required|string',
+                'tag_id' => 'sometimes|integer',
+                'sponsor_company_name' => 'sometimes|string',
+                'contact_email' => 'sometimes|string',
+                'sponsor_id' => 'sometimes|integer',
+                'tier_name' =>  'sometimes|string',
+                'email_sent' => ['sometimes', new Boolean()],
+            ]);
+
+            $this->promo_code_service->triggerSendSponsorPromoCodes($summit, $payload, FiltersParams::getFilterParam());
 
             return $this->ok();
         });

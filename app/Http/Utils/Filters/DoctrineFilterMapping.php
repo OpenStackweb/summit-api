@@ -35,9 +35,10 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
 
     /**
      * @param FilterElement $filter
+     * @param array $bindings
      * @return string
      */
-    public function toRawSQL(FilterElement $filter)
+    public function toRawSQL(FilterElement $filter, array $bindings = []):string
     {
         throw new \Exception;
     }

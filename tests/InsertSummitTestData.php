@@ -47,6 +47,8 @@ use models\summit\SponsorAd;
 use models\summit\SponsorMaterial;
 use models\summit\SponsorshipType;
 use models\summit\SponsorSocialNetwork;
+use models\summit\SponsorSummitRegistrationDiscountCode;
+use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -60,6 +62,7 @@ use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
+use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
 use models\summit\SummitVenue;
@@ -260,6 +263,11 @@ trait InsertSummitTestData
     static $default_discount_code;
 
     /**
+     * @var array | SummitRegistrationPromoCode[]
+     */
+    static $default_sponsors_promo_codes = [];
+
+    /**
      * @throws Exception
      */
     protected static function insertSummitTestData(){
@@ -268,6 +276,10 @@ trait InsertSummitTestData
 
         DB::delete("DELETE FROM SummitBadgeViewType");
         DB::delete("DELETE FROM SummitMediaFileType");
+        DB::delete('DELETE FROM SponsorSummitRegistrationDiscountCode');
+        DB::delete("DELETE FROM SummitRegistrationPromoCode");
+        DB::delete("DELETE FROM Sponsor");
+        DB::delete("DELETE FROM Company");
         DB::delete("DELETE FROM Summit");
 
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
@@ -852,6 +864,22 @@ trait InsertSummitTestData
 
             self::$em->persist($c);
             self::$companies_without_sponsor[] = $c;
+        }
+
+        // sponsor promo codes
+
+        for($i = 0 ; $i < 20; $i++){
+            $promo_code = new SponsorSummitRegistrationDiscountCode();
+            $promo_code->setCode(sprintf("TEST_SPONSOR_PROMO_CODE_%s", $i));
+            $promo_code->setDescription(sprintf("TEST SPONSOR PROMO CODE %s", $i));
+            $promo_code->setValidSinceDate(null);
+            $promo_code->setValidUntilDate(null);
+            $promo_code->setRate(50.00);
+            $promo_code->addTag(new Tag('TEST TAG'));
+            $promo_code->setContactEmail("test@test.com");
+            $promo_code->setSponsor(self::$sponsors[array_rand(self::$sponsors)]);
+            self::$summit->addPromoCode($promo_code);
+            self::$default_sponsors_promo_codes[] = $promo_code;
         }
 
         self::$em->persist(self::$summit);

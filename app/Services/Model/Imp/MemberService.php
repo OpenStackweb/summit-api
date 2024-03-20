@@ -623,15 +623,15 @@ final class MemberService
     public function assocSummitOrders(int $member_id):void{
 
         $member = $this->tx_service->transaction(function() use($member_id){
-            Log::debug(sprintf("MemberService::assocSummitOrders trying to get member id %s", $member_id));
+            Log::debug(sprintf("MemberService::assocSummitOrders trying to get member id %s.", $member_id));
             $member = $this->member_repository->getById($member_id);
-            if(is_null($member) || !$member instanceof Member) return null;
+            if(!$member instanceof Member) return null;
             return $member;
         });
 
-        if(is_null($member))
+        if(!$member instanceof Member)
         {
-            Log::warning(sprintf("MemberService::assocSummitOrders member %s not found", $member_id));
+            Log::warning(sprintf("MemberService::assocSummitOrders member %s not found.", $member_id));
             return;
         }
 

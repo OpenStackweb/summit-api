@@ -2757,7 +2757,14 @@ SQL;
                 continue;
             }
             if ($ticket_type_currency != $default_currency)
-                throw new ValidationException(sprintf("All ticket types for summit %s should have same currency.", $this->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "All ticket types for summit %s should have same currency.",
+                        $this->getId()
+                    )
+                );
         }
         return $default_currency;
     }

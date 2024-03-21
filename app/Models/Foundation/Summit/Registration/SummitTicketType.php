@@ -47,7 +47,6 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     const EUR_Currency = 'EUR';
     const GBP_Currency = 'GBP';
     const CAD_Currency = 'CAD';
-
     const WON_Currency = 'KRW';
 
     const AmountFree = 0.0;
@@ -306,7 +305,14 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     public function setCurrency(string $currency): void
     {
         if(!in_array($currency, self::AllowedCurrencies))
-            throw new ValidationException(sprintf("Currency %s is not allowed.", $currency));
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Currency %s is not allowed.",
+                    $currency
+                )
+            );
 
         $this->currency = $currency;
     }

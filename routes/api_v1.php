@@ -1075,6 +1075,11 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@updateTicketTypeBySummit']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@deleteTicketTypeBySummit']);
             });
+            Route::group(['prefix' => 'all'], function () {
+                Route::group(['prefix' => 'currency'], function () {
+                    Route::put('{currency_symbol}', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@updateCurrencySymbol']);
+                });
+            });
         });
 
         // begin registration endpoints

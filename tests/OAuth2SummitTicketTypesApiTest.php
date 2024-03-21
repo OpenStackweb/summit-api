@@ -1,4 +1,7 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitTicketType;
 
@@ -436,5 +439,34 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
         $ticket_types = json_decode($content);
         $this->assertTrue(!is_null($ticket_types));
         return $ticket_types;
+    }
+
+    public function testUpdateTicketTypesCurrencySymbol(){
+        $currency_symbol = SummitTicketType::EUR_Currency;
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'currency_symbol' => $currency_symbol
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitsTicketTypesApiController@updateCurrencySymbol",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        $summit_repository = EntityManager::getRepository(Summit::class);
+        $summit = $summit_repository->find(self::$summit->getId());
+        $this->assertEquals($currency_symbol, $summit->getTicketTypes()->first()->getCurrency());
     }
 }

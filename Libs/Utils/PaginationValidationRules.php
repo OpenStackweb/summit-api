@@ -20,13 +20,16 @@
 final class PaginationValidationRules
 {
 
+    const PageParam = 'page';
+    const PerPageParam = 'per_page';
+
     const PerPageMin = 5;
     const PerPageMax = 500;
 
     public static function get():array{
         return [
-            'page' => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s',self::PerPageMin, self::PerPageMax)
+            self::PageParam => 'integer|min:1',
+            self::PerPageParam => sprintf('required_with:page|integer|min:%s|max:%s',self::PerPageMin, self::PerPageMax)
         ];
     }
 }

@@ -15,7 +15,6 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\MultipartFormDataCleaner;
-use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +38,6 @@ use utils\FilterElement;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
-use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
 

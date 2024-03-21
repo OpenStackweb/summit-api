@@ -21,6 +21,7 @@ use libs\utils\PaginationValidationRules;
  */
 trait ParseAndGetPaginationParams
 {
+
     /**
      * @param callable|null $defaultPageSize
      * @return array
@@ -29,13 +30,14 @@ trait ParseAndGetPaginationParams
         $page = 1;
         $per_page = is_null($defaultPageSize) ? PaginationValidationRules::PerPageMin : call_user_func($defaultPageSize);
 
-        if (Request::has('page')) {
-            $page = intval(Request::get('page'));
+        if (Request::has(PaginationValidationRules::PageParam)) {
+            $page = intval(Request::get(PaginationValidationRules::PageParam));
         }
 
-        if (Request::has('per_page')) {
-            $per_page = intval(Request::get('per_page'));
+        if (Request::has(PaginationValidationRules::PerPageParam)) {
+            $per_page = intval(Request::get(PaginationValidationRules::PerPageParam));
         }
+
         return [$page, $per_page];
     }
 }

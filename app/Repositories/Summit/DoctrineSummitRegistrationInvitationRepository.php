@@ -17,7 +17,6 @@ use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
-use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use utils\DoctrineCaseFilterMapping;

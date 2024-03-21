@@ -33,20 +33,7 @@ use Illuminate\Support\Facades\Request;
  */
 abstract class RetrieveSummitEventsStrategy
 {
-
-    protected function getPageParams()
-    {
-        // default values
-        $page = 1;
-        $per_page = PaginationValidationRules::PerPageMin;
-
-        if (Request::has('page')) {
-            $page = intval(Request::input('page'));
-            $per_page = intval(Request::input('per_page'));
-        }
-
-        return [$page, $per_page];
-    }
+    use ParseAndGetPaginationParams;
 
     /**
      * @param array $params
@@ -66,7 +53,7 @@ abstract class RetrieveSummitEventsStrategy
         }
 
 
-        list($page, $per_page) = $this->getPageParams();
+        list($page, $per_page) = $this->getPaginationParams();
 
         return $this->retrieveEventsFromSource
         (
@@ -166,7 +153,8 @@ abstract class RetrieveSummitEventsStrategy
     protected function getValidFilters()
     {
         return [
-
+            'id' => ['=='],
+            'not_id' => ['=='],
             'title' => ['=@', '@@', '=='],
             'abstract' => ['=@', '@@', '=='],
             'meeting_url' => ['=@', '@@', '=='],
@@ -191,7 +179,6 @@ abstract class RetrieveSummitEventsStrategy
             'speaker_title' => ['=@', '@@', '=='],
             'speaker_company' => ['=@', '@@', '=='],
             'selection_status' => ['=='],
-            'id' => ['=='],
             'selection_plan_id' => ['=='],
             'created_by_fullname' => ['=@', '@@', '=='],
             'created_by_email' => ['=@', '@@', '=='],
@@ -221,6 +208,8 @@ abstract class RetrieveSummitEventsStrategy
     protected function getFilterValidatorRules(): array
     {
         return [
+            'id' => 'sometimes|integer',
+            'not_id' => 'sometimes|integer',
             'title' => 'sometimes|string',
             'abstract' => 'sometimes|string',
             'social_summary' => 'sometimes|string',
@@ -239,7 +228,7 @@ abstract class RetrieveSummitEventsStrategy
             'summit_id' => 'sometimes|integer',
             'speaker_id' => 'sometimes|integer',
             'location_id' => 'sometimes|integer',
-            'id' => 'sometimes|integer',
+
             'selection_plan_id' => 'sometimes|integer',
             'created_by_fullname' => 'sometimes|string',
             'created_by_email' => 'sometimes|string',

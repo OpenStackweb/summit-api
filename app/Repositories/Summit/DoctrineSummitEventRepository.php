@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -236,7 +238,8 @@ final class DoctrineSummitEventRepository
     protected function getCustomFilterMappings(int $current_member_id, int $current_track_id)
     {
         return [
-            'id' => 'e.id:json_int',
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
             'title' => 'e.title:json_string',
             'streaming_url' => 'e.streaming_url:json_string',
             'streaming_type' => 'e.streaming_type:json_string',

@@ -864,7 +864,9 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      */
     public function getExtraQuestions()
     {
-        return $this->extra_questions;
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->extra_questions->matching($criteria);
     }
 
     /**

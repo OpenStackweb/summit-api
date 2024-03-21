@@ -16,6 +16,7 @@ use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTicketTypeService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -413,9 +414,21 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->processRequest(function () use ($summit_id, $currency_symbol) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
-            $this->ticket_type_service->updateCurrencySymbol($summit, $currency_symbol);
+            $member = $this->resource_server_context->getCurrentUser();
+            if (is_null($member)) return $this->error403();
+
+            if(!$member->isAuthzFor($summit)){
+                return $this->error403();
+            }
+
+            if(!in_array($currency_symbol, SummitTicketType::AllowedCurrencies)){
+                throw new ValidationException(sprintf("Currency symbol %s is not allowed.", $currency_symbol));
+            }
+
+            $this->ticket_type_service->updateCurrencySymbol($summit, strval($currency_symbol));
 
             return $this->updated();
         });

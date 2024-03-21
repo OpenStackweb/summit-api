@@ -67,4 +67,12 @@ interface ISummitTicketTypeService
      * @throws \Exception
      */
     public function getAllowedTicketTypes(Summit $summit, Member $member, ?string $promocode_code = null): array;
+
+    /**
+     * @param Summit $summit
+     * @param String $currency_symbol
+     * @return void
+     * @throws \Exception
+     */
+    public function updateCurrencySymbol(Summit $summit, string $currency_symbol): void;
 }

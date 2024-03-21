@@ -386,4 +386,28 @@ final class SummitTicketTypeService
             return $factory->build($summit, $member, $promo_code)->getTicketTypes();
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param String $currency_symbol
+     * @return void
+     * @throws \Exception
+     */
+    public function updateCurrencySymbol(Summit $summit, string $currency_symbol): void {
+        $this->tx_service->transaction(function () use ($summit, $currency_symbol) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitTicketTypeService::updateCurrencySymbol summit %s new currency symbol %s.",
+                    $summit->getId(),
+                    $currency_symbol
+                )
+            );
+
+            foreach($summit->getTicketTypes() as $tt) {
+                $tt->setCurrency($currency_symbol);
+            }
+        });
+    }
 }

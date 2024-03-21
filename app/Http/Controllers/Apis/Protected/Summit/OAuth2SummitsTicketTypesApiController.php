@@ -403,4 +403,21 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $currency_symbol
+     * @return mixed
+     */
+    public function updateCurrencySymbol($summit_id, $currency_symbol)
+    {
+        return $this->processRequest(function () use ($summit_id, $currency_symbol) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->ticket_type_service->updateCurrencySymbol($summit, $currency_symbol);
+
+            return $this->updated();
+        });
+    }
 }

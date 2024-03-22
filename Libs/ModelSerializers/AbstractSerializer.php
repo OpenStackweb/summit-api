@@ -473,4 +473,14 @@ abstract class AbstractSerializer implements IModelSerializer
         return SerializerRegistry::SerializerType_Public;
     }
 
+    /**
+     * @param string $label
+     * @return string
+     */
+    public static function getCSVLabel(string $label): string
+    {
+        $res = strip_tags(trim(html_entity_decode(strtolower(trim($label))), "\t\n\r\0\x0B\xC2\xA0"));
+        return str_replace(",","\,", $res);
+    }
+
 }

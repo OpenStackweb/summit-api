@@ -16,6 +16,7 @@ use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\Request;
+use Libs\ModelSerializers\AbstractSerializer;
 use models\exceptions\EntityNotFoundException;
 use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
@@ -423,7 +424,7 @@ final class OAuth2SummitBadgeScanApiController
                 ];
 
                 foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question){
-                    $allowed_columns[] = $question->getCSVLabel();
+                    $allowed_columns[] = AbstractSerializer::getCSVLabel($question->getLabel());
                 }
 
                 $columns_param = Request::input("columns", "");

@@ -13,6 +13,7 @@
  **/
 use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use Illuminate\Support\Facades\Log;
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\SummitOrderExtraQuestionType;
 /**
@@ -48,7 +49,7 @@ class SponsorUserInfoGrantCSVSerializer extends SponsorUserInfoGrantSerializer
             }
             foreach ($params['ticket_questions'] as $question) {
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
-                $label = $question->getCSVLabel();
+                $label = AbstractSerializer::getCSVLabel($question->getLabel());
                 $values[$label] = '';
                 if (!is_null($ticket_owner)) {
                     $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);

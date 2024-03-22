@@ -63,7 +63,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
             }
 
             foreach ($params['ticket_questions'] as $question) {
-                $label = $question->getCSVLabel();
+                $label = AbstractSerializer::getCSVLabel($question->getLabel());
 
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
                 $values[$label] = '';
@@ -79,7 +79,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         foreach ($sponsor_questions as $question) {
             if (!$question instanceof SummitSponsorExtraQuestionType) continue;
 
-            $label = $question->getCSVLabel();
+            $label = AbstractSerializer::getCSVLabel($question->getLabel());
             $values[$label] = '';
 
             $value = $scan->getExtraQuestionAnswerValueByQuestion($question);

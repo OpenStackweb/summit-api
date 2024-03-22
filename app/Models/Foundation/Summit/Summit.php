@@ -71,14 +71,8 @@ class Summit extends SilverstripeBaseModel
         'attendee_last_name',
         'attendee_email',
         'attendee_company',
-        'attendee_extra_questions' => [
-            'id',
-            'name'
-        ],
-        'extra_questions' => [
-            'id',
-            'name'
-        ]
+        'attendee_extra_questions' => ['*'],
+        'extra_questions' => ['*']
     ];
 
     /**
@@ -6944,9 +6938,19 @@ SQL;
         if ($res) return $res;
 
         //default
+        //expand summit level attendee extra questions
+        $attendee_extra_questions = $this->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $default_setting = self::$default_report_setting;
+        $default_setting['attendee_extra_questions'] = $attendee_extra_questions->map(function ($entity) {
+            return [
+                'id' => $entity->getId(),
+                'name' => $entity->getName(),
+            ];
+        })->toArray();
+
         $res = new SummitLeadReportSetting();
         $res->setSummit($this);
-        $res->setColumns(self::$default_report_setting);
+        $res->setColumns($default_setting);
         return $res;
     }
 }

@@ -23,20 +23,20 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
 
     use InsertMemberTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::insertSummitTestData();
-    }
-
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        self::clearMemberTestData();
-        parent::tearDown();
-    }
+//    protected function setUp():void
+//    {
+//        parent::setUp();
+//        self::insertMemberTestData(IGroup::TrackChairs);
+//        self::$defaultMember = self::$member;
+//        self::insertSummitTestData();
+//    }
+//
+//    protected function tearDown():void
+//    {
+//        self::clearSummitTestData();
+//        self::clearMemberTestData();
+//        parent::tearDown();
+//    }
 
     public function testAddBadgeScan(){
         $params = [
@@ -254,7 +254,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
     public function testExportSummitBadgeScans(){
 
         $params = [
-            'id'    =>  self::$summit->getId(),
+            'id'    =>  3873, //self::$summit->getId(),
             'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
         ];
 

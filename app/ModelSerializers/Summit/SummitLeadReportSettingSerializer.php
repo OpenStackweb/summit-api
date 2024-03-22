@@ -22,9 +22,9 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
 class SummitLeadReportSettingSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Columns'                          => 'columns:json_string',
-        'SponsorId'                        => 'sponsor_id:json_int',
-        'SummitId'                         => 'summit_id:json_int',
+        'Columns'   => 'columns:json_string',
+        'SponsorId' => 'sponsor_id:json_int',
+        'SummitId'  => 'summit_id:json_int',
     ];
 
     protected static $expand_mappings = [

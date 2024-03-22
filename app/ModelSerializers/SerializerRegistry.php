@@ -646,6 +646,8 @@ final class SerializerRegistry
         // proposed schedule lock
         $this->registry['SummitProposedScheduleLock'] = SummitProposedScheduleLockSerializer::class;
 
+        // summit lead report setting
+        $this->registry['SummitLeadReportSetting'] = SummitLeadReportSettingSerializer::class;
     }
 
     /**

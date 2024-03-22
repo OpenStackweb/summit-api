@@ -37,6 +37,15 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         'AttendeeCompany' => 'attendee_company:json_string',
     ];
 
+    private function isAllowedExtraQuestion(array $allowed_extra_questions, int $extra_question_id): bool
+    {
+        if (count($allowed_extra_questions) > 0 && $allowed_extra_questions[0] == '*') return true;
+
+        foreach($allowed_extra_questions as $allowed_extra_question) {
+            if ($allowed_extra_question['id'] == $extra_question_id) return true;
+        }
+        return false;
+    }
 
     /**
      * @param null $expand
@@ -52,17 +61,23 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $sponsor = $scan->getSponsor();
         $sponsor_questions = $sponsor->getExtraQuestions();
+        $setting = $sponsor->getSummit()->getLeadReportSettingFor($sponsor);
 
         if (isset($params['ticket_questions'])) {
 
             $ticket_owner = null;
             $badge = $scan->getBadge();
 
+            $allowed_attendee_extra_questions = $setting->getColumns()['attendee_extra_questions'];
+
             if (!is_null($badge)) {
                 $ticket_owner = $badge->getTicket()->getOwner();
             }
 
             foreach ($params['ticket_questions'] as $question) {
+                if (!is_null($allowed_attendee_extra_questions) &&
+                    !$this->isAllowedExtraQuestion($allowed_attendee_extra_questions, $question->getId())) continue;
+
                 $label = AbstractSerializer::getCSVLabel($question->getLabel());
 
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
@@ -76,8 +91,13 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
             }
         }
 
+        $allowed_sponsor_extra_questions = $setting->getColumns()['extra_questions'];
+
         foreach ($sponsor_questions as $question) {
             if (!$question instanceof SummitSponsorExtraQuestionType) continue;
+
+            if (!is_null($allowed_sponsor_extra_questions) &&
+                !$this->isAllowedExtraQuestion($allowed_sponsor_extra_questions, $question->getId())) continue;
 
             $label = AbstractSerializer::getCSVLabel($question->getLabel());
             $values[$label] = '';

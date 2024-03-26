@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 /**
  * Class CSVExporter
  * @package App\Http\Utils
@@ -44,11 +45,10 @@ final class CSVExporter
     /**
      * @param array $items
      * @param $field_separator
-     * @param array $header
      * @param array $formatters
      * @return string
      */
-    public function export(array $items, $field_separator = ",", array $header = [], array $formatters = []):string{
+    public function export(array $items, $field_separator = ",", array $formatters = []):string{
         $output         = '';
         $header         = [];
         $originalHeader = [];

@@ -178,7 +178,7 @@ abstract class JsonController extends Controller
 
         return $this->rawContent
         (
-            CSVExporter::getInstance()->export($items, $field_separator, $columns, $formatters),
+            CSVExporter::getInstance()->export($items, $field_separator, $formatters),
             $headers
         );
     }

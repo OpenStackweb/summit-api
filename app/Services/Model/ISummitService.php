@@ -32,6 +32,7 @@ use models\summit\SummitBookableVenueRoomAttributeType;
 use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
+use models\summit\SummitLeadReportSetting;
 use models\summit\SummitScheduleEmptySpot;
 use utils\Filter;
 /**
@@ -647,4 +648,20 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function removeRegistrationFeedMetadata(Summit $summit, int $metadata_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws \Exception
+     */
+    public function addLeadReportSettings(Summit $summit, array $payload): SummitLeadReportSetting;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws \Exception
+     */
+    public function updateLeadReportSettings(Summit $summit, array $payload): SummitLeadReportSetting;
 }

@@ -24,6 +24,8 @@ use models\summit\SponsorAd;
 use models\summit\SponsorMaterial;
 use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
+use models\summit\SummitLeadReportSetting;
+
 /**
  * Interface ISummitSponsorService
  * @package services\model
@@ -306,4 +308,22 @@ interface ISummitSponsorService
      * @return void
      */
     public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws \Exception
+     */
+    public function addLeadReportSettings(Summit $summit, int $sponsor_id, array $payload): SummitLeadReportSetting;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws \Exception
+     */
+    public function updateLeadReportSettings(Summit $summit, int $sponsor_id, array $payload): SummitLeadReportSetting;
 }

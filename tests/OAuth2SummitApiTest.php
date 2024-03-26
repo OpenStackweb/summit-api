@@ -17,6 +17,8 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 use Illuminate\Http\UploadedFile;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use App\Models\Foundation\Main\IGroup;
+use models\summit\SummitLeadReportSetting;
+
 /**
  * Class OAuth2SummitApiTest
  */
@@ -1817,5 +1819,124 @@ CSV;
         );
         $content = $response->getContent();
         $this->assertResponseStatus(201);
+    }
+
+    public function testAddLeadReportSettings(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $allowed_columns = [
+            'scan_date',
+            'attendee_first_name',
+            'attendee_company',
+            SummitLeadReportSetting::AttendeeExtraQuestionsKey => [
+                [
+                    'id'   => 392,
+                    'name' => 'QUESTION1'
+                ],
+            ],
+            SummitLeadReportSetting::SponsorExtraQuestionsKey => ['*']
+        ];
+
+        $data = [
+            'allowed_columns' => $allowed_columns
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitApiController@addLeadReportSettings",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $lead_report_settings = json_decode($content);
+        $this->assertNotNull($lead_report_settings);
+        $this->assertSameSize($allowed_columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey], $lead_report_settings->columns->attendee_extra_questions);
+        return $lead_report_settings;
+    }
+
+    public function testUpdateLeadReportSettings(){
+        $this->testAddLeadReportSettings();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $allowed_columns = [
+            'scan_date',
+            SummitLeadReportSetting::AttendeeExtraQuestionsKey => [
+                [
+                    'id'   => 393,
+                    'name' => 'QUESTION2'
+                ],
+            ],
+            SummitLeadReportSetting::SponsorExtraQuestionsKey => ['*']
+        ];
+
+        $data = [
+            'allowed_columns' => $allowed_columns
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitApiController@updateLeadReportSettings",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $lead_report_settings = json_decode($content);
+        $this->assertEquals($allowed_columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey][0]['id'], $lead_report_settings->columns->attendee_extra_questions[0]->id);
+        return $lead_report_settings;
+    }
+
+    public function testGetLeadReportSettingsMetadata(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getLeadReportSettingsMetadata",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $metadata = json_decode($content);
+        self::assertEquals('*', $metadata->extra_questions[0]);
     }
 }

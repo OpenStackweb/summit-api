@@ -972,6 +972,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      */
     public function setLeadReportSetting(SummitLeadReportSetting $lead_report_setting): void
     {
+        $lead_report_setting->setSponsor($this);
         $this->lead_report_setting = $lead_report_setting;
     }
 

@@ -1246,6 +1246,13 @@ Route::group(array('prefix' => 'summits'), function () {
                         });
                     });
                 });
+
+                // lead repport settings
+                Route::group(['prefix' => 'lead-report-settings'], function(){
+                    Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getLeadReportSettingsMetadata']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addLeadReportSettings']);
+                    Route::put('', ['uses' => 'OAuth2SummitSponsorApiController@updateLeadReportSettings']);
+                });
             });
         });
 
@@ -2084,6 +2091,14 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('', ['uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@get']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationFeedMetadataApiController@delete']);
             });
+        });
+
+        // lead repport settings
+
+        Route::group(['prefix' => 'lead-report-settings'], function(){
+            Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@getLeadReportSettingsMetadata']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addLeadReportSettings']);
+            Route::put('', ['uses' => 'OAuth2SummitApiController@updateLeadReportSettings']);
         });
     });
 });

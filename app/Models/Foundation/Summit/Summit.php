@@ -65,20 +65,15 @@ class Summit extends SilverstripeBaseModel
 
     use GetDefaultValueFromConfig;
 
-    public static $default_report_setting = [
+    private static $default_report_setting_columns = [
         'scan_date',
         'attendee_first_name',
         'attendee_last_name',
         'attendee_email',
         'attendee_company',
-        'attendee_extra_questions' => [
-            'id',
-            'name'
-        ],
-        'extra_questions' => [
-            'id',
-            'name'
-        ]
+        'notes',
+        SummitLeadReportSetting::AttendeeExtraQuestionsKey => ['*'],
+        SummitLeadReportSetting::SponsorExtraQuestionsKey  => ['*']
     ];
 
     /**
@@ -3572,7 +3567,7 @@ SQL;
                 (
                     sprintf
                     (
-                    "Slot length change not allowed. ".
+                        "Slot length change not allowed. ".
                         "Summit already has reservations with former slot length (%s minutes)",
                         $this->meeting_room_booking_slot_length
                     )
@@ -6694,7 +6689,7 @@ SQL;
         return $this->events->matching
             (
                 $criteria->where($criteria->expr()->eq('category', $track)
-            ))->count() > 0;
+                ))->count() > 0;
     }
 
     /**
@@ -6943,10 +6938,38 @@ SQL;
         $res = $this->lead_report_settings->matching($criteria)->first();
         if ($res) return $res;
 
-        //default
+        //default -> expand summit level attendee extra questions
+        $default_report_setting_columns = $this->getLeadReportSettingsMetadata($sponsor);
+
         $res = new SummitLeadReportSetting();
         $res->setSummit($this);
-        $res->setColumns(self::$default_report_setting);
+        $res->setColumns($default_report_setting_columns);
         return $res;
+    }
+
+    /**
+     * @param Sponsor|null $sponsor
+     * @return array
+     */
+    public function getLeadReportSettingsMetadata(?Sponsor $sponsor = null): array {
+        $attendee_extra_questions = $this->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $default_report_setting_columns = self::$default_report_setting_columns;
+        $default_report_setting_columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey] = $attendee_extra_questions->map(function ($entity) {
+            return [
+                'id' => $entity->getId(),
+                'name' => $entity->getName(),
+            ];
+        })->toArray();
+
+        if (!is_null($sponsor)) {
+            $default_report_setting_columns[SummitLeadReportSetting::SponsorExtraQuestionsKey] = $sponsor->getExtraQuestions()->map(function ($entity) {
+                return [
+                    'id' => $entity->getId(),
+                    'name' => $entity->getName(),
+                ];
+            })->toArray();
+        }
+
+        return $default_report_setting_columns;
     }
 }

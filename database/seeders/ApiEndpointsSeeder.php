@@ -2548,6 +2548,47 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Sponsors,
                 ]
             ],
+            // lead repport settings
+            [
+                'name' => 'get-sponsor-report-settings-metadata',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-report-settings',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-report-settings',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //
             [
                 'name' => 'add-sponsor-user',
@@ -8782,7 +8823,47 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators
                 ],
             ],
-
+            // lead repport settings
+            [
+                'name' => 'get-summit-report-settings-metadata',
+                'route' => '/api/v1/summits/{id}/lead-report-settings/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-summit-report-settings',
+                'route' => '/api/v1/summits/{id}/lead-report-settings',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-summit-report-settings',
+                'route' => '/api/v1/summits/{id}/lead-report-settings',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
         ]);
 
     }

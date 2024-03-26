@@ -1384,4 +1384,80 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         });
 
     }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return mixed
+     */
+    public function getLeadReportSettingsMetadata($summit_id, $sponsor_id) {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            return $this->ok($summit->getLeadReportSettingsMetadata($sponsor));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return mixed
+     */
+    public function addLeadReportSettings($summit_id, $sponsor_id) {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            $payload = $this->getJsonPayload(LeadReportSettingsValidationRulesFactory::buildForAdd(), true);
+
+            $settings = $this->service->addLeadReportSettings($summit, $sponsor->getId(), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($settings)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return mixed
+     */
+    public function updateLeadReportSettings($summit_id, $sponsor_id) {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            $payload = $this->getJsonPayload(LeadReportSettingsValidationRulesFactory::buildForUpdate(), true);
+
+            $settings = $this->service->updateLeadReportSettings($summit, $sponsor->getId(), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($settings)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
 }

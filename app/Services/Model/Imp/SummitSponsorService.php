@@ -16,6 +16,7 @@ use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\SponsorAdFactory;
 use App\Models\Foundation\Summit\Factories\SponsorExtraQuestionFactory;
 use App\Models\Foundation\Summit\Factories\SponsorFactory;
@@ -37,6 +38,7 @@ use models\summit\SponsorAd;
 use models\summit\SponsorMaterial;
 use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
+use models\summit\SummitLeadReportSetting;
 use services\model\ISummitSponsorService;
 
 /**
@@ -969,6 +971,59 @@ final class SummitSponsorService
 
 
             parent::_deleteExtraQuestionValue($extra_question, $value_id);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws \Exception
+     */
+    public function addLeadReportSettings(Summit $summit, int $sponsor_id, array $payload): SummitLeadReportSetting
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (!$summit_sponsor instanceof Sponsor)
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $lead_report_settings = LeadReportSettingsFactory::build($payload);
+
+            $lead_report_settings->validateFor($summit, $summit_sponsor);
+
+            $lead_report_settings->setSummit($summit);
+            $summit_sponsor->setLeadReportSetting($lead_report_settings);
+
+            return $lead_report_settings;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws \Exception
+     */
+    public function updateLeadReportSettings(Summit $summit, int $sponsor_id, array $payload): SummitLeadReportSetting
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $former_setting = $summit->getLeadReportSettingFor($summit_sponsor);
+
+            $lead_report_settings = LeadReportSettingsFactory::populate($former_setting, $payload);
+
+            $lead_report_settings->validateFor($summit, $summit_sponsor);
+
+            $summit_sponsor->setLeadReportSetting($lead_report_settings);
+
+            return $lead_report_settings;
         });
     }
 }

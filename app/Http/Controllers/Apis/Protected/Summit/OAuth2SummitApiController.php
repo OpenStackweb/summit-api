@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\IStatsConstants;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
@@ -921,4 +922,65 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getLeadReportSettingsMetadata($summit_id) {
+        return $this->processRequest(function () use ($summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            return $this->ok($summit->getLeadReportSettingsMetadata());
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function addLeadReportSettings($summit_id) {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(LeadReportSettingsValidationRulesFactory::buildForAdd(), true);
+
+            $settings = $this->summit_service->addLeadReportSettings($summit, $payload);
+
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($settings)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function updateLeadReportSettings($summit_id) {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(LeadReportSettingsValidationRulesFactory::buildForUpdate(), true);
+
+            $settings = $this->summit_service->updateLeadReportSettings($summit, $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($settings)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
 }

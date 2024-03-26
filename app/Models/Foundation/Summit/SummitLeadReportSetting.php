@@ -13,6 +13,7 @@
  **/
 
 use Doctrine\ORM\Mapping as ORM;
+use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 
 /**
@@ -24,6 +25,9 @@ use models\utils\SilverstripeBaseModel;
 class SummitLeadReportSetting extends SilverstripeBaseModel
 {
     use SummitOwned;
+
+    const AttendeeExtraQuestionsKey = 'attendee_extra_questions';
+    const SponsorExtraQuestionsKey = 'extra_questions';
 
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
@@ -103,5 +107,32 @@ class SummitLeadReportSetting extends SilverstripeBaseModel
     public function setColumns(array  $columns): void
     {
         $this->columns = $columns;
+    }
+
+    public function validateFor(Summit $summit, ?Sponsor $sponsor = null): void
+    {
+        $columns = $this->getColumns();
+
+        // check if the extra questions belongs to the summit
+        if (array_key_exists(SummitLeadReportSetting::AttendeeExtraQuestionsKey, $columns)) {
+            foreach ($columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey] as $extra_question) {
+                if (array_key_exists('id', $extra_question) &&
+                    is_null($summit->getOrderExtraQuestionById($extra_question['id']))) {
+                    throw new ValidationException(
+                        sprintf("Attendee extra question id %s doesn't belong to summit %s", $extra_question['id'], $summit->getId()));
+                }
+            }
+        }
+
+        // check if the extra questions belongs to the sponsor
+        if (!is_null($sponsor) && array_key_exists(SummitLeadReportSetting::SponsorExtraQuestionsKey, $columns)) {
+            foreach ($columns[SummitLeadReportSetting::SponsorExtraQuestionsKey] as $extra_question) {
+                if (array_key_exists('id', $extra_question) &&
+                    is_null($sponsor->getExtraQuestionById($extra_question['id']))) {
+                    throw new ValidationException(
+                        sprintf("Sponsor extra question id %s doesn't belong to sponsor %s", $extra_question['id'], $sponsor->getId()));
+                }
+            }
+        }
     }
 }

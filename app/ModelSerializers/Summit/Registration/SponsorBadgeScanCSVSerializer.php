@@ -13,10 +13,12 @@
  **/
 
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SponsorBadgeScan;
+use models\summit\Summit;
+use models\summit\SummitLeadReportSetting;
 use models\summit\SummitOrderExtraQuestionType;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Class SponsorBadgeScanCSVSerializer
@@ -38,6 +40,15 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         'AttendeeCompany' => 'attendee_company:json_string',
     ];
 
+    private static function isAllowedExtraQuestion(array $allowed_extra_questions, int $extra_question_id): bool
+    {
+        if (count($allowed_extra_questions) > 0 && $allowed_extra_questions[0] == '*') return true;
+
+        foreach($allowed_extra_questions as $allowed_extra_question) {
+            if ($allowed_extra_question['id'] == $extra_question_id) return true;
+        }
+        return false;
+    }
 
     /**
      * @param null $expand
@@ -46,7 +57,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];
@@ -54,46 +65,69 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $sponsor = $scan->getSponsor();
         $sponsor_questions = $sponsor->getExtraQuestions();
+        $setting = $sponsor->getSummit()->getLeadReportSettingFor($sponsor);
+        $setting_columns = $setting->getColumns();
 
         Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize scan %s original values %s", $scan->getId(), json_encode($values)));
-        $sponsor_questions_values  = [];
-        foreach ($sponsor_questions as $question) {
-            if (!$question instanceof SummitSponsorExtraQuestionType) continue;
-            $label = AbstractSerializer::getCSVLabel($question->getLabel());
-            Log::debug
-            (
-                sprintf
-                (
-                    "SponsorBadgeScanCSVSerializer::serialize question %s label %s order %s",
-                    $question->getId(),
-                    $label,
-                    $question->getOrder()
-                )
-            );
 
-            $sponsor_questions_values[$label] = '';
-
-            $value = $scan->getExtraQuestionAnswerValueByQuestion($question);
-            if (is_null($value)) continue;
-            $sponsor_questions_values[$label] = $question->getNiceValue($value);
+        // remove not allowed string columns
+        foreach($values as $id => $value) {
+            if (!in_array($id, $setting_columns)) {
+                unset($values[$id]);
+            }
         }
-        Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize sponsor_questions %s", json_encode($sponsor_questions_values)));
+
+        $sponsor_questions_values  = [];
+        if (isset($setting_columns[SummitLeadReportSetting::SponsorExtraQuestionsKey])
+            && count($setting_columns[SummitLeadReportSetting::SponsorExtraQuestionsKey]) > 0) {
+
+            $allowed_sponsor_extra_questions = $setting_columns[SummitLeadReportSetting::SponsorExtraQuestionsKey];
+
+            foreach ($sponsor_questions as $question) {
+                if (!$question instanceof SummitSponsorExtraQuestionType) continue;
+
+                if (!self::isAllowedExtraQuestion($allowed_sponsor_extra_questions, $question->getId())) continue;
+
+                $label = AbstractSerializer::getCSVLabel($question->getLabel());
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SponsorBadgeScanCSVSerializer::serialize question %s label %s order %s",
+                        $question->getId(),
+                        $label,
+                        $question->getOrder()
+                    )
+                );
+
+                $sponsor_questions_values[$label] = '';
+
+                $value = $scan->getExtraQuestionAnswerValueByQuestion($question);
+                if (is_null($value)) continue;
+                $sponsor_questions_values[$label] = $question->getNiceValue($value);
+            }
+        }
 
         $ticket_questions_values = [];
-        if (isset($params['ticket_questions'])) {
+        if (isset($params['ticket_questions'])
+            && isset($setting_columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey])
+            && count($setting_columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey]) > 0) {
 
             $ticket_owner = null;
             $badge = $scan->getBadge();
+
+            $allowed_attendee_extra_questions = $setting_columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey];
 
             if (!is_null($badge)) {
                 $ticket_owner = $badge->getTicket()->getOwner();
             }
 
             foreach ($params['ticket_questions'] as $question) {
+                if (!self::isAllowedExtraQuestion($allowed_attendee_extra_questions, $question->getId())) continue;
+
                 $label = AbstractSerializer::getCSVLabel($question->getLabel());
 
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
-
                 $ticket_questions_values[$label] = '';
 
                 if (!is_null($ticket_owner)) {

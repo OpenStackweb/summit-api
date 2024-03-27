@@ -106,8 +106,10 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     /**
      * SELECTION STATUS (TRACK CHAIRS LIST)
      */
+
+    const SelectionStatus_Selected = 'selected';
     const SelectionStatus_Accepted = 'accepted';
-    const SelectionStatus_Unaccepted = 'unaccepted';
+    const SelectionStatus_Unaccepted = 'rejected';
     const SelectionStatus_Alternate = 'alternate';
 
     /**
@@ -808,7 +810,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         if ($this->isPublished())
             return 'Accepted';
-        return $this->status;
+        return !empty( $this->status) ?  $this->status : 'Not Submitted';
     }
 
     /**
@@ -955,9 +957,13 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             $selection = $session_sel[0];
         }
 
+        if($this->isPublished())
+            return Presentation::SelectionStatus_Accepted;
+
         if (!$selection) {
             return Presentation::SelectionStatus_Unaccepted;
         }
+
         if ($selection->getOrder() <= $this->getCategory()->getSessionCount()) {
             return Presentation::SelectionStatus_Accepted;
         }

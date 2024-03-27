@@ -20,6 +20,7 @@ use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\summit\PresentationCategory;
 use models\utils\SilverstripeBaseModel;
@@ -133,6 +134,9 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      */
     public function setName(string $name): void
     {
+        $name = TextUtils::trim($name);
+        if(empty($name))
+            throw new ValidationException("Name is mandatory.");
         $this->name = $name;
     }
 
@@ -158,9 +162,10 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      */
     public function setPlaceholder(string $placeholder): void
     {
+        $placeholder = TextUtils::trim($placeholder);
         if(empty($placeholder)) return;
         if(!in_array($this->type, ExtraQuestionTypeConstants::AllowedPlaceHolderQuestionType))
-            throw new ValidationException(sprintf("%s type does not allows a placeholder", $this->type));
+            throw new ValidationException(sprintf("%s type does not allows a placeholder.", $this->type));
         $this->placeholder = $placeholder;
     }
 
@@ -171,7 +176,7 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     public function setType(string $type): void
     {
         if(!in_array($type, ExtraQuestionTypeConstants::ValidQuestionTypes))
-            throw new ValidationException(sprintf("%s type is not valid", $type));
+            throw new ValidationException(sprintf("%s type is not valid.", $type));
 
         $this->type = $type;
     }
@@ -189,7 +194,10 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      */
     public function setLabel(string $label): void
     {
-        $this->label = $label;
+        $label = TextUtils::trim($label);
+        if(empty($label))
+            throw new ValidationException("Label is mandatory.");
+        $this->label = trim($label);
     }
 
     /**

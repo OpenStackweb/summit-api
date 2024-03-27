@@ -792,6 +792,32 @@ final class SummitSponsorService
 
             $extra_question = SponsorExtraQuestionFactory::build($payload);
 
+            // check that question is not duplicated ( name / label ) on Order Extra Questions
+
+            $formerQuestion = $summit->getOrderExtraQuestionByLabel($extra_question->getLabel());
+            if(!is_null($formerQuestion))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Extra Question with label %s already exists for Attendee Extra Questions (%s) on summit.",
+                        $extra_question->getLabel(),
+                        $formerQuestion->getId()
+                    )
+                );
+
+            $formerQuestion = $summit->getOrderExtraQuestionByName($extra_question->getName());
+            if(!is_null($formerQuestion))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Extra Question with name %s already exists for Attendee Extra Questions (%s) on summit.",
+                        $extra_question->getName(),
+                        $formerQuestion->getId()
+                    )
+                );
+
             $summit_sponsor->addExtraQuestion($extra_question);
 
             return $extra_question;
@@ -813,12 +839,40 @@ final class SummitSponsorService
             if(!$extra_question instanceof SummitSponsorExtraQuestionType)
                 throw new EntityNotFoundException("Sponsor extra question not found.");
 
+            $extra_question = SponsorExtraQuestionFactory::populate($extra_question, $payload);
+
+            // check that question is not duplicated ( name / label ) on Order Extra Questions
+
+            $formerQuestion = $summit->getOrderExtraQuestionByLabel($extra_question->getLabel());
+            if(!is_null($formerQuestion))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Extra Question with label %s already exists for Attendee Extra Questions (%s) on summit.",
+                        $extra_question->getLabel(),
+                        $formerQuestion->getId()
+                    )
+                );
+
+            $formerQuestion = $summit->getOrderExtraQuestionByName($extra_question->getName());
+            if(!is_null($formerQuestion))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Extra Question with name %s already exists for Attendee Extra Questions (%s) on summit.",
+                        $extra_question->getName(),
+                        $formerQuestion->getId()
+                    )
+                );
+
             if (isset($payload['order']) && intval($payload['order']) != $extra_question->getOrder()) {
                 // request to update order
                 $summit_sponsor->recalculateQuestionOrder($extra_question, intval($payload['order']));
             }
 
-            return SponsorExtraQuestionFactory::populate($extra_question, $payload);
+            return $extra_question;
         });
     }
 

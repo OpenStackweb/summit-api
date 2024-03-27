@@ -15,6 +15,7 @@
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
+use libs\utils\TextUtils;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -479,7 +480,7 @@ abstract class AbstractSerializer implements IModelSerializer
      */
     public static function getCSVLabel(string $label): string
     {
-        $res = strip_tags(trim(html_entity_decode(strtolower(trim($label))), "\t\n\r\0\x0B\xC2\xA0"));
+        $res = strip_tags(trim(html_entity_decode(strtolower(TextUtils::trim($label))), "\t\n\r\0\x0B\xC2\xA0"));
         return str_replace(",","\,", $res);
     }
 

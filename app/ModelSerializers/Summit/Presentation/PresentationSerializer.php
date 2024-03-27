@@ -32,7 +32,7 @@ class PresentationSerializer extends SummitEventSerializer
         'AttendeesExpectedLearnt' => 'attendees_expected_learnt:json_string',
         'ToRecord'                => 'to_record:json_boolean',
         'AttendingMedia'          => 'attending_media:json_boolean',
-        'StatusNice'              => 'submission_status:json_string',
+        'StatusNice'              => 'status:json_string',
         'ProgressNice'            => 'progress:json_string',
         'Slug'                    => 'slug:json_string',
         'SelectionStatus'         => 'selection_status:string',

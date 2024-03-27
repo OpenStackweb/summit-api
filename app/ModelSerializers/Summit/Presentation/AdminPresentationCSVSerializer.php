@@ -243,7 +243,10 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         if(in_array("location_name",$fields) && $presentation->hasLocation()){
             $values['location_name'] = $presentation->getLocation()->getName();
         }
-
+        if(isset($values['status'])) {
+            $values['submission_status'] = $values['status'];
+            unset($values['status']);
+        }
         return $values;
     }
 }

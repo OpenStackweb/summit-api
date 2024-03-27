@@ -127,7 +127,12 @@ class PresentationSerializer extends SummitEventSerializer
                                 $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
                                 (
                                     $mediaUpload, $this->getMediaUploadsSerializerType()
-                                )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                )->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                );
                             }
 
                             $values['media_uploads'] = $media_uploads;
@@ -221,8 +226,8 @@ class PresentationSerializer extends SummitEventSerializer
                             )->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                [],
-                                [],
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
                                 $params
                             );
                             $serialized_speaker['order'] = $s->getPresentationAssignmentOrder($presentation);
@@ -237,8 +242,8 @@ class PresentationSerializer extends SummitEventSerializer
                             )->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                [],
-                                [],
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
                                 $params
                             );
                         }
@@ -249,21 +254,36 @@ class PresentationSerializer extends SummitEventSerializer
                         {
                             if($presentation->getCreatorId() > 0) {
                                 unset($values['creator_id']);
-                                $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator(), $this->getSerializerType($relation))->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                );
                             }
                         }
                         break;
                     case 'selection_plan':{
                         if($presentation->getSelectionPlanId() > 0) {
                             unset($values['selection_plan_id']);
-                            $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation->getSelectionPlan())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
                     }
                     break;
                     case 'slides':{
                         $slides = [];
                         foreach ($presentation->getSlides() as $slide) {
-                            $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                             if(empty($slide_values['link'])) continue;
                             $slides[] = $slide_values;
                         }
@@ -273,7 +293,12 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'public_comments':{
                         $public_comments = [];
                         foreach ($presentation->getPublicComments() as $comment) {
-                            $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
                         $values['public_comments'] = $public_comments;
                     }
@@ -291,7 +316,12 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'videos':{
                         $videos = [];
                         foreach ($presentation->getVideos() as $video) {
-                            $video_values   = SerializerRegistry::getInstance()->getSerializer($video)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $video_values   = SerializerRegistry::getInstance()->getSerializer($video)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                             $videos[] = $video_values;
                         }
                         $values['videos'] = $videos;
@@ -304,7 +334,12 @@ class PresentationSerializer extends SummitEventSerializer
                             $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $mediaUpload, $this->getMediaUploadsSerializerType()
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
 
                         $values['media_uploads'] = $media_uploads;
@@ -313,7 +348,12 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'extra_questions':{
                         $answers = [];
                         foreach ($presentation->getExtraQuestionAnswers() as $answer) {
-                            $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
                         $values['extra_questions'] = $answers;
                     }
@@ -321,7 +361,12 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'actions':{
                         $actions = [];
                         foreach ($presentation->getPresentationActions() as $action) {
-                            $actions[]= SerializerRegistry::getInstance()->getSerializer($action)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $actions[]= SerializerRegistry::getInstance()->getSerializer($action)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
                         $values['actions'] = $actions;
                     }

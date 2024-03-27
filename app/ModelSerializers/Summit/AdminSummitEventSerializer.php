@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\Traits\RequestCache;
 use models\summit\SummitEvent;
+
 /**
  * Class AdminSummitEventSerializer
  * @package ModelSerializers
@@ -40,6 +43,7 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         return SerializerRegistry::SerializerType_Private;
     }
 
+    use RequestCache;
     /**
      * @param null $expand
      * @param array $fields
@@ -47,22 +51,42 @@ class AdminSummitEventSerializer extends SummitEventSerializer
      * @param array $params
      * @return array
      */
-    public function serialize(
+    public function serialize
+    (
         $expand = null, array $fields = [], array $relations = [], array $params = []
     )
     {
-        $event = $this->object;
-        if (!$event instanceof SummitEvent) return [];
+        $scope = sprintf("SummitEvent_%s", $this->object->getIdentifier());
+        $cache_key = $scope;
+        if(!empty($expand))
+            $cache_key = sprintf("%s_%s", $cache_key, md5($expand));
+        if(!empty($fields)){
+            $cache_key = sprintf("%s_%s", $cache_key, md5(implode('.',$fields)));
+        }
+        if(!empty($relations)){
+            $cache_key = sprintf("%s_%s", $cache_key, md5(implode('.',$relations)));
+        }
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
+        return $this->cache
+        (
+            $scope,
+            $cache_key,
+            function () use ($expand, $fields, $relations, $params) {
+                $event = $this->object;
+                if (!$event instanceof SummitEvent) return [];
 
-        $values = parent::serialize($expand, $fields, $relations, $params);
+                if (!count($relations)) $relations = $this->getAllowedRelations();
 
-        // always set
-        $values['streaming_url'] = $event->getStreamingUrl();
-        $values['streaming_type'] = $event->getStreamingType();
-        $values['etherpad_link'] = $event->getEtherpadLink();
+                $values = parent::serialize($expand, $fields, $relations, $params);
 
-        return $values;
+                // always set
+                $values['streaming_url'] = $event->getStreamingUrl();
+                $values['streaming_type'] = $event->getStreamingType();
+                $values['etherpad_link'] = $event->getEtherpadLink();
+
+                return $values;
+            }
+        );
+
     }
 }

@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\Traits\RequestCache;
 use models\summit\Presentation;
+
 /**
  * Class AdminPresentationSerializer
  * @package ModelSerializers
@@ -19,6 +22,7 @@ use models\summit\Presentation;
 class AdminPresentationSerializer extends PresentationSerializer
 {
 
+    use RequestCache;
     /**
      * @param string|null $relation
      * @return string
@@ -93,22 +97,40 @@ class AdminPresentationSerializer extends PresentationSerializer
     public function serialize(
         $expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
-        $presentation = $this->object;
-        if (!$presentation instanceof Presentation) return [];
+        $scope = sprintf("Presentation_%s", $this->object->getIdentifier());
+        $cache_key = $scope;
+        if(!empty($expand))
+            $cache_key = sprintf("%s_%s", $cache_key, md5($expand));
+        if(!empty($fields)){
+            $cache_key = sprintf("%s_%s", $cache_key, md5(implode('.',$fields)));
+        }
+        if(!empty($relations)){
+            $cache_key = sprintf("%s_%s", $cache_key, md5(implode('.',$relations)));
+        }
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $fields = $this->getAllowedFields();
-        $values = parent::serialize($expand, $fields, $relations, $params);
+        return $this->cache
+        (
+            $scope,
+            $cache_key,
+            function () use ($expand, $fields, $relations, $params) {
+                $presentation = $this->object;
+                if (!$presentation instanceof Presentation) return [];
 
-        if(in_array("streaming_url",$fields))
-            $values['streaming_url'] = $presentation->getStreamingUrl();
-        if(in_array("streaming_type",$fields))
-            $values['streaming_type'] = $presentation->getStreamingType();
-        if(in_array("etherpad_link",$fields))
-            $values['etherpad_link'] = $presentation->getEtherpadLink();
-        if(in_array("track_chair_scores_avg",$fields))
-            $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
+                if (!count($relations)) $relations = $this->getAllowedRelations();
+                if (!count($fields)) $fields = $this->getAllowedFields();
+                $values = parent::serialize($expand, $fields, $relations, $params);
 
-        return $values;
+                if (in_array("streaming_url", $fields))
+                    $values['streaming_url'] = $presentation->getStreamingUrl();
+                if (in_array("streaming_type", $fields))
+                    $values['streaming_type'] = $presentation->getStreamingType();
+                if (in_array("etherpad_link", $fields))
+                    $values['etherpad_link'] = $presentation->getEtherpadLink();
+                if (in_array("track_chair_scores_avg", $fields))
+                    $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
+
+                return $values;
+
+            });
     }
 }

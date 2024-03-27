@@ -31,13 +31,20 @@ final class EpochCellFormatter implements ICellFormatter
     private $dateTimeZone;
 
     /**
+     * @var bool
+     */
+    private $displayTimeZone;
+
+    /**
      * @param string $format
      * @param DateTimeZone|null $dateTimeZone
+     * @param bool $showTimeZone
      */
-    public function __construct(string $format = EpochCellFormatter::DefaultFormat, DateTimeZone $dateTimeZone = null)
+    public function __construct(string $format = EpochCellFormatter::DefaultFormat, DateTimeZone $dateTimeZone = null, bool $displayTimeZone = false)
     {
         $this->format = $format;
         $this->dateTimeZone = $dateTimeZone;
+        $this->displayTimeZone = $displayTimeZone;
     }
 
     /**
@@ -48,8 +55,13 @@ final class EpochCellFormatter implements ICellFormatter
     {
         if(empty($val)) return '';
         $date = new DateTime("@$val");
-        if(!is_null($this->dateTimeZone))
+        $tzName = 'UTC';
+        if(!is_null($this->dateTimeZone)) {
             $date->setTimezone($this->dateTimeZone);
-        return $date->format($this->format);
+            $tzName = $this->dateTimeZone->getName();
+        }
+        return $this->displayTimeZone ?
+            sprintf("%s (%s)", $date->format($this->format), $tzName) :
+            $date->format($this->format);
     }
 }

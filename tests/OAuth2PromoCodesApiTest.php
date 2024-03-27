@@ -28,24 +28,24 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
 
     static $summit_id = 3769;
 
-//    protected function setUp():void
-//    {
-//        parent::setUp();
-//        self::insertSummitTestData();
-//        self::insertMemberTestData(IGroup::TrackChairs);
-//        self::$summit_permission_group->addMember(self::$member);
-//        self::$em->persist(self::$summit);
-//        self::$em->persist(self::$summit_permission_group);
-//        self::$em->flush();
-//
-//        self::$summit_id = self::$summit->getId();
-//    }
-//
-//    protected function tearDown():void
-//    {
-//        self::clearSummitTestData();
-//        parent::tearDown();
-//    }
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+
+        self::$summit_id = self::$summit->getId();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
 
     public function testGetPromoCodesDiscount(){
         $params = [

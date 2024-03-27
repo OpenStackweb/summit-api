@@ -359,10 +359,10 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             function () {
                 return SerializerRegistry::SerializerType_CSV;
             },
-            function () {
+            function () use ($summit) {
                 return [
-                    'created' => new EpochCellFormatter,
-                    'last_edited' => new EpochCellFormatter,
+                    'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, null, true),
+                    'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, null, true),
                     'redeemed' => new BooleanCellFormatter,
                     'email_sent' => new BooleanCellFormatter,
                 ];

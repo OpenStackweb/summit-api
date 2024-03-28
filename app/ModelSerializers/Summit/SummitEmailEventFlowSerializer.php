@@ -38,7 +38,7 @@ class SummitEmailEventFlowSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $event_flow = $this->object;
         if (!$event_flow instanceof SummitEmailEventFlow) return [];

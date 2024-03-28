@@ -35,7 +35,7 @@ final class PresentationActionSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $action = $this->object;
         if (!$action instanceof PresentationAction) return [];
@@ -50,7 +50,12 @@ final class PresentationActionSerializer extends SilverStripeSerializer
                             $values['presentation'] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $action->getPresentation()
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'type':
@@ -59,7 +64,12 @@ final class PresentationActionSerializer extends SilverStripeSerializer
                             $values['type'] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $action->getType()
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'created_by':
@@ -69,7 +79,12 @@ final class PresentationActionSerializer extends SilverStripeSerializer
                                 $values['created_by'] = SerializerRegistry::getInstance()->getSerializer
                                 (
                                     $action->getCreatedBy()
-                                )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                )->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -80,7 +95,12 @@ final class PresentationActionSerializer extends SilverStripeSerializer
                                 $values['updated_by'] = SerializerRegistry::getInstance()->getSerializer
                                 (
                                     $action->getUpdatedBy()
-                                )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                )->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;

@@ -40,11 +40,10 @@ final class PresentationTrackChairRatingTypeSerializer extends SilverStripeSeria
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $ratingType = $this->object;
         if (!$ratingType instanceof PresentationTrackChairRatingType) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (in_array('score_types', $relations) && !isset($values['score_types'])) {

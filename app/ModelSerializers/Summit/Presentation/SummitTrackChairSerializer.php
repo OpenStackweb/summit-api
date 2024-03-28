@@ -41,10 +41,8 @@ class SummitTrackChairSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $track_chair = $this->object;
 
         if (!$track_chair instanceof SummitTrackChair) return [];
@@ -67,7 +65,13 @@ class SummitTrackChairSerializer extends SilverStripeSerializer
                     {
                         $categories = [];
                         foreach ($track_chair->getCategories() as $t) {
-                            $categories[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $categories[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['categories'] = $categories;
                     }
@@ -81,7 +85,13 @@ class SummitTrackChairSerializer extends SilverStripeSerializer
                                 (
                                     $track_chair->getMember(),
                                     $this->getMemberSerializerType()
-                                )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                )->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -89,7 +99,13 @@ class SummitTrackChairSerializer extends SilverStripeSerializer
                         {
                             if ($track_chair->getSummitId() > 0) {
                                 unset($values['summit_id']);
-                                $values['summit'] = SerializerRegistry::getInstance()->getSerializer($track_chair->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['summit'] = SerializerRegistry::getInstance()->getSerializer($track_chair->getSummit())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;

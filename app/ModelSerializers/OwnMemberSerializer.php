@@ -74,12 +74,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $member         = $this->object;
         if(!$member instanceof Member) return [];
-
-        if(!count($relations)) $relations = $this->getAllowedRelations();
 
         $values           = parent::serialize($expand, $fields, $relations, $params);
         $summit           = isset($params['summit'])? $params['summit'] :null;
@@ -214,7 +212,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                             unset($values['speaker_id']);
                             $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize
                             (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),[],['none']
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation), [], ['none']
                             );
                         }
                     }
@@ -225,7 +223,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         $feedback = array();
                         foreach ($member->getFeedbackBySummit($summit) as $f) {
                             $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation)
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
                             );
                         }
                         $values['feedback'] = $feedback;
@@ -238,7 +239,12 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getFavoritesSummitEventsBySummit($summit) as $events){
                             $favorites[] = SerializerRegistry::getInstance()
                                 ->getSerializer($events)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['favorite_summit_events'] = $favorites;
                     }
@@ -249,7 +255,12 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getScheduleBySummit($summit) as $events){
                             $schedule[] = SerializerRegistry::getInstance()
                                 ->getSerializer($events)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['schedule_summit_events'] = $schedule;
                     }
@@ -262,7 +273,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getPaidSummitTickets($summit) as $ticket){
                             $summit_tickets[] = SerializerRegistry::getInstance()
                                 ->getSerializer($ticket)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             $count++;
                             /*if (AbstractSerializer::MaxCollectionPage < $count){
                                 $values['summit_tickets_has_more'] = true;
@@ -279,7 +296,12 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getRsvpBySummit($summit) as $rsvp){
                             $rsvps[] = SerializerRegistry::getInstance()
                                 ->getSerializer($rsvp)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['rsvp'] = $rsvps;
                     }
@@ -290,7 +312,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getLegalAgreements() as $agreement){
                             $res[] = SerializerRegistry::getInstance()
                                 ->getSerializer($agreement)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['legal_agreements'] = $res;
                     }
@@ -301,7 +329,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getTrackChairs() as $trackChair){
                             $res[] = SerializerRegistry::getInstance()
                                 ->getSerializer($trackChair)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['track_chairs'] = $res;
                     }

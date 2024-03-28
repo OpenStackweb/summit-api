@@ -41,10 +41,8 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $selected_presentation = $this->object;
 
         if (!$selected_presentation instanceof SummitSelectedPresentation) return [];
@@ -63,7 +61,13 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
                             (
                                 $selected_presentation->getPresentation(),
                                 IPresentationSerializerTypes::TrackChairs
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                     break;
@@ -71,7 +75,13 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
                     {
                         if ($selected_presentation->getListId() > 0) {
                             unset($values['list_id']);
-                            $values['list'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getList())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['list'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getList())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                     break;

@@ -49,13 +49,11 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $order = $this->object;
         if (!$order instanceof SummitOrder) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         if (in_array('tickets', $relations)) {
             $tickets = [];
@@ -80,14 +78,21 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
 
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'tickets':
                         {
                             if (!in_array('tickets', $relations)) break;
                             $tickets = [];
                             unset($values['tickets']);
                             foreach ($order->getTickets() as $ticket) {
-                                $tickets[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(AbstractSerializer::getExpandForPrefix('tickets', $expand));
+                                $tickets[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['tickets'] = $tickets;
                         }
@@ -97,7 +102,13 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
 
                             if ($order->hasOwner()) {
                                 unset($values['owner_id']);
-                                $values['owner'] = SerializerRegistry::getInstance()->getSerializer($order->getOwner())->serialize(AbstractSerializer::getExpandForPrefix('owner', $expand));
+                                $values['owner'] = SerializerRegistry::getInstance()->getSerializer($order->getOwner())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -121,7 +132,13 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
 
                             if ($order->hasOwnerCompany()) {
                                 unset($values['owner_company_id']);
-                                $values['owner_company'] = SerializerRegistry::getInstance()->getSerializer($order->getCompany())->serialize(AbstractSerializer::getExpandForPrefix('owner_company', $expand));
+                                $values['owner_company'] = SerializerRegistry::getInstance()->getSerializer($order->getCompany())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -131,7 +148,13 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
                             $extra_question_answers = [];
                             unset($values['extra_questions']);
                             foreach ($order->getExtraQuestionAnswers() as $answer) {
-                                $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::getExpandForPrefix('extra_questions', $expand));
+                                $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['extra_questions'] = $extra_question_answers;
                         }

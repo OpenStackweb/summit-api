@@ -36,7 +36,7 @@ final class SummitPushNotificationSerializer extends PushNotificationMessageSeri
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $notification = $this->object;
         if(! $notification instanceof SummitPushNotification) return [];

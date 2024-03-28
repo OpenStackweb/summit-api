@@ -196,7 +196,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($template)->serialize($expand,[], $relations));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($template)->serialize($expand, [], $relations));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

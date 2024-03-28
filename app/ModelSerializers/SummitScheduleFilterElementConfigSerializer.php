@@ -37,8 +37,7 @@ final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSeri
     {
         $filter = $this->object;
         if (!$filter instanceof SummitScheduleFilterElementConfig) return [];
-
-        if (!count($relations)) $relations = $this->getAllowedRelations();
+        
         $values  = parent::serialize($expand, $fields, $relations, $params);
         return [ $filter->getType() => $values];
     }

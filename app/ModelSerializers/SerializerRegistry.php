@@ -115,6 +115,8 @@ use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
 use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
+use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\IModelSerializer;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\ChatTeams\ChatTeamInvitationSerializer;
@@ -653,7 +655,7 @@ final class SerializerRegistry
      * @param string $type
      * @return IModelSerializer
      */
-    public function getSerializer($object, $type = self::SerializerType_Public)
+    public function getSerializer($object, $type = self::SerializerType_Public):?IModelSerializer
     {
         if (is_null($object)) return null;
         $reflect = new \ReflectionClass($object);
@@ -664,6 +666,7 @@ final class SerializerRegistry
         $serializer_class = $this->registry[$class];
 
         if (is_array($serializer_class)) {
+
             if (!isset($serializer_class[$type])) {
                 $type = self::SerializerType_Public;
             }
@@ -675,6 +678,72 @@ final class SerializerRegistry
             $serializer_class = $serializer_class[$type];
         }
 
-        return new $serializer_class($object, $this->resource_server_context);
+        return new SerializerDecorator(new $serializer_class($object, $this->resource_server_context));
+    }
+}
+
+/**
+ * Class SerializerDecorator
+ * @package ModelSerializers
+ */
+final class SerializerDecorator implements IModelSerializer {
+    private $serializer_imp;
+
+    private $pre_hooks = [];
+
+    private $post_hooks = [];
+
+    public function __construct(IModelSerializer $serializer_imp, array $pre_hooks = [], array $post_hooks = [])
+    {
+        $this->serializer_imp = $serializer_imp;
+        $this->pre_hooks = $pre_hooks;
+        $this->post_hooks = $post_hooks;
+    }
+
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        Log::debug
+        (
+            sprintf
+            (
+                "SerializerDecorator::serialize %s expand %s fields %s relations %s",
+                get_class($this->serializer_imp),
+                $expand,
+                json_encode($fields),
+                json_encode($relations)
+            )
+        );
+
+        // check first level fields, and if empty get default fields
+        if (!count(AbstractSerializer::getFirstLevelAllowedFields($relations)))
+            $relations = array_merge($relations, $this->serializer_imp->getAllowedRelations());
+        if(!count(AbstractSerializer::getFirstLevelAllowedFields($fields)))
+            $fields = array_merge($fields, $this->serializer_imp->getAllowedFields());
+
+        foreach($this->pre_hooks as $hook) {
+            if (!is_callable($hook)) continue;
+            list($expand, $fields, $relations, $params) = call_user_func($expand, $fields, $relations, $params);
+        }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SerializerDecorator::serialize %s expand %s fields %s relations %s after pre hooks",
+                get_class($this->serializer_imp),
+                $expand,
+                json_encode($fields),
+                json_encode($relations)
+            )
+        );
+
+        $res = $this->serializer_imp->serialize($expand, $fields, $relations, $params);
+
+        foreach($this->post_hooks as $hook) {
+            if (!is_callable($hook)) continue;
+            $res = call_user_func($hook, $res);
+        }
+
+        return $res;
     }
 }

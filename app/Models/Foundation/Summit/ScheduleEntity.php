@@ -13,9 +13,11 @@
  **/
 
 use App\Events\ScheduleEntityLifeCycleEvent;
+use App\Models\Utils\Traits\CachedEntity;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 
 /**
@@ -24,18 +26,9 @@ use ReflectionClass;
  */
 trait ScheduleEntity
 {
-    /**
-     * @return string
-     */
-    private function _getClassName(): string
-    {
-        try {
-            return (new ReflectionClass($this))->getShortName();
-        }
-        catch (\Exception $ex){
-
-        }
-        return '';
+    use CachedEntity {
+        deleted as protected cachedDeleted;
+        updated as protected cachedUpdated;
     }
 
     /**
@@ -79,6 +72,7 @@ trait ScheduleEntity
      */
     public function deleted($args)
     {
+        $this->cachedDeleted($args);
     }
 
     /**
@@ -94,6 +88,8 @@ trait ScheduleEntity
      */
     public function updated($args)
     {
+        Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
+        $this->cachedUpdated($args);
         Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
             $this->_getSummitId(),
             $this->id,

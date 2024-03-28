@@ -40,10 +40,8 @@ final class SummitTrackChairCSVSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $track_chair = $this->object;
 
         if (!$track_chair instanceof SummitTrackChair) return [];

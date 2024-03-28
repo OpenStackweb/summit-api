@@ -448,7 +448,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                         SerializerUtils::getExpand(),
                         SerializerUtils::getFields(),
                         SerializerUtils::getRelations(),
-                        [ 'filter' => $filter ]
+                        ['filter' => $filter]
                     )
             );
         });

@@ -27,7 +27,7 @@ class SummitBookableVenueRoomSerializer extends SummitVenueRoomSerializer
         'Currency'     => 'currency:json_string',
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $room   = $this->object;
         if(!$room instanceof SummitBookableVenueRoom)
@@ -39,7 +39,10 @@ class SummitBookableVenueRoomSerializer extends SummitVenueRoomSerializer
         foreach ($room->getAttributes() as $attribute){
             $attributes[] = SerializerRegistry::getInstance()->getSerializer($attribute)->serialize
             (
-                AbstractSerializer::filterExpandByPrefix($expand, 'attributes')
+                AbstractSerializer::filterExpandByPrefix($expand, 'attributes'),
+                AbstractSerializer::filterFieldsByPrefix($fields, 'attributes'),
+                AbstractSerializer::filterFieldsByPrefix($relations, 'attributes'),
+                $params
             );
         }
         $values['attributes'] = $attributes;

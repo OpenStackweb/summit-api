@@ -25,7 +25,7 @@ final class LegalAgreementSerializer extends SilverStripeSerializer
         'DocumentId' => 'document_id:json_int',
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $legal_agreement = $this->object;
         if (!$legal_agreement instanceof LegalAgreement) return [];

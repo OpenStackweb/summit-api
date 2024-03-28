@@ -38,13 +38,12 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($fields)) $fields = $this->getAllowedFields();
-
         $values = parent::serialize($expand, $fields, $relations, $params);
         $summit_event = $this->object;
         if(!$summit_event instanceof SummitEvent) return $values;
+
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
         }

@@ -19,7 +19,6 @@
  */
 class PresentationMaterialSerializer extends SilverStripeSerializer
 {
-
     protected static $array_mappings = [
         'Name'           => 'name:json_text',
         'Description'    => 'description:json_text',
@@ -28,5 +27,18 @@ class PresentationMaterialSerializer extends SilverStripeSerializer
         'Order'          => 'order:json_int',
         'PresentationId' => 'presentation_id:json_int',
         'ClassName'      => 'class_name:json_text',
+    ];
+
+    protected static $allowed_fields = [
+        'id',
+        'created',
+        'last_edited',
+        'name',
+        'description',
+        'display_on_site',
+        'featured',
+        'order',
+        'presentation_id',
+        'class_name',
     ];
 }

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 /**
  * Class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer
@@ -38,10 +40,8 @@ final class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $request = $this->object;
 
         if(!$request instanceof PresentationSpeakerSummitAssistanceConfirmationRequest) return [];
@@ -59,7 +59,12 @@ final class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer
                     case 'speaker': {
                         if(isset($values['speaker_id']) && intval($values['speaker_id']) > 0 ){
                             unset($values['speaker_id']);
-                            $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($request->getSpeaker(), $serializer_type)->serialize();
+                            $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($request->getSpeaker(), $serializer_type)->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                     break;

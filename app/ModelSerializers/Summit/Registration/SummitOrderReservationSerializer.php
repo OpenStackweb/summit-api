@@ -54,7 +54,6 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $order = $this->object;
         if (!$order instanceof SummitOrder) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);

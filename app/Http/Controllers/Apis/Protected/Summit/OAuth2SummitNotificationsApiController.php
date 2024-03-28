@@ -334,7 +334,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $notification = $this->push_notification_service->approveNotification($summit, $this->resource_server_context->getCurrentUser(), $notification_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($notification)->serialize( Request::input('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($notification)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
@@ -358,7 +358,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $notification = $this->push_notification_service->unApproveNotification($summit, $this->resource_server_context->getCurrentUser(), $notification_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($notification)->serialize( Request::input('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($notification)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));

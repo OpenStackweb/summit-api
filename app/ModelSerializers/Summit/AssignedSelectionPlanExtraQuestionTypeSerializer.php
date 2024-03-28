@@ -42,7 +42,6 @@ final class AssignedSelectionPlanExtraQuestionTypeSerializer
     {
         $assigment = $this->object;
         if (!$assigment instanceof AssignedSelectionPlanExtraQuestionType) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         Log::debug(sprintf("AssignedSelectionPlanExtraQuestionTypeSerializer expand %s", $expand));
         $values = parent::serialize($expand, $fields, $relations, $params);
         $question_type = SerializerRegistry::getInstance()->getSerializer($assigment->getQuestionType())

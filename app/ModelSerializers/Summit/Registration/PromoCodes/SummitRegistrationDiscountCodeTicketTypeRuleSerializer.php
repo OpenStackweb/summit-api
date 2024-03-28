@@ -38,8 +38,6 @@ final class SummitRegistrationDiscountCodeTicketTypeRuleSerializer extends Abstr
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $rule = $this->object;
         if (!$rule instanceof SummitRegistrationDiscountCodeTicketTypeRule) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
@@ -51,13 +49,25 @@ final class SummitRegistrationDiscountCodeTicketTypeRuleSerializer extends Abstr
                     case 'ticket_type':
                         {
                             unset($values['ticket_type_id']);
-                            $values['ticket_type'] = SerializerRegistry::getInstance()->getSerializer($rule->getTicketType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['ticket_type'] = SerializerRegistry::getInstance()->getSerializer($rule->getTicketType())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'discount_code':
                         {
                             unset($values['discount_code_id']);
-                            $values['discount_code'] = SerializerRegistry::getInstance()->getSerializer($rule->getDiscountCode())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['discount_code'] = SerializerRegistry::getInstance()->getSerializer($rule->getDiscountCode())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                 }

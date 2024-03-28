@@ -37,7 +37,6 @@ final class SubmitterMemberSerializer extends AdminMemberSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $submitter = $this->object;
 
         if(!$submitter instanceof Member) return [];
@@ -65,21 +64,39 @@ final class SubmitterMemberSerializer extends AdminMemberSerializer
                     case 'accepted_presentations':
                         $accepted_presentations = [];
                         foreach ($submitter->getAcceptedPresentations($summit,$params['filter'] ?? null) as $p) {
-                            $accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['accepted_presentations'] = $accepted_presentations;
                         break;
                     case 'alternate_presentations':
                         $alternate_presentations = [];
                         foreach ($submitter->getAlternatePresentations($summit,$params['filter'] ?? null) as $p) {
-                            $alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['alternate_presentations'] = $alternate_presentations;
                         break;
                     case 'rejected_presentations':
                         $rejected_presentations = [];
                         foreach ($submitter->getRejectedPresentations($summit,$params['filter'] ?? null) as $p) {
-                            $rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['rejected_presentations'] = $rejected_presentations;
                         break;

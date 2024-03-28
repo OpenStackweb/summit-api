@@ -67,11 +67,8 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $fields = $this->getAllowedFields();
-
         $presentation = $this->object;
 
         if(!$presentation instanceof Presentation) return [];
@@ -176,7 +173,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     case 'selectors': {
                         $selectors = [];
                         foreach ($presentation->getSelectors() as $m) {
-                            $selectors[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $selectors[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['selectors'] = $selectors;
                     }
@@ -184,7 +187,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     case 'likers': {
                         $likers = [];
                         foreach ($presentation->getLikers() as $m) {
-                            $likers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $likers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['likers'] = $likers;
                     }
@@ -192,7 +201,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     case 'passers': {
                         $passers = [];
                         foreach ($presentation->getPassers() as $m) {
-                            $passers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $passers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['passers'] = $passers;
                     }
@@ -200,7 +215,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     case 'viewers': {
                         $viewers = [];
                         foreach ($presentation->getMemberViewers() as $m) {
-                            $viewers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $viewers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['viewers'] = $viewers;
                     }
@@ -208,7 +229,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     case 'comments':{
                         $comments = [];
                         foreach ($presentation->getComments() as $comment) {
-                            $comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['comments'] = $comments;
                     }
@@ -216,7 +243,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     case 'category_changes_requests':{
                         $category_changes_requests = [];
                         foreach ($presentation->getCategoryChangeRequests() as $request) {
-                            $category_changes_requests[] = SerializerRegistry::getInstance()->getSerializer($request)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $category_changes_requests[] = SerializerRegistry::getInstance()->getSerializer($request)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['category_changes_requests'] = $category_changes_requests;
                     }
@@ -225,7 +258,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                         if(!is_null($summit_track_chair)) {
                             $track_chair_scores = [];
                             foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
-                                $track_chair_scores[] = SerializerRegistry::getInstance()->getSerializer($score)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $track_chair_scores[] = SerializerRegistry::getInstance()->getSerializer($score)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['track_chair_scores'] = $track_chair_scores;
                         }

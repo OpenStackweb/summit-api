@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use libs\utils\ICacheService;
+use models\exceptions\ValidationException;
 use models\main\ChatTeamPermission;
 use models\main\PushNotificationMessagePriority;
 use models\oauth2\IResourceServerContext;
@@ -258,7 +259,8 @@ class AppServiceProvider extends ServiceProvider
                 $validation = Validator::make($element, self::$event_dto_validation_rules);
 
                 if ($validation->fails()) {
-                    Log::debug(sprintf("event_dto_array::validation fails %s", print_r($validation->errors(), true)));
+                    Log::debug(sprintf("event_dto_array::validation fails %s", json_encode($validation->errors()->toArray())));
+                    throw new ValidationException($validation->errors()->toArray());
                     return false;
                 }
             }

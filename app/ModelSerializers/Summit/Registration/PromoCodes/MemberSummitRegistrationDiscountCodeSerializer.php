@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\MemberSummitRegistrationDiscountCode;
 /**
  * Class MemberSummitRegistrationDiscountCodeSerializer
@@ -35,10 +37,8 @@ class MemberSummitRegistrationDiscountCodeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $code            = $this->object;
         if(!$code instanceof MemberSummitRegistrationDiscountCode) return [];
         $values          = parent::serialize($expand, $fields, $relations, $params);
@@ -49,7 +49,8 @@ class MemberSummitRegistrationDiscountCodeSerializer
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'owner': {
                         if($code->hasOwner()){
                             unset($values['owner_id']);
@@ -57,7 +58,12 @@ class MemberSummitRegistrationDiscountCodeSerializer
                             (
                                 $code->getOwner(),
                                 $serializer_type
-                            )->serialize($expand);
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                         break;

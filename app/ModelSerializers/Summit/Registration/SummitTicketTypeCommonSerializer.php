@@ -50,13 +50,20 @@ trait SummitTicketTypeCommonSerializer
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'applied_taxes':
                         {
                             unset($values['applied_taxes']);
                             $applied_taxes = [];
                             foreach ($ticket_type->getAppliedTaxes() as $tax) {
-                                $applied_taxes[] = SerializerRegistry::getInstance()->getSerializer($tax)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "applied_taxes"));
+                                $applied_taxes[] = SerializerRegistry::getInstance()->getSerializer($tax)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['applied_taxes'] = $applied_taxes;
                         }
@@ -66,7 +73,13 @@ trait SummitTicketTypeCommonSerializer
                         {
                             if ($ticket_type->hasBadgeType()) {
                                 unset($values['badge_type_id']);
-                                $values['badge_type'] = SerializerRegistry::getInstance()->getSerializer($ticket_type->getBadgeType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "badge_type"));
+                                $values['badge_type'] = SerializerRegistry::getInstance()->getSerializer($ticket_type->getBadgeType())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;

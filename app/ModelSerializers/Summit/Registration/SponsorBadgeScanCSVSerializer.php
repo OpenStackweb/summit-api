@@ -46,7 +46,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];

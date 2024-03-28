@@ -40,7 +40,7 @@ final class SummitCategoryChangeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $request = $this->object;
         if (!$request instanceof SummitCategoryChange) return [];
@@ -56,32 +56,61 @@ final class SummitCategoryChangeSerializer extends SilverStripeSerializer
                             (
                                 $request->getPresentation(),
                                 IPresentationSerializerTypes::TrackChairs
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'new_category':
                         {
                             unset($values['new_category_id']);
-                            $values['new_category'] = SerializerRegistry::getInstance()->getSerializer($request->getNewCategory())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['new_category'] = SerializerRegistry::getInstance()->getSerializer($request->getNewCategory())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'old_category':
                         {
                             unset($values['old_category_id']);
-                            $values['old_category'] = SerializerRegistry::getInstance()->getSerializer($request->getOldCategory())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['old_category'] = SerializerRegistry::getInstance()->getSerializer($request->getOldCategory())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'requester':
                         {
                             unset($values['requester_id']);
-                            $values['requester'] = SerializerRegistry::getInstance()->getSerializer($request->getRequester())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['requester'] = SerializerRegistry::getInstance()->getSerializer($request->getRequester())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                     case 'aprover':
                         {
                             if($request->hasAprover()) {
                                 unset($values['aprover_id']);
-                                $values['aprover'] = SerializerRegistry::getInstance()->getSerializer($request->getAprover())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['aprover'] = SerializerRegistry::getInstance()->getSerializer($request->getAprover())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;

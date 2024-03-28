@@ -38,8 +38,6 @@ class SpeakersRegistrationDiscountCodeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $code = $this->object;
         if(!$code instanceof SpeakersRegistrationDiscountCode) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);

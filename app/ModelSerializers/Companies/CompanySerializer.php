@@ -54,11 +54,10 @@ final class CompanySerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $company = $this->object;
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         if(!$company instanceof Company) return $values;
 
         if (in_array('sponsorships', $relations)) {
@@ -86,7 +85,12 @@ final class CompanySerializer extends SilverStripeSerializer
                         $sponsorships = [];
                         foreach ($company->getSponsorships() as $s) {
                             $sponsorships[] = SerializerRegistry::getInstance()->getSerializer($s)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['sponsorships'] = $sponsorships;
                     }
@@ -96,7 +100,12 @@ final class CompanySerializer extends SilverStripeSerializer
                         $project_sponsorships = [];
                         foreach ($company->getProjectSponsorships() as $ps) {
                             $project_sponsorships[] = SerializerRegistry::getInstance()->getSerializer($ps)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['project_sponsorships'] = $project_sponsorships;
                     }

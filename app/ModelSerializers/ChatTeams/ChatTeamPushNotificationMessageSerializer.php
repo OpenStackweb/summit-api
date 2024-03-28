@@ -35,7 +35,7 @@ final class ChatTeamPushNotificationMessageSerializer  extends SilverStripeSeria
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $message = $this->object;
         if(! $message instanceof ChatTeamPushNotificationMessage) return [];

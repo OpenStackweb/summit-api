@@ -1,10 +1,4 @@
 <?php namespace ModelSerializers;
-use Libs\ModelSerializers\AbstractSerializer;
-use Libs\ModelSerializers\Many2OneExpandSerializer;
-use Libs\ModelSerializers\One2ManyExpandSerializer;
-use models\summit\SummitDocument;
-use models\summit\SummitEventType;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +11,9 @@ use models\summit\SummitEventType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
+use models\summit\SummitEventType;
 /**
  * Class SummitEventTypeSerializer
  * @package ModelSerializers
@@ -41,6 +37,12 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         'ShowAlwaysOnSchedule'             => 'show_always_on_schedule:json_boolean',
     ];
 
+    protected static $allowed_relations = [
+        'summit_documents',
+        'allowed_ticket_types',
+        'summit',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -48,13 +50,13 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $event_type = $this->object;
         if (!$event_type instanceof SummitEventType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(!isset($values['summit_documents'])) {
+        if(in_array('summit_documents', $relations) && !isset($values['summit_documents'])) {
             $summit_documents = [];
             if ($event_type->hasSummitDocuments()) {
                 foreach ($event_type->getSummitDocuments() as $document) {
@@ -64,14 +66,13 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
             $values['summit_documents'] = $summit_documents;
         }
 
-        if(!isset($values['allowed_ticket_types'])) {
+        if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])) {
             $allowed_ticket_types = [];
             foreach ($event_type->getAllowedTicketTypes() as $ticket_type) {
                 $allowed_ticket_types[] = $ticket_type->getId();
             }
             $values['allowed_ticket_types'] = $allowed_ticket_types;
         }
-
 
         return $values;
     }

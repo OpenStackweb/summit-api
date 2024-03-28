@@ -134,7 +134,6 @@ class SummitSerializer extends SilverStripeSerializer
         $summit = $this->object;
         if (!$summit instanceof Summit) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $values['dates_with_events'] = [];
         foreach ($summit->getSummitDaysWithEvents() as $day) {

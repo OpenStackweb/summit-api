@@ -56,8 +56,6 @@ final class SummitMediaUploadTypeSerializer extends SilverStripeSerializer
         if (!$type instanceof SummitMediaUploadType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $fields = $this->getAllowedFields();
         if (in_array('presentation_types', $relations)) {
             $presentation_types = [];
             foreach ($type->getPresentationTypes() as $presentation_type) {

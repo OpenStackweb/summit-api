@@ -121,7 +121,6 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
                 $relations
             ), function () use ($expand, $fields, $relations, $params) {
 
-            if (!count($relations)) $relations = $this->getAllowedRelations();
             $ticket = $this->object;
             if (!$ticket instanceof SummitAttendeeTicket) return [];
             $values = parent::serialize($expand, $fields, $relations, $params);

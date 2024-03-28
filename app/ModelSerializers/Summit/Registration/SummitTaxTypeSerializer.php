@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitTaxType;
 /**
  * Class SummitTicketTypeSerializer
@@ -36,12 +38,11 @@ final class SummitTaxTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $tax = $this->object;
         if (!$tax instanceof SummitTaxType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         // applied_taxes
         if(in_array('ticket_types', $relations)) {
             $ticket_types = [];
@@ -59,7 +60,12 @@ final class SummitTaxTypeSerializer extends SilverStripeSerializer
                         unset($values['ticket_types']);
                         $ticket_types = [];
                         foreach ($tax->getTicketTypes() as $ticket_type) {
-                            $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize($expand);
+                            $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['ticket_types'] = $ticket_types;
                     }

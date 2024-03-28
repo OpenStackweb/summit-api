@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\ModelSerializers\Traits\RequestCache;
 use models\summit\SummitEvent;
 
 /**
@@ -46,7 +45,6 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         return SerializerRegistry::SerializerType_Private;
     }
 
-    use RequestCache;
     /**
      * @param null $expand
      * @param array $fields
@@ -59,31 +57,8 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         $expand = null, array $fields = [], array $relations = [], array $params = []
     )
     {
-        /*
-        $scope = sprintf("SummitEvent_%s", $this->object->getIdentifier());
-        $cache_key = $scope;
-        if(!empty($expand))
-            $cache_key = sprintf("%s_%s", $cache_key, md5($expand));
-        if(!empty($fields)){
-            $cache_key = sprintf("%s_%s", $cache_key, md5(implode('.',$fields)));
-        }
-        if(!empty($relations)){
-            $cache_key = sprintf("%s_%s", $cache_key, md5(implode('.',$relations)));
-        }
-
-        return $this->cache
-        (
-            $scope,
-            $cache_key,
-            function () use ($expand, $fields, $relations, $params) {
-
-            }
-        );
-        */
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if (!count($fields)) $fields = $this->getAllowedFields();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 

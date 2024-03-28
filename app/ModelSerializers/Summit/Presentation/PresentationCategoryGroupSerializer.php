@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationCategoryGroup;
 /**
  * Class PresentationCategoryGroupSerializer
@@ -36,7 +38,7 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $track_group = $this->object;
@@ -47,7 +49,12 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         foreach($track_group->getCategories() as $c)
         {
             if(!is_null($expand) &&  in_array('tracks', explode(',',$expand))){
-                $categories[] = SerializerRegistry::getInstance()->getSerializer($c)->serialize();
+                $categories[] = SerializerRegistry::getInstance()->getSerializer($c)->serialize(
+                    AbstractSerializer::filterExpandByPrefix($expand, 'tracks'),
+                    AbstractSerializer::filterFieldsByPrefix($fields, 'tracks'),
+                    AbstractSerializer::filterFieldsByPrefix($relations, 'tracks'),
+                    $params
+                );
             }
             else
                 $categories[] = intval($c->getId());

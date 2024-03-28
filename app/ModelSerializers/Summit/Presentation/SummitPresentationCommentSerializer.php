@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitPresentationComment;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
@@ -35,9 +37,8 @@ final class SummitPresentationCommentSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $comment = $this->object;
 
@@ -50,7 +51,12 @@ final class SummitPresentationCommentSerializer extends SilverStripeSerializer
                     case 'creator':{
                         if($comment->getCreatorId() > 0) {
                             unset($values['creator_id']);
-                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($comment->getCreator())->serialize();
+                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($comment->getCreator())->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                     break;

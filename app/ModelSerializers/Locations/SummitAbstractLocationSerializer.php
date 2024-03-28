@@ -41,7 +41,6 @@ class SummitAbstractLocationSerializer
     {
         $location = $this->object;
         if (!$location instanceof SummitAbstractLocation) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 

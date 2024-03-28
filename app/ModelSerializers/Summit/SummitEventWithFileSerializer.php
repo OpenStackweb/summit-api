@@ -26,11 +26,10 @@ class SummitEventWithFileSerializer extends SummitEventSerializer
         'attachment'
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         $event = $this->object;
-        if(!count($fields)) $fields = $this->getAllowedFields();
         if (!$event instanceof SummitEventWithFile) return [];
 
         $values = parent::serialize($expand, $fields, $relations, $params);

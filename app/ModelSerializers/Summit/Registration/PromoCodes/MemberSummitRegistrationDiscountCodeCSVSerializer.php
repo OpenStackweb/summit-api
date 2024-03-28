@@ -31,11 +31,9 @@ extends MemberSummitRegistrationDiscountCodeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
-        $code            = $this->object;
+        $code = $this->object;
         if(!$code instanceof MemberSummitRegistrationDiscountCode) return [];
 
         return self::serializeFields2CSV

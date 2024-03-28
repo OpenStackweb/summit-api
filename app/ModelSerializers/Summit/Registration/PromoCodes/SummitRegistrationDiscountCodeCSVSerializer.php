@@ -31,8 +31,6 @@ class SummitRegistrationDiscountCodeCSVSerializer extends SummitRegistrationDisc
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $code = $this->object;
         if (!$code instanceof SummitRegistrationDiscountCode) return [];
         return self::serializeFields2CSV

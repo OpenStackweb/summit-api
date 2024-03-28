@@ -53,11 +53,10 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $project = $this->object;
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         if(!$project instanceof SponsoredProject) return $values;
 
         if (!empty($expand)) {
@@ -67,7 +66,12 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
                     $parentProject = $project->getParentProject();
                     if (!is_null($parentProject) && $project instanceof SponsoredProject) {
                         $values['parent_project'] = SerializerRegistry::getInstance()->getSerializer($project->getParentProject())
-                            ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            ->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                     }
                 }
             }

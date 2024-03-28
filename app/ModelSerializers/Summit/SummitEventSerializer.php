@@ -129,9 +129,6 @@ class SummitEventSerializer extends SilverStripeSerializer
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $fields = $this->getAllowedFields();
-
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (in_array('sponsors', $relations))

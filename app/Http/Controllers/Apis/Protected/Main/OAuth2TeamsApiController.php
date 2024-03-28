@@ -148,10 +148,10 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
                     ->getSerializer($team)
                     ->serialize
                     (
-                        $expand    = Request::input('expand',''),
-                        $fields    = [],
+                        $expand = Request::input('expand', ''),
+                        $fields = [],
                         $relations = [],
-                        $params    = [
+                        $params = [
                             'current_member' => $current_member
                         ]
                     )

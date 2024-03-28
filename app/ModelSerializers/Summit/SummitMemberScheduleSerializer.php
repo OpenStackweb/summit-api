@@ -24,7 +24,7 @@ final class SummitMemberScheduleSerializer extends SilverStripeSerializer
 
     );
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $schedule                = $this->object;
 

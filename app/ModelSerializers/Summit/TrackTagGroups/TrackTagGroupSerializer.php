@@ -37,7 +37,7 @@ final class TrackTagGroupSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $track_tag_group = $this->object;
@@ -61,7 +61,13 @@ final class TrackTagGroupSerializer extends SilverStripeSerializer
                         foreach($track_tag_group->getAllowedTags() as $allowed_tag){
                             $allowed_tags[] = SerializerRegistry::getInstance()
                                 ->getSerializer($allowed_tag)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));;
+                                ->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['allowed_tags'] = $allowed_tags;
                     }

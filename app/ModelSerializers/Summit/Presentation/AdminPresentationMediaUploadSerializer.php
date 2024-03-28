@@ -15,7 +15,6 @@
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileDownloadStrategyFactory;
 use Illuminate\Support\Facades\Log;
-use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationMediaUpload;
 /**
  * Class AdminPresentationMediaUploadSerializer
@@ -33,13 +32,12 @@ final class AdminPresentationMediaUploadSerializer extends PresentationMediaUplo
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         $values = parent::serialize($expand, $fields, $relations, $params);
         $mediaUpload  = $this->object;
         if(!$mediaUpload instanceof PresentationMediaUpload) return [];
-        if(!count(AbstractSerializer::getFirstLevelAllowedFields($fields))) $fields = array_merge($fields, $this->getAllowedFields());
 
         $mediaUploadType = $mediaUpload->getMediaUploadType();
         if(!is_null($mediaUploadType)) {

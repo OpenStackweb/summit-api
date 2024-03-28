@@ -36,12 +36,11 @@ final class SummitAdministratorPermissionGroupSerializer extends SilverStripeSer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $group  = $this->object;
         if(!$group instanceof SummitAdministratorPermissionGroup) return [];
 
-        if(!count($relations)) $relations = $this->getAllowedRelations();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
@@ -69,7 +68,13 @@ final class SummitAdministratorPermissionGroupSerializer extends SilverStripeSer
                         $members = [];
                         unset($values['members']);
                         foreach ($group->getMembers() as $m) {
-                            $members[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand,'members'));
+                            $members[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['members'] = $members;
                     }
@@ -79,7 +84,13 @@ final class SummitAdministratorPermissionGroupSerializer extends SilverStripeSer
                         $summits = [];
                         unset($values['summits']);
                         foreach ($group->getSummits() as $s) {
-                            $summits[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize(AbstractSerializer::filterExpandByPrefix($expand,'summits'));
+                            $summits[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['summits'] = $summits;
                     }

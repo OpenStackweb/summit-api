@@ -39,12 +39,11 @@ final class ConsultantServiceOfferedTypeSerializer extends SilverStripeSerialize
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         $service  = $this->object;
         if(!$service instanceof ConsultantServiceOfferedType) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('service_offered_type', $relations)){

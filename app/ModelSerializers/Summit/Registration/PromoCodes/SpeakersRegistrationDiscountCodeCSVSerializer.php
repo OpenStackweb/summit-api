@@ -14,6 +14,10 @@
 
 use models\summit\SpeakersRegistrationDiscountCode;
 
+/**
+ * Class SpeakersRegistrationDiscountCodeCSVSerializer
+ * @package ModelSerializers
+ */
 class SpeakersRegistrationDiscountCodeCSVSerializer
 extends SpeakersRegistrationDiscountCodeSerializer
 {
@@ -26,10 +30,8 @@ extends SpeakersRegistrationDiscountCodeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $code            = $this->object;
         if(!$code instanceof SpeakersRegistrationDiscountCode) return [];
 

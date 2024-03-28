@@ -32,7 +32,7 @@ final class PresentationActionTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $action = $this->object;
         if (!$action instanceof PresentationActionType) return [];
@@ -51,7 +51,12 @@ final class PresentationActionTypeSerializer extends SilverStripeSerializer
                             $values['summit'] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $action->getSummit()
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         break;
                 }

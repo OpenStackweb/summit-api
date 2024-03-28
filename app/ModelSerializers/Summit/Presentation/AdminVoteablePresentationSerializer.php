@@ -34,13 +34,11 @@ class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
      */
     public function serialize
     (
-        $expand = null, array $fields = array(), array $relations = array(), array $params = array()
+        $expand = null, array $fields = [], array $relations = [], array $params = []
     )
     {
         $presentation = $this->object;
         if (!$presentation instanceof Presentation) return [];
-
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 

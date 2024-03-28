@@ -50,8 +50,7 @@ abstract class AbstractSerializer implements IModelSerializer
         $this->resource_server_context = $resource_server_context;
     }
 
-    protected static $array_mappings = [
-    ];
+    protected static $array_mappings = [];
 
     protected static $allowed_fields = [];
 
@@ -169,6 +168,11 @@ abstract class AbstractSerializer implements IModelSerializer
         }
     }
 
+    static public function getFirstLevelAllowedFields(array $relations):array{
+        return array_filter($relations, function($elem) {
+            return !str_contains(trim($elem), ".");
+        });
+    }
     /**
      * @return array
      */

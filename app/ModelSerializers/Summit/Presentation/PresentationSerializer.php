@@ -69,6 +69,8 @@ class PresentationSerializer extends SummitEventSerializer
         'extra_questions',
         'public_comments',
         'actions',
+        'creator',
+        'selection_plan',
     ];
 
     /**
@@ -94,12 +96,10 @@ class PresentationSerializer extends SummitEventSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $presentation = $this->object;
-
         if(!$presentation instanceof Presentation) return [];
-
+        if(!count($relations)) $relations = $this->getAllowedRelations();
+        if(!count($fields)) $relations = $this->getAllowedFields();
         $key =
             sprintf
             (

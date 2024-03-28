@@ -37,6 +37,9 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
         'AllowsSpeakerEventCollision' => 'allows_speaker_event_collision:json_boolean',
     ];
 
+    protected static $allowed_relations = [
+        'allowed_media_upload_types',
+    ];
     /**
      * @param null $expand
      * @param array $fields
@@ -49,31 +52,36 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $type = $this->object;
         if (!$type instanceof PresentationType) return [];
+        if (!count($relations)) $relations = $this->getAllowedRelations();
 
-        $allowed_media_upload_types = [];
+        if(in_array('allowed_media_upload_types', $relations)) {
+            $allowed_media_upload_types = [];
 
-        foreach ($type->getAllowedMediaUploadTypes() as $media_type){
-            $allowed_media_upload_types[] = $media_type->getId();
+            foreach ($type->getAllowedMediaUploadTypes() as $media_type) {
+                $allowed_media_upload_types[] = $media_type->getId();
+            }
+
+            $values['allowed_media_upload_types'] = $allowed_media_upload_types;
         }
-
-        $values['allowed_media_upload_types'] = $allowed_media_upload_types;
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
-
                     case 'allowed_media_upload_types': {
                         unset($values['allowed_media_upload_types']);
                         $allowed_media_upload_types = [];
 
                         foreach ($type->getAllowedMediaUploadTypes() as $media_type){
-                            $allowed_media_upload_types[] = SerializerRegistry::getInstance()->getSerializer($media_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $allowed_media_upload_types[] = SerializerRegistry::getInstance()->getSerializer($media_type)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation)
+                            );
                         }
 
                         $values['allowed_media_upload_types'] = $allowed_media_upload_types;
                     }
-                        break;
+                    break;
                 }
             }
         }

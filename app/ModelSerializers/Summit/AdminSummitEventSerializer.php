@@ -27,6 +27,9 @@ class AdminSummitEventSerializer extends SummitEventSerializer
 
     protected static $allowed_fields = [
         'occupancy',
+        'streaming_url',
+        'streaming_type',
+        'etherpad_link',
     ];
 
     /**
@@ -56,6 +59,7 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         $expand = null, array $fields = [], array $relations = [], array $params = []
     )
     {
+        /*
         $scope = sprintf("SummitEvent_%s", $this->object->getIdentifier());
         $cache_key = $scope;
         if(!empty($expand))
@@ -72,21 +76,26 @@ class AdminSummitEventSerializer extends SummitEventSerializer
             $scope,
             $cache_key,
             function () use ($expand, $fields, $relations, $params) {
-                $event = $this->object;
-                if (!$event instanceof SummitEvent) return [];
 
-                if (!count($relations)) $relations = $this->getAllowedRelations();
-
-                $values = parent::serialize($expand, $fields, $relations, $params);
-
-                // always set
-                $values['streaming_url'] = $event->getStreamingUrl();
-                $values['streaming_type'] = $event->getStreamingType();
-                $values['etherpad_link'] = $event->getEtherpadLink();
-
-                return $values;
             }
         );
+        */
+        $event = $this->object;
+        if (!$event instanceof SummitEvent) return [];
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        if (!count($fields)) $fields = $this->getAllowedFields();
+
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        // always set
+        if (in_array('streaming_url', $fields))
+            $values['streaming_url'] = $event->getStreamingUrl();
+        if (in_array('streaming_type', $fields))
+            $values['streaming_type'] = $event->getStreamingType();
+        if (in_array('etherpad_link', $fields))
+            $values['etherpad_link'] = $event->getEtherpadLink();
+
+        return $values;
 
     }
 }

@@ -22,13 +22,22 @@ use Closure;
 trait RequestCache
 {
     /**
+     * @param string $scope
      * @param string $key
      * @param Closure $callback
+     * @param array $params
      * @return mixed
      */
-    function cache(string $scope , string $key, Closure $callback){
+    function cache(string $scope , string $key, Closure $callback, array $params = []){
 
         Log::debug(sprintf("RequestCache::cache scope %s key %s.", $scope, $key));
+        $bypass = $params['bypass_cache'] ?? false;
+
+        if($bypass){
+            Log::debug(sprintf("RequestCache::cache scope %s key %s bypassing cache.", $scope, $key));
+            return $callback();
+        }
+
         $res = Cache::tags($scope)->get($key);
         if(!empty($res)){
             Log::debug(sprintf("RequestCache::cache scope %s key %s cache hit", $scope, $key));

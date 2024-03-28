@@ -27,6 +27,12 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
         'MediaUploadTypeId' => 'media_upload_type_id:json_int'
     );
 
+    protected static $allowed_fields = [
+        'filename',
+        'media_upload_type_id',
+        'public_url',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -39,24 +45,30 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $mediaUpload  = $this->object;
         if(!$mediaUpload instanceof PresentationMediaUpload) return [];
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        if(!count(AbstractSerializer::getFirstLevelAllowedFields($fields))) $fields = array_merge($fields, $this->getAllowedFields());
         // these values are calculated
         unset($values['name']);
         unset($values['description']);
         unset($values['featured']);
 
-        $mediaUploadType =  $mediaUpload->getMediaUploadType();
+        $mediaUploadType = $mediaUpload->getMediaUploadType();
         if(!is_null($mediaUploadType)){
             try {
-                $values['name'] = $mediaUploadType->getName();
-                $values['description'] = $mediaUploadType->getDescription();
-                $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-                if (!is_null($strategy)) {
-                    $values['public_url'] = $strategy->getUrl
-                    (
-                        $mediaUpload->getRelativePath(),
-                        $mediaUploadType->isUseTemporaryLinksOnPublicStorage(),
-                        $mediaUploadType->getTemporaryLinksPublicStorageTtl() * 60 // convert to seconds
-                    );
+                if(in_array('name', $fields))
+                    $values['name'] = $mediaUploadType->getName();
+                if(in_array('description', $fields))
+                    $values['description'] = $mediaUploadType->getDescription();
+                if(in_array('public_url', $fields)) {
+                    $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                    if (!is_null($strategy)) {
+                        $values['public_url'] = $strategy->getUrl
+                        (
+                            $mediaUpload->getRelativePath(),
+                            $mediaUploadType->isUseTemporaryLinksOnPublicStorage(),
+                            $mediaUploadType->getTemporaryLinksPublicStorageTtl() * 60 // convert to seconds
+                        );
+                    }
                 }
             }
             catch (\Exception $ex){
@@ -72,7 +84,12 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
                         unset($values['media_upload_type_id']);
                         $type = $mediaUpload->getMediaUploadType();
                         if(!is_null($type))
-                            $values['media_upload_type'] = SerializerRegistry::getInstance()->getSerializer($type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['media_upload_type'] = SerializerRegistry::getInstance()->getSerializer($type)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                     }
                   break;
                 }

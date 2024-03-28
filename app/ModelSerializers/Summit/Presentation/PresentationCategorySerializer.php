@@ -42,6 +42,16 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             'ParentId' => 'parent_id:json_int',
         ];
 
+    protected static $allowed_relations = [
+        'track_groups',
+        'allowed_tags',
+        'extra_questions',
+        'selection_lists',
+        'allowed_access_levels',
+        'proposed_schedule_allowed_locations',
+        'subtracks',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -53,52 +63,68 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
     {
         $category = $this->object;
         if (!$category instanceof PresentationCategory) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $groups = [];
-        $allowed_access_levels = [];
-        $allowed_tag = [];
-        $extra_questions = [];
-        $selection_lists = [];
-        $proposed_schedule_allowed_locations = [];
-        $subtracks = [];
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        if(!count($fields)) $fields = $this->getAllowedFields();
 
+        $values = parent::serialize($expand, $fields, $relations, $params);
         $summit = $category->getSummit();
 
-        foreach ($category->getGroups() as $group) {
-            $groups[] = intval($group->getId());
+        if(in_array('track_groups', $relations)) {
+            $groups = [];
+            foreach ($category->getGroups() as $group) {
+                $groups[] = intval($group->getId());
+            }
+            $values['track_groups'] = $groups;
         }
 
-        foreach ($category->getAllowedTags() as $tag) {
-            $allowed_tag[] = $tag->getId();
+        if(in_array('allowed_tags', $relations)) {
+            $allowed_tag = [];
+            foreach ($category->getAllowedTags() as $tag) {
+                $allowed_tag[] = $tag->getId();
+            }
+            $values['allowed_tags'] = $allowed_tag;
         }
 
-        foreach ($category->getExtraQuestions() as $question) {
-            $extra_questions[] = intval($question->getId());
+        if(in_array('extra_questions', $relations)) {
+            $extra_questions = [];
+            foreach ($category->getExtraQuestions() as $question) {
+                $extra_questions[] = intval($question->getId());
+            }
+            $values['extra_questions'] = $extra_questions;
         }
 
-        foreach ($category->getSelectionLists() as $list) {
-            $selection_lists[] = intval($list->getId());
+        if(in_array('selection_lists', $relations)) {
+            $selection_lists = [];
+            foreach ($category->getSelectionLists() as $list) {
+                $selection_lists[] = intval($list->getId());
+            }
+            $values['selection_lists'] = $selection_lists;
         }
 
-        foreach ($category->getAllowedAccessLevels() as $access_level) {
-            $allowed_access_levels[] = intval($access_level->getId());
+        if(in_array('allowed_access_levels', $relations)) {
+            $allowed_access_levels = [];
+            foreach ($category->getAllowedAccessLevels() as $access_level) {
+                $allowed_access_levels[] = intval($access_level->getId());
+            }
+
+            $values['allowed_access_levels'] = $allowed_access_levels;
         }
 
-        foreach ($category->getProposedScheduleAllowedLocations() as $allowed_location) {
-            $proposed_schedule_allowed_locations[] = intval($allowed_location->getId());
+        if(in_array('proposed_schedule_allowed_locations', $relations)) {
+            $proposed_schedule_allowed_locations = [];
+            foreach ($category->getProposedScheduleAllowedLocations() as $allowed_location) {
+                $proposed_schedule_allowed_locations[] = intval($allowed_location->getId());
+            }
+            $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
         }
 
-        foreach ($category->getSubTracks() as $children) {
-            $subtracks[] = intval($children->getId());
+        if(in_array('subtracks', $relations)) {
+            $subtracks = [];
+            foreach ($category->getSubTracks() as $children) {
+                $subtracks[] = intval($children->getId());
+            }
+            $values['subtracks'] = $subtracks;
         }
-
-        $values['track_groups'] = $groups;
-        $values['allowed_tags'] = $allowed_tag;
-        $values['extra_questions'] = $extra_questions;
-        $values['selection_lists'] = $selection_lists;
-        $values['allowed_access_levels'] = $allowed_access_levels;
-        $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
-        $values['subtracks'] = $subtracks;
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);

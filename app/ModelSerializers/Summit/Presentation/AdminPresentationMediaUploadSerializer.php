@@ -14,8 +14,8 @@
 
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileDownloadStrategyFactory;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationMediaUpload;
 /**
  * Class AdminPresentationMediaUploadSerializer
@@ -23,7 +23,10 @@ use models\summit\PresentationMediaUpload;
  */
 final class AdminPresentationMediaUploadSerializer extends PresentationMediaUploadSerializer
 {
-  /**
+    protected static $allowed_fields = [
+        'private_url',
+    ];
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations
@@ -32,17 +35,20 @@ final class AdminPresentationMediaUploadSerializer extends PresentationMediaUplo
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
+
         $values = parent::serialize($expand, $fields, $relations, $params);
         $mediaUpload  = $this->object;
         if(!$mediaUpload instanceof PresentationMediaUpload) return [];
+        if(!count(AbstractSerializer::getFirstLevelAllowedFields($fields))) $fields = array_merge($fields, $this->getAllowedFields());
 
         $mediaUploadType = $mediaUpload->getMediaUploadType();
         if(!is_null($mediaUploadType)) {
             try{
-                $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-                if (!is_null($strategy)) {
-
-                    $values['private_url'] = $strategy->getUrl($mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType));
+                if(in_array('private_url', $fields)) {
+                    $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                    if (!is_null($strategy)) {
+                        $values['private_url'] = $strategy->getUrl($mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType));
+                    }
                 }
             }
             catch (\Exception $ex){

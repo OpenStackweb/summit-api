@@ -106,6 +106,12 @@ class SummitEventSerializer extends SilverStripeSerializer
         'feedback',
         'current_attendance',
         'allowed_ticket_types',
+        'location',
+        'rsvp_template',
+        'track',
+        'type',
+        'created_by',
+        'updated_by',
     ];
 
     /**
@@ -115,8 +121,10 @@ class SummitEventSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize(
-        $expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize
+    (
+        $expand = null, array $fields = [], array $relations = [], array $params = []
+    )
     {
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
@@ -168,7 +176,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                 $values['etherpad_link'] = $event->getEtherpadLink();
         }
 
-        if(!isset($values['allowed_ticket_types'])) {
+        if (in_array('allowed_ticket_types', $relations)) {
             $allowed_ticket_types = [];
             foreach ($event->getAllowedTicketTypes() as $ticket_type) {
                 $allowed_ticket_types[] = $ticket_type->getId();
@@ -261,6 +269,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                                 AbstractSerializer::filterFieldsByPrefix($relations, $relation),
                             );
                         }
+                        break;
                     }
                     case 'type':
                         {

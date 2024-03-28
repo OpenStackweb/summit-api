@@ -61,7 +61,6 @@ final class SponsorSerializer extends SilverStripeSerializer
     {
         $sponsor = $this->object;
         if (!$sponsor instanceof Sponsor) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (in_array('extra_questions', $relations)) {
@@ -83,7 +82,8 @@ final class SponsorSerializer extends SilverStripeSerializer
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'summit':
                         {
                             $current_member = $params['member'] ?? null;
@@ -118,7 +118,12 @@ final class SponsorSerializer extends SilverStripeSerializer
                             $extra_questions = [];
                             foreach ($sponsor->getExtraQuestions() as $extra_question) {
                                 $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($extra_question)
-                                    ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'extra_questions'));
+                                    ->serialize(
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                             }
                             $values['extra_questions'] = $extra_questions;
                         }
@@ -128,7 +133,13 @@ final class SponsorSerializer extends SilverStripeSerializer
                             unset($values['members']);
                             $members = [];
                             foreach ($sponsor->getMembers() as $member) {
-                                $members[] = SerializerRegistry::getInstance()->getSerializer($member)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'members'));
+                                $members[] = SerializerRegistry::getInstance()->getSerializer($member)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['members'] = $members;
                         }
@@ -137,7 +148,13 @@ final class SponsorSerializer extends SilverStripeSerializer
                         {
                             if ($sponsor->hasCompany()) {
                                 unset($values['company_id']);
-                                $values['company'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getCompany())->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'company'));
+                                $values['company'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getCompany())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -145,7 +162,13 @@ final class SponsorSerializer extends SilverStripeSerializer
                         {
                             if ($sponsor->hasSponsorship()) {
                                 unset($values['sponsorship_id']);
-                                $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSponsorship())->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'sponsorship'));
+                                $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSponsorship())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -155,8 +178,10 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 unset($values['featured_event_id']);
                                 $values['featured_event'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getFeaturedEvent())->serialize
                                 (
-                                    AbstractSerializer::filterExpandByPrefix($expand, 'featured_event'),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, 'featured_event')
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
                                 );
                             }
                         }

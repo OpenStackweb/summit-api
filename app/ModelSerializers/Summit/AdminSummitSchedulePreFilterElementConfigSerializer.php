@@ -41,12 +41,11 @@ final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverSt
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $filter = $this->object;
         if (!$filter instanceof SummitSchedulePreFilterElementConfig) return [];
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('values', $relations) && !isset($values['values'])){

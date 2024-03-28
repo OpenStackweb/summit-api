@@ -43,12 +43,11 @@ final class OpenStackReleaseSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $release = $this->object;
         if (!$release instanceof OpenStackRelease) return [];
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('components', $relations) && !isset($values['components'])){

@@ -48,12 +48,11 @@ class OpenStackImplementationSerializer extends RegionalSupportedCompanyServiceS
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         $implementation  = $this->object;
         if(!$implementation instanceof OpenStackImplementation) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('capabilities', $relations)){

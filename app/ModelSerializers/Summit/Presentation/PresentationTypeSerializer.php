@@ -47,12 +47,11 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $type = $this->object;
         if (!$type instanceof PresentationType) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         if(in_array('allowed_media_upload_types', $relations)) {
             $allowed_media_upload_types = [];
@@ -75,7 +74,10 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
                         foreach ($type->getAllowedMediaUploadTypes() as $media_type){
                             $allowed_media_upload_types[] = SerializerRegistry::getInstance()->getSerializer($media_type)->serialize
                             (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation)
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
                             );
                         }
 

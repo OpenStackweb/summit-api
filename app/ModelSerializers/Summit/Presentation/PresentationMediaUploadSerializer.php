@@ -40,13 +40,11 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $mediaUpload  = $this->object;
         if(!$mediaUpload instanceof PresentationMediaUpload) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count(AbstractSerializer::getFirstLevelAllowedFields($fields))) $fields = array_merge($fields, $this->getAllowedFields());
         // these values are calculated
         unset($values['name']);
         unset($values['description']);

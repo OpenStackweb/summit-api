@@ -24,7 +24,7 @@ final class SummitMemberFavoriteSerializer extends SilverStripeSerializer
 
     );
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $favorite                = $this->object;
         $values                  = SerializerRegistry::getInstance()->getSerializer($favorite->getEvent())->serialize

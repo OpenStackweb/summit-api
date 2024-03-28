@@ -69,7 +69,6 @@ class SummitRefundRequestSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $request = $this->object;
         if (!$request instanceof SummitRefundRequest) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);

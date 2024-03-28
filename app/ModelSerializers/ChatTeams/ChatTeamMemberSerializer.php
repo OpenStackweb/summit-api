@@ -35,7 +35,7 @@ final class ChatTeamMemberSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $team_member = $this->object;
         if(! $team_member instanceof ChatTeamMember) return [];

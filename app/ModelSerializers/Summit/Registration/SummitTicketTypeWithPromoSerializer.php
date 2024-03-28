@@ -59,7 +59,7 @@ class SummitTicketTypeWithPromoSerializer extends AbstractSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $ticket_type = $this->object;
         if (!$ticket_type instanceof SummitTicketTypeWithPromo) return [];

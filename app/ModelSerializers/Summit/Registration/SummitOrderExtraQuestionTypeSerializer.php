@@ -52,12 +52,10 @@ final class SummitOrderExtraQuestionTypeSerializer extends ExtraQuestionTypeSeri
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $question = $this->object;
         if (!$question instanceof SummitOrderExtraQuestionType) return [];
-
-        if(!count($relations)) $relations = $this->getAllowedRelations();
 
         // we do here before calling parent to overload and applyt the should skip rule
         if(in_array('sub_question_rules', $relations) && !isset($values['sub_question_rules']) && $question->allowsValues()) {

@@ -51,7 +51,6 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $speaker = $this->object;
 
         if (!$speaker instanceof PresentationSpeaker) return [];

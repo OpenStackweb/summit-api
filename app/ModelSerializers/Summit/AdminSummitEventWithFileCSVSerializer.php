@@ -24,9 +24,8 @@ final class AdminSummitEventWithFileCSVSerializer extends AdminSummitEventWithFi
         'location_name',
     ];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($fields)) $fields = $this->getAllowedFields();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
         $summit_event = $this->object;

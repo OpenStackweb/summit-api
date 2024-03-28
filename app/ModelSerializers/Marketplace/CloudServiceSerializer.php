@@ -29,12 +29,11 @@ class CloudServiceSerializer extends OpenStackImplementationSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         $cloud_service  = $this->object;
         if(!$cloud_service instanceof CloudService) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('data_centers', $relations)){

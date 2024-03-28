@@ -27,7 +27,7 @@ class SummitBookableVenueRoomAttributeTypeSerializer extends SilverStripeSeriali
         'SummitId' => 'summit_id:json_int',
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $attr_type   = $this->object;
         if(!$attr_type instanceof SummitBookableVenueRoomAttributeType)
@@ -48,7 +48,12 @@ class SummitBookableVenueRoomAttributeTypeSerializer extends SilverStripeSeriali
                         unset($values['values']);
                         $attr_values = [];
                         foreach ($attr_type->getValues() as $attr_val){
-                            $attr_values[] = SerializerRegistry::getInstance()->getSerializer($attr_val)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $attr_values[] = SerializerRegistry::getInstance()->getSerializer($attr_val)->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                         $values['values'] = $attr_values;
                     }

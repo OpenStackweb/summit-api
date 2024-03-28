@@ -50,13 +50,11 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $event_type = $this->object;
         if (!$event_type instanceof SummitEventType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $fields = $this->getAllowedFields();
 
         if(in_array('summit_documents', $relations) && !isset($values['summit_documents'])) {
             $summit_documents = [];

@@ -32,11 +32,10 @@ final class SummitSelectionPlanExtraQuestionTypeSerializer extends ExtraQuestion
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $question = $this->object;
         if (!$question instanceof SummitSelectionPlanExtraQuestionType) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
         if (isset($values['order']))
             unset($values['order']);

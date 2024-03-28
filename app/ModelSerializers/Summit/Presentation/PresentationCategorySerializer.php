@@ -63,8 +63,6 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
     {
         $category = $this->object;
         if (!$category instanceof PresentationCategory) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $fields = $this->getAllowedFields();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
         $summit = $category->getSummit();
@@ -136,7 +134,13 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $groups = [];
                             unset($values['track_groups']);
                             foreach ($category->getGroups() as $g) {
-                                $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['track_groups'] = $groups;
                         }
@@ -163,7 +167,13 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             unset($values['allowed_access_levels']);
                             foreach ($category->getAllowedAccessLevels() as $access_level) {
                                 $allowed_access_levels[] = SerializerRegistry::getInstance()
-                                    ->getSerializer($access_level)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                    ->getSerializer($access_level)->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                             }
                             $values['allowed_access_levels'] = $allowed_access_levels;
                         }
@@ -174,7 +184,13 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             unset($values['extra_questions']);
                             foreach ($category->getExtraQuestions() as $question) {
                                 $extra_questions[] = SerializerRegistry::getInstance()
-                                    ->getSerializer($question)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                    ->getSerializer($question)->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                             }
                             $values['extra_questions'] = $extra_questions;
                         }
@@ -184,7 +200,13 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $proposed_schedule_allowed_locations = [];
                             unset($values['proposed_schedule_allowed_locations']);
                             foreach ($category->getProposedScheduleAllowedLocations() as $allowed_location) {
-                                $proposed_schedule_allowed_locations[] = SerializerRegistry::getInstance()->getSerializer($allowed_location)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $proposed_schedule_allowed_locations[] = SerializerRegistry::getInstance()->getSerializer($allowed_location)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
                         }
@@ -192,7 +214,13 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                     case 'parent':{
                         if($category->hasParent()) {
                             unset($values['parent_id']);
-                            $values['parent'] = SerializerRegistry::getInstance()->getSerializer($category->getParent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['parent'] = SerializerRegistry::getInstance()->getSerializer($category->getParent())->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                     break;
@@ -201,7 +229,13 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $subtracks = [];
                             unset($values['subtracks']);
                             foreach ($category->getSubTracks() as $children) {
-                                $subtracks[] = SerializerRegistry::getInstance()->getSerializer($children)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $subtracks[] = SerializerRegistry::getInstance()->getSerializer($children)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['subtracks'] = $subtracks;
                         }

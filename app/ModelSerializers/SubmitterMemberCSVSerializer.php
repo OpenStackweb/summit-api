@@ -36,7 +36,6 @@ final class SubmitterMemberCSVSerializer extends AdminMemberSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $submitter = $this->object;
 
         if(!$submitter instanceof Member) return [];

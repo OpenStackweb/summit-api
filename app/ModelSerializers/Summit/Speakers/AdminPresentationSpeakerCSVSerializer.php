@@ -39,7 +39,6 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $speaker = $this->object;
 
         if(!$speaker instanceof PresentationSpeaker) return [];

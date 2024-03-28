@@ -104,12 +104,10 @@ final class AdminSummitSerializer extends SummitSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $summit = $this->object;
         if (!$summit instanceof Summit) return [];
-
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('track_groups', $relations) && !isset($values['track_groups'])){

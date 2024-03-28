@@ -94,12 +94,11 @@ class PresentationSerializer extends SummitEventSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $presentation = $this->object;
         if(!$presentation instanceof Presentation) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-        if(!count($fields)) $relations = $this->getAllowedFields();
+
         $key =
             sprintf
             (

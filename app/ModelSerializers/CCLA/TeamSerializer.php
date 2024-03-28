@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use Models\Foundation\Main\CCLA\Team;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
@@ -34,7 +36,7 @@ final class TeamSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $team = $this->object;
 
@@ -57,15 +59,25 @@ final class TeamSerializer extends SilverStripeSerializer
                         if(isset($values['company_id']))
                         {
                             unset($values['company_id']);
-                            $values['company'] =  SerializerRegistry::getInstance()->getSerializer($team->getCompany())->serialize($expand);
+                            $values['company'] =  SerializerRegistry::getInstance()->getSerializer($team->getCompany())->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
                     }
                     break;
                     case 'members':{
-                        unset( $values['members']);
+                        unset($values['members']);
                         $members        = [];
                         foreach($team->getMembers() as $member){
-                            $members[] = SerializerRegistry::getInstance()->getSerializer($member)->serialize($expand);
+                            $members[] = SerializerRegistry::getInstance()->getSerializer($member)->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
                         }
 
                         $values['members'] = $members;

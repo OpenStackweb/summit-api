@@ -300,7 +300,7 @@ final class OAuth2PresentationCategoryGroupController
             if(is_null($track_group))
                 return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_group)->serialize( Request::input('expand', '')));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_group)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412([$ex1->getMessage()]);

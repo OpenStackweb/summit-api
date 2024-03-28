@@ -39,8 +39,6 @@ class SummitRegistrationDiscountCodeSerializer extends SummitRegistrationPromoCo
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $code = $this->object;
         if (!$code instanceof SummitRegistrationDiscountCode) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
@@ -64,7 +62,13 @@ class SummitRegistrationDiscountCodeSerializer extends SummitRegistrationPromoCo
                             unset($values['ticket_types_rules']);
                             $ticket_types_rules = [];
                             foreach ($code->getTicketTypesRules() as $ticket_types_rule) {
-                                $ticket_types_rules[] = SerializerRegistry::getInstance()->getSerializer($ticket_types_rule)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $ticket_types_rules[] = SerializerRegistry::getInstance()->getSerializer($ticket_types_rule)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['ticket_types_rules'] = $ticket_types_rules;
                         }

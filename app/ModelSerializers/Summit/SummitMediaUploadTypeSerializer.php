@@ -36,6 +36,13 @@ final class SummitMediaUploadTypeSerializer extends SilverStripeSerializer
         'Editable' => 'is_editable:json_boolean',
     ];
 
+    protected static $allowed_relations = [
+        'presentation_types',
+        'summit',
+        'type'
+    ];
+
+
     /**
      * @param null $expand
      * @param array $fields
@@ -49,26 +56,38 @@ final class SummitMediaUploadTypeSerializer extends SilverStripeSerializer
         if (!$type instanceof SummitMediaUploadType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $presentation_types = [];
-
-        foreach ($type->getPresentationTypes() as $presentation_type){
-            $presentation_types[] = $presentation_type->getId();
+        if (in_array('presentation_types', $relations)) {
+            $presentation_types = [];
+            foreach ($type->getPresentationTypes() as $presentation_type) {
+                $presentation_types[] = $presentation_type->getId();
+            }
+            $values['presentation_types'] = $presentation_types;
         }
-
-        $values['presentation_types'] = $presentation_types;
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
+                if (!in_array('presentation_types', $relations)) continue;
                 switch ($relation) {
                     case 'type': {
                         unset($values['type_id']);
-                        $values['type'] = SerializerRegistry::getInstance()->getSerializer($type->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['type'] = SerializerRegistry::getInstance()->getSerializer(
+                        $type->getType())->serialize
+                        (
+                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                        );
                     }
                         break;
                     case 'summit': {
                         unset($values['summit_id']);
-                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($type->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($type->getSummit())->serialize
+                        (
+                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($relations, $relation)
+                        );
                     }
                         break;
                     case 'presentation_types': {
@@ -76,7 +95,12 @@ final class SummitMediaUploadTypeSerializer extends SilverStripeSerializer
                         $presentation_types = [];
 
                         foreach ($type->getPresentationTypes() as $presentation_type){
-                            $presentation_types[] = SerializerRegistry::getInstance()->getSerializer($presentation_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $presentation_types[] = SerializerRegistry::getInstance()->getSerializer($presentation_type)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
 
                         $values['presentation_types'] = $presentation_types;

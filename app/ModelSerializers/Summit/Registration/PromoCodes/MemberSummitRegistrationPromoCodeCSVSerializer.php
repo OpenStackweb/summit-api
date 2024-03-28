@@ -14,6 +14,10 @@
 
 use models\summit\MemberSummitRegistrationPromoCode;
 
+/**
+ * Class MemberSummitRegistrationPromoCodeCSVSerializer
+ * @package ModelSerializers
+ */
 class  MemberSummitRegistrationPromoCodeCSVSerializer
 extends MemberSummitRegistrationPromoCodeSerializer
 {
@@ -26,10 +30,8 @@ extends MemberSummitRegistrationPromoCodeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $code            = $this->object;
         if(!$code instanceof MemberSummitRegistrationPromoCode) return [];
         return self::serializeFields2CSV

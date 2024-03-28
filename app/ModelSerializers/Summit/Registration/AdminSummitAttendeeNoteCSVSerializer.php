@@ -14,6 +14,10 @@
 
 use models\summit\SummitAttendeeNote;
 
+/**
+ * Class AdminSummitAttendeeNoteCSVSerializer
+ * @package App\ModelSerializers\Summit
+ */
 final class AdminSummitAttendeeNoteCSVSerializer extends AdminSummitAttendeeNoteSerializer
 {
     /**
@@ -23,7 +27,7 @@ final class AdminSummitAttendeeNoteCSVSerializer extends AdminSummitAttendeeNote
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $note = $this->object;
         if (!$note instanceof SummitAttendeeNote) return [];

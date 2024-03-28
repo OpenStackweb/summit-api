@@ -43,9 +43,8 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $presentation_list = $this->object;
 
@@ -77,7 +76,13 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
                         {
                             if ($presentation_list->getMemberId() > 0) {
                                 unset($values['owner_id']);
-                                $values['owner'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getMember())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['owner'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getMember())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -85,7 +90,13 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
                         {
                             if ($presentation_list->getCategoryId() > 0) {
                                 unset($values['category_id']);
-                                $values['category'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getCategory())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['category'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getCategory())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -93,7 +104,13 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
                         {
                             if ($presentation_list->getSelectionPlanId() > 0) {
                                 unset($values['selection_plan_id']);
-                                $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getSelectionPlan())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                         break;
@@ -101,7 +118,13 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
                         {
                             $selected_presentations = [];
                             foreach ($presentation_list->getSelectedPresentationsByCollection(SummitSelectedPresentation::CollectionSelected) as $p) {
-                                $selected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $selected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['selected_presentations'] = $selected_presentations;
                         }
@@ -111,7 +134,13 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
                             if ($presentation_list->getListType() == SummitSelectedPresentationList::Individual) {
                                 $interested_presentations = [];
                                 foreach ($presentation_list->getSelectedPresentationsByCollection(SummitSelectedPresentation::CollectionMaybe) as $p) {
-                                    $interested_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                    $interested_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                                 }
                                 $values['interested_presentations'] = $interested_presentations;
                             }

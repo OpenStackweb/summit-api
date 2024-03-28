@@ -1037,9 +1037,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
             return $this->updated(SerializerRegistry::getInstance()
                 ->getSerializer($speaker, SerializerRegistry::SerializerType_Private)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
             ));
         });
     }

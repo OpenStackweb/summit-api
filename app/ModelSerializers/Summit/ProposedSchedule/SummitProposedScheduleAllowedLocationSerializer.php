@@ -15,7 +15,6 @@
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
-use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
 
 /**
@@ -52,12 +51,10 @@ final class SummitProposedScheduleAllowedLocationSerializer extends SilverStripe
         ],
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $allowed_location  = $this->object;
         if(!$allowed_location instanceof SummitProposedScheduleAllowedLocation) return [];
-
-        if(!count($relations)) $relations = $this->getAllowedRelations();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 

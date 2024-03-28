@@ -45,7 +45,7 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         return $this->cache($this->getRequestKey
@@ -56,7 +56,7 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
             $fields,
             $relations
         ), function () use ($expand, $fields, $relations, $params) {
-            if(!count($relations)) $relations = $this->getAllowedRelations();
+
             $badge = $this->object;
             if(!$badge instanceof SummitAttendeeBadge) return [];
             $values  = parent::serialize($expand, $fields, $relations, $params);
@@ -75,13 +75,20 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
             if (!empty($expand)) {
                 $exp_expand = explode(',', $expand);
                 foreach ($exp_expand as $relation) {
-                    switch (trim($relation)) {
+                    $relation = trim($relation);
+                    switch ($relation) {
 
                         case 'ticket': {
                             if ($badge->hasTicket())
                             {
                                 unset($values['ticket_id']);
-                                $values['ticket'] = SerializerRegistry::getInstance()->getSerializer($badge->getTicket())->serialize(AbstractSerializer::getExpandForPrefix('ticket', $expand));
+                                $values['ticket'] = SerializerRegistry::getInstance()->getSerializer($badge->getTicket())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                             break;
@@ -89,7 +96,13 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
                             if ($badge->hasType())
                             {
                                 unset($values['type_id']);
-                                $values['type'] = SerializerRegistry::getInstance()->getSerializer($badge->getType())->serialize(AbstractSerializer::getExpandForPrefix('type', $expand));
+                                $values['type'] = SerializerRegistry::getInstance()->getSerializer($badge->getType())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                             break;
@@ -99,7 +112,13 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
                                 $features = [];
 
                                 foreach ($badge->getAllFeatures() as $feature) {
-                                    $features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('features', $expand));
+                                    $features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                                 }
                                 $values['features'] = $features;
                             }

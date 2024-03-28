@@ -30,7 +30,7 @@ final class AffiliationSerializer extends SilverStripeSerializer
         'OrganizationId'  => 'organization_id:json_int'
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $affiliation = $this->object;
         if (!$affiliation instanceof Affiliation) return [];

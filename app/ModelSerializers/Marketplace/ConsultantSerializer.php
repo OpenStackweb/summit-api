@@ -35,12 +35,11 @@ final class ConsultantSerializer extends RegionalSupportedCompanyServiceSerializ
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         $consultant  = $this->object;
         if(!$consultant instanceof Consultant) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('offices', $relations)){

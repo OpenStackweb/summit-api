@@ -31,7 +31,7 @@ final class SummitEntityEventSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $entity_event = $this->object;
         $values       = parent::serialize($expand, $fields, $relations, $params);

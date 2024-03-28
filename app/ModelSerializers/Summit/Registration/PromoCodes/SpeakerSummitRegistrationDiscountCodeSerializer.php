@@ -33,10 +33,8 @@ class SpeakerSummitRegistrationDiscountCodeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
         $code            = $this->object;
         if(!$code instanceof SpeakerSummitRegistrationDiscountCode) return [];
         $values          = parent::serialize($expand, $fields, $relations, $params);

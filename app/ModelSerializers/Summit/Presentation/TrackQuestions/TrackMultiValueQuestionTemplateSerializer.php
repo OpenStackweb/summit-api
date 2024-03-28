@@ -31,7 +31,7 @@ class TrackMultiValueQuestionTemplateSerializer extends TrackQuestionTemplateSer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $question_template = $this->object;

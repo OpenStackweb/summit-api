@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PrivatePresentationCategoryGroup;
 
 /**
@@ -34,7 +35,7 @@ final class PrivatePresentationCategoryGroupSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
 
@@ -46,7 +47,12 @@ final class PrivatePresentationCategoryGroupSerializer
         foreach($track_group->getAllowedGroups() as $g)
         {
             if(!is_null($expand) &&  in_array('allowed_groups', explode(',',$expand))){
-                $allowed_groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize();
+                $allowed_groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(
+                    AbstractSerializer::filterExpandByPrefix($expand, 'allowed_groups'),
+                    AbstractSerializer::filterFieldsByPrefix($fields, 'allowed_groups'),
+                    AbstractSerializer::filterFieldsByPrefix($relations, 'allowed_groups'),
+                    $params
+                );
             }
             else
                 $allowed_groups[] = intval($g->getId());

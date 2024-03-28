@@ -50,11 +50,10 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $question = $this->object;
         if (!$question instanceof ExtraQuestionType) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
         Log::debug(sprintf("ExtraQuestionTypeSerializer expand %s", $expand));
         if(in_array('values', $relations) && !isset($values['values']) && $question->allowsValues()) {

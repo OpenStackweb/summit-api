@@ -43,12 +43,11 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $invitation = $this->object;
         if (!$invitation instanceof SummitRegistrationInvitation) return [];
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])){

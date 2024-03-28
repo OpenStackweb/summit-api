@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Member;
@@ -54,10 +55,8 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($fields)) $fields = $this->getAllowedFields();
-
         $values = parent::serialize($expand, $fields, $relations, $params);
         $presentation = $this->object;
         if(!$presentation instanceof Presentation) return $values;

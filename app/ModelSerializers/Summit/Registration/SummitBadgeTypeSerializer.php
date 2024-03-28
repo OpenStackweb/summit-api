@@ -44,7 +44,7 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         return $this->cache($this->getRequestKey
         (
@@ -58,7 +58,6 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
             if (!$badge_type instanceof SummitBadgeType) return [];
             $values = parent::serialize($expand, $fields, $relations, $params);
 
-            if(!count($relations)) $relations = $this->getAllowedRelations();
             // access_levels
             if(in_array('access_levels', $relations)) {
                 $access_levels = [];
@@ -89,12 +88,19 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
             if (!empty($expand)) {
                 $exp_expand = explode(',', $expand);
                 foreach ($exp_expand as $relation) {
+                    $relation = trim($relation);
                     switch (trim($relation)) {
                         case 'access_levels': {
                             unset($values['access_levels']);
                             $access_levels = [];
                             foreach ($badge_type->getAccessLevels() as $access_level) {
-                                $access_levels[] = SerializerRegistry::getInstance()->getSerializer($access_level)->serialize(AbstractSerializer::getExpandForPrefix('access_levels', $expand));
+                                $access_levels[] = SerializerRegistry::getInstance()->getSerializer($access_level)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['access_levels'] = $access_levels;
                         }
@@ -103,7 +109,13 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
                             unset($values['badge_features']);
                             $badge_features = [];
                             foreach ($badge_type->getBadgeFeatures() as $feature) {
-                                $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('badge_features', $expand));
+                                $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['badge_features'] = $badge_features;
                         }
@@ -112,7 +124,13 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
                             unset($values['allowed_view_types']);
                             $allowed_view_types = [];
                             foreach ($badge_type->getAllowedViewTypes() as $viewType) {
-                                $allowed_view_types[] = SerializerRegistry::getInstance()->getSerializer($viewType)->serialize(AbstractSerializer::getExpandForPrefix('allowed_view_types', $expand));
+                                $allowed_view_types[] = SerializerRegistry::getInstance()->getSerializer($viewType)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['allowed_view_types'] = $allowed_view_types;
                         }

@@ -50,8 +50,7 @@ abstract class AbstractSerializer implements IModelSerializer
         $this->resource_server_context = $resource_server_context;
     }
 
-    protected static $array_mappings = [
-    ];
+    protected static $array_mappings = [];
 
     protected static $allowed_fields = [];
 
@@ -62,7 +61,7 @@ abstract class AbstractSerializer implements IModelSerializer
     /**
      * @return array
      */
-    protected function getAllowedFields():array
+    public function getAllowedFields():array
     {
         try {
             $allowed_fields = [];
@@ -135,7 +134,7 @@ abstract class AbstractSerializer implements IModelSerializer
     /**
      * @return array
      */
-    protected function getAllowedRelations():array
+    public function getAllowedRelations():array
     {
         try {
             $relations = [];
@@ -169,6 +168,11 @@ abstract class AbstractSerializer implements IModelSerializer
         }
     }
 
+    static public function getFirstLevelAllowedFields(array $relations):array{
+        return array_filter($relations, function($elem) {
+            return !str_contains(trim($elem), ".");
+        });
+    }
     /**
      * @return array
      */
@@ -415,7 +419,7 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param string $prefix
      * @return string
      */
-    public static function filterExpandByPrefix(?string $expand_str, string $prefix):?string
+    public static function filterExpandByPrefix(?string $expand_str, string $prefix, string $default = ''):?string
     {
         if(empty($expand_str)) return '';
         $expand_to = explode(',', $expand_str);
@@ -427,6 +431,10 @@ abstract class AbstractSerializer implements IModelSerializer
         foreach ($filtered_expand as $filtered_expand_elem) {
             if (strlen($res) > 0) $res .= ',';
             $res .= str_replace_first($prefix . ".", "", strtolower(trim($filtered_expand_elem)));
+        }
+        if(!empty($default)){
+            if(strlen($res) > 0) $res .= ',';
+            $res .= $default;
         }
         return $res;
     }

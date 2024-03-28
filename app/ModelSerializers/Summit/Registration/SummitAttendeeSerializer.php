@@ -57,7 +57,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
 
         return $this->cache($this->getRequestKey
@@ -69,7 +69,6 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
             $relations
         ), function () use ($expand, $fields, $relations, $params) {
 
-            if(!count($relations)) $relations = $this->getAllowedRelations();
             $attendee = $this->object;
             if(!$attendee instanceof SummitAttendee) return [];
             $serializer_type = SerializerRegistry::SerializerType_Public;
@@ -166,7 +165,8 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
             if (!empty($expand)) {
                 $exp_expand = explode(',', $expand);
                 foreach ($exp_expand as $relation) {
-                    switch (trim($relation)) {
+                    $relation = trim($relation);
+                    switch ($relation) {
                         case 'tickets': {
                             if (!in_array('tickets', $relations)) break;
                             unset($values['tickets']);
@@ -177,7 +177,13 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                                 if (!$t->hasTicketType()) continue;
                                 if ($t->isCancelled()) continue;
                                 if (!$t->isActive()) continue;
-                                $tickets[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize(AbstractSerializer::getExpandForPrefix('tickets', $expand));
+                                $tickets[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                                 $count++;
                                 /*if (AbstractSerializer::MaxCollectionPage < $count) {
                                     $values['tickets_has_more'] = true;
@@ -193,7 +199,13 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                             $extra_question_answers = [];
                             foreach($attendee->getExtraQuestionAnswers() as $answer)
                             {
-                                $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::getExpandForPrefix('extra_questions', $expand));
+                                $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                             $values['extra_questions'] = $extra_question_answers;
                         }
@@ -253,7 +265,13 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                             if (!is_null($speaker))
                             {
                                 unset($values['speaker_id']);
-                                $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize(AbstractSerializer::getExpandForPrefix('speaker', $expand));
+                                $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                             }
                         }
                             break;
@@ -264,9 +282,9 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                                 $values['member']    = SerializerRegistry::getInstance()
                                     ->getSerializer($attendee->getMember(), $serializer_type)
                                     ->serialize(
-                                        AbstractSerializer::getExpandForPrefix('member', $expand),
-                                        [],
-                                        [],
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
                                         ['summit' => $attendee->getSummit()]);
                             }
                         }
@@ -276,7 +294,13 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
 
                                 if ($attendee->hasCompany()) {
                                     unset($values['company_id']);
-                                    $values['company'] = SerializerRegistry::getInstance()->getSerializer($attendee->getCompany())->serialize(AbstractSerializer::getExpandForPrefix('company', $expand));
+                                    $values['company'] = SerializerRegistry::getInstance()->getSerializer($attendee->getCompany())->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                                 }
                             }
                             break;

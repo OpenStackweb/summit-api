@@ -37,11 +37,10 @@ class SummitAbstractLocationSerializer
         'published_events',
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $location = $this->object;
         if (!$location instanceof SummitAbstractLocation) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 

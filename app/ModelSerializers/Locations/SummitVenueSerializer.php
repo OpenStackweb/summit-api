@@ -49,11 +49,10 @@ final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $venue  = $this->object;
         if(!$venue instanceof  SummitVenue) return [];
-        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
         if(in_array('rooms', $relations) && !isset($values['rooms'])) {
             // rooms

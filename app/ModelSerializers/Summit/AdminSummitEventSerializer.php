@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\summit\SummitEvent;
+
 /**
  * Class AdminSummitEventSerializer
  * @package ModelSerializers
@@ -24,6 +26,9 @@ class AdminSummitEventSerializer extends SummitEventSerializer
 
     protected static $allowed_fields = [
         'occupancy',
+        'streaming_url',
+        'streaming_type',
+        'etherpad_link',
     ];
 
     /**
@@ -47,22 +52,25 @@ class AdminSummitEventSerializer extends SummitEventSerializer
      * @param array $params
      * @return array
      */
-    public function serialize(
+    public function serialize
+    (
         $expand = null, array $fields = [], array $relations = [], array $params = []
     )
     {
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         // always set
-        $values['streaming_url'] = $event->getStreamingUrl();
-        $values['streaming_type'] = $event->getStreamingType();
-        $values['etherpad_link'] = $event->getEtherpadLink();
+        if (in_array('streaming_url', $fields))
+            $values['streaming_url'] = $event->getStreamingUrl();
+        if (in_array('streaming_type', $fields))
+            $values['streaming_type'] = $event->getStreamingType();
+        if (in_array('etherpad_link', $fields))
+            $values['etherpad_link'] = $event->getEtherpadLink();
 
         return $values;
+
     }
 }

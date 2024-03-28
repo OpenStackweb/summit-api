@@ -108,6 +108,28 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
             throw new ValidationException("Question is not set.");
         }
 
+        if($this->question->isMandatory() && empty($value)){
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Question %s is mandatory.",
+                    $this->question->getId()
+                )
+            );
+        }
+
+        if(!$this->question->isValidValue($value)){
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Invalid value (%s) for question %s",
+                    json_encode($value),
+                    $this->question->getId()
+                )
+            );
+        }
         $res = $value;
         if(is_array($res))
         {

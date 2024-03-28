@@ -262,6 +262,21 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     public function allowsValues():bool {
         return in_array($this->type, ExtraQuestionTypeConstants::AllowedMultiValueQuestionType);
     }
+
+    public function isValidValue($value):bool{
+        if(empty($value) && !$this->mandatory) return true;
+        if($this->allowsValues()) {
+            if(!is_array($value))
+                $value = explode(self::QuestionChoicesCharSeparator, $value);
+            foreach ($value as $v) {
+                if(!$this->getValueById(intval($v)))
+                    return false;
+            }
+        }
+        if($this->type === ExtraQuestionTypeConstants::RadioButtonQuestionType)
+            return empty($value) || $value === 'true';
+        return true;
+    }
     /**
      * @param ExtraQuestionTypeValue $value
      * @throws ValidationException

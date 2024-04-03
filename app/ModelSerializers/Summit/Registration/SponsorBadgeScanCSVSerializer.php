@@ -70,12 +70,14 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
 
         Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize scan %s original values %s", $scan->getId(), json_encode($values)));
 
-        // remove not allowed string columns
-        foreach($values as $id => $value) {
-            if (!in_array($id, $setting_columns)) {
-                unset($values[$id]);
-            }
+        // remove not allowed string columns and sort them by setting columns order
+        $new_values = [];
+        foreach(array_values($setting_columns) as $column) {
+            if(!is_string($column)) continue;
+            if(!isset($values[$column])) continue;
+            $new_values[$column] = $values[$column];
         }
+        $values = $new_values;
 
         $sponsor_questions_values  = [];
         if (isset($setting_columns[SummitLeadReportSetting::SponsorExtraQuestionsKey])

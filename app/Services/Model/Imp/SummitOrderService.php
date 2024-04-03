@@ -1987,7 +1987,7 @@ final class SummitOrderService
             $ticket->generateQRCode();
             $ticket->generateHash();
 
-            $attendee->sendInvitationEmail($ticket, false, $payload);
+            $attendee->sendInvitationEmail($ticket, true, $payload);
 
             return $ticket;
         });

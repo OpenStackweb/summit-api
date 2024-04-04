@@ -148,7 +148,13 @@ final class DoctrineSummitEventRepository
                 ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
         }
 
+        if ($order->hasOrder("actions") && !$filter->hasFilter("actions")) {
+            $query = $query->leftJoin("p.actions", 'a', Join::LEFT_JOIN);
+        }
+
         $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
 
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
@@ -213,6 +219,19 @@ final class DoctrineSummitEventRepository
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return QueryBuilder
+     */
+    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder
+    {
+        $query = $query->addSelect("COUNT(a.is_completed) AS HIDDEN HIDDEN_COMPLETED_ACTIONS_COUNT");
+        $query->groupBy("e");
+        return $query;
     }
 
     /**
@@ -570,6 +589,7 @@ CASE
     END 
 SQL,
             'selection_plan' => 'selp.name',
+            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT'
             /*
             'event_type_capacity' => <<<SQL
 SQL,

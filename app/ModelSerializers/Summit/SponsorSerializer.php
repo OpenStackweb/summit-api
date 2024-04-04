@@ -189,10 +189,8 @@ final class SponsorSerializer extends SilverStripeSerializer
                         break;
                     case 'lead_report_setting':
                         {
-                            if ($sponsor->hasLeadReportSetting()) {
-                                unset($values['lead_report_setting_id']);
-                                $values['lead_report_setting'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getLeadReportSetting())->serialize();
-                            }
+                            unset($values['lead_report_setting_id']);
+                            $values['lead_report_setting'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getLeadReportSetting())->serialize();
                         }
                         break;
                 }

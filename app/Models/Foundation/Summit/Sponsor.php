@@ -942,29 +942,9 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     /**
      * @return SummitLeadReportSetting
      */
-    public function getLeadReportSetting(): ?SummitLeadReportSetting
+    public function getLeadReportSetting(): SummitLeadReportSetting
     {
-        return $this->lead_report_setting;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasLeadReportSetting(): bool
-    {
-        return $this->getLeadReportSettingId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getLeadReportSettingId(): int
-    {
-        try {
-            return is_null($this->lead_report_setting) ? 0 : $this->lead_report_setting->getId();
-        } catch (\Exception $ex) {
-            return 0;
-        }
+        return $this->lead_report_setting ?? $this->summit->getLeadReportSettingFor($this);
     }
 
     /**

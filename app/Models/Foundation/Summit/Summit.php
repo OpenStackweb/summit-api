@@ -6898,7 +6898,11 @@ SQL;
      */
     public function getLeadReportSettings()
     {
-        return $this->lead_report_settings;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->isNull('sponsor'));
+        $res = $this->lead_report_settings->matching($criteria);
+        if ($res->count() > 0) return $res;
+        return [$this->getLeadReportSettingFor()];
     }
 
     /**

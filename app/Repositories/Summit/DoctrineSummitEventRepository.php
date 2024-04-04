@@ -125,12 +125,15 @@ final class DoctrineSummitEventRepository
         }
 
         $query = $this->getEntityManager()->createQueryBuilder()
-            ->distinct("e")
             ->select("e")
+            ->distinct(true)
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
+        $ssp_join_added = false;
+
         if (is_null($order) || !$order->hasOrder("votes_count")) {
+            $ssp_join_added = true;
             $query = $query
                 ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
                 ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
@@ -146,6 +149,15 @@ final class DoctrineSummitEventRepository
                 ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
                 ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
                 ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
+        }
+
+        if ($order->hasOrder("selection_status")) {
+            if (!$ssp_join_added) {
+                $query = $query
+                    ->leftJoin("p.selected_presentations", "ssp", Join::LEFT_JOIN)
+                    ->leftJoin("ssp.list", "sspl", Join::LEFT_JOIN);
+            }
+            $query = $query->leftJoin("sspl.category", "ssplc", Join::LEFT_JOIN);
         }
 
         $query = $this->applyExtraJoins($query, $filter);
@@ -552,22 +564,20 @@ SQL,
 SQL,
             'published_date' => 'e.published_date',
             'is_published' => 'e.is_published',
-
             'selection_status' => <<<SQL
-CASE 
-
-    WHEN (ssp.order is not null and ssp.order <= c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category) OR e.published = 1 THEN 'accepted'
+CASE
+    WHEN (ssp.order is not null and ssp.order <= c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and ssplc = c) OR e.published = 1 THEN 'accepted'
     WHEN e.published = 0 AND NOT EXISTS (
-                                            SELECT ___sp31.id 
+                                            SELECT ___sp31.id
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = 'Group' AND ___spl31.list_class = 'Session'
-                                            WHERE ___p31.id = e.id 
+                                            WHERE ___p31.id = e.id
                                             AND ___sp31.collection = 'selected'
                                         ) THEN 'rejected'
-    WHEN ssp.order is not null and ssp.order > c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category THEN 'alternate'
+    WHEN ssp.order is not null and ssp.order > c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and ssplc = c THEN 'alternate'
     ELSE 'pending'
-    END 
+END
 SQL,
             'selection_plan' => 'selp.name',
             /*

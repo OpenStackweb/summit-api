@@ -202,7 +202,8 @@ final class SummitPromoCodeFactory
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
 
-                $promo_code->setSponsor($params['sponsor']);
+                if(isset($params['sponsor']))
+                    $promo_code->setSponsor($params['sponsor']);
             }
             break;
             case MemberSummitRegistrationDiscountCode::ClassName:{

@@ -739,6 +739,32 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     }
 
     /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function ingestSponsorPromoCodes(LaravelRequest $request, $summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $request) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $this->promo_code_service->importSponsorPromoCodes($summit, $file, $this->resource_server_context->getCurrentUser());
+            return $this->ok();
+
+        });
+    }
+
+    /**
      * @param $summit_id
      * @param $promo_code_id
      * @return \Illuminate\Http\JsonResponse|mixed

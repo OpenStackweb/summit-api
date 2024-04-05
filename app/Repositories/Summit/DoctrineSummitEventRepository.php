@@ -125,8 +125,8 @@ final class DoctrineSummitEventRepository
         }
 
         $query = $this->getEntityManager()->createQueryBuilder()
-            ->distinct("e")
             ->select("e")
+            ->distinct(true)
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
@@ -552,22 +552,42 @@ SQL,
 SQL,
             'published_date' => 'e.published_date',
             'is_published' => 'e.is_published',
-
             'selection_status' => <<<SQL
-CASE 
-
-    WHEN (ssp.order is not null and ssp.order <= c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category) OR e.published = 1 THEN 'accepted'
+    CASE
+    WHEN p is null THEN ''
+    WHEN e.published = 1 OR EXISTS (
+                                            SELECT ___sp331.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp331
+                                            JOIN ___sp331.presentation ___p331
+                                            JOIN ___p331.category ___pc331                  
+                                            JOIN ___sp331.list ___spl331 WITH ___spl331.list_type = 'Group' AND ___spl331.list_class = 'Session'
+                                            WHERE 
+                                            ___p331.id = e.id
+                                            AND ___sp331.collection = 'selected'
+                                            AND ___sp331.order <= ___pc331.session_count                  
+                                   )  THEN 'accepted'
     WHEN e.published = 0 AND NOT EXISTS (
-                                            SELECT ___sp31.id 
-                                            FROM models\summit\SummitSelectedPresentation ___sp31
-                                            JOIN ___sp31.presentation ___p31
-                                            JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = 'Group' AND ___spl31.list_class = 'Session'
-                                            WHERE ___p31.id = e.id 
-                                            AND ___sp31.collection = 'selected'
+                                            SELECT ___sp332.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp332
+                                            JOIN ___sp332.presentation ___p332
+                                            JOIN ___sp332.list ___spl332 WITH ___spl332.list_type = 'Group' AND ___spl332.list_class = 'Session'
+                                            WHERE ___p332.id = e.id
+                                            AND ___sp332.collection = 'selected'
                                         ) THEN 'rejected'
-    WHEN ssp.order is not null and ssp.order > c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category THEN 'alternate'
+    WHEN 
+     EXISTS (
+                                            SELECT ___sp333.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp333
+                                            JOIN ___sp333.presentation ___p333
+                                            JOIN ___p333.category ___pc333                  
+                                            JOIN ___sp333.list ___spl333 WITH ___spl333.list_type = 'Group' AND ___spl333.list_class = 'Session'
+                                            WHERE 
+                                            ___p333.id = e.id
+                                            AND ___sp333.collection = 'selected'
+                                            AND ___sp333.order > ___pc333.session_count                  
+                                   ) THEN 'alternate'
     ELSE 'pending'
-    END 
+END
 SQL,
             'selection_plan' => 'selp.name',
             /*

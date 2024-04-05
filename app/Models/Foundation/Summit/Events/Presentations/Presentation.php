@@ -935,6 +935,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function getSelectionStatus()
     {
 
+        Log::debug(sprintf("Presentation::getSelectionStatus presentation %s", $this->id));
+
         $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp 
             JOIN sp.list l
             JOIN sp.presentation p
@@ -955,19 +957,68 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $selection = null;
         if (count($session_sel) == 1) {
             $selection = $session_sel[0];
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s got selection %s",
+                    $this->id,
+                    $selection->getId()
+                )
+            );
         }
 
-        if($this->isPublished())
+        if($this->isPublished()) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( is published ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Accepted
+                )
+            );
+
             return Presentation::SelectionStatus_Accepted;
+        }
 
         if (!$selection) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( not selected ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Unaccepted
+                )
+            );
             return Presentation::SelectionStatus_Unaccepted;
         }
 
         if ($selection->getOrder() <= $this->getCategory()->getSessionCount()) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( selection order is %s from %s ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Accepted,
+                    $selection->getOrder(),
+                    $this->getCategory()->getSessionCount()
+                )
+            );
             return Presentation::SelectionStatus_Accepted;
         }
 
+        Log::debug
+        (
+            sprintf
+            (
+                "Presentation::getSelectionStatus presentation %s return %s ( default ).",
+                $this->id,
+                Presentation::SelectionStatus_Alternate
+            )
+        );
         return Presentation::SelectionStatus_Alternate;
     }
 

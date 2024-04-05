@@ -40,6 +40,20 @@ CSV;
         }
     }
 
+    public function testRowHasMoreColsThanHeaderCSV()
+    {
+        $data = <<<CSV
+code,class_name,quantity_available,sponsor_id,contact_email
+TEST_SANTI_SPONS_DIS,SPONSOR_DISCOUNT_CODE,10,,,
+TEST_SANTI_SPONS_PROMO,SPONSOR_PROMO_CODE,10,252,,
+SANTI_SPONS_PROMO1,SPONSOR_PROMO_CODE,10,,santipalenque@gmail.com
+SANTI_SPONS_PROMO2,SPONSOR_PROMO_CODE,10
+CSV;
+
+        $reader = CSVReader::buildFrom($data);
+        $this->assertTrue($reader->hasColumn("contact_email"));
+        $this->assertTrue($reader->count() == 4);
+    }
     public function test3ColCSV()
     {
         $data = <<<CSV

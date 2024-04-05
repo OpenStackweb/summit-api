@@ -71,9 +71,8 @@ final class CSVReader implements Iterator {
                 continue;
             }
             $line  = [];
-            if(count($row) != count($header)) continue;
             for($i = 0; $i < count($header); $i++){
-                $line[$header[$i]] = trim($row[$i]);
+                $line[$header[$i]] = $row[$i] ?? '';
             }
             $lines[] = $line;
 
@@ -145,5 +144,9 @@ final class CSVReader implements Iterator {
     public function rewind()
     {
         $this->position = 0;
+    }
+
+    public function count():int{
+        return count($this->lines);
     }
 }

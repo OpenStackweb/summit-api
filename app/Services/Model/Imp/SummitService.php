@@ -28,6 +28,7 @@ use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
+use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
@@ -89,6 +90,7 @@ use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\RSVP;
+use models\summit\Sponsor;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -103,6 +105,7 @@ use models\summit\SummitEventType;
 use models\summit\SummitEventWithFile;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitGroupEvent;
+use models\summit\SummitLeadReportSetting;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitScheduleEmptySpot;
 use services\apis\IEventbriteAPI;
@@ -3945,4 +3948,48 @@ final class SummitService
         });
     }
 
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws Exception
+     */
+    public function addLeadReportSettings(Summit $summit, array $payload): SummitLeadReportSetting
+    {
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
+            $former_setting = $summit->getLeadReportSettingFor();
+            if (!is_null($former_setting)) {
+                throw new ValidationException(sprintf("Lead report settings already exists for summit %s", $summit->getId()));
+            }
+            $lead_report_settings = LeadReportSettingsFactory::build($payload);
+
+            $lead_report_settings->validateFor($summit);
+
+            $lead_report_settings->setSummit($summit);
+            $summit->addLeadReportSetting($lead_report_settings);
+
+            return $lead_report_settings;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitLeadReportSetting
+     * @throws Exception
+     */
+    public function updateLeadReportSettings(Summit $summit, array $payload): SummitLeadReportSetting
+    {
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
+            $former_setting = $summit->getLeadReportSettingFor();
+            $lead_report_settings = LeadReportSettingsFactory::populate($former_setting, $payload);
+
+            $lead_report_settings->validateFor($summit);
+
+            $summit->removeLeadReportSetting($former_setting);
+            $summit->addLeadReportSetting($lead_report_settings);
+
+            return $lead_report_settings;
+        });
+    }
 }

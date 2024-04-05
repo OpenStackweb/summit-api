@@ -43,6 +43,7 @@ final class SponsorSerializer extends SilverStripeSerializer
         'HeaderImageMobileAltText' => 'header_image_mobile_alt_text:json_string',
         'CarouselAdvertiseImageAltText' => 'carousel_advertise_image_alt_text:json_string',
         'ShowLogoInEventPage' => 'show_logo_in_event_page:json_boolean',
+        'LeadReportSettingId' => 'lead_report_setting_id:json_int',
     ];
 
     protected static $allowed_relations = [
@@ -184,6 +185,12 @@ final class SponsorSerializer extends SilverStripeSerializer
                                     $params
                                 );
                             }
+                        }
+                        break;
+                    case 'lead_report_setting':
+                        {
+                            unset($values['lead_report_setting_id']);
+                            $values['lead_report_setting'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getLeadReportSetting())->serialize();
                         }
                         break;
                 }

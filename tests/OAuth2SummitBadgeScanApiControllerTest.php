@@ -1,5 +1,11 @@
 <?php namespace Tests;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use Libs\ModelSerializers\AbstractSerializer;
+use models\summit\Sponsor;
+use models\summit\Summit;
+use models\summit\SummitLeadReportSetting;
 
 /**
  * Copyright 2019 OpenStack Foundation
@@ -276,5 +282,123 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertNotEmpty($content);
+    }
+
+    public function testExportSummitBadgeScansWithReportSettingsRestriction(){
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        if (!$sponsor instanceof Sponsor) self::fail();
+
+        $sponsor_question = $sponsor->getExtraQuestions()[0];
+        if (!$sponsor_question instanceof SummitSponsorExtraQuestionType) self::fail();
+
+        $params = [
+            'id'    =>  self::$summit->getId(),
+            'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        // set up allowed columns
+
+        $allowed_columns = [
+            'scan_date',
+            'extra_questions' => [
+                [
+                    'id'   => $sponsor_question->getId(),
+                    'name' => $sponsor_question->getName()
+                ]
+            ]
+        ];
+
+        $data = [
+            'allowed_columns' => $allowed_columns
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitApiController@updateLeadReportSettings",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeScanApiController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($content);
+        $this->assertTrue(str_contains($content, AbstractSerializer::getCSVLabel($sponsor_question->getLabel())));
+        $this->assertTrue(str_contains($content, 'scan_date'));
+    }
+
+    public function testExportSummitBadgeScansWithAllReportSettingsRestriction(){
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        if (!$sponsor instanceof Sponsor) self::fail();
+
+        $sponsor_question = $sponsor->getExtraQuestions()[0];
+        if (!$sponsor_question instanceof SummitSponsorExtraQuestionType) self::fail();
+
+        $params = [
+            'id'    =>  self::$summit->getId(),
+            'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $data = [
+            'allowed_columns' => [
+                SummitLeadReportSetting::AttendeeExtraQuestionsKey => [],
+                SummitLeadReportSetting::SponsorExtraQuestionsKey => []
+            ]
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitApiController@updateLeadReportSettings",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeScanApiController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($content);
+        $this->assertTrue(!str_contains($content, 'scan_date'));
     }
 }

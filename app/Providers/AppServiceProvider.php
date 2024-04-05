@@ -175,6 +175,11 @@ class AppServiceProvider extends ServiceProvider
         'value' => 'sometimes|string_or_string_array',
     ];
 
+    static $lead_report_settings_question_dto_validation_rules = [
+        'id'   => 'required|integer',
+        'name' => 'sometimes|string',
+    ];
+
     /**
      * Bootstrap any application services.
      * @return void
@@ -373,6 +378,31 @@ class AppServiceProvider extends ServiceProvider
                 $validation = Validator::make($element, self::$event_dto_publish_validation_rules);
 
                 if ($validation->fails()) return false;
+            }
+            return true;
+        });
+
+        Validator::extend('lead_report_settings_dto_array', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('lead_report_settings_dto_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf
+                (
+                    "%s should be an array of strings or extra question data {id : int, name: string}",
+                    $attribute);
+            });
+
+            if (!is_array($value)) return false;
+
+            foreach ($value as $element) {
+                if (is_string($element)) continue;
+
+                foreach ($element as $key => $element_val) {
+                    if ($element_val == '*') continue;
+
+                    // Creates a Validator instance and validates the data.
+                    $validation = Validator::make($element_val, self::$lead_report_settings_question_dto_validation_rules);
+
+                    if ($validation->fails()) return false;
+                }
             }
             return true;
         });

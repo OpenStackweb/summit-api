@@ -232,6 +232,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     private $extra_questions;
 
     /**
+     * @var SummitLeadReportSetting
+     * @ORM\OneToOne(targetEntity="models\summit\SummitLeadReportSetting", mappedBy="sponsor", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    private $lead_report_setting;
+
+    /**
      * Sponsor constructor.
      */
     public function __construct()
@@ -931,5 +937,32 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function recalculateQuestionOrder(SummitSponsorExtraQuestionType $question, int $new_order)
     {
         self::recalculateOrderForSelectable($this->extra_questions, $question, $new_order);
+    }
+
+    /**
+     * @return SummitLeadReportSetting
+     */
+    public function getLeadReportSetting(): SummitLeadReportSetting
+    {
+        return $this->lead_report_setting ?? $this->summit->getLeadReportSettingFor($this);
+    }
+
+    /**
+     * @param SummitLeadReportSetting $lead_report_setting
+     */
+    public function setLeadReportSetting(SummitLeadReportSetting $lead_report_setting): void
+    {
+        $lead_report_setting->setSponsor($this);
+        $this->lead_report_setting = $lead_report_setting;
+    }
+
+    /**
+     * @return void
+     */
+    public function clearLeadReportSetting()
+    {
+        if (is_null($this->lead_report_setting)) return;
+        $this->lead_report_setting->clearSponsor();
+        $this->lead_report_setting = null;
     }
 }

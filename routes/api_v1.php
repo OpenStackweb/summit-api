@@ -1889,6 +1889,8 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getAllSponsorPromoCodesBySummit']);
             Route::group(['prefix' => 'csv'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getSponsorPromoCodesAllBySummitCSV']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@ingestSponsorPromoCodes']);
+
             });
         });
 

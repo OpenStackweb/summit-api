@@ -26,6 +26,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
+use libs\utils\TextUtils;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
@@ -640,6 +641,109 @@ final class SummitPromoCodeService
                 }
 
                 Log::debug(sprintf("SummitPromoCodeService::importPromoCodes processing row %s", json_encode($row)));
+                $code = trim($row['code']);
+                $promo_code = $summit->getPromoCodeByCode($code);
+                if(is_null($promo_code))
+                    $this->addPromoCode($summit, $row, $current_user);
+                else
+                    $this->updatePromoCode($summit, $promo_code->getId(),$row, $current_user);
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+                $summit = $this->summit_repository->getById($summit->getId());
+            }
+        }
+    }
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $csv_file
+     * @param Member|null $current_user
+     * @throws ValidationException
+     */
+    public function importSponsorPromoCodes(Summit $summit, UploadedFile $csv_file, ?Member $current_user = null):void{
+        Log::debug(sprintf("SummitPromoCodeService::importSponsorPromoCodes - summit %s", $summit->getId()));
+
+        $allowed_extensions = ['txt'];
+
+        if (!in_array($csv_file->extension(), $allowed_extensions)) {
+            throw new ValidationException("File does not has a valid extension ('csv').");
+        }
+
+        $csv_data = File::get($csv_file->getRealPath());
+
+        if (empty($csv_data))
+            throw new ValidationException("File content is empty.");
+
+        $reader = CSVReader::buildFrom($csv_data);
+
+        $allowed_class_names = [
+            SponsorSummitRegistrationDiscountCode::ClassName,
+            SponsorSummitRegistrationPromoCode::ClassName
+        ];
+
+        // check needed columns (headers names)
+
+        if (!$reader->hasColumn("code"))
+            throw new ValidationException("File is missing code column.");
+
+        if (!$reader->hasColumn("class_name"))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "File is missing class_name column. allowed values (%s)",
+                    implode(',', $allowed_class_names)
+                )
+            );
+
+        if (!$reader->hasColumn("quantity_available"))
+            throw new ValidationException("File is missing quantity_available column.");
+
+        foreach ($reader as $idx => $row) {
+            try {
+                $class_name = TextUtils::trim($row['class_name']);
+                if(!in_array($class_name, $allowed_class_names)) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "class_name %s is invalid. allowed values (%s)",
+                            $class_name,
+                            implode(',', $allowed_class_names)
+                        )
+                    );
+                    continue;
+                }
+
+                if(isset($row['badge_features'])){
+                    $row['badge_features'] = explode('|', $row['badge_features']);
+                }
+
+                if(isset($row['allowed_ticket_types'])){
+                    $row['allowed_ticket_types'] = explode('|', $row['allowed_ticket_types']);
+                }
+
+                if(isset($row['tags'])){
+                    $row['tags'] = explode('|', $row['tags']);
+                }
+
+                if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
+
+                    $row['ticket_types_rules'] = explode('|', $row['ticket_types_rules']);
+
+                    $ticket_types_rules = [];
+
+                    foreach ($row['ticket_types_rules'] as $ticket_type_id){
+                        $ticket_types_rules[] = [
+                            'ticket_type_id' => intval($ticket_type_id),
+                            'amount' => $row['amount'] ?? 0.0,
+                            'rate' =>  $row['rate']?? 0.0
+                        ];
+                    }
+                    $row['ticket_types_rules'] = $ticket_types_rules;
+                }
+
+                Log::debug(sprintf("SummitPromoCodeService::importSponsorPromoCodes processing row %s", json_encode($row)));
                 $code = trim($row['code']);
                 $promo_code = $summit->getPromoCodeByCode($code);
                 if(is_null($promo_code))

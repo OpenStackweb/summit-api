@@ -187,7 +187,13 @@ final class Filter
                 // OR
                 foreach ($filter as $e) {
                     if ($e instanceof FilterElement) {
-                        if (!isset($res[$e->getField()])) $res[$e->getField()] = [];
+                        if (!isset($res[$e->getField()])){
+                            $res[$e->getField()] = [];
+                        }
+                        $former_filter_value = $res[$e->getField()];
+                        if(!is_array($former_filter_value)){
+                            $res[$e->getField()] = [$former_filter_value];
+                        }
                         $res[$e->getField()][] = $e->getValue();
                     }
                 }

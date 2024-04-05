@@ -337,10 +337,14 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     Filter::buildConcatStringFields(["owr2.FirstName", "owr2.Surname"]),
                     "owr2.FirstName :operator :value",
                     "owr2.Surname :operator :value",
+                    Filter::buildConcatStringFields(["mpc.FirstName", "mpc.LastName"]),
+                    Filter::buildConcatStringFields(["mdc.FirstName", "mdc.LastName"]),
                 ],
                 'owner_email' => [
                     Filter::buildEmailField('owr.Email'),
                     Filter::buildEmailField('owr2.Email'),
+                    Filter::buildEmailField('mpc.Email'),
+                    Filter::buildEmailField('mdc.Email'),
                 ],
                 'speaker' => [
                     Filter::buildConcatStringFields(["ps3.FirstName", "ps3.LastName"]),

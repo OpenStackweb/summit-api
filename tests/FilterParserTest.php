@@ -15,6 +15,8 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use App\Rules\Boolean;
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
 use models\summit\PresentationType;
@@ -754,5 +756,53 @@ DQL;
 
         $this->assertEquals("SELECT DISTINCT e FROM models\summit\SummitRegistrationInvitation e WHERE  (  ( e.hash is not null )  )  AND e.id NOT IN ( :value_1 ) AND e.id IN ( :value_2 )", $dql);
         $res = $query->getQuery()->getResult();
+    }
+
+    public function testDuplicateCriteria(){
+        $filter = FilterParser::parse([
+            'owner_email==cespin+174@gmail.com',
+            'code=@cespin+174@gmail.com,creator=@cespin+174@gmail.com,creator_email=@cespin+174@gmail.com,owner=@cespin+174@gmail.com,owner_email=@cespin+174@gmail.com,speaker=@cespin+174@gmail.com,speaker_email=@cespin+174@gmail.com,sponsor_company_name=@cespin+174@gmail.com'
+        ],
+            [
+                'code' => ['@@', '=@', '=='],
+                'description' => ['@@', '=@'],
+                'notes' => ['@@', '=@'],
+                'creator' => ['@@', '=@', '=='],
+                'creator_email' => ['@@', '=@', '=='],
+                'owner' => ['@@', '=@', '=='],
+                'owner_email' => ['@@', '=@', '=='],
+                'speaker' => ['@@', '=@', '=='],
+                'speaker_email' => ['@@', '=@', '=='],
+                'class_name' => ['=='],
+                'type' => ['=='],
+                'tag' => ['@@','=@', '=='],
+                'tag_id' => ['=='],
+                'sponsor_company_name' => ['@@', '=@', '=='],
+                'sponsor_id' => ['=='],
+                'contact_email' =>  ['@@', '=@', '=='],
+                'tier_name' =>  ['@@', '=@', '=='],
+                'email_sent' => ['=='],
+            ]);
+
+        $filter->validate([
+            'class_name' => sprintf('sometimes|required|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
+            'code' => 'sometimes|string',
+            'description' => 'sometimes|string',
+            'notes' => 'sometimes|string',
+            'creator' => 'sometimes|string',
+            'creator_email' => 'sometimes|string',
+            'owner' => 'sometimes|string',
+            'owner_email' => 'sometimes|string',
+            'speaker' => 'sometimes|string',
+            'speaker_email' => 'sometimes|string',
+            'type' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::getValidTypes())),
+            'tag' => 'sometimes|required|string',
+            'tag_id' => 'sometimes|integer',
+            'sponsor_company_name' => 'sometimes|string',
+            'contact_email' => 'sometimes|string',
+            'sponsor_id' => 'sometimes|integer',
+            'tier_name' =>  'sometimes|string',
+            'email_sent' => ['sometimes', new Boolean()],
+        ]);
     }
 }

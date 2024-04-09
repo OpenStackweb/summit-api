@@ -36,10 +36,14 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
     const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_SPONSOR_PROMO_CODE';
 
     /**
-     * SponsorPromoCodeEmail constructor.
      * @param SummitRegistrationPromoCode $promo_code
+     * @param string|null $test_email_recipient
      */
-    public function __construct(SummitRegistrationPromoCode $promo_code)
+    public function __construct
+    (
+        SummitRegistrationPromoCode $promo_code,
+        ?string $test_email_recipient
+    )
     {
         Log::debug("SponsorPromoCodeEmail::__construct");
 
@@ -64,6 +68,20 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::contact_email] = $recipient;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+        if (!empty($test_email_recipient)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SponsorPromoCodeEmail::__construct replacing original email %s by %s",
+                    $recipient,
+                    $test_email_recipient
+                )
+            );
+
+            $payload[IMailTemplatesConstants::contact_email] = $test_email_recipient;
+            $recipient = $test_email_recipient;
+        }
         parent::__construct($summit, $payload, $template_identifier, $recipient);
         Log::debug(sprintf("SponsorPromoCodeEmail::__construct %s", $this->template_identifier));
     }

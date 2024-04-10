@@ -118,14 +118,15 @@ final class FilterParser
                 }
 
                 if (!isset($allowed_fields[$field])) {
-                    throw new FilterParserException(sprintf("filter by field %s is not allowed", $field));
+                    throw new FilterParserException(sprintf("Filter by field %s is not allowed.", $field));
                 }
 
                 if (!is_array($allowed_fields[$field])) {
-                    throw new FilterParserException(sprintf("filter by field %s is not an array", $field));
+                    throw new FilterParserException(sprintf("Filter by field %s is not an array.", $field));
                 }
+
                 if (!in_array($op, $allowed_fields[$field])) {
-                    throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s", $op, $field));
+                    throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s.", $op, $field));
                 }
 
                 $f = self::buildFilter($field, $op, $value, $same_field_op);
@@ -154,7 +155,7 @@ final class FilterParser
 
         $op = $matches[0];
         $operands = explode($op, $exp, 2);
-        $field = $operands[0];
+        $field = strtolower(trim($operands[0]));
         $value = $operands[1];
         Log::debug(sprintf("FilterParser::filterExpresion field %s op %s value %s", $field, $op, json_encode($value)));
         return [$field, $op, $value];

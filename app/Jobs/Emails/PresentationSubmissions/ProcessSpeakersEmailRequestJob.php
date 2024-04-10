@@ -90,12 +90,14 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
             'has_alternate_presentations' => ['=='],
             'has_rejected_presentations' => ['=='],
             'presentations_track_id' => ['=='],
-            'presentations_selection_plan_id' =>  ['=='],
-            'presentations_type_id'           =>  ['=='],
-            'presentations_title'             => ['=@', '@@', '=='],
-            'presentations_abstract'          => ['=@', '@@', '=='],
+            'presentations_selection_plan_id' => ['=='],
+            'presentations_type_id' => ['=='],
+            'presentations_title' => ['=@', '@@', '=='],
+            'presentations_abstract' => ['=@', '@@', '=='],
             'presentations_submitter_full_name' => ['=@', '@@', '=='],
             'presentations_submitter_email' => ['=@', '@@', '=='],
+            'has_media_upload_with_type' => ['=='],
+            'has_not_media_upload_with_type' => ['=='],
         ]) : null;
 
         $service->sendEmails($this->summit_id, $this->payload, $filter);

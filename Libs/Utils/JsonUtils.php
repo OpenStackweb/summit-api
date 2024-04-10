@@ -1,4 +1,6 @@
 <?php namespace libs\utils;
+use Aws\S3\Exception\PermanentRedirectException;
+
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -113,13 +115,14 @@ abstract class JsonUtils
     }
 
     /**
-     * @param string $value
-     * @return float|null
+     * @param $value
+     * @param int $precision
+     * @return float
      */
-    public static function toJsonMoney($value)
+    public static function toJsonMoney($value, int $precision = 2 )
     {
         if(empty($value)) return 0.00;
-        return floatval(round($value, 2, PHP_ROUND_HALF_UP));
+        return floatval(round($value, $precision, PHP_ROUND_HALF_UP));
     }
 
     /**

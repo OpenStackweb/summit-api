@@ -78,6 +78,11 @@ class SummitTaxRefund extends SilverstripeBaseModel
         return $this->refunded_amount;
     }
 
+    public function getRefundedAmountInCents(): int
+    {
+        return self::convertToCents($this->refunded_amount);
+    }
+
     public function getTax(): SummitTaxType
     {
         return $this->tax;

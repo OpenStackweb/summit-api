@@ -23,7 +23,8 @@ final class SummitTaxRefundSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'TaxId' => 'tax_id:json_int',
         'RefundRequestId' => 'refund_request_id:json_int',
-        'RefundedAmount' => 'refunded_amount:json_float',
+        'RefundedAmount' => 'refunded_amount:json_money:10',
+        'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
     ];
 
     protected static $expand_mappings = [

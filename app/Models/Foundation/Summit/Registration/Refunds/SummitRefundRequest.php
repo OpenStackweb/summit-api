@@ -242,6 +242,14 @@ class SummitRefundRequest extends SilverstripeBaseModel
         return $this->refunded_amount + $this->getTaxesRefundedAmount();
     }
 
+    /*
+     * Total amount refunded Ticket Price + Tax/Fee price
+     *  @return int
+     */
+    public function getTotalRefundedAmountInCents(): int {
+        return self::convertToCents($this->getTotalRefundedAmount());
+    }
+
     public function getTaxesRefundedAmount():float{
         $taxes_refund_amount = 0.0;
         foreach ($this->refunded_taxes as $tax_refund)

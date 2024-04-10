@@ -234,6 +234,7 @@ abstract class AbstractSerializer implements IModelSerializer
     const StringType = 'json_string';
     const IntType = 'json_int';
     const FloatType = 'json_float';
+    const MoneyType = 'json_money';
     const ObfuscatedEmailType = 'json_obfuscated_email';
     const UrlType = 'json_url';
     const ColorType = 'json_color';
@@ -249,6 +250,7 @@ abstract class AbstractSerializer implements IModelSerializer
         self::UrlType,
         self::ColorType,
         self::JsonStringArray,
+        self::MoneyType
     ];
 
     /**
@@ -352,7 +354,7 @@ abstract class AbstractSerializer implements IModelSerializer
                             break;
                         case 'json_money':
                             {
-                                $value = JsonUtils::toJsonMoney($value);
+                                $value = JsonUtils::toJsonMoney($value, count($mapping) > 2 ? intval($mapping[2]) : 2);
                             }
                             break;
                         case 'json_obfuscated_email':

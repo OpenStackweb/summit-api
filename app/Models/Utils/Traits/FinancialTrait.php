@@ -50,10 +50,11 @@ trait FinancialTrait
 
     /**
      * @param float $value
+     * @param bool $should_round
      * @return int
      */
-    static function convertToCents(float $value):int{
-        return intval(round($value * 100));
+    static function convertToCents(float $value, bool $should_round = true):int{
+        return $should_round ? intval(round($value * 100)) : intval($value * 100);
     }
 
     /**

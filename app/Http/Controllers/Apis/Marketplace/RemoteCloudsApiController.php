@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IRemoteCloudServiceRepository;
+use models\oauth2\IResourceServerContext;
+
 /**
  * Class RemoteCloudsApiController
  * @package App\Http\Controllers
@@ -22,9 +24,9 @@ final class RemoteCloudsApiController extends AbstractCompanyServiceApiControlle
      * PrivateCloudsApiController constructor.
      * @param IRemoteCloudServiceRepository $repository
      */
-    public function __construct(IRemoteCloudServiceRepository $repository)
+    public function __construct(IRemoteCloudServiceRepository $repository, IResourceServerContext $resource_server_context)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $resource_server_context);
     }
 
     public function getAll()

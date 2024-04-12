@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IApplianceRepository;
+use models\oauth2\IResourceServerContext;
+
 /**
  * Class AppliancesApiController
  * @package App\Http\Controllers
@@ -23,9 +25,9 @@ final class AppliancesApiController extends AbstractCompanyServiceApiController
      * AppliancesApiController constructor.
      * @param IApplianceRepository $repository
      */
-    public function __construct(IApplianceRepository $repository)
+    public function __construct(IApplianceRepository $repository, IResourceServerContext $resource_server_context)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $resource_server_context);
     }
 
     public function getAll()

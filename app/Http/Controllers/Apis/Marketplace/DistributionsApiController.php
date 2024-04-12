@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IDistributionRepository;
+use models\oauth2\IResourceServerContext;
+
 /**
  * Class DistributionsApiController
  * @package App\Http\Controllers\Apis\Marketplace
@@ -23,9 +25,9 @@ final class DistributionsApiController extends AbstractCompanyServiceApiControll
      * DistributionsApiController constructor.
      * @param IDistributionRepository $repository
      */
-    public function __construct(IDistributionRepository $repository)
+    public function __construct(IDistributionRepository $repository, IResourceServerContext $resource_server_context)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $resource_server_context);
     }
 
     public function getAll()

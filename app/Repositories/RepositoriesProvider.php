@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\IElectionsRepository;
 use App\Models\Foundation\Main\Language;
@@ -22,6 +21,7 @@ use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
+use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
 use App\Models\Foundation\Software\OpenStackRelease;
 use App\Models\Foundation\Software\Repositories\IOpenStackReleaseRepository;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
@@ -316,6 +316,13 @@ final class RepositoriesProvider extends ServiceProvider
             });
 
         // Marketplace
+
+        App::singleton(
+            ICompanyServiceRepository::class,
+            function(){
+                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\CompanyService::class);
+            }
+        );
 
         App::singleton(
             'App\Models\Foundation\Marketplace\IApplianceRepository',

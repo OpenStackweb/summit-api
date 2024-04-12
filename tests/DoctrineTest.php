@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use models\summit\SummitExternalLocation;
+use models\utils\IBaseRepository;
 use utils\PagingInfo;
 use utils\FilterParser;
 use ModelSerializers\SerializerRegistry;
@@ -235,5 +236,12 @@ final class DoctrineTest extends TestCase
         $speaker_repo->delete($speaker);
 
         $em->flush();
+    }
+
+    public function testCompanyService(){
+        $repo = EntityManager::getRepository(\App\Models\Foundation\Marketplace\CompanyService::class);
+        $this->assertTrue($repo instanceof IBaseRepository);
+        $service = $repo->getById(1);
+        $this->assertTrue(!is_null($service));
     }
 }

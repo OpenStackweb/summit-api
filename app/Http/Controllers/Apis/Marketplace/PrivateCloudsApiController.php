@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IPrivateCloudServiceRepository;
+use models\oauth2\IResourceServerContext;
+
 /**
  * Class PrivateCloudsApiController
  * @package App\Http\Controllers
@@ -22,9 +24,9 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
      * PrivateCloudsApiController constructor.
      * @param IPrivateCloudServiceRepository $repository
      */
-    public function __construct(IPrivateCloudServiceRepository $repository)
+    public function __construct(IPrivateCloudServiceRepository $repository, IResourceServerContext $resource_server_context)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $resource_server_context);
     }
 
     public function getAll()

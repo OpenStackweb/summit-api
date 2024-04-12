@@ -18,7 +18,7 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use models\main\Company;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineCompanyServiceRepository")
  * @ORM\Table(name="CompanyService")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
@@ -32,7 +32,8 @@ use models\main\Company;
  *     "CloudService", "CloudService",
  *     "PrivateCloudService" = "PrivateCloudService",
  *     "PublicCloudService" = "PublicCloudService",
- *     "RemoteCloudService" = "RemoteCloudService"
+ *     "RemoteCloudService" = "RemoteCloudService",
+ *     "TrainingService" = "TrainingService",
  * } )
  * Class CompanyService
  * @package App\Models\Foundation\Marketplace

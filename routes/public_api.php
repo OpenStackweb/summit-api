@@ -243,6 +243,10 @@ Route::group(['prefix' => 'summits'], function () {
 // marketplace
 Route::group(array('prefix' => 'marketplace'), function () {
 
+    Route::group(array('prefix' => 'services'), function () {
+        Route::get('', 'CompanyServiceApiController@getAll');
+    });
+
     Route::group(array('prefix' => 'appliances'), function () {
         Route::get('', 'AppliancesApiController@getAll');
     });

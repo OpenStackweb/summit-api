@@ -1,6 +1,6 @@
 <?php namespace App\Http\Controllers;
-/**
- * Copyright 2017 OpenStack Foundation
+/*
+ * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,26 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Models\Foundation\Marketplace\IPublicCloudServiceRepository;
+
+use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
 use models\oauth2\IResourceServerContext;
 
 /**
- * Class PublicCloudsApiController
+ * Class CompanyServiceApiController
  * @package App\Http\Controllers
  */
-final class PublicCloudsApiController extends AbstractCompanyServiceApiController
+final class CompanyServiceApiController extends AbstractCompanyServiceApiController
 {
+
     /**
-     * PrivateCloudsApiController constructor.
-     * @param IPublicCloudServiceRepository $repository
+     * @param ICompanyServiceRepository $repository
+     * @param IResourceServerContext $resource_server_context
      */
-    public function __construct(IPublicCloudServiceRepository $repository, IResourceServerContext $resource_server_context)
+    public function __construct(ICompanyServiceRepository $repository,  IResourceServerContext$resource_server_context)
     {
         parent::__construct($repository, $resource_server_context);
-    }
-
-    public function getAll()
-    {
-        return parent::getAll();
     }
 }

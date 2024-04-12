@@ -181,4 +181,27 @@ final class MarketplaceApiTest extends BrowserKitTestCase
         $this->assertTrue(!is_null($clouds));
         $this->assertResponseStatus(200);
     }
+
+    public function testGetAllServices(){
+        $params = [
+            'page'     => 1,
+            'per_page' => 100,
+            'filter[]'   => 'name@@test',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "CompanyServiceApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            []
+        );
+
+        $content    = $response->getContent();
+        $clouds    = json_decode($content);
+        $this->assertTrue(!is_null($clouds));
+        $this->assertResponseStatus(200);
+    }
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IConsultantRepository;
+use models\oauth2\IResourceServerContext;
 
 /**
  * Class ConsultantsApiController
@@ -24,9 +25,9 @@ final class ConsultantsApiController extends AbstractCompanyServiceApiController
      * ConsultansApiController constructor.
      * @param IConsultantRepository $repository
      */
-    public function __construct(IConsultantRepository $repository)
+    public function __construct(IConsultantRepository $repository, IResourceServerContext $resource_server_context)
     {
-        parent::__construct($repository);
+        parent::__construct($repository, $resource_server_context);
     }
 
     public function getAll()

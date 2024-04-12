@@ -53,6 +53,7 @@ use App\ModelSerializers\Marketplace\RemoteCloudServiceSerializer;
 use App\ModelSerializers\Marketplace\ServiceOfferedTypeSerializer;
 use App\ModelSerializers\Marketplace\SpokenLanguageSerializer;
 use App\ModelSerializers\Marketplace\SupportChannelTypeSerializer;
+use App\ModelSerializers\Marketplace\TrainingServiceSerializer;
 use App\ModelSerializers\PushNotificationMessageSerializer;
 use App\ModelSerializers\ResourceServer\ApiEndpointAuthzGroupSerializer;
 use App\ModelSerializers\ResourceServer\ApiEndpointSerializer;
@@ -627,6 +628,7 @@ final class SerializerRegistry
         $this->registry['PublicCloudService'] = PublicCloudServiceSerializer::class;
         $this->registry['RemoteCloudService'] = RemoteCloudServiceSerializer::class;
         $this->registry['CloudServiceOffered'] = CloudServiceOfferedSerializer::class;
+        $this->registry['TrainingService'] = TrainingServiceSerializer::class;
         // software
 
         $this->registry['OpenStackComponent'] = OpenStackComponentSerializer::class;

@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Marketplace\CompanyService;
+use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use utils\DoctrineJoinFilterMapping;
@@ -18,7 +21,8 @@ use utils\DoctrineJoinFilterMapping;
  * Class DoctrineCompanyServiceRepository
  * @package App\Repositories\Marketplace
  */
-abstract class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepository
+class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepository
+implements ICompanyServiceRepository
 {
 
     /**
@@ -26,7 +30,7 @@ abstract class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepo
      * @return QueryBuilder
      */
     protected function applyExtraFilters(QueryBuilder $query){
-        $query->where('e.is_active = 1');
+        $query = $query->andWhere('e.is_active = 1');
         return $query;
     }
 
@@ -55,5 +59,10 @@ abstract class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepo
             'id'   => 'e.id',
             'name' => 'e.name',
         ];
+    }
+
+    protected function getBaseEntity()
+    {
+       return CompanyService::class;
     }
 }

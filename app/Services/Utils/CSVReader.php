@@ -48,16 +48,12 @@ final class CSVReader implements Iterator {
      */
     public static function buildFrom(string $content):CSVReader
     {
-        Log::debug(sprintf("CSVReader::buildFrom content %s", $content));
         $data    = str_getcsv($content,"\n"  );
-        Log::debug(sprintf("CSVReader::buildFrom data %s", json_encode($data)));
-
         $header  = [];
         $lines   = [];
         foreach($data as $idx => $row)
         {
             $row = str_getcsv($row, ",");
-            Log::debug(sprintf("CSVReader::buildFrom row %s idx %s", json_encode($row), $idx));
             if($idx === 0) {
                 foreach($row as $idx => $val){
                     // remove BOM

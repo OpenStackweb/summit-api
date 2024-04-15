@@ -61,14 +61,11 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
     {
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];
-        Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize scan %s", $scan->getId()));
         $values = parent::serialize($expand, $fields, $relations, $params);
         $sponsor = $scan->getSponsor();
         $sponsor_questions = $sponsor->getExtraQuestions();
         $setting = $sponsor->getSummit()->getLeadReportSettingFor($sponsor);
         $setting_columns = $setting->getColumns();
-
-        Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize scan %s original values %s", $scan->getId(), json_encode($values)));
 
         // remove not allowed string columns and sort them by setting columns order
         $new_values = [];
@@ -140,11 +137,9 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
             }
         }
 
-        Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize ticket_questions_values %s", json_encode($ticket_questions_values)));
 
         $values = array_merge($values, $sponsor_questions_values, $ticket_questions_values);
 
-        Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize values %s", json_encode($values)));
         return $values;
     }
 }

@@ -1,4 +1,6 @@
 <?php namespace App\Http\Utils;
+use Illuminate\Support\Facades\Log;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +50,8 @@ final class CSVExporter
      * @param array $formatters
      * @return string
      */
-    public function export(array $items, $field_separator = ",", array $formatters = []):string{
+    public function export(array $items, string $field_separator = ",", array $formatters = []):string{
+        Log::debug(sprintf("CSVExporter::export items %s", json_encode($items)));
         $output         = '';
         $header         = [];
         $originalHeader = [];
@@ -61,6 +64,7 @@ final class CSVExporter
             $header = array_unique(array_merge($header, $tempHeader));
             $originalHeader = array_unique(array_merge($originalHeader, $currentKeys));
         }
+        Log::debug(sprintf("CSVExporter::export header %s", json_encode($header)));
 
         foreach ($items as $row){
             array_walk($row, array($this, 'cleanData'));

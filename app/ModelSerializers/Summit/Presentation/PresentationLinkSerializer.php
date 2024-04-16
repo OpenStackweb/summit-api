@@ -23,4 +23,7 @@ final class PresentationLinkSerializer extends PresentationMaterialSerializer
         'Link'  => 'link:json_text',
     );
 
+    protected static $allowed_fields = [
+        'link',
+    ];
 }

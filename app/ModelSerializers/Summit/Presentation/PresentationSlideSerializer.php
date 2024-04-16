@@ -23,6 +23,9 @@ final class PresentationSlideSerializer extends PresentationMaterialSerializer
         'Link' => 'link:json_text',
     );
 
+    protected static $allowed_fields = [
+        'link',
+    ];
     /**
      * @param null $expand
      * @param array $fields

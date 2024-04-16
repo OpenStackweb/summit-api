@@ -27,4 +27,11 @@ final class PresentationVideoSerializer extends PresentationMaterialSerializer
         'Views'        => 'views:json_int',
     ];
 
+    protected static $allowed_fields = [
+        'youtube_id',
+        'external_url',
+        'data_uploaded',
+        'highlighted',
+        'views',
+    ];
 }

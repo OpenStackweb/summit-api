@@ -1732,6 +1732,29 @@ SQL;
     }
 
     /**
+     * @return Sponsor[]
+     * @throws \Exception
+     */
+    public function getActiveSummitsSponsorMemberships()
+    {
+        $dql = <<<DQL
+SELECT sp 
+FROM models\summit\Sponsor sp
+JOIN sp.members m
+JOIN sp.summit s 
+WHERE m.id = :member_id
+AND s.end_date >= :now
+ORDER BY s.begin_date ASC
+DQL;
+
+        $query = $this->createQuery($dql);
+        return $query
+            ->setParameter('member_id', $this->getId())
+            ->setParameter('now', new \DateTime('now', new \DateTimeZone('UTC')))
+            ->getResult();
+    }
+
+    /**
      * @return array
      */
     public function getSponsorMembershipIds(Summit $summit): array

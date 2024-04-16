@@ -33,7 +33,6 @@ interface ExtraQuestionTypeConstants
         self::TextAreaQuestionType,
         self::TextQuestionType,
         self::CheckBoxQuestionType,
-        self::RadioButtonQuestionType,
         self::ComboBoxQuestionType,
         self::CheckBoxListQuestionType,
         self::RadioButtonListQuestionType,

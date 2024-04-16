@@ -256,7 +256,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public static function getAllowedQuestionTypes(): array
     {
         return [
-            ExtraQuestionTypeConstants::RadioButtonQuestionType,
             ExtraQuestionTypeConstants::CheckBoxQuestionType,
             ExtraQuestionTypeConstants::CheckBoxListQuestionType,
             ExtraQuestionTypeConstants::RadioButtonListQuestionType,

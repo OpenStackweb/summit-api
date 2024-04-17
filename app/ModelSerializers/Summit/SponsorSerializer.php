@@ -149,7 +149,11 @@ final class SponsorSerializer extends SilverStripeSerializer
                         {
                             if ($sponsor->hasCompany()) {
                                 unset($values['company_id']);
-                                $values['company'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getCompany())->serialize
+                                $values['company'] = SerializerRegistry::getInstance()->getSerializer
+                                (
+                                    $sponsor->getCompany(),
+                                    SerializerRegistry::SerializerType_Admin
+                                )->serialize
                                 (
                                     AbstractSerializer::filterExpandByPrefix($expand, $relation),
                                     AbstractSerializer::filterFieldsByPrefix($fields, $relation),

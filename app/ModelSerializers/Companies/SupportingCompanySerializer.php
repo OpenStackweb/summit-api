@@ -29,7 +29,8 @@ final class SupportingCompanySerializer extends SilverStripeSerializer
             'type' => One2ManyExpandSerializer::class,
             'original_attribute' => 'company_id',
             'getter' => 'getCompany',
-            'has' => 'hasCompany'
+            'has' => 'hasCompany',
+            'serializer_type' => SerializerRegistry::SerializerType_Admin,
         ],
         'sponsorship_type' => [
             'type' => One2ManyExpandSerializer::class,

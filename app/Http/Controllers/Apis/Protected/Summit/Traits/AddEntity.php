@@ -41,6 +41,10 @@ trait AddEntity
      */
     abstract protected function addEntity(array $payload): IEntity;
 
+
+    protected function addEntitySerializerType(){
+        return SerializerRegistry::SerializerType_Public;
+    }
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */
@@ -52,7 +56,7 @@ trait AddEntity
 
             $entity = $this->addEntity($payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($entity)->serialize
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($entity, $this->addEntitySerializerType())->serialize
             (
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),

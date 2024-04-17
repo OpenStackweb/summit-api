@@ -65,6 +65,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
      */
     public function getAllCompanies()
     {
+
         return $this->_getAll(
             function () {
                 return [
@@ -86,7 +87,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 return $filter;
             },
             function () {
-                return SerializerRegistry::SerializerType_Public;
+              return $this->getEntitySerializerType();
             }
         );
     }
@@ -110,6 +111,10 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         return $this->service->addCompany($payload);
     }
 
+    protected function addEntitySerializerType(){
+        return $this->getEntitySerializerType();
+    }
+
     /**
      * @inheritDoc
      */
@@ -126,6 +131,17 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         return $this->repository->getById($id);
     }
 
+
+    protected function getEntitySerializerType()
+    {
+        $currentUser = $this->resource_server_context->getCurrentUser();
+        return !is_null($currentUser) ? SerializerRegistry::SerializerType_Private :
+            SerializerRegistry::SerializerType_Public;
+    }
+
+    protected function updateEntitySerializerType(){
+        return $this->getEntitySerializerType();
+    }
     /**
      * @inheritDoc
      */

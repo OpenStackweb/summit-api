@@ -16,6 +16,7 @@ use App\ModelSerializers\Audit\SummitAttendeeBadgeAuditLogSerializer;
 use App\ModelSerializers\Audit\SummitAuditLogSerializer;
 use App\ModelSerializers\Audit\SummitEventAuditLogSerializer;
 use App\ModelSerializers\CCLA\TeamSerializer;
+use App\ModelSerializers\Companies\BaseCompanySerializer;
 use App\ModelSerializers\Elections\CandidateSerializer;
 use App\ModelSerializers\Elections\ElectionSerializer;
 use App\ModelSerializers\Elections\NominationSerializer;
@@ -351,7 +352,12 @@ final class SerializerRegistry
 
         // Company
 
-        $this->registry['Company'] = CompanySerializer::class;
+        $this->registry['Company'] = [
+            self::SerializerType_Public => BaseCompanySerializer::class,
+            self::SerializerType_Private => CompanySerializer::class,
+            self::SerializerType_Admin => CompanySerializer::class,
+        ];
+
         $this->registry['SponsoredProject'] = SponsoredProjectSerializer::class;
         $this->registry['ProjectSponsorshipType'] = ProjectSponsorshipTypeSerializer::class;
         $this->registry['SupportingCompany'] = SupportingCompanySerializer::class;

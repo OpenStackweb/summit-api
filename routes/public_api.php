@@ -293,3 +293,7 @@ Route::group(array('prefix' => 'releases'), function () {
         Route::get('', 'ReleasesApiController@getCurrent');
     });
 });
+
+Route::group(['prefix' => 'companies'], function () {
+    Route::get('', 'OAuth2CompaniesApiController@getAllCompanies');
+});

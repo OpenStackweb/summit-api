@@ -11,35 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\Companies\BaseCompanySerializer;
 use models\main\Company;
 use Libs\ModelSerializers\AbstractSerializer;
 /**
  * Class CompanySerializer
  * @package ModelSerializers
  */
-final class CompanySerializer extends SilverStripeSerializer
+final class CompanySerializer extends BaseCompanySerializer
 {
     protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Url' => 'url:json_string',
         'DisplayOnSite' => 'display_on_site:json_boolean',
         'Featured' => 'featured:json_boolean',
-        'City' => 'city:json_string',
-        'State' => 'state:json_string',
-        'Country' => 'country:json_string',
-        'Description' => 'description:json_string',
-        'Industry' => 'industry:json_string',
-        'Contributions' => 'contributions:json_string',
         'ContactEmail' => 'contact_email:json_string',
-        'MemberLevel' => 'member_level:json_string',
         'AdminEmail' => 'admin_email:json_string',
-        'Overview' => 'overview:json_string',
-        'Products' => 'products:json_string',
-        'Commitment' => 'commitment:json_string',
-        'CommitmentAuthor' => 'commitment_author:json_string',
-        'LogoUrl' => 'logo:json_url',
-        'BigLogoUrl' => 'big_logo:json_url',
-        'Color' => 'color:json_color',
     ];
 
     protected static $allowed_relations = [

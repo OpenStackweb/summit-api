@@ -24,9 +24,54 @@ final class Version20240307161027 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
+        // SponsorSummitRegistrationPromoCode
+        $sql = <<<SQL
+UPDATE SponsorSummitRegistrationPromoCode AS PC
+INNER JOIN SummitRegistrationPromoCode ON SummitRegistrationPromoCode.ID = PC.ID
+INNER JOIN Company ON Company.ID = PC.SponsorID
+INNER JOIN Sponsor S ON S.CompanyID = Company.ID
+SET PC.SponsorID = S.ID
+WHERE
+    S.SummitID = SummitRegistrationPromoCode.SummitID;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+UPDATE SponsorSummitRegistrationPromoCode AS PC
+INNER JOIN SummitRegistrationPromoCode ON SummitRegistrationPromoCode.ID = PC.ID
+SET PC.SponsorID = NULL
+WHERE not exists (select * from Sponsor where Sponsor.ID = PC.SponsorID);
+
+SQL;
+
+
         $sql = <<<SQL
 ALTER TABLE SponsorSummitRegistrationPromoCode ADD CONSTRAINT FK_SponsorSummitRegistrationPromoCode_Sponsor FOREIGN KEY (SponsorID) REFERENCES Sponsor (ID);     
 SQL;
+
+
+        $this->addSql($sql);
+
+        // SponsorSummitRegistrationDiscountCode
+
+        $sql = <<<SQL
+UPDATE SponsorSummitRegistrationDiscountCode AS PC
+INNER JOIN SummitRegistrationPromoCode ON SummitRegistrationPromoCode.ID = PC.ID
+INNER JOIN Company ON Company.ID = PC.SponsorID
+INNER JOIN Sponsor S ON S.CompanyID = Company.ID
+SET PC.SponsorID = S.ID
+WHERE
+    S.SummitID = SummitRegistrationPromoCode.SummitID;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+UPDATE SponsorSummitRegistrationDiscountCode AS PC
+INNER JOIN SummitRegistrationPromoCode ON SummitRegistrationPromoCode.ID = PC.ID
+SET PC.SponsorID = NULL
+WHERE not exists (select * from Sponsor where Sponsor.ID = PC.SponsorID);
+SQL;
+
 
         $this->addSql($sql);
 

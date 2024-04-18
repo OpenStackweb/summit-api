@@ -45,6 +45,8 @@ WHERE not exists (select * from Sponsor where Sponsor.ID = PC.SponsorID);
 SQL;
 
 
+        $this->addSql($sql);
+
         $sql = <<<SQL
 ALTER TABLE SponsorSummitRegistrationPromoCode ADD CONSTRAINT FK_SponsorSummitRegistrationPromoCode_Sponsor FOREIGN KEY (SponsorID) REFERENCES Sponsor (ID);     
 SQL;

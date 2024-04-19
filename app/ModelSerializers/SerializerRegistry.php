@@ -17,6 +17,7 @@ use App\ModelSerializers\Audit\SummitAuditLogSerializer;
 use App\ModelSerializers\Audit\SummitEventAuditLogSerializer;
 use App\ModelSerializers\CCLA\TeamSerializer;
 use App\ModelSerializers\Companies\BaseCompanySerializer;
+use App\ModelSerializers\ContinentSerializer;
 use App\ModelSerializers\Elections\CandidateSerializer;
 use App\ModelSerializers\Elections\ElectionSerializer;
 use App\ModelSerializers\Elections\NominationSerializer;
@@ -116,6 +117,8 @@ use App\ModelSerializers\Summit\SummitSponsorshipTypeSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
 use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
+use App\ModelSerializers\UserStoriesIndustrySerializer;
+use App\ModelSerializers\UserStorySerializer;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
@@ -658,6 +661,12 @@ final class SerializerRegistry
 
         // summit lead report setting
         $this->registry['SummitLeadReportSetting'] = SummitLeadReportSettingSerializer::class;
+
+        // user stories
+        $this->registry['UserStory'] = UserStorySerializer::class;
+        $this->registry['UserStoriesIndustry'] = UserStoriesIndustrySerializer::class;
+
+        $this->registry['Continent'] = ContinentSerializer::class;
     }
 
     /**

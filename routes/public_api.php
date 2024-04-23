@@ -297,3 +297,8 @@ Route::group(array('prefix' => 'releases'), function () {
 Route::group(['prefix' => 'companies'], function () {
     Route::get('', 'OAuth2CompaniesApiController@getAllCompanies');
 });
+
+// user stories
+Route::group(array('prefix' => 'user-stories'), function () {
+    Route::get('', 'OAuth2UserStoriesApiController@getAllUserStories');
+});

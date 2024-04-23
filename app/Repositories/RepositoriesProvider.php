@@ -21,6 +21,7 @@ use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
+use App\Models\Foundation\Main\Repositories\IUserStoryRepository;
 use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
 use App\Models\Foundation\Software\OpenStackRelease;
 use App\Models\Foundation\Software\Repositories\IOpenStackReleaseRepository;
@@ -106,6 +107,7 @@ use App\Models\Foundation\Summit\Signs\SummitSign;
 use App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
+use App\Models\Foundation\UserStories\UserStory;
 use App\Models\ResourceServer\IApiRepository;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
@@ -937,6 +939,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitRefundRequestRepository::class,
             function (){
                 return EntityManager::getRepository(SummitRefundRequest::class);
+            }
+        );
+
+        App::singleton(
+            IUserStoryRepository::class,
+            function (){
+                return EntityManager::getRepository(UserStory::class);
             }
         );
     }

@@ -23,6 +23,7 @@ use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCo
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
@@ -118,6 +119,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     public function getAllBySummit($summit_id)
     {
 
+        Log::debug("OAuth2SummitPromoCodesApiController::getAllBySummit");
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 

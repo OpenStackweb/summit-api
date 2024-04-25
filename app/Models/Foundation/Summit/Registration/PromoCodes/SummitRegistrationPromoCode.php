@@ -789,4 +789,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return $this->sent_date;
     }
 
+    public function getMaxUsagePerOrder():int{
+        return 1;
+    }
 }

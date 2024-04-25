@@ -252,7 +252,7 @@ final class SagaFactory {
         Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
         return Saga::start()
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($payload))
+            ->addTask(new PreProcessReservationTask($summit, $payload))
             ->addTask(new AutoAssignPrePaidTicketTask(
                 $owner,
                 $summit,
@@ -269,7 +269,7 @@ final class SagaFactory {
         Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
         return Saga::start()
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($payload))
+            ->addTask(new PreProcessReservationTask($summit, $payload))
             ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ReserveOrderTask(
@@ -878,12 +878,12 @@ final class ReserveTicketsTask extends AbstractTask
             foreach ($ticket_types as $ticket_type) {
 
                 if (!empty($former_currency) && $ticket_type->getCurrency() != $former_currency) {
-                    throw new ValidationException("order should have tickets with same currency");
+                    throw new ValidationException("Order should have tickets with same currency.");
                 }
 
                 $former_currency = $ticket_type->getCurrency();
                 if (!$ticket_type instanceof SummitTicketType) {
-                    throw new EntityNotFoundException("ticket type not found");
+                    throw new EntityNotFoundException("Ticket type not found.");
                 }
                 if (!$ticket_type->canSell()) {
                     throw new ValidationException(sprintf('The ticket “%s” is not available. Please go back and select a different ticket.', $ticket_type->getName()));
@@ -927,12 +927,21 @@ final class PreProcessReservationTask extends AbstractTask
     private $payload;
 
     /**
-     * PreProcessReservationTask constructor.
+     * @var Summit
+     */
+    private $summit;
+    /**
+     * @param Summit $summit
      * @param array $payload
      */
-    public function __construct(array $payload)
+    public function __construct
+    (
+        Summit $summit,
+        array $payload
+    )
     {
         $this->payload = $payload;
+        $this->summit = $summit;
     }
 
     /**
@@ -949,10 +958,16 @@ final class PreProcessReservationTask extends AbstractTask
         $tickets = $this->payload['tickets'];
 
         foreach ($tickets as $ticket_dto) {
+
             if (!isset($ticket_dto['type_id']))
                 throw new ValidationException('type_id is mandatory.');
 
             $type_id = intval($ticket_dto['type_id']);
+
+            $ticket_type = $this->summit->getTicketTypeById($type_id);
+
+            if(is_null($ticket_type) || !$ticket_type->isLive())
+                throw new ValidationException(sprintf("Ticket Type %s is not available.", $type_id));
 
             if (!in_array($type_id, $ticket_types_ids))
                 $ticket_types_ids[] = $type_id;
@@ -965,6 +980,13 @@ final class PreProcessReservationTask extends AbstractTask
             $reservations[$type_id] = $reservations[$type_id] + 1;
 
             if (!empty($promo_code_value)) {
+                $promo_code =$this->summit->getPromoCodeByCode($promo_code_value);
+
+                if(is_null($promo_code))
+                    throw new ValidationException("Promo Code is invalid.");
+
+                if(!$promo_code->canBeAppliedTo($ticket_type))
+                    throw new ValidationException("Promo Code is invalid.");
 
                 if (!isset($promo_codes_usage[$promo_code_value])) {
                     $promo_codes_usage[$promo_code_value] = [
@@ -976,12 +998,24 @@ final class PreProcessReservationTask extends AbstractTask
                 $info = $promo_codes_usage[$promo_code_value];
                 $info['qty'] = $info['qty'] + 1;
 
+                if($promo_code->getMaxUsagePerOrder() < $info['qty'])
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Promo Code %s can not be used more than %s times per order.",
+                            $promo_code_value,
+                            $promo_code->getMaxUsagePerOrder()
+                        )
+                    );
+
                 if (!in_array($type_id, $info['types']))
                     $info['types'] = array_merge($info['types'], [$type_id]);
 
                 $promo_codes_usage[$promo_code_value] = $info;
             }
         }
+
         return [
             "reservations" => $reservations,
             "promo_codes_usage" => $promo_codes_usage,
@@ -1029,7 +1063,8 @@ final class PreOrderValidationTask extends AbstractTask
      */
     public function __construct
     (
-        Summit                      $summit, array $payload,
+        Summit                      $summit,
+        array                       $payload,
         ISummitTicketTypeRepository $ticket_type_repository,
         ITransactionService         $tx_service
     )

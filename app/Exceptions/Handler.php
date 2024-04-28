@@ -12,13 +12,13 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Predis\Connection\ConnectionException as RedisConnectionException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 /**
@@ -38,6 +38,7 @@ class Handler extends ExceptionHandler
         ModelNotFoundException::class,
         ValidationException::class,
         RedisConnectionException::class,
+        NotFoundHttpException::class
     ];
 
     /**
@@ -65,7 +66,6 @@ class Handler extends ExceptionHandler
         if (config('app.debug')) {
             return parent::render($request, $e);
         }
-        Log::error($e);
         return response()->view('errors.404', [], 200);
     }
 }

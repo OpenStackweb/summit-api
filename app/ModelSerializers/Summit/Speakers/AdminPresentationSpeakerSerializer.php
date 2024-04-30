@@ -53,7 +53,13 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 
         $values          = parent::serialize($expand, $fields, $relations, $params);
         $summit          = isset($params['summit'])? $params['summit']:null;
-        $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
+
+        $application_type = $this->resource_server_context->getApplicationType();
+        // choose email serializer depending on user permissions
+        // is current user is null then is a service account
+        $values['email'] = $application_type == "SERVICE" ?
+            JsonUtils::toNullEmail($speaker->getEmail()) :
+            JsonUtils::toJsonString($speaker->getEmail());
 
         if(!is_null($summit)){
             if(in_array('summit_assistance', $relations)) {

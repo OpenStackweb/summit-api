@@ -1237,7 +1237,8 @@ final class SpeakerService
             function($summit, $paging_info, $filter) {
                 return $this->speaker_repository->getSpeakersIdsBySummit($summit, $paging_info, $filter);
             },
-            function($summit, $flow_event, $speaker_id, $test_email_recipient, $speaker_announcement_email_config, $filter) use ($payload) {
+            function($summit, $flow_event, $speaker_id, $test_email_recipient,
+                     $speaker_announcement_email_config, $filter, $onDispatchSuccess) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use
                     (
@@ -1247,6 +1248,7 @@ final class SpeakerService
                         $test_email_recipient,
                         $speaker_announcement_email_config,
                         $filter,
+                        $onDispatchSuccess,
                         $payload
                     ) {
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
@@ -1280,7 +1282,8 @@ final class SpeakerService
                             $speaker_announcement_email_config,
                             $filter,
                             $promo_code,
-                            $assistance
+                            $assistance,
+                            $onDispatchSuccess
                         );
                     });
                 } catch (\Exception $ex) {

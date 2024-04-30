@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 
@@ -30,9 +31,10 @@ class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmail
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
+     * @param callable|null $onSuccess
      * @return void
      */
-    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
+    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null, callable $onSuccess = null)
     {
         if (!$attendee->isComplete()) {
             Log::debug
@@ -45,6 +47,10 @@ class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmail
                 )
             );
             SummitAttendeeRegistrationIncompleteReminderEmail::dispatch($attendee, $test_email_recipient);
+
+            if (!is_null($onSuccess)) {
+                $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
+            }
         } else {
             Log::debug
             (

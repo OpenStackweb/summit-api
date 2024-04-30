@@ -57,10 +57,12 @@ final class SubmitterActionsEmailStrategy
      * @param Member $submitter
      * @param string|null $test_email_recipient
      * @param Filter|null $filter
+     * @param callable|null $onSuccess
      */
     public function process(Member  $submitter,
                             ?string $test_email_recipient,
-                            ?Filter $filter = null): void
+                            ?Filter $filter = null,
+                            callable $onSuccess = null): void
     {
         try {
             $type = null;
@@ -139,7 +141,8 @@ final class SubmitterActionsEmailStrategy
                     $submitter,
                     $type,
                     $test_email_recipient,
-                    $filter
+                    $filter,
+                    $onSuccess
                 );
                 EmailExcerpt::addEmailSent();
                 return;

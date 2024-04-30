@@ -13,49 +13,72 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Cache;
+use Ramsey\Uuid\Guid\Guid;
+
 /**
  * Class EmailExcerptService
  * @package App\Services\utils
  */
 final class EmailExcerptService implements IEmailExcerptService
 {
-    /**
-     * Report lines holder
-     *
-     * @var array
-     */
-    private $report = [];
+    private $prefix;
 
-    private $sent_email_count = 0;
+    /**
+     * EmailExcerptService constructor.
+     */
+    public function __construct($uuid)
+    {
+        $this->prefix = $uuid;
+    }
+
+    private function getReportKey(): string
+    {
+        return $this->prefix . '_email_excerpt_report';
+    }
+
+    private function getEmailCountKey(): string
+    {
+        return $this->prefix . '_sent_email_count';
+    }
 
     /**
      * @inheritDoc
      */
-    public function add(array $value) : void
+    public function add(array $value): void
     {
-        $this->report[] = $value;
+        $report = $this->getReport();
+        $report[] = $value;
+        Cache::put($this->getReportKey(), $report);
     }
 
-    public function addInfoMessage(string $message):void{
-        $this->report[] = [
+    public function addInfoMessage(string $message): void
+    {
+        $report = $this->getReport();
+        $report[] = [
             'type' => IEmailExcerptService::InfoType,
             'message' => $message
         ];
+        Cache::put($this->getReportKey(), $report);
     }
 
-    public function addErrorMessage(string $message):void{
-        $this->report[] = [
+    public function addErrorMessage(string $message): void
+    {
+        $report = $this->getReport();
+        $report[] = [
             'type' => IEmailExcerptService::ErrorType,
             'message' => $message
         ];
+        Cache::put($this->getReportKey(), $report);
     }
 
     /**
      * @inheritDoc
      */
-    public function clearReport() : void
+    public function clearReport(): void
     {
-        $this->report = [];
+        Cache::forget($this->getReportKey());
+        Cache::forget($this->getEmailCountKey());
     }
 
     /**
@@ -63,14 +86,22 @@ final class EmailExcerptService implements IEmailExcerptService
      */
     public function getReport(): array
     {
-        return $this->report;
+        $report = Cache::get($this->getReportKey());
+        if ($report == null) return [];
+        return $report;
     }
 
-    public function addEmailSent():void{
-        ++$this->sent_email_count;
+    public function addEmailSent(): void
+    {
+        $count = Cache::get($this->getEmailCountKey());
+        if ($count == null) $count = 0;
+        Cache::put($this->getEmailCountKey(), ++$count);
     }
 
-    public function generateEmailCountLine():void{
-        $this->addInfoMessage(sprintf("Total %s email(s) sent.", $this->sent_email_count));
+    public function generateEmailCountLine(): void
+    {
+        $count = Cache::get($this->getEmailCountKey());
+        if ($count == null) $count = 0;
+        $this->addInfoMessage("Total $count email(s) sent.");
     }
 }

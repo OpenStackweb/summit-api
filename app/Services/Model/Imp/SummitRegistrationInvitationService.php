@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\Registration\Invitations\InvitationExcerptEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ProcessRegistrationInvitationsJob;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
@@ -25,6 +26,7 @@ use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use App\Services\Model\ITagService;
 use App\Services\Utils\CSVReader;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -588,7 +590,8 @@ final class SummitRegistrationInvitationService
                 }
                 return $this->invitation_repository->getAllIdsByPage($paging_info, $filter);
             },
-            function ($summit, $flow_event, $invitation_id, $test_email_recipient, $announcement_email_config, $filter) use ($payload) {
+            function ($summit, $flow_event, $invitation_id, $test_email_recipient,
+                      $announcement_email_config, $filter, $onDispatchSuccess) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use (
                         $summit,
@@ -596,6 +599,7 @@ final class SummitRegistrationInvitationService
                         $invitation_id,
                         $test_email_recipient,
                         $filter,
+                        $onDispatchSuccess,
                         $payload
                     ) {
                         $invitation = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
@@ -627,17 +631,31 @@ final class SummitRegistrationInvitationService
                             return $invitation;
                         });
 
+                        $add_excerpt = false;
+
                         // send email
-                        if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($invitation))
+                        if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($invitation)) {
                             InviteSummitRegistrationEmail::dispatch($invitation, $test_email_recipient);
-                        if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($invitation))
+                            $add_excerpt = true;
+                        }
+
+                        if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($invitation)) {
                             ReInviteSummitRegistrationEmail::dispatch($invitation, $test_email_recipient);
+                            $add_excerpt = true;
+                        }
+
+                        if ($add_excerpt) {
+                            $onDispatchSuccess(
+                                $invitation->getEmail(), IEmailExcerptService::EmailLineType, $flow_event);
+                        }
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
                 }
             },
-            null,
+            function($summit, $outcome_email_recipient, $report){
+                InvitationExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+            },
             $filter
         );
     }

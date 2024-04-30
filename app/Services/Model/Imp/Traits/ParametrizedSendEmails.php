@@ -197,7 +197,17 @@ trait ParametrizedSendEmails
                             $subject_id));
                         continue;
                     };
-                    $processCurrentId($summit, $flow_event, $subject_id, $test_email_recipient, $email_config, $filter);
+                    $processCurrentId($summit, $flow_event, $subject_id, $test_email_recipient,
+                        $email_config, $filter,
+                        function($recipient_email, $type, $flow_event) {
+                            EmailExcerpt::add(
+                                [
+                                    'type'        => $type,
+                                    'guest_email' => $recipient_email,
+                                    'email_type'  => $flow_event,
+                                ]
+                            );
+                        });
                     $count++;
                 } catch (Exception $ex) {
                     Log::warning($ex);

@@ -52,8 +52,10 @@ use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRequestedEmail;
 use App\Jobs\Emails\ProposedSchedule\SubmitForReviewEmail;
 use App\Jobs\Emails\ProposedSchedule\UnsubmitForReviewEmail;
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
+use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
 use App\Jobs\Emails\Registration\ExternalIngestion\SuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\ExternalIngestion\UnsuccessfulIIngestionEmail;
+use App\Jobs\Emails\Registration\Invitations\InvitationExcerptEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\PromoCodes\MemberPromoCodeEmail;
@@ -162,12 +164,14 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG] = SummitAttendeeRegistrationIncompleteReminderEmail::class;
         $this->registry[SummitAttendeeTicketEmail::EVENT_SLUG] = SummitAttendeeTicketEmail::class;
         $this->registry[SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG] = InviteAttendeeTicketEditionMail::class;
+        $this->registry[SummitAttendeeExcerptEmail::EVENT_SLUG] = SummitAttendeeExcerptEmail::class;
 
         $this->registry[SuccessfulIIngestionEmail::EVENT_SLUG] = SuccessfulIIngestionEmail::class;
         $this->registry[UnsuccessfulIIngestionEmail::EVENT_SLUG] = UnsuccessfulIIngestionEmail::class;
 
         $this->registry[InviteSummitRegistrationEmail::EVENT_SLUG] = InviteSummitRegistrationEmail::class;
         $this->registry[ReInviteSummitRegistrationEmail::EVENT_SLUG] = ReInviteSummitRegistrationEmail::class;
+        $this->registry[InvitationExcerptEmail::EVENT_SLUG] = InvitationExcerptEmail::class;
 
         $this->registry[SummitOrderRefundAccepted::EVENT_SLUG] = SummitOrderRefundRequestOwner::class;
         $this->registry[SummitOrderRefundRequestAdmin::EVENT_SLUG] = SummitOrderRefundRequestAdmin::class;

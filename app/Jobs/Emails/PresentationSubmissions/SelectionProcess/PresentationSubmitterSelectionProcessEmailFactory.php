@@ -52,6 +52,7 @@ final class PresentationSubmitterSelectionProcessEmailFactory
      * @param string $type
      * @param string|null $test_email_recipient
      * @param Filter|null $filter
+     * @param callable|null $onSuccess
      */
     public static function send
     (
@@ -59,7 +60,8 @@ final class PresentationSubmitterSelectionProcessEmailFactory
         Member $submitter,
         string $type,
         ?string $test_email_recipient,
-        ?Filter $filter = null
+        ?Filter $filter = null,
+        callable $onSuccess = null
     ){
 
         Log::debug(sprintf("PresentationSubmitterSelectionProcessEmailFactory::send speaker %s type %s", $submitter->getEmail(), $type));
@@ -121,12 +123,8 @@ final class PresentationSubmitterSelectionProcessEmailFactory
                 break;
         }
 
-        EmailExcerpt::add(
-            [
-                'type' => IEmailExcerptService::SubmitterEmailType,
-                'submitter_email' => $submitter->getEmail(),
-                'email_type'    => $type
-            ]
-        );
+        if (!is_null($onSuccess)) {
+            $onSuccess($submitter->getEmail(), IEmailExcerptService::EmailLineType, $type);
+        }
     }
 }

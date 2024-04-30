@@ -1,6 +1,6 @@
-<?php namespace App\Jobs\Emails\PresentationSubmissions\SelectionProcess;
+<?php namespace App\Jobs\Emails\Registration\Invitations;
 /**
- * Copyright 2023 OpenStack Foundation
+ * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,10 +15,10 @@
 use App\Jobs\Emails\AbstractExcerptEmailJob;
 
 /**
- * Class PresentationSubmitterSelectionProcessExcerptEmail
- * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
+ * Class InvitationExcerptEmail
+ * @package App\Jobs\Emails\Registration\Attendees
  */
-class PresentationSubmitterSelectionProcessExcerptEmail extends AbstractExcerptEmailJob
+class InvitationExcerptEmail extends AbstractExcerptEmailJob
 {
     protected function getEmailEventSlug(): string
     {
@@ -26,7 +26,7 @@ class PresentationSubmitterSelectionProcessExcerptEmail extends AbstractExcerptE
     }
 
     // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT';
+    const EVENT_SLUG = 'SUMMIT_INVITATION_EXCERPT';
+    const EVENT_NAME = 'SUMMIT_INVITATION_EXCERPT';
+    const DEFAULT_TEMPLATE = 'SUMMIT_INVITATION_EXCERPT';
 }

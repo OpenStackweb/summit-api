@@ -64,13 +64,15 @@ final class SpeakerActionsEmailStrategy
      * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
+     * @param callable|null $onSuccess
      */
     public function process(PresentationSpeaker                                     $speaker,
                             ?string                                                 $test_email_recipient,
                             SpeakersAnnouncementEmailConfigDTO                      $speaker_announcement_email_config,
                             ?Filter                                                 $filter = null,
                             ?SummitRegistrationPromoCode                            $promo_code = null,
-                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null): void
+                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null,
+                            callable $onSuccess = null): void
     {
         try {
             $type = null;
@@ -164,9 +166,9 @@ final class SpeakerActionsEmailStrategy
                 default:
                     EmailExcerpt::add(
                         [
-                            'type' => IEmailExcerptService::SpeakerEmailType,
-                            'speaker_email' => $speaker->getEmail(),
-                            'email_type' => SpeakerAnnouncementSummitEmail::TypeNone
+                            'type'          => IEmailExcerptService::EmailLineType,
+                            'subject_email' => $speaker->getEmail(),
+                            'email_type'    => SpeakerAnnouncementSummitEmail::TypeNone
                         ]
                     );
                     break;
@@ -209,7 +211,8 @@ final class SpeakerActionsEmailStrategy
                     $speaker_announcement_email_config,
                     $filter,
                     $promo_code,
-                    $assistance
+                    $assistance,
+                    $onSuccess
                 );
 
                 // mark the promo code as sent

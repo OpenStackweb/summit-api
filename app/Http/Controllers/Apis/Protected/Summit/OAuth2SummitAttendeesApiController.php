@@ -929,8 +929,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                         GenericSummitAttendeeEmail::EVENT_SLUG,
                     ]),
                 'attendees_ids' => 'sometimes|int_array',
-                'excluded_attendees_ids' => 'sometimes|int_array',
-                'test_email_recipient' => 'sometimes|email',
+                'excluded_attendees_ids'  => 'sometimes|int_array',
+                'test_email_recipient'    => 'sometimes|email',
+                'outcome_email_recipient' => 'sometimes|email',
             ]);
 
             if ($validation->fails()) {

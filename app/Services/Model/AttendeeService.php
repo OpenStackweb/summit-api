@@ -13,10 +13,10 @@
  **/
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
+use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Utils\AES;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -535,7 +535,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
                 return $this->attendee_repository->getAllIdsByPage($paging_info, $filter);
             },
-            function ($summit, $flow_event, $attendee_id, $test_email_recipient, $announcement_email_config, $filter) use ($payload) {
+            function ($summit, $flow_event, $attendee_id, $test_email_recipient,
+                      $announcement_email_config, $filter, $onDispatchSuccess) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use (
                         $summit,
@@ -543,6 +544,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         $attendee_id,
                         $test_email_recipient,
                         $filter,
+                        $onDispatchSuccess,
                         $payload
                     ) {
                         Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
@@ -554,15 +556,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
                         $strategy = $emailActionsStrategyFactory->build($flow_event);
                         if ($strategy != null) {
-                            $strategy->process($attendee, $test_email_recipient);
+                            $strategy->process($attendee, $test_email_recipient, $onDispatchSuccess);
                         }
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
-                    EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
             },
-            null,
+            function($summit, $outcome_email_recipient, $report){
+                SummitAttendeeExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+            },
             $filter
         );
     }

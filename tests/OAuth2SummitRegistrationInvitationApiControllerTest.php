@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use Illuminate\Http\UploadedFile;
-use LaravelDoctrine\ORM\Facades\EntityManager;
-use models\summit\Summit;
 use models\summit\SummitTicketType;
 
 /**
@@ -24,19 +24,19 @@ class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTe
 
     use InsertSummitTestData;
 
-//    public function setUp():void
-//    {
-//        parent::setUp();
-//
-//        self::insertSummitTestData();
-//        self::$summit->seedDefaultEmailFlowEvents();
-//    }
-//
-//    protected function tearDown():void
-//    {
-//        self::clearSummitTestData();
-//        parent::tearDown();
-//    }
+    public function setUp():void
+    {
+        parent::setUp();
+
+        self::insertSummitTestData();
+        self::$summit->seedDefaultEmailFlowEvents();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
 
     public function testIngestInvitationsAndGet(){
         $csv_content = <<<CSV
@@ -487,5 +487,38 @@ CSV;
 
         $content = $response->getContent();
         $this->assertResponseStatus(204);
+    }
+
+    public function testSendInvitationsEmail() {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event'  => InviteSummitRegistrationEmail::EVENT_SLUG,
+            'invitations_ids'   => [ 34 ],
+            'test_email_recipient'    => 'test_recip@nomail.com',
+            'outcome_email_recipient' => 'outcome_recip@nomail.com',
+        ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitRegistrationInvitationApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
     }
 }

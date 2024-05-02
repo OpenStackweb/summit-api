@@ -11,8 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use App\Utils\AES;
+use App\Utils\AES256GCM;
 
 /**
  * Class DecryptedResponse
@@ -37,7 +36,7 @@ final class DecryptedSingleResponse extends AbstractPayload
         if(!isset($response['data']))
             throw new InvalidResponse(sprintf("missing data field on response %s", $content));
 
-        $dec = AES::decrypt($key, $response['data']);
+        $dec = AES256GCM::decrypt($key, $response['data']);
         if($dec->hasError())
             throw new InvalidResponse($dec->getErrorMessage());
 

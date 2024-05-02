@@ -12,7 +12,8 @@
  * limitations under the License.
  **/
 
-use App\Utils\AES;
+use App\Utils\AES256GCM;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class EncryptedRequest
@@ -27,7 +28,9 @@ final class EncryptedPayload extends AbstractPayload
      */
     public function __construct(string $key, AbstractPayload $request){
 
-        $enc = AES::encrypt($key, $request->__toString());
+        $data =(string)$request;
+        Log::debug(sprintf("EncryptedPayload::constructor request %s.", $data));
+        $enc = AES256GCM::encrypt($key, $data);
         if($enc->hasError())
             throw new \Exception($enc->getErrorMessage());
 

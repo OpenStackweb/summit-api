@@ -197,6 +197,16 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         try {
 
             $metadata = $summit->getRegistrationFeedMetadata();
+            Log::debug
+            (
+                sprintf
+                (
+                    "SamsungRegistrationAPI::userList summit %s metadata %s",
+                    $summit->getId(),
+                    json_encode($metadata, JSON_UNESCAPED_UNICODE)
+                )
+            );
+
             $metadata[PayloadParamNames::ExternalShowId] = $summit->getExternalSummitId();
             $defaultTicketType = $summit->getFirstDefaultTicketType();
             if(is_null($defaultTicketType))
@@ -207,17 +217,6 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
             $metadata[PayloadParamNames::DefaultTicketName] = $defaultTicketType->getName();
 
             $request = new UserListRequest($metadata);
-
-            Log::debug
-
-            (
-                sprintf
-                (
-                    "SamsungRegistrationAPI::userList POST %s payload %s",
-                    $this->endpoint,
-                    $request
-                )
-            );
 
             $payload = (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload();
 
@@ -230,6 +229,17 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                     'headers' => ['Accept' => 'application/json'],
                     RequestOptions::JSON => $payload,
                 ]
+            );
+
+            Log::debug
+            (
+                sprintf
+                (
+
+                    "SamsungRegistrationAPI::userList POST %s payload %s",
+                    $this->endpoint,
+                    json_encode($payload)
+                )
             );
 
             return new DecryptedListResponse

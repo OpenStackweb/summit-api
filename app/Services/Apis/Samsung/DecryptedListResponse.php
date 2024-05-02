@@ -13,7 +13,8 @@
  **/
 
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedResponse;
-use App\Utils\AES;
+use App\Utils\AES256GCM;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class DecryptedListResponse
@@ -35,20 +36,36 @@ implements IExternalRegistrationFeedResponse
 
         parent::__construct($params);
 
+        if(empty($content)){
+            Log::warning("DecryptedListResponse::constructor empty content.");
+            throw new EmptyResponse("response not found.");
+        }
+
         $this->position  = 0;
 
         $response = json_decode($content, true);
         if(is_array($response) && !count($response))
-            throw new EmptyResponse("response not found");
+            throw new EmptyResponse("response not found.");
+
+        Log::debug(sprintf("DecryptedListResponse::constructor response %s.", json_encode($response)));
 
         if(!isset($response['data']))
-            throw new InvalidResponse(sprintf("missing data field on response %s", $content));
+            throw new InvalidResponse(sprintf("missing data field on response %s.", $content));
 
-        $dec = AES::decrypt($key, $response['data']);
-        if($dec->hasError())
+        if(empty($response['data']))
+            throw new EmptyResponse("response not found.");
+
+        $dec = AES256GCM::decrypt($key, $response['data']);
+        if($dec->hasError()) {
+            Log::warning(sprintf("DecryptedListResponse::constructor error %s.", $dec->getErrorMessage()));
             throw new InvalidResponse($dec->getErrorMessage());
+        }
 
-        $list = json_decode($dec->getData(), true);
+        $data = $dec->getData();
+
+        Log::debug(sprintf("DecryptedListResponse::constructor data %s.", $data));
+
+        $list = json_decode($data, true);
         if(!is_array($list))
             throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
 

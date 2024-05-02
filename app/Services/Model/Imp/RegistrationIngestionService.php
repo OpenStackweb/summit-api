@@ -644,7 +644,7 @@ final class RegistrationIngestionService
                 $response = $feed->getAttendees($page, $summit->getExternalRegistrationFeedLastIngestDate());
 
                 if(is_null($response))
-                    throw new ValidationException("Response is empty");
+                    throw new ValidationException("Response is empty.");
 
                 if ($response->hasData()) {
                     $shouldMarkProcess = true;

@@ -29,7 +29,6 @@ abstract class AbstractPayload
     function __construct(array $params)
     {
         if(!isset($params[PayloadParamNames::Forum]))
-
             throw new \InvalidArgumentException("missing forum param");
 
         if(!isset($params[PayloadParamNames::Region]))

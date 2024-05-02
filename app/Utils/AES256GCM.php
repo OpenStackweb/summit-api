@@ -1,6 +1,6 @@
 <?php namespace App\Utils;
 /*
- * Copyright 2023 OpenStack Foundation
+ * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,14 +12,14 @@
  * limitations under the License.
  **/
 
-
 /**
- * Class AES
+ * Class AES256GCM
  * @package App\Utils
  */
-final class AES
+final class AES256GCM
 {
-    const CIPHER = 'AES-256-CBC';
+
+    const CIPHER = 'AES-256-GCM';
 
     /**
      * Encoded/Decoded data
@@ -43,8 +43,8 @@ final class AES
     /**
      * AesCipher constructor.
      *
-     * @param string $iv        Initialization vector value
-     * @param string|null $data         Encoded/Decoded data
+     * @param string $iv Initialization vector value
+     * @param string|null $data Encoded/Decoded data
      * @param string|null $errorMessage Error message if operation failed
      */
     public function __construct(string $iv, string $data = null, string $errorMessage = null)
@@ -55,93 +55,88 @@ final class AES
     }
 
     /**
-     * Encrypt input text by AES-128-CBC algorithm
-     *
-     * @param string $key 16/24/32 -characters secret password
-     * @param string $data Text for encryption
-     *
-     * @return self Self object instance with data or error message
+     * @param string $key
+     * @param string $data
+     * @return AES256GCM
      */
-    public static function encrypt(string $key, string $data): AES
+    public static function encrypt(string $key, string $data): AES256GCM
     {
         try {
             // Check secret length
-            if (!AES::isKeyLengthValid($key)) {
+            if (!AES256GCM::isKeyLengthValid($key)) {
                 throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits");
             }
 
-            $iv_len = openssl_cipher_iv_length(AES::CIPHER);
+            $iv_len = openssl_cipher_iv_length(AES256GCM::CIPHER);
             // Get random initialization vector
-            $iv = bin2hex(openssl_random_pseudo_bytes($iv_len / 2));
-
+            $iv = random_bytes($iv_len);
+            $tag = '';
             // Encrypt input text
             $raw = openssl_encrypt(
                 $data,
-                AES::CIPHER,
+                AES256GCM::CIPHER,
                 $key,
                 OPENSSL_RAW_DATA,
-                $iv
+                $iv,
+                $tag,
+                '',
+                16
             );
 
             // Return base64-encoded string: initVector + encrypted result
-            $result = $iv.base64_encode($raw);
+            $result = base64_encode($iv) . base64_encode($raw . $tag);
 
             if ($result === false) {
                 // Operation failed
-                return new AES($iv, null, openssl_error_string());
+                return new AES256GCM($iv, null, openssl_error_string());
             }
 
             // Return successful encoded object
-            return new AES($iv, $result);
+            return new AES256GCM($iv, $result);
         } catch (\Exception $e) {
             // Operation failed
-            return new AES(isset($iv), null, $e->getMessage());
+            return new AES256GCM(isset($iv), null, $e->getMessage());
         }
     }
 
     /**
-     * Decrypt encoded text by AES-128-CBC algorithm
-     *
-     * @param string $key  16/24/32 -characters secret password
-     * @param string $data Encrypted text
-     *
-     * @return self Self object instance with data or error message
+     * @param string $key
+     * @param string $data
+     * @return AES256GCM
      */
-    public static function decrypt(string $key, string $data): AES
+    public static function decrypt(string $key, string $data): AES256GCM
     {
         try {
             // Check secret length
-            if (!AES::isKeyLengthValid($key)) {
+            if (!AES256GCM::isKeyLengthValid($key)) {
                 throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits");
             }
 
-            $iv_len = openssl_cipher_iv_length(AES::CIPHER);
-
-            // Slice initialization vector
-            $iv = substr($data, 0, $iv_len);
-
-            // Slice encoded data
-            $decodedBytes = base64_decode(substr($data, $iv_len));
+            $iv = base64_decode(substr($data, 0, 16));
+            $data = base64_decode(substr($data, 16));
+            $tag = substr($data, strlen($data) - 16);
+            $data = substr($data, 0, strlen($data) - 16);
 
             // Trying to get decrypted text
             $decoded = openssl_decrypt(
-                $decodedBytes,
-                AES::CIPHER,
+                $data,
+                AES256GCM::CIPHER,
                 $key,
                 OPENSSL_RAW_DATA,
-                $iv
+                $iv,
+                $tag
             );
 
             if ($decoded === false) {
                 // Operation failed
-                return new AES(isset($iv), null, openssl_error_string());
+                return new AES256GCM(isset($iv), null, openssl_error_string());
             }
 
             // Return successful decoded object
-            return new AES($iv, $decoded);
+            return new AES256GCM($iv, $decoded);
         } catch (\Exception $e) {
             // Operation failed
-            return new AES(isset($iv), null, $e->getMessage());
+            return new AES256GCM(isset($iv), null, $e->getMessage());
         }
     }
 
@@ -164,7 +159,7 @@ final class AES
      *
      * @return string|null
      */
-    public function getData():?string
+    public function getData(): ?string
     {
         return $this->data;
     }
@@ -174,7 +169,7 @@ final class AES
      *
      * @return string|null
      */
-    public function getInitVector():?string
+    public function getInitVector(): ?string
     {
         return $this->iv;
     }
@@ -184,7 +179,7 @@ final class AES
      *
      * @return string|null
      */
-    public function getErrorMessage():?string
+    public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
     }
@@ -194,7 +189,7 @@ final class AES
      *
      * @return bool
      */
-    public function hasError():bool
+    public function hasError(): bool
     {
         return $this->errorMessage !== null;
     }
@@ -204,7 +199,7 @@ final class AES
      *
      * @return null|string
      */
-    public function __toString():?string
+    public function __toString(): ?string
     {
         return $this->getData();
     }

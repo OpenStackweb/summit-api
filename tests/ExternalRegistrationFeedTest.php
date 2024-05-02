@@ -14,18 +14,15 @@
 
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Services\Apis\Samsung\ForumTypes;
-use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByExternalFeedStrategy;
 use App\Utils\AES;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use Mockery;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
-use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;

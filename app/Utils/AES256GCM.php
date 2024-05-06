@@ -64,19 +64,20 @@ final class AES256GCM
         try {
             // Check secret length
             if (!AES256GCM::isKeyLengthValid($key)) {
-                throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits");
+                throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits.");
             }
 
-            $iv_len = openssl_cipher_iv_length(AES256GCM::CIPHER);
+            $iv_len = 16;
             // Get random initialization vector
             $iv = random_bytes($iv_len);
             $tag = '';
             // Encrypt input text
-            $raw = openssl_encrypt(
+            $raw = openssl_encrypt
+            (
                 $data,
                 AES256GCM::CIPHER,
                 $key,
-                OPENSSL_RAW_DATA,
+                OPENSSL_RAW_DATA|OPENSSL_NO_PADDING,
                 $iv,
                 $tag,
                 '',
@@ -84,7 +85,7 @@ final class AES256GCM
             );
 
             // Return base64-encoded string: initVector + encrypted result
-            $result = base64_encode($iv) . base64_encode($raw . $tag);
+            $result = base64_encode($iv . $raw . $tag);
 
             if ($result === false) {
                 // Operation failed
@@ -109,20 +110,22 @@ final class AES256GCM
         try {
             // Check secret length
             if (!AES256GCM::isKeyLengthValid($key)) {
-                throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits");
+                throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits.");
             }
 
-            $iv = base64_decode(substr($data, 0, 16));
-            $data = base64_decode(substr($data, 16));
-            $tag = substr($data, strlen($data) - 16);
-            $data = substr($data, 0, strlen($data) - 16);
+            $bytes = base64_decode($data);
+            $ivlen = 16;
+            $tag_length = 16;
+            $iv = substr($bytes, 0, $ivlen);
+            $tag = substr($bytes, -$tag_length);
+            $ciphertext = substr($bytes, $ivlen, -$tag_length);
 
             // Trying to get decrypted text
             $decoded = openssl_decrypt(
-                $data,
+                $ciphertext,
                 AES256GCM::CIPHER,
                 $key,
-                OPENSSL_RAW_DATA,
+                OPENSSL_RAW_DATA|OPENSSL_NO_PADDING,
                 $iv,
                 $tag
             );

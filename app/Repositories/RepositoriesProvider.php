@@ -129,6 +129,7 @@ use models\summit\ISummitProposedScheduleEventRepository;
 use models\summit\ISummitProposedScheduleLockRepository;
 use models\summit\ISummitProposedScheduleRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
+use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\PaymentGatewayProfile;
 use models\summit\PresentationActionType;
@@ -215,7 +216,7 @@ final class RepositoriesProvider extends ServiceProvider
             });
 
         App::singleton(
-            'models\summit\ISummitRepository',
+            ISummitRepository::class,
             function () {
                 return EntityManager::getRepository(\models\summit\Summit::class);
             });

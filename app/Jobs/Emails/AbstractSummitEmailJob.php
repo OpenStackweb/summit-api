@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
+use models\summit\ISummitRepository;
 use models\summit\Summit;
 use services\apis\IMarketingAPI;
-
 /**
  * Class AbstractSummitEmailJob
  * @package App\Jobs\Emails
@@ -31,6 +32,8 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
      * @param string|null $subject
      * @param string|null $cc_email
      * @param string|null $bcc_email
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function __construct
     (
@@ -54,15 +57,23 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
             )
         );
 
+        // refresh summit from DB
+
+        $repository = App::make(ISummitRepository::class);
+        $summit = $repository->getByIdRefreshed($summit->getId());
+
+        if(!$summit instanceof Summit)
+            throw new EntityNotFoundException("Summit not found.");
+
         // inject summit common data
         $payload[IMailTemplatesConstants::summit_id]   = $summit->getId();
         $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
         $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+
         $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
         $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
         $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
         $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-
         $summitBeginDate = $summit->getLocalBeginDate();
         $payload[IMailTemplatesConstants::summit_date] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
         $payload[IMailTemplatesConstants::summit_dates_label] = $summit->getDatesLabel();
@@ -70,6 +81,13 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
         $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
         $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
+
+        foreach(self::getRequiredFields() as $field){
+            if(!isset($payload[$field]))
+                throw new ValidationException(sprintf("missing field %s", $field));
+            if(empty($payload[$field]))
+                throw new ValidationException(sprintf("empty field %s", $field));
+        }
 
         $marketing_api = App::make(IMarketingApi::class);
         $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
@@ -88,6 +106,20 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
     }
 
+    public static function getRequiredFields(): array {
+        return [
+            IMailTemplatesConstants::summit_id,
+            IMailTemplatesConstants::summit_name,
+            IMailTemplatesConstants::summit_virtual_site_url,
+            IMailTemplatesConstants::summit_marketing_site_url,
+            IMailTemplatesConstants::raw_summit_virtual_site_url,
+            IMailTemplatesConstants::raw_summit_marketing_site_url,
+            IMailTemplatesConstants::summit_date,
+            IMailTemplatesConstants::summit_dates_label,
+            IMailTemplatesConstants::registration_link,
+            IMailTemplatesConstants::virtual_event_site_link,
+        ];
+    }
     /**
      * @return array
      */
@@ -106,7 +138,6 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
-
         return $payload;
     }
 }

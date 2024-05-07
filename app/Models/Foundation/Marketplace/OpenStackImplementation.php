@@ -24,6 +24,8 @@ use DateTimeZone;
  */
 class OpenStackImplementation extends RegionalSupportedCompanyService
 {
+    const ClassName = 'OpenStackImplementation';
+
     /**
      * @ORM\Column(name="CompatibleWithStorage", type="boolean")
      * @var bool
@@ -110,6 +112,14 @@ class OpenStackImplementation extends RegionalSupportedCompanyService
         $this->hypervisors  = new ArrayCollection();
         $this->guests       = new ArrayCollection();
         $this->capabilities = new ArrayCollection();
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
     }
 
     /**

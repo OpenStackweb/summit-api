@@ -20,5 +20,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class PublicCloudService extends CloudService
 {
+    const ClassName = 'PublicCloudService';
 
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
+    }
 }

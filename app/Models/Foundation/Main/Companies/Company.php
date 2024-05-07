@@ -140,6 +140,12 @@ class Company extends SilverstripeBaseModel
      */
     private $is_deleted;
 
+    /**
+     * @ORM\Column(name="URLSegment", type="string")
+     * @var string
+     */
+    private $url_segment;
+
     // relations
 
     /**
@@ -623,5 +629,19 @@ class Company extends SilverstripeBaseModel
      */
     public function getSponsorships(){
         return $this->sponsorships;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUrlSegment(): string{
+        return $this->url_segment;
+    }
+
+    /**
+     * @param string $url_segment
+     */
+    public function setUrlSegment(string $url_segment): void{
+        $this->url_segment = $url_segment;
     }
 }

@@ -23,6 +23,8 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class RegionalSupportedCompanyService extends CompanyService
 {
+    const ClassName = 'RegionalSupportedCompanyService';
+
     /**
      * @ORM\OneToMany(targetEntity="RegionalSupport", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
      * @var RegionalSupport[]
@@ -33,6 +35,14 @@ class RegionalSupportedCompanyService extends CompanyService
     {
         parent::__construct();
         $this->regional_supports = new ArrayCollection();
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
     }
 
     /**

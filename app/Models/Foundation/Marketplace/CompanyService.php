@@ -40,6 +40,8 @@ use models\main\Company;
  */
 class CompanyService extends SilverstripeBaseModel
 {
+    const ClassName = 'CompanyService';
+
     /**
      * @ORM\Column(name="Name", type="string")
      * @var string
@@ -112,6 +114,14 @@ class CompanyService extends SilverstripeBaseModel
         $this->reviews   = new ArrayCollection();
         $this->videos    = new ArrayCollection();
         $this->resources = new ArrayCollection();
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
     }
 
     /**

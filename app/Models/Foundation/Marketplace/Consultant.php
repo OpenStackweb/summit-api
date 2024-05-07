@@ -22,6 +22,8 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class Consultant extends RegionalSupportedCompanyService
 {
+    const ClassName = 'Consultant';
+
     /**
      * @ORM\OneToMany(targetEntity="Office", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
      * @var Office[]
@@ -81,6 +83,14 @@ class Consultant extends RegionalSupportedCompanyService
         $this->configuration_management_expertises = new ArrayCollection();
         $this->expertise_areas                     = new ArrayCollection();
         $this->services_offered                    = new ArrayCollection();
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
     }
 
     /**

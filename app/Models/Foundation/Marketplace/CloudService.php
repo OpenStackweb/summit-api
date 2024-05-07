@@ -21,6 +21,8 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class CloudService extends OpenStackImplementation
 {
+    const ClassName = 'CloudService';
+
     /**
      * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
      * @var DataCenterLocation[]
@@ -42,6 +44,14 @@ class CloudService extends OpenStackImplementation
     }
 
     /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
+    }
+
+    /**
      * @return DataCenterLocation[]
      */
     public function getDataCenters()
@@ -56,5 +66,4 @@ class CloudService extends OpenStackImplementation
     {
         return $this->data_center_regions->toArray();
     }
-
 }

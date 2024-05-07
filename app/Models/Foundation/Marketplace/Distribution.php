@@ -20,5 +20,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class Distribution extends OpenStackImplementation
 {
+    const ClassName = 'Distribution';
 
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
+    }
 }

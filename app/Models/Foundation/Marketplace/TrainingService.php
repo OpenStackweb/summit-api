@@ -21,5 +21,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class TrainingService extends CompanyService
 {
+    const ClassName = 'TrainingService';
 
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
+    }
 }

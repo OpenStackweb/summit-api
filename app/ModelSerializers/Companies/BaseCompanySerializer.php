@@ -21,6 +21,7 @@ class BaseCompanySerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Name' => 'name:json_string',
         'Url' => 'url:json_string',
+        'UrlSegment' => 'url_segment:json_string',
         'City' => 'city:json_string',
         'State' => 'state:json_string',
         'Country' => 'country:json_string',

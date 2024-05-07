@@ -24,9 +24,11 @@ class CompanyServiceSerializer extends SilverStripeSerializer
      * @var array
      */
     protected static $array_mappings = [
+        'ClassName'      => 'class_name:json_string',
         'Name'           => 'name:json_string',
         'Overview'       => 'overview:json_string',
         'Call2ActionUrl' => 'call_2_action_url:json_string',
+        'Slug'           => 'slug:json_string',
         'CompanyId'      => 'company_id:json_int',
         'TypeId'         => 'type_id:json_int',
     ];

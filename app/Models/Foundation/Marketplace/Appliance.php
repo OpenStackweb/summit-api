@@ -20,5 +20,13 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class Appliance extends OpenStackImplementation
 {
+    const ClassName = 'Appliance';
 
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
+    }
 }

@@ -20,6 +20,8 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class RemoteCloudService extends OpenStackImplementation
 {
+    const ClassName = 'RemoteCloudService';
+
     /**
      * @ORM\Column(name="HardwareSpecifications", type="string")
      * @var string
@@ -43,6 +45,14 @@ class RemoteCloudService extends OpenStackImplementation
      * @var bool
      */
     private $vendor_managed_upgrades;
+
+    /**
+     * @return string
+     */
+    public function getClassName():string
+    {
+        return self::ClassName;
+    }
 
     /**
      * @return string

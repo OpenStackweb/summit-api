@@ -34,7 +34,9 @@ class CompanyServiceSerializer extends SilverStripeSerializer
     ];
 
     protected static $allowed_relations = [
+        'company',
         'reviews',
+        'type',
     ];
 
     /**
@@ -53,28 +55,30 @@ class CompanyServiceSerializer extends SilverStripeSerializer
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'company': {
-                        unset($values['company_id']);
-                        $values['company'] = SerializerRegistry::getInstance()->getSerializer($company_service->getCompany())->serialize(null, [], ['none']);;
-                    }
-                    break;
-                    case 'type': {
-                        unset($values['type_id']);
-                        $values['type'] = SerializerRegistry::getInstance()->getSerializer($company_service->getType())->serialize(null, [], ['none']);;
-                    }
-                    break;
+                $relation = trim($relation);
+                if (!in_array($relation, $relations)) continue;
+                switch ($relation) {
+                    case 'company':
+                        {
+                            unset($values['company_id']);
+                            $values['company'] = SerializerRegistry::getInstance()->getSerializer($company_service->getCompany())->serialize(null, [], ['none']);
+                        }
+                        break;
+                    case 'type':
+                        {
+                            unset($values['type_id']);
+                            $values['type'] = SerializerRegistry::getInstance()->getSerializer($company_service->getType())->serialize(null, [], ['none']);
+                        }
+                        break;
                     case 'reviews':
-                    {
-                        if(in_array('reviews', $relations)){
+                        {
                             $reviews = [];
                             foreach ($company_service->getApprovedReviews() as $r) {
                                 $reviews[] = SerializerRegistry::getInstance()->getSerializer($r)->serialize();
                             }
                             $values['reviews'] = $reviews;
                         }
-                    }
-                    break;
+                        break;
                 }
             }
         }

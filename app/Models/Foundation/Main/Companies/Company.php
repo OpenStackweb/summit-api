@@ -634,7 +634,7 @@ class Company extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getUrlSegment(): string{
+    public function getUrlSegment(): ?string{
         return $this->url_segment;
     }
 

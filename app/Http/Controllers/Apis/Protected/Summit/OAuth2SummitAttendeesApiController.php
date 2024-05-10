@@ -22,6 +22,7 @@ use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Jobs\SynchAllAttendeesStatus;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ISummitOrderService;
 use Exception;
@@ -386,6 +387,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
             'tags' => ['=@', '==', '@@'],
             'tags_id' => ['=='],
+            'notes' => ['=@', '@@'],
+            'has_notes' => ['=='],
         ];
 
         if (Request::has('filter')) {
@@ -446,6 +449,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                     'tags' => 'sometimes|string',
                     'tags_id' => 'sometimes|integer',
+                    'notes' => 'sometimes|string',
+                    'has_notes' => ['sometimes', new Boolean()]
                 ];
             },
             function () {
@@ -463,6 +468,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'presentation_votes_count',
                     'summit_hall_checked_in_date',
                     'tickets_count',
+                    'has_notes',
                 ];
             },
             function ($filter) use ($summit) {
@@ -521,6 +527,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'summit_hall_checked_in_date' =>  ['==', '>=', '<=', '>', '<', '[]'],
                     'tags' => ['=@', '==', '@@'],
                     'tags_id' => ['=='],
+                    'notes' => ['=@', '@@'],
+                    'has_notes' => ['=='],
                 ];
             },
             function () {
@@ -552,6 +560,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                     'tags' => 'sometimes|string',
                     'tags_id' => 'sometimes|integer',
+                    'notes' => 'sometimes|string',
+                    'has_notes' => ['sometimes', new Boolean()]
                 ];
             },
             function () {
@@ -567,6 +577,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'full_name',
                     'summit_hall_checked_in_date',
                     'tickets_count',
+                    'has_notes',
                 ];
             },
             function ($filter) use ($summit) {
@@ -961,6 +972,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
                     'tags' => ['=@', '==', '@@'],
                     'tags_id' => ['=='],
+                    'notes' => ['=@', '@@'],
+                    'has_notes' => ['=='],
                 ]);
             }
 
@@ -998,6 +1011,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                 'tags' => 'sometimes|string',
                 'tags_id' => 'sometimes|integer',
+                'notes' => 'sometimes|string',
+                'has_notes' => ['sometimes', new Boolean()]
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, FiltersParams::getFilterParam());

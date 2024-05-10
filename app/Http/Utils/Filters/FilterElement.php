@@ -13,6 +13,8 @@
  **/
 class FilterElement extends AbstractFilterElement
 {
+    static $symbols = ['%EMPTY%' => ''];
+
     /**
      * @var mixed
      */
@@ -73,36 +75,51 @@ class FilterElement extends AbstractFilterElement
         }
         return to_boolean($this->value);
     }
+
+    public static function mapValueSymbols(string $val):string{
+        if(isset(self::$symbols[strtoupper($val)])) return self::$symbols[strtoupper($val)];
+        return $val;
+    }
+
     /**
      * @return mixed
      */
     public function getValue()
     {
+        $value = $this->value;
+        if(is_array($value)){
+            $res = [];
+            foreach ($value as $val){
+                $res[]= empty($val) ? '' : self::mapValueSymbols($val);
+            }
+            $value = $res;
+        }
+        else {
+            $value = self::mapValueSymbols($value);
+        }
+
         switch($this->operator)
         {
             case 'like':
-                if(is_array($this->value)){
+                if(is_array($value)){
                     $res = [];
-                    foreach ($this->value as $val){
+                    foreach ($value as $val){
                         $res[]= empty($val) ? '' : "%".$val."%";
                     }
                     return $res;
                 }
-                return empty($this->value) ? '' : "%".$this->value."%";
-                break;
+                return empty($value) ? '' : "%".$value."%";
             case 'start_like':
-                if(is_array($this->value)){
+                if(is_array($value)){
                     $res = [];
-                    foreach ($this->value as $val){
+                    foreach ($value as $val){
                         $res[]= empty($val) ? '' : $val."%";
                     }
                     return $res;
                 }
-                return  empty($this->value) ? '' : $this->value."%";
-                break;
+                return  empty($value) ? '' : $value."%";
             default:
-                return $this->value;
-                break;
+                return $value;
         }
     }
 

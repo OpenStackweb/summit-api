@@ -109,15 +109,25 @@ class One2ManyExpandSerializer implements IExpandSerializer
     }
 
     /**
-     * @param mixed $entity
+     * @param $entity
      * @param array $values
      * @param string $expand
      * @param array $fields
      * @param array $relations
      * @param array $params
+     * @param bool $should_verify_relation
      * @return array
      */
-    public function serialize($entity, array $values, string $expand, array $fields = [], array $relations = [], array $params = []): array
+    public function serialize
+    (
+        $entity,
+        array $values,
+        string $expand,
+        array $fields = [],
+        array $relations = [],
+        array $params = [],
+        bool $should_verify_relation = false
+    ): array
     {
         Log::debug
         (

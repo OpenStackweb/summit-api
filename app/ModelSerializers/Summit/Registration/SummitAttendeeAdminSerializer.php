@@ -1,4 +1,6 @@
 <?php namespace ModelSerializers;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +20,18 @@
 class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer
 {
     protected static $array_mappings = [
-        'AdminNotes' => 'admin_notes:json_string',
         'VirtualCheckedIn' => 'has_virtual_check_in:json_boolean',
+    ];
+
+    protected static $allowed_relations = [
+        'notes',
+    ];
+
+    protected static $expand_mappings = [
+        'notes' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getNotes',
+            'should_verify_relation' => true
+        ],
     ];
 }

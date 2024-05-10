@@ -277,6 +277,7 @@ abstract class AbstractSerializer implements IModelSerializer
         $values = [];
         $method_prefix = ['get', 'is'];
         if (!count($fields)) $fields = $this->getAllowedFields();
+        if (!count($relations)) $relations = $this->getAllowedRelations();
         $mappings = $this->getAttributeMappings();
         if (count($mappings)) {
             $new_values = [];
@@ -407,9 +408,10 @@ abstract class AbstractSerializer implements IModelSerializer
                 $has = $serializerSpec['has'] ?? null;
                 $test_rule = $serializerSpec['test_rule'] ?? null;
                 $should_skip_rule = $serializerSpec['should_skip_rule'] ?? null;
+                $should_verify_relation = $serializerSpec['should_verify_relation'] ?? false;
                 $serializer_type = $serializerSpec['serializer_type'] ?? SerializerRegistry::SerializerType_Public;
                 $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has, $serializer_type, $test_rule, $should_skip_rule);
-                $values = $serializer->serialize($this->object, $values, $expand, $fields, $relations, $params);
+                $values = $serializer->serialize($this->object, $values, $expand, $fields, $relations, $params, $should_verify_relation);
             }
         }
 

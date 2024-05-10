@@ -19,20 +19,32 @@ use ModelSerializers\SerializerRegistry;
  */
 class Many2OneExpandSerializer extends One2ManyExpandSerializer
 {
+
     /**
-     * @param mixed $entity
+     * @param $entity
      * @param array $values
      * @param string $expand
      * @param array $fields
      * @param array $relations
      * @param array $params
+     * @param bool $should_verify_relation
      * @return array
      */
-    public function serialize($entity, array $values, string $expand, array $fields = [], array $relations = [], array $params = []): array
-    {
+    public function serialize
+    (
+        $entity,
+        array $values,
+        string $expand,
+        array $fields = [],
+        array $relations = [],
+        array $params = [],
+        bool $should_verify_relation = false
+    ): array
+     {
         $testRuleRes = is_null($this->test_rule) ? true : call_user_func($this->test_rule, $entity);
         if(!$testRuleRes) return $values;
         $values = $this->unsetOriginalAttribute($values);
+        if($should_verify_relation && !in_array($this->attribute, $relations)) return $values;
         $res = [];
         foreach ($entity->{$this->getter}() as $item){
             $shouldSkip = is_null($this->should_skip_rule) ? false : call_user_func($this->should_skip_rule, $item, $params);

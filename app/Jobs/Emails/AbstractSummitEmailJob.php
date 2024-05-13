@@ -14,6 +14,7 @@
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use models\summit\ISummitRepository;
 use models\summit\Summit;
 use services\apis\IMarketingAPI;
 
@@ -53,6 +54,9 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
                 $to_email
             )
         );
+
+        $repository = App::make(ISummitRepository::class);
+        $summit = $repository->getByIdRefreshed($summit->getId());
 
         // inject summit common data
         $payload[IMailTemplatesConstants::summit_id]   = $summit->getId();

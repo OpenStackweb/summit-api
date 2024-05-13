@@ -805,4 +805,82 @@ DQL;
             'email_sent' => ['sometimes', new Boolean()],
         ]);
     }
+
+    public function testApplyCompanyFilterEMPTYtoAttendeesList(){
+        $filters_input = [
+            'company==%EMPTY%'
+        ];
+
+        $filter = FilterParser::parse($filters_input, [
+            'company' => ['==']
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query->select("e")
+            ->from(\models\summit\SummitAttendee::class, "e")
+            ->leftJoin('e.summit', 's')
+            ->leftJoin('e.member', 'm')
+            ->leftJoin('e.tickets', 't');
+
+        $filter->apply2Query($query, [
+            'company' => new DoctrineFilterMapping("e.company_name :operator :value")
+        ]);
+
+        $dql = $query->getDQL();
+
+        $this->assertNotEmpty($dql);
+
+        $params = $query->getParameters();
+
+        $this->assertEquals(1, $params->count());
+        $this->assertEmpty($params[0]->getValue());
+
+        //if DQL is not well-formed this will fail
+        $sql = $query->getQuery()->getSQL();
+        $this->assertNotEmpty($sql);
+
+        $res = $query->getQuery()->getResult();
+        $this->assertNotEmpty($res);
+    }
+
+    public function testApplyCompanyFilterEMPTYORtoAttendeesList(){
+        $filters_input = [
+            'company==%EMPTY%||1||2'
+        ];
+
+        $filter = FilterParser::parse($filters_input, [
+            'company' => ['==']
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query->select("e")
+            ->from(\models\summit\SummitAttendee::class, "e")
+            ->leftJoin('e.summit', 's')
+            ->leftJoin('e.member', 'm')
+            ->leftJoin('e.tickets', 't');
+
+        $filter->apply2Query($query, [
+            'company' => new DoctrineFilterMapping("e.company_name :operator :value")
+        ]);
+
+        $dql = $query->getDQL();
+
+        $this->assertNotEmpty($dql);
+
+        $params = $query->getParameters();
+
+        $this->assertEquals(3, $params->count());
+        $this->assertEmpty($params[0]->getValue());
+        $this->assertEquals('1', $params[1]->getValue());
+        $this->assertEquals('2', $params[2]->getValue());
+
+        //if DQL is not well-formed this will fail
+        $sql = $query->getQuery()->getSQL();
+        $this->assertNotEmpty($sql);
+
+        $res = $query->getQuery()->getResult();
+        $this->assertNotEmpty($res);
+    }
 }

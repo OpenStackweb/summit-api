@@ -21,6 +21,7 @@ use models\summit\ISummitAttendeeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
@@ -50,7 +51,8 @@ final class DoctrineSummitAttendeeRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query =  $query->join('e.summit', 's')
             ->leftJoin('e.member', 'm')
-           ->leftJoin('e.tickets', 't');
+            ->leftJoin('e.tickets', 't')
+            ->leftJoin('e.notes', 'n');
 
         if($filter->hasFilter("presentation_votes_count")){
             $query = $query->leftJoin("e.presentation_votes","pv");
@@ -208,6 +210,18 @@ final class DoctrineSummitAttendeeRepository
             'summit_hall_checked_in_date' => Filter::buildDateTimeEpochField("e.summit_hall_checked_in_date"),
             'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "tags","tags.tag :operator :value"),
             'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "tags","tags.id :operator :value"),
+            'notes' => new DoctrineLeftJoinFilterMapping("e.notes", "notes","notes.content :operator :value"),
+            'has_notes' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "SIZE(e.notes) > 0"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "SIZE(e.notes) = 0"
+                    )
+                ]
+            ),
         ];
     }
 
@@ -219,6 +233,9 @@ final class DoctrineSummitAttendeeRepository
                 "COALESCE(SUM(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END), 0) AS HIDDEN HIDDEN_TICKETS_QTY",
                 IOrderConstants::PaidStatus
             )
+        );
+        $query = $query->addSelect(
+            "COALESCE(CASE WHEN (COUNT(n.id) = 0) THEN 0 ELSE 1 END, 0) AS HIDDEN HIDDEN_HAS_NOTES_ORDER"
         );
         $query->groupBy("e");
         return $query;
@@ -246,6 +263,7 @@ SQL,
             'presentation_votes_count' => 'COUNT(pv.id)',
             'summit_hall_checked_in_date' => 'e.summit_hall_checked_in_date',
             'tickets_count' => 'HIDDEN_TICKETS_QTY',
+            'has_notes'     => 'HIDDEN_HAS_NOTES_ORDER'
         ];
     }
 

@@ -230,7 +230,12 @@ final class DoctrineSummitEventRepository
     protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder
     {
         if(!is_null($order) && $order->hasOrder('actions')) {
-            $query = $query->addSelect("COUNT(a.is_completed) AS HIDDEN HIDDEN_COMPLETED_ACTIONS_COUNT");
+            //Weighted sub-query using the following distribution:
+            // - Action is completed     => weight = 2
+            // - Action is not completed => weight = 1
+            // - No associated actions   => weight = 0
+            $query = $query->addSelect(
+                "SUM(CASE WHEN (a.is_completed = 1) THEN 2 WHEN (a.is_completed = 0) THEN 1 ELSE 0 END) AS HIDDEN HIDDEN_COMPLETED_ACTIONS_COUNT");
             $query->groupBy("e");
         }
         return $query;

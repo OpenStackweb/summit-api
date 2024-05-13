@@ -1653,7 +1653,7 @@ final class SummitService
                 ));
 
             $speaker = $this->speaker_repository->getById($speaker_id);
-            if (!($speaker instanceof PresentationSpeaker))
+            if (!$speaker instanceof PresentationSpeaker)
                 throw new EntityNotFoundException(sprintf('Speaker %s not found.', $speaker_id));
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
@@ -1709,7 +1709,7 @@ final class SummitService
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if ($speaker instanceof PresentationSpeaker)
+            if (!$speaker instanceof PresentationSpeaker)
                 throw new EntityNotFoundException(sprintf('Speaker %s not found.', $speaker_id));
 
             if (!$presentation->isCompleted())

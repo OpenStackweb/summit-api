@@ -94,6 +94,12 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      */
     private $hide_past_events_with_show_always_on_schedule;
 
+    /**
+     * @ORM\Column(name="TimeFormat", type="string")
+     * @var string
+     */
+    private $time_format;
+
     public function __construct()
     {
         parent::__construct();

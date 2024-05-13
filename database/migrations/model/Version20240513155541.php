@@ -30,12 +30,7 @@ class Version20240513155541 extends AbstractMigration
         $builder = new Builder($schema);
         if($builder->hasTable("SummitScheduleConfig") && $builder->hasColumns("SummitScheduleConfig", ["TimeFormat"])) {
             $sql = <<<SQL
-ALTER TABLE SummitScheduleConfig MODIFY TimeFormat enum('12h', '24h') DEFAULT '12h';
-SQL;
-            $this->addSql($sql);
-
-            $sql = <<<SQL
-       update SummitScheduleConfig set TimeFormat = '12h' where TimeFormat IS NULL;
+ALTER TABLE SummitScheduleConfig MODIFY TimeFormat enum('12h', '24h');
 SQL;
             $this->addSql($sql);
         }

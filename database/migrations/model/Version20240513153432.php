@@ -30,7 +30,7 @@ class Version20240513153432 extends AbstractMigration
         $builder = new Builder($schema);
         if($builder->hasTable("SummitScheduleConfig") && !$builder->hasColumns("SummitScheduleConfig", ["TimeFormat"])) {
             $builder->table("SummitScheduleConfig", function (Table $table) {
-                $table->string("TimeFormat",3)->setNotnull(true);
+                $table->string("TimeFormat",3)->setNotnull(true)->setDefault('12h');
             });
         }
     }

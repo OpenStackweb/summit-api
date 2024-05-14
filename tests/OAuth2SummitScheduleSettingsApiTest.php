@@ -54,6 +54,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
         ];
 
         $response = $this->action
@@ -126,6 +127,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,
@@ -196,6 +198,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,
@@ -262,6 +265,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,
@@ -327,6 +331,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,
@@ -393,6 +398,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,
@@ -484,6 +490,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,
@@ -546,6 +553,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'only_events_with_attendee_access' => true,
             'hide_past_events_with_show_always_on_schedule' => false,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'time_format' => SummitScheduleConfig::TimeFormat_24,
             'filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Date,

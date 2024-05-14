@@ -35,6 +35,7 @@ final class SummitScheduleConfigRulesFactory
             'color_source' => 'required|string|in:'.implode(',', SummitScheduleConfig::AllowedColorSource),
             'filters' => 'sometimes|summit_schedule_config_filter_dto_array',
             'pre_filters' => 'sometimes|summit_schedule_config_pre_filter_dto_array',
+            'time_format' => 'required|string|in:'.implode(',', SummitScheduleConfig::AllowedTimeFormats),
         ];
     }
 }

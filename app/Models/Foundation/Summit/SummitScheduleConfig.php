@@ -40,6 +40,10 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     const ColorSource_TrackGroup = 'TRACK_GROUP';
     const AllowedColorSource = [self::ColorSource_EventType, self::ColorSource_Track, self::ColorSource_TrackGroup];
 
+    const TimeFormat_12 = '12h';
+    const TimeFormat_24 = '24h';
+    const AllowedTimeFormats = [self::TimeFormat_12, self::TimeFormat_24];
+
     /**
      * @ORM\Column(name="Key", type="string")
      * @var string
@@ -93,6 +97,12 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      * @var bool
      */
     private $hide_past_events_with_show_always_on_schedule;
+
+    /**
+     * @ORM\Column(name="TimeFormat", type="string")
+     * @var string
+     */
+    private $time_format;
 
     public function __construct()
     {
@@ -316,5 +326,24 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     public function setHidePastEventsWithShowAlwaysOnSchedule(bool $hide_past_events_with_show_always_on_schedule): void
     {
         $this->hide_past_events_with_show_always_on_schedule = $hide_past_events_with_show_always_on_schedule;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTimeFormat(): string
+    {
+        return $this->time_format;
+    }
+
+    /**
+     * @param string $time_format
+     * @throws ValidationException
+     */
+    public function setTimeFormat(string $time_format): void
+    {
+        if(!in_array($time_format, self::AllowedTimeFormats))
+            throw new ValidationException(sprintf("Time Format %s is not allowed.", $time_format));
+        $this->time_format = $time_format;
     }
 }

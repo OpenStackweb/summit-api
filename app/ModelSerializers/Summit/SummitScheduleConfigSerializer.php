@@ -30,6 +30,7 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
         'Enabled' => 'is_enabled:json_boolean',
         'Default' => 'is_default:json_boolean',
         'HidePastEventsWithShowAlwaysOnSchedule' => 'hide_past_events_with_show_always_on_schedule:json_boolean',
+        'TimeFormat' => 'time_format:json_string',
     ];
 
     protected static $allowed_relations = [

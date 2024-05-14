@@ -972,6 +972,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
                     'tags' => ['=@', '==', '@@'],
                     'tags_id' => ['=='],
+                    'notes' => ['=@', '@@'],
+                    'has_notes' => ['=='],
                 ]);
             }
 
@@ -1009,6 +1011,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                 'tags' => 'sometimes|string',
                 'tags_id' => 'sometimes|integer',
+                'notes' => 'sometimes|string',
+                'has_notes' => ['sometimes', new Boolean()]
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, FiltersParams::getFilterParam());

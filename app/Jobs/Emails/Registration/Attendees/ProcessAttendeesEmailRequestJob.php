@@ -92,6 +92,10 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_track_group_id' => ['=='],
             'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
+            'tags' => ['=@', '==', '@@'],
+            'tags_id' => ['=='],
+            'notes' => ['=@', '@@'],
+            'has_notes' => ['=='],
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);

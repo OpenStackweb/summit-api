@@ -26,7 +26,7 @@ final class SummitMediaUploadTypeValidationRulesFactory extends AbstractValidati
     {
         return [
             'name' => 'required|string|max:255',
-            'description' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string|max:5120',
             'is_mandatory' => 'required|boolean',
             'use_temporary_links_on_public_storage' => 'sometimes|boolean',
             'temporary_links_public_storage_ttl' => 'sometimes|int|required_with:use_temporary_links_on_public_storage',
@@ -46,7 +46,7 @@ final class SummitMediaUploadTypeValidationRulesFactory extends AbstractValidati
     {
         return [
             'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string|max:5120',
             'is_mandatory' => 'sometimes|boolean',
             'use_temporary_links_on_public_storage' => 'sometimes|boolean',
             'temporary_links_public_storage_ttl' => 'sometimes|int|required_with:use_temporary_links_on_public_storage',

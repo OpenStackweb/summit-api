@@ -18,7 +18,7 @@
 final class RetrieveAllSummitEventsBySummitCSVStrategy
 extends RetrieveAllSummitEventsBySummitStrategy
 {
-    protected function getPageParams(){
+    public static function getPaginationParams(callable $defaultPageSize = null): array {
         return [1, PHP_INT_MAX];
     }
 }

@@ -6376,6 +6376,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-submit-presentation',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ]
+            ],
+            [
                 'name' => 'update-submit-presentation',
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}',
                 'http_method' => 'PUT',

@@ -288,6 +288,36 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return mixed
      */
+    public function getPresentationSubmission($summit_id, $presentation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $presentation = $summit->getEvent(intval($presentation_id));
+            if(!$presentation instanceof Presentation) return $this->error404();
+
+            if(!$presentation->memberCanEdit($current_member))
+                return $this->error403();
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return mixed
+     */
     public function updatePresentationSubmission($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {

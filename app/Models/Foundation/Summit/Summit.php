@@ -2376,7 +2376,7 @@ SQL;
     public function generateRegistrationSlugPrefix(): void
     {
         if (empty($this->registration_slug_prefix)) {
-            $this->registration_slug_prefix = $this->getSlug("");
+            $this->registration_slug_prefix = $this->slug;
         }
     }
 

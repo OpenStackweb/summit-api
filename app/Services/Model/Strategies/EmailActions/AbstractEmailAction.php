@@ -39,8 +39,14 @@ abstract class AbstractEmailAction
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
      * @param callable|null $onSuccess
+     * @param callable|null $onError
      * @return mixed
      */
-    public abstract function process(
-        SummitAttendee $attendee, ?string $test_email_recipient = null, callable $onSuccess = null);
+    public abstract function process
+    (
+        SummitAttendee $attendee,
+        ?string $test_email_recipient = null,
+        callable $onSuccess = null,
+        callable $onError = null
+    );
 }

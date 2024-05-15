@@ -590,8 +590,17 @@ final class SummitRegistrationInvitationService
                 }
                 return $this->invitation_repository->getAllIdsByPage($paging_info, $filter);
             },
-            function ($summit, $flow_event, $invitation_id, $test_email_recipient,
-                      $announcement_email_config, $filter, $onDispatchSuccess) use ($payload) {
+            function
+            (
+                $summit,
+                $flow_event,
+                $invitation_id,
+                $test_email_recipient,
+                $announcement_email_config,
+                $filter,
+                $onDispatchSuccess,
+                $onDispatchError
+            ) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use (
                         $summit,
@@ -600,6 +609,7 @@ final class SummitRegistrationInvitationService
                         $test_email_recipient,
                         $filter,
                         $onDispatchSuccess,
+                        $onDispatchError,
                         $payload
                     ) {
                         $invitation = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
@@ -651,6 +661,7 @@ final class SummitRegistrationInvitationService
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
+                    $onDispatchError($ex->getMessage());
                 }
             },
             function($summit, $outcome_email_recipient, $report){

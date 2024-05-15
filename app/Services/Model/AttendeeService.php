@@ -535,8 +535,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
                 return $this->attendee_repository->getAllIdsByPage($paging_info, $filter);
             },
-            function ($summit, $flow_event, $attendee_id, $test_email_recipient,
-                      $announcement_email_config, $filter, $onDispatchSuccess) use ($payload) {
+            function
+            (
+                $summit,
+                $flow_event,
+                $attendee_id,
+                $test_email_recipient,
+                $announcement_email_config,
+                $filter,
+                $onDispatchSuccess,
+                $onDispatchError) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use (
                         $summit,
@@ -545,6 +553,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         $test_email_recipient,
                         $filter,
                         $onDispatchSuccess,
+                        $onDispatchError,
                         $payload
                     ) {
                         Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
@@ -556,7 +565,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
                         $strategy = $emailActionsStrategyFactory->build($flow_event);
                         if ($strategy != null) {
-                            $strategy->process($attendee, $test_email_recipient, $onDispatchSuccess);
+                            $strategy->process($attendee, $test_email_recipient, $onDispatchSuccess, $onDispatchError);
                         }
                     });
                 } catch (\Exception $ex) {

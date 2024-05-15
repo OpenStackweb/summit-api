@@ -14,7 +14,6 @@
 
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
@@ -38,9 +37,16 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
      * @param callable|null $onSuccess
+     * @param callable|null $onError
      * @return void
      */
-    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null, callable $onSuccess = null)
+    public function process
+    (
+        SummitAttendee $attendee,
+        ?string $test_email_recipient = null,
+        callable $onSuccess = null,
+        callable $onError = null
+    )
     {
         foreach ($attendee->getTickets() as $ticket) {
             try {
@@ -88,7 +94,9 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
 
             } catch (\Exception $ex) {
                 Log::warning($ex);
-                EmailExcerpt::addErrorMessage($ex->getMessage());
+                if (!is_null($onError)) {
+                    $onError($ex->getMessage());
+                }
             }
         }
     }

@@ -33,7 +33,6 @@ use App\Services\Model\IFolderService;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
-use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -331,7 +330,7 @@ final class SpeakerService
 
             if ($member_id > 0) {
                 $member = $this->member_repository->getById($member_id);
-                if (is_null($member))
+                if (!$member instanceof Member)
                     throw new EntityNotFoundException;
 
                 $existent_speaker = $this->speaker_repository->getByMember($member);
@@ -1203,7 +1202,6 @@ final class SpeakerService
     {
         $this->tx_service->transaction(function () use ($speaker_id) {
 
-
             $speaker = $this->speaker_repository->getById($speaker_id);
 
             if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
@@ -1237,8 +1235,18 @@ final class SpeakerService
             function($summit, $paging_info, $filter) {
                 return $this->speaker_repository->getSpeakersIdsBySummit($summit, $paging_info, $filter);
             },
-            function($summit, $flow_event, $speaker_id, $test_email_recipient,
-                     $speaker_announcement_email_config, $filter, $onDispatchSuccess) use ($payload) {
+            function
+            (
+                $summit,
+                $flow_event,
+                $speaker_id,
+                $test_email_recipient,
+                $speaker_announcement_email_config,
+                $filter,
+                $onDispatchSuccess,
+                $onDispatchError,
+                $onDispatchInfo
+            ) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use
                     (
@@ -1249,6 +1257,8 @@ final class SpeakerService
                         $speaker_announcement_email_config,
                         $filter,
                         $onDispatchSuccess,
+                        $onDispatchError,
+                        $onDispatchInfo,
                         $payload
                     ) {
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
@@ -1283,12 +1293,15 @@ final class SpeakerService
                             $filter,
                             $promo_code,
                             $assistance,
-                            $onDispatchSuccess
+                            $onDispatchSuccess,
+                            $onDispatchInfo,
+                            $onDispatchError
                         );
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
-                    EmailExcerpt::addErrorMessage($ex->getMessage());
+                    if(!is_null($onDispatchError))
+                        $onDispatchError($ex->getMessage());
                 }
             },
             function($summit, $outcome_email_recipient, $report){

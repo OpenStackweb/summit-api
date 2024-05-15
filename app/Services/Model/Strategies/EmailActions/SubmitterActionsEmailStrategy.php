@@ -19,7 +19,6 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitt
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessRejectedOnlyEmail;
-use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\summit\SubmitterAnnouncementSummitEmail;
@@ -58,11 +57,17 @@ final class SubmitterActionsEmailStrategy
      * @param string|null $test_email_recipient
      * @param Filter|null $filter
      * @param callable|null $onSuccess
+     * @param callable|null $onInfo
+     * @param callable|null $onError
+     * @return void
      */
     public function process(Member  $submitter,
                             ?string $test_email_recipient,
                             ?Filter $filter = null,
-                            callable $onSuccess = null): void
+                            callable $onSuccess = null,
+                            callable $onInfo = null,
+                            callable $onError = null
+    ): void
     {
         try {
             $type = null;
@@ -87,17 +92,18 @@ final class SubmitterActionsEmailStrategy
                 )
             );
 
-            EmailExcerpt::addInfoMessage(
-                sprintf
-                (
-                    "trying to send email %s to submitter %s accepted %b alternate %b rejected %b",
-                    $this->flow_event,
-                    $submitter->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations
-                )
-            );
+            if(!is_null($onInfo))
+                $onInfo(
+                    sprintf
+                    (
+                        "Trying to send email %s to submitter %s accepted %b alternate %b rejected %b.",
+                        $this->flow_event,
+                        $submitter->getEmail(),
+                        $has_accepted_presentations,
+                        $has_alternate_presentations,
+                        $has_rejected_presentations
+                    )
+                );
 
             switch ($this->flow_event) {
                 case PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
@@ -123,17 +129,18 @@ final class SubmitterActionsEmailStrategy
             }
 
             if (!is_null($type)) {
-                EmailExcerpt::addInfoMessage(
-                    sprintf
-                    (
-                        "submitter %s accepted %b alternate %b rejected %b already has an email of type %s.",
-                        $submitter->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations,
-                        $this->flow_event
-                    )
-                );
+                if(!is_null($onInfo))
+                    $onInfo(
+                        sprintf
+                        (
+                            "Submitter %s accepted %b alternate %b rejected %b already has an email of type %s.",
+                            $submitter->getEmail(),
+                            $has_accepted_presentations,
+                            $has_alternate_presentations,
+                            $has_rejected_presentations,
+                            $this->flow_event
+                        )
+                    );
 
                 PresentationSubmitterSelectionProcessEmailFactory::send
                 (
@@ -144,24 +151,25 @@ final class SubmitterActionsEmailStrategy
                     $filter,
                     $onSuccess
                 );
-                EmailExcerpt::addEmailSent();
                 return;
             }
 
-            EmailExcerpt::addInfoMessage(
-                sprintf
-                (
-                    "excluded submitter %s accepted %b alternate %b rejected %b for original email %s",
-                    $submitter->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations,
-                    $this->flow_event
-                )
-            );
+            if(!is_null($onInfo))
+                $onInfo(
+                    sprintf
+                    (
+                        "Excluded submitter %s accepted %b alternate %b rejected %b for original email %s.",
+                        $submitter->getEmail(),
+                        $has_accepted_presentations,
+                        $has_alternate_presentations,
+                        $has_rejected_presentations,
+                        $this->flow_event
+                    )
+                );
         } catch (\Exception $ex) {
             Log::error($ex);
-            EmailExcerpt::addErrorMessage($ex->getMessage());
+            if(!is_null($onError))
+                $onError($ex->getMessage());
         }
     }
 }

@@ -13,7 +13,6 @@
  **/
 
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;

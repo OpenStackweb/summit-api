@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;

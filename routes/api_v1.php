@@ -716,6 +716,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::group(['prefix' => '{presentation_id}'], function () {
 
                 // opened without role CFP - valid selection plan on CFP status
+                Route::get('', 'OAuth2PresentationApiController@getPresentationSubmission');
                 Route::put('', 'OAuth2PresentationApiController@updatePresentationSubmission');
 
                 Route::put('completed', 'OAuth2PresentationApiController@completePresentationSubmission');

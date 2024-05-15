@@ -376,7 +376,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
     public function isInfinite(): bool
     {
-        return $this->quantity_available == 0;
+        return $this->getQuantityAvailable() == 0;
     }
 
     /**

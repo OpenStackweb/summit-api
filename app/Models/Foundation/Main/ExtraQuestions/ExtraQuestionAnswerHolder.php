@@ -92,7 +92,7 @@ trait ExtraQuestionAnswerHolder
      * @throws ValidationException
      */
     private function checkQuestion(ExtraQuestionType $q, ExtraQuestionAnswerSet $formerAnswers, ExtraQuestionAnswerSet $answers):bool{
-        Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s former answers %s current answers %s", $q->getId(), json_encode($formerAnswers->serialize()), json_encode($answers->serialize())));
+        //Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s former answers %s current answers %s", $q->getId(), json_encode($formerAnswers->serialize()), json_encode($answers->serialize())));
         $formerAnswer = $formerAnswers->getAnswerFor($q);
         $currentAnswer = $answers->getAnswerFor($q);
         // check if we are allowed to change the answers that we already did ( bypass only if we are admin)

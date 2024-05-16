@@ -361,8 +361,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             },
             function () use ($summit) {
                 return [
-                    'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, null, true),
-                    'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, null, true),
+                    'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone(), true),
+                    'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone(), true),
                     'redeemed' => new BooleanCellFormatter,
                     'email_sent' => new BooleanCellFormatter,
                 ];

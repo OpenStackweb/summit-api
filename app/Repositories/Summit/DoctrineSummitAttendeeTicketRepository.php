@@ -74,7 +74,18 @@ final class DoctrineSummitAttendeeTicketRepository
             'is_active' => 'e.is_active',
             'order_number' => 'o.number:json_string',
             'owner_name' => "COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))",
-            'owner_company' => 'a.company_name:json_string',
+            'owner_company' => 'COALESCE(a.company_name, a_c.name)',
+            'has_owner_company' => new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "((a.company_name is not null and a.company_name <> '') OR (a_c.name is not null and a_c.name <> ''))"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "((a.company_name is null OR a.company_name = '') AND (a_c.name is null OR a_c.name = ''))"
+                    ),
+                ]
+            ),
             'owner_first_name' => "COALESCE(LOWER(a.first_name),LOWER(m.first_name))",
             'owner_last_name' => "COALESCE(LOWER(a.surname),LOWER(m.last_name))",
             'owner_email' => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string', 'a.email:json_string'],
@@ -187,6 +198,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $query = $query->join("o.summit", "s");
         $query = $query->leftJoin("o.owner", "ord_m");
         $query = $query->leftJoin("e.owner", "a");
+        $query = $query->leftJoin("a.company", "a_c");
         $query = $query->leftJoin("e.badge", "b");
         $query = $query->leftJoin("b.prints", "prt");
         $query = $query->leftJoin("b.type", "bt");
@@ -226,7 +238,7 @@ SQL,
             'ticket_type' => 'tt.name',
             'final_amount' => 'HIDDEN_FINAL_AMOUNT',
             'owner_email' => 'COALESCE(LOWER(m.email), LOWER(m.second_email), LOWER(m.third_email), LOWER(a.email))',
-            'owner_company' => 'a.company_name',
+            'owner_company' => 'COALESCE(a.company_name, a_c.name)',
             'promo_code' => 'pc.code',
             'bought_date' => 'e.bought_date',
             'refunded_amount' => 'HIDDEN_REFUNDED_AMOUNT',

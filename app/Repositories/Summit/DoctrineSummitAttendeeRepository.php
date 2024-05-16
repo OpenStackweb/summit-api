@@ -52,7 +52,8 @@ final class DoctrineSummitAttendeeRepository
         $query =  $query->join('e.summit', 's')
             ->leftJoin('e.member', 'm')
             ->leftJoin('e.tickets', 't')
-            ->leftJoin('e.notes', 'n');
+            ->leftJoin('e.notes', 'n')
+            ->leftJoin('e.company', 'a_c');
 
         if($filter->hasFilter("presentation_votes_count")){
             $query = $query->leftJoin("e.presentation_votes","pv");
@@ -187,7 +188,18 @@ final class DoctrineSummitAttendeeRepository
                 "concat(m.first_name, ' ', m.last_name) :operator :value",
                 "concat(e.first_name, ' ', e.surname) :operator :value"
             ],
-            'company'               => new DoctrineFilterMapping("e.company_name :operator :value"),
+            'company'     => 'COALESCE(e.company_name, a_c.name)',
+            'has_company' => new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "((e.company_name is not null AND e.company_name <> '') OR (a_c.name is not null AND a_c.name <> ''))"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "((e.company_name is null OR e.company_name = '') AND (a_c.name is null OR a_c.name = ''))"
+                    ),
+                ]
+            ),
             'email'                => [
                 Filter::buildEmailField("m.email"),
                 Filter::buildEmailField("e.email")
@@ -254,7 +266,7 @@ final class DoctrineSummitAttendeeRepository
 COALESCE(LOWER(CONCAT(e.first_name, ' ', e.surname)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
             'external_order_id' => 't.external_order_id',
-            'company'           => 'e.company_name',
+            'company'           => 'COALESCE(e.company_name, a_c.name)',
             'member_id'         => 'm.id',
             'status'            => 'e.status',
             'email'             => <<<SQL

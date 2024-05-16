@@ -363,6 +363,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'last_name' => ['=@', '=='],
             'full_name' => ['=@', '=='],
             'company' => ['=@', '=='],
+            'has_company' => ['=='],
             'email' => ['=@', '=='],
             'external_order_id' => ['=@', '=='],
             'external_attendee_id' => ['=@', '=='],
@@ -425,6 +426,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'last_name' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
                     'company' => 'sometimes|string',
+                    'has_company' => ['sometimes', new Boolean()],
                     'email' => 'sometimes|string',
                     'external_order_id' => 'sometimes|string',
                     'external_attendee_id' => 'sometimes|string',
@@ -450,7 +452,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tags' => 'sometimes|string',
                     'tags_id' => 'sometimes|integer',
                     'notes' => 'sometimes|string',
-                    'has_notes' => ['sometimes', new Boolean()]
+                    'has_notes' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -508,6 +510,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'email' => ['=@', '=='],
                     'external_order_id' => ['=@', '=='],
                     'company' => ['=@', '=='],
+                    'has_company' => ['=='],
                     'external_attendee_id' => ['=@', '=='],
                     'member_id' => ['==', '<=', '>='],
                     'status' => ['=@', '=='],
@@ -542,6 +545,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'external_order_id' => 'sometimes|string',
                     'external_attendee_id' => 'sometimes|string',
                     'company' => 'sometimes|string',
+                    'has_company' => ['sometimes', new Boolean()],
                     'member_id' => 'sometimes|integer',
                     'status' => 'sometimes|string',
                     'has_member' => 'sometimes|required|string|in:true,false',
@@ -561,7 +565,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tags' => 'sometimes|string',
                     'tags_id' => 'sometimes|integer',
                     'notes' => 'sometimes|string',
-                    'has_notes' => ['sometimes', new Boolean()]
+                    'has_notes' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -948,6 +952,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'last_name' => ['=@', '=='],
                     'full_name' => ['=@', '=='],
                     'company' => ['=@', '=='],
+                    'has_company' => ['=='],
                     'email' => ['=@', '=='],
                     'external_order_id' => ['=@', '=='],
                     'external_attendee_id' => ['=@', '=='],
@@ -987,6 +992,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'last_name' => 'sometimes|string',
                 'full_name' => 'sometimes|string',
                 'company' => 'sometimes|string',
+                'has_company' => ['sometimes', new Boolean()],
                 'email' => 'sometimes|string',
                 'external_order_id' => 'sometimes|string',
                 'external_attendee_id' => 'sometimes|string',
@@ -1012,7 +1018,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'tags' => 'sometimes|string',
                 'tags_id' => 'sometimes|integer',
                 'notes' => 'sometimes|string',
-                'has_notes' => ['sometimes', new Boolean()]
+                'has_notes' => ['sometimes', new Boolean()],
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, FiltersParams::getFilterParam());

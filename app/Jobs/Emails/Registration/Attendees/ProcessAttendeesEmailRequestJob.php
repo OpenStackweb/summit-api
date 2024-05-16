@@ -70,6 +70,7 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             'last_name' => ['=@', '=='],
             'full_name' => ['=@', '=='],
             'company' => ['=@', '=='],
+            'has_company' => ['=='],
             'email' => ['=@', '=='],
             'external_order_id' => ['=@', '=='],
             'external_attendee_id' => ['=@', '=='],
@@ -95,7 +96,7 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             'tags' => ['=@', '==', '@@'],
             'tags_id' => ['=='],
             'notes' => ['=@', '@@'],
-            'has_notes' => ['=='],
+            'has_notes' => ['==']
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);

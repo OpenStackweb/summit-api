@@ -39,6 +39,10 @@ trait SummitRegistrationPromoCodeCSVSerializerTrait
         }
         $values['tags'] = implode('|', $tags);
 
+        if ($code->isInfinite()) {
+            $values['quantity_remaining'] = 'N/A';
+        }
+
         return $values;
     }
 }

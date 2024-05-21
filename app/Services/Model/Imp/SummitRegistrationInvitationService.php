@@ -603,13 +603,9 @@ final class SummitRegistrationInvitationService
                             Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
 
                             $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
+
                             if (!$invitation instanceof SummitRegistrationInvitation)
                                 return null;
-
-                            if($invitation->isAccepted()) {
-                                Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is already accepted", $invitation_id));
-                                return null;
-                            }
 
                             if($invitation->isRejected()) {
                                 Log::warning(sprintf("SummitRegistrationInvitationService::send invitation %s is already rejected", $invitation_id));

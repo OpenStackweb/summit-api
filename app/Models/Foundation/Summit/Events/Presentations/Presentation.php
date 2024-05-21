@@ -149,6 +149,22 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     const STATUS_RECEIVED = 'Received';
 
+    const ReviewStatusPublished = 'Published';
+    const ReviewStatusNoSubmitted = 'NoSubmitted';
+    const ReviewStatusReceived = 'Received';
+    const ReviewStatusInReview = 'InReview';
+    const ReviewStatusRejected = 'Rejected';
+    const ReviewStatusAccepted = 'Accepted';
+
+    const AllowedReviewStatus  = [
+        self::ReviewStatusPublished,
+        self::ReviewStatusNoSubmitted,
+        self::ReviewStatusReceived,
+        self::ReviewStatusInReview,
+        self::ReviewStatusRejected,
+        self::ReviewStatusAccepted,
+    ];
+
     const ClassNamePresentation = 'Presentation';
 
     const MaxAllowedLinks = 5;
@@ -2401,5 +2417,81 @@ SQL;
         }
 
         return array_merge( $snapshot, parent::getSnapshot());
+    }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getReviewStatus(): string
+    {
+        if ($this->selection_plan == null) return self::ReviewStatusNoSubmitted;
+
+        $submission_begin_date = $this->selection_plan->getSubmissionBeginDate();
+        $submission_end_date = $this->selection_plan->getSubmissionEndDate();
+        $selection_begin_date = $this->selection_plan->getSelectionBeginDate();
+        $selection_end_date = $this->selection_plan->getSelectionEndDate();
+        $submission_lock_down_presentation_status_date = $this->selection_plan->getSubmissionLockDownPresentationStatusDate();
+
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+
+        /**
+         * Published - Presentation is published
+         * Not Submitted - the submission period is open or closed, the submission is started, but not complete.
+         * Received  - the submission is complete and the submission period is open
+         * In Review - the submission is complete, submission period is closed, track chairs is open or the
+         *             submission_lock_down_presentation_status_date is greater than now.
+         * Rejected - the submission is complete, the track chairs is closed, submission is closed, and the presentation is
+         *            not in alternate or accepted on teams list.
+         * Accepted - the submission is complete, the track chair is closed, submission is closed, and the presentation is
+         *            in alternate or accepted on teams list.
+         **/
+
+        // submission ( CFP )
+        // check submission period
+        $submission_open = $now >= $submission_begin_date && $now <= $submission_end_date;
+        $submission_closed = !$submission_open;
+
+        // selection ( track chairs )
+        // check selection period
+        $selection_open = $now >= $selection_begin_date && $now <= $selection_end_date;
+        $selection_closed = !$selection_open;
+
+        $presentation_status = $this->getStatus();
+
+        $submission_complete =
+            in_array($presentation_status, [self::ReviewStatusReceived, self::ReviewStatusAccepted]);
+
+        if (!$submission_complete) return self::ReviewStatusNoSubmitted;
+
+        $selection_status = $this->getSelectionStatus();
+
+        $submission_accepted =
+            in_array($selection_status, [self::SelectionStatus_Alternate, self::SelectionStatus_Accepted]);
+
+        $is_lock_down_period = $submission_lock_down_presentation_status_date != null &&
+            $submission_lock_down_presentation_status_date > $now;
+
+        // if lock down period is enabled then short-circuit everything
+        if ($is_lock_down_period || ($submission_closed && $selection_open)) {
+            return self::ReviewStatusInReview;
+        } else if ($this->isPublished()) {
+            return self::ReviewStatusPublished;
+        } else if ($selection_closed) {
+            return $submission_accepted ? self::ReviewStatusAccepted : self::ReviewStatusRejected;
+        }
+
+        return self::ReviewStatusReceived;
+    }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getReviewStatusNice(): string {
+        $review_status = $this->getReviewStatus();
+        if ($review_status == self::ReviewStatusNoSubmitted) return 'No Submitted';
+        if ($review_status == self::ReviewStatusInReview) return 'In Review';
+        return $review_status;
     }
 }

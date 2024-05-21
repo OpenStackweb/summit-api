@@ -523,6 +523,80 @@ final class DoctrineSummitEventRepository
                     WHERE p4:i.id = p.id AND mut2:i.id :operator :value
                 )'
             ),
+            'review_status' => new DoctrineSwitchFilterMapping
+            (
+                [
+                    Presentation::ReviewStatusNoSubmitted => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusNoSubmitted,
+                        "selp IS NULL OR p.status IS NULL OR (p.status <> 'Received' AND p.status <> 'Accepted')"
+                    ),
+                    Presentation::ReviewStatusInReview => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusInReview,
+                        "(p.status = 'Received' OR p.status = 'Accepted') AND
+                            selp IS NOT NULL AND (
+                            (selp.submission_lock_down_presentation_status_date IS NOT NULL AND selp.submission_lock_down_presentation_status_date > CURRENT_TIMESTAMP()) OR 
+                            (
+                                (selp.submission_begin_date > CURRENT_TIMESTAMP() OR selp.submission_end_date < CURRENT_TIMESTAMP()) 
+                                AND 
+                                (selp.selection_begin_date <= CURRENT_TIMESTAMP() AND selp.selection_end_date >= CURRENT_TIMESTAMP())
+                            )
+                         )"
+                    ),
+                    Presentation::ReviewStatusPublished => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusPublished,
+                        "(p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1 AND
+                            selp IS NOT NULL AND 
+                            selp.submission_lock_down_presentation_status_date IS NULL AND 
+                            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
+                            selp.submission_end_date >= CURRENT_TIMESTAMP() AND
+                            (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP())"
+                    ),
+                    Presentation::ReviewStatusReceived => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusReceived,
+                        "(p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND
+                            selp IS NOT NULL AND 
+                            selp.submission_lock_down_presentation_status_date IS NULL AND 
+                            selp.selection_begin_date <= CURRENT_TIMESTAMP() AND 
+                            selp.selection_end_date >= CURRENT_TIMESTAMP() AND
+                            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
+                            selp.submission_end_date >= CURRENT_TIMESTAMP()"
+                    ),
+                    Presentation::ReviewStatusAccepted => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusAccepted,
+                        sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND e.published = 0 AND 
+                        selp IS NOT NULL AND
+                        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) AND
+                        EXISTS (
+                            SELECT ___sp32.id 
+                            FROM models\summit\SummitSelectedPresentation ___sp32
+                            JOIN ___sp32.presentation ___p32
+                            JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
+                            WHERE ___p32.id = e.id 
+                            AND ___sp32.collection = \'%1$s\'
+                        )',
+                        SummitSelectedPresentation::CollectionSelected,
+                        SummitSelectedPresentationList::Group,
+                        SummitSelectedPresentationList::Session)
+                    ),
+                    Presentation::ReviewStatusRejected => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusRejected,
+                        sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND e.published = 0 AND
+                        selp IS NOT NULL AND
+                        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) AND
+                        NOT EXISTS (
+                            SELECT ___sp33.id 
+                            FROM models\summit\SummitSelectedPresentation ___sp33
+                            JOIN ___sp33.presentation ___p33
+                            JOIN ___sp33.list ___spl33 WITH ___spl33.list_type = \'%2$s\' AND ___spl33.list_class = \'%3$s\'
+                            WHERE ___p33.id = e.id 
+                            AND ___sp33.collection = \'%1$s\'
+                        )',
+                        SummitSelectedPresentation::CollectionSelected,
+                        SummitSelectedPresentationList::Group,
+                        SummitSelectedPresentationList::Session)
+                    )
+                ]
+            ),
         ];
     }
 
@@ -616,12 +690,67 @@ SQL,
 END
 SQL,
             'selection_plan' => 'selp.name',
-            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT'
+            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT',
             /*
             'event_type_capacity' => <<<SQL
 SQL,
             'speakers' => <<<SQL
 SQL,*/
+            'review_status' => <<<SQL
+    CASE
+    WHEN p IS NULL THEN ''
+	WHEN selp IS NULL OR p.status IS NULL OR (p.status <> 'Received' AND p.status <> 'Accepted') THEN 'NoSubmitted'
+	WHEN (p.status = 'Received' OR p.status = 'Accepted') AND
+            selp IS NOT NULL AND (
+            (selp.submission_lock_down_presentation_status_date IS NOT NULL AND selp.submission_lock_down_presentation_status_date > CURRENT_TIMESTAMP()) OR 
+            (
+                (selp.submission_begin_date > CURRENT_TIMESTAMP() OR selp.submission_end_date < CURRENT_TIMESTAMP()) 
+                AND 
+                (selp.selection_begin_date <= CURRENT_TIMESTAMP() AND selp.selection_end_date >= CURRENT_TIMESTAMP())
+            )
+    ) THEN 'InReview'
+	WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1 AND
+            selp IS NOT NULL AND 
+            selp.submission_lock_down_presentation_status_date IS NULL AND 
+            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
+            selp.submission_end_date >= CURRENT_TIMESTAMP() AND
+            (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP())
+    THEN 'Published'
+    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND
+            selp IS NOT NULL AND 
+            selp.submission_lock_down_presentation_status_date IS NULL AND 
+            selp.selection_begin_date <= CURRENT_TIMESTAMP() AND 
+            selp.selection_end_date >= CURRENT_TIMESTAMP() AND
+            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
+            selp.submission_end_date >= CURRENT_TIMESTAMP()
+    THEN 'Received'
+    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND 
+        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) 
+        AND EXISTS (
+            SELECT ___sp331.id
+            FROM models\summit\SummitSelectedPresentation ___sp331 
+            JOIN ___sp331.presentation ___p331 
+            JOIN ___p331.category ___pc331                
+            JOIN ___sp331.list ___spl331 WITH ___spl331.list_type = 'Group' AND ___spl331.list_class = 'Session' 
+            WHERE ___p331.id = e.id 
+            AND ___sp331.collection = 'selected'
+            AND ___sp331.order > ___pc331.session_count                  
+    ) THEN 'Accepted'
+    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND 
+        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) 
+        AND NOT EXISTS (
+            SELECT ___sp332.id
+            FROM models\summit\SummitSelectedPresentation ___sp332
+            JOIN ___sp332.presentation ___p332
+            JOIN ___p332.category ___pc332                
+            JOIN ___sp332.list ___spl332 WITH ___spl332.list_type = 'Group' AND ___spl332.list_class = 'Session'
+            WHERE ___p332.id = e.id
+            AND ___sp332.collection = 'selected'
+            AND ___sp332.order > ___pc332.session_count                  
+    ) THEN 'Rejected'
+    ELSE ''
+END
+SQL
         ];
     }
 

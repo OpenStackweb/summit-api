@@ -134,7 +134,8 @@ abstract class RetrieveSummitEventsStrategy
                 'selection_status',
                 'published_date',
                 'selection_plan',
-                'actions'
+                'actions',
+                'review_status'
             ]);
         }
         return $order;
@@ -200,6 +201,7 @@ abstract class RetrieveSummitEventsStrategy
             'has_media_upload_with_type' => ['=='],
             'has_not_media_upload_with_type' => ['=='],
             'actions' => ['=='],
+            'review_status' => ['=='],
         ];
     }
 
@@ -254,6 +256,7 @@ abstract class RetrieveSummitEventsStrategy
             'has_media_upload_with_type' => 'sometimes|integer',
             'has_not_media_upload_with_type' => 'sometimes|integer',
             'actions' => 'sometimes|string',
+            'review_status' => 'sometimes|string|in:' . implode(',', Presentation::AllowedReviewStatus),
         ];
     }
 }

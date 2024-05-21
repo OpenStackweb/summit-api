@@ -40,6 +40,7 @@ class PresentationSerializer extends SummitEventSerializer
         'DisclaimerAccepted'      => 'disclaimer_accepted:json_boolean',
         'CustomOrder'             => 'custom_order:json_int',
         'AttendeeVotesCount'      => 'attendee_votes_count:json_int',
+        'ReviewStatusNice'        => 'review_status:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -58,6 +59,7 @@ class PresentationSerializer extends SummitEventSerializer
         'disclaimer_accepted',
         'custom_order',
         'attendee_votes_count',
+        'review_status',
     ];
 
     protected static $allowed_relations = [

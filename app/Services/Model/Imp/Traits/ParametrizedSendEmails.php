@@ -20,6 +20,7 @@ use ReflectionClass;
 use utils\Filter;
 use utils\PagingInfo;
 use Exception;
+
 const MaxPageSize = 100;
 
 /**
@@ -52,6 +53,7 @@ trait ParametrizedSendEmails
         $caller = (new ReflectionClass($this))->getShortName();
         $subject_ids_key = $subject . '_ids';   //We assume that the payload key for the ids array starts with the prefix that contains $subject
         $exclude_subject_ids_key = 'excluded_' . $subject_ids_key;
+
         Log::debug
         (
             sprintf
@@ -197,7 +199,32 @@ trait ParametrizedSendEmails
                             $subject_id));
                         continue;
                     };
-                    $processCurrentId($summit, $flow_event, $subject_id, $test_email_recipient, $email_config, $filter);
+
+                    $processCurrentId
+                    (
+                        $summit,
+                        $flow_event,
+                        $subject_id,
+                        $test_email_recipient,
+                        $email_config,
+                        $filter,
+                        function($recipient_email, $type, $flow_event) {
+                            EmailExcerpt::add(
+                                [
+                                    'type'          => $type,
+                                    'subject_email' => $recipient_email,
+                                    'email_type'    => $flow_event,
+                                ]
+                            );
+                            EmailExcerpt::addEmailSent();
+                        },
+                        function ($error){
+                            EmailExcerpt::addErrorMessage($error);
+                        },
+                        function($info) {
+                            EmailExcerpt::addInfoMessage($info);
+                        }
+                    );
                     $count++;
                 } catch (Exception $ex) {
                     Log::warning($ex);

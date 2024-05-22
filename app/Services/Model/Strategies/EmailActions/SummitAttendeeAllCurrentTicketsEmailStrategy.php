@@ -13,10 +13,15 @@
  **/
 
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 
-class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
+/**
+ * Class SummitAttendeeAllCurrentTicketsEmailStrategy
+ * @package App\Services\Model\Strategies\EmailActions
+ */
+final class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
 {
     /**
      * SummitAttendeeAllCurrentTicketsEmailStrategy constructor.
@@ -30,9 +35,17 @@ class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
+     * @param callable|null $onSuccess
+     * @param callable|null $onError
      * @return void
      */
-    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
+    public function process
+    (
+        SummitAttendee $attendee,
+        ?string $test_email_recipient = null,
+        callable $onSuccess = null,
+        callable $onError = null
+    )
     {
         Log::debug
         (
@@ -44,5 +57,9 @@ class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
             )
         );
         SummitAttendeeAllTicketsEditionEmail::dispatch($attendee, $test_email_recipient);
+
+        if (!is_null($onSuccess)) {
+            $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
+        }
     }
 }

@@ -20,7 +20,6 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
@@ -64,13 +63,21 @@ final class SpeakerActionsEmailStrategy
      * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
+     * @param callable|null $onSuccess
+     * @param callable|null $onInfo
+     * @param callable|null $onError
+     * @return void
      */
     public function process(PresentationSpeaker                                     $speaker,
                             ?string                                                 $test_email_recipient,
                             SpeakersAnnouncementEmailConfigDTO                      $speaker_announcement_email_config,
                             ?Filter                                                 $filter = null,
                             ?SummitRegistrationPromoCode                            $promo_code = null,
-                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null): void
+                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null,
+                            callable $onSuccess = null,
+                            callable $onInfo = null,
+                            callable $onError = null
+    ): void
     {
         try {
             $type = null;
@@ -130,17 +137,18 @@ final class SpeakerActionsEmailStrategy
                 )
             );
 
-            EmailExcerpt::addInfoMessage(
-                sprintf
-                (
-                    "trying to send email %s to speaker %s accepted %b alternate %b rejected %b",
-                    $this->flow_event,
-                    $speaker->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations
-                )
-            );
+            if(!is_null($onInfo))
+                $onInfo(
+                    sprintf
+                    (
+                        "Trying to send email %s to speaker %s accepted %b alternate %b rejected %b.",
+                        $this->flow_event,
+                        $speaker->getEmail(),
+                        $has_accepted_presentations,
+                        $has_alternate_presentations,
+                        $has_rejected_presentations
+                    )
+                );
 
             switch ($this->flow_event) {
                 case PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
@@ -162,13 +170,14 @@ final class SpeakerActionsEmailStrategy
                     $type = SpeakerAnnouncementSummitEmail::TypeRejected;
                     break;
                 default:
-                    EmailExcerpt::add(
-                        [
-                            'type' => IEmailExcerptService::SpeakerEmailType,
-                            'speaker_email' => $speaker->getEmail(),
-                            'email_type' => SpeakerAnnouncementSummitEmail::TypeNone
-                        ]
-                    );
+                    if (!is_null($onSuccess)) {
+                        $onSuccess
+                        (
+                            $speaker->getEmail(),
+                            IEmailExcerptService::EmailLineType,
+                            SpeakerAnnouncementSummitEmail::TypeNone
+                        );
+                    }
                     break;
             }
 
@@ -176,17 +185,19 @@ final class SpeakerActionsEmailStrategy
                 if ($speaker->hasAnnouncementEmailTypeSent($this->summit, $type) &&
                     !$speaker_announcement_email_config->shouldResend()) {
 
-                    EmailExcerpt::addInfoMessage(
-                        sprintf
+                    if(!is_null($onInfo))
+                        $onInfo
                         (
-                            "speaker %s accepted %b alternate %b rejected %b already has an email of type %s.",
-                            $speaker->getEmail(),
-                            $has_accepted_presentations,
-                            $has_alternate_presentations,
-                            $has_rejected_presentations,
-                            $this->flow_event
-                        )
-                    );
+                            sprintf
+                            (
+                                "Speaker %s accepted %b alternate %b rejected %b already has an email of type %s.",
+                                $speaker->getEmail(),
+                                $has_accepted_presentations,
+                                $has_alternate_presentations,
+                                $has_rejected_presentations,
+                                $this->flow_event
+                            )
+                        );
 
                     Log::debug
                     (
@@ -209,7 +220,8 @@ final class SpeakerActionsEmailStrategy
                     $speaker_announcement_email_config,
                     $filter,
                     $promo_code,
-                    $assistance
+                    $assistance,
+                    $onSuccess
                 );
 
                 // mark the promo code as sent
@@ -222,24 +234,26 @@ final class SpeakerActionsEmailStrategy
                 $speaker->addAnnouncementSummitEmail($proof);
                 $this->summit->addAnnouncementSummitEmail($proof);
                 $proof->markAsSent();
-                EmailExcerpt::addEmailSent();
                 return;
             }
 
-            EmailExcerpt::addInfoMessage(
-                sprintf
+            if(!is_null($onInfo))
+                $onInfo
                 (
-                    "excluded speaker %s accepted %b alternate %b rejected %b for original email %s",
-                    $speaker->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations,
-                    $this->flow_event
-                )
-            );
+                    sprintf
+                    (
+                        "Excluded speaker %s accepted %b alternate %b rejected %b for original email %s.",
+                        $speaker->getEmail(),
+                        $has_accepted_presentations,
+                        $has_alternate_presentations,
+                        $has_rejected_presentations,
+                        $this->flow_event
+                    )
+                );
         } catch (\Exception $ex) {
             Log::error($ex);
-            EmailExcerpt::addErrorMessage($ex->getMessage());
+            if(!is_null($onError))
+                $onError($ex->getMessage());
         }
     }
 }

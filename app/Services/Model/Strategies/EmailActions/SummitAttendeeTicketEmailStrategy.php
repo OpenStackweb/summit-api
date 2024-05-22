@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 
@@ -35,9 +36,17 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
+     * @param callable|null $onSuccess
+     * @param callable|null $onError
      * @return void
      */
-    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
+    public function process
+    (
+        SummitAttendee $attendee,
+        ?string $test_email_recipient = null,
+        callable $onSuccess = null,
+        callable $onError = null
+    )
     {
         foreach ($attendee->getTickets() as $ticket) {
             try {
@@ -68,6 +77,7 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
                         )
                     );
                 }
+
                 // send email
                 if ($this->flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
                     $ticket->sendPublicEditEmail($test_email_recipient);
@@ -78,8 +88,15 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
                 }
                 $this->flow_event = $original_flow_event;
 
+                if (!is_null($onSuccess)) {
+                    $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
+                }
+
             } catch (\Exception $ex) {
                 Log::warning($ex);
+                if (!is_null($onError)) {
+                    $onError($ex->getMessage());
+                }
             }
         }
     }

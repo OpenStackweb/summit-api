@@ -1,5 +1,9 @@
 <?php namespace Tests;
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Models\Foundation\Main\IGroup;
+use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\utils\IEmailExcerptService;
+use Illuminate\Support\Facades\Date;
 
 /**
  * Copyright 2017 OpenStack Foundation
@@ -427,5 +431,39 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $ticket = json_decode($content);
         $this->assertTrue(!is_null($ticket));
         return $ticket;
+    }
+
+    public function testSendAttendeesBulkEmail() {
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event'  => SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
+            'attendees_ids'     => [ 6039 ],
+            'test_email_recipient'    => 'test_recip@nomail.com',
+            'outcome_email_recipient' => 'outcome_recip@nomail.com',
+        ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitAttendeesApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
     }
 }

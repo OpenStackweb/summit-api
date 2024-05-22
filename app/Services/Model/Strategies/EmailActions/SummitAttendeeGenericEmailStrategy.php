@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 
@@ -34,9 +35,17 @@ final class SummitAttendeeGenericEmailStrategy extends AbstractEmailAction
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
+     * @param callable|null $onSuccess
+     * @param callable|null $onError
      * @return void
      */
-    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
+    public function process
+    (
+        SummitAttendee $attendee,
+        ?string $test_email_recipient = null,
+        callable $onSuccess = null,
+        callable $onError = null
+    )
     {
         Log::debug
         (
@@ -49,5 +58,9 @@ final class SummitAttendeeGenericEmailStrategy extends AbstractEmailAction
         );
 
         GenericSummitAttendeeEmail::dispatch($attendee, $test_email_recipient);
+
+        if (!is_null($onSuccess)) {
+            $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
+        }
     }
 }

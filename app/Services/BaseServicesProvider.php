@@ -37,6 +37,7 @@ use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use libs\utils\ICacheService;
 use libs\utils\IEncryptionService;
 use libs\utils\ITransactionService;
@@ -94,7 +95,7 @@ final class BaseServicesProvider extends ServiceProvider
         });
 
         App::scoped(EmailExcerpt::class, function ($app) {
-            return new EmailExcerptService();
+            return new EmailExcerptService(Str::uuid());
         });
 
         App::singleton(ISerializerTypeSelector::class, BaseSerializerTypeSelector::class);

@@ -17,7 +17,6 @@ use App\Jobs\Emails\ProcessSubmittersEmailRequestJob;
 use App\Services\Model\AbstractService;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SubmitterActionsEmailStrategy;
-use App\Services\Utils\Facades\EmailExcerpt;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -86,14 +85,28 @@ final class SubmitterService
             function ($summit, $paging_info, $filter) {
                 return $this->member_repository->getSubmittersIdsBySummit($summit, $paging_info, $filter);
             },
-            function ($summit, $flow_event, $submitter_id, $test_email_recipient, $email_config, $filter) {
+            function
+            (
+                $summit,
+                $flow_event,
+                $submitter_id,
+                $test_email_recipient,
+                $email_config,
+                $filter,
+                $onDispatchSuccess,
+                $onDispatchError,
+                $onDispatchInfo
+            ) {
                 try {
                     $this->tx_service->transaction(function () use (
                         $flow_event,
                         $summit,
                         $submitter_id,
                         $filter,
-                        $test_email_recipient
+                        $test_email_recipient,
+                        $onDispatchSuccess,
+                        $onDispatchError,
+                        $onDispatchInfo
                     ) {
                         $email_strategy = new SubmitterActionsEmailStrategy($summit, $flow_event);
 
@@ -109,12 +122,16 @@ final class SubmitterService
                         (
                             $submitter,
                             $test_email_recipient,
-                            $filter
+                            $filter,
+                            $onDispatchSuccess,
+                            $onDispatchInfo,
+                            $onDispatchError
                         );
                     });
                 } catch (Exception $ex) {
                     Log::warning($ex);
-                    EmailExcerpt::addErrorMessage($ex->getMessage());
+                    if(!is_null($onDispatchError))
+                        $onDispatchError($ex->getMessage());
                 }
             },
             function ($summit, $outcome_email_recipient, $report) {

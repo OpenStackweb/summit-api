@@ -13,7 +13,6 @@
  **/
 
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
@@ -68,7 +67,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config,
         ?Filter $filter = null,
         ?SummitRegistrationPromoCode $promo_code = null,
-        ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance = null
+        ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance = null,
+        callable $onSuccess = null
     ){
 
         Log::debug(sprintf("PresentationSpeakerSelectionProcessEmailFactory::send speaker %s type %s", $speaker->getEmail(), $type));
@@ -146,12 +146,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                 break;
         }
 
-        EmailExcerpt::add(
-            [
-                'type' => IEmailExcerptService::SpeakerEmailType,
-                'speaker_email' => $speaker->getEmail(),
-                'email_type'    => $type
-            ]
-        );
+        if (!is_null($onSuccess)) {
+            $onSuccess($speaker->getEmail(), IEmailExcerptService::EmailLineType, $type);
+        }
     }
 }

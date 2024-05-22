@@ -13,16 +13,21 @@
  **/
 
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 
-class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmailAction
+/**
+ * Class SummitAttendeeRegistrationIncompleteReminderStrategy
+ * @package App\Services\Model\Strategies\EmailActions
+ */
+final class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmailAction
 {
     /**
      * SummitAttendeeRegistrationIncompleteReminderStrategy constructor.
      * @param String $flow_event
      */
-    public function __construct(String $flow_event)
+    public function __construct(string $flow_event)
     {
         parent::__construct($flow_event);
     }
@@ -30,9 +35,17 @@ class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmail
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
+     * @param callable|null $onSuccess
+     * @param callable|null $onError
      * @return void
      */
-    public function process(SummitAttendee $attendee, ?string $test_email_recipient = null)
+    public function process
+    (
+        SummitAttendee $attendee,
+        ?string        $test_email_recipient = null,
+        callable       $onSuccess = null,
+        callable       $onError = null
+    )
     {
         if (!$attendee->isComplete()) {
             Log::debug
@@ -45,15 +58,20 @@ class SummitAttendeeRegistrationIncompleteReminderStrategy extends AbstractEmail
                 )
             );
             SummitAttendeeRegistrationIncompleteReminderEmail::dispatch($attendee, $test_email_recipient);
-        } else {
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitAttendeeRegistrationIncompleteReminderStrategy::nothing to send due to attendee (%s) status is complete",
-                    $attendee->getEmail()
-                )
-            );
+
+            if (!is_null($onSuccess)) {
+                $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
+            }
+            return;
         }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendeeRegistrationIncompleteReminderStrategy::nothing to send due to attendee (%s) status is complete",
+                $attendee->getEmail()
+            )
+        );
     }
 }

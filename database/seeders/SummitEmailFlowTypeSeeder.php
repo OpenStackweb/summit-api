@@ -45,6 +45,8 @@ use App\Jobs\Emails\ProposedSchedule\SubmitForReviewEmail;
 use App\Jobs\Emails\ProposedSchedule\UnsubmitForReviewEmail;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
+use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
+use App\Jobs\Emails\Registration\Invitations\InvitationExcerptEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\PromoCodes\MemberPromoCodeEmail;
@@ -406,6 +408,16 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => PresentationSubmitterSelectionProcessExcerptEmail::EVENT_NAME,
                 'slug' => PresentationSubmitterSelectionProcessExcerptEmail::EVENT_SLUG,
                 'default_email_template' => PresentationSubmitterSelectionProcessExcerptEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => SummitAttendeeExcerptEmail::EVENT_NAME,
+                'slug' => SummitAttendeeExcerptEmail::EVENT_SLUG,
+                'default_email_template' => SummitAttendeeExcerptEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => InvitationExcerptEmail::EVENT_NAME,
+                'slug' => InvitationExcerptEmail::EVENT_SLUG,
+                'default_email_template' => InvitationExcerptEmail::DEFAULT_TEMPLATE
             ],
 
         ], $flow);

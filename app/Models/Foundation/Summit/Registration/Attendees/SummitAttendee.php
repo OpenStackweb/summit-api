@@ -36,6 +36,7 @@ use models\main\Tag;
 use models\oauth2\IResourceServerContext;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
+use App\Events\SummitAttendeeCheckInStateUpdated;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeRepository")
@@ -223,6 +224,8 @@ class SummitAttendee extends SilverstripeBaseModel
 
         $this->summit_hall_checked_in = $summit_hall_checked_in;
         $this->summit_hall_checked_in_date = $summit_hall_checked_in ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
+        // trugger evebt
+        SummitAttendeeCheckInStateUpdated::dispatch($this->getId());
     }
 
     public function hasCheckedIn(): bool

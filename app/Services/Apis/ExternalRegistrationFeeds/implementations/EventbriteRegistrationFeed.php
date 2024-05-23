@@ -85,4 +85,14 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
     {
         return false;
     }
+
+    public function checkAttendee(string $external_id): void
+    {
+        throw new \Exception("Not Implemented");
+    }
+
+    public function unCheckAttendee(string $external_id): void
+    {
+        throw new \Exception("Not Implemented");
+    }
 }

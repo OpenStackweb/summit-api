@@ -145,4 +145,11 @@ interface IAttendeeService
      * @param int $note_id
      */
     public function deleteAttendeeNote(Summit $summit, int $attendee_id, int $note_id): void;
+
+    /**
+     * @param int $attendee_id
+     * @return void
+     * @throws \Exception
+     */
+    public function processAttendeeCheckStatusUpdate(int $attendee_id):void;
 }

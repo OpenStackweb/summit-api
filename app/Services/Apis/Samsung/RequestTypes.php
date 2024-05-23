@@ -21,6 +21,8 @@
 final class RequestTypes
 {
     const UserCheck = 'userCheck';
+
+    const UserUncheck = 'userUncheck';
     const EmailCheck = 'emailCheck';
     const UserList = 'userList';
 }

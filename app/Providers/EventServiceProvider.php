@@ -31,10 +31,10 @@ use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\MemberAssocSummitOrders;
 use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
+use App\Jobs\ProcessSummitAttendeeCheckInStateUpdated;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
-use App\Listeners\ProcessSummitAttendeeCheckInStateUpdated;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -62,10 +62,7 @@ final class EventServiceProvider extends ServiceProvider
     protected $listen = [
         QueryExecuted::class => [
             QueryExecutedListener::class,
-        ],
-        SummitAttendeeCheckInStateUpdated::class => [
-            ProcessSummitAttendeeCheckInStateUpdated::class,
-        ],
+        ]
     ];
 
     /**
@@ -89,6 +86,11 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\MyFavoritesRemove::class, function ($event) {
         });
 
+        Event::listen(SummitAttendeeCheckInStateUpdated::class, function($event){
+            if(!$event instanceof SummitAttendeeCheckInStateUpdated) return;
+            Log::debug(sprintf("EventServiceProvider::SummitAttendeeCheckInStateUpdated attendee %s", $event->getAttendeeId()));
+            ProcessSummitAttendeeCheckInStateUpdated::dispatch($event->getAttendeeId())->afterResponse();
+        });
 
         // bookable rooms events
 

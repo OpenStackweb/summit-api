@@ -985,7 +985,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     public function processAttendeeCheckStatusUpdate(int $attendee_id):void{
         $this->tx_service->transaction(function () use ($attendee_id) {
             Log::debug(sprintf("AttendeeService::processAttendeeCheckStatusUpdate attendee id %s", $attendee_id));
-            $attendee = $this->attendee_repository->getById($attendee_id);
+            $attendee = $this->attendee_repository->getByIdRefreshed($attendee_id);
             if (!$attendee instanceof SummitAttendee)
                 throw new EntityNotFoundException(sprintf("Attendee %s not found.", $attendee_id));
 

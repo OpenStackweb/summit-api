@@ -58,7 +58,6 @@ final class DoctrineSummitEventRepository
         SummitGroupEvent::ClassName,
     ];
 
-
     /**
      * @param IPublishableEvent $event
      * @return IPublishableEvent[]
@@ -528,44 +527,63 @@ final class DoctrineSummitEventRepository
                 [
                     Presentation::ReviewStatusNoSubmitted => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusNoSubmitted,
-                        "selp IS NULL OR p.status IS NULL OR (p.status <> 'Received' AND p.status <> 'Accepted')"
+                        "selp IS NULL OR p.status IS NULL"
                     ),
+                    /*
+                     * In Review - the submission is complete, submission period is closed, track chairs is open or the
+                     *             submission_lock_down_presentation_status_date is greater than now (UTC).
+                     *             submission is complete == (p.status = 'Received' OR p.status = 'Accepted')
+                     *             submission period is closed == selp.submission_begin_date > UTC_TIMESTAMP() OR selp.submission_end_date < UTC_TIMESTAMP()
+                     *             track chairs is open == selection period is open ==  selp.selection_begin_date <= UTC_TIMESTAMP() AND selp.selection_end_date >= UTC_TIMESTAMP()
+                     */
                     Presentation::ReviewStatusInReview => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusInReview,
                         "(p.status = 'Received' OR p.status = 'Accepted') AND
-                            selp IS NOT NULL AND (
-                            (selp.submission_lock_down_presentation_status_date IS NOT NULL AND selp.submission_lock_down_presentation_status_date > CURRENT_TIMESTAMP()) OR 
+                            selp IS NOT NULL AND 
                             (
-                                (selp.submission_begin_date > CURRENT_TIMESTAMP() OR selp.submission_end_date < CURRENT_TIMESTAMP()) 
-                                AND 
-                                (selp.selection_begin_date <= CURRENT_TIMESTAMP() AND selp.selection_end_date >= CURRENT_TIMESTAMP())
-                            )
+                                (selp.submission_lock_down_presentation_status_date IS NOT NULL AND selp.submission_lock_down_presentation_status_date > UTC_TIMESTAMP()) OR 
+                                (
+                                    (
+                                        selp.submission_begin_date > UTC_TIMESTAMP() OR selp.submission_end_date < UTC_TIMESTAMP()
+                                    ) 
+                                    AND 
+                                    (
+                                        selp.selection_begin_date <= UTC_TIMESTAMP() AND selp.selection_end_date >= UTC_TIMESTAMP()
+                                    )
+                                )
                          )"
                     ),
+                    /*
+                     * Published - the submission is complete and presentation is published
+                     *             submission is complete == (p.status = 'Received' OR p.status = 'Accepted')
+                     */
                     Presentation::ReviewStatusPublished => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusPublished,
-                        "(p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1 AND
-                            selp IS NOT NULL AND 
-                            selp.submission_lock_down_presentation_status_date IS NULL AND 
-                            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
-                            selp.submission_end_date >= CURRENT_TIMESTAMP() AND
-                            (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP())"
+                        "(p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1"
                     ),
-                    Presentation::ReviewStatusReceived => new DoctrineCaseFilterMapping(
-                        Presentation::ReviewStatusReceived,
-                        "(p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND
-                            selp IS NOT NULL AND 
-                            selp.submission_lock_down_presentation_status_date IS NULL AND 
-                            selp.selection_begin_date <= CURRENT_TIMESTAMP() AND 
-                            selp.selection_end_date >= CURRENT_TIMESTAMP() AND
-                            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
-                            selp.submission_end_date >= CURRENT_TIMESTAMP()"
-                    ),
+                    /*
+                     * Accepted - the submission is complete,
+                     *            the track chair is closed,
+                     *            the presentation is in alternate or accepted on teams list.
+                     *            submission is complete == (p.status = 'Received' OR p.status = 'Accepted')
+                     *            the track chair is closed ==  selp.selection_begin_date > UTC_TIMESTAMP() OR selp.selection_end_date < UTC_TIMESTAMP()
+                     *            the presentation is in alternate or accepted on teams list ==
+                     *             EXISTS (
+                     *                   SELECT ___sp32.id
+                     *                   FROM models\summit\SummitSelectedPresentation ___sp32
+                     *                   JOIN ___sp32.presentation ___p32
+                     *                   JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
+                     *                   WHERE ___p32.id = e.id
+                     *                   AND ___sp32.collection = \'%1$s\'
+                     *               )
+                     */
                     Presentation::ReviewStatusAccepted => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusAccepted,
-                        sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND e.published = 0 AND 
+                        sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND 
                         selp IS NOT NULL AND
-                        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) AND
+                        (
+                            selp.selection_begin_date > UTC_TIMESTAMP() OR selp.selection_end_date < UTC_TIMESTAMP()
+                        ) AND
                         EXISTS (
                             SELECT ___sp32.id 
                             FROM models\summit\SummitSelectedPresentation ___sp32
@@ -578,11 +596,19 @@ final class DoctrineSummitEventRepository
                         SummitSelectedPresentationList::Group,
                         SummitSelectedPresentationList::Session)
                     ),
+                    /**
+                     * Rejected - the submission is complete,
+                     *            the track chairs is closed,
+                     *            and the presentation is
+                     *            not in alternate or accepted on teams list.
+                     */
                     Presentation::ReviewStatusRejected => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusRejected,
-                        sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND e.published = 0 AND
+                        sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND
                         selp IS NOT NULL AND
-                        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) AND
+                        (
+                            selp.selection_begin_date > UTC_TIMESTAMP() OR selp.selection_end_date < UTC_TIMESTAMP()
+                        ) AND
                         NOT EXISTS (
                             SELECT ___sp33.id 
                             FROM models\summit\SummitSelectedPresentation ___sp33
@@ -594,7 +620,15 @@ final class DoctrineSummitEventRepository
                         SummitSelectedPresentation::CollectionSelected,
                         SummitSelectedPresentationList::Group,
                         SummitSelectedPresentationList::Session)
-                    )
+                    ),
+                    /*
+                     * Received - the submission is complete and the submission period is open
+                     *            submission is complete == (p.status = 'Received' OR p.status = 'Accepted')
+                     */
+                    Presentation::ReviewStatusReceived => new DoctrineCaseFilterMapping(
+                        Presentation::ReviewStatusReceived,
+                        "(p.status = 'Received' OR p.status = 'Accepted')"
+                    ),
                 ]
             ),
         ];
@@ -698,34 +732,26 @@ SQL,
 SQL,*/
             'review_status' => <<<SQL
     CASE
-    WHEN p IS NULL THEN ''
-	WHEN selp IS NULL OR p.status IS NULL OR (p.status <> 'Received' AND p.status <> 'Accepted') THEN 'NoSubmitted'
+	WHEN selp IS NULL OR p.status IS NULL THEN 'NoSubmitted'
 	WHEN (p.status = 'Received' OR p.status = 'Accepted') AND
             selp IS NOT NULL AND (
-            (selp.submission_lock_down_presentation_status_date IS NOT NULL AND selp.submission_lock_down_presentation_status_date > CURRENT_TIMESTAMP()) OR 
             (
-                (selp.submission_begin_date > CURRENT_TIMESTAMP() OR selp.submission_end_date < CURRENT_TIMESTAMP()) 
-                AND 
-                (selp.selection_begin_date <= CURRENT_TIMESTAMP() AND selp.selection_end_date >= CURRENT_TIMESTAMP())
+                selp.submission_lock_down_presentation_status_date IS NOT NULL AND selp.submission_lock_down_presentation_status_date > UTC_TIMESTAMP()
+            ) OR 
+            (
+                (
+                    selp.submission_begin_date > UTC_TIMESTAMP() OR selp.submission_end_date < UTC_TIMESTAMP()
+                ) AND 
+                (
+                    selp.selection_begin_date <= UTC_TIMESTAMP() AND selp.selection_end_date >= UTC_TIMESTAMP()
+                )
             )
     ) THEN 'InReview'
-	WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1 AND
-            selp IS NOT NULL AND 
-            selp.submission_lock_down_presentation_status_date IS NULL AND 
-            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
-            selp.submission_end_date >= CURRENT_TIMESTAMP() AND
-            (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP())
-    THEN 'Published'
-    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND
-            selp IS NOT NULL AND 
-            selp.submission_lock_down_presentation_status_date IS NULL AND 
-            selp.selection_begin_date <= CURRENT_TIMESTAMP() AND 
-            selp.selection_end_date >= CURRENT_TIMESTAMP() AND
-            selp.submission_begin_date <= CURRENT_TIMESTAMP() AND 
-            selp.submission_end_date >= CURRENT_TIMESTAMP()
-    THEN 'Received'
-    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND 
-        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) 
+	WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1 THEN 'Published'
+    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND 
+        (
+            selp.selection_begin_date > UTC_TIMESTAMP() OR selp.selection_end_date < UTC_TIMESTAMP()
+        ) 
         AND EXISTS (
             SELECT ___sp331.id
             FROM models\summit\SummitSelectedPresentation ___sp331 
@@ -736,8 +762,10 @@ SQL,*/
             AND ___sp331.collection = 'selected'
             AND ___sp331.order > ___pc331.session_count                  
     ) THEN 'Accepted'
-    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND e.published = 0 AND 
-        (selp.selection_begin_date > CURRENT_TIMESTAMP() OR selp.selection_end_date < CURRENT_TIMESTAMP()) 
+    WHEN (p.status = 'Received' OR p.status = 'Accepted') AND 
+        (
+           selp.selection_begin_date > UTC_TIMESTAMP() OR selp.selection_end_date < UTC_TIMESTAMP()
+        ) 
         AND NOT EXISTS (
             SELECT ___sp332.id
             FROM models\summit\SummitSelectedPresentation ___sp332
@@ -748,7 +776,8 @@ SQL,*/
             AND ___sp332.collection = 'selected'
             AND ___sp332.order > ___pc332.session_count                  
     ) THEN 'Rejected'
-    ELSE ''
+    WHEN (p.status = 'Received' OR p.status = 'Accepted') THEN 'Received'                         
+    ELSE 'NoSubmitted'
 END
 SQL
         ];

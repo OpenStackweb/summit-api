@@ -2425,13 +2425,16 @@ SQL;
      */
     public function getReviewStatus(): string
     {
-        if ($this->selection_plan == null) return self::ReviewStatusNoSubmitted;
+        if (!$this->hasSelectionPlan())
+            return self::ReviewStatusNoSubmitted;
 
-        $submission_begin_date = $this->selection_plan->getSubmissionBeginDate();
-        $submission_end_date = $this->selection_plan->getSubmissionEndDate();
-        $selection_begin_date = $this->selection_plan->getSelectionBeginDate();
-        $selection_end_date = $this->selection_plan->getSelectionEndDate();
-        $submission_lock_down_presentation_status_date = $this->selection_plan->getSubmissionLockDownPresentationStatusDate();
+        $selection_plan = $this->selection_plan;
+
+        $submission_begin_date = $selection_plan->getSubmissionBeginDate();
+        $submission_end_date = $selection_plan->getSubmissionEndDate();
+        $selection_begin_date = $selection_plan->getSelectionBeginDate();
+        $selection_end_date = $selection_plan->getSelectionEndDate();
+        $submission_lock_down_presentation_status_date = $selection_plan->getSubmissionLockDownPresentationStatusDate();
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
 
@@ -2441,9 +2444,13 @@ SQL;
          * Received  - the submission is complete and the submission period is open
          * In Review - the submission is complete, submission period is closed, track chairs is open or the
          *             submission_lock_down_presentation_status_date is greater than now.
-         * Rejected - the submission is complete, the track chairs is closed, submission is closed, and the presentation is
+         * Rejected - the submission is complete,
+         *            the track chairs is closed,
+         *            and the presentation is
          *            not in alternate or accepted on teams list.
-         * Accepted - the submission is complete, the track chair is closed, submission is closed, and the presentation is
+         * Accepted - the submission is complete,
+         *            the track chair is closed,
+         *            and the presentation is
          *            in alternate or accepted on teams list.
          **/
 

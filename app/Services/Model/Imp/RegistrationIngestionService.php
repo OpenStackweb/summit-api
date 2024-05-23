@@ -41,7 +41,6 @@ use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrderExtraQuestionAnswer;
-use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\ISummitAttendeeRepository;

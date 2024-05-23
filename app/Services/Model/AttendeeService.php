@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use App\Services\Utils\Facades\EmailExcerpt;
@@ -102,6 +103,12 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     private $tag_repository;
 
     /**
+     * @var IExternalRegistrationFeedFactory
+     */
+    private $registration_feed_factory;
+
+    /**
+     * @param IExternalRegistrationFeedFactory $registration_feed_factory
      * @param ISummitAttendeeRepository $attendee_repository
      * @param IMemberRepository $member_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
@@ -116,6 +123,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function __construct
     (
+        IExternalRegistrationFeedFactory       $registration_feed_factory,
         ISummitAttendeeRepository              $attendee_repository,
         IMemberRepository                      $member_repository,
         ISummitAttendeeTicketRepository        $ticket_repository,
@@ -140,6 +148,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $this->badge_repository = $badge_repository;
         $this->company_repository = $company_repository;
         $this->tag_repository = $tag_repository;
+        $this->registration_feed_factory = $registration_feed_factory;
     }
 
     /**
@@ -965,6 +974,64 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 throw new EntityNotFoundException(sprintf("Attendee note id %s does not belong to attendee id %s.", $note_id, $attendee_id));
 
             $attendee->removeNote($note);
+        });
+    }
+
+    /**
+     * @param int $attendee_id
+     * @return void
+     * @throws \Exception
+     */
+    public function processAttendeeCheckStatusUpdate(int $attendee_id):void{
+        $this->tx_service->transaction(function () use ($attendee_id) {
+            Log::debug(sprintf("AttendeeService::processAttendeeCheckStatusUpdate attendee id %s", $attendee_id));
+            $attendee = $this->attendee_repository->getById($attendee_id);
+            if (!$attendee instanceof SummitAttendee)
+                throw new EntityNotFoundException(sprintf("Attendee %s not found.", $attendee_id));
+
+            $summit = $attendee->getSummit();
+
+            $feed = $this->registration_feed_factory->build($summit);
+            if(is_null($feed)){
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "AttendeeService::processAttendeeCheckStatusUpdate summit %s does not have a external registration feed.",
+                        $summit->getId()
+                    )
+                );
+                return;
+            }
+
+            $external_id = $attendee->getExternalId();
+            if(empty($external_id)){
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "AttendeeService::processAttendeeCheckStatusUpdate attendee %s does not have an external id.",
+                        $attendee_id
+                    )
+                );
+                return;
+            }
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::processAttendeeCheckStatusUpdate attendee %s external id %s checked in %b",
+                    $attendee_id,
+                    $external_id,
+                    $attendee->hasCheckedIn()
+                )
+            );
+
+            if($attendee->hasCheckedIn())
+                $feed->checkAttendee($external_id);
+            else
+                $feed->unCheckAttendee($external_id);
         });
     }
 }

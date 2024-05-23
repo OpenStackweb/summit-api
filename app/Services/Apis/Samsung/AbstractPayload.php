@@ -29,17 +29,16 @@ abstract class AbstractPayload
     function __construct(array $params)
     {
         if(!isset($params[PayloadParamNames::Forum]))
-
-            throw new \InvalidArgumentException("missing forum param");
+            throw new \InvalidArgumentException("Missing forum param.");
 
         if(!isset($params[PayloadParamNames::Region]))
-            throw new \InvalidArgumentException("missing region param");
+            throw new \InvalidArgumentException("Missing region param.");
 
         if(!isset($params[PayloadParamNames::GBM]))
-            throw new \InvalidArgumentException("missing gbm param");
+            throw new \InvalidArgumentException("Missing gbm param.");
 
         if(!isset($params[PayloadParamNames::Year]))
-            throw new \InvalidArgumentException("missing year param");
+            throw new \InvalidArgumentException("Missing year param.");
 
         $this->params = $params;
 

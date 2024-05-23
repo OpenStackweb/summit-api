@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use DateTime;
-use models\summit\SummitAttendeeTicket;
 
 /**
  * Interface IExternalRegistrationFeed
@@ -52,4 +51,17 @@ interface IExternalRegistrationFeed
     public function getAttendeeByEmail(string $email);
 
     public function shouldCreateExtraQuestions():bool;
+
+    /**
+     * @param string $external_id
+     * @return void
+     */
+    public function checkAttendee(string $external_id):void;
+
+    /**
+     * @param string $external_id
+     * @return void
+     */
+    public function unCheckAttendee(string $external_id):void;
+
 }

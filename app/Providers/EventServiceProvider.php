@@ -19,6 +19,7 @@ use App\Events\Registration\MemberDataUpdatedExternally;
 use App\Events\RequestedBookableRoomReservationRefund;
 use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;
+use App\Events\SummitAttendeeCheckInStateUpdated;
 use App\Events\TicketUpdated;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
@@ -33,6 +34,7 @@ use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
+use App\Listeners\ProcessSummitAttendeeCheckInStateUpdated;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -44,7 +46,8 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\RSVP;
 use models\summit\SummitRoomReservation;
 use App\Events\ScheduleEntityLifeCycleEvent;
-
+use Illuminate\Database\Events\QueryExecuted;
+use App\Listeners\QueryExecutedListener;
 /**
  * Class EventServiceProvider
  * @package App\Providers
@@ -57,8 +60,11 @@ final class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        'Illuminate\Database\Events\QueryExecuted' => [
-            'App\Listeners\QueryExecutedListener',
+        QueryExecuted::class => [
+            QueryExecutedListener::class,
+        ],
+        SummitAttendeeCheckInStateUpdated::class => [
+            ProcessSummitAttendeeCheckInStateUpdated::class,
         ],
     ];
 

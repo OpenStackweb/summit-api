@@ -60,6 +60,7 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
     public function checkUser(Summit $summit, string $userId)
     {
         try {
+            Log::debug(sprintf("SamsungRegistrationAPI::checkUser summit %s user %s", $summit->getId(), $userId));
 
             $metadata = $summit->getRegistrationFeedMetadata();
             $metadata[PayloadParamNames::ExternalShowId] = $summit->getExternalSummitId();
@@ -254,6 +255,68 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         catch (Exception $ex) {
             Log::error($ex->getMessage());
             return null;
+        }
+    }
+
+    public function uncheckUser(Summit $summit, string $userId)
+    {
+        try {
+
+            Log::debug(sprintf("SamsungRegistrationAPI::uncheckUser summit %s user %s", $summit->getId(), $userId));
+            $metadata = $summit->getRegistrationFeedMetadata();
+            $metadata[PayloadParamNames::ExternalShowId] = $summit->getExternalSummitId();
+            $defaultTicketType = $summit->getFirstDefaultTicketType();
+            if(is_null($defaultTicketType))
+                throw new ValidationException(sprintf("Summit %s has not default ticket type set.", $summit->getId()));
+
+            $metadata[PayloadParamNames::DefaultTicketId] = $defaultTicketType->getId();
+            $metadata[PayloadParamNames::DefaultTicketDescription] = $defaultTicketType->getDescription();
+            $metadata[PayloadParamNames::DefaultTicketName] = $defaultTicketType->getName();
+
+            $request = new UnCheckUserRequest
+            (
+                $userId,
+                $metadata
+            );
+
+            Log::debug(sprintf("SamsungRegistrationAPI::uncheckUser POST %s payload %s", $this->endpoint, $request));
+
+            // http://docs.guzzlephp.org/en/stable/request-options.html
+            $response = $this->client->request('POST',
+                $this->endpoint,
+                [
+                    'timeout' => 120,
+                    'http_errors' => true,
+                    RequestOptions::JSON => (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload()
+                ]
+            );
+
+            $response = new DecryptedSingleResponse
+            (
+                $summit->getExternalRegistrationFeedApiKey(),
+                $response->getBody()->getContents(),
+                $metadata
+            );
+
+            Log::debug(sprintf("SamsungRegistrationAPI::uncheckUser POST %s response %s", $this->endpoint, $response));
+
+            return $response->getPayload();
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex->getMessage());
+            return [];
+        }
+        catch(EmptyResponse $ex){
+            Log::warning($ex->getMessage());
+            return [];
+        }
+        catch (InvalidResponse $ex){
+            Log::warning($ex->getMessage());
+            return [];
+        }
+        catch (Exception $ex) {
+            Log::error($ex->getMessage());
+            return [];
         }
     }
 }

@@ -19,13 +19,11 @@ use App\Services\Apis\Samsung\EmptyResponse;
 use App\Services\Apis\Samsung\InvalidResponse;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Apis\Samsung\PayloadParamNames;
-use App\Services\Apis\Samsung\Regions;
 use DateTime;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
-use services\apis\EventbriteAPI;
 
 /**
  * Class SamsungRegistrationFeed
@@ -129,5 +127,15 @@ final class SamsungRegistrationFeed
     public function shouldCreateExtraQuestions(): bool
     {
         return true;
+    }
+
+    public function checkAttendee(string $external_id): void
+    {
+        $this->api->checkUser($this->summit, $external_id);
+    }
+
+    public function unCheckAttendee(string $external_id): void
+    {
+        $this->api->uncheckUser($this->summit, $external_id);
     }
 }

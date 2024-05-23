@@ -1,6 +1,6 @@
 <?php namespace App\Services\Apis\Samsung;
 /*
- * Copyright 2023 OpenStack Foundation
+ * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,38 +12,24 @@
  * limitations under the License.
  **/
 
-use models\summit\Summit;
-
 /**
- * Interface ISamsungRegistrationAPI
+ * Class UnCheckUserRequest
  * @package App\Services\Apis\Samsung
  */
-interface ISamsungRegistrationAPI
+final class UnCheckUserRequest extends AbstractPayload
 {
     /**
-     * @param Summit $summit
      * @param string $userId
-     * @return mixed
+     * @param array $params
      */
-    public function checkUser(Summit $summit, string $userId);
+    public function __construct(string $userId, array $params = []){
 
-    /**
-     * @param Summit $summit
-     * @param string $userId
-     * @return mixed
-     */
-    public function uncheckUser(Summit $summit, string $userId);
+        parent::__construct($params);
 
-    /**
-     * @param Summit $summit
-     * @param string $email
-     * @return mixed
-     */
-    public function checkEmail(Summit $summit, string $email);
+        $this->payload = array_merge($this->payload , [
+            PayloadParamNames::Type => RequestTypes::UserUncheck,
+            PayloadParamNames::UserId => trim($userId),
+        ]);
+    }
 
-    /**
-     * @param Summit $summit
-     * @return mixed
-     */
-    public function userList(Summit $summit);
 }

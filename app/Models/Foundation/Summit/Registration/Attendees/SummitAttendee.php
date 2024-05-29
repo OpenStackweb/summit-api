@@ -437,6 +437,14 @@ class SummitAttendee extends SilverstripeBaseModel
         return $ticket ? $ticket : null;
     }
 
+    public function clearTickets():void{
+        foreach ($this->tickets as $ticket){
+            $ticket->clearOwner();
+            $ticket->clearOrder();
+        }
+        $this->tickets->clear();
+    }
+
     /**
      * @param SummitAttendeeTicket $ticket
      * @return $this

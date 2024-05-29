@@ -2381,13 +2381,6 @@ SQL;
     }
 
     /**
-     * @param string $registration_slug_prefix
-     */
-    public function setRegistrationSlugPrefix(string $registration_slug_prefix){
-        $this->registration_slug_prefix = $registration_slug_prefix;
-    }
-
-    /**
      * @return string
      */
     public function getRegistrationSlugPrefix(): string

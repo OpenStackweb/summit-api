@@ -32,11 +32,11 @@ interface IRegistrationIngestionService
     public function ingestSummit(Summit $summit):void;
 
     /**
-     * @param $summit_id
-     * @param $index
-     * @param $external_attendee
+     * @param int $summit_id
+     * @param int $index
+     * @param array $external_attendee
      * @param IExternalRegistrationFeed $feed
      * @return SummitAttendee|null
      */
-    public function ingestExternalAttendee($summit_id, $index, $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee;
+    public function ingestExternalAttendee(int $summit_id, int $index, array $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee;
 }

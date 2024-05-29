@@ -27,23 +27,23 @@ use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\IRegistrationIngestionService;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\summit\factories\SummitAttendeeFactory;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
-use Exception;
-use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitRegistrationDiscountCode;
-use models\summit\ISummitAttendeeRepository;
 use models\summit\SummitRegistrationPromoCode;
 use services\apis\IEventbriteAPI;
 
@@ -138,13 +138,13 @@ final class RegistrationIngestionService
     }
 
     /**
-     * @param $summit_id
-     * @param $index
-     * @param $external_attendee
+     * @param int $summit_id
+     * @param int $index
+     * @param array $external_attendee
      * @param IExternalRegistrationFeed $feed
      * @return SummitAttendee|null
      */
-    public function ingestExternalAttendee($summit_id, $index, $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee{
+    public function ingestExternalAttendee(int $summit_id, int $index, array $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee{
         Log::debug
         (
             sprintf
@@ -188,6 +188,129 @@ final class RegistrationIngestionService
                     );
 
                     $summit->addTicketType($ticket_type);
+                }
+
+                // check if we have already an attendee on this summit
+                $attendee_email = trim($external_attendee_profile['email']);
+                $first_name = trim($external_attendee_profile['first_name']);
+                $last_name = trim($external_attendee_profile['last_name']);
+                $company = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
+                $attendee_owner = $this->member_repository->getByEmail($attendee_email);
+
+                if (is_null($attendee_owner)) {
+                    // check if we have an external one
+                    try {
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "RegistrationIngestionService::ingestSummit attendee owner does not exist for email %s, trying to get it externally"
+                                , $attendee_email
+                            )
+                        );
+
+                        $user = $this->member_service->checkExternalUser($attendee_email);
+
+                        if (!is_null($user)) {
+                            // we have a user on idp
+                            $external_id = $user['id'];
+                            Log::debug
+                            (
+                                sprintf
+                                (
+                                    "RegistrationIngestionService::ingestSummit got external user %s for email %s",
+                                    $external_id, $attendee_email
+                                )
+                            );
+
+                            try {
+                                // possible race condition
+                                $attendee_owner = $this->member_service->registerExternalUser
+                                (
+                                    new ExternalUserDTO
+                                    (
+                                        $external_id,
+                                        $user['email'],
+                                        $user['first_name'],
+                                        $user['last_name'],
+                                        boolval($user['active']),
+                                        boolval($user['email_verified'])
+                                    )
+                                );
+                            } catch (\Exception $ex) {
+                                // race condition lost, try to get it
+                                Log::warning($ex);
+                                $attendee_owner = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                            }
+                        }
+                    } catch (Exception $ex) {
+                        Log::warning($ex);
+                    }
+                }
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "RegistrationIngestionService::ingestSummit looking for attendee %s , %s (%s)"
+                        , $first_name
+                        , $last_name
+                        , $attendee_email
+                    )
+                );
+
+                $attendee = $this->attendee_repository->getBySummitAndExternalId($summit, $external_attendee['id']);
+
+                if (is_null($attendee)) {
+                    // try to get it only by email
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "RegistrationIngestionService::ingestSummit attendee %s does not exists, trying to check by email",
+                            $external_attendee['id']
+                        )
+                    );
+                    $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+                }
+
+                if (is_null($attendee)) {
+                    Log::debug(sprintf("RegistrationIngestionService::ingestSummit attendee %s does not exists", $attendee_email));
+                    $attendee = SummitAttendeeFactory::build($summit, [
+                        'external_id' => $external_attendee['id'],
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'company' => $company,
+                        'email' => $attendee_email
+                    ], $attendee_owner);
+                    $summit->addAttendee($attendee);
+                } else {
+                    // update it
+                    SummitAttendeeFactory::populate($summit, $attendee, [
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'company' => $company,
+                        'email' => $attendee_email,
+                    ], $attendee_owner);
+                }
+
+                // check if external id changed ...
+                $former_external_id = $attendee->getExternalId();
+                $current_external_id = $external_attendee['id'];
+
+                if($former_external_id != $current_external_id){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "RegistrationIngestionService::ingestSummit attendee %s external id changed from %s to %s",
+                            $attendee_email,
+                            $former_external_id,
+                            $current_external_id
+                        )
+                    );
+                    $attendee->setExternalId($current_external_id);
+                    $attendee->clearTickets();
                 }
 
                 // trying to get the order by external id
@@ -364,103 +487,6 @@ final class RegistrationIngestionService
                     }
 
                     $promo_code->applyTo($ticket);
-                }
-
-                // assign attendee
-                // check if we have already an attendee on this summit
-                $attendee_email = trim($external_attendee_profile['email']);
-                $first_name = trim($external_attendee_profile['first_name']);
-                $last_name = trim($external_attendee_profile['last_name']);
-                $company = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
-                $attendee_owner = $this->member_repository->getByEmail($attendee_email);
-
-                if (is_null($attendee_owner)) {
-                    // check if we have an external one
-                    try {
-                        Log::debug
-                        (
-                            sprintf
-                            (
-                                "RegistrationIngestionService::ingestSummit attendee owner does not exist for email %s, trying to get it externally"
-                                , $attendee_email
-                            )
-                        );
-
-                        $user = $this->member_service->checkExternalUser($attendee_email);
-
-                        if (!is_null($user)) {
-                            // we have a user on idp
-                            $external_id = $user['id'];
-                            Log::debug
-                            (
-                                sprintf
-                                (
-                                    "RegistrationIngestionService::ingestSummit got external user %s for email %s",
-                                    $external_id, $attendee_email
-                                )
-                            );
-
-                            try {
-                                // possible race condition
-                                $attendee_owner = $this->member_service->registerExternalUser
-                                (
-                                    new ExternalUserDTO
-                                    (
-                                        $external_id,
-                                        $user['email'],
-                                        $user['first_name'],
-                                        $user['last_name'],
-                                        boolval($user['active']),
-                                        boolval($user['email_verified'])
-                                    )
-                                );
-                            } catch (\Exception $ex) {
-                                // race condition lost, try to get it
-                                Log::warning($ex);
-                                $attendee_owner = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
-                            }
-                        }
-                    } catch (Exception $ex) {
-                        Log::warning($ex);
-                    }
-                }
-
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "RegistrationIngestionService::ingestSummit looking for attendee %s , %s (%s)"
-                        , $first_name
-                        , $last_name
-                        , $attendee_email
-                    )
-                );
-
-                $attendee = $this->attendee_repository->getBySummitAndExternalId($summit, $external_attendee['id']);
-
-                if (is_null($attendee)) {
-                    // try to get it only by email
-                    $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
-                }
-
-                if (is_null($attendee)) {
-                    Log::debug(sprintf("RegistrationIngestionService::ingestSummit attendee %s does not exists", $attendee_email));
-                    $attendee = SummitAttendeeFactory::build($summit, [
-                        'external_id' => $external_attendee['id'],
-                        'first_name' => $first_name,
-                        'last_name' => $last_name,
-                        'company' => $company,
-                        'email' => $attendee_email
-                    ], $attendee_owner);
-                    $summit->addAttendee($attendee);
-                } else {
-                    // update it
-                    SummitAttendeeFactory::populate($summit, $attendee, [
-                        'first_name' => $first_name,
-                        'last_name' => $last_name,
-                        'company' => $company,
-                        'email' => $attendee_email,
-                    ], $attendee_owner);
                 }
 
                 // extra questions answers ...

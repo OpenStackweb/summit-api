@@ -1108,6 +1108,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->owner = null;
     }
 
+    public function clearOrder(){
+        $this->order = null;
+    }
     /**
      * @return string
      */

@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeed;
+use App\Services\Apis\IExternalUserApi;
+use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitTicketTypeService;
 use models\summit\SummitTicketType;
@@ -24,12 +27,31 @@ use models\utils\SilverstripeBaseModel;
 use LaravelDoctrine\ORM\Facades\Registry;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
+
 /**
  * Class ExternalRegistrationIngestionTest
  * @package Tests
  */
 class ExternalRegistrationIngestionTest extends \Tests\BrowserKitTestCase
 {
+
+    protected function prePrepareForTest():void{
+        $member_service = Mockery::mock(IMemberService::class);
+        $member_service->shouldReceive('checkExternalUser')->andReturn([
+                'id' => '123456',
+                'first_name' => 'test',
+                'last_name' => 'test',
+                'email' => 'test@test.com',
+                'user_active' => true,
+                'email_verified' => true,
+            ]
+        );
+
+        $this->app->singleton(IMemberService::class, function() use ($member_service){
+            return $member_service;
+        });
+    }
+
     public function tearDown():void
     {
         Mockery::close();
@@ -124,5 +146,103 @@ class ExternalRegistrationIngestionTest extends \Tests\BrowserKitTestCase
         $service->ingestSummit($summit);
 
         $this->assertTrue($summit->getAttendeesCount() > 0);
+    }
+
+    public function testAttendeeUserIdChange(){
+
+        $summit = new Summit();
+        $summit->setActive(true);
+        // set feed type (sched)
+        $summit->setExternalRegistrationFeedType(ISummitExternalRegistrationFeedType::Samsung);
+        $summit->setExternalRegistrationFeedApiKey('SUMMIT_REGISTRATION_EXT_API_KEY');
+        $summit->setExternalSummitId("EXTERNAL_ID");
+        $summit->setTimeZoneId("America/Los_Angeles");
+        $summit->setBeginDate(new \DateTime("2023-10-6"));
+        $summit->setEndDate(new \DateTime("2023-10-7"));
+        $summit->setRawSlug("test-summit");
+
+        // registration metadata
+
+        $summit->addRegistrationFeedMetadata("forum", "Tech day 2023");
+        $summit->addRegistrationFeedMetadata("gbm", "LSI");
+        $summit->addRegistrationFeedMetadata("region", "LS");
+        $summit->addRegistrationFeedMetadata("year", "2023");
+
+        $mainVenue = new SummitVenue();
+        $mainVenue->setIsMain(true);
+        $summit->addLocation($mainVenue);
+
+        $defaultBadge = new SummitBadgeType();
+        $defaultBadge->setName("DEFAULT");
+        $defaultBadge->setIsDefault(true);
+        $summit->addBadgeType($defaultBadge);
+
+        $defaultTicketType = new SummitTicketType();
+        $defaultTicketType->setName("DEFAULT");
+        $defaultTicketType->setDescription("DEFAULT");
+        $defaultTicketType->setAudience(SummitTicketType::Audience_All);
+        $defaultTicketType->setCost(0.0);
+        $defaultTicketType->setBadgeType($defaultBadge);
+        $summit->addTicketType($defaultTicketType);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->persist($summit);
+        $em->flush();
+
+        $service = App::make(IRegistrationIngestionService::class);
+        $this->assertTrue($service instanceof IRegistrationIngestionService);
+        $this->assertTrue($summit->getTicketTypes()->count() > 0);
+
+        $feed = Mockery::mock(IExternalRegistrationFeed::class);
+        $feed->shouldReceive('shouldCreateExtraQuestions')->andReturn(false);
+
+        $id = '123456';
+        $external_attendee_data = [
+            'id' => $id,
+            'profile' => [
+                'id' => $id,
+                'email' => 'test@test.com',
+                'first_name' => 'test',
+                'last_name' => 'test',
+                'company' => 'test',
+            ],
+            'ticket_class' => ['id' => $defaultTicketType->getId()],
+            'order' => [
+                'id' => $id,
+                'email' => 'test@test.com',
+                'first_name' => 'test',
+                'last_name' => 'test',
+                'company' => 'test',
+            ],
+        ];
+
+        $attendee = $service->ingestExternalAttendee($summit->getId(), 0, $external_attendee_data, $feed);
+
+        $this->assertTrue(!is_null($attendee));
+        $this->assertTrue($attendee->getTickets()->count() == 1);
+
+        // change id
+        $id = 'ABCDFGH';
+        $external_attendee_data = [
+            'id' => $id,
+            'profile' => [
+                'id' => $id,
+                'email' => 'test@test.com',
+                'first_name' => 'test',
+                'last_name' => 'test',
+                'company' => 'test',
+            ],
+            'ticket_class' => ['id' => $defaultTicketType->getId()],
+            'order' => [
+                'id' => $id,
+                'email' => 'test@test.com',
+                'first_name' => 'test',
+                'last_name' => 'test',
+                'company' => 'test',
+            ],
+        ];
+
+        $update_attendee = $service->ingestExternalAttendee($summit->getId(), 0, $external_attendee_data, $feed);
+        $this->assertTrue($update_attendee->getTickets()->count() == 1);
     }
 }

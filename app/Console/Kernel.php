@@ -49,6 +49,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
         \App\Console\Commands\PurgeAuditLogCommand::class,
         \App\Console\Commands\SummitBadgesQREncryptor::class,
+        \App\Console\Commands\CreateTestDBCommand::class,
+
     ];
 
     /**

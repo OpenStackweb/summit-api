@@ -58,6 +58,7 @@ abstract class BrowserKitTestCase extends BaseTestCase
         Model::unguard();
         // clean up
         DB::setDefaultConnection("model");
+        Artisan::call('db:create_test_db');
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force' => '']);
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force' => '']);
         $this->seed(TestSeeder::class);

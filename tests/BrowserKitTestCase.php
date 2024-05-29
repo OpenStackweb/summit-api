@@ -38,11 +38,15 @@ abstract class BrowserKitTestCase extends BaseTestCase
      */
     protected $baseUrl = 'http://localhost';
 
+    protected function prePrepareForTest():void{
+
+    }
     protected function setUp():void
     {
         parent::setUp(); // Don't forget this!
         $this->redis = Redis::connection();
         $this->redis->flushall();
+        $this->prePrepareForTest();
         $this->prepareForTests();
     }
 

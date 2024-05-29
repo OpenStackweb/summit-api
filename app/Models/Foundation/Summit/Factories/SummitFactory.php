@@ -476,10 +476,6 @@ final class SummitFactory
             $summit->setSpeakersSupportEmail(trim($data['speakers_support_email']));
         }
 
-        if(isset($data['registration_slug_prefix'])){
-            $summit->setRegistrationSlugPrefix(trim($data['registration_slug_prefix']));
-        }
-
         if(isset($data['mux_token_id'])){
             $summit->setMuxTokenId(trim($data['mux_token_id']));
         }

@@ -627,7 +627,29 @@ final class DoctrineSummitEventRepository
                      */
                     Presentation::ReviewStatusReceived => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusReceived,
-                        "(p.status = 'Received' OR p.status = 'Accepted')"
+                        "(p.status = 'Received' OR p.status = 'Accepted') AND
+                            selp IS NOT NULL 
+                            AND 
+                            (
+                                (
+                                    selp.submission_lock_down_presentation_status_date IS NULL OR 
+                                    selp.submission_lock_down_presentation_status_date <= UTC_TIMESTAMP()
+                                ) 
+                                AND 
+                                (
+                                    (
+                                        selp.submission_begin_date <= UTC_TIMESTAMP() 
+                                        AND selp.submission_end_date >= UTC_TIMESTAMP()
+                                    ) 
+                                    OR 
+                                    (
+                                         selp.selection_begin_date > UTC_TIMESTAMP() 
+                                         OR selp.selection_end_date < UTC_TIMESTAMP()
+                                    )
+                                )
+                            )
+                            AND 
+                            e.published = 0"
                     ),
                 ]
             ),

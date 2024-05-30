@@ -559,7 +559,30 @@ final class DoctrineSummitEventRepository
                      */
                     Presentation::ReviewStatusPublished => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusPublished,
-                        "(p.status = 'Received' OR p.status = 'Accepted') AND e.published = 1"
+                        "(p.status = 'Received' OR p.status = 'Accepted') 
+                        AND
+                        selp IS NOT NULL 
+                        AND 
+                        (
+                                (
+                                    selp.submission_lock_down_presentation_status_date IS NULL OR 
+                                    selp.submission_lock_down_presentation_status_date <= UTC_TIMESTAMP()
+                                ) 
+                                AND 
+                                (
+                                    (
+                                        selp.submission_begin_date <= UTC_TIMESTAMP() 
+                                        AND selp.submission_end_date >= UTC_TIMESTAMP()
+                                    ) 
+                                    OR 
+                                    (
+                                         selp.selection_begin_date > UTC_TIMESTAMP() 
+                                         OR selp.selection_end_date < UTC_TIMESTAMP()
+                                    )
+                                )
+                        )
+                        AND
+                        e.published = 1"
                     ),
                     /*
                      * Accepted - the submission is complete,
@@ -698,7 +721,12 @@ final class DoctrineSummitEventRepository
                                 )
                             )
                             AND 
-                            e.published = 0"
+                            e.published = 0
+                            AND   
+                            (
+                                selp.selection_begin_date > UTC_TIMESTAMP() 
+                                OR selp.selection_end_date < UTC_TIMESTAMP()
+                            )"
                     ),
                 ]
             ),

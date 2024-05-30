@@ -297,6 +297,7 @@ trait InsertSummitTestData
         self::$summit->setApiFeedUrl("");
         self::$summit->setApiFeedKey("");
         self::$summit->setTimeZoneId("America/Chicago");
+
         $time_zone = new DateTimeZone("America/Chicago");
         $begin_date = new DateTime("now", $time_zone);
         $begin_date = $begin_date->add(new DateInterval("P1D"));
@@ -306,7 +307,7 @@ trait InsertSummitTestData
         self::$summit->setRegistrationBeginDate($begin_date);
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
-
+        self::$summit->setRawSlug("test-summit");
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
         self::$default_badge_type->setIsDefault(true);
@@ -506,6 +507,7 @@ trait InsertSummitTestData
         self::$summit2->setRegistrationBeginDate($begin_date);
         self::$summit2->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit2->setName("TEST SUMMIT2");
+        self::$summit2->setRawSlug("test-summit-2");
 
         self::$mainVenue = new SummitVenue();
         self::$mainVenue->setName("TEST VENUE");

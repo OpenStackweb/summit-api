@@ -1,10 +1,4 @@
 <?php namespace Tests;
-use App\Models\Foundation\Main\IGroup;
-use Illuminate\Support\Facades\App;
-use models\summit\Presentation;
-use models\utils\SilverstripeBaseModel;
-use services\model\IPresentationService;
-
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +11,15 @@ use services\model\IPresentationService;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\App;
+use models\summit\Presentation;
+use models\utils\SilverstripeBaseModel;
+use services\model\IPresentationService;
+/**
+ * Class OAuth2SummitEventsApiTest
+ * @package Tests
+ */
 final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;

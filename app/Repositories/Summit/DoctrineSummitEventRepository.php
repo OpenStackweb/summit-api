@@ -605,10 +605,34 @@ final class DoctrineSummitEventRepository
                     Presentation::ReviewStatusRejected => new DoctrineCaseFilterMapping(
                         Presentation::ReviewStatusRejected,
                         sprintf('(p.status = \'Received\' OR p.status = \'Accepted\') AND
-                        selp IS NOT NULL AND
+                        selp IS NOT NULL 
+                        AND 
                         (
-                            selp.selection_begin_date > UTC_TIMESTAMP() OR selp.selection_end_date < UTC_TIMESTAMP()
-                        ) AND
+                                (
+                                    selp.submission_lock_down_presentation_status_date IS NULL OR 
+                                    selp.submission_lock_down_presentation_status_date <= UTC_TIMESTAMP()
+                                ) 
+                                AND 
+                                (
+                                    (
+                                        selp.submission_begin_date <= UTC_TIMESTAMP() 
+                                        AND selp.submission_end_date >= UTC_TIMESTAMP()
+                                    ) 
+                                    OR 
+                                    (
+                                         selp.selection_begin_date > UTC_TIMESTAMP() 
+                                         OR selp.selection_end_date < UTC_TIMESTAMP()
+                                    )
+                                )
+                        )
+                        AND
+                        e.published = 0
+                        AND   
+                        (
+                            selp.selection_begin_date > UTC_TIMESTAMP() 
+                            OR selp.selection_end_date < UTC_TIMESTAMP()
+                        )
+                        AND            
                         NOT EXISTS (
                             SELECT ___sp33.id 
                             FROM models\summit\SummitSelectedPresentation ___sp33

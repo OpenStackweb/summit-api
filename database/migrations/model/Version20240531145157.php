@@ -14,14 +14,20 @@ class Version20240531145157 extends AbstractMigration
     {
         $sql = <<<SQL
 DROP FUNCTION IF EXISTS REVIEW_STATUS ;
+SQL;
+
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+DELIMITER $$
 CREATE FUNCTION REVIEW_STATUS(ActivityID INT)
 RETURNS VARCHAR(100) DETERMINISTIC
 BEGIN
     DECLARE reviewStatus VARCHAR(100);
     SELECT
     CASE
-        WHEN SP.ID IS NULL OR P.Status IS NULL THEN 'NotSubmitted'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
+        WHEN SP.ID IS NULL OR P.Status IS NULL THEN ‘NotSubmitted’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
             SP.ID IS NOT NULL AND (
             (
                 SP.SubmissionLockDownPresentationStatusDate IS NOT NULL AND
@@ -30,52 +36,53 @@ BEGIN
             OR
             (
                 (
-                    SP.SubmissionBeginDate > UTC_TIMESTAMP() OR SP.SubmissionEndDate < UTC_TIMESTAMP()
+                    SP.SubmissionBeginDate IS NULL OR SP.SubmissionBeginDate > UTC_TIMESTAMP() OR SP.SubmissionEndDate < UTC_TIMESTAMP() OR SP.SubmissionEndDate IS NULL
                 )
                     AND
                 (
                     SP.SelectionBeginDate <= UTC_TIMESTAMP() AND SP.SelectionEndDate >= UTC_TIMESTAMP()
                 )
             )
-        ) THEN 'InReview'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND S.Published = 1 THEN 'Published'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
+        ) THEN ‘InReview’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND S.Published = 1 THEN ‘Published’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
         (
-            SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP()
+               SP.SelectionBeginDate IS NULL OR SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP() OR SP.SelectionEndDate IS NULL
         )
         AND EXISTS (
             SELECT 1 FROM SummitSelectedPresentation SSP
             INNER JOIN SummitSelectedPresentationList L ON L.ID = SSP.SummitSelectedPresentationListID
             WHERE
                 SSP.PresentationID = P.ID AND
-                SSP.Collection = 'selected' AND
-                L.ListType = 'Group' AND
-                L.ListClass = 'Session'
+                SSP.Collection = ‘selected’ AND
+                L.ListType = ‘Group’ AND
+                L.ListClass = ‘Session’
         )
-        THEN 'Accepted'
-         WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
+        THEN ‘Accepted’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
         (
-            SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP()
+            SP.SelectionBeginDate IS NULL OR SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP() OR SP.SelectionEndDate IS NULL
         )
         AND NOT EXISTS (
             SELECT 1 FROM SummitSelectedPresentation SSP
             INNER JOIN SummitSelectedPresentationList L ON L.ID = SSP.SummitSelectedPresentationListID
             WHERE
                 SSP.PresentationID = P.ID AND
-                SSP.Collection = 'selected' AND
-                L.ListType = 'Group' AND
-                L.ListClass = 'Session'
+                SSP.Collection = ‘selected’ AND
+                L.ListType = ‘Group’ AND
+                L.ListClass = ‘Session’
         )
-        THEN 'Rejected'
-        WHEN (P.Status = 'Received' OR P.Status = 'Accepted') THEN 'Received'
-        ELSE 'NotSubmitted'
+        THEN ‘Rejected’
+        WHEN (P.Status = ‘Received’ OR P.Status = ‘Accepted’) THEN ‘Received’
+        ELSE ‘NotSubmitted’
         END
     FROM SummitEvent S
     LEFT JOIN Presentation P ON P.ID = S.ID
     LEFT JOIN SelectionPlan SP ON P.SelectionPlanID = SP.ID
     WHERE S.ID = ActivityID INTO reviewStatus;
     RETURN reviewStatus;
-END
+END$$
+DELIMITER ;
 SQL;
 
         $this->addSql($sql);
@@ -86,6 +93,10 @@ SQL;
      */
     public function down(Schema $schema): void
     {
+        $sql = <<<SQL
+DROP FUNCTION IF EXISTS REVIEW_STATUS ;
+SQL;
 
+        $this->addSql($sql);
     }
 }

@@ -150,7 +150,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     const STATUS_RECEIVED = 'Received';
 
     const ReviewStatusPublished = 'Published';
-    const ReviewStatusNoSubmitted = 'NoSubmitted';
+    const ReviewStatusNoSubmitted = 'NotSubmitted';
     const ReviewStatusReceived = 'Received';
     const ReviewStatusInReview = 'InReview';
     const ReviewStatusRejected = 'Rejected';
@@ -2497,7 +2497,7 @@ SQL;
      */
     public function getReviewStatusNice(): string {
         $review_status = $this->getReviewStatus();
-        if ($review_status == self::ReviewStatusNoSubmitted) return 'No Submitted';
+        if ($review_status == self::ReviewStatusNoSubmitted) return 'Not Submitted';
         if ($review_status == self::ReviewStatusInReview) return 'In Review';
         return $review_status;
     }

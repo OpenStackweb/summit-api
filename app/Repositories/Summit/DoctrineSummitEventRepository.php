@@ -237,7 +237,6 @@ final class DoctrineSummitEventRepository
                 "SUM(CASE WHEN (a.is_completed = 1) THEN 2 WHEN (a.is_completed = 0) THEN 1 ELSE 0 END) AS HIDDEN HIDDEN_COMPLETED_ACTIONS_COUNT");
             $query->groupBy("e");
         }
-        $query = $query->addSelect("REVIEW_STATUS(e.id) AS HIDDEN HIDDEN_REVIEW_STATUS");
         return $query;
     }
 

@@ -184,6 +184,7 @@ return [
         'TIMESTAMPADD'      => DoctrineExtensions\Query\Mysql\TimestampAdd::class,
         'TIMESTAMPDIFF'     => DoctrineExtensions\Query\Mysql\TimestampDiff::class,
         'UTC_TIMESTAMP'     => DoctrineExtensions\Query\Mysql\UtcTimestamp::class,
+        'REVIEW_STATUS'     => \App\Utils\CustomDBFunctions\ReviewStatus::class,
     ],
     /*
     |--------------------------------------------------------------------------

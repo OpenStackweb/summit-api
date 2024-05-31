@@ -43,8 +43,9 @@ BEGIN
     DECLARE reviewStatus VARCHAR(100);
     SELECT
     CASE
-        WHEN SP.ID IS NULL OR P.Status IS NULL THEN ‘NotSubmitted’
-        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
+        WHEN S.ClassName <> 'Presentation' THEN 'N/A'
+        WHEN SP.ID IS NULL OR P.Status IS NULL THEN 'NotSubmitted'
+        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
             SP.ID IS NOT NULL AND (
             (
                 SP.SubmissionLockDownPresentationStatusDate IS NOT NULL AND
@@ -60,9 +61,9 @@ BEGIN
                     SP.SelectionBeginDate <= UTC_TIMESTAMP() AND SP.SelectionEndDate >= UTC_TIMESTAMP()
                 )
             )
-        ) THEN ‘InReview’
-        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND S.Published = 1 THEN ‘Published’
-        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
+        ) THEN 'InReview'
+        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND S.Published = 1 THEN 'Published'
+        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
         (
                SP.SelectionBeginDate IS NULL OR SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP() OR SP.SelectionEndDate IS NULL
         )
@@ -71,12 +72,12 @@ BEGIN
             INNER JOIN SummitSelectedPresentationList L ON L.ID = SSP.SummitSelectedPresentationListID
             WHERE
                 SSP.PresentationID = P.ID AND
-                SSP.Collection = ‘selected’ AND
-                L.ListType = ‘Group’ AND
-                L.ListClass = ‘Session’
+                SSP.Collection = 'selected' AND
+                L.ListType = 'Group' AND
+                L.ListClass = 'Session'
         )
-        THEN ‘Accepted’
-        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
+        THEN 'Accepted'
+        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
         (
             SP.SelectionBeginDate IS NULL OR SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP() OR SP.SelectionEndDate IS NULL
         )
@@ -85,13 +86,13 @@ BEGIN
             INNER JOIN SummitSelectedPresentationList L ON L.ID = SSP.SummitSelectedPresentationListID
             WHERE
                 SSP.PresentationID = P.ID AND
-                SSP.Collection = ‘selected’ AND
-                L.ListType = ‘Group’ AND
-                L.ListClass = ‘Session’
+                SSP.Collection = 'selected' AND
+                L.ListType = 'Group' AND
+                L.ListClass = 'Session'
         )
-        THEN ‘Rejected’
-        WHEN (P.Status = ‘Received’ OR P.Status = ‘Accepted’) THEN ‘Received’
-        ELSE ‘NotSubmitted’
+        THEN 'Rejected'
+        WHEN (P.Status = 'Received' OR P.Status = 'Accepted') THEN 'Received'
+        ELSE 'NotSubmitted'
         END
     FROM SummitEvent S
     LEFT JOIN Presentation P ON P.ID = S.ID

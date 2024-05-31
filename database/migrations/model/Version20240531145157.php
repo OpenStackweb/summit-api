@@ -13,13 +13,12 @@ class Version20240531145157 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $sql = <<<SQL
-DROP FUNCTION IF EXISTS REVIEW_STATUS ;
+DROP FUNCTION IF EXISTS REVIEW_STATUS;
 SQL;
 
         $this->addSql($sql);
 
         $sql = <<<SQL
-DELIMITER $$
 CREATE FUNCTION REVIEW_STATUS(ActivityID INT)
 RETURNS VARCHAR(100) DETERMINISTIC
 BEGIN
@@ -81,8 +80,7 @@ BEGIN
     LEFT JOIN SelectionPlan SP ON P.SelectionPlanID = SP.ID
     WHERE S.ID = ActivityID INTO reviewStatus;
     RETURN reviewStatus;
-END$$
-DELIMITER ;
+END
 SQL;
 
         $this->addSql($sql);
@@ -94,7 +92,7 @@ SQL;
     public function down(Schema $schema): void
     {
         $sql = <<<SQL
-DROP FUNCTION IF EXISTS REVIEW_STATUS ;
+DROP FUNCTION IF EXISTS REVIEW_STATUS;
 SQL;
 
         $this->addSql($sql);

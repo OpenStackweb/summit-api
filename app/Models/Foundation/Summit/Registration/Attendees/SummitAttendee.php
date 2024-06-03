@@ -705,10 +705,10 @@ SQL;
         return null;
     }
 
-    public function clearExtraQuestionAnswers()
+    public function clearExtraQuestionAnswers(): void
     {
         Log::debug(sprintf("SummitAttendee::clearExtraQuestionAnswers for attendee %s", $this->getId()));
-        return $this->extra_question_answers->clear();
+        $this->extra_question_answers->clear();
     }
 
     /**

@@ -25,6 +25,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\TextUtils;
 use models\exceptions\EntityNotFoundException;
@@ -488,10 +489,12 @@ class SummitAttendee extends SilverstripeBaseModel
     ):void
     {
 
+        $delay = intval(Config::get("registration.attendee_invitation_email_threshold", 5));
+
         $email = $this->getEmail();
         $key = md5(sprintf("%s_%s", $email, $ticket->getId()));
 
-        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s", $email, $ticket->getId()));
+        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s delay %s", $email, $ticket->getId(), $delay));
 
         if ($ticket->getOwnerEmail() != $this->getEmail()) return;
 
@@ -512,7 +515,7 @@ class SummitAttendee extends SilverstripeBaseModel
             $ticket->generateQRCode();
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
             // adds a threshold of 5 minutes to avoid duplicates emails
-            if (Cache::add(sprintf("%s_emit_ticket", $key), true, now()->addMinutes(5))) {
+            if (Cache::add(sprintf("%s_emit_ticket", $key), true, now()->addMinutes($delay)) || $delay == 0) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending SummitAttendeeTicketEmail", $email, $ticket->getId()));
                 SummitAttendeeTicketEmail::dispatch($ticket, $payload, $test_email_recipient);
                 $ticket->getOwner()->markInvitationEmailSentDate();
@@ -529,7 +532,7 @@ class SummitAttendee extends SilverstripeBaseModel
         if ($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             // no delay
             // adds a threshold of 5 minutes to avoid duplicates emails
-            if (Cache::add(sprintf("%s_edit_ticket", $key), true, now()->addMinutes(5))) {
+            if (Cache::add(sprintf("%s_edit_ticket", $key), true, now()->addMinutes($delay)) || $delay == 0) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending InviteAttendeeTicketEditionMail", $email, $ticket->getId()));
                 InviteAttendeeTicketEditionMail::dispatch($ticket, $payload, $test_email_recipient);
                 $ticket->getOwner()->markInvitationEmailSentDate();

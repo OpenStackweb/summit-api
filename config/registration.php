@@ -44,4 +44,5 @@ return [
     'order_public_edit_ttl' => env('REGISTRATION_ORDER_PUBLIC_EDIT_TTL', 10),
     // in minutes
     'attendee_invitation_email_delay' => env('REGISTRATION_ATTENDEE_INVITATION_EMAIL_DELAY', 10),
+    'attendee_invitation_email_threshold' => env('REGISTRATION_ATTENDEE_INVITATION_EMAIL_THRESHOLD', 5),
 ];

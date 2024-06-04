@@ -1693,10 +1693,6 @@ final class SummitOrderService
                 return $order;
             }
 
-            // validation of zip code its only for paid events
-            if (!$order->isFree() && empty($order->getBillingAddressZipCode()))
-                throw new ValidationException("Zip Code is mandatory.");
-
             $payment_gateway = $summit->getPaymentGateWayPerApp
             (
                 IPaymentConstants::ApplicationTypeRegistration,

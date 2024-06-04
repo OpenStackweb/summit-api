@@ -29,7 +29,9 @@ final class Version20240531145157 extends AbstractMigration
          * needs SUPER GRANT
          * GRANT SUPER ON *.* TO 'user'@'172.16.1.%';
          * FLUSH PRIVILEGES;
+         * this function needs to be added by hand on server
          */
+        /*
         $sql = <<<SQL
 DROP FUNCTION IF EXISTS REVIEW_STATUS;
 SQL;
@@ -103,6 +105,7 @@ END
 SQL;
 
         $this->addSql($sql);
+        */
     }
 
     /**

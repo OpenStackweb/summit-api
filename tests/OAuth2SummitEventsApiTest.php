@@ -1,9 +1,4 @@
 <?php namespace Tests;
-use App\Models\Foundation\Main\IGroup;
-use Illuminate\Support\Facades\App;
-use models\utils\SilverstripeBaseModel;
-use services\model\IPresentationService;
-
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +11,15 @@ use services\model\IPresentationService;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\App;
+use models\summit\Presentation;
+use models\utils\SilverstripeBaseModel;
+use services\model\IPresentationService;
+/**
+ * Class OAuth2SummitEventsApiTest
+ * @package Tests
+ */
 final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
@@ -2040,5 +2043,146 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $events = json_decode($content);
         $this->assertTrue(!is_null($events));
+    }
+
+    private function testGetPresentationsByReviewStatus($review_status) {
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 80,
+            'order'    => "+id",
+            'filter'   => ["class_name==Presentation", "review_status==$review_status"]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitEventsApiController@getEvents",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        return $response->getContent();
+    }
+
+    public function testGetPresentationsByReviewStatusNoSubmitted(){
+        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusNoSubmitted);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        foreach ($page->data as $presentation) {
+            $this->assertEquals('No Submitted', $presentation->review_status);
+        }
+    }
+
+    public function testGetPresentationsByReviewStatusReceived(){
+        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusReceived);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        foreach ($page->data as $presentation) {
+            $this->assertTrue(in_array($presentation->review_status,
+                [Presentation::ReviewStatusReceived, Presentation::ReviewStatusAccepted]));
+        }
+    }
+
+    public function testGetPresentationsByReviewStatusInReview(){
+        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusInReview);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        foreach ($page->data as $presentation) {
+            $this->assertEquals('In Review', $presentation->review_status);
+        }
+    }
+
+    public function testGetPresentationsByReviewStatusPublished(){
+        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusPublished);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        foreach ($page->data as $presentation) {
+            $this->assertEquals(Presentation::ReviewStatusPublished, $presentation->review_status);
+        }
+    }
+
+    public function testGetPresentationsByReviewStatusAccepted(){
+        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusAccepted);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        foreach ($page->data as $presentation) {
+            $this->assertEquals(Presentation::ReviewStatusAccepted, $presentation->review_status);
+        }
+    }
+
+    public function testGetPresentationsByReviewStatusRejected(){
+        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusRejected);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        foreach ($page->data as $presentation) {
+            $this->assertEquals(Presentation::ReviewStatusRejected, $presentation->review_status);
+        }
+    }
+
+    private function getPresentationsOrderedByReviewStatus($order_asc) {
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 80,
+            'filter'   => "class_name==Presentation",
+            'order'    => $order_asc ? "+review_status" : "-review_status"
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitEventsApiController@getEvents",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content = $response->getContent();
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+
+        return $page;
+    }
+
+    public function testGetPresentationsOrderedByReviewStatusASC() {
+        $page = $this->getPresentationsOrderedByReviewStatus(true);
+        $last_review_status = '';
+        foreach ($page->data as $presentation) {
+            $this->assertTrue($last_review_status <= $presentation->review_status);
+            $last_review_status = $presentation->review_status;
+        }
+    }
+
+    public function testGetPresentationsOrderedByReviewStatusDESC() {
+        $page = $this->getPresentationsOrderedByReviewStatus(false);
+        $last_review_status = $page->data[0];
+        foreach ($page->data as $presentation) {
+            $this->assertTrue( $last_review_status >= $presentation->review_status);
+            $last_review_status = $presentation->review_status;
+        }
     }
 }

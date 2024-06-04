@@ -58,7 +58,6 @@ final class DoctrineSummitEventRepository
         SummitGroupEvent::ClassName,
     ];
 
-
     /**
      * @param IPublishableEvent $event
      * @return IPublishableEvent[]
@@ -523,6 +522,7 @@ final class DoctrineSummitEventRepository
                     WHERE p4:i.id = p.id AND mut2:i.id :operator :value
                 )'
             ),
+           'review_status' => 'REVIEW_STATUS(e.id)',
         ];
     }
 
@@ -616,12 +616,13 @@ SQL,
 END
 SQL,
             'selection_plan' => 'selp.name',
-            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT'
+            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT',
             /*
             'event_type_capacity' => <<<SQL
 SQL,
             'speakers' => <<<SQL
 SQL,*/
+            'review_status' => 'REVIEW_STATUS(e.id)',
         ];
     }
 

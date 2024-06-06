@@ -306,6 +306,7 @@ trait InsertSummitTestData
         self::$summit->setRegistrationBeginDate($begin_date);
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
+        self::$summit->setRawSlug("testsummit");
 
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");

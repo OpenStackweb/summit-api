@@ -48,7 +48,6 @@ use models\summit\SponsorMaterial;
 use models\summit\SponsorshipType;
 use models\summit\SponsorSocialNetwork;
 use models\summit\SponsorSummitRegistrationDiscountCode;
-use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -246,8 +245,14 @@ trait InsertSummitTestData
      */
     static $default_summit_sponsor_type;
 
+    /**
+     * @var array | SummitTicketType
+     */
     static $ticket_types = [];
 
+    /**
+     * @var array | SummitMediaUploadType[]
+     */
     static $media_uploads_types = [];
 
     static $default_media_file_type;
@@ -293,11 +298,13 @@ trait InsertSummitTestData
 
         self::$summit = new Summit();
         self::$summit->setActive(true);
+        self::$summit->setAvailableOnApi(true);
+        self::$summit->setRawSlug("TEST1");
+        self::$summit->setExternalSummitId("123456");
         // set feed type (sched)
         self::$summit->setApiFeedUrl("");
         self::$summit->setApiFeedKey("");
         self::$summit->setTimeZoneId("America/Chicago");
-
         $time_zone = new DateTimeZone("America/Chicago");
         $begin_date = new DateTime("now", $time_zone);
         $begin_date = $begin_date->add(new DateInterval("P1D"));
@@ -307,8 +314,8 @@ trait InsertSummitTestData
         self::$summit->setRegistrationBeginDate($begin_date);
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
-        self::$summit->setRawSlug("test-summit");
-        self::$summit->setRegistrationSlugPrefix("TS");
+        self::$summit->setRawSlug("testsummit");
+
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
         self::$default_badge_type->setIsDefault(true);
@@ -325,9 +332,11 @@ trait InsertSummitTestData
         self::$em->persist(self::$summit);
         self::$em->flush();
 
+        self::$ticket_types = [];
         self::$default_ticket_type = new SummitTicketType();
         self::$default_ticket_type->setCost(100);
         self::$default_ticket_type->setCurrency("USD");
+        self::$default_ticket_type->setExternalId("123456");
         self::$default_ticket_type->setName("TICKET TYPE 1");
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
@@ -402,7 +411,7 @@ trait InsertSummitTestData
 
         self::$em->persist(self::$default_media_file_type);
         self::$em->flush();
-
+        self::$media_uploads_types = [];
         // media upload types
         for($i = 0; $i <5 ; $i++) {
             $media_upload_type = new SummitMediaUploadType();
@@ -411,6 +420,7 @@ trait InsertSummitTestData
             $media_upload_type->setDescription(sprintf("Media Upload Type %s Description", $i));
             $media_upload_type->addPresentationType(self::$defaultPresentationType);
             self::$summit->addMediaUploadType($media_upload_type);
+            self::$em->persist($media_upload_type);
             self::$media_uploads_types[] = $media_upload_type;
         }
 
@@ -435,7 +445,7 @@ trait InsertSummitTestData
         self::$defaultEventType->setType(ISummitEventType::Breaks);
         self::$defaultEventType->setBlackoutTimes('All');
         self::$summit->addEventType(self::$defaultEventType);
-        
+
         self::$summit->addEventType(self::$allow2VotePresentationType);
 
         // badge view types
@@ -500,6 +510,8 @@ trait InsertSummitTestData
 
         self::$summit2 = new Summit();
         self::$summit2->setActive(true);
+        self::$summit2->setAvailableOnApi(true);
+        self::$summit2->setRawSlug("TEST2");
         // set feed type (sched)
         self::$summit2->setApiFeedUrl("");
         self::$summit2->setApiFeedKey("");
@@ -511,8 +523,6 @@ trait InsertSummitTestData
         self::$summit2->setRegistrationBeginDate($begin_date);
         self::$summit2->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit2->setName("TEST SUMMIT2");
-        self::$summit2->setRawSlug("test-summit-2");
-        self::$summit->setRegistrationSlugPrefix("TS2");
 
         self::$mainVenue = new SummitVenue();
         self::$mainVenue->setName("TEST VENUE");
@@ -570,7 +580,7 @@ trait InsertSummitTestData
         self::$defaultTrackTagGroup->setLabel("DEFAULT TRACK TAG GROUP");
 
         $tags = ['101','Case Study', 'Demo'];
-
+        self::$defaultTags = [];
         foreach ($tags as $t){
             $tag = new Tag($t);
             self::$defaultTags[] = $tag;
@@ -597,7 +607,6 @@ trait InsertSummitTestData
         self::$default_selection_plan->setSelectionEndDate($submission_end_date);
         self::$default_selection_plan->setIsEnabled(true);
         self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
-        self::$default_selection_plan->addEventType(self::$defaultPresentationType);
 
         // create extra questions
 
@@ -788,7 +797,8 @@ trait InsertSummitTestData
         self::$default_summit_sponsor_type = new SummitSponsorshipType();
         self::$default_summit_sponsor_type->setType(self::$default_sponsor_ship_type);
         self::$summit->addSponsorshipType(self::$default_summit_sponsor_type);
-
+        self::$companies = [];
+        self::$sponsors = [];
         for($i = 0 ; $i < 20; $i++){
             $c = new Company();
             $c->setName(sprintf("Company %s %s", $i, str_random(16)));
@@ -830,6 +840,7 @@ trait InsertSummitTestData
                 $s->addAd($ad);
             }
 
+            self::$em->persist($s);
             self::$summit->addSummitSponsor($s);
             self::$sponsors[] = $s;
         }
@@ -867,7 +878,7 @@ trait InsertSummitTestData
 
         self::$summit->addPromoCode($discount_code);
         self::$default_discount_code = $discount_code;
-
+        self::$companies_without_sponsor = [];
         for($i = 0 ; $i < 20; $i++){
             $c = new Company();
             $c->setName(sprintf("Company %s %s", $i, str_random(16)));
@@ -878,7 +889,7 @@ trait InsertSummitTestData
         }
 
         // sponsor promo codes
-
+        self::$default_sponsors_promo_codes = [];
         for($i = 0 ; $i < 20; $i++){
             $promo_code = new SponsorSummitRegistrationDiscountCode();
             $promo_code->setCode(sprintf("TEST_SPONSOR_PROMO_CODE_%s", $i));
@@ -908,6 +919,8 @@ trait InsertSummitTestData
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
         self::$default_media_file_type = self::$media_file_type_repository->find(self::$default_media_file_type->getId());
         self::$summit_permission_group = self::$summit_permission_group_repository->find(self::$summit_permission_group->getId());
+        self::$summit->clearOrders();
+        self::$summit2->clearOrders();
         self::$summit->clearMetrics();
         self::$summit2->clearMetrics();
         self::$em->remove(self::$summit);
@@ -924,5 +937,13 @@ trait InsertSummitTestData
         self::$mainVenue = null;
         self::$defaultTags = [];
         self::$ticket_types = [];
+        self::$sponsors = [];
+        self::$companies_without_sponsor = [];
+        self::$media_uploads_types = [];
+        self::$default_sponsors_promo_codes = [];
+        self::$access_levels = [];
+        self::$venue_rooms = [];
+        self::$companies = [];
+        self::$presentations = [];
     }
 }

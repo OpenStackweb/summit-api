@@ -11,11 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use Spatie\Dropbox\Client as DropboxClient;
-use App\Services\FileSystem\Dropbox\DropboxAdapter;
+use Spatie\FlysystemDropbox\DropboxAdapter;
+
 /**
  * Class DropboxServiceProvider
  * @package App\Services\FileSystem\Dropbox
@@ -37,13 +40,18 @@ class DropboxServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         Storage::extend('dropbox', function ($app, $config) {
-            $client = new DropboxClient(
-                $config['authorization_token'] ?? ''
+            $adapter = new DropboxAdapter(
+                new DropboxClient($config['authorization_token'])
             );
-            return new Filesystem(new DropboxAdapter($client));
+
+            return new FilesystemAdapter(
+                new Filesystem($adapter, $config),
+                $adapter,
+                $config
+            );
         });
     }
 }

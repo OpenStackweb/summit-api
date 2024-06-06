@@ -22,52 +22,49 @@ use Tests\InsertSummitTestData;
  * Class CreateTestDBCommand
  * @package App\Console\Commands
  */
-final class SeedTestDataCommand extends Command
-{
-    use InsertSummitTestData;
+final class SeedTestDataCommand extends Command {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    use InsertOrdersTestData;
+  use InsertOrdersTestData;
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'seed_test_data';
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "seed_test_data";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'db:seed_test_data';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "db:seed_test_data";
 
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Seet Test Data";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Seet Test Data';
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle(): void
-    {
-        try {
-            $this->info("inserting test Member data ...");
-            self::insertMemberTestData(IGroup::FoundationMembers);
-            $this->info("inserting test Summit data ...");
-            self::insertSummitTestData();
-            $this->info("inserting test Order data ...");
-            self::InsertOrdersTestData();
-        } catch (\Exception $e){
-            $this->error($e->getMessage());
-        }
+  /**
+   * Execute the console command.
+   *
+   * @return void
+   */
+  public function handle(): void {
+    try {
+      $this->info("inserting test Member data ...");
+      self::insertMemberTestData(IGroup::FoundationMembers);
+      $this->info("inserting test Summit data ...");
+      self::insertSummitTestData();
+      $this->info("inserting test Order data ...");
+      self::InsertOrdersTestData();
+    } catch (\Exception $e) {
+      $this->error($e->getMessage());
     }
+  }
 }

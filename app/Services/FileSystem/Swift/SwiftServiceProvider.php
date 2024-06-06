@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Filesystem;
@@ -38,7 +38,7 @@ final class SwiftServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         Storage::extend('swift', function ($app, $config) {
 
@@ -81,7 +81,13 @@ final class SwiftServiceProvider extends ServiceProvider
 
                 $container = $openstackClient->objectStoreV1()->getContainer($config["container"]);
 
-                return new Filesystem(new SwiftAdapter($container));
+                $adapter = new SwiftAdapter($container);
+
+                return new FilesystemAdapter(
+                    new Filesystem($adapter, $config),
+                    $adapter,
+                    $config
+                );
             }
             catch(\Exception $ex){
                 Log::error($ex);

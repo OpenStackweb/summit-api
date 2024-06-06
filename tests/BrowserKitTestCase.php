@@ -55,7 +55,7 @@ abstract class BrowserKitTestCase extends BaseTestCase
      * This will cause the tests to run quickly.
      *
      */
-    protected function prepareForTests()
+    protected function prepareForTests(): void
     {
         // see https://laravel.com/docs/9.x/mocking#mail-fake
         Mail::fake();

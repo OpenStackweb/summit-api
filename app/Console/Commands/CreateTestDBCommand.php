@@ -13,6 +13,8 @@
  **/
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Class CreateTestDBCommand
@@ -32,7 +34,7 @@ final class CreateTestDBCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'db:create_test_db';
+    protected $signature = 'db:create_test_db {--schema=}';
 
 
     /**
@@ -42,37 +44,63 @@ final class CreateTestDBCommand extends Command
      */
     protected $description = 'Create Test DB';
 
+    const SchemaConfig = 'config';
+
+    const SchemaModel = 'model';
+
+    const AllowedSchemas = [
+        self::SchemaConfig,
+        self::SchemaModel
+    ];
+
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
-    public function handle()
+    public function handle(): void
     {
-        $pdo = new \PDO('mysql:host=' . env('SS_DB_HOST'), env('SS_DB_USERNAME'), env('SS_DB_PASSWORD'));
+        $schema_name = $this->option('schema');
+        $this->validateOptions($schema_name);
+
+        $db_host = env('SS_DB_HOST');
+        $db_user_name = env('SS_DB_USERNAME');
+        $db_password = env('SS_DB_PASSWORD');
+        $db_name = env('SS_DATABASE');
+
+        if ($schema_name == self::SchemaConfig) {
+            $db_host = env('DB_HOST');
+            $db_user_name = env('DB_USERNAME');
+            $db_password = env('DB_PASSWORD');
+            $db_name = env('DB_DATABASE');
+        }
+
+        $pdo = new \PDO('mysql:host=' . $db_host, $db_user_name, $db_password);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         try{
-            $this->info(sprintf("dropping schema %s", env('SS_DATABASE')));
-            $pdo->exec('DROP SCHEMA ' . env('SS_DATABASE').';');
+            $this->info("dropping schema {$db_name} at host {$db_host}...");
+            $pdo->exec('DROP SCHEMA ' . $db_name .';');
         }
         catch (\Exception $e){
             $this->error($e->getMessage());
         }
 
         try{
-            $this->info(sprintf("creating schema %s", env('SS_DATABASE')));
-            $pdo->exec('CREATE SCHEMA ' . env('SS_DATABASE').';');
-            $pdo->exec('USE ' . env('SS_DATABASE').';');
+            $this->info("creating schema {$db_name} at host {$db_host}...");
+            $pdo->exec('CREATE SCHEMA ' . $db_name .';');
+            $pdo->exec('USE ' . $db_name .';');
         }
         catch (\Exception $e){
             $this->error($e->getMessage());
         }
 
+        $current_dir =  dirname(__FILE__);
+
         try{
-            $this->info(sprintf("creating initial schema ..."));
-            $current_dir =  dirname(__FILE__);
-            $schema = file_get_contents($current_dir.'/../../../database/migrations/model/initial_schema.sql', true);
+            $this->info("creating initial schema...");
+            $schema = file_get_contents(
+                "{$current_dir}/../../../database/migrations/{$schema_name}/initial_schema.sql", true);
             $schema = explode(';', $schema);
             foreach ($schema as $ddl) {
                 $ddl = trim($ddl);
@@ -85,17 +113,39 @@ final class CreateTestDBCommand extends Command
         }
 
         try{
-            $this->info(sprintf("adding already ran migrations ..."));
-            $migrations = file_get_contents($current_dir.'/../../../database/migrations/model/initial_migrations.sql', true);
+            $this->info("adding already ran migrations...");
+            $migrations = file_get_contents(
+                "{$current_dir}/../../../database/migrations/{$schema_name}/initial_migrations.sql", true);
+
             $migrations = explode(';', $migrations);
+
             foreach ($migrations as $idx => $statement) {
                 if (empty(trim($statement))) continue;
                 $pdo->exec($statement.';');
-                $this->info(sprintf("running migration %s", $idx));
+                $this->info("running migration {$idx}");
             }
         }
         catch (\Exception $e){
             $this->error($e->getMessage());
+        }
+    }
+
+    protected function validateOptions($schema): void
+    {
+        $validator = Validator::make(
+            [
+                'schema' => $schema,
+            ],
+            [
+                'schema' => 'required|string|in:' . implode(',', self::AllowedSchemas),
+            ]
+        );
+
+        try {
+            $validator->validate();
+        } catch (ValidationException $e) {
+            $this->error('Validation error: ' . $e->getMessage());
+            exit(1);
         }
     }
 }

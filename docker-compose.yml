@@ -18,28 +18,32 @@ services:
     depends_on:
       redis:
         condition: service_started
-      db:
+      db_config:
+        condition: service_healthy
+      db_model:
         condition: service_healthy
   redis:
     image: redis:latest
     restart: always
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     ports:
-      - "6379"
+      - ${REDIS_PORT}
     volumes:
       - /tmp/redis:/root/redis
       - ./docker-compose/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - summit-api-local-net
     env_file: ./.env
-  db:
+  db_config:
     image: mysql:8.0
-    container_name: summit-api-db-local
+    container_name: summit-api-config-db-local
     command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     ports:
       - "32780:3306"
     environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
@@ -48,8 +52,31 @@ services:
       timeout: 20s
       retries: 10
     volumes:
-      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
-      - /tmp/mysql:/var/lib/mysql
+      - ./docker-compose/mysql/config:/docker-entrypoint-initdb.d
+      - /tmp/mysql/config:/var/lib/mysql
+    networks:
+      - summit-api-local-net
+    env_file: ./.env
+  db_model:
+    image: mysql:8.0
+    container_name: summit-api-model-db-local
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=ONLY_FULL_GROUP_BY,NO_ENGINE_SUBSTITUTION
+    restart: unless-stopped
+    ports:
+      - "32781:3306"
+    environment:
+      MYSQL_DATABASE: ${SS_DATABASE}
+      MYSQL_PASSWORD: ${SS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${SS_DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - ./docker-compose/mysql/model:/docker-entrypoint-initdb.d
+      - /tmp/mysql/model:/var/lib/mysql
     networks:
       - summit-api-local-net
     env_file: ./.env

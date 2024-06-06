@@ -1,5 +1,3 @@
-USE model_test;
-
 create table DoctrineMigration
 (
     version     varchar(14) not null

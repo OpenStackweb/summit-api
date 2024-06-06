@@ -11,24 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Database\Seeders\ConfigSeeder;
 use Database\Seeders\MainDataSeeder;
-use Database\Seeders\TestSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use models\summit\SummitRegistrationPromoCode;
 
 /**
  * Class TestCase
  * @package Tests
  */
-abstract class BrowserKitTestCase extends BaseTestCase
-{
+abstract class BrowserKitTestCase extends BaseTestCase {
     use CreatesApplication;
 
     private $redis;
@@ -38,10 +34,9 @@ abstract class BrowserKitTestCase extends BaseTestCase
      *
      * @var string
      */
-    protected $baseUrl = 'http://localhost';
+    protected $baseUrl = "http://localhost";
 
-    protected function setUp():void
-    {
+    protected function setUp(): void {
         parent::setUp(); // Don't forget this!
         $this->redis = Redis::connection();
         $this->redis->flushall();
@@ -53,21 +48,22 @@ abstract class BrowserKitTestCase extends BaseTestCase
      * This will cause the tests to run quickly.
      *
      */
-    protected function prepareForTests()
-    {
+    protected function prepareForTests(): void {
         // see https://laravel.com/docs/9.x/mocking#mail-fake
         Mail::fake();
         Model::unguard();
         // clean up
         DB::setDefaultConnection("model");
-        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force' => '']);
-        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force' => '']);
+        Artisan::call("doctrine:migrations:migrate", ["--em" => "config", "--no-interaction" => true]);
+        Artisan::call("doctrine:migrations:migrate", ["--em" => "model", "--no-interaction" => true]);
+
         DB::setDefaultConnection("config");
-        DB::delete('DELETE FROM endpoint_api_scopes');
-        DB::delete('DELETE FROM endpoint_api_authz_groups');
-        DB::delete('DELETE FROM api_scopes');
-        DB::delete('DELETE FROM api_endpoints');
-        DB::delete('DELETE FROM apis');
+
+        DB::delete("DELETE FROM endpoint_api_scopes");
+        DB::delete("DELETE FROM endpoint_api_authz_groups");
+        DB::delete("DELETE FROM api_scopes");
+        DB::delete("DELETE FROM api_endpoints");
+        DB::delete("DELETE FROM apis");
 
         $this->seed(ConfigSeeder::class);
         $this->seed(MainDataSeeder::class);

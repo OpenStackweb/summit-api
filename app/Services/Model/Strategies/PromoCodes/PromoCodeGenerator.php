@@ -16,7 +16,7 @@
 
 use libs\utils\ICacheService;
 use models\summit\Summit;
-use Zend\Math\Rand;
+use Laminas\Math\Rand;
 
 /**
  * Class PromoCodeGenerator

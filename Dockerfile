@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     libpng-dev \
     libonig-dev \
+    libssl-dev \
     libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
     redis-tools \
@@ -24,13 +26,16 @@ RUN apt-get update && apt-get install -y \
     make \
     g++\
     gpg \
-    gettext
+    gettext \
+    libmagickwand-dev
 
 RUN apt clean && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath sockets gettext
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+
+RUN install-php-extensions bcmath exif gettext gd imagick mbstring openssl pcntl pdo pdo_mysql sockets ${XDEBUG_VERSION} zip
+
 # XDEBUG
-RUN yes | pecl install ${XDEBUG_VERSION}
 COPY docker-compose/php/docker-php-ext-xdebug.ini $PHP_DIR/conf.d/docker-php-ext-xdebug.ini
 
 WORKDIR /var/www

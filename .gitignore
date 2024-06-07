@@ -29,3 +29,4 @@ routes.txt
 /ss.sql
 phpunit.xml
 .phpunit.result.cache
+package.xml

@@ -11,7 +11,7 @@ Step Debugging
     executing.
 
 Improvements to PHP&apos;s error reporting
-    An improved var_dump() function, stack traces for Notices, Warnings, Errors
+    An improved var_dump() function, stack traces for Notices, Warnings, Errorss
     and Exceptions to highlight the code path to the error
 
 Tracing

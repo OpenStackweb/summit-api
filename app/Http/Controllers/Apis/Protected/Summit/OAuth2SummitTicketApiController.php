@@ -19,7 +19,9 @@ use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
@@ -208,12 +210,12 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit))
-                return $this->error404();
+                return $this->error404("Summit not found.");
 
             $external_feed_type = $summit->getExternalRegistrationFeedType();
             if (is_null($external_feed_type) ||
             $external_feed_type == ISummitExternalRegistrationFeedType::NoneType)
-                return $this->error404();
+                return $this->error412("Summit has no external feed.");
 
             $filter = self::getFilter(
                 function(){ return [ 'owner_email' => ['==']];},
@@ -221,9 +223,15 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             );
 
             $filterVal = $filter->getUniqueFilter('owner_email');
-            if(is_null($filterVal)) return $this->error400();
+            if(is_null($filterVal)) return $this->error400("missing owner_email parameter.");
 
-            $ticket = $this->service->getTicket($summit, $filterVal->getRawValue());
+            try {
+                $ticket = $this->service->getTicket($summit, $filterVal->getRawValue());
+            }
+            catch (EntityNotFoundException $ex){
+                Log::error($ex);
+                $ticket = null;
+            }
 
             $data = is_null($ticket) ? [] : [$ticket];
 

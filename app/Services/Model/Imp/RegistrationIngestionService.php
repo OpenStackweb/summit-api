@@ -619,9 +619,10 @@ final class RegistrationIngestionService
                             $ticket->getOwnerEmail()
                         )
                     );
-
+                    $ticket->getBadge()->clearFeatures();
                     $ticket->getBadge()->addFeature($badge_feature);
                 }
+
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit processed attendee %s", $external_attendee['id']));
 
                 return $attendee;

@@ -619,7 +619,7 @@ final class RegistrationIngestionService
                             $ticket->getOwnerEmail()
                         )
                     );
-                    $ticket->getBadge()->clearFeatures();
+
                     $ticket->getBadge()->addFeature($badge_feature);
                 }
 

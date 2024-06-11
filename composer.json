@@ -43,7 +43,7 @@
         "pion/laravel-chunk-upload": "^1.4",
         "predis/predis": "v2.1.2",
         "ramsey/uuid": "^4.2",
-        "s-ichikawa/laravel-sendgrid-driver": "~3.0",
+        "s-ichikawa/laravel-sendgrid-driver": "^4.0",
         "simplesoftwareio/simple-qrcode": "^2.0",
         "sokil/php-isocodes": "^3.0",
         "spatie/flysystem-dropbox": "^3.0.1",

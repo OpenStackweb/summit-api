@@ -2757,9 +2757,9 @@ SQL;
      * @return null|string
      * @throws ValidationException
      */
-    public function getDefaultTicketTypeCurrency(): ?string
+    public function getDefaultTicketTypeCurrency(): string
     {
-        $default_currency = null;
+        $default_currency = SummitTicketType::USD_Currency;
         foreach ($this->ticket_types as $ticket_type) {
             $ticket_type_currency = $ticket_type->getCurrency();
             if (empty($ticket_type_currency)) continue;
@@ -2778,6 +2778,15 @@ SQL;
                 );
         }
         return $default_currency;
+    }
+
+    /**
+     * @return string|null
+     * @throws ValidationException
+     */
+    public function getDefaultTicketTypeCurrencySymbol(): ?string
+    {
+       return SummitTicketType::getSymbolForCurrency($this->getDefaultTicketTypeCurrency());
     }
 
     /**

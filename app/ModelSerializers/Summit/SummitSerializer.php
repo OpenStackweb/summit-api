@@ -99,6 +99,7 @@ class SummitSerializer extends SilverStripeSerializer
         'RegistrationSlugPrefix' => 'registration_slug_prefix:json_string',
         'MarketingSiteOauth2ClientScopes' => 'marketing_site_oauth2_client_scopes:json_string',
         'DefaultTicketTypeCurrency' => 'default_ticket_type_currency:json_string',
+        'DefaultTicketTypeCurrencySymbol' => 'default_ticket_type_currency_symbol:json_string',
     ];
 
     protected static $allowed_relations = [

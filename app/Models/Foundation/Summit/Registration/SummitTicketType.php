@@ -433,11 +433,11 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     }
 
     /**
+     * @param string $currency
      * @return string
      */
-    public function getCurrencySymbol(): ?string
-    {
-        switch ($this->currency){
+    public static function getSymbolForCurrency(string $currency):string{
+        switch ($currency){
             case self::USD_Currency:
                 return '$';
             case self::EUR_Currency:
@@ -451,6 +451,13 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
             default:
                 return '$';
         }
+    }
+    /**
+     * @return string
+     */
+    public function getCurrencySymbol(): string
+    {
+        return self::getSymbolForCurrency($this->currency);
     }
 
     /**

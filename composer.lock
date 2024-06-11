@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7682344bece1fd6df8cffb512b90f7a6",
+    "content-hash": "ff7e35057c408c2854d8583affdd3810",
     "packages": [
         {
             "name": "affinipay/chargeio-php",
@@ -148,16 +148,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.311.1",
+            "version": "3.312.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "90218b9372469babf294f97bdd764c9d47ec8a57"
+                "reference": "53b233072f707d2abfd62b0df4bc2dc27caf3274"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/90218b9372469babf294f97bdd764c9d47ec8a57",
-                "reference": "90218b9372469babf294f97bdd764c9d47ec8a57",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/53b233072f707d2abfd62b0df4bc2dc27caf3274",
+                "reference": "53b233072f707d2abfd62b0df4bc2dc27caf3274",
                 "shasum": ""
             },
             "require": {
@@ -237,9 +237,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.311.1"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.312.0"
             },
-            "time": "2024-06-06T18:05:50+00:00"
+            "time": "2024-06-10T18:04:10+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -2513,16 +2513,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.358.0",
+            "version": "v0.359.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "a6daf60ee25cb45b6e3dbd04b62d1df39a609fbd"
+                "reference": "e975e6d0efa47f7e49280c4ea7fd6a93b6d7e338"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/a6daf60ee25cb45b6e3dbd04b62d1df39a609fbd",
-                "reference": "a6daf60ee25cb45b6e3dbd04b62d1df39a609fbd",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/e975e6d0efa47f7e49280c4ea7fd6a93b6d7e338",
+                "reference": "e975e6d0efa47f7e49280c4ea7fd6a93b6d7e338",
                 "shasum": ""
             },
             "require": {
@@ -2551,9 +2551,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.358.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.359.0"
             },
-            "time": "2024-06-03T01:02:16+00:00"
+            "time": "2024-06-10T01:02:17+00:00"
         },
         {
             "name": "google/auth",
@@ -6242,16 +6242,16 @@
         },
         {
             "name": "psy/psysh",
-            "version": "v0.12.3",
+            "version": "v0.12.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bobthecow/psysh.git",
-                "reference": "b6b6cce7d3ee8fbf31843edce5e8f5a72eff4a73"
+                "reference": "2fd717afa05341b4f8152547f142cd2f130f6818"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/b6b6cce7d3ee8fbf31843edce5e8f5a72eff4a73",
-                "reference": "b6b6cce7d3ee8fbf31843edce5e8f5a72eff4a73",
+                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/2fd717afa05341b4f8152547f142cd2f130f6818",
+                "reference": "2fd717afa05341b4f8152547f142cd2f130f6818",
                 "shasum": ""
             },
             "require": {
@@ -6315,9 +6315,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bobthecow/psysh/issues",
-                "source": "https://github.com/bobthecow/psysh/tree/v0.12.3"
+                "source": "https://github.com/bobthecow/psysh/tree/v0.12.4"
             },
-            "time": "2024-04-02T15:57:53+00:00"
+            "time": "2024-06-10T01:18:23+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -6546,29 +6546,30 @@
         },
         {
             "name": "s-ichikawa/laravel-sendgrid-driver",
-            "version": "3.0.4",
+            "version": "4.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/s-ichikawa/laravel-sendgrid-driver.git",
-                "reference": "55cddf5288cde0fdd49083bba9fe5a2023c59d8f"
+                "reference": "5a96a8430c834b3715543bcdfa202890b42f6b5c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/s-ichikawa/laravel-sendgrid-driver/zipball/55cddf5288cde0fdd49083bba9fe5a2023c59d8f",
-                "reference": "55cddf5288cde0fdd49083bba9fe5a2023c59d8f",
+                "url": "https://api.github.com/repos/s-ichikawa/laravel-sendgrid-driver/zipball/5a96a8430c834b3715543bcdfa202890b42f6b5c",
+                "reference": "5a96a8430c834b3715543bcdfa202890b42f6b5c",
                 "shasum": ""
             },
             "require": {
-                "guzzlehttp/guzzle": "^6.3 || ^7.0",
-                "illuminate/mail": ">=7.0",
-                "illuminate/support": ">=7.0"
+                "guzzlehttp/guzzle": "^7.2",
+                "illuminate/mail": "^9.0||^10.0||^11.0",
+                "illuminate/notifications": "^9.0||^10.0||^11.0",
+                "illuminate/support": "^9.0||^10.0||^11.0"
             },
             "require-dev": {
-                "illuminate/container": ">=7.0",
-                "illuminate/filesystem": ">=7.0",
+                "illuminate/container": "^9.0||^10.0||^11.0",
+                "illuminate/filesystem": "^9.0||^10.0||^11.0",
                 "laravel/helpers": "^1.2",
-                "phpunit/phpunit": "^8.5",
-                "vlucas/phpdotenv": "^4.1 || ^5.2"
+                "phpunit/phpunit": "^9.5.8||^10.0",
+                "vlucas/phpdotenv": "^5.4.1"
             },
             "suggest": {
                 "s-ichikawa/sendgrid-api-builder": "support to build json for sendgrid api"
@@ -6603,23 +6604,15 @@
             ],
             "support": {
                 "issues": "https://github.com/s-ichikawa/laravel-sendgrid-driver/issues",
-                "source": "https://github.com/s-ichikawa/laravel-sendgrid-driver/tree/3.0.4"
+                "source": "https://github.com/s-ichikawa/laravel-sendgrid-driver/tree/4.0.5"
             },
             "funding": [
                 {
-                    "url": "https://github.com/[user1",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/s-ichikawa]# Replace with up to 4 GitHub Sponsors-enabled usernames e.g.",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/user2",
+                    "url": "https://github.com/s-ichikawa",
                     "type": "github"
                 }
             ],
-            "time": "2021-06-06T15:18:57+00:00"
+            "time": "2024-03-15T01:27:19+00:00"
         },
         {
             "name": "simplesoftwareio/simple-qrcode",

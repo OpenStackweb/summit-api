@@ -42,7 +42,7 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTest
 
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');

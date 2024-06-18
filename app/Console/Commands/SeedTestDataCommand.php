@@ -60,8 +60,11 @@ final class SeedTestDataCommand extends Command
     public function handle(): void
     {
         try {
+            $this->info("inserting test Member data ...");
             self::insertMemberTestData(IGroup::FoundationMembers);
+            $this->info("inserting test Summit data ...");
             self::insertSummitTestData();
+            $this->info("inserting test Order data ...");
             self::InsertOrdersTestData();
         } catch (\Exception $e){
             $this->error($e->getMessage());

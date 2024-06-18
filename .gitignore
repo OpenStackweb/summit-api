@@ -30,3 +30,4 @@ routes.txt
 phpunit.xml
 .phpunit.result.cache
 package.xml
+.env.dev

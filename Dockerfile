@@ -1,16 +1,16 @@
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG GITHUB_OAUTH_TOKEN
 ARG XDEBUG_VERSION="xdebug-3.3.2"
 
-ENV NVM_DIR /usr/local/nvm
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
 ENV PHP_DIR /usr/local/etc/php
 
 # base packages
-RUN apt-get update && apt-get install -y \
+RUN apt-get update
+RUN apt-get install -y \
     git \
     curl \
     libpng-dev \
@@ -37,6 +37,9 @@ RUN install-php-extensions bcmath exif gettext gd imagick mbstring openssl pcntl
 
 # XDEBUG
 COPY docker-compose/php/docker-php-ext-xdebug.ini $PHP_DIR/conf.d/docker-php-ext-xdebug.ini
+
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+RUN echo 'memory_limit = 512M' >> $PHP_INI_DIR/php.ini;
 
 WORKDIR /var/www
 COPY . /var/www

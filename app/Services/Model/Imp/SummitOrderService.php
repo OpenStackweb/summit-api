@@ -1842,7 +1842,7 @@ final class SummitOrderService
             (
                 sprintf
                 (
-                    "SummitOrderService::_assignTicket order id %s ticket id %s payload %s",
+                    "SummitOrderService::ownerAssignTicket order id %s ticket id %s payload %s",
                     $order_id,
                     $ticket_id,
                     json_encode($payload)
@@ -1882,6 +1882,7 @@ final class SummitOrderService
 
             if ($ticket->hasOwner()) {
 
+                Log::debug(sprintf("SummitOrderService::ownerAssignTicket - ticket %s has owner", $ticket->getId()));
                 if ($summit->hasReassignTicketLimit()) {
                     $now = new \DateTime('now', new \DateTimeZone('UTC'));
                     if ($now > $summit->getReassignTicketTillDate()) {
@@ -1907,7 +1908,7 @@ final class SummitOrderService
                 (
                     sprintf
                     (
-                        "SummitOrderService::_assignTicket - attendee does not exists for email %s trying to get by member",
+                        "SummitOrderService::ownerAssignTicket - attendee does not exists for email %s trying to get by member",
                         $email
                     )
                 );
@@ -1920,13 +1921,15 @@ final class SummitOrderService
                 (
                     sprintf
                     (
-                        "SummitOrderService::_assignTicket - attendee does not exists for email %s creating it",
+                        "SummitOrderService::ownerAssignTicket - attendee does not exists for email %s creating it",
                         $email
                     )
                 );
                 $attendee = SummitAttendeeFactory::build($summit, [
                     'email' => $email,
                 ], $member);
+
+                $this->attendee_repository->add($attendee, true);
             }
 
             // normalize payload

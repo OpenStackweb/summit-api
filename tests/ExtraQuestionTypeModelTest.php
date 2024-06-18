@@ -101,7 +101,7 @@ class MockExtraQuestionAnswerHolder
     /**
      * @param SummitOrderExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer): void
+    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer): void
     {
         $this->answers[] = $answer;
     }

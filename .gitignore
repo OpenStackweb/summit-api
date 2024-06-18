@@ -33,3 +33,4 @@ phpunit.xml
 docker-compose/mysql/config/*.sql
 docker-compose/mysql/model/*.sql
 package.xml
+.env.dev

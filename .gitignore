@@ -31,3 +31,4 @@ phpunit.xml
 .phpunit.result.cache
 .phpunit.cache/
 package.xml
+.env.dev

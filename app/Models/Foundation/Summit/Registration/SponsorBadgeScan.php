@@ -203,9 +203,9 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
         return $this->extra_question_answers;
     }
 
-    public function clearExtraQuestionAnswers()
+    public function clearExtraQuestionAnswers(): void
     {
-        return $this->extra_question_answers->clear();
+        $this->extra_question_answers->clear();
     }
 
     /**

@@ -100,7 +100,7 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'allow_update_attendee_extra_questions' => 'sometimes|boolean',
             'time_zone_label' => 'sometimes|string',
             'registration_allowed_refund_request_till_date' => 'nullable|date_format:U',
-            'registration_slug_prefix' => 'sometimes|string|max:50',
+            'registration_slug_prefix' => 'required|string|max:50',
             'mux_token_id' => 'nullable|string',
             'mux_token_secret' => 'nullable|string',
             'mux_allowed_domains' => ['sometimes', new DomainArray()],

@@ -66,6 +66,12 @@ interface ISummitRepository extends IBaseRepository
     public function getBySlug(string $slug):?Summit;
 
     /**
+     * @param string $registration_slug_prefix
+     * @return Summit|null
+     */
+    public function getByRegistrationSlugPrefix(string $registration_slug_prefix):?Summit;
+
+    /**
      * @param string $slug
      * @return Summit|null
      */

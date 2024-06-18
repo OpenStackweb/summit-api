@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\IStatsConstants;
+use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Illuminate\Http\UploadedFile;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
@@ -27,10 +28,13 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
     use InsertSummitTestData;
 
+    use InsertOrdersTestData;
+
     protected function setUp():void
     {
         parent::setUp();
         self::insertSummitTestData();
+        self::InsertOrdersTestData();
     }
 
     public function tearDown():void
@@ -368,12 +372,14 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $name        = str_random(16).'_summit';
         $data = [
             'name'         => $name,
+            'slug'         => $name,
+            'registration_slug_prefix' => 'test_registration_slug_prefix',
             'start_date'   => 1522853212,
             'end_date'     => 1542853212,
             'time_zone_id' => 'America/Argentina/Buenos_Aires',
             'submission_begin_date' => null,
             'submission_end_date' => null,
-            'api_feed_type' => IExternalScheduleFeedFactory::SchedType,
+            'api_feed_type' => ISummitExternalScheduleFeedType::SchedType,
             'api_feed_url'  =>  'https://localhost.com',
             'api_feed_key'  => 'secret'
         ];
@@ -495,6 +501,66 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($summit));
 
         return $summit;
+    }
+
+    private function updateSummitRegSlugPrefix($summit_id, $data): \Laravel\BrowserKitTesting\TestResponse
+    {
+        $params = [
+            'id' => $summit_id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        return $this->action(
+            "PUT",
+            "OAuth2SummitApiController@updateSummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+    }
+    public function testUpdateSummitRegSlugPrefix(){
+        $summit = $this->testAddSummit();
+        $new_registration_slug_prefix = $summit->registration_slug_prefix . '_UPDATED';
+        $data = [
+            'slug'                     => $summit->slug,
+            'registration_slug_prefix' => $new_registration_slug_prefix
+        ];
+        $response = $this->updateSummitRegSlugPrefix($summit->id, $data);
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $summit = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        $this->assertEquals($new_registration_slug_prefix, $summit->registration_slug_prefix);
+        return $summit;
+    }
+
+    public function testUpdateSummitRegSlugPrefixWhenSlugAlreadyExists(){
+        $data = [
+            'slug'                     => self::$summit->getSlug(),
+            'registration_slug_prefix' => 'TS2'
+        ];
+        $response = $this->updateSummitRegSlugPrefix(self::$summit->getId(), $data);
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('already belongs to summit', $content);
+    }
+
+    public function testUpdateSummitRegSlugPrefixHavingPaidTickets(){
+        $data = [
+            'slug'                     => self::$summit->getSlug(),
+            'registration_slug_prefix' => self::$summit->getRegistrationSlugPrefix() . '_updated'
+        ];
+        $response = $this->updateSummitRegSlugPrefix(self::$summit->getId(), $data);
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('there are paid tickets', $content);
     }
 
     public function testDeleteSummit(){

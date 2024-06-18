@@ -436,7 +436,9 @@ final class SummitFactory
             $summit->setExternalRegistrationFeedApiKey(trim($data['external_registration_feed_api_key']));
         }
 
-        $summit->generateRegistrationSlugPrefix();
+        if(isset($data['registration_slug_prefix']) ){
+            $summit->setRegistrationSlugPrefix($data['registration_slug_prefix']);
+        }
 
         // urls
 

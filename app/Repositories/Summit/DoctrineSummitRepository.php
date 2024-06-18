@@ -200,6 +200,26 @@ final class DoctrineSummitRepository
     }
 
     /**
+     * @param string $registration_slug_prefix
+     * @return Summit|null
+     */
+    public function getByRegistrationSlugPrefix(string $registration_slug_prefix): ?Summit
+    {
+        try {
+            return $this->getEntityManager()->createQueryBuilder()
+                ->select("s")
+                ->from($this->getBaseEntity(), "s")
+                ->where('s.registration_slug_prefix = :registration_slug_prefix')
+                ->setParameter('registration_slug_prefix', trim($registration_slug_prefix))
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+            return null;
+        }
+    }
+
+    /**
      * @param string $qr_enc_key
      * @return Summit|null
      */

@@ -4,4 +4,4 @@ export DOCKER_SCAN_SUGGEST=false
 
 docker compose stop
 docker compose rm
-#docker compose up -d --build --force-recreate
+docker compose up -d --build --force-recreate

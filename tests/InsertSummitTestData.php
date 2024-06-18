@@ -48,7 +48,6 @@ use models\summit\SponsorMaterial;
 use models\summit\SponsorshipType;
 use models\summit\SponsorSocialNetwork;
 use models\summit\SponsorSummitRegistrationDiscountCode;
-use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -293,6 +292,8 @@ trait InsertSummitTestData
 
         self::$summit = new Summit();
         self::$summit->setActive(true);
+        self::$summit->setAvailableOnApi(true);
+        self::$summit->setRawSlug("TEST1");
         // set feed type (sched)
         self::$summit->setApiFeedUrl("");
         self::$summit->setApiFeedKey("");
@@ -496,6 +497,8 @@ trait InsertSummitTestData
 
         self::$summit2 = new Summit();
         self::$summit2->setActive(true);
+        self::$summit2->setAvailableOnApi(true);
+        self::$summit2->setRawSlug("TEST2");
         // set feed type (sched)
         self::$summit2->setApiFeedUrl("");
         self::$summit2->setApiFeedKey("");

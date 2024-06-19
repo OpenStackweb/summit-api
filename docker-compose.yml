@@ -37,7 +37,7 @@ services:
   db_config:
     image: mysql:8.0
     container_name: summit-api-config-db-local
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
     restart: unless-stopped
     ports:
       - "32780:3306"
@@ -60,7 +60,7 @@ services:
   db_model:
     image: mysql:8.0
     container_name: summit-api-model-db-local
-    command: --default-authentication-plugin=mysql_native_password --sql_mode=ONLY_FULL_GROUP_BY,NO_ENGINE_SUBSTITUTION
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
     restart: unless-stopped
     ports:
       - "32781:3306"

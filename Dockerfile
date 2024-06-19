@@ -39,7 +39,7 @@ RUN install-php-extensions bcmath exif gettext gd imagick mbstring openssl pcntl
 COPY docker-compose/php/docker-php-ext-xdebug.ini $PHP_DIR/conf.d/docker-php-ext-xdebug.ini
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
-RUN echo 'memory_limit = 512M' >> $PHP_INI_DIR/php.ini;
+RUN echo 'memory_limit = 1024M' >> $PHP_INI_DIR/php.ini;
 
 WORKDIR /var/www
 COPY . /var/www

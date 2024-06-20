@@ -11,50 +11,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use models\summit\SummitMediaFileType;
+use Tests\InsertMemberTestData;
+use Tests\InsertOrdersTestData;
+use Tests\InsertSummitTestData;
 
 /**
  * Class TestSeeder
  */
-final class TestSeeder extends Seeder
+final class MainDataSeeder extends Seeder
 {
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    use InsertOrdersTestData;
+
     public function run()
     {
         Model::unguard();
         DB::setDefaultConnection("model");
-        if(env('TESTS_CLEAR_EVERYTHING', true)) {
-            DB::delete("DELETE FROM SummitBadgeViewType");
-            DB::delete("DELETE FROM SummitMediaFileType");
-            DB::delete('DELETE FROM SponsorSummitRegistrationDiscountCode');
-            DB::delete("DELETE FROM SummitRegistrationPromoCode");
-            DB::delete("DELETE FROM Sponsor");
-            DB::delete("DELETE FROM Company");
-            DB::table('SummitMediaFileType')->delete();
-            DB::table('PresentationTrackChairRatingType')->delete();
-            DB::table('SummitScheduleConfig')->delete();
-            DB::table('Presentation')->delete();
-            DB::table('SummitEvent')->delete();
-            DB::table('Summit')->delete();
-            DB::table('SummitEventType')->delete();
-            DB::table('PresentationType')->delete();
-            DB::table('SummitAbstractLocation')->delete();
-            DB::table('SummitGeoLocatedLocation')->delete();
-            DB::table('SummitVenue')->delete();
-        }
+        DB::delete('DELETE FROM DefaultSummitEventType');
+        DB::delete("DELETE FROM SummitBadgeViewType");
+        DB::delete("DELETE FROM SummitMediaFileType");
+        DB::delete('DELETE FROM SponsorSummitRegistrationDiscountCode');
+        DB::delete("DELETE FROM SummitRegistrationPromoCode");
+        DB::delete("DELETE FROM Sponsor");
+        DB::delete("DELETE FROM Company");
+        DB::table('SummitMediaFileType')->delete();
+        DB::table('PresentationTrackChairRatingType')->delete();
+        DB::table('SummitScheduleConfig')->delete();
+        DB::table('Presentation')->delete();
+        DB::table('SummitEvent')->delete();
+        DB::table('Summit')->delete();
+        DB::table('SummitEventType')->delete();
+        DB::table('PresentationType')->delete();
+        DB::table('SummitAbstractLocation')->delete();
+        DB::table('SummitGeoLocatedLocation')->delete();
+        DB::table('SummitVenue')->delete();
 
-        DB::setDefaultConnection("config");
-        $this->call(ApiSeeder::class);
-        $this->call(ApiScopesSeeder::class);
-        $this->call(ApiEndpointsSeeder::class);
         // summit
         $this->call(DefaultEventTypesSeeder::class);
         $this->call(DefaultPrintRulesSeeder::class);
         $this->call(SummitEmailFlowTypeSeeder::class);
         $this->call(SummitEmailFlowEventSeeder::class);
         $this->call(SummitMediaFileTypeSeeder::class);
+
     }
 }

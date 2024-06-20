@@ -108,6 +108,7 @@ abstract class RetrieveSummitEventsStrategy
                 'end_date',
                 'id',
                 'created',
+                'last_edited',
                 'track',
                 'random',
                 'page_random',
@@ -202,6 +203,8 @@ abstract class RetrieveSummitEventsStrategy
             'has_not_media_upload_with_type' => ['=='],
             'actions' => ['=='],
             'review_status' => ['=='],
+            'created' => ['>', '<', '<=', '>=', '==','[]'],
+            'last_edited' => ['>', '<', '<=', '>=', '==','[]'],
         ];
     }
 
@@ -257,6 +260,8 @@ abstract class RetrieveSummitEventsStrategy
             'has_not_media_upload_with_type' => 'sometimes|integer',
             'actions' => 'sometimes|string',
             'review_status' => 'sometimes|string|in:' . implode(',', Presentation::AllowedReviewStatus),
+            'created' => 'sometimes|required|date_format:U',
+            'last_edited' => 'sometimes|required|date_format:U',
         ];
     }
 }

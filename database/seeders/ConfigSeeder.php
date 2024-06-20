@@ -26,6 +26,13 @@ final class ConfigSeeder extends Seeder
     {
         Model::unguard();
         DB::setDefaultConnection("config");
+
+        DB::delete('DELETE FROM endpoint_api_scopes');
+        DB::delete('DELETE FROM endpoint_api_authz_groups');
+        DB::delete('DELETE FROM api_scopes');
+        DB::delete('DELETE FROM api_endpoints');
+        DB::delete('DELETE FROM apis');
+
         $this->call(ApiSeeder::class);
         $this->call(ApiScopesSeeder::class);
         $this->call(ApiEndpointsSeeder::class);

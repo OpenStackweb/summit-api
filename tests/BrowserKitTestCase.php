@@ -59,6 +59,15 @@ abstract class BrowserKitTestCase extends BaseTestCase
         DB::setDefaultConnection("model");
         Artisan::call('doctrine:migrations:migrate', ["--em" => 'config', '--no-interaction' => true]);
         Artisan::call('doctrine:migrations:migrate', ["--em" => 'model', '--no-interaction' => true]);
+
+        DB::setDefaultConnection("config");
+
+        DB::delete('DELETE FROM endpoint_api_scopes');
+        DB::delete('DELETE FROM endpoint_api_authz_groups');
+        DB::delete('DELETE FROM api_scopes');
+        DB::delete('DELETE FROM api_endpoints');
+        DB::delete('DELETE FROM apis');
+
         $this->seed(ConfigSeeder::class);
         $this->seed(MainDataSeeder::class);
     }

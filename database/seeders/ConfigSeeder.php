@@ -12,9 +12,11 @@
  * limitations under the License.
 */
 
+use App\Models\ResourceServer\Api;
+use App\Models\ResourceServer\ResourceServerEntity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use LaravelDoctrine\ORM\Facades\Registry;
 
 /**
  * Class ConfigSeeder
@@ -25,13 +27,19 @@ final class ConfigSeeder extends Seeder
     public function run()
     {
         Model::unguard();
-        DB::setDefaultConnection("config");
 
-        DB::delete('DELETE FROM endpoint_api_scopes');
-        DB::delete('DELETE FROM endpoint_api_authz_groups');
-        DB::delete('DELETE FROM api_scopes');
-        DB::delete('DELETE FROM api_endpoints');
-        DB::delete('DELETE FROM apis');
+        // clear all apis
+        $em = Registry::getManager(ResourceServerEntity::EntityManager);
+        $api_repository = $em->getRepository(Api::class);
+
+        foreach($api_repository->getAll() as $api){
+            echo "deleting api ".$api->getName().PHP_EOL;
+            $api->clearEndpoints();
+            $api->clearScopes();
+            $api_repository->delete($api);
+        }
+
+        $em->flush();
 
         $this->call(ApiSeeder::class);
         $this->call(ApiScopesSeeder::class);

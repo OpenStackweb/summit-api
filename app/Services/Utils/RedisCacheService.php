@@ -57,6 +57,9 @@ class RedisCacheService implements ICacheService
             $metadata = var_export(stream_get_meta_data($resource), true);
             Log::error(sprintf("RedisCacheService::__destruct %s %s %s", $ex->getCode(), $ex->getMessage(), $metadata));
         }
+        catch(\Exception $ex){
+            Log::warning($ex);
+        }
     }
 
     /**

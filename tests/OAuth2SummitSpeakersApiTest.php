@@ -1281,4 +1281,108 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
         $media_upload = $accepted_presentation->media_uploads[0];
         $this->assertTrue(in_array($media_upload->media_upload_type_id, $media_upload_ids));
     }
+
+    public function testGetCurrentSummitSpeakers()
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 50,
+            'order'    => '+first_name,-last_name'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testAllSpeakers()
+    {
+        $params = [
+            'page'     => 1,
+            'per_page' => 15,
+            'filter'   => 'first_name=@John,last_name=@Bryce,email=@sebastian@',
+            'order'    => '+first_name,-last_name'
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testAllSpeakersFilterByFullName()
+    {
+        $params = [
+            'page'     => 1,
+            'per_page' => 15,
+            'filter'   => 'full_name=@Bryce',
+            'order'    => '+first_name,-last_name'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+
+    public function testGetMySpeakerFromCurrentSummit()
+    {
+
+        $params = array
+        (
+            'expand' => 'presentations',
+            'id' => 6,
+            'speaker_id' => 'me'
+        );
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeaker",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speaker = json_decode($content);
+        $this->assertTrue(!is_null($speaker));
+    }
 }

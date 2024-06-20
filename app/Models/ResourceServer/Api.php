@@ -24,12 +24,12 @@ class Api extends ResourceServerEntity implements IApi
 {
 
     /**
-     * @ORM\OneToMany(targetEntity="ApiScope", mappedBy="api", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="ApiScope", mappedBy="api", cascade={"persist", "remove"}, orphanRemoval=true)
      */
     private $scopes;
 
     /**
-     * @ORM\OneToMany(targetEntity="ApiEndpoint", mappedBy="api", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="ApiEndpoint", mappedBy="api", cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $endpoints;
 
@@ -179,5 +179,20 @@ class Api extends ResourceServerEntity implements IApi
             $ids[] = intval($e->getId());
         }
         return $ids;
+    }
+
+    public function clearEndpoints():void
+    {
+        foreach($this->endpoints as $endpoint)
+        {
+            $endpoint->clearScopes();
+            $endpoint->clearAuthzGroups();
+        }
+        $this->endpoints->clear();
+    }
+
+    public function clearScopes():void
+    {
+        $this->scopes->clear();
     }
 }

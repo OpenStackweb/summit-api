@@ -39,7 +39,7 @@ create table api_endpoints
     constraint UNIQ_A1C980CB5E237E06
         unique (name),
     constraint FK_A1C980CB54963938
-        foreign key (api_id) references apis (id)
+        foreign key (api_id) references apis (id) ON DELETE CASCADE ON UPDATE RESTRICT
 )
     collate = utf8mb3_unicode_ci;
 
@@ -78,7 +78,7 @@ create table endpoint_api_authz_groups
     constraint UNIQ_B388DE9C4BD8F4B8B1C7C012
         unique (api_endpoint_id, group_slug),
     constraint FK_B388DE9C4BD8F4B8
-        foreign key (api_endpoint_id) references api_endpoints (id)
+        foreign key (api_endpoint_id) references api_endpoints (id) ON DELETE CASCADE ON UPDATE RESTRICT
 )
     collate = utf8mb3_unicode_ci;
 
@@ -94,9 +94,9 @@ create table endpoint_api_scopes
     created_at      datetime default CURRENT_TIMESTAMP not null,
     updated_at      datetime default CURRENT_TIMESTAMP not null,
     constraint FK_C3E8B8BE4BD8F4B8
-        foreign key (api_endpoint_id) references api_endpoints (id),
+        foreign key (api_endpoint_id) references api_endpoints (id) ON DELETE CASCADE ON UPDATE RESTRICT,
     constraint FK_C3E8B8BE682B5931
-        foreign key (scope_id) references api_scopes (id)
+        foreign key (scope_id) references api_scopes (id) ON DELETE CASCADE ON UPDATE RESTRICT
 )
     collate = utf8mb3_unicode_ci;
 

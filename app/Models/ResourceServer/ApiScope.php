@@ -23,6 +23,44 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class ApiScope extends ResourceServerEntity implements IApiScope
 {
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Api", inversedBy="scopes")
+     * @ORM\JoinColumn(name="api_id", referencedColumnName="id")
+     * @var Api
+     */
+    private $api;
+
+    /**
+     * @ORM\Column(name="name", type="string")
+     * @var string
+     */
+    private $name;
+
+    /**
+     * @ORM\Column(name="description", type="string")
+     * @var string
+     */
+    private $description;
+
+    /**
+     * @ORM\Column(name="short_description", type="string")
+     * @var string
+     */
+    private $short_description;
+
+    /**
+     * @ORM\Column(name="active", type="boolean")
+     * @var bool
+     */
+    private $active;
+
+    /**
+     * @ORM\Column(name="`default`", type="boolean")
+     * @var bool
+     */
+    private $default;
+
     /**
      * @return IApi
      */
@@ -38,13 +76,6 @@ class ApiScope extends ResourceServerEntity implements IApiScope
     {
         $this->api = $api;
     }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Api", inversedBy="scopes")
-     * @ORM\JoinColumn(name="api_id", referencedColumnName="id")
-     * @var Api
-     */
-	private $api;
 
     /**
      * @return string
@@ -110,17 +141,7 @@ class ApiScope extends ResourceServerEntity implements IApiScope
         $this->active = $active;
     }
 
-    /**
-     * @ORM\Column(name="name", type="string")
-     * @var string
-     */
-	private $name;
 
-    /**
-     * @ORM\Column(name="description", type="string")
-     * @var string
-     */
-    private $description;
 
     /**
      * @return boolean
@@ -137,24 +158,6 @@ class ApiScope extends ResourceServerEntity implements IApiScope
     {
         $this->default = $default;
     }
-
-    /**
-     * @ORM\Column(name="short_description", type="string")
-     * @var string
-     */
-    private $short_description;
-
-    /**
-     * @ORM\Column(name="active", type="boolean")
-     * @var bool
-     */
-    private $active;
-
-    /**
-     * @ORM\Column(name="`default`", type="boolean")
-     * @var bool
-     */
-    private $default;
 
     public function __construct()
     {

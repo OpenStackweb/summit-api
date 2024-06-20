@@ -203,7 +203,8 @@ class DefaultSummitEventType extends SilverstripeBaseModel
 
     public function __construct()
     {
-        $this->blackout_times = false;
+        parent::__construct();
+        $this->blackout_times = SummitEventTypeConstants::BLACKOUT_TIME_NONE;
         $this->use_sponsors = false;
         $this->are_sponsors_mandatory = false;
         $this->allows_attachment = false;

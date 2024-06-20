@@ -1,5 +1,6 @@
 <?php namespace Tests;
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
@@ -2040,5 +2041,51 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $events = json_decode($content);
         $this->assertTrue(!is_null($events));
+    }
+
+    public function testImportEventData(){
+        /*        $csv_content = <<<CSV
+        title,abstract,type,track,social_summary,allow_feedback,to_record,tags,speakers_names,speakers,start_date,end_date,is_published,selection_plan,attendees_expected_learnt,problem_addressed,location
+        test1,test abstract1,TEST PRESENTATION TYPE,DEFAULT TRACK,social test1,1,1,tag1|tag2|tag3,Sebas Marcet|Sebas 1 Marcet|Sebas 2 Marcet,smarcet@gmail.com|smarcet+1@gmail.com,smarcet+2@gmail.com,2020-01-01 13:00:00,2020-01-01 13:45:00,1,TEST_SELECTION_PLAN,DEFAULT TRACK,big things,world issues,TEST VENUE
+        test2,test abstract2,TEST PRESENTATION TYPE,DEFAULT TRACK,social test2,1,1,tag1|tag2,Sebas  Marcet,smarcet@gmail.com,2020-01-01 13:45:00,2020-01-01 14:45:00,1,TEST_SELECTION_PLAN,big things,world issues,TEST VENUE
+        test3,test abstract3,TEST PRESENTATION TYPE,DEFAULT TRACK,social test3,1,1,tag4,Sebas 2 Marcet,smarcet+2@gmail.com,2020-01-01 14:45:00,2020-01-01 15:45:00,1,TEST_SELECTION_PLAN,big things,world issues,
+        CSV;*/
+        $csv_content = <<<CSV
+track,start_date,end_date,type,title,abstract,attendees_expected_learnt,social_summary ,speakers_names,speakers,selection_plan
+Security,2020-11-12 8:00:00,2020-11-12 9:00:00,Presentation,Security Projects Alignment,"OCP-Security scope / threat model
+Compare Resiliency approaches
+General role of RoT
+Alignment on security requirements across OCP Server sub-groups.",Cross-orgs alignment/sync on scope and approaches ,,JP Mon,jp@tipit.net,Draft Presentations Submissions
+CSV;
+
+        $path = "/tmp/events.csv";
+
+        file_put_contents($path, $csv_content);
+
+        $file = new UploadedFile($path, "events.csv", 'text/csv', null, true);
+
+        $params = [
+            'summit_id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitEventsApiController@importEventData",
+            $params,
+            [
+                'send_speaker_email' => true,
+            ],
+            [],
+            [
+                'file' => $file,
+            ],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
     }
 }

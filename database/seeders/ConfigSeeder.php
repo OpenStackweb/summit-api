@@ -1,4 +1,4 @@
-<?php
+<?php namespace Database\Seeders;
 /*
  * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -10,11 +10,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+*/
 
-namespace Database\Seeders;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
-class ConfigSeeder
+/**
+ * Class ConfigSeeder
+ * @package Database\Seeders
+ */
+final class ConfigSeeder extends Seeder
 {
-
+    public function run()
+    {
+        Model::unguard();
+        DB::setDefaultConnection("config");
+        $this->call(ApiSeeder::class);
+        $this->call(ApiScopesSeeder::class);
+        $this->call(ApiEndpointsSeeder::class);
+    }
 }

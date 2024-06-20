@@ -30,17 +30,17 @@ final class ConfigSeeder extends Seeder
 
         // clear all apis
         $em = Registry::getManager(ResourceServerEntity::EntityManager);
-        $api_repository = $em->getRepository(Api::class);
-
-        foreach($api_repository->getAll() as $api){
-            echo "deleting api ".$api->getName().PHP_EOL;
-            $api->clearEndpoints();
-            $api->clearScopes();
-            $api_repository->delete($api);
+        $connection = $em->getConnection();
+        $sqls = [
+            'DELETE FROM endpoint_api_scopes',
+            'DELETE FROM endpoint_api_authz_groups',
+            'DELETE FROM api_endpoints;',
+            'DELETE FROM api_scopes;',
+            'DELETE FROM apis;',
+        ];
+        foreach ($sqls as $sql) {
+            $connection->executeStatement($sql);
         }
-
-        $em->flush();
-
         $this->call(ApiSeeder::class);
         $this->call(ApiScopesSeeder::class);
         $this->call(ApiEndpointsSeeder::class);

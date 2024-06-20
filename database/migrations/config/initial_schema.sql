@@ -60,7 +60,7 @@ create table api_scopes
     created_at        datetime default CURRENT_TIMESTAMP not null,
     updated_at        datetime default CURRENT_TIMESTAMP not null,
     constraint FK_8223A4B054963938
-        foreign key (api_id) references apis (id)
+        foreign key (api_id) references apis (id) ON DELETE CASCADE ON UPDATE RESTRICT
 )
     collate = utf8mb3_unicode_ci;
 

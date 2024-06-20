@@ -25,12 +25,13 @@ final class ApiSeeder extends Seeder
 
     public function run()
     {
+        DB::setDefaultConnection("config");
 
-        DB::table('endpoint_api_scopes')->delete();
-        DB::table('endpoint_api_authz_groups')->delete();
-        DB::table('api_scopes')->delete();
-        DB::table('api_endpoints')->delete();
-        DB::table('apis')->delete();
+        DB::delete('DELETE FROM endpoint_api_scopes');
+        DB::delete('DELETE FROM endpoint_api_authz_groups');
+        DB::delete('DELETE FROM api_scopes');
+        DB::delete('DELETE FROM api_endpoints');
+        DB::delete('DELETE FROM apis');
 
         // summit
 

@@ -1,5 +1,4 @@
 <?php namespace Tests;
-use App\Models\Foundation\Main\IGroup;
 
 /**
  * Copyright 2022 OpenStack Foundation
@@ -13,7 +12,9 @@ use App\Models\Foundation\Main\IGroup;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\Main\IGroup;
+use Illuminate\Http\UploadedFile;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 /**
  * Class OAuth2PresentationApiTest
  */
@@ -459,5 +460,240 @@ final class OAuth2PresentationApiTest extends ProtectedApiTest
         );
 
         $this->assertResponseStatus(204);
+    }
+
+    public function testAddPresentationVideo($summit_id = 25)
+    {
+        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $repo->getById($summit_id);
+        $presentation = $summit->getPublishedPresentations()[0];
+        $params = array
+        (
+            'id' => $summit_id,
+            'presentation_id' => $presentation->getId()
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $video_data = array
+        (
+            'youtube_id' => 'cpHa7kSOur0',
+            'name' => 'test video',
+            'description' => 'test video',
+            'display_on_site' => true,
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2PresentationApiController@addVideo",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($video_data)
+        );
+
+        $video_id = $response->getContent();
+        $this->assertResponseStatus(201);
+        return intval($video_id);
+    }
+
+    public function testUpdatePresentationVideo()
+    {
+        $video_id = $this->testAddPresentationVideo($summit_id = 25);
+
+        $params = array
+        (
+            'id' => 7,
+            'presentation_id' => 15404,
+            'video_id' => $video_id
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $video_data = array
+        (
+            'youtube_id' => 'cpHa7kSOur0',
+            'name' => 'test video update',
+        );
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2PresentationApiController@updateVideo",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($video_data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+
+    }
+
+    public function testGetPresentationVideos()
+    {
+
+        //$video_id = $this->testAddPresentationVideo(7, 15404);
+
+        $params = array
+        (
+            'id' => 7,
+            'presentation_id' => 15404,
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2PresentationApiController@getPresentationVideos",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+    }
+
+    public function testDeletePresentationVideo()
+    {
+        $video_id = $this->testAddPresentationVideo($summit_id = 25);
+
+        $params = array
+        (
+            'id' => 7,
+            'presentation_id' => 15404,
+            'video_id' => $video_id
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "DELETE",
+            "OAuth2PresentationApiController@deleteVideo",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+
+    }
+
+    public function testAddPresentationSlide($summit_id=25){
+
+        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $repo->getById($summit_id);
+        $presentation = $summit->getPublishedPresentations()[0];
+        $params = array
+        (
+            'id' => $summit_id,
+            'presentation_id' => $presentation->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        );
+
+        $video_data = array
+        (
+            'name' => 'test slide',
+            'description' => 'test slide',
+            'display_on_site' => true,
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2PresentationApiController@addPresentationSlide",
+            $params,
+            array(),
+            array(),
+            [
+                'file' => UploadedFile::fake()->image('slide.pdf')
+            ],
+            $headers,
+            json_encode($video_data)
+        );
+
+        $video_id = $response->getContent();
+        $this->assertResponseStatus(201);
+        return intval($video_id);
+    }
+
+    public function testAddPresentationSlideInvalidName($summit_id=25){
+
+        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $repo->getById($summit_id);
+        $presentation = $summit->getPublishedPresentations()[0];
+        $params = array
+        (
+            'id' => $summit_id,
+            'presentation_id' => $presentation->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $video_data = array
+        (
+            'name' => 'test slide',
+            'description' => 'test slide',
+            'display_on_site' => true,
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2PresentationApiController@addPresentationSlide",
+            $params,
+            array(),
+            array(),
+            [
+                'file' => UploadedFile::fake()->image('IMG 0008 副本 白底.jpg')
+            ],
+            $headers,
+            json_encode($video_data)
+        );
+
+        $video_id = $response->getContent();
+        $this->assertResponseStatus(201);
+        return intval($video_id);
     }
 }

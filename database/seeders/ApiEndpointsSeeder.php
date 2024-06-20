@@ -32,9 +32,6 @@ class ApiEndpointsSeeder extends Seeder
 
     public function run()
     {
-        DB::table('endpoint_api_scopes')->delete();
-        DB::table('endpoint_api_authz_groups')->delete();
-        DB::table('api_endpoints')->delete();
 
         $this->seedSummitEndpoints();
         $this->seedAuditLogEndpoints();

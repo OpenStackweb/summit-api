@@ -84,9 +84,9 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: Change mysql sql_mode
+      - name: Change MYSQL sql_mode
         run: >
-          docker exec mysql_api_model mysql -u root --password=1qaz2wsx -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
+          docker exec mysql_api_model mysql -u root --password=${{env.SS_DB_PASSWORD}} -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
       - name: Install PHP
         uses: "shivammathur/setup-php@v2"
         with:

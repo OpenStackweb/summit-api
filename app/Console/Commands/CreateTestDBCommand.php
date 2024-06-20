@@ -63,6 +63,8 @@ final class CreateTestDBCommand extends Command
         $schema_name = $this->option('schema');
         $this->validateOptions($schema_name);
 
+        $this->info(sprintf("Creating Test DB for schema %s", $schema_name));
+
         $db_host = env('SS_DB_HOST');
         $db_user_name = env('SS_DB_USERNAME');
         $db_password = env('SS_DB_PASSWORD');
@@ -122,8 +124,10 @@ final class CreateTestDBCommand extends Command
             foreach ($migrations as $idx => $statement) {
                 if (empty(trim($statement))) continue;
                 $pdo->exec($statement.';');
-                $this->info("running migration {$idx}");
+                $this->info("adding migration {$idx} ...");
             }
+
+            $this->info(sprintf("Test DB for schema %s created successfully!", $schema_name));
         }
         catch (\Exception $e){
             $this->error($e->getMessage());

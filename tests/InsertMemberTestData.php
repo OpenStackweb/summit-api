@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Doctrine\Persistence\ObjectRepository;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\LegalAgreement;
@@ -80,7 +81,7 @@ trait InsertMemberTestData
         self::$group->setCode($current_group_slug);
         self::$group->setTitle($current_group_slug);
         self::$em->persist(self::$group);
-
+        self::$member->clearGroups();
         self::$member->add2Group(self::$group);
 
         self::$em->persist(self::$member);
@@ -148,8 +149,6 @@ trait InsertMemberTestData
         self::$em->persist(self::$member2);
 
         self::$em->flush();
-
-        self::$member2->belongsToGroup(IGroup::BadgePrinters);
     }
 
     protected static function clearMemberTestData()
@@ -175,6 +174,10 @@ trait InsertMemberTestData
             if (!is_null(self::$group2))
                 self::$em->remove(self::$group2);
 
+            self::$member = null;
+            self::$group = null;
+            self::$member2 = null;
+            self::$group2 = null;
             self::$em->flush();
         } catch (\Exception $ex) {
 

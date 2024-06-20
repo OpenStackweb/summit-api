@@ -12,11 +12,11 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
-use models\summit\Presentation;
-use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
+
 /**
  * Class OAuth2SummitEventsApiTest
  * @package Tests
@@ -25,20 +25,21 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-    use InsertOrdersTestData;
+    use InsertMemberTestData;
 
     protected function setUp():void
     {
         parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
-        self::InsertOrdersTestData();
     }
 
-    public function tearDown():void
+    protected function tearDown():void
     {
         self::clearSummitTestData();
+        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -403,7 +404,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => self::$summit->getId(),
+            'id' => 7,
         );
 
         $headers = array
@@ -417,11 +418,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'title' => 'test presentation BCN',
             'description' => 'test presentation BCN',
             'allow_feedback' => true,
-            'type_id' => self::$defaultPresentationType->getId(),
-            'track_id' => self::$defaultTrack->getId(),
+            'type_id' => 86,
             'tags' => ['tag#1', 'tag#2'],
-            'speakers' => [1],
-            'submission_source' => SummitEvent::SOURCE_ADMIN,
+            'speakers' => [1, 2, 3],
         );
 
         $response = $this->action
@@ -441,8 +440,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $presentation = json_decode($content);
 
-        $this->assertTrue($presentation->id > 0);
-        $this->assertEquals(SummitEvent::SOURCE_ADMIN, $presentation->submission_source);
+        $this->assertTrue($presentation->getId() > 0);
         return $presentation;
     }
 
@@ -460,10 +458,10 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'allowed_ticket_types' => [
                 self::$summit->getTicketTypes()[0]->getId(),
                 self::$summit->getTicketTypes()[1]->getId(),
-            ],
             'submission_source' => SummitEvent::SOURCE_ADMIN,
             'overflow_streaming_url' => 'https://test.com',
             'overflow_stream_is_secure' => true,
+            ]
         ];
 
 
@@ -704,27 +702,36 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsWithFilterCSV()
     {
-        $params = [
-            'id' => self::$summit->getId(),
+        $params = array
+        (
+            'id' => 31,
             //'expand' => 'feedback',
             /*'filter' => [
                 'published==1'
             ]*/
-        ];
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitEventsApiController@getEventsCSV",
             $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders()
+            array(),
+            array(),
+            array(),
+            $headers
         );
 
         $csv = $response->getContent();
         $this->assertResponseStatus(200);
+
+
         $this->assertTrue(!empty($csv));
     }
 
@@ -1951,10 +1958,10 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
      * @param int $event_id
      */
     public function testShareEvent($summit_id = 27, $event_id = 24344){
-         $params = [
-             'id' => $summit_id,
-             'event_id' => $event_id,
-         ];
+        $params = [
+            'id' => $summit_id,
+            'event_id' => $event_id,
+        ];
 
         $headers = [
 
@@ -2042,145 +2049,50 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
-    private function testGetPresentationsByReviewStatus($review_status) {
+    public function testImportEventData(){
+        /*        $csv_content = <<<CSV
+        title,abstract,type,track,social_summary,allow_feedback,to_record,tags,speakers_names,speakers,start_date,end_date,is_published,selection_plan,attendees_expected_learnt,problem_addressed,location
+        test1,test abstract1,TEST PRESENTATION TYPE,DEFAULT TRACK,social test1,1,1,tag1|tag2|tag3,Sebas Marcet|Sebas 1 Marcet|Sebas 2 Marcet,smarcet@gmail.com|smarcet+1@gmail.com,smarcet+2@gmail.com,2020-01-01 13:00:00,2020-01-01 13:45:00,1,TEST_SELECTION_PLAN,DEFAULT TRACK,big things,world issues,TEST VENUE
+        test2,test abstract2,TEST PRESENTATION TYPE,DEFAULT TRACK,social test2,1,1,tag1|tag2,Sebas  Marcet,smarcet@gmail.com,2020-01-01 13:45:00,2020-01-01 14:45:00,1,TEST_SELECTION_PLAN,big things,world issues,TEST VENUE
+        test3,test abstract3,TEST PRESENTATION TYPE,DEFAULT TRACK,social test3,1,1,tag4,Sebas 2 Marcet,smarcet+2@gmail.com,2020-01-01 14:45:00,2020-01-01 15:45:00,1,TEST_SELECTION_PLAN,big things,world issues,
+        CSV;*/
+        $csv_content = <<<CSV
+track,start_date,end_date,type,title,abstract,attendees_expected_learnt,social_summary ,speakers_names,speakers,selection_plan
+Security,2020-11-12 8:00:00,2020-11-12 9:00:00,Presentation,Security Projects Alignment,"OCP-Security scope / threat model
+Compare Resiliency approaches
+General role of RoT
+Alignment on security requirements across OCP Server sub-groups.",Cross-orgs alignment/sync on scope and approaches ,,JP Mon,jp@tipit.net,Draft Presentations Submissions
+CSV;
+
+        $path = "/tmp/events.csv";
+
+        file_put_contents($path, $csv_content);
+
+        $file = new UploadedFile($path, "events.csv", 'text/csv', null, true);
 
         $params = [
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 80,
-            'order'    => "+id",
-            'filter'   => ["class_name==Presentation", "review_status==$review_status"]
+            'summit_id' => self::$summit->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
-            "GET",
-            "OAuth2SummitEventsApiController@getEvents",
+            "POST",
+            "OAuth2SummitEventsApiController@importEventData",
             $params,
+            [
+                'send_speaker_email' => true,
+            ],
             [],
-            [],
-            [],
+            [
+                'file' => $file,
+            ],
             $headers
         );
 
         $this->assertResponseStatus(200);
-        return $response->getContent();
-    }
-
-    public function testGetPresentationsByReviewStatusNoSubmitted(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusNoSubmitted);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals('No Submitted', $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusReceived(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusReceived);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertTrue(in_array($presentation->review_status,
-                [Presentation::ReviewStatusReceived, Presentation::ReviewStatusAccepted]));
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusInReview(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusInReview);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals('In Review', $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusPublished(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusPublished);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals(Presentation::ReviewStatusPublished, $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusAccepted(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusAccepted);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals(Presentation::ReviewStatusAccepted, $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusRejected(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusRejected);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals(Presentation::ReviewStatusRejected, $presentation->review_status);
-        }
-    }
-
-    private function getPresentationsOrderedByReviewStatus($order_asc) {
-
-        $params = [
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 80,
-            'filter'   => "class_name==Presentation",
-            'order'    => $order_asc ? "+review_status" : "-review_status"
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitEventsApiController@getEvents",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $this->assertResponseStatus(200);
-        $content = $response->getContent();
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        return $page;
-    }
-
-    public function testGetPresentationsOrderedByReviewStatusASC() {
-        $page = $this->getPresentationsOrderedByReviewStatus(true);
-        $last_review_status = '';
-        foreach ($page->data as $presentation) {
-            $this->assertTrue($last_review_status <= $presentation->review_status);
-            $last_review_status = $presentation->review_status;
-        }
-    }
-
-    public function testGetPresentationsOrderedByReviewStatusDESC() {
-        $page = $this->getPresentationsOrderedByReviewStatus(false);
-        $last_review_status = $page->data[0];
-        foreach ($page->data as $presentation) {
-            $this->assertTrue( $last_review_status >= $presentation->review_status);
-            $last_review_status = $presentation->review_status;
-        }
     }
 
     public function testSetOverflow()

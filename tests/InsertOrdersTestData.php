@@ -70,7 +70,6 @@ trait InsertOrdersTestData
         $tax2->setRate(1.5);
         self::$summit->addTaxType($tax2);
 
-
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
         self::$default_badge_type->setIsDefault(true);
@@ -119,6 +118,7 @@ trait InsertOrdersTestData
             $order->setOwnerSurname(sprintf("LNAME %s", $i));
             $order->setOwnerEmail(sprintf("test+%s@test.com", $i));
             $order->setPaymentMethodOffline();
+            $order->setExternalId(sprintf("EXTERNAL_ID_%s", $i));
             self::$summit->addOrder($order);
             $order->generateNumber();
             $ticket = new SummitAttendeeTicket();

@@ -66,18 +66,20 @@ final class CreateTestDBCommand extends Command
         $this->info(sprintf("Creating Test DB for schema %s", $schema_name));
 
         $db_host = env('SS_DB_HOST');
+        $db_port = env('SS_DB_PORT');
         $db_user_name = env('SS_DB_USERNAME');
         $db_password = env('SS_DB_PASSWORD');
         $db_name = env('SS_DATABASE');
 
         if ($schema_name == self::SchemaConfig) {
             $db_host = env('DB_HOST');
+            $db_port = env('DB_PORT');
             $db_user_name = env('DB_USERNAME');
             $db_password = env('DB_PASSWORD');
             $db_name = env('DB_DATABASE');
         }
 
-        $pdo = new \PDO('mysql:host=' . $db_host, $db_user_name, $db_password);
+        $pdo = new \PDO(sprintf("mysql:host=%s;port=%s",$db_host, $db_port), $db_user_name, $db_password);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         try{

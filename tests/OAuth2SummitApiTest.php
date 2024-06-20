@@ -43,7 +43,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
     public function tearDown():void
     {
         self::clearSummitTestData();
-        \Mockery::close();
+        parent::tearDown();
     }
 
     public function createApplication()
@@ -115,6 +115,27 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertTrue($delta <= 1);
         $this->assertTrue(!is_null($data));
         $this->assertResponseStatus(200);
+    }
+
+    public function testGenerateQREncKey()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitApiController@generateQREncKey",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $data = json_decode($content);
+        $this->assertTrue(!is_null($data));
     }
 
     public function testGetAllSummits()
@@ -1013,27 +1034,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         );
 
         $this->assertResponseStatus(204);
-    }
-
-    public function testGenerateQREncKey()
-    {
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitApiController@generateQREncKey",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders()
-        );
-        $this->assertResponseStatus(201);
-        $content = $response->getContent();
-        $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
     }
 
     public function testUpdateLeadReportSettings(){

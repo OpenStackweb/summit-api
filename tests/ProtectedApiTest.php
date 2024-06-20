@@ -326,7 +326,6 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
     protected function tearDown():void
     {
         self::clearMemberTestData();
-        Mockery::close();
         parent::tearDown();
     }
 

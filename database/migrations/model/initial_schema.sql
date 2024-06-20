@@ -2767,7 +2767,7 @@ create table ExtraQuestionTypeValue
         primary key,
     Created    datetime             not null,
     LastEdited datetime             not null,
-    ClassName  varchar(255)         not null,
+    ClassName  enum ('ExtraQuestionTypeValue') charset utf8mb3 default 'ExtraQuestionTypeValue' null,
     Label      text                 not null,
     Value      text                 not null,
     `Order`    int        default 1 not null,

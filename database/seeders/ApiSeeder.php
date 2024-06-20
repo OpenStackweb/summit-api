@@ -12,10 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
+use App\Models\ResourceServer\ResourceServerEntity;
 use Illuminate\Database\Seeder;
 use App\Models\ResourceServer\Api;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Illuminate\Support\Facades\DB;
+use LaravelDoctrine\ORM\Facades\Registry;
 
 /**
  * Class ApisTableSeeder
@@ -26,14 +29,6 @@ final class ApiSeeder extends Seeder
     public function run()
     {
         DB::setDefaultConnection("config");
-
-        DB::delete('DELETE FROM endpoint_api_scopes');
-        DB::delete('DELETE FROM endpoint_api_authz_groups');
-        DB::delete('DELETE FROM api_scopes');
-        DB::delete('DELETE FROM api_endpoints');
-        DB::delete('DELETE FROM apis');
-
-        // summit
 
         $api = new Api();
         $api->setName('summits');

@@ -12,19 +12,14 @@
  * limitations under the License.
  **/
 
-use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\IStatsConstants;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\ModelSerializers\SerializerUtils;
 use App\Utils\FilterUtils;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Validator;
-use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ConfirmationExternalOrderRequest;
@@ -43,7 +38,6 @@ use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
 use utils\PagingInfo;
-use utils\PagingResponse;
 
 /**
  * Class OAuth2SummitApiController
@@ -215,7 +209,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         if (!is_null($current_member) &&
             !$current_member->isAdmin() &&
             !$current_member->hasAllowedSummits()) {
-            return $this->error403(['message' => sprintf("Member %s has not permission for any Summit", $current_member->getId())]);
+            return $this->error403(
+                [
+                    'message' => sprintf("Member %s has not permission for any Summit", $current_member->getId())]);
         }
 
         return $this->_getAll(
@@ -645,9 +641,11 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $external_order_id, $external_attendee_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) throw new \HTTP401UnauthorizedException;
+            if (is_null($current_member))
+                throw new \HTTP401UnauthorizedException;
 
             $attendee = $this->summit_service->confirmExternalOrderAttendee
             (

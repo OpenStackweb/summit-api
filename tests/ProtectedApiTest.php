@@ -32,6 +32,20 @@ use Mockery;
  */
 class AccessTokenServiceStub implements IAccessTokenService
 {
+    private $idp_user_groups = [];
+    public function __construct(array $idp_user_groups = [
+        [
+            'slug' => 'badge-printers',
+
+        ],
+        [
+            'slug' => 'administrators',
+
+        ],
+    ])
+    {
+        $this->idp_user_groups = $idp_user_groups;
+    }
     /**
      * @param mixed $user_id
      */
@@ -47,7 +61,6 @@ class AccessTokenServiceStub implements IAccessTokenService
     {
         $this->user_external_id = $user_external_id;
     }
-
 
     private $user_id;
 
@@ -138,16 +151,7 @@ class AccessTokenServiceStub implements IAccessTokenService
                 'application_type'    => 'WEB_APPLICATION',
                 'allowed_return_uris' => 'https://www.openstack.org/OpenStackIdAuthenticator,https://www.openstack.org/Security/login',
                 'allowed_origins'     =>  '',
-                'user_groups' => [
-                    [
-                       'slug' => 'badge-printers',
-
-                    ],
-                     [
-                       'slug' => 'administrators',
-
-                    ],
-                ],
+                'user_groups' => $this->idp_user_groups,
             ]
         );
     }
@@ -242,7 +246,6 @@ class AccessTokenServiceStub2 implements IAccessTokenService
                 'allowed_origins'     =>  '',
                 'user_groups' => [
                     [
-                        //'slug' => 'administrators'
                     ]
                 ],
             ]
@@ -258,6 +261,7 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
 {
     use InsertMemberTestData;
 
+    protected $app;
     /**
      * @var string
      */
@@ -271,7 +275,7 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
      */
     public function createApplication()
     {
-        $app = parent::createApplication();
+        $this->app = parent::createApplication();
         self::$service = new AccessTokenServiceStub();
 
         App::singleton(IAccessTokenService::class, function () { return self::$service; });
@@ -287,7 +291,8 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
                 "1234",
                 "STATE",
                 "CITY",
-                "USA"))->zeroOrMoreTimes();
+                "USA")
+        )->zeroOrMoreTimes();
 
         $geoCodingApiMock->shouldReceive('getGeoCoordinates')->andReturn
         (
@@ -302,7 +307,7 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
             return $geoCodingApiMock;
         });
 
-        return $app;
+        return $this->app;
     }
 
     protected function setCurrentGroup(string $group){

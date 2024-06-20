@@ -1932,6 +1932,10 @@ SQL;
         return $this->membership_type;
     }
 
+
+    public function clearGroups():void{
+        $this->groups->clear();
+    }
     /**
      * @param Group $group
      */
@@ -1939,7 +1943,6 @@ SQL;
     {
         if ($this->groups->contains($group)) return;
         $this->groups->add($group);
-        //$group->addMember($this);
     }
 
     public function removeFromGroup(Group $group)

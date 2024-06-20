@@ -117,7 +117,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-
     public function testGenerateQREncKey()
     {
         $params = [
@@ -138,7 +137,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $data = json_decode($content);
         $this->assertTrue(!is_null($data));
     }
-/*
+
     public function testGetAllSummits()
     {
 
@@ -1092,6 +1091,4 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $metadata = json_decode($content);
         self::assertEquals('*', $metadata->extra_questions[0]);
     }
-    */
-
 }

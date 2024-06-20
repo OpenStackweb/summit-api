@@ -16,6 +16,7 @@ use App\Models\ResourceServer\Api;
 use App\Models\ResourceServer\ResourceServerEntity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
 
 /**
@@ -27,22 +28,30 @@ final class ConfigSeeder extends Seeder
     public function run()
     {
         Model::unguard();
+        try {
+            // clear all
+            $em = Registry::getManager(ResourceServerEntity::EntityManager);
+            $connection = $em->getConnection();
+            $connection->beginTransaction();
+            $statements = [
+                'DELETE FROM endpoint_api_scopes',
+                'DELETE FROM endpoint_api_authz_groups',
+                'DELETE FROM api_endpoints;',
+                'DELETE FROM api_scopes;',
+                'DELETE FROM apis;',
+            ];
 
-        // clear all apis
-        $em = Registry::getManager(ResourceServerEntity::EntityManager);
-        $connection = $em->getConnection();
-        $sqls = [
-            'DELETE FROM endpoint_api_scopes',
-            'DELETE FROM endpoint_api_authz_groups',
-            'DELETE FROM api_endpoints;',
-            'DELETE FROM api_scopes;',
-            'DELETE FROM apis;',
-        ];
-        foreach ($sqls as $sql) {
-            $connection->executeStatement($sql);
+            foreach ($statements as $sql) {
+                $connection->executeStatement($sql);
+            }
+
+            $connection->commit();
+            $this->call(ApiSeeder::class);
+            $this->call(ApiScopesSeeder::class);
+            $this->call(ApiEndpointsSeeder::class);
         }
-        $this->call(ApiSeeder::class);
-        $this->call(ApiScopesSeeder::class);
-        $this->call(ApiEndpointsSeeder::class);
+        catch (\Exception $ex){
+            Log::error($ex);
+        }
     }
 }

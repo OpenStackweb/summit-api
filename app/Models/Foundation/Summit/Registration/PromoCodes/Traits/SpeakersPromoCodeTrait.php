@@ -283,6 +283,8 @@ trait SpeakersPromoCodeTrait
     public function isEmailSent():bool
     {
         try {
+            if(!$this->owners->count()) return false;
+
             $query = $this->createQuery("SELECT COUNT(e.id) from models\summit\AssignedPromoCodeSpeaker e 
             JOIN e.registration_promo_code pc 
             WHERE pc.id = :promo_code_id and e.sent is null");

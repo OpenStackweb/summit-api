@@ -65,4 +65,8 @@ class ApiEndpointAuthzGroup extends ResourceServerEntity
     {
         $this->slug = $slug;
     }
+
+    public function clearApiEndpoint():void{
+        $this->api_endpoint = null;
+    }
 }

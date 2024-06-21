@@ -364,11 +364,11 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             function () {
                 return SerializerRegistry::SerializerType_CSV;
             },
-            function () {
+            function () use($summit) {
                 return [
-                    'created' => new EpochCellFormatter(),
-                    'last_edited' => new EpochCellFormatter(),
-                    'purchase_date' => new EpochCellFormatter(),
+                    'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'purchase_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
                 ];
             },
             function () use ($summit) {

@@ -1963,7 +1963,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     /**
      * @param ExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer)
+    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer): void
     {
         if (!$answer instanceof PresentationExtraQuestionAnswer) return;
         if ($this->extra_question_answers->contains($answer)) return;

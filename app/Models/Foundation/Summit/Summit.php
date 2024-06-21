@@ -2372,21 +2372,35 @@ SQL;
         return strtolower(preg_replace('/[^a-zA-Z0-9\-]/', '', $res));
     }
 
-
-    public function generateRegistrationSlugPrefix(): void
-    {
-        if (empty($this->registration_slug_prefix)) {
-            $this->registration_slug_prefix = $this->slug;
-        }
-    }
-
     /**
      * @return string
      */
     public function getRegistrationSlugPrefix(): string
     {
-        $this->generateRegistrationSlugPrefix();
         return $this->registration_slug_prefix;
+    }
+
+    /**
+     * @param string $slug
+     * @return string
+     */
+    public static function formatSlug(string $slug): string
+    {
+        return strtoupper(trim(str_replace(" ","_", $slug)));
+    }
+
+    /**
+     * @param string $registration_slug_prefix
+     * @throws ValidationException
+     */
+    public function setRegistrationSlugPrefix(string $registration_slug_prefix)
+    {
+        $slug_prefix = self::formatSlug($registration_slug_prefix);
+
+        // once that a ticket is sold, registration_slug_prefix can't be changed anymore
+        if ($slug_prefix != $this->registration_slug_prefix && $this->getPaidTicketsCount() > 0)
+            throw new ValidationException("Cannot change the registration slug when there are paid tickets.");
+        $this->registration_slug_prefix = $slug_prefix;
     }
 
     /**
@@ -2488,7 +2502,7 @@ SQL;
             $sql = <<<SQL
            SELECT count(SummitAttendeeTicket.ID) AS TICKET_COUNT from SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.Status = ':status'
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.Status = :status
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute([

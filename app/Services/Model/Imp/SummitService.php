@@ -1501,6 +1501,20 @@ final class SummitService
                 }
             }
 
+            $registration_slug_prefix = $data['registration_slug_prefix'] ?? null;
+            if (!empty($registration_slug_prefix)) {
+                // check if exist another summit with that registration slug
+
+                $old_summit =
+                    $this->summit_repository->getByRegistrationSlugPrefix(Summit::formatSlug($registration_slug_prefix));
+                if (!is_null($old_summit)) {
+                    throw new ValidationException(sprintf(
+                        "Registration slug prefix %s already belongs to summit (%s)",
+                        $registration_slug_prefix, $old_summit->getId()
+                    ));
+                }
+            }
+
             $summit = SummitFactory::build($data);
 
             // seed default event types
@@ -1569,6 +1583,20 @@ final class SummitService
                 $old_summit = $this->summit_repository->getBySlug(trim($slug));
                 if (!is_null($old_summit) && $summit_id != $old_summit->getId()) {
                     throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
+                }
+            }
+
+            $registration_slug_prefix = $data['registration_slug_prefix'] ?? null;
+            if (!empty($registration_slug_prefix)) {
+                // check if exist another summit with that registration slug
+
+                $old_summit =
+                    $this->summit_repository->getByRegistrationSlugPrefix(Summit::formatSlug($registration_slug_prefix));
+                if (!is_null($old_summit)) {
+                    throw new ValidationException(sprintf(
+                        "Registration slug prefix %s already belongs to summit (%s)",
+                        $registration_slug_prefix, $old_summit->getId()
+                    ));
                 }
             }
 

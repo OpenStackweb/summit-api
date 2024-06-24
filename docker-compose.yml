@@ -29,7 +29,7 @@ services:
     ports:
       - ${REDIS_PORT}
     volumes:
-      - /tmp/redis:/root/redis
+      - /tmp/summit_api/redis:/root/redis
       - ./docker-compose/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - summit-api-local-net
@@ -53,7 +53,7 @@ services:
       retries: 10
     volumes:
       - ./docker-compose/mysql/config:/docker-entrypoint-initdb.d
-      - /tmp/mysql/config:/var/lib/mysql
+      - /tmp/mysql/summit_api/config:/var/lib/mysql
     networks:
       - summit-api-local-net
     env_file: ./.env
@@ -76,7 +76,7 @@ services:
       retries: 10
     volumes:
       - ./docker-compose/mysql/model:/docker-entrypoint-initdb.d
-      - /tmp/mysql/model:/var/lib/mysql
+      - /tmp/mysql/summit_api/model:/var/lib/mysql
     networks:
       - summit-api-local-net
     env_file: ./.env

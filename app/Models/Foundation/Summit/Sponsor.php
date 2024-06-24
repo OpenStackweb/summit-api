@@ -617,7 +617,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function getAdById(int $ad_id): ?SponsorAd
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($ad_id)));
+        $criteria->where(Criteria::expr()->eq('id', $ad_id));
         $ad = $this->ads->matching($criteria)->first();
         return $ad === false ? null : $ad;
     }
@@ -661,7 +661,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function getMaterialById(int $material_id): ?SponsorMaterial
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($material_id)));
+        $criteria->where(Criteria::expr()->eq('id', $material_id));
         $material = $this->materials->matching($criteria)->first();
         return $material === false ? null : $material;
     }
@@ -734,7 +734,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function getSocialNetworkById(int $social_network_id): ?SponsorSocialNetwork
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($social_network_id)));
+        $criteria->where(Criteria::expr()->eq('id', $social_network_id));
         $social_network = $this->social_networks->matching($criteria)->first();
         return $social_network === false ? null : $social_network;
     }
@@ -881,7 +881,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function getExtraQuestionById(int $extra_question_id): ?SummitSponsorExtraQuestionType
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($extra_question_id)));
+        $criteria->where(Criteria::expr()->eq('id', $extra_question_id));
         $extra_questions = $this->extra_questions->matching($criteria)->first();
         return $extra_questions === false ? null : $extra_questions;
     }

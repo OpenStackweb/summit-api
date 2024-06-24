@@ -73,7 +73,7 @@ class RSVPMultiValueQuestionTemplate extends RSVPQuestionTemplate
     /**
      * @param mixed $values
      */
-    public function setValues($values)
+    public function setValues($values): void
     {
         $this->values = $values;
     }
@@ -143,8 +143,8 @@ class RSVPMultiValueQuestionTemplate extends RSVPQuestionTemplate
     }
 
     /**
-     * @param  int $id
-     * @return RSVPQuestionValueTemplate
+     * @param int $id
+     * @return RSVPQuestionValueTemplate|null
      */
     public function getValueById($id){
         $criteria = Criteria::create();
@@ -154,8 +154,8 @@ class RSVPMultiValueQuestionTemplate extends RSVPQuestionTemplate
     }
 
     /**
-     * @param  string $value
-     * @return RSVPQuestionValueTemplate
+     * @param string $value
+     * @return RSVPQuestionValueTemplate|null
      */
     public function getValueByValue($value){
         $criteria = Criteria::create();

@@ -294,14 +294,16 @@ class SponsoredProject extends SilverstripeBaseModel
         return $sponsorshipType === false ? null : $sponsorshipType;
     }
 
-    public function addSponsorshipType(ProjectSponsorshipType $sponsorshipType){
+    public function addSponsorshipType(ProjectSponsorshipType $sponsorshipType): void
+    {
         if($this->sponsorship_types->contains($sponsorshipType)) return;
         $this->sponsorship_types->add($sponsorshipType);
         $sponsorshipType->setSponsoredProject($this);
         $sponsorshipType->setOrder($this->sponsorship_types->count());
     }
 
-    public function removeSponsorshipType(ProjectSponsorshipType $sponsorshipType){
+    public function removeSponsorshipType(ProjectSponsorshipType $sponsorshipType): void
+    {
         if(!$this->sponsorship_types->contains($sponsorshipType)) return;
         $this->sponsorship_types->removeElement($sponsorshipType);
         $sponsorshipType->clearSponsoredProject();
@@ -365,7 +367,8 @@ class SponsoredProject extends SilverstripeBaseModel
         return $subProject === false ? null : $subProject;
     }
 
-    public function addSubProject(SponsoredProject $subProject){
+    public function addSubProject(SponsoredProject $subProject): void
+    {
         if($this->sub_projects->contains($subProject)) return;
         $this->sub_projects->add($subProject);
         $subProject->setParentProject($this);

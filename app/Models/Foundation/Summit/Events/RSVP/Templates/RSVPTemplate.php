@@ -152,8 +152,8 @@ class RSVPTemplate extends SilverstripeBaseModel
     }
 
     /**
-     * @param  string $name
-     * @return RSVPQuestionTemplate
+     * @param string $name
+     * @return RSVPQuestionTemplate|null
      */
     public function getQuestionByName($name){
         $criteria = Criteria::create();
@@ -163,8 +163,8 @@ class RSVPTemplate extends SilverstripeBaseModel
     }
 
     /**
-     * @param  int $id
-     * @return RSVPQuestionTemplate
+     * @param int $id
+     * @return RSVPQuestionTemplate|null
      */
     public function getQuestionById($id){
         $criteria = Criteria::create();

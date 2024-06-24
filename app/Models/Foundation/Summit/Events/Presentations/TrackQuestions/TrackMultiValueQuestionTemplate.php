@@ -135,8 +135,8 @@ class TrackMultiValueQuestionTemplate extends TrackQuestionTemplate
     }
 
     /**
-     * @param  int $id
-     * @return TrackQuestionValueTemplate
+     * @param int $id
+     * @return TrackQuestionValueTemplate|null
      */
     public function getValueById($id){
         $criteria = Criteria::create();
@@ -146,8 +146,8 @@ class TrackMultiValueQuestionTemplate extends TrackQuestionTemplate
     }
 
     /**
-     * @param  string $value
-     * @return TrackQuestionValueTemplate
+     * @param string $value
+     * @return TrackQuestionValueTemplate|null
      */
     public function getValueByValue($value){
         $criteria = Criteria::create();
@@ -157,8 +157,8 @@ class TrackMultiValueQuestionTemplate extends TrackQuestionTemplate
     }
 
     /**
-     * @param  string $label
-     * @return TrackQuestionValueTemplate
+     * @param string $label
+     * @return TrackQuestionValueTemplate|null
      */
     public function getValueByLabel($label){
         $criteria = Criteria::create();

@@ -46,6 +46,8 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         'presentation_flags',
         'created_by',
         'location_name',
+        'track',
+        'type',
     ];
 
     /**
@@ -214,6 +216,10 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                     $values['extra_questions'] = $values['extra_questions'] . '|';
                 $values['extra_questions'] = $values['extra_questions'] . str_replace(",", "", (string)$answer);
             }
+        }
+
+        if(in_array("type",$fields) && $presentation->hasType()) {
+            $values['type'] = $presentation->getType()->getType();
         }
 
         if(in_array("track", $fields) && $presentation->hasCategory()){

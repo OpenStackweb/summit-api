@@ -24,21 +24,20 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
+    use InsertOrdersTestData;
 
     protected function setUp():void
     {
         parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
+        self::InsertOrdersTestData();
     }
 
-    protected function tearDown():void
+    public function tearDown():void
     {
         self::clearSummitTestData();
-        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -698,36 +697,27 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsWithFilterCSV()
     {
-        $params = array
-        (
-            'id' => 31,
+        $params = [
+            'id' => self::$summit->getId(),
             //'expand' => 'feedback',
             /*'filter' => [
                 'published==1'
             ]*/
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitEventsApiController@getEventsCSV",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $csv = $response->getContent();
         $this->assertResponseStatus(200);
-
-
         $this->assertTrue(!empty($csv));
     }
 

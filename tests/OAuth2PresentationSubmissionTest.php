@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use models\summit\SummitEvent;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,10 +45,12 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
             'social_description'  => 'this is a social description',
             'level'  => 'N/A',
             'attendees_expected_learnt'  => 'super duper',
-            'type_id'  => self::$defaultEventType->getId(),
+            'type_id'  => self::$defaultPresentationType->getId(),
             'track_id'  => self::$defaultTrack->getId(),
             'attending_media' => true,
             'links' => ['https://www.google.com'],
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'submission_source' => SummitEvent::SOURCE_ADMIN,
             //'tags' => ['Upstream Development']
         ];
 
@@ -71,6 +75,7 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
         $presentation = json_decode($content);
         $this->assertTrue(!is_null($presentation));
         $this->assertEquals($title, $presentation->title);
+        $this->assertEquals(SummitEvent::SOURCE_ADMIN, $presentation->submission_source);
 
         $params = [
             'id' => self::$summit->getId(),

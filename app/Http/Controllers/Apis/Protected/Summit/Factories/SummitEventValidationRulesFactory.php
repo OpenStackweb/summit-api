@@ -50,6 +50,7 @@ final class SummitEventValidationRulesFactory
                 'tags' => 'sometimes|string_array',
                 'sponsors' => 'sometimes|int_array',
                 'level' => 'sometimes|string',
+                'submission_source' => 'sometimes|string',
                 // presentation rules
                 'attendees_expected_learnt' => 'sometimes|string|max:1100',
                 'attending_media' => 'sometimes|boolean',
@@ -94,6 +95,7 @@ final class SummitEventValidationRulesFactory
             'tags' => 'sometimes|string_array',
             'sponsors' => 'sometimes|int_array',
             'level' => 'sometimes|string',
+            'submission_source' => 'sometimes|string',
             // presentation rules
             'attendees_expected_learnt' => 'sometimes|string|max:1100',
             'attending_media' => 'sometimes|boolean',
@@ -149,6 +151,7 @@ final class SummitEventValidationRulesFactory
                 'selection_plan_id' => 'required|integer',
                 'duration' => 'sometimes|integer|min:0',
                 'level' => 'sometimes|string',
+                'submission_source' => 'sometimes|string',
             ];
         }
 
@@ -167,6 +170,7 @@ final class SummitEventValidationRulesFactory
             'disclaimer_accepted' => 'sometimes|boolean',
             'duration' => 'sometimes|integer|min:0',
             'level' => 'sometimes|string',
+            'submission_source' => 'sometimes|string',
         ];
     }
 }

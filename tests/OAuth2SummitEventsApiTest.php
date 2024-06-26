@@ -14,6 +14,7 @@
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\App;
 use models\summit\Presentation;
+use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
 /**
@@ -402,7 +403,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => 7,
+            'id' => self::$summit->getId(),
         );
 
         $headers = array
@@ -416,9 +417,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'title' => 'test presentation BCN',
             'description' => 'test presentation BCN',
             'allow_feedback' => true,
-            'type_id' => 86,
+            'type_id' => self::$defaultPresentationType->getId(),
+            'track_id' => self::$defaultTrack->getId(),
             'tags' => ['tag#1', 'tag#2'],
-            'speakers' => [1, 2, 3],
+            'speakers' => [1],
+            'submission_source' => SummitEvent::SOURCE_ADMIN,
         );
 
         $response = $this->action
@@ -438,7 +441,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $presentation = json_decode($content);
 
-        $this->assertTrue($presentation->getId() > 0);
+        $this->assertTrue($presentation->id > 0);
+        $this->assertEquals(SummitEvent::SOURCE_ADMIN, $presentation->submission_source);
         return $presentation;
     }
 
@@ -456,7 +460,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'allowed_ticket_types' => [
                 self::$summit->getTicketTypes()[0]->getId(),
                 self::$summit->getTicketTypes()[1]->getId(),
-            ]
+            ],
+            'submission_source' => SummitEvent::SOURCE_ADMIN
         ];
 
 

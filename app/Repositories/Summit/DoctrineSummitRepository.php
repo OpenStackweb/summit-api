@@ -393,7 +393,7 @@ SQL;
 
         $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchFirstColumn()[0]);
 
         $bindings = array_merge( $bindings, array
         (

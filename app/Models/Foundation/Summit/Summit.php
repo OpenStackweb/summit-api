@@ -2267,8 +2267,8 @@ class Summit extends SilverstripeBaseModel
     WHERE SummitID = :summit_id AND ClassName = 'SummitAppSchedPage';
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             if (count($res) == 0) return '';
             $segment = $res[0]['URLSegment'];
             $parent_id = intval($res[0]['ParentID']);
@@ -2280,8 +2280,8 @@ SQL;
     WHERE ID = :parent_id;
 SQL;
                 $stmt = $this->prepareRawSQL($sql);
-                $stmt->execute(['parent_id' => $parent_id]);
-                $res = $stmt->fetchAll();
+                $res = $stmt->execute(['parent_id' => $parent_id]);
+                $res = $res->fetchAllAssociative();
                 if (count($res) == 0) break;
                 $segment = $res[0]['URLSegment'];
                 $parent_id = intval($res[0]['ParentID']);
@@ -2450,8 +2450,8 @@ SQL;
             WHERE E.SummitID = :summit_id
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 
@@ -2472,8 +2472,8 @@ SQL;
             WHERE E.SummitID = :summit_id
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 
@@ -2515,11 +2515,11 @@ INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.Status = :status
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $this->id,
                 'status' => $status
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 
@@ -2549,8 +2549,8 @@ SQL;
             WHERE SummitEvent.SummitID = :summit_id AND Presentation.Status = :status
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id, 'status' => Presentation::STATUS_RECEIVED]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id, 'status' => Presentation::STATUS_RECEIVED]);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 
@@ -2570,8 +2570,8 @@ SQL;
             WHERE SummitEvent.SummitID = :summit_id AND SummitEvent.Published = 1
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 
@@ -2594,8 +2594,8 @@ SQL;
             WHERE SpeakerAnnouncementSummitEmail.SummitID = :summit_id AND SpeakerAnnouncementSummitEmail.AnnouncementEmailTypeSent = :type
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id, 'type' => $type]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id, 'type' => $type]);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 
@@ -3582,12 +3582,12 @@ WHERE L.SummitID = :summit_id AND (
 SQL;
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
+            $res = $stmt->execute(
                 [
                     'summit_id' => $this->getId(),
                 ]
             );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             $reservation_count = count($res) > 0 ? $res[0] : 0;
             if ($reservation_count > 0) {
                 throw new ValidationException
@@ -5116,12 +5116,12 @@ DQL;
            AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $this->id,
                 'slug' => trim($eventSlug)
             ]);
 
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             $identifier = count($res) > 0 ? $res[0] : null;
         } catch (\Exception $ex) {
             $identifier = null;
@@ -5179,12 +5179,12 @@ SQL;
            AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $this->id,
                 'slug' => trim($eventSlug)
             ]);
 
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             $recipients = count($res) > 0 ? $res[0] : null;
             if (!empty($recipients)) {
                 Log::debug(
@@ -5654,10 +5654,10 @@ SQL;
             AND SummitMediaUploadType.IsMandatory = 1
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $this->id,
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             $count = count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
             $count = 0;
@@ -5909,12 +5909,12 @@ SQL;
             AND (SummitEvent.StartDate <= :end and SummitEvent.EndDate >= :begin)
 SQL;
                 $stmt = $this->prepareRawSQL($sql);
-                $stmt->execute([
+                $res = $stmt->execute([
                     'summit_id' => $this->id,
                     'begin' => $begin->format("Y-m-d H:i:s"),
                     'end' => $end->format('Y-m-d H:i:s'),
                 ]);
-                $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                $res = $res->fetchFirstColumn();
                 $count = count($res) > 0 ? $res[0] : 0;
             } catch (\Exception $ex) {
                 Log::debug($ex);
@@ -6462,12 +6462,12 @@ SQL;
                   AND ( A.Email = :email OR M.Email = :email )
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $this->id,
                 'type_id' => $ticketType->getId(),
                 'email' => strtolower(trim($emailOwner))
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? intval($res[0]) : 0;
         } catch (\Exception $ex) {
             return 0;

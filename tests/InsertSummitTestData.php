@@ -299,7 +299,6 @@ trait InsertSummitTestData
         self::$summit = new Summit();
         self::$summit->setActive(true);
         self::$summit->setAvailableOnApi(true);
-        self::$summit->setRawSlug("TEST1");
         self::$summit->setExternalSummitId("123456");
         // set feed type (sched)
         self::$summit->setApiFeedUrl("");
@@ -314,7 +313,8 @@ trait InsertSummitTestData
         self::$summit->setRegistrationBeginDate($begin_date);
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
-        self::$summit->setRawSlug("testsummit");
+        self::$summit->setRawSlug("testsummit");;
+        self::$summit->setRegistrationSlugPrefix("TEST1");
 
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
@@ -512,6 +512,7 @@ trait InsertSummitTestData
         self::$summit2->setActive(true);
         self::$summit2->setAvailableOnApi(true);
         self::$summit2->setRawSlug("TEST2");
+        self::$summit2->setRegistrationSlugPrefix("TEST2");
         // set feed type (sched)
         self::$summit2->setApiFeedUrl("");
         self::$summit2->setApiFeedKey("");
@@ -607,6 +608,7 @@ trait InsertSummitTestData
         self::$default_selection_plan->setSelectionEndDate($submission_end_date);
         self::$default_selection_plan->setIsEnabled(true);
         self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
+        self::$default_selection_plan->addEventType(self::$defaultPresentationType);
 
         // create extra questions
 

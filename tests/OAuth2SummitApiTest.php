@@ -336,6 +336,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $data = [
             'name'         => $name,
             'slug' => $name,
+            'registration_slug_prefix' => $name,
             'start_date'   => 1522853212,
             'end_date'     => 1562853212,
             'time_zone_id' => 'America/Argentina/Buenos_Aires',
@@ -370,6 +371,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $data = [
             'name'         => $name,
             'slug' => $name,
+            'registration_slug_prefix' => $name,
             'start_date'   => 1522853212,
             'end_date'     => 1542853212,
             'time_zone_id' => 'America/Argentina/Buenos_Aires',
@@ -405,6 +407,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $data = [
             'name'         => $name,
             'slug'        => $name,
+            'registration_slug_prefix' => 'test_registration_slug_prefix',
             'start_date'   => 1522853212,
             'end_date'     => 1542853212,
             'time_zone_id' => 'America/Argentina/Buenos_Aires',
@@ -1089,5 +1092,61 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $metadata = json_decode($content);
         self::assertEquals('*', $metadata->extra_questions[0]);
+    }
+
+    private function updateSummitRegSlugPrefix($summit_id, $data): \Laravel\BrowserKitTesting\TestResponse
+    {
+        $params = [
+            'id' => $summit_id
+        ];
+
+        return $this->action(
+            "PUT",
+            "OAuth2SummitApiController@updateSummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+    }
+
+    public function testUpdateSummitRegSlugPrefix(){
+        $summit = $this->testAddSummit();
+        $new_registration_slug_prefix = $summit->registration_slug_prefix . '_UPDATED';
+        $data = [
+            'slug'                     => $summit->slug,
+            'registration_slug_prefix' => $new_registration_slug_prefix
+        ];
+        $response = $this->updateSummitRegSlugPrefix($summit->id, $data);
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $summit = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        $this->assertEquals($new_registration_slug_prefix, $summit->registration_slug_prefix);
+        return $summit;
+    }
+
+    public function testUpdateSummitRegSlugPrefixWhenSlugAlreadyExists(){
+        $data = [
+            'slug'                     => self::$summit->getSlug(),
+            'registration_slug_prefix' => 'TEST2'
+        ];
+        $response = $this->updateSummitRegSlugPrefix(self::$summit->getId(), $data);
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('already belongs to summit', $content);
+    }
+
+    public function testUpdateSummitRegSlugPrefixHavingPaidTickets(){
+        $data = [
+            'slug'                     => self::$summit->getSlug(),
+            'registration_slug_prefix' => self::$summit->getRegistrationSlugPrefix() . '_updated'
+        ];
+        $response = $this->updateSummitRegSlugPrefix(self::$summit->getId(), $data);
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('there are paid tickets', $content);
     }
 }

@@ -28,6 +28,7 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
         return [
             'name'                  => 'required|string|max:255',
             'is_enabled'            => 'required|boolean',
+            'is_hidden'             => 'required|boolean',
             'allow_new_presentations' => 'required|boolean',
             'max_submission_allowed_per_user' => 'sometimes|integer|min:1',
             'submission_begin_date' => 'nullable|date_format:U',
@@ -57,6 +58,7 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
         return [
             'name'                  => 'sometimes|string|max:255',
             'is_enabled'            => 'sometimes|boolean',
+            'is_hidden'             => 'sometimes|boolean',
             'allow_new_presentations' => 'sometimes|boolean',
             'max_submission_allowed_per_user' => 'sometimes|integer|min:1',
             'submission_begin_date' => 'nullable|date_format:U',

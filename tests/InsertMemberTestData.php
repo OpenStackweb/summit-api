@@ -146,6 +146,7 @@ trait InsertMemberTestData
         self::$speaker->setMember(self::$member);
 
         self::$em->persist(self::$member);
+        self::$em->persist(self::$speaker);
         self::$em->persist(self::$member2);
 
         self::$em->flush();
@@ -179,6 +180,7 @@ trait InsertMemberTestData
             self::$member2 = null;
             self::$group2 = null;
             self::$em->flush();
+
         } catch (\Exception $ex) {
 
         }

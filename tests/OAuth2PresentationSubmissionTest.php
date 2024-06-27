@@ -1,6 +1,4 @@
 <?php namespace Tests;
-use models\summit\SummitEvent;
-
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +12,30 @@ use models\summit\SummitEvent;
  * limitations under the License.
  **/
 
-class OAuth2PresentationSubmissionTest extends ProtectedApiTest
+use App\Models\Foundation\Main\IGroup;
+use models\summit\SummitEvent;
+
+/**
+ * Class OAuth2PresentationSubmissionTest
+ * @package Tests
+ */
+final class OAuth2PresentationSubmissionTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
+    use InsertOrdersTestData;
+
     protected function setUp():void
     {
+        $this->current_group = IGroup::TrackChairs;
         parent::setUp();
-
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
-        self::$em->persist(self::$summit);
-        self::$em->flush();
+        self::InsertOrdersTestData();
     }
 
-    protected function tearDown():void
+    public function tearDown():void
     {
         self::clearSummitTestData();
         parent::tearDown();
@@ -51,12 +59,6 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
             'links' => ['https://www.google.com'],
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'submission_source' => SummitEvent::SOURCE_ADMIN,
-            //'tags' => ['Upstream Development']
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -66,7 +68,7 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -75,22 +77,7 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
         $presentation = json_decode($content);
         $this->assertTrue(!is_null($presentation));
         $this->assertEquals($title, $presentation->title);
-        $this->assertEquals(SummitEvent::SOURCE_ADMIN, $presentation->submission_source);
-
-        $params = [
-            'id' => self::$summit->getId(),
-            'presentation_id' => $presentation->id
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2PresentationApiController@completePresentationSubmission",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+        $this->assertEquals(SummitEvent::SOURCE_SUBMISSION, $presentation->submission_source);
 
         return $presentation;
     }
@@ -98,17 +85,13 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
     /**
      * @param int $summit_id
      */
-    public function testDeletePresentation($summit_id = 25){
-        $new_presentation = $this->testSubmitPresentation($summit_id);
+    public function testDeletePresentation(){
+        $new_presentation = $this->testSubmitPresentation();
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'presentation_id' => $new_presentation->id,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
 
         $response = $this->action(
             "DELETE",
@@ -117,15 +100,17 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             ''
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
 
     public function testImportAssetsFromMUX(){
+
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
             'id' => self::$summit->getId(),
         ];

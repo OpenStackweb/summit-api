@@ -102,10 +102,27 @@ jobs:
           php artisan db:create_test_db --schema=config
           php artisan db:create_test_db --schema=model
           php artisan doctrine:migrations:migrate --no-interaction --em model
-          vendor/bin/phpunit --filter "OAuth2SummitApiTest" --log-junit results.xml
-      - name: 'Upload Unit Test Output'
+          echo "running OAuth2SummitApiTest"
+          vendor/bin/phpunit --filter "OAuth2SummitApiTest" --log-junit results_summit_api_test.xml
+          echo "running OAuth2SummitEventsApiTest"
+          vendor/bin/phpunit --filter "OAuth2SummitEventsApiTest" --log-junit results_events_api_test.xml
+          echo "running OAuth2PresentationSubmissionTest"
+          vendor/bin/phpunit --filter "OAuth2PresentationSubmissionTest" --log-junit results_presentation_submissions_api_test.xml
+      - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
         uses: actions/upload-artifact@v4
         with:
-          name: output
-          path: results.xml
+          name: results_summit_api_test
+          path: results_summit_api_test.xml
+          retention-days: 5
+      - name: 'Upload Unit Test Output For OAuth2SummitEventsApiTest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: results_events_api_test
+          path: results_events_api_test.xml
+          retention-days: 5
+      - name: 'Upload Unit Test Output For OAuth2PresentationSubmissionTest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: results_presentation_submissions_api_test
+          path: results_presentation_submissions_api_test.xml
           retention-days: 5

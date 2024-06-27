@@ -45,12 +45,12 @@ WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
 SQL;
 
         $stmt = $em->getConnection()->prepare($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->member_id,
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
     }
 
     /**
@@ -72,13 +72,13 @@ WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
 SQL;
 
             $stmt = $em->getConnection()->prepare($sql);
-            $stmt->execute(
+            $res = $stmt->execute(
                 [
                     'member_id' => $this->member_id,
                     'summit_id' => $summit->getId(),
                 ]
             );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             return intval($res[0]) > 0;
         } catch (\Exception $ex) {
             return false;

@@ -114,8 +114,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
@@ -143,8 +143,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
@@ -173,8 +173,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
@@ -200,8 +200,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitOrder", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
@@ -228,8 +228,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             return $res;
@@ -260,8 +260,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitRefundRequest", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             return $res;
@@ -289,8 +289,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitTicketType.Name';
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -326,8 +326,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitTicketType.Name';
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -357,8 +357,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeType.ID';
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -393,8 +393,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeType.ID';
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -447,8 +447,8 @@ SQL;
             }
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             return $res;
@@ -488,8 +488,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             return $res;
@@ -545,8 +545,8 @@ SQL;
             }
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             return $res;
@@ -586,8 +586,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", "Created", $startDate, $endDate);
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             return $res;
@@ -624,8 +624,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -662,8 +662,8 @@ SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
             $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -737,16 +737,16 @@ SQL;
 SELECT COUNT(*) FROM ({$sql}) T1
 SQL;
             $stmt = $this->prepareRawSQL($count_sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
 
             $total = count($res) > 0 ? intval($res[0]) : 0;
 
             $sql .= " LIMIT {$pagingInfo->getPerPage()} OFFSET {$pagingInfo->getOffset()} ";
             Log::debug(sprintf("Summit::getAttendeesCheckinsGroupedBy sql %s", $sql));
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
 
             return new PagingResponse
@@ -837,8 +837,8 @@ SQL;
 SELECT COUNT(*) FROM ({$sql}) T1
 SQL;
             $stmt = $this->prepareRawSQL($count_sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchFirstColumn();
 
             $total = count($res) > 0 ? intval($res[0]) : 0;
 
@@ -846,8 +846,8 @@ SQL;
             Log::debug(sprintf("Summit::getTicketsPurchasedGroupedBy sql %s", $sql));
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $res = $stmt->execute(['summit_id' => $this->id]);
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
 
             return new PagingResponse

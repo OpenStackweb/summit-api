@@ -14045,7 +14045,7 @@ create table SummitLeadReportSetting
     ClassName  varchar(255) default 'SummitLeadReportSetting' not null,
     Created    datetime                                       not null,
     LastEdited datetime                                       not null,
-    Columns    json                                           not null comment '(DC2Type:json_array)',
+    Columns    json                                           not null,
     SummitID   int                                            not null,
     SponsorID  int                                            null,
     constraint UNIQ_5C01A78790CF727894CE1A1A

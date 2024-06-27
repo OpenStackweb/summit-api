@@ -494,9 +494,9 @@ GROUP BY pc.ID, pc.Code
 {$extra_orders} LIMIT {$limit} OFFSET {$offset};
 SQL;
 
-        $stm = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
+        $res = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
 
-        $ids = $stm->fetchFirstColumn(\PDO::FETCH_COLUMN);
+        $ids = $res->fetchFirstColumn(\PDO::FETCH_COLUMN);
 
         return new PagingResponse
         (

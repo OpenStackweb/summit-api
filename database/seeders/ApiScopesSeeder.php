@@ -31,9 +31,6 @@ final class ApiScopesSeeder extends Seeder
 
     public function run()
     {
-        DB::table('endpoint_api_scopes')->delete();
-        DB::table('api_scopes')->delete();
-
         $this->seedSummitScopes();
         $this->seedAuditLogScopes();
         $this->seedMembersScopes();

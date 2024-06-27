@@ -1150,7 +1150,7 @@ final class SummitService
                     if (!is_null($old_attendee))
                         throw new ValidationException
                         (
-                            'attendee already exists for current summit!'
+                            'Attendee already exists for current summit.'
                         );
 
                     $old_ticket = $this->ticket_repository->getByExternalOrderIdAndExternalAttendeeId(

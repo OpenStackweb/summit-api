@@ -1367,14 +1367,14 @@ SQL;
 
     /**
      * @param Summit $summit
-     * @return CalendarSyncInfo[]
+     * @return array|null
      */
     public function getSyncInfoBy(Summit $summit)
     {
         try {
             $criteria = Criteria::create();
             $criteria->where(Criteria::expr()->eq('summit', $summit));
-            $criteria->andWhere(Criteria::expr()->eq('revoked', 0));
+            $criteria->andWhere(Criteria::expr()->eq('revoked', false));
             $res = $this->calendars_sync->matching($criteria)->first();
             return $res == false ? null : $res;
         } catch (NoResultException $ex1) {
@@ -1881,6 +1881,10 @@ SQL;
         return $this->membership_type;
     }
 
+
+    public function clearGroups():void{
+        $this->groups->clear();
+    }
     /**
      * @param Group $group
      */
@@ -1888,7 +1892,6 @@ SQL;
     {
         if ($this->groups->contains($group)) return;
         $this->groups->add($group);
-        //$group->addMember($this);
     }
 
     public function removeFromGroup(Group $group)

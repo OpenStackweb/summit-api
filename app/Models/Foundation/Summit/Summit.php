@@ -1682,7 +1682,7 @@ class Summit extends SilverstripeBaseModel
     public function getScheduleEvent($event_id)
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('published', 1));
+        $criteria->where(Criteria::expr()->eq('published', true));
         $criteria->andWhere(Criteria::expr()->eq('id', intval($event_id)));
         $event = $this->events->matching($criteria)->first();
         return $event === false ? null : $event;
@@ -1695,7 +1695,7 @@ class Summit extends SilverstripeBaseModel
     public function isEventOnSchedule($event_id)
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('published', 1));
+        $criteria->where(Criteria::expr()->eq('published', true));
         $criteria->andWhere(Criteria::expr()->eq('id', intval($event_id)));
         return $this->events->matching($criteria)->count() > 0;
     }
@@ -1703,7 +1703,7 @@ class Summit extends SilverstripeBaseModel
     public function getScheduleEvents()
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('published', 1));
+        $criteria->where(Criteria::expr()->eq('published', true));
         $criteria->orderBy(["start_date" => Criteria::ASC, "end_date" => Criteria::ASC]);
         return $this->events->matching($criteria);
     }
@@ -1726,7 +1726,7 @@ class Summit extends SilverstripeBaseModel
     public function getPublishedEvents()
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('published', 1));
+        $criteria->where(Criteria::expr()->eq('published', true));
         return $this->events->matching($criteria);
     }
 
@@ -6991,5 +6991,9 @@ SQL;
         }
 
         return $default_report_setting_columns;
+    }
+
+    public function clearOrders():void{
+        $this->orders->clear();
     }
 }

@@ -34,11 +34,11 @@ select ID,Title,Content,URLSegment FROM SiteTree
 where SiteTree.URLSegment = :url_segment AND SiteTree.ClassName = :class_name
 SQL;
             $stmt = Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection()->prepare($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'url_segment' => trim($slug),
                 'class_name' => "LegalDocumentPage"
             ]);
-            $res = $stmt->fetchAll();
+            $res = $res->fetchAllAssociative();
             if(count($res) == 0 ) return null;
             return new LegalDocument(
                 $res[0]['ID'],
@@ -64,11 +64,11 @@ select ID,Title,Content,URLSegment FROM SiteTree
 where SiteTree.ID = :id AND SiteTree.ClassName = :class_name
 SQL;
             $stmt = Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection()->prepare($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'id' => $id,
                 'class_name' => "LegalDocumentPage"
             ]);
-            $res = $stmt->fetchAll();
+            $res = $res->fetchAllAssociative();
             if(count($res) == 0 ) return null;
             return new LegalDocument(
                 $res[0]['ID'],

@@ -789,8 +789,8 @@ SQL;
 
 
         $stm = $this->getEntityManager()->getConnection()->prepare($query_count);
-        $stm->execute($bindings);
-        $res = $stm->fetchAll(\PDO::FETCH_COLUMN);
+        $res = $stm->execute($bindings);
+        $res = $res->fetchFirstColumn();
 
         $total = count($res) > 0 ? $res[0] : 0;
 
@@ -1181,12 +1181,12 @@ SQL;
 SQL;
 
             $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $summit_id,
                 'speaker_id' => $speaker_id
             ]);
 
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             if (count($res) > 0 && intval($res[0]) > 0) return true;
 
             $sql = <<<SQL
@@ -1196,12 +1196,12 @@ SQL;
 SQL;
 
             $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'summit_id' => $summit_id,
                 'speaker_id' => $speaker_id
             ]);
 
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             if (count($res) > 0 && intval($res[0]) > 0) return true;
         } catch (\Exception $ex) {
             Log::warning($ex);

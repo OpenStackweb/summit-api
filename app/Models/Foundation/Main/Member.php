@@ -1030,13 +1030,13 @@ WHERE MemberID = :member_id AND `Group`.Code = :code
 SQL;
 
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
+            $res = $stmt->execute(
                 [
                     'member_id' => $this->getId(),
                     'code' => trim($code),
                 ]
             );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             return intval($res[0]) > 0;
         } catch (\Exception $ex) {
 
@@ -1160,13 +1160,13 @@ WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.Summit
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
     }
 
     /**
@@ -1331,13 +1331,13 @@ WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.Summit
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
     }
 
     /**
@@ -1818,13 +1818,13 @@ WHERE MemberID = :member_id AND Sponsor.SummitID = :summit_id
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
     }
 
     public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
@@ -1851,8 +1851,8 @@ SQL;
         }
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute($params);
-        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $res = $stmt->execute($params);
+        $res = $res->fetchFirstColumn();
         return intval($res[0]) > 0;
         } catch (\Exception $ex) {
             return false;
@@ -2071,13 +2071,13 @@ SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId()
             ]
         );
-        $allowed_summits = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $allowed_summits = $res->fetchAllNumeric();
         return count($allowed_summits) > 0 && $this->isOnGroup($groupSlug);
     }
 
@@ -2098,13 +2098,13 @@ SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId()
             ]
         );
-        $allowed_summits = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $allowed_summits = $res->fetchAllNumeric();
         return count($allowed_summits) > 0;
     }
 
@@ -2126,7 +2126,7 @@ SummitAttendeeTicket.Status = :ticket_status AND SummitAttendeeTicket.IsActive =
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'member_id' => $this->getId(),
                 'member_email' => $this->email,
@@ -2134,7 +2134,7 @@ SQL;
                 'summit_id' => $summit->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
     }
 
     /**
@@ -2396,11 +2396,11 @@ SQL;
                   C.CandidateID = :candidate_id
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res = $stmt->execute([
                 'election_id' => $election->getId(),
                 'candidate_id' => $this->id
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
             Log::warning($ex);

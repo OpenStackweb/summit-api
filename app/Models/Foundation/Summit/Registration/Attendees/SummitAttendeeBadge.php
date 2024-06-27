@@ -338,11 +338,11 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
             WHERE SummitAttendeeBadgePrint.BadgeID = :badge_id AND Group_Members.GroupID = :group_id
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $res= $stmt->execute([
                 'badge_id' => $this->id,
                 'group_id' => $group->getId(),
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $res->fetchFirstColumn();
 
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {

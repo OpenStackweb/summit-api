@@ -355,7 +355,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     const SOURCE_ADMIN = 'Admin';
     const SOURCE_SUBMISSION = 'Submission';
 
-    const ValidSources = [self::SOURCE_SUBMISSION, self::SOURCE_ADMIN];
+    const ValidSubmissionSources = [self::SOURCE_SUBMISSION, self::SOURCE_ADMIN];
 
      /**
      * @ORM\Column(name="SubmissionSource", type="string")
@@ -1669,8 +1669,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function setSubmissionSource(string $submission_source): void
     {
-        if (!in_array($submission_source, self::ValidSources))
-            throw new ValidationException(sprintf("%s is not a valid submission source", $submission_source));
+        if (!in_array($submission_source, self::ValidSubmissionSources))
+            throw new ValidationException(sprintf("%s is not a valid submission source.", $submission_source));
         $this->submission_source = $submission_source;
     }
 }

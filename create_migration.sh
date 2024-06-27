@@ -1,3 +1,3 @@
 #!/usr/bin/bash
 
-php artisan doctrine:migrations:generate --em=model
+php artisan doctrine:migrations:generate --connection=model

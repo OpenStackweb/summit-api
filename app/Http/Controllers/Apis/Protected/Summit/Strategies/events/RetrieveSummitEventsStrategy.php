@@ -264,7 +264,7 @@ abstract class RetrieveSummitEventsStrategy
             'review_status' => 'sometimes|string|in:' . implode(',', Presentation::AllowedReviewStatus),
             'created' => 'sometimes|required|date_format:U',
             'last_edited' => 'sometimes|required|date_format:U',
-            'submission_source' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidSources),
+            'submission_source' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidSubmissionSources),
         ];
     }
 }

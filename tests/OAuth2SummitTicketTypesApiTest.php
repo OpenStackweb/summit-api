@@ -53,11 +53,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'order'    => '+name'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllBySummit",
@@ -65,7 +60,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -84,11 +79,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'filter'   => 'audience==WithoutInvitation',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllBySummitV2",
@@ -96,7 +86,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -112,11 +102,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'ticket_type_id'    => self::$default_ticket_type->getId()
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getTicketTypeBySummit",
@@ -124,7 +109,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -143,11 +128,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'order'    => '+id'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
@@ -155,7 +135,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -183,11 +163,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'filter'   => 'promo_code==' . self::$default_prepaid_discount_code->getCode(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
@@ -195,7 +170,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -221,11 +196,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'filter'   => 'promo_code==' . self::$default_discount_code->getCode(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
@@ -233,7 +203,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -264,11 +234,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'filter'   => 'promo_code==' . self::$default_discount_code->getCode(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
@@ -276,7 +241,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -310,11 +275,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'filter'   => 'promo_code==' . self::$default_discount_code->getCode(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
@@ -322,7 +282,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -350,11 +310,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'audience'    => $audience,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitsTicketTypesApiController@addTicketTypeBySummit",
@@ -362,7 +317,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -389,11 +344,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'audience'    => $audience,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitsTicketTypesApiController@updateTicketTypeBySummit",
@@ -401,7 +351,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -419,11 +369,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'id' => self::$summit->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitsTicketTypesApiController@seedDefaultTicketTypesBySummit",
@@ -431,7 +376,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -449,11 +394,6 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'currency_symbol' => $currency_symbol
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $this->action(
             "PUT",
             "OAuth2SummitsTicketTypesApiController@updateCurrencySymbol",
@@ -461,7 +401,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $this->assertResponseStatus(201);
@@ -478,12 +418,9 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
             'currency_symbol' => $currency_symbol
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
-        $response = $this->action(
+        $this->action(
             "PUT",
             "OAuth2SummitsTicketTypesApiController@updateCurrencySymbol",
             $params,

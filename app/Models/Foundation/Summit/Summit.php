@@ -2792,7 +2792,7 @@ SQL;
                     )
                 );
         }
-        return $default_currency;
+        return $default_currency ?? SummitTicketType::USD_Currency;
     }
 
     /**

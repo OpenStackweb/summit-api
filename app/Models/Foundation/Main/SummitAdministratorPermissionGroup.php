@@ -119,12 +119,12 @@ WHERE SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGr
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'group_id' => $this->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
 
     }
 
@@ -160,12 +160,12 @@ WHERE SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGr
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $res = $stmt->execute(
             [
                 'group_id' => $this->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res->fetchAllNumeric();
 
     }
 

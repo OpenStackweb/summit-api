@@ -469,4 +469,62 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
         $summit = $summit_repository->find(self::$summit->getId());
         $this->assertEquals($currency_symbol, $summit->getTicketTypes()->first()->getCurrency());
     }
+
+     public function testUpdateTicketTypesCurrencySymbolAfterGlobalCurrencyUpdate(){
+        $currency_symbol = SummitTicketType::EUR_Currency;
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'currency_symbol' => $currency_symbol
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitsTicketTypesApiController@updateCurrencySymbol",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        $summit_repository = EntityManager::getRepository(Summit::class);
+        $summit = $summit_repository->find(self::$summit->getId());
+        $this->assertEquals($currency_symbol, $summit->getTicketTypes()->first()->getCurrency());
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'ticket_type_id' => self::$default_ticket_type->getId()
+        ];
+
+        $data = [
+            'description'     => 'test description',
+            'currency'        => $currency_symbol,
+            'currency_symbol' => '€',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitsTicketTypesApiController@updateTicketTypeBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket_type = json_decode($content);
+        $this->assertTrue(!is_null($ticket_type));
+
+        return $ticket_type;
+    }
 }

@@ -2773,7 +2773,8 @@ SQL;
      */
     public function getDefaultTicketTypeCurrency(): string
     {
-        $default_currency = SummitTicketType::USD_Currency;
+        $default_currency = null;
+
         foreach ($this->ticket_types as $ticket_type) {
             $ticket_type_currency = $ticket_type->getCurrency();
             if (empty($ticket_type_currency)) continue;

@@ -55,6 +55,7 @@ use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
+use models\summit\SummitEvent;
 use models\summit\SummitPresentationComment;
 
 /**
@@ -360,6 +361,8 @@ final class PresentationService
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SUMMARY);
 
+            // force submission source
+            $data['submission_source'] = SummitEvent::SOURCE_SUBMISSION;
 
             $presentation = $this->saveOrUpdatePresentation
             (
@@ -544,6 +547,9 @@ final class PresentationService
             $current_selection_plan->checkPresentationAllowedEdtiableQuestions($data, $presentation->getSnapshot());
 
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
+
+            // force submission source
+            $data['submission_source'] = SummitEvent::SOURCE_SUBMISSION;
 
             return $this->saveOrUpdatePresentation
             (

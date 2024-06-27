@@ -386,7 +386,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->attendance_metrics = new ArrayCollection();
         $this->stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
-        $this->submission_source = SummitEvent::SOURCE_SUBMISSION;
+        $this->submission_source = SummitEvent::SOURCE_ADMIN;
     }
 
     use SummitOwned;

@@ -138,8 +138,8 @@ class PresentationType extends SummitEventType
             AND SummitEventType.Type = :type
 SQL;
             $stmt = self::prepareRawSQLStatic($sql);
-            $stmt->execute(['summit_id' => $summit->getId(), 'type' => $type]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->execute(['summit_id' => $summit->getId(), 'type' => $type]);
+            $res = $res->fetchFirstColumn();
             return count($res) > 0;
         } catch (\Exception $ex) {
 

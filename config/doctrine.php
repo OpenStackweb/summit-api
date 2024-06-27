@@ -35,7 +35,7 @@ return [
             ],
             'repository' => Doctrine\ORM\EntityRepository::class,
             'proxies'    => [
-                'namespace'     => false,
+                'namespace'     => 'Proxies',
                 'path'          => storage_path('proxies'),
                 'auto_generate' => env('DOCTRINE_PROXY_AUTOGENERATE', false)
             ],
@@ -92,7 +92,7 @@ return [
             ],
             'repository' => Doctrine\ORM\EntityRepository::class,
             'proxies'    => [
-                'namespace'     => false,
+                'namespace'     => 'Proxies',
                 'path'          => storage_path('proxies'),
                 'auto_generate' => env('DOCTRINE_PROXY_AUTOGENERATE', false)
             ],
@@ -171,7 +171,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'custom_types'              => [
-        'json' => LaravelDoctrine\ORM\Types\Json::class
+        'CarbonDate'       => DoctrineExtensions\Types\CarbonDateType::class,
+        'CarbonDateTime'   => DoctrineExtensions\Types\CarbonDateTimeType::class,
+        'CarbonDateTimeTz' => DoctrineExtensions\Types\CarbonDateTimeTzType::class,
+        'CarbonTime'       => DoctrineExtensions\Types\CarbonTimeType::class
     ],
     /*
     |--------------------------------------------------------------------------
@@ -181,9 +184,26 @@ return [
     'custom_datetime_functions' => [
         'DATEADD'  => DoctrineExtensions\Query\Mysql\DateAdd::class,
         'DATEDIFF' => DoctrineExtensions\Query\Mysql\DateDiff::class,
+        'UTC_TIMESTAMP' => \App\Models\Utils\UTCTimestamp::class,
+        'DATE'              =>  DoctrineExtensions\Query\Mysql\Date::class,
+        'DATE_FORMAT'       => DoctrineExtensions\Query\Mysql\DateFormat::class,
+        'DATESUB'           => DoctrineExtensions\Query\Mysql\DateSub::class,
+        'DAY'               => DoctrineExtensions\Query\Mysql\Day::class,
+        'DAYNAME'           => DoctrineExtensions\Query\Mysql\DayName::class,
+        'FROM_UNIXTIME'     => DoctrineExtensions\Query\Mysql\FromUnixtime::class,
+        'HOUR'              => DoctrineExtensions\Query\Mysql\Hour::class,
+        'LAST_DAY'          => DoctrineExtensions\Query\Mysql\LastDay::class,
+        'MINUTE'            => DoctrineExtensions\Query\Mysql\Minute::class,
+        'MONTH'             => DoctrineExtensions\Query\Mysql\Month::class,
+        'MONTHNAME'         => DoctrineExtensions\Query\Mysql\MonthName::class,
+        'SECOND'            => DoctrineExtensions\Query\Mysql\Second::class,
+        'STRTODATE'         => DoctrineExtensions\Query\Mysql\StrToDate::class,
+        'TIME'              => DoctrineExtensions\Query\Mysql\Time::class,
         'TIMESTAMPADD'      => DoctrineExtensions\Query\Mysql\TimestampAdd::class,
         'TIMESTAMPDIFF'     => DoctrineExtensions\Query\Mysql\TimestampDiff::class,
-        'UTC_TIMESTAMP'     => DoctrineExtensions\Query\Mysql\UtcTimestamp::class,
+        'WEEK'              => DoctrineExtensions\Query\Mysql\Week::class,
+        'WEEKDAY'           => DoctrineExtensions\Query\Mysql\WeekDay::class,
+        'YEAR'              => DoctrineExtensions\Query\Mysql\Year::class,
         'REVIEW_STATUS'     => \App\Utils\CustomDBFunctions\ReviewStatus::class,
         'SUMMIT_ORDER_FINAL_AMOUNT' => \App\Utils\CustomDBFunctions\SummitOrderFinalAmount::class,
     ],

@@ -56,6 +56,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'ShowSponsors' => 'show_sponsors:json_boolean',
         'Duration' => 'duration:json_int',
         'SecureStream' => 'stream_is_secure:json_boolean',
+        'SubmissionSource' => 'submission_source:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -98,6 +99,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'published_date',
         'duration',
         'stream_is_secure',
+        'submission_source',
     ];
 
     protected static $allowed_relations = [

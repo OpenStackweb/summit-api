@@ -351,6 +351,18 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     protected $allowed_ticket_types;
 
+
+    const SOURCE_ADMIN = 'Admin';
+    const SOURCE_SUBMISSION = 'Submission';
+
+    const ValidSubmissionSources = [self::SOURCE_SUBMISSION, self::SOURCE_ADMIN];
+
+     /**
+     * @ORM\Column(name="SubmissionSource", type="string")
+     * @var string
+     */
+    protected $submission_source;
+
     /**
      * SummitEvent constructor.
      */
@@ -374,6 +386,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->attendance_metrics = new ArrayCollection();
         $this->stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
+        $this->submission_source = SummitEvent::SOURCE_SUBMISSION;
     }
 
     use SummitOwned;
@@ -1645,4 +1658,19 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->allowed_ticket_types->isEmpty() && $this->type->isPublic();
     }
 
+    public function getSubmissionSource(): string
+    {
+        return $this->submission_source;
+    }
+
+    /**
+     * @param string $submission_source
+     * @throws ValidationException
+     */
+    public function setSubmissionSource(string $submission_source): void
+    {
+        if (!in_array($submission_source, self::ValidSubmissionSources))
+            throw new ValidationException(sprintf("%s is not a valid submission source.", $submission_source));
+        $this->submission_source = $submission_source;
+    }
 }

@@ -136,7 +136,8 @@ abstract class RetrieveSummitEventsStrategy
                 'published_date',
                 'selection_plan',
                 'actions',
-                'review_status'
+                'review_status',
+                'submission_source'
             ]);
         }
         return $order;
@@ -205,6 +206,7 @@ abstract class RetrieveSummitEventsStrategy
             'review_status' => ['=='],
             'created' => ['>', '<', '<=', '>=', '==','[]'],
             'last_edited' => ['>', '<', '<=', '>=', '==','[]'],
+            'submission_source' => ['=='],
         ];
     }
 
@@ -262,6 +264,7 @@ abstract class RetrieveSummitEventsStrategy
             'review_status' => 'sometimes|string|in:' . implode(',', Presentation::AllowedReviewStatus),
             'created' => 'sometimes|required|date_format:U',
             'last_edited' => 'sometimes|required|date_format:U',
+            'submission_source' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidSubmissionSources),
         ];
     }
 }

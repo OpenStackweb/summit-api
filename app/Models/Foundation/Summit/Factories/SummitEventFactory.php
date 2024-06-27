@@ -194,6 +194,10 @@ final class SummitEventFactory
             }
         }
 
+        if(isset($payload['submission_source'])) {
+            $event->setSubmissionSource(trim($payload['submission_source']));
+        }
+
         return $event;
     }
 }

@@ -594,6 +594,7 @@ trait InsertSummitTestData
         self::$default_selection_plan->setSelectionEndDate($submission_end_date);
         self::$default_selection_plan->setIsEnabled(true);
         self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
+        self::$default_selection_plan->addEventType(self::$defaultPresentationType);
 
         // create extra questions
 
@@ -759,6 +760,7 @@ trait InsertSummitTestData
             $event->setAbstract(sprintf("Raw Event Abstract %s %s", $i, str_random(16)));
             $event->setCategory(self::$defaultTrack);
             $event->setType( self::$defaultEventType );
+            $event->setSubmissionSource( $i < 10 ? SummitEvent::SOURCE_ADMIN : SummitEvent::SOURCE_SUBMISSION);
             self::$summit->addEvent($event);
             self::$presentations[] = $event;
         }

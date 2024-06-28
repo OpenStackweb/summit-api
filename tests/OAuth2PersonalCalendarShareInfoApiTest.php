@@ -15,7 +15,7 @@
 /**
  * Class OAuth2PersonalCalendarShareInfoApiTest
  */
-class OAuth2PersonalCalendarShareInfoApiTest extends ProtectedApiTest
+class OAuth2PersonalCalendarShareInfoApiTest extends ProtectedApiTestCase
 {
     public function testCreateShareableLink($summit_id = 27){
 

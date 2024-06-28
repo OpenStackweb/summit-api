@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 class OAuth2SummitAdministratorPermissionGroupApiControllerTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

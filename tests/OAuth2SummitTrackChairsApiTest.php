@@ -16,7 +16,7 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitTrackChairsApiTest
  * @package Tests
  */
-class OAuth2SummitTrackChairsApiTest  extends ProtectedApiTest
+class OAuth2SummitTrackChairsApiTest  extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

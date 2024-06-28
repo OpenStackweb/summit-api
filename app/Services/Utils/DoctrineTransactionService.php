@@ -117,7 +117,7 @@ final class DoctrineTransactionService implements ITransactionService
                     continue;
                 }
                 Log::warning("DoctrineTransactionService::transaction rolling back TX");
-                Log::error($ex);
+                Log::warning($ex);
                 throw $ex;
             }
         }

@@ -1029,13 +1029,11 @@ INNER JOIN `Group` ON `Group`.ID = Group_Members.GroupID
 WHERE MemberID = :member_id AND `Group`.Code = :code
 SQL;
 
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(
-                [
-                    'member_id' => $this->getId(),
-                    'code' => trim($code),
-                ]
-            );
+            $stmt = $this->prepareRawSQL($sql, [
+                'member_id' => $this->getId(),
+                'code' => trim($code),
+            ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return intval($res[0]) > 0;
         } catch (\Exception $ex) {
@@ -1159,14 +1157,12 @@ INNER JOIN SummitEvent ON SummitEvent.ID = Member_FavoriteSummitEvents.SummitEve
 WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $res = $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        return $res->fetchAllNumeric();
+        $stmt = $this->prepareRawSQL($sql,[
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -1330,14 +1326,12 @@ INNER JOIN SummitEvent ON SummitEvent.ID = Member_Schedule.SummitEventID
 WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $res = $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        return $res->fetchAllNumeric();
+        $stmt = $this->prepareRawSQL($sql,[
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -1817,14 +1811,12 @@ INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
 WHERE MemberID = :member_id AND Sponsor.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $res = $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        return $res->fetchAllNumeric();
+        $stmt = $this->prepareRawSQL($sql,  [
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
@@ -1850,8 +1842,8 @@ SQL;
             $params['sponsor_id'] = $sponsor->getId();
         }
 
-        $stmt = $this->prepareRawSQL($sql);
-        $res = $stmt->execute($params);
+        $stmt = $this->prepareRawSQL($sql, $params);
+        $res = $stmt->executeQuery();
         $res = $res->fetchFirstColumn();
         return intval($res[0]) > 0;
         } catch (\Exception $ex) {
@@ -2070,14 +2062,14 @@ AND
 SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $res = $stmt->execute(
+        $stmt = $this->prepareRawSQL($sql,
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId()
             ]
         );
-        $allowed_summits = $res->fetchAllNumeric();
+        $res = $stmt->executeQuery();
+        $allowed_summits = $res->fetchFirstColumn();
         return count($allowed_summits) > 0 && $this->isOnGroup($groupSlug);
     }
 
@@ -2097,14 +2089,14 @@ AND
 SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $res = $stmt->execute(
+        $stmt = $this->prepareRawSQL($sql,
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId()
             ]
         );
-        $allowed_summits = $res->fetchAllNumeric();
+        $res = $stmt->executeQuery();
+        $allowed_summits = $res->fetchFirstColumn();
         return count($allowed_summits) > 0;
     }
 
@@ -2126,15 +2118,12 @@ SummitAttendeeTicket.Status = :ticket_status AND
 SummitAttendeeTicket.IsActive = 1
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql,
-            [
-                'member_email' => $this->email,
-                'ticket_status' => IOrderConstants::PaidStatus,
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        $stmt->execute();
-        $res = $stmt->execute();
+        $stmt = $this->prepareRawSQL($sql,  [
+            'member_email' => $this->email,
+            'ticket_status' => IOrderConstants::PaidStatus,
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
         $res = $res->fetchFirstColumn();
         if(count($res) > 0) return $res;
 
@@ -2150,15 +2139,13 @@ SummitAttendeeTicket.Status = :ticket_status AND
 SummitAttendeeTicket.IsActive = 1
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql,
-            [
-                'member_id' => $this->getId(),
-                'ticket_status' => IOrderConstants::PaidStatus,
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        $res = $stmt->execute();
-        $res->fetchFirstColumn();
+        $stmt = $this->prepareRawSQL($sql,  [
+            'member_id' => $this->getId(),
+            'ticket_status' => IOrderConstants::PaidStatus,
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -2419,11 +2406,11 @@ SQL;
             WHERE C.ElectionID = :election_id AND 
                   C.CandidateID = :candidate_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'election_id' => $election->getId(),
                 'candidate_id' => $this->id
             ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {

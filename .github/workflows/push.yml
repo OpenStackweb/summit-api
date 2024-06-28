@@ -101,7 +101,8 @@ jobs:
           ./update_doctrine.sh
           php artisan db:create_test_db --schema=config
           php artisan db:create_test_db --schema=model
-          php artisan doctrine:migrations:migrate --no-interaction --em model
+          php artisan doctrine:migrations:migrate --no-interaction --em=config
+          php artisan doctrine:migrations:migrate --no-interaction --em=model
           echo "running OAuth2SummitApiTest"
           vendor/bin/phpunit --filter "OAuth2SummitApiTest" --log-junit results_summit_api_test.xml
           echo "running OAuth2SummitEventsApiTest"

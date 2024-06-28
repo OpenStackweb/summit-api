@@ -22,7 +22,7 @@ use models\summit\SummitMediaUploadType;
  * Class PresentationMediaUploadsTests
  */
 class PresentationMediaUploadsTests
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
     /**

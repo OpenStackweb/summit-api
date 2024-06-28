@@ -16,7 +16,7 @@
  * Class OAuth2BookableRoomAttributeTypesApiTest
  * @package Tests
  */
-final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTest
+final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTestCase
 {
     public function testGetBookableAttributeTypesBySummit($summit_id = 27){
         $params  = [

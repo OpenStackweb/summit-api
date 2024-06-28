@@ -18,7 +18,7 @@ use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 /**
  * Class OAuth2PaymentGatewayProfileApiTest
  */
-final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTest
+final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
 {
     /**
     * @var string

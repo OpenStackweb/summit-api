@@ -22,7 +22,7 @@ use models\utils\SilverstripeBaseModel;
 /**
  * Class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest
  */
-final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
+final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

@@ -255,9 +255,9 @@ class AccessTokenServiceStub2 implements IAccessTokenService
 
 
 /**
- * Class ProtectedApiTest
+ * Class ProtectedApiTestCase
  */
-abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
+abstract class ProtectedApiTestCase extends \Tests\BrowserKitTestCase
 {
     use InsertMemberTestData;
 

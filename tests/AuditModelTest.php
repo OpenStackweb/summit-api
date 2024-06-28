@@ -26,7 +26,7 @@ use utils\PagingInfo;
 /**
  * Class AuditModelTest
  */
-class AuditModelTest extends ProtectedApiTest
+class AuditModelTest extends ProtectedApiTestCase
 {
     public function testAuditSummitChange(){
         $audit_repository = EntityManager::getRepository(AuditLog::class);

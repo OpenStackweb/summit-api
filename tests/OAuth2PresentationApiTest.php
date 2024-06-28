@@ -18,7 +18,7 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 /**
  * Class OAuth2PresentationApiTest
  */
-final class OAuth2PresentationApiTest extends ProtectedApiTest
+final class OAuth2PresentationApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

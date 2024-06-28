@@ -18,7 +18,7 @@ use models\summit\SummitTicketType;
  * Class OAuth2SummitSubmissionInvitationApiTest
  * @package Tests
  */
-final class OAuth2SummitSubmissionInvitationApiTest extends ProtectedApiTest
+final class OAuth2SummitSubmissionInvitationApiTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

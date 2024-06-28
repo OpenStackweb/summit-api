@@ -16,7 +16,7 @@ use Illuminate\Http\UploadedFile;
 /**
  * Class OAuth2TracksApiTest
  */
-final class OAuth2TracksApiTest extends ProtectedApiTest
+final class OAuth2TracksApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

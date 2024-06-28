@@ -18,7 +18,7 @@ use DateTime;
  * Class OAuth2MembersApiTest
  * @package Tests
  */
-final class OAuth2MembersApiTest extends ProtectedApiTest
+final class OAuth2MembersApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

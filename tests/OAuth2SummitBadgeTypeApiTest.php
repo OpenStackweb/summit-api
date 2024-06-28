@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-final class OAuth2SummitBadgeTypeApiTest extends ProtectedApiTest
+final class OAuth2SummitBadgeTypeApiTest extends ProtectedApiTestCase
 {
 
     /**

@@ -16,7 +16,7 @@
 /**
 * Class OAuth2ConsultantApiTest
 */
-class OAuth2ConsultantApiTest extends ProtectedApiTest
+class OAuth2ConsultantApiTest extends ProtectedApiTestCase
 {
 
 

@@ -17,7 +17,7 @@ use services\model\ISummitService;
  * limitations under the License.
  **/
 
-final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTest
+final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

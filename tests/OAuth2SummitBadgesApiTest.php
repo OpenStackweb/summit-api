@@ -16,7 +16,7 @@
 /**
  * Class OAuth2SummitBadgesApiTest
  */
-class OAuth2SummitBadgesApiTest extends ProtectedApiTest
+class OAuth2SummitBadgesApiTest extends ProtectedApiTestCase
 {
 
     public function testGetAllBySummit($summit_id=27){

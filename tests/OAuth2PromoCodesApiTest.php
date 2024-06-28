@@ -20,7 +20,7 @@ use models\summit\SpeakersSummitRegistrationPromoCode;
 /**
  * Class OAuth2PromoCodesApiTest
  */
-final class OAuth2PromoCodesApiTest extends ProtectedApiTest
+final class OAuth2PromoCodesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

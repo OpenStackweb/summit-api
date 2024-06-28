@@ -36,7 +36,7 @@ class Version20240625172824 extends AbstractMigration
             $builder->table('SummitEvent', function (Table $table) {
                 $table->string("SubmissionSource",32)
                     ->setNotnull(true)
-                    ->setDefault(SummitEvent::SOURCE_SUBMISSION);
+                    ->setDefault(SummitEvent::SOURCE_ADMIN);
             });
         }
     }

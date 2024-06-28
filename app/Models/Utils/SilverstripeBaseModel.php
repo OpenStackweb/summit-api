@@ -13,12 +13,14 @@
  **/
 
 use App\Models\Utils\BaseEntity;
+use Doctrine\DBAL\Statement;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use LaravelDoctrine\ORM\Facades\Registry;
+use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 
 /***
  * @ORM\MappedSuperclass
@@ -116,7 +118,7 @@ class SilverstripeBaseModel extends BaseEntity
     /**
      * @return QueryBuilder
      */
-    protected function createQueryBuilder()
+    protected function createQueryBuilder():QueryBuilder
     {
         return Registry::getManager(self::EntityManager)->createQueryBuilder();
     }
@@ -125,33 +127,41 @@ class SilverstripeBaseModel extends BaseEntity
      * @param string $dql
      * @return Query
      */
-    protected function createQuery($dql)
+    protected function createQuery($dql):Query
     {
         return Registry::getManager(self::EntityManager)->createQuery($dql);
     }
 
     /**
-     * @param string $sql
-     * @return mixed
+     * @param $sql
+     * @param array $params
+     * @return Statement
      */
-    protected function prepareRawSQL($sql)
+    protected function prepareRawSQL($sql, array $params = []):Statement
     {
-        return Registry::getManager(self::EntityManager)->getConnection()->prepare($sql);
+        $stmt = Registry::getManager(self::EntityManager)->getConnection()->prepare($sql);
+        if(count($params) > 0)
+            $stmt = DoctrineStatementValueBinder::bind($stmt, $params);
+        return $stmt;
     }
 
     /**
-     * @param string $sql
-     * @return mixed
+     * @param $sql
+     * @param array $params
+     * @return Statement
      */
-    protected static function prepareRawSQLStatic($sql)
+    protected static function prepareRawSQLStatic($sql, array $params = []):Statement
     {
-        return Registry::getManager(self::EntityManager)->getConnection()->prepare($sql);
+        $stmt = Registry::getManager(self::EntityManager)->getConnection()->prepare($sql);
+        if(count($params) > 0)
+            $stmt = DoctrineStatementValueBinder::bind($stmt, $params);
+        return $stmt;
     }
 
     /**
      * @return EntityManager
      */
-    protected function getEM()
+    protected function getEM():EntityManager
     {
         return Registry::getManager(self::EntityManager);
     }
@@ -159,7 +169,7 @@ class SilverstripeBaseModel extends BaseEntity
     /**
      * @return EntityManager
      */
-    protected static function getEMStatic()
+    protected static function getEMStatic():EntityManager
     {
         return Registry::getManager(self::EntityManager);
     }

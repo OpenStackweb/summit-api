@@ -500,7 +500,7 @@ SQL;
 
         $res = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
 
-        $ids = $res->fetchFirstColumn(\PDO::FETCH_COLUMN);
+        $ids = $res->fetchFirstColumn();
 
         return new PagingResponse
         (

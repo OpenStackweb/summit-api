@@ -19,7 +19,7 @@ use App\Models\Foundation\Main\IGroup;
  * @package Tests
  */
 final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

@@ -14,7 +14,7 @@ use App\Models\Foundation\Main\IGroup;
  * limitations under the License.
  **/
 
-class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTest
+class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

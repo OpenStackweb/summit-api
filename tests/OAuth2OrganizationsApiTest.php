@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-class OAuth2OrganizationsApiTest extends ProtectedApiTest
+class OAuth2OrganizationsApiTest extends ProtectedApiTestCase
 {
 
     public function testGetOrganizations()

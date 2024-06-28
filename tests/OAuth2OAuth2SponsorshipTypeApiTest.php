@@ -15,7 +15,7 @@
 /**
  * Class OAuth2OAuth2SponsorshipTypeApiTest
  */
-final class OAuth2OAuth2SponsorshipTypeApiTest extends ProtectedApiTest
+final class OAuth2OAuth2SponsorshipTypeApiTest extends ProtectedApiTestCase
 {
 
     /**

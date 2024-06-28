@@ -15,7 +15,7 @@ use models\summit\SpeakersSummitRegistrationPromoCode;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
+final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

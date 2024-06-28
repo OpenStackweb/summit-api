@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-class OAuth2TagsApiTest extends ProtectedApiTest
+class OAuth2TagsApiTest extends ProtectedApiTestCase
 {
 
     public function testGetTags()

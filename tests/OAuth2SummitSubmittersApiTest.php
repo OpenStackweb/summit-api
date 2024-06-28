@@ -13,7 +13,7 @@ use App\Models\Foundation\Main\IGroup;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
+final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

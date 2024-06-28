@@ -1,9 +1,4 @@
 <?php namespace App\Models\Foundation\Main\Strategies;
-
-use LaravelDoctrine\ORM\Facades\Registry;
-use models\summit\Summit;
-use models\utils\SilverstripeBaseModel;
-
 /**
  * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +11,14 @@ use models\utils\SilverstripeBaseModel;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use LaravelDoctrine\ORM\Facades\Registry;
+use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
+use models\summit\Summit;
+use models\utils\SilverstripeBaseModel;
+/**
+ * Class SponsorMemberSummitStrategy
+ * @package App\Models\Foundation\Main\Strategies
+ */
 class SponsorMemberSummitStrategy implements IMemberSummitStrategy
 {
     private $member_id;
@@ -42,13 +44,14 @@ FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
 WHERE Sponsor_Users.MemberID = :member_id;
 SQL;
 
-        $stmt = $em->getConnection()->prepare($sql);
-        $res = $stmt->execute(
+        $stmt = DoctrineStatementValueBinder::bind(
+            $em->getConnection()->prepare($sql),
             [
                 'member_id' => $this->member_id,
             ]
         );
-        return $res->fetchAllNumeric();
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -67,13 +70,14 @@ WHERE Sponsor_Users.MemberID = :member_id
         AND Sponsor.SummitID = :summit_id
 SQL;
 
-            $stmt = $em->getConnection()->prepare($sql);
-            $res = $stmt->execute(
+            $stmt = DoctrineStatementValueBinder::bind(
+                $em->getConnection()->prepare($sql),
                 [
                     'member_id' => $this->member_id,
                     'summit_id' => $summit->getId(),
                 ]
             );
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return intval($res[0]) > 0;
         } catch (\Exception $ex) {

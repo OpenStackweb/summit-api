@@ -23,7 +23,7 @@ use models\summit\SummitLeadReportSetting;
 /**
  * Class OAuth2SummitBadgeScanApiControllerTest
  */
-class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
+class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

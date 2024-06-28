@@ -15,7 +15,7 @@
 /**
  * Class OAuth2RSVPSummitEventApiTest
  */
-final class OAuth2RSVPSummitEventApiTest extends ProtectedApiTest
+final class OAuth2RSVPSummitEventApiTest extends ProtectedApiTestCase
 {
 
     /**

@@ -21,7 +21,7 @@ use models\summit\SummitLeadReportSetting;
 /**
  * Class OAuth2SummitSponsorApiTest
  */
-final class OAuth2SummitSponsorApiTest extends ProtectedApiTest
+final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

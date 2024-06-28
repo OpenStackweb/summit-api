@@ -16,7 +16,7 @@
 /**
  * Class OAuth2PublicCloudApiTest
  */
-class OAuth2PublicCloudApiTest extends ProtectedApiTest
+class OAuth2PublicCloudApiTest extends ProtectedApiTestCase
 {
 
     public function testGetPublicClouds()

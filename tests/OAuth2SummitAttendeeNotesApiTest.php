@@ -16,7 +16,7 @@ use models\summit\SummitAttendee;
  * limitations under the License.
  **/
 
-class OAuth2SummitAttendeeNotesApiTest extends ProtectedApiTest
+class OAuth2SummitAttendeeNotesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

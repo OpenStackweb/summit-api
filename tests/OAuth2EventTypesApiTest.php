@@ -15,7 +15,7 @@
 /**
  * Class OAuth2EventTypesApiTest
  */
-final class OAuth2EventTypesApiTest extends ProtectedApiTest
+final class OAuth2EventTypesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

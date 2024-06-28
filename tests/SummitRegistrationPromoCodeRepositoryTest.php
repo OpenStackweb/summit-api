@@ -23,7 +23,7 @@ use utils\PagingInfo;
 /**
  * Class SummitRegistrationPromoCodeRepositoryTest
  */
-class SummitRegistrationPromoCodeRepositoryTest extends ProtectedApiTest
+class SummitRegistrationPromoCodeRepositoryTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

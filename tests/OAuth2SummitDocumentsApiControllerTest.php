@@ -18,7 +18,7 @@ use models\summit\SummitDocument;
 /**
  * Class OAuth2SummitDocumentsApiControllerTest
  */
-class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
+class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

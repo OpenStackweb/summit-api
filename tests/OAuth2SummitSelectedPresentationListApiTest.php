@@ -18,7 +18,7 @@ use models\summit\SummitSelectedPresentation;
  * @package Tests
  */
 final class OAuth2SummitSelectedPresentationListApiTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

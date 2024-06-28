@@ -15,7 +15,7 @@
 /**
  * Class OAuth2SummitEmailEventFlowApiControllerTest
  */
-class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTest
+class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

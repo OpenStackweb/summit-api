@@ -18,7 +18,7 @@ use models\summit\SummitOrderExtraQuestionTypeConstants;
 /**
  * Class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest
  */
-final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedApiTest
+final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

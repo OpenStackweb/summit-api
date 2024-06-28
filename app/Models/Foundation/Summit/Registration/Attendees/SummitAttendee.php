@@ -692,13 +692,11 @@ SELECT ExtraQuestionAnswer.Value FROM `SummitOrderExtraQuestionAnswer`
 INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SummitOrderExtraQuestionAnswer.ID
 WHERE SummitOrderExtraQuestionAnswer.SummitAttendeeID = :owner_id AND ExtraQuestionAnswer.QuestionID = :question_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(
-                [
-                    'owner_id' => $this->getId(),
-                    'question_id' => $question->getId()
-                ]
-            );
+            $stmt = $this->prepareRawSQL($sql, [
+                'owner_id' => $this->getId(),
+                'question_id' => $question->getId()
+            ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : null;
             return !is_null($res) ? $res : null;
@@ -1161,8 +1159,8 @@ SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid'
 GROUP BY OwnerID, TicketTypeID;
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['owner_id' => $this->id]);
+            $stmt = $this->prepareRawSQL($sql, ['owner_id' => $this->id]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             if (count($res) > 0) {

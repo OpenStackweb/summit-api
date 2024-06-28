@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+composer dump-autoload --optimize;
+
 php artisan config:cache
 php artisan route:cache
 php artisan view:clear

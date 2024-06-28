@@ -12,10 +12,8 @@
  * limitations under the License.
  **/
 
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -393,13 +391,12 @@ SQL;
 
         $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchFirstColumn()[0]);
+        $total = intval($stm->fetchOne());
 
-        $bindings = array_merge( $bindings, array
-        (
+        $bindings = array_merge( $bindings, [
             'per_page'  => $paging_info->getPerPage(),
             'offset'    => $paging_info->getOffset(),
-        ));
+        ]);
 
         $query = <<<SQL
 SELECT *

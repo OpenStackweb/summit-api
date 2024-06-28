@@ -2266,8 +2266,8 @@ class Summit extends SilverstripeBaseModel
     SummitPage ON SummitPage.ID = SiteTree.ID 
     WHERE SummitID = :summit_id AND ClassName = 'SummitAppSchedPage';
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['summit_id' => $this->id]);
+            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchAllAssociative();
             if (count($res) == 0) return '';
             $segment = $res[0]['URLSegment'];
@@ -2279,8 +2279,8 @@ SQL;
     SELECT URLSegment,ParentID FROM SiteTree
     WHERE ID = :parent_id;
 SQL;
-                $stmt = $this->prepareRawSQL($sql);
-                $res = $stmt->execute(['parent_id' => $parent_id]);
+                $stmt = $this->prepareRawSQL($sql, ['parent_id' => $parent_id]);
+                $res = $stmt->executeQuery();
                 $res = $res->fetchAllAssociative();
                 if (count($res) == 0) break;
                 $segment = $res[0]['URLSegment'];
@@ -2449,8 +2449,8 @@ SQL;
             INNER JOIN SummitEvent AS E ON E.ID = Vote.PresentationID
             WHERE E.SummitID = :summit_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['summit_id' => $this->id]);
+            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -2471,8 +2471,8 @@ SQL;
             INNER JOIN SummitEvent AS E ON E.ID = Vote.PresentationID
             WHERE E.SummitID = :summit_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['summit_id' => $this->id]);
+            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -2514,11 +2514,11 @@ SQL;
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.Status = :status
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'summit_id' => $this->id,
                 'status' => $status
             ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -2548,8 +2548,8 @@ SQL;
             INNER JOIN Presentation ON Presentation.ID = SummitEvent.ID
             WHERE SummitEvent.SummitID = :summit_id AND Presentation.Status = :status
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['summit_id' => $this->id, 'status' => Presentation::STATUS_RECEIVED]);
+            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id, 'status' => Presentation::STATUS_RECEIVED]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -2569,8 +2569,8 @@ SQL;
             FROM SummitEvent
             WHERE SummitEvent.SummitID = :summit_id AND SummitEvent.Published = 1
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['summit_id' => $this->id]);
+            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -2582,7 +2582,7 @@ SQL;
     // speakers emails info
 
     /**
-     * @param strign $type
+     * @param string $type
      * @return int
      */
     public function getSpeakerAnnouncementEmailCount(string $type): int
@@ -2593,8 +2593,8 @@ SQL;
             FROM SpeakerAnnouncementSummitEmail
             WHERE SpeakerAnnouncementSummitEmail.SummitID = :summit_id AND SpeakerAnnouncementSummitEmail.AnnouncementEmailTypeSent = :type
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(['summit_id' => $this->id, 'type' => $type]);
+            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id, 'type' => $type]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -3581,12 +3581,10 @@ WHERE L.SummitID = :summit_id AND (
         SummitRoomReservation.Status = 'Paid');
 SQL;
 
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute(
-                [
-                    'summit_id' => $this->getId(),
-                ]
-            );
+            $stmt = $this->prepareRawSQL($sql,  [
+                'summit_id' => $this->getId(),
+            ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             $reservation_count = count($res) > 0 ? $res[0] : 0;
             if ($reservation_count > 0) {
@@ -5115,12 +5113,11 @@ DQL;
            where SummitID = :summit_id 
            AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'summit_id' => $this->id,
                 'slug' => trim($eventSlug)
             ]);
-
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             $identifier = count($res) > 0 ? $res[0] : null;
         } catch (\Exception $ex) {
@@ -5178,12 +5175,11 @@ SQL;
            where SummitID = :summit_id 
            AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'summit_id' => $this->id,
                 'slug' => trim($eventSlug)
             ]);
-
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             $recipients = count($res) > 0 ? $res[0] : null;
             if (!empty($recipients)) {
@@ -5653,10 +5649,10 @@ SQL;
             SummitMediaUploadType.SummitID = :summit_id 
             AND SummitMediaUploadType.IsMandatory = 1
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'summit_id' => $this->id,
             ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             $count = count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
@@ -5908,12 +5904,12 @@ SQL;
             AND SummitEvent.Published = 1
             AND (SummitEvent.StartDate <= :end and SummitEvent.EndDate >= :begin)
 SQL;
-                $stmt = $this->prepareRawSQL($sql);
-                $res = $stmt->execute([
+                $stmt = $this->prepareRawSQL($sql, [
                     'summit_id' => $this->id,
                     'begin' => $begin->format("Y-m-d H:i:s"),
                     'end' => $end->format('Y-m-d H:i:s'),
                 ]);
+                $res = $stmt->executeQuery();
                 $res = $res->fetchFirstColumn();
                 $count = count($res) > 0 ? $res[0] : 0;
             } catch (\Exception $ex) {
@@ -6461,12 +6457,12 @@ SQL;
                   AND TT.ID = :type_id
                   AND ( A.Email = :email OR M.Email = :email )
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $res = $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'summit_id' => $this->id,
                 'type_id' => $ticketType->getId(),
                 'email' => strtolower(trim($emailOwner))
             ]);
+            $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
             return count($res) > 0 ? intval($res[0]) : 0;
         } catch (\Exception $ex) {

@@ -16,7 +16,7 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitTracksApiTest
  * @package Tests
  */
-class OAuth2SummitTracksApiTest extends ProtectedApiTest
+class OAuth2SummitTracksApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

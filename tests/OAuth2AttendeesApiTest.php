@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Date;
  * Class OAuth2AttendeesApiTest
  * @package Tests
  */
-class OAuth2AttendeesApiTest extends ProtectedApiTest
+class OAuth2AttendeesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

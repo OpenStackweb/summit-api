@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTest
+final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase
 {
     /**
      * @param int $summit_id

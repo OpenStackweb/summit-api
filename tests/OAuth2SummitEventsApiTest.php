@@ -18,7 +18,7 @@ use models\summit\SummitEvent;
  * limitations under the License.
  **/
 
-final class OAuth2SummitEventsApiTest extends ProtectedApiTest
+final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

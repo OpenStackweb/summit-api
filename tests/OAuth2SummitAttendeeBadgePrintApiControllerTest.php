@@ -18,7 +18,7 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 
-final class OAuth2SummitAttendeeBadgePrintApiControllerTest extends ProtectedApiTest
+final class OAuth2SummitAttendeeBadgePrintApiControllerTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

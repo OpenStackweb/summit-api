@@ -22,7 +22,7 @@ use models\summit\SummitSponsorshipType;
  * @package Tests
  */
 final class OAuth2SummitSponsorshipTypeApiControllerTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

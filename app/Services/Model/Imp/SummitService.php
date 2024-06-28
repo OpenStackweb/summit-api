@@ -1150,7 +1150,7 @@ final class SummitService
                     if (!is_null($old_attendee))
                         throw new ValidationException
                         (
-                            'attendee already exists for current summit!'
+                            'Attendee already exists for current summit.'
                         );
 
                     $old_ticket = $this->ticket_repository->getByExternalOrderIdAndExternalAttendeeId(
@@ -1594,7 +1594,7 @@ final class SummitService
                     $this->summit_repository->getByRegistrationSlugPrefix(Summit::formatSlug($registration_slug_prefix));
                 if (!is_null($old_summit)) {
                     throw new ValidationException(sprintf(
-                        "Registration slug prefix %s already belongs to summit (%s)",
+                        "Registration slug prefix %s already belongs to summit (%s).",
                         $registration_slug_prefix, $old_summit->getId()
                     ));
                 }

@@ -15,11 +15,8 @@ final class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(UsersTableSeeder::class);
 	    Model::unguard();
-        $this->call(ApiSeeder::class);
-        $this->call(ApiScopesSeeder::class);
-        $this->call(ApiEndpointsSeeder::class);
+        $this->call(ConfigSeeder::class);
         // summit
         $this->call(DefaultEventTypesSeeder::class);
         $this->call(DefaultPrintRulesSeeder::class);

@@ -18,7 +18,7 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitProposedScheduleApiTest
  * @package Tests
  */
-final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
+final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

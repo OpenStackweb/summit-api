@@ -20,7 +20,7 @@ use models\utils\SilverstripeBaseModel;
  * Class OAuth2SummitMediaUploadTypeApiControllerTest
  */
 final class OAuth2SummitMediaUploadTypeApiControllerTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

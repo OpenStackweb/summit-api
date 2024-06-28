@@ -24,7 +24,7 @@ use services\apis\IEventbriteAPI;
 /**
  * Class OAuth2SummitApiTest
  */
-final class OAuth2SummitApiTest extends ProtectedApiTest
+final class OAuth2SummitApiTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-class OAuth2SummitEventsBulkActionsTest extends ProtectedApiTest
+class OAuth2SummitEventsBulkActionsTest extends ProtectedApiTestCase
 {
     public function testUpdateEvents()
     {

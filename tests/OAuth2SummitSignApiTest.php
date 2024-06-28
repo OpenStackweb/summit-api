@@ -20,7 +20,7 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitSignApiTest
  * @package Tests
  */
-final class OAuth2SummitSignApiTest extends ProtectedApiTest
+final class OAuth2SummitSignApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

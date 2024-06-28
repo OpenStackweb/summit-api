@@ -15,7 +15,7 @@
 /**
  * Class OAuth2SummitNotificationsApiControllerTest
  */
-final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTest
+final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestCase
 {
     /**
      * @param int $summit_id

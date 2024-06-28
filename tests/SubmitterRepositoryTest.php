@@ -25,7 +25,7 @@ use utils\PagingInfo;
 /**
  * Class AuditModelTest
  */
-class SubmitterRepositoryTest extends ProtectedApiTest
+class SubmitterRepositoryTest extends ProtectedApiTestCase
 {
     public function testGetSubmittersBySummit(){
 

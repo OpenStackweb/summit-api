@@ -19,7 +19,7 @@ use Mockery;
 /**
  * Class OAuth2SummitLocationsApiTest
  */
-final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
+final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
 {
     public function testGetFolder(){
         $service = \Illuminate\Support\Facades\App::make(\App\Services\Model\IFolderService::class);

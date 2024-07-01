@@ -26,6 +26,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Name' => 'name:json_string',
         'Enabled' => 'is_enabled:json_boolean',
+        'Hidden' => 'is_hidden:json_boolean',
         'SubmissionBeginDate' => 'submission_begin_date:datetime_epoch',
         'SubmissionEndDate' => 'submission_end_date:datetime_epoch',
         'SubmissionLockDownPresentationStatusDate' => 'submission_lock_down_presentation_status_date:datetime_epoch',

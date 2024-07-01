@@ -33,6 +33,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
         self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
@@ -104,6 +105,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $data = [
             'name' => 'my_selecion_plan',
             'is_enabled' => true,
+            'is_hidden' => false,
             'allow_new_presentations' => true,
             'max_submission_allowed_per_user' => 1,
             'submission_begin_date' => 1649108093,
@@ -134,6 +136,8 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
 
     public function testUpdateSelectionPlan()
     {
+        $is_hidden = true;
+
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
@@ -144,7 +148,8 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'presentation_moderator_notification_email_template' => '',
             'presentation_speaker_notification_email_template' => 'speaker_email_template',
             //'allowed_presentation_questions' => [SummitEvent::FieldLevel, SummitEvent::FieldTitle, Presentation::FieldWillAllSpeakersAttend],
-            'allow_track_change_requests' => true
+            'allow_track_change_requests' => true,
+            'is_hidden' => $is_hidden
         ];
 
         $response = $this->action(
@@ -163,7 +168,8 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $selectionPlan = json_decode($content);
         $this->assertTrue(!is_null($selectionPlan));
         $this->assertNotEmpty($selectionPlan->allowed_presentation_questions);
-        $this->assertTrue(count($selectionPlan->allowed_presentation_questions) === 3);
+        $this->assertCount(6, $selectionPlan->allowed_presentation_questions);
+        $this->assertEquals($is_hidden, $selectionPlan->is_hidden);
     }
 
     public function testAttachPresentationType()
@@ -385,5 +391,47 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         );
 
         $this->assertResponseStatus(204);
+    }
+
+     public function testAddAllowedMemberWhenIsHiddenPlan()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+        ];
+
+        $data = [
+            'is_hidden' => true
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@updateSelectionPlan",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@addAllowedMember",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders(),
+            json_encode([
+                'email' => self::$member->getEmail()
+            ])
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString("because it's hidden", $content);
     }
 }

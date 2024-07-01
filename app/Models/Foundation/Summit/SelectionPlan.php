@@ -80,6 +80,12 @@ class SelectionPlan extends SilverstripeBaseModel
     private $is_enabled;
 
     /**
+     * @ORM\Column(name="IsHidden", type="boolean")
+     * @var bool
+     */
+    private $is_hidden;
+
+    /**
      * @ORM\Column(name="AllowNewPresentations", type="boolean")
      * @var bool
      */
@@ -412,6 +418,22 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->is_enabled = $is_enabled;
     }
 
+     /**
+     * @return bool
+     */
+    public function isHidden(): bool
+    {
+        return $this->is_hidden;
+    }
+
+    /**
+     * @param bool $is_hidden
+     */
+    public function setIsHidden(bool $is_hidden)
+    {
+        $this->is_hidden = $is_hidden;
+    }
+
     /**
      * SelectionPlan constructor.
      */
@@ -419,6 +441,7 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->is_enabled = false;
+        $this->is_hidden = false;
         $this->allow_new_presentations = true;
         $this->allow_proposed_schedules = true;
         $this->allow_track_change_requests = true;
@@ -1382,6 +1405,16 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     public function addAllowedMember(string $email): ?SelectionPlanAllowedMember
     {
+        if ($this->is_hidden)
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Members cannot be added to selection plan %s because it's hidden.",
+                    $this->id
+                )
+            );
+
         if (empty($email)) return null;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
@@ -1429,7 +1462,7 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     public function isAllowedMember(string $email): bool
     {
-        if ($this->getType() === self::PublicType) return true;
+        if ($this->getType() === self::PublicType || $this->getType() === self::HiddenType) return true;
         return $this->containsMember($email);
     }
 
@@ -1459,12 +1492,14 @@ class SelectionPlan extends SilverstripeBaseModel
 
     const PublicType = 'Public';
     const PrivateType = 'Private';
+    const HiddenType = 'Hidden';
 
     /**
      * @return string
      */
     public function getType(): string
     {
+        if ($this->is_hidden) return self::HiddenType;
         return $this->allowed_members->count() > 0 ? self::PrivateType : self::PublicType;
     }
 

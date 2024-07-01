@@ -81,37 +81,40 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
     }
 
     private static function getMarketingVariables(Summit $summit) {
-        $marketing_vars = null;
+        $default_email_template_vars = collect(Config::get('marketing.default_email_template_vars'))
+            ->mapWithKeys(function ($value, $key) {
+                return [strtoupper($key) => $value];
+            })->toArray();
+
+        $marketing_api = App::make(IMarketingApi::class);
+        if (is_null($marketing_api)) {
+            Log::warning("Marketing API is not set.");
+            return $default_email_template_vars;
+        }
+
         try {
-            $marketing_api = App::make(IMarketingApi::class);
-            if (is_null($marketing_api)) {
-                throw new \Exception("Marketing api is not configured");
-            }
-
             $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
-
-            $default_email_template_vars = Config::get('marketing.default_email_template_vars');
-            foreach ($default_email_template_vars as $key => $value) {
-                $key = strtoupper($key);
-                if (!array_key_exists($key, $marketing_vars) || !is_string($marketing_vars[$key]) || empty($marketing_vars[$key])) {
-                    $marketing_vars[$key] = $value;
-                }
-            }
-
-            if(count($marketing_vars) > 0) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "AbstractSummitEmailJob::construct summit %s injecting marketing_vars %s",
-                        $summit->getId(),
-                        json_encode($marketing_vars)
-                    )
-                );
-            }
         } catch(\Exception $ex){
             Log::error($ex);
-            $marketing_vars = [];
+            return $default_email_template_vars;
+        }
+
+        foreach ($default_email_template_vars as $key => $value) {
+            if (!array_key_exists($key, $marketing_vars) || !is_string($marketing_vars[$key]) || empty($marketing_vars[$key])) {
+                $marketing_vars[$key] = $value;
+            }
+        }
+
+        if(count($marketing_vars) > 0) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "AbstractSummitEmailJob::construct summit %s injecting marketing_vars %s",
+                    $summit->getId(),
+                    json_encode($marketing_vars)
+                )
+            );
         }
 
         return $marketing_vars;

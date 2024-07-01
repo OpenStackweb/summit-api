@@ -13,6 +13,7 @@
  **/
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -75,21 +76,45 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
         $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
 
-        $marketing_api = App::make(IMarketingApi::class);
-        $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
-        if(count($marketing_vars) > 0) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "AbstractSummitEmailJob::construct summit %s injecting marketing_vars %s",
-                    $summit->getId(),
-                    json_encode($marketing_vars)
-                )
-            );
-            $payload = array_merge($payload, $marketing_vars);
-        }
+        $payload = array_merge($payload, self::getMarketingVariables($summit));
         parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
+    }
+
+    private static function getMarketingVariables(Summit $summit) {
+        $marketing_vars = null;
+        try {
+            $marketing_api = App::make(IMarketingApi::class);
+            if (is_null($marketing_api)) {
+                throw new \Exception("Marketing api is not configured");
+            }
+
+            $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
+
+            $default_email_template_vars = Config::get('marketing.default_email_template_vars');
+            foreach ($default_email_template_vars as $key => $value) {
+                $key = strtoupper($key);
+                if (!array_key_exists($key, $marketing_vars) || !is_string($marketing_vars[$key]) || empty($marketing_vars[$key])) {
+                    $marketing_vars[$key] = $value;
+                }
+            }
+
+            if(count($marketing_vars) > 0) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "AbstractSummitEmailJob::construct summit %s injecting marketing_vars %s",
+                        $summit->getId(),
+                        json_encode($marketing_vars)
+                    )
+                );
+            }
+        } catch(\Exception $ex){
+            Log::error($ex);
+            $marketing_vars = [];
+        }
+
+        return $marketing_vars;
     }
 
     /**

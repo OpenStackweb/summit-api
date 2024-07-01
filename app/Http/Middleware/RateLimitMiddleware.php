@@ -67,6 +67,7 @@ final class RateLimitMiddleware extends ThrottleRequests
      */
     public function handle($request, Closure $next, $maxAttempts = 60, $decayMinutes = 1, $prefix = '')
     {
+        $decayMinutes = intval($decayMinutes);
         $route     = RequestUtils::getCurrentRoutePath($request);
         $method    = $request->getMethod();
         $endpoint  = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);

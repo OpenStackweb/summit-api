@@ -30,7 +30,7 @@ class Version20240625175839 extends AbstractMigration
         $builder = new Builder($schema);
         if($builder->hasTable("SummitRegistrationPromoCode")) {
             $this->addSql(
-                "ALTER TABLE SummitEvent MODIFY SubmissionSource enum('Admin','Submission') DEFAULT 'Submission';");
+                "ALTER TABLE SummitEvent MODIFY SubmissionSource enum('Admin','Submission') DEFAULT 'Admin';");
         }
     }
 

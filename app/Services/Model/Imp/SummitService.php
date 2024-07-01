@@ -1497,7 +1497,15 @@ final class SummitService
 
                 $old_summit = $this->summit_repository->getBySlug(trim($slug));
                 if (!is_null($old_summit)) {
-                    throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Slug %s already belongs to another summit (%s).",
+                            $slug,
+                            $old_summit->getId()
+                        )
+                    );
                 }
             }
 
@@ -1509,7 +1517,7 @@ final class SummitService
                     $this->summit_repository->getByRegistrationSlugPrefix(Summit::formatSlug($registration_slug_prefix));
                 if (!is_null($old_summit)) {
                     throw new ValidationException(sprintf(
-                        "Registration slug prefix %s already belongs to summit (%s)",
+                        "Registration slug prefix %s already belongs to summit (%s).",
                         $registration_slug_prefix, $old_summit->getId()
                     ));
                 }
@@ -1582,7 +1590,7 @@ final class SummitService
 
                 $old_summit = $this->summit_repository->getBySlug(trim($slug));
                 if (!is_null($old_summit) && $summit_id != $old_summit->getId()) {
-                    throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
+                    throw new ValidationException(sprintf("Slug %s already belongs to another summit (%s)/", $slug,$old_summit->getId()));
                 }
             }
 
@@ -1592,9 +1600,9 @@ final class SummitService
 
                 $old_summit =
                     $this->summit_repository->getByRegistrationSlugPrefix(Summit::formatSlug($registration_slug_prefix));
-                if (!is_null($old_summit)) {
+                if (!is_null($old_summit) && $summit_id != $old_summit->getId() ) {
                     throw new ValidationException(sprintf(
-                        "Registration slug prefix %s already belongs to summit (%s)",
+                        "Registration slug prefix %s already belongs to summit (%s).",
                         $registration_slug_prefix, $old_summit->getId()
                     ));
                 }

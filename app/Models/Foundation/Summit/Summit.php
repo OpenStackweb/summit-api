@@ -2396,7 +2396,17 @@ SQL;
     public function setRegistrationSlugPrefix(string $registration_slug_prefix)
     {
         $slug_prefix = self::formatSlug($registration_slug_prefix);
-
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::setRegistrationSlugPrefix summit %s slug %s (%s) original slug %s",
+                $this->id,
+                $slug_prefix,
+                $registration_slug_prefix,
+                $this->registration_slug_prefix
+            )
+        );
         // once that a ticket is sold, registration_slug_prefix can't be changed anymore
         if ($slug_prefix != $this->registration_slug_prefix && $this->getPaidTicketsCount() > 0)
             throw new ValidationException("Cannot change the registration slug when there are paid tickets.");

@@ -14,5 +14,18 @@
 
 return [
     'base_url' => env('MARKETING_API_BASE_URL', null),
-    'cache_ttl' => env('MARKETING_VARS_CACHE_TTL', 60)
+    'cache_ttl' => env('MARKETING_VARS_CACHE_TTL', 60),
+
+    'default_email_template_vars' => [
+        'email_template_generic_banner' => env('EMAIL_TEMPLATE_GENERIC_BANNER',
+            'https://spaces.fnvirtual.app/FNTECH/Generic_Email_Headers/Tier1-Default-EmailHeader-Generic.png'),
+        'email_template_generic_speaker_banner' => env('EMAIL_TEMPLATE_GENERIC_SPEAKER_BANNER',
+            'https://spaces.fnvirtual.app/FNTECH/Generic_Email_Headers/Tier1-Default-EmailHeader-Generic.png'),
+        'email_template_ticket_top_graphic' => env('EMAIL_TEMPLATE_TICKET_TOP_GRAPHIC',
+            'https://spaces.fnvirtual.app/emails/REGISTRATION_ATTENDEE_TICKET/header-top.jpg'),
+        'email_template_ticket_bottom_graphic' => env('EMAIL_TEMPLATE_TICKET_BOTTOM_GRAPHIC',
+            'https://spaces.fnvirtual.app/emails/REGISTRATION_ATTENDEE_TICKET/header-bottom.jpg'),
+        'email_template_primary_color' => env('EMAIL_TEMPLATE_PRIMARY_COLOR', '#000000'),
+        'email_template_secondary_color' => env('EMAIL_TEMPLATE_SECONDARY_COLOR', '#808080'),
+    ]
 ];

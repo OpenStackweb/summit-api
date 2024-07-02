@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
+final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

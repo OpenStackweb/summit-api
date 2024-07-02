@@ -19,7 +19,7 @@ use models\summit\ISummitBadgeViewTypeRepository;
  * Class OAuth2SummitBadgeViewTypeApiTest
  * @package Tests
  */
-final class OAuth2SummitBadgeViewTypeApiTest extends ProtectedApiTest
+final class OAuth2SummitBadgeViewTypeApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

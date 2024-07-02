@@ -500,7 +500,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param string $type
      * @throws ValidationException
      */
-    public function addPresentationAllowedQuestion(string $type)
+    public function addPresentationAllowedQuestion(string $type): void
     {
 
         if (!Presentation::isAllowedField(trim($type)))
@@ -536,7 +536,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param string $type
      * @throws ValidationException
      */
-    public function addPresentationAllowedEditableQuestion(string $type)
+    public function addPresentationAllowedEditableQuestion(string $type): void
     {
 
         if (!Presentation::isAllowedEditableField(trim($type)))
@@ -774,7 +774,7 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getPresentation(int $id): ?Presentation
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $criteria->where(Criteria::expr()->eq('id', $id));
         $presentation = $this->presentations->matching($criteria)->first();
         return $presentation === false ? null : $presentation;
     }
@@ -890,7 +890,7 @@ class SelectionPlan extends SilverstripeBaseModel
         return $assignment;
     }
 
-    public function removeExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
+    public function removeExtraQuestion(SummitSelectionPlanExtraQuestionType $question): void
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('question_type', $question));
@@ -909,7 +909,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, int $new_order)
+    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, int $new_order): void
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('question_type', $question));
@@ -1331,7 +1331,7 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
-     * @return int|null
+     * @return int
      */
     public function getPresentationActionTypesMaxOrder(): int
     {
@@ -1344,7 +1344,7 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param PresentationActionType $presentation_action_type
      */
-    public function addPresentationActionType(PresentationActionType $presentation_action_type)
+    public function addPresentationActionType(PresentationActionType $presentation_action_type): void
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
@@ -1357,7 +1357,7 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param PresentationActionType $presentation_action_type
      */
-    public function removePresentationActionType(PresentationActionType $presentation_action_type)
+    public function removePresentationActionType(PresentationActionType $presentation_action_type): void
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
@@ -1372,7 +1372,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculatePresentationActionTypeOrder(PresentationActionType $presentation_action_type, int $new_order)
+    public function recalculatePresentationActionTypeOrder(PresentationActionType $presentation_action_type, int $new_order): void
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));

@@ -22,7 +22,7 @@ use models\summit\SummitTicketType;
  * Class OAuth2SummitPromoCodesApiTest
  */
 final class OAuth2SummitPromoCodesApiTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

@@ -22,7 +22,7 @@ use services\model\ISummitService;
 /**
  * Class OAuth2SummitOrdersApiTest
  */
-final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
+final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
 {
     /**
      * @var string

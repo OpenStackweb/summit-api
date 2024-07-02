@@ -203,7 +203,7 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     /**
      * @return SummitScheduleFilterElementConfig[]
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'ASC']);
@@ -218,7 +218,8 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      * @param SummitScheduleFilterElementConfig $filter
      * @throws ValidationException
      */
-    public function addFilter(SummitScheduleFilterElementConfig $filter){
+    public function addFilter(SummitScheduleFilterElementConfig $filter): void
+    {
         if($this->filters->contains($filter)) return;
         // check type
         $criteria = Criteria::create();
@@ -256,7 +257,8 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      * @param SummitSchedulePreFilterElementConfig $filter
      * @throws ValidationException
      */
-    public function addPreFilter(SummitSchedulePreFilterElementConfig $filter){
+    public function addPreFilter(SummitSchedulePreFilterElementConfig $filter): void
+    {
         if($this->pre_filters->contains($filter)) return;
         // check type
         $criteria = Criteria::create();
@@ -268,7 +270,8 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $filter->setConfig($this);
     }
 
-    public function removePreFilter(SummitSchedulePreFilterElementConfig $filter){
+    public function removePreFilter(SummitSchedulePreFilterElementConfig $filter): void
+    {
         if(!$this->pre_filters->contains($filter)) return;
         $this->pre_filters->removeElement($filter);
         $filter->clearConfig();

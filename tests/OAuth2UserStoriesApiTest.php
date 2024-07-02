@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-class OAuth2UserStoriesApiTest extends ProtectedApiTest
+class OAuth2UserStoriesApiTest extends ProtectedApiTestCase
 {
     public function testGetUserStories()
     {

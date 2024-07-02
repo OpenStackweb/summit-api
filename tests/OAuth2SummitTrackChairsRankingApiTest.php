@@ -15,7 +15,7 @@
 /**
  * Class OAuth2SummitTrackChairsRankingApiTest
  */
-final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
+final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

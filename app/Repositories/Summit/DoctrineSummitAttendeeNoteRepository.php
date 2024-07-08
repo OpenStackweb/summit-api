@@ -20,6 +20,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeNote;
+use models\utils\SilverstripeBaseModel;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -60,8 +61,8 @@ final class DoctrineSummitAttendeeNoteRepository
             'author_email'    => 'a.email',
             'owner_fullname'  => "CONCAT(LOWER(o.first_name), ' ', LOWER(o.surname)) :operator LOWER(:value))",
             'owner_email'     => 'o.email',
-            'created'         => Filter::buildDateTimeEpochField('e.created'),
-            'edited'          => Filter::buildDateTimeEpochField('e.last_edited'),
+            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
         ];
     }
 

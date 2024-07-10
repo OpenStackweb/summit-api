@@ -29,7 +29,6 @@ class SummitEventAuditLog extends SummitAuditLog
     use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
-        'getEventId' => 'related_entity',
         'getUserId'  => 'user',
     ];
 
@@ -44,6 +43,12 @@ class SummitEventAuditLog extends SummitAuditLog
      * @var SummitEvent
      */
     private $related_entity;
+
+    /**
+     * @ORM\Column(name="EventID", type="integer")
+     * @var int
+     */
+    private  $related_entity_id;
 
     public function getClassName(): string
     {
@@ -60,9 +65,19 @@ class SummitEventAuditLog extends SummitAuditLog
         $this->related_entity = $event;
     }
 
+    /**
+     * @param Member|null $user
+     * @param string $action
+     * @param Summit $summit
+     * @param SummitEvent $event
+     */
     public function __construct(?Member $user, string $action, Summit $summit, SummitEvent $event)
     {
         parent::__construct($user, $action, $summit);
         $this->related_entity = $event;
+    }
+
+    public function getEventId():int{
+        return $this->related_entity_id;
     }
 }

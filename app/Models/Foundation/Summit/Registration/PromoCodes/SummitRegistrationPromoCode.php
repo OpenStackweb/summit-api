@@ -789,7 +789,13 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return $this->sent_date;
     }
 
+    /**
+     * see https://tipit.avaza.com/project/view/347915#!tab=task-pane&task=3547232
+     * @return int
+     */
     public function getMaxUsagePerOrder():int{
-        return 1;
+        // if is infinite , then we can purchase one per time
+        if($this->isInfinite()) return 1;
+        return $this->getQuantityRemaining();
     }
 }

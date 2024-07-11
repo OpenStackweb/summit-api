@@ -14,6 +14,8 @@
 
 use Illuminate\Support\Facades\Log;
 use Iterator;
+use models\exceptions\ValidationException;
+
 /**
  * Class CSVReader
  * @package App\Services\Utils
@@ -48,32 +50,37 @@ final class CSVReader implements Iterator {
      */
     public static function buildFrom(string $content):CSVReader
     {
-        $data    = str_getcsv($content,"\n"  );
-        $header  = [];
-        $lines   = [];
-        foreach($data as $idx => $row)
-        {
-            $row = str_getcsv($row, ",");
-            if($idx === 0) {
-                foreach($row as $idx => $val){
-                    // remove BOM
-                    $val = str_replace("\xEF\xBB\xBF",'',$val);
-                    // check the encoding of the header values
-                    if(mb_detect_encoding($val) == 'UTF-8')
-                        $val = iconv('utf-8', 'ascii//TRANSLIT', $val);
-                    Log::debug(sprintf("CSVReader::buildFrom adding %s to header", $val));
-                    $header[] = $val;
+        try {
+            $data = str_getcsv($content, "\n");
+            $header = [];
+            $lines = [];
+            foreach ($data as $idx => $row) {
+                $row = str_getcsv($row, ",");
+                if ($idx === 0) {
+                    foreach ($row as $idx => $val) {
+                        // remove BOM
+                        $val = str_replace("\xEF\xBB\xBF", '', $val);
+                        // check the encoding of the header values
+                        if (mb_detect_encoding($val) == 'UTF-8')
+                            $val = iconv('utf-8', 'ascii//TRANSLIT', $val);
+                        Log::debug(sprintf("CSVReader::buildFrom adding %s to header", $val));
+                        $header[] = $val;
+                    }
+                    continue;
                 }
-                continue;
-            }
-            $line  = [];
-            for($i = 0; $i < count($header); $i++){
-                $line[$header[$i]] = $row[$i] ?? '';
-            }
-            $lines[] = $line;
+                $line = [];
+                for ($i = 0; $i < count($header); $i++) {
+                    $line[$header[$i]] = $row[$i] ?? '';
+                }
+                $lines[] = $line;
 
-        } //parse the items in rows
-        return new CSVReader($header, $lines);
+            } //parse the items in rows
+            return new CSVReader($header, $lines);
+        }
+        catch(\Exception $ex){
+            Log::error($ex);
+            throw new ValidationException("CSV is not valid.");
+        }
     }
 
     /**

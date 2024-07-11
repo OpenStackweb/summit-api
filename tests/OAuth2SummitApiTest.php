@@ -29,10 +29,11 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
     use InsertSummitTestData;
 
     use InsertOrdersTestData;
-
     protected function setUp():void
     {
         parent::setUp();
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
         self::InsertOrdersTestData();
     }
@@ -40,7 +41,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
     public function tearDown():void
     {
         self::clearSummitTestData();
-        \Mockery::close();
+        parent::tearDown();
     }
 
     public function createApplication()

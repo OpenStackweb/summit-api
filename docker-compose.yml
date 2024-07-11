@@ -1,0 +1,100 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        GITHUB_OAUTH_TOKEN: ${GITHUB_OAUTH_TOKEN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    image: summit-api
+    container_name: summit-api
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - summit-api-local-net
+    depends_on:
+      redis:
+        condition: service_started
+      db_config:
+        condition: service_healthy
+      db_model:
+        condition: service_healthy
+  redis:
+    image: redis:latest
+    container_name: redis-summit-api
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    ports:
+      - ${REDIS_PORT}
+    volumes:
+      - /tmp/summit_api/redis:/root/redis
+      - ./docker-compose/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - summit-api-local-net
+    env_file: ./.env
+  db_config:
+    image: mysql:8.0
+    container_name: summit-api-config-db-local
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
+    restart: unless-stopped
+    ports:
+      - "32780:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - ./docker-compose/mysql/config:/docker-entrypoint-initdb.d
+      - /tmp/mysql/summit_api/config:/var/lib/mysql
+    networks:
+      - summit-api-local-net
+    env_file: ./.env
+  db_model:
+    image: mysql:8.0
+    container_name: summit-api-model-db-local
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
+    restart: unless-stopped
+    ports:
+      - "32781:3306"
+    environment:
+      MYSQL_DATABASE: ${SS_DATABASE}
+      MYSQL_PASSWORD: ${SS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${SS_DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - ./docker-compose/mysql/model:/docker-entrypoint-initdb.d
+      - /tmp/mysql/summit_api/model:/var/lib/mysql
+    networks:
+      - summit-api-local-net
+    env_file: ./.env
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-summit-api
+    restart: unless-stopped
+    ports:
+      - "8002:80"
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - summit-api-local-net
+    env_file: ./.env
+    depends_on:
+      - app
+networks:
+  summit-api-local-net:
+    driver: bridge

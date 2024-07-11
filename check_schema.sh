@@ -1,3 +1,3 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 php artisan doctrine:schema:validate

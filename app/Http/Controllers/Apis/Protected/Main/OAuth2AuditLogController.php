@@ -56,9 +56,10 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'summit_id' => ['=='],
                     'event_id'  => ['=='],
                     'entity_id'  => ['=='],
-                    'user_email' => ['==', '=@'],
-                    'user_full_name'  => ['==', '=@'],
-                    'action'  => ['=@'],
+                    'user_email' => ['==', '=@','@@'],
+                    'user_full_name'  => ['==', '=@','@@'],
+                    'action'  => ['=@','@@'],
+                    'created' => ['==', '>', '<', '>=', '<=','[]'],
                 ];
             },
             function () {
@@ -71,6 +72,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'user_email' => 'sometimes|string',
                     'user_full_name' => 'sometimes|string',
                     'action' => 'sometimes|string',
+                    'created' => 'sometimes|date_format:U',
                 ];
             },
             function () {

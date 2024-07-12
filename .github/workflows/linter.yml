@@ -96,7 +96,7 @@ jobs:
         uses: "ramsey/composer-install@v3"
         env:
           COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
-      - name: 'Run Tests'
+      - name: 'Run Linter'
         run: |
           ./update_doctrine.sh
           php artisan db:create_test_db --schema=config

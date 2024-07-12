@@ -140,18 +140,21 @@ final class MarketingAPI implements IMarketingAPI
             $cache_key = "show_{$summit_id}_email_templates_marketing_vars";
             $cached_data = $this->cache_service->getSingleValue($cache_key);
             if (!is_null($cached_data)) {
+                $payload =  json_decode($cached_data, true);
                 Log::debug
                 (
                     sprintf
                     (
-                        "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache hit",
+                        "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache hit payload %s",
                         $summit_id,
                         $search_pattern,
                         $page,
-                        $per_page
+                        $per_page,
+                        json_encode($payload)
                     )
                 );
-                return json_decode($cached_data, true);
+
+                return $payload;
             }
 
             $res = $this->getEntity("/api/public/v1/config-values/all/shows/{$summit_id}",
@@ -172,11 +175,12 @@ final class MarketingAPI implements IMarketingAPI
             (
                 sprintf
                 (
-                    "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache miss",
+                    "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache miss payload %s",
                     $summit_id,
                     $search_pattern,
                     $page,
-                    $per_page
+                    $per_page,
+                    json_encode($payload)
                 )
             );
             $this->cache_service->setSingleValue($cache_key, json_encode($payload), $this->cache_ttl);

@@ -322,4 +322,12 @@ trait SpeakersPromoCodeTrait
             return false;
         }
     }
+
+    /*
+     * tied to 1
+     * @see https://tipit.avaza.com/project/view/347915#!tab=task-pane&task=3547232
+     */
+    public function getMaxUsagePerOrder():int{
+        return 1;
+    }
 }

@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepositor
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitAttendeeBadgePrint;
+use models\utils\SilverstripeBaseModel;
 use utils\Filter;
 
 /**
@@ -51,7 +52,7 @@ final class DoctrineSummitAttendeeBadgePrintRepository
             'ticket_id' => Filter::buildIntField('t.id'),
             'summit_id' => Filter::buildIntField('s.id'),
             'view_type_id' => new DoctrineInFilterMapping('vt.id'),
-            'created' => Filter::buildDateTimeEpochField('e.created'),
+            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'print_date'=>Filter::buildDateTimeEpochField('e.print_date'),
             'requestor_full_name' => "CONCAT(LOWER(r.first_name), ' ', LOWER(r.last_name)) :operator LOWER(:value) )",
             'requestor_email' => 'r.email',

@@ -21,6 +21,7 @@ use models\summit\Summit;
 use models\summit\SummitPushNotification;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitPushNotificationChannel;
+use models\utils\SilverstripeBaseModel;
 use utils\DoctrineFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -45,7 +46,8 @@ final class DoctrineSummitNotificationRepository
             'message'   => 'n.message:json_string',
             'channel'   => 'n.channel:json_string',
             'sent_date' => 'n.sent_date:datetime_epoch',
-            'created'   => 'n.created:datetime_epoch',
+            'created'           => sprintf('n.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited'       => sprintf('n.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'is_sent'   => 'n.is_sent:json_boolean',
             'approved'  => 'n.approved:json_boolean',
             'recipient_id'  => new DoctrineFilterMapping("

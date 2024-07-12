@@ -1,3 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
+
 composer update --prefer-dist;
 composer dump-autoload --optimize;

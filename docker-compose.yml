@@ -24,6 +24,7 @@ services:
         condition: service_healthy
   redis:
     image: redis:latest
+    container_name: redis-summit-api
     restart: always
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     ports:

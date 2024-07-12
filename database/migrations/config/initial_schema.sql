@@ -148,3 +148,4 @@ create table queue_jobs
 
 create index queue
     on queue_jobs (queue);
+

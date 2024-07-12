@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 composer dump-autoload --optimize;
 

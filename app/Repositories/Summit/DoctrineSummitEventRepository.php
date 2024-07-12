@@ -285,8 +285,8 @@ final class DoctrineSummitEventRepository
             'type_show_always_on_schedule' => Filter::buildBooleanField('et.show_always_on_schedule'),
             'start_date' => 'e.start_date:datetime_epoch',
             'end_date' => 'e.end_date:datetime_epoch',
-            'created' => 'e.created:datetime_epoch',
-            'last_edited' => 'e.last_edited:datetime_epoch',
+            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'tags' => "t.tag",
             'submission_status' => new DoctrineSwitchFilterMapping
             (

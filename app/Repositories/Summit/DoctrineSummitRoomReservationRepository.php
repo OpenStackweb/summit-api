@@ -66,7 +66,8 @@ final class DoctrineSummitRoomReservationRepository
             'status'         => 'e.status:json_string',
             'start_datetime' => 'e.start_datetime:datetime_epoch',
             'end_datetime'   => 'e.end_datetime:datetime_epoch',
-            'created'        => 'e.created:datetime_epoch',
+            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'room_id' => new DoctrineJoinFilterMapping
             (
                 'e.room',

@@ -12,7 +12,6 @@
  * limitations under the License.
 */
 
-use App\Models\ResourceServer\Api;
 use App\Models\ResourceServer\ResourceServerEntity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;

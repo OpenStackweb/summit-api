@@ -81,6 +81,9 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
     }
 
     private static function getMarketingVariables(Summit $summit) {
+
+        Log::debug(sprintf("AbstractSummitEmailJob::getMarketingVariables summit %s", $summit->getId()));
+
         $default_email_template_vars = collect(Config::get('marketing.default_email_template_vars'))
             ->mapWithKeys(function ($value, $key) {
                 return [strtoupper($key) => $value];
@@ -88,7 +91,14 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
 
         $marketing_api = App::make(IMarketingApi::class);
         if (is_null($marketing_api)) {
-            Log::warning("AbstractSummitEmailJob::getMarketingVariables Marketing API is not set.");
+            Log::warning
+            (
+                sprintf
+                (
+                    "AbstractSummitEmailJob::getMarketingVariables Marketing API is not set returning default variables %s.",
+                    json_encode($default_email_template_vars)
+                )
+            );
             return $default_email_template_vars;
         }
 
@@ -96,6 +106,14 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
             $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
         } catch(\Exception $ex){
             Log::error($ex);
+            Log::warning
+            (
+                sprintf
+                (
+                    "AbstractSummitEmailJob::getMarketingVariables Marketing API ERROR returning default variables %s.",
+                    json_encode($default_email_template_vars)
+                )
+            );
             return $default_email_template_vars;
         }
 

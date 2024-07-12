@@ -52,12 +52,14 @@
         "laminas/laminas-math": "^3.7"
     },
     "require-dev": {
-        "filp/whoops": "^2.0",
-        "spatie/laravel-ignition": "^2.8.0",
         "fakerphp/faker": "^1.23",
+        "filp/whoops": "^2.0",
+        "laravel/browser-kit-testing": "7.2.0",
         "mockery/mockery": "^1.6",
+        "php-parallel-lint/php-console-highlighter": "^1.0",
+        "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpunit/phpunit": "^11.0.1",
-        "laravel/browser-kit-testing": "7.2.0"
+        "spatie/laravel-ignition": "^2.8.0"
     },
     "suggest":{
         "lib-openssl": "Required to use AES algorithms (except AES GCM)",

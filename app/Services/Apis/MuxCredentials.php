@@ -12,53 +12,47 @@
  * limitations under the License.
  **/
 
-
 /**
  * @from https://dashboard.mux.com/organizations/<organization-id>/settings/access-tokens
  * Class MuxCredentials
  * @package App\Services\Apis
  */
-final class MuxCredentials
-{
-    /**
-     * @var string
-     */
-    private $token_id;
+final class MuxCredentials {
+  /**
+   * @var string
+   */
+  private $token_id;
 
-    /**
-     * @var string
-     */
-    private $token_secret;
+  /**
+   * @var string
+   */
+  private $token_secret;
 
-    /**
-     * MuxCredentials constructor.
-     * @param string $token_id
-     * @param string $token_secret
-     */
-    public function __construct(string $token_id, string $token_secret)
-    {
-        $this->token_id = $token_id;
-        $this->token_secret = $token_secret;
-    }
+  /**
+   * MuxCredentials constructor.
+   * @param string $token_id
+   * @param string $token_secret
+   */
+  public function __construct(string $token_id, string $token_secret) {
+    $this->token_id = $token_id;
+    $this->token_secret = $token_secret;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTokenId(): string
-    {
-        return $this->token_id;
-    }
+  /**
+   * @return string
+   */
+  public function getTokenId(): string {
+    return $this->token_id;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTokenSecret(): string
-    {
-        return $this->token_secret;
-    }
+  /**
+   * @return string
+   */
+  public function getTokenSecret(): string {
+    return $this->token_secret;
+  }
 
-    public function __toString()
-    {
-        return sprintf("id %s secret %s", $this->token_id, $this->token_secret);
-    }
+  public function __toString() {
+    return sprintf("id %s secret %s", $this->token_id, $this->token_secret);
+  }
 }

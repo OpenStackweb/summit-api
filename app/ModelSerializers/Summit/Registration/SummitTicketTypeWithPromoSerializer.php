@@ -20,52 +20,66 @@ use models\summit\SummitTicketTypeWithPromo;
  * Class SummitTicketTypeWithPromoSerializer
  * @package ModelSerializers
  */
-class SummitTicketTypeWithPromoSerializer extends AbstractSerializer
-{
-    use SummitTicketTypeCommonSerializer;
+class SummitTicketTypeWithPromoSerializer extends AbstractSerializer {
+  use SummitTicketTypeCommonSerializer;
 
-    protected static $array_mappings = [
-        'Id'   => 'id:json_int',
-        'Name' => 'name:json_string',
-        'Description' => 'description:json_string',
-        'ExternalId' => 'external_id:json_string',
-        'SummitId' => 'summit_id:json_int',
-        'Cost' => 'cost:json_float',
-        'Currency' => 'currency:json_string',
-        'CurrencySymbol' => 'currency_symbol:json_string',
-        'Quantity2Sell' => 'quantity_2_sell:json_int',
-        'MaxQuantityPerOrder' => 'max_quantity_per_order:json_int',
-        'SalesStartDate' => 'sales_start_date:datetime_epoch',
-        'SalesEndDate' => 'sales_end_date:datetime_epoch',
-        'BadgeTypeId' => 'badge_type_id:json_int',
-        'QuantitySold' => 'quantity_sold:json_int',
-        'Audience' => 'audience:json_string',
-    ];
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "ExternalId" => "external_id:json_string",
+    "SummitId" => "summit_id:json_int",
+    "Cost" => "cost:json_float",
+    "Currency" => "currency:json_string",
+    "CurrencySymbol" => "currency_symbol:json_string",
+    "Quantity2Sell" => "quantity_2_sell:json_int",
+    "MaxQuantityPerOrder" => "max_quantity_per_order:json_int",
+    "SalesStartDate" => "sales_start_date:datetime_epoch",
+    "SalesEndDate" => "sales_end_date:datetime_epoch",
+    "BadgeTypeId" => "badge_type_id:json_int",
+    "QuantitySold" => "quantity_sold:json_int",
+    "Audience" => "audience:json_string",
+  ];
 
-    /**
-     * @param $entity
-     * @param array $values
-     * @return array
-     */
-    protected function serializeCustomFields($entity, $values): array {
-        $values["cost_with_applied_discount"] = JsonUtils::toJsonFloat($entity->getCostWithAppliedDiscount());
-        return $values;
+  /**
+   * @param $entity
+   * @param array $values
+   * @return array
+   */
+  protected function serializeCustomFields($entity, $values): array {
+    $values["cost_with_applied_discount"] = JsonUtils::toJsonFloat(
+      $entity->getCostWithAppliedDiscount(),
+    );
+    return $values;
+  }
+
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $ticket_type = $this->object;
+    if (!$ticket_type instanceof SummitTicketTypeWithPromo) {
+      return [];
     }
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $ticket_type = $this->object;
-        if (!$ticket_type instanceof SummitTicketTypeWithPromo) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $values = self::serializeCommonFields($ticket_type, $values, $expand, $fields, $relations, $params);
-        return $this->serializeCustomFields($ticket_type, $values);
-    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $values = self::serializeCommonFields(
+      $ticket_type,
+      $values,
+      $expand,
+      $fields,
+      $relations,
+      $params,
+    );
+    return $this->serializeCustomFields($ticket_type, $values);
+  }
 }

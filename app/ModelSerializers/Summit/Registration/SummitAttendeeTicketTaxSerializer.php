@@ -18,43 +18,47 @@ use models\summit\SummitAttendeeTicketTax;
  * Class SummitAttendeeTicketTaxSerializer
  * @package ModelSerializers
  */
-final class SummitAttendeeTicketTaxSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Amount'   => 'amount:json_float',
-        'AmountInCents' => 'amount_in_cents:json_int',
-        'TaxId'    => 'tax_id:json_int',
-        'TicketId' => 'ticket_id:json_int',
-    ];
+final class SummitAttendeeTicketTaxSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Amount" => "amount:json_float",
+    "AmountInCents" => "amount_in_cents:json_int",
+    "TaxId" => "tax_id:json_int",
+    "TicketId" => "ticket_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'tax' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'tax_id',
-            'getter' => 'getTax',
-            'has' => 'hasTax'
-        ],
-        'ticket' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'ticket_id',
-            'getter' => 'getTicket',
-            'has' => 'hasTicket'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "tax" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "tax_id",
+      "getter" => "getTax",
+      "has" => "hasTax",
+    ],
+    "ticket" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "ticket_id",
+      "getter" => "getTicket",
+      "has" => "hasTicket",
+    ],
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $tax_applied = $this->object;
-        if (!$tax_applied instanceof SummitAttendeeTicketTax) return [];
-        return parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $tax_applied = $this->object;
+    if (!$tax_applied instanceof SummitAttendeeTicketTax) {
+      return [];
     }
-
+    return parent::serialize($expand, $fields, $relations, $params);
+  }
 }

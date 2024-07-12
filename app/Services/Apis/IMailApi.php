@@ -16,16 +16,22 @@
  * Interface IMailApi
  * @package App\Services\Apis
  */
-interface IMailApi
-{
-    /**
-     * @param array $payload
-     * @param string $template_identifier
-     * @param string $to_email
-     * @param string|null $subject
-     * @param string|null $cc_email
-     * @param string|null $bbc_email
-     * @return array
-     */
-    public function sendEmail(array $payload, string $template_identifier, string $to_email, string $subject = null, string $cc_email = null , string $bbc_email = null):array ;
+interface IMailApi {
+  /**
+   * @param array $payload
+   * @param string $template_identifier
+   * @param string $to_email
+   * @param string|null $subject
+   * @param string|null $cc_email
+   * @param string|null $bbc_email
+   * @return array
+   */
+  public function sendEmail(
+    array $payload,
+    string $template_identifier,
+    string $to_email,
+    string $subject = null,
+    string $cc_email = null,
+    string $bbc_email = null,
+  ): array;
 }

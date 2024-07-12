@@ -21,70 +21,61 @@ use Illuminate\Support\Facades\Log;
  * @package App\Console\Commands
  */
 class RecalculateAttendeesStatusCommand extends Command {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:recalculate-attendees-status';
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:recalculate-attendees-status";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:recalculate-attendees-status {summit_id}';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:recalculate-attendees-status {summit_id}";
 
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Recalculate Attendees Status";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Recalculate Attendees Status';
+  /**
+   * @var ISummitRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $repository;
+  /**
+   * @var IAttendeeService
+   */
+  private $service;
 
-    /**
-     * @var IAttendeeService
-     */
-    private $service;
+  public function __construct(ISummitRepository $repository, IAttendeeService $service) {
+    parent::__construct();
+    $this->repository = $repository;
+    $this->service = $service;
+  }
 
-    public function __construct(
-        ISummitRepository $repository,
-        IAttendeeService $service
-    )
-    {
-        parent::__construct();
-        $this->repository    = $repository;
-        $this->service       = $service;
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    try {
+      $start = time();
+      $summit_id = $this->argument("summit_id");
+      if (empty($summit_id)) {
+        throw new \InvalidArgumentException("summit_id is required");
+      }
+      $this->service->resynchAttendeesStatusBySummit(intval($summit_id));
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-
-        try {
-
-            $start   = time();
-            $summit_id = $this->argument('summit_id');
-            if(empty($summit_id))
-                throw new \InvalidArgumentException("summit_id is required");
-            $this->service->resynchAttendeesStatusBySummit(intval($summit_id));
-            $end   = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
+  }
 }

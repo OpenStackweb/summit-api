@@ -16,25 +16,27 @@
  * Class SummitTypeSerializer
  * @package ModelSerializers
  */
-class SummitTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'Title' => 'name:json_string',
-        'Color' => 'color:json_color',
-        'Type'  => 'type:json_string',
-    );
+class SummitTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Title" => "name:json_string",
+    "Color" => "color:json_color",
+    "Type" => "type:json_string",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        return $values;
-    }
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    return $values;
+  }
 }

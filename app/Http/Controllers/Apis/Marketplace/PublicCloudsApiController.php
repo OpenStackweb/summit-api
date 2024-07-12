@@ -18,19 +18,19 @@ use models\oauth2\IResourceServerContext;
  * Class PublicCloudsApiController
  * @package App\Http\Controllers
  */
-final class PublicCloudsApiController extends AbstractCompanyServiceApiController
-{
-    /**
-     * PrivateCloudsApiController constructor.
-     * @param IPublicCloudServiceRepository $repository
-     */
-    public function __construct(IPublicCloudServiceRepository $repository, IResourceServerContext $resource_server_context)
-    {
-        parent::__construct($repository, $resource_server_context);
-    }
+final class PublicCloudsApiController extends AbstractCompanyServiceApiController {
+  /**
+   * PrivateCloudsApiController constructor.
+   * @param IPublicCloudServiceRepository $repository
+   */
+  public function __construct(
+    IPublicCloudServiceRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($repository, $resource_server_context);
+  }
 
-    public function getAll()
-    {
-        return parent::getAll();
-    }
+  public function getAll() {
+    return parent::getAll();
+  }
 }

@@ -16,7 +16,5 @@
  * Interface ISummitEventTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitEventTypeRepository extends ISummitOwnedEntityRepository
-{
-
+interface ISummitEventTypeRepository extends ISummitOwnedEntityRepository {
 }

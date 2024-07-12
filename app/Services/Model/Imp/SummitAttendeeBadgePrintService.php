@@ -26,54 +26,58 @@ use models\summit\SummitAttendeeTicket;
  * Class SummitAttendeeBadgePrintService
  * @package services\model
  */
-final class SummitAttendeeBadgePrintService
-    extends AbstractService
-    implements ISummitAttendeeBadgePrintService
-{
-    use ParametrizedSendEmails;
+final class SummitAttendeeBadgePrintService extends AbstractService implements
+  ISummitAttendeeBadgePrintService {
+  use ParametrizedSendEmails;
 
-    /**
-     * @var ISummitAttendeeTicketRepository
-     */
-    private $ticket_repository;
+  /**
+   * @var ISummitAttendeeTicketRepository
+   */
+  private $ticket_repository;
 
-    /**
-     * SpeakerService constructor.
-     * @param ISummitAttendeeTicketRepository $ticket_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        ISummitAttendeeTicketRepository  $ticket_repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->ticket_repository = $ticket_repository;
-    }
+  /**
+   * SpeakerService constructor.
+   * @param ISummitAttendeeTicketRepository $ticket_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    ISummitAttendeeTicketRepository $ticket_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->ticket_repository = $ticket_repository;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function deleteBadgePrintsByTicket(Summit $summit, int $ticket_id): void
-    {
-        $this->tx_service->transaction(function() use($summit, $ticket_id){
+  /**
+   * @inheritDoc
+   */
+  public function deleteBadgePrintsByTicket(Summit $summit, int $ticket_id): void {
+    $this->tx_service->transaction(function () use ($summit, $ticket_id) {
+      Log::debug(
+        sprintf(
+          "SummitAttendeeBadgePrintService::deleteBadgePrintsByTicket: summit id %s, ticket id %s",
+          $summit->getId(),
+          $ticket_id,
+        ),
+      );
 
-            Log::debug(sprintf("SummitAttendeeBadgePrintService::deleteBadgePrintsByTicket: summit id %s, ticket id %s", $summit->getId(), $ticket_id));
+      $ticket = $this->ticket_repository->getById($ticket_id);
 
-            $ticket = $this->ticket_repository->getById($ticket_id);
+      if (!$ticket instanceof SummitAttendeeTicket) {
+        throw new EntityNotFoundException(sprintf("Ticket id %s not found.", $ticket_id));
+      }
 
-            if (!$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException(sprintf("Ticket id %s not found.", $ticket_id));
+      if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
+        throw new ValidationException(
+          sprintf("Ticket id %s does not belong to summit %s.", $ticket_id, $summit->getId()),
+        );
+      }
 
-            if ($ticket->getOrder()->getSummitId() != $summit->getId())
-                throw new ValidationException(sprintf("Ticket id %s does not belong to summit %s.", $ticket_id, $summit->getId()));
-
-            $badge = $ticket->getBadge();
-            if (!is_null($badge)) {
-                $badge->backupPrints();
-                $badge->clearPrints();
-            }
-        });
-    }
+      $badge = $ticket->getBadge();
+      if (!is_null($badge)) {
+        $badge->backupPrints();
+        $badge->clearPrints();
+      }
+    });
+  }
 }

@@ -12,159 +12,146 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="PresentationVideo")
-  * Class PresentationVideo
+ * Class PresentationVideo
  * @package models\summit
  */
-class PresentationVideo extends PresentationMaterial
-{
-    const ClassName = 'PresentationVideo';
+class PresentationVideo extends PresentationMaterial {
+  const ClassName = "PresentationVideo";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @ORM\Column(name="YouTubeID", type="string")
-     * @var string
-     */
-    private $youtube_id;
+  /**
+   * @ORM\Column(name="YouTubeID", type="string")
+   * @var string
+   */
+  private $youtube_id;
 
-    /**
-     * @ORM\Column(name="ExternalUrl", type="string")
-     * @var string
-     */
-    private $external_url;
+  /**
+   * @ORM\Column(name="ExternalUrl", type="string")
+   * @var string
+   */
+  private $external_url;
 
-    /**
-     * @return string
-     */
-    public function getYoutubeId()
-    {
-        return $this->youtube_id;
-    }
+  /**
+   * @return string
+   */
+  public function getYoutubeId() {
+    return $this->youtube_id;
+  }
 
-    /**
-     * @param string $youtube_id
-     */
-    public function setYoutubeId($youtube_id)
-    {
-        $this->youtube_id = $youtube_id;
-    }
+  /**
+   * @param string $youtube_id
+   */
+  public function setYoutubeId($youtube_id) {
+    $this->youtube_id = $youtube_id;
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getDateUploaded()
-    {
-        return $this->date_uploaded;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getDateUploaded() {
+    return $this->date_uploaded;
+  }
 
-    /**
-     * @param \DateTime $date_uploaded
-     */
-    public function setDateUploaded($date_uploaded)
-    {
-        $this->date_uploaded = $date_uploaded;
-    }
+  /**
+   * @param \DateTime $date_uploaded
+   */
+  public function setDateUploaded($date_uploaded) {
+    $this->date_uploaded = $date_uploaded;
+  }
 
-    /**
-     * @return bool
-     */
-    public function getHighlighted()
-    {
-        return (bool)$this->highlighted;
-    }
+  /**
+   * @return bool
+   */
+  public function getHighlighted() {
+    return (bool) $this->highlighted;
+  }
 
-    /**
-     * @param bool $highlighted
-     */
-    public function setHighlighted($highlighted)
-    {
-        $this->highlighted = $highlighted;
-    }
+  /**
+   * @param bool $highlighted
+   */
+  public function setHighlighted($highlighted) {
+    $this->highlighted = $highlighted;
+  }
 
-    /**
-     * @return int
-     */
-    public function getViews()
-    {
-        return $this->views;
-    }
+  /**
+   * @return int
+   */
+  public function getViews() {
+    return $this->views;
+  }
 
-    /**
-     * @param int $views
-     */
-    public function setViews($views)
-    {
-        $this->views = $views;
-    }
+  /**
+   * @param int $views
+   */
+  public function setViews($views) {
+    $this->views = $views;
+  }
 
-    /**
-     * @ORM\Column(name="DateUploaded", type="datetime")
-     * @var \DateTime
-     */
-    private $date_uploaded;
+  /**
+   * @ORM\Column(name="DateUploaded", type="datetime")
+   * @var \DateTime
+   */
+  private $date_uploaded;
 
-    /**
-     * @ORM\Column(name="Highlighted", type="boolean")
-     * @var bool
-     */
-    private $highlighted;
+  /**
+   * @ORM\Column(name="Highlighted", type="boolean")
+   * @var bool
+   */
+  private $highlighted;
 
-    /**
-     * @ORM\Column(name="Views", type="integer")
-     * @var int
-     */
-    private $views;
+  /**
+   * @ORM\Column(name="Views", type="integer")
+   * @var int
+   */
+  private $views;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->highlighted = false;
-        $this->views       = 0;
-        $this->date_uploaded = new \DateTime();
-        $this->external_url = null;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->highlighted = false;
+    $this->views = 0;
+    $this->date_uploaded = new \DateTime();
+    $this->external_url = null;
+  }
 
-    /**
-     * @return string
-     */
-    public function getExternalUrl(): ?string
-    {
-        return $this->external_url;
-    }
+  /**
+   * @return string
+   */
+  public function getExternalUrl(): ?string {
+    return $this->external_url;
+  }
 
-    /**
-     * @param string $external_url
-     */
-    public function setExternalUrl(?string $external_url): void
-    {
-        $this->external_url = $external_url;
-    }
+  /**
+   * @param string $external_url
+   */
+  public function setExternalUrl(?string $external_url): void {
+    $this->external_url = $external_url;
+  }
 
-    /**
-     * @return PresentationMaterial
-     */
-    public function clone(): PresentationMaterial {
-        $clone = parent::clone();
-        $clone->setYoutubeId($this->getYoutubeId());
-        $clone->setDateUploaded($this->getDateUploaded());
-        $clone->setHighlighted($this->getHighlighted());
-        $clone->setViews($this->getViews());
-        $clone->setExternalUrl($this->getExternalUrl());
-        return $clone;
-    }
+  /**
+   * @return PresentationMaterial
+   */
+  public function clone(): PresentationMaterial {
+    $clone = parent::clone();
+    $clone->setYoutubeId($this->getYoutubeId());
+    $clone->setDateUploaded($this->getDateUploaded());
+    $clone->setHighlighted($this->getHighlighted());
+    $clone->setViews($this->getViews());
+    $clone->setExternalUrl($this->getExternalUrl());
+    return $clone;
+  }
 
-    protected function createInstance(): PresentationMaterial
-    {
-        return new PresentationVideo();
-    }
+  protected function createInstance(): PresentationMaterial {
+    return new PresentationVideo();
+  }
 }

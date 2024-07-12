@@ -13,86 +13,79 @@
  **/
 
 use models\exceptions\ValidationException;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * Trait SponsorPromoCodeTrait
  * @package models\summit
  */
-trait SponsorPromoCodeTrait
-{
-    /**
-     * @ORM\Column(name="ContactEmail", type="string")
-     * @var string
-     */
-    protected $contact_email;
+trait SponsorPromoCodeTrait {
+  /**
+   * @ORM\Column(name="ContactEmail", type="string")
+   * @var string
+   */
+  protected $contact_email;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
-     * @var Sponsor
-     */
-    protected $sponsor;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
+   * @var Sponsor
+   */
+  protected $sponsor;
 
-    /**
-     * @return string
-     */
-    public function getType():string
-    {
-        return 'SPONSOR';
+  /**
+   * @return string
+   */
+  public function getType(): string {
+    return "SPONSOR";
+  }
+
+  /**
+   * @return int
+   */
+  public function getSponsorId(): int {
+    try {
+      return is_null($this->sponsor) ? 0 : $this->sponsor->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getSponsorId():int{
-        try {
-            return is_null($this->sponsor) ? 0: $this->sponsor->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @return bool
+   */
+  public function hasSponsor(): bool {
+    return $this->getSponsorId() > 0;
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasSponsor():bool{
-        return $this->getSponsorId() > 0;
-    }
+  public function getContactEmail(): ?string {
+    return $this->contact_email;
+  }
 
-    public function getContactEmail(): ?string
-    {
-        return $this->contact_email;
-    }
+  public function setContactEmail(string $contact_email): void {
+    $this->contact_email = $contact_email;
+  }
 
-    public function setContactEmail(string $contact_email): void
-    {
-        $this->contact_email = $contact_email;
-    }
+  /**
+   * @return Sponsor
+   */
+  public function getSponsor(): Sponsor {
+    return $this->sponsor;
+  }
 
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor():Sponsor
-    {
-        return $this->sponsor;
-    }
+  /**
+   * @param Sponsor $sponsor
+   */
+  public function setSponsor(Sponsor $sponsor) {
+    $this->sponsor = $sponsor;
+  }
 
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor)
-    {
-        $this->sponsor = $sponsor;
-    }
-
-    /**
-     * @param string $email
-     * @param null|string $company
-     * @return bool
-     * @throw ValidationException
-     */
-    public function checkSubject(string $email, ?string $company):bool{
-        return true;
-    }
+  /**
+   * @param string $email
+   * @param null|string $company
+   * @return bool
+   * @throw ValidationException
+   */
+  public function checkSubject(string $email, ?string $company): bool {
+    return true;
+  }
 }

@@ -18,18 +18,17 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitAuditLogSerializer
  * @package ModelSerializers
  */
-class SummitAuditLogSerializer extends AuditLogSerializer
-{
-    protected static $array_mappings = [
-        'SummitId' => 'summit_id:json_int',
-    ];
+class SummitAuditLogSerializer extends AuditLogSerializer {
+  protected static $array_mappings = [
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'summit' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'summit_id',
-            'getter' => 'getSummit',
-            'has' => 'hasSummit'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "summit" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "summit_id",
+      "getter" => "getSummit",
+      "has" => "hasSummit",
+    ],
+  ];
 }

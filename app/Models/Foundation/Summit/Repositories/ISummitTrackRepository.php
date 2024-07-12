@@ -16,6 +16,5 @@
  * Interface ISummitTrackRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitTrackRepository extends ISummitOwnedEntityRepository
-{
+interface ISummitTrackRepository extends ISummitOwnedEntityRepository {
 }

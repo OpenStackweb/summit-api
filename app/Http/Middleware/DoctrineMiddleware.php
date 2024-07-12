@@ -20,30 +20,26 @@ use models\utils\SilverstripeBaseModel;
  * Class DoctrineMiddleware
  * @package App\Http\Middleware
  */
-class DoctrineMiddleware
-{
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @param  \Closure $next
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
-    {
-
-        $response = $next($request);
-        // before response close it
-        try {
-            $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-            if ($em) {
-                $em->getConnection()->close();
-                $em->close();
-            }
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-        }
-        return $response;
+class DoctrineMiddleware {
+  /**
+   * Handle an incoming request.
+   *
+   * @param  \Illuminate\Http\Request $request
+   * @param  \Closure $next
+   * @return mixed
+   */
+  public function handle($request, Closure $next) {
+    $response = $next($request);
+    // before response close it
+    try {
+      $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+      if ($em) {
+        $em->getConnection()->close();
+        $em->close();
+      }
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+    return $response;
+  }
 }

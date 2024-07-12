@@ -16,17 +16,16 @@
  * Class SummitRSVPMultiValueQuestionTemplateValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRSVPMultiValueQuestionTemplateValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-        if($update){
-            return ['empty_string' => 'sometimes|string'];
-        }
-        return ['empty_string' => 'required|string'];
+final class SummitRSVPMultiValueQuestionTemplateValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return ["empty_string" => "sometimes|string"];
     }
+    return ["empty_string" => "required|string"];
+  }
 }

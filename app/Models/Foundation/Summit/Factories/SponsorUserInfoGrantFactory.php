@@ -17,39 +17,41 @@ use models\summit\SponsorUserInfoGrant;
  * Class SponsorUserInfoGrant
  * @package App\Models\Foundation\Summit\SponsorUserInfoGrantFactory
  */
-final class SponsorUserInfoGrantFactory
-{
-    /**
-     * @param array $payload
-     * @return SponsorUserInfoGrant
-     */
-    public static function build(array $payload):SponsorUserInfoGrant {
-        $grant = null;
-        $class_name = $payload['class_name'];
-        switch($class_name){
-            case SponsorUserInfoGrant::ClassName:
-                $grant = self::populate(new SponsorUserInfoGrant, $payload);
-                break;
-            case SponsorBadgeScan::ClassName:
-                $grant = self::populate(new SponsorBadgeScan, $payload);
-                break;
-        }
-        return $grant;
+final class SponsorUserInfoGrantFactory {
+  /**
+   * @param array $payload
+   * @return SponsorUserInfoGrant
+   */
+  public static function build(array $payload): SponsorUserInfoGrant {
+    $grant = null;
+    $class_name = $payload["class_name"];
+    switch ($class_name) {
+      case SponsorUserInfoGrant::ClassName:
+        $grant = self::populate(new SponsorUserInfoGrant(), $payload);
+        break;
+      case SponsorBadgeScan::ClassName:
+        $grant = self::populate(new SponsorBadgeScan(), $payload);
+        break;
     }
+    return $grant;
+  }
 
-    /**
-     * @param SponsorUserInfoGrant $grant
-     * @param array $payload
-     * @return SponsorUserInfoGrant
-     */
-    public static function populate(SponsorUserInfoGrant $grant, array $payload):SponsorUserInfoGrant{
-        $class_name = $payload['class_name'];
-        switch($class_name){
-            case SponsorUserInfoGrant::ClassName:
-                break;
-            case SponsorBadgeScan::ClassName:
-                break;
-        }
-        return $grant;
+  /**
+   * @param SponsorUserInfoGrant $grant
+   * @param array $payload
+   * @return SponsorUserInfoGrant
+   */
+  public static function populate(
+    SponsorUserInfoGrant $grant,
+    array $payload,
+  ): SponsorUserInfoGrant {
+    $class_name = $payload["class_name"];
+    switch ($class_name) {
+      case SponsorUserInfoGrant::ClassName:
+        break;
+      case SponsorBadgeScan::ClassName:
+        break;
     }
+    return $grant;
+  }
 }

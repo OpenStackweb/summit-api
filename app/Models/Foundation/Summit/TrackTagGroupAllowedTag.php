@@ -16,117 +16,106 @@ use Doctrine\ORM\Cache;
 use models\main\Tag;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineTrackTagGroupAllowedTagsRepository")
  * @ORM\Table(name="TrackTagGroup_AllowedTags")
  * Class TrackTagGroupAllowedTag
  * @package models\summit\TrackTagGroupAllowedTag
  */
-class TrackTagGroupAllowedTag extends BaseEntity
-{
-    /**
-     * @ORM\Column(name="IsDefault", type="boolean")
-     * @var boolean
-     */
-    private $is_default;
+class TrackTagGroupAllowedTag extends BaseEntity {
+  /**
+   * @ORM\Column(name="IsDefault", type="boolean")
+   * @var boolean
+   */
+  private $is_default;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Tag", cascade={"persist"})
-     * @ORM\JoinColumn(name="TagID", referencedColumnName="ID")
-     * @var Tag
-     */
-    private $tag;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Tag", cascade={"persist"})
+   * @ORM\JoinColumn(name="TagID", referencedColumnName="ID")
+   * @var Tag
+   */
+  private $tag;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="TrackTagGroup", inversedBy="allowed_tags")
-     * @ORM\JoinColumn(name="TrackTagGroupID", referencedColumnName="ID")
-     * @var TrackTagGroup
-     */
-    private $track_tag_group;
+  /**
+   * @ORM\ManyToOne(targetEntity="TrackTagGroup", inversedBy="allowed_tags")
+   * @ORM\JoinColumn(name="TrackTagGroupID", referencedColumnName="ID")
+   * @var TrackTagGroup
+   */
+  private $track_tag_group;
 
-    /**
-     * @return int
-     */
-    public function getTrackTagGroupId(){
-        try {
-            return is_null($this->track_tag_group) ? 0 : $this->track_tag_group->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getTrackTagGroupId() {
+    try {
+      return is_null($this->track_tag_group) ? 0 : $this->track_tag_group->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getSummitId(){
-        try {
-            return is_null($this->track_tag_group) ? 0 : $this->track_tag_group->getSummitId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getSummitId() {
+    try {
+      return is_null($this->track_tag_group) ? 0 : $this->track_tag_group->getSummitId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getTagId(){
-        try {
-            return is_null($this->tag) ? 0 : $this->tag->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getTagId() {
+    try {
+      return is_null($this->tag) ? 0 : $this->tag->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
+  /**
+   * @return bool
+   */
+  public function isDefault() {
+    return $this->is_default;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isDefault()
-    {
-        return $this->is_default;
-    }
+  /**
+   * @param bool $is_default
+   */
+  public function setIsDefault($is_default) {
+    $this->is_default = $is_default;
+  }
 
-    /**
-     * @param bool $is_default
-     */
-    public function setIsDefault($is_default)
-    {
-        $this->is_default = $is_default;
-    }
+  /**
+   * @return Tag
+   */
+  public function getTag() {
+    return $this->tag;
+  }
 
-    /**
-     * @return Tag
-     */
-    public function getTag()
-    {
-        return $this->tag;
-    }
+  /**
+   * @param Tag $tag
+   */
+  public function setTag(Tag $tag) {
+    $this->tag = $tag;
+  }
 
-    /**
-     * @param Tag $tag
-     */
-    public function setTag(Tag $tag)
-    {
-        $this->tag = $tag;
-    }
+  /**
+   * @return TrackTagGroup
+   */
+  public function getTrackTagGroup() {
+    return $this->track_tag_group;
+  }
 
-    /**
-     * @return TrackTagGroup
-     */
-    public function getTrackTagGroup()
-    {
-        return $this->track_tag_group;
-    }
-
-    /**
-     * @param TrackTagGroup $track_tag_group
-     */
-    public function setTrackTagGroup(TrackTagGroup $track_tag_group)
-    {
-        $this->track_tag_group = $track_tag_group;
-    }
+  /**
+   * @param TrackTagGroup $track_tag_group
+   */
+  public function setTrackTagGroup(TrackTagGroup $track_tag_group) {
+    $this->track_tag_group = $track_tag_group;
+  }
 }

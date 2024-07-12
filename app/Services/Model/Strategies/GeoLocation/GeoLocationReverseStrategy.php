@@ -18,29 +18,22 @@ use models\summit\SummitGeoLocatedLocation;
  * Class GeoLocationReverseStrategy
  * @package App\Services\Model\Strategies\GeoLocation
  */
-final class GeoLocationReverseStrategy implements IGeoLocationStrategy
-{
-    /**
-     * @param SummitGeoLocatedLocation $location
-     * @param IGeoCodingAPI $geo_coding_api
-     * @return SummitGeoLocatedLocation
-     */
-    public function doGeoLocation(SummitGeoLocatedLocation $location, IGeoCodingAPI $geo_coding_api)
-    {
-        $response = $geo_coding_api->getAddressInfo
-        (
-            new GeoCoordinatesInfo
-            (
-                $location->getLat(),
-                $location->getLng()
-            )
-        );
+final class GeoLocationReverseStrategy implements IGeoLocationStrategy {
+  /**
+   * @param SummitGeoLocatedLocation $location
+   * @param IGeoCodingAPI $geo_coding_api
+   * @return SummitGeoLocatedLocation
+   */
+  public function doGeoLocation(SummitGeoLocatedLocation $location, IGeoCodingAPI $geo_coding_api) {
+    $response = $geo_coding_api->getAddressInfo(
+      new GeoCoordinatesInfo($location->getLat(), $location->getLng()),
+    );
 
-        $location->setAddress1($response->getAddress()[0]);
-        $location->setZipCode($response->getZipCode());
-        $location->setState($response->getState());
-        $location->setCity($response->getCity());
-        $location->setCountry($response->getCountry());
-        return $location;
-    }
+    $location->setAddress1($response->getAddress()[0]);
+    $location->setZipCode($response->getZipCode());
+    $location->setState($response->getState());
+    $location->setCity($response->getCity());
+    $location->setCountry($response->getCountry());
+    return $location;
+  }
 }

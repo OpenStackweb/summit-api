@@ -16,14 +16,10 @@
  * Class PresentationLinkSerializer
  * @package ModelSerializers
  */
-final class PresentationLinkSerializer extends PresentationMaterialSerializer
-{
-    protected static $array_mappings = array
-    (
-        'Link'  => 'link:json_text',
-    );
+final class PresentationLinkSerializer extends PresentationMaterialSerializer {
+  protected static $array_mappings = [
+    "Link" => "link:json_text",
+  ];
 
-    protected static $allowed_fields = [
-        'link',
-    ];
+  protected static $allowed_fields = ["link"];
 }

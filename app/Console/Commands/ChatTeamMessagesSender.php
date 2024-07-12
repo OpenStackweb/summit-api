@@ -18,53 +18,52 @@ use services\model\IChatTeamService;
  * @package App\Console\Commands
  */
 final class ChatTeamMessagesSender extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "teams:message-sender";
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'teams:message-sender';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "teams:message-sender {bach_size?}";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'teams:message-sender {bach_size?}';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Send out Teams Chat Messages";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Send out Teams Chat Messages';
+  /**
+   * @var IChatTeamService
+   */
+  private $service;
 
-    /**
-     * @var IChatTeamService
-     */
-    private $service;
+  /**
+   * ChatTeamMessagesSender constructor.
+   * @param IChatTeamService $service
+   */
+  public function __construct(IChatTeamService $service) {
+    parent::__construct();
+    $this->service = $service;
+  }
 
-    /**
-     * ChatTeamMessagesSender constructor.
-     * @param IChatTeamService $service
-     */
-    public function __construct(IChatTeamService $service)
-    {
-        parent::__construct();
-        $this->service = $service;
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    $bach_size = $this->argument("bach_size");
+    if (is_null($bach_size)) {
+      $bach_size = 100;
     }
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        $bach_size = $this->argument('bach_size');
-        if(is_null($bach_size)) $bach_size = 100;
-        $res = $this->service->sendMessages($bach_size);
-        $this->info(sprintf("total messages sent %s", $res));
-    }
+    $res = $this->service->sendMessages($bach_size);
+    $this->info(sprintf("total messages sent %s", $res));
+  }
 }

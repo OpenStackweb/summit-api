@@ -18,30 +18,28 @@ use models\utils\IEntity;
  * Interface IBaseService
  * @package App\Services\Utils
  */
-interface IBaseService
-{
-    /**
-     * @param array $payload
-     * @return IEntity
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function create(array $payload):IEntity;
+interface IBaseService {
+  /**
+   * @param array $payload
+   * @return IEntity
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function create(array $payload): IEntity;
 
-    /**
-     * @param int $id
-     * @param array $payload
-     * @return IEntity
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function update(int $id, array $payload):IEntity;
+  /**
+   * @param int $id
+   * @param array $payload
+   * @return IEntity
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function update(int $id, array $payload): IEntity;
 
-    /**
-     * @param int $id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function delete(int $id):void;
-
+  /**
+   * @param int $id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function delete(int $id): void;
 }

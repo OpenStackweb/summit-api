@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\SummitAbstractLocation;
 /**
  * Class AdminSummitLocationActionSyncWorkRequest
@@ -19,45 +19,39 @@ use models\summit\SummitAbstractLocation;
  * @ORM\Table(name="AdminSummitLocationActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
-class AdminSummitLocationActionSyncWorkRequest
-extends AdminScheduleSummitActionSyncWorkRequest
-{
-    const SubType = 'ADMIN_LOCATION';
+class AdminSummitLocationActionSyncWorkRequest extends AdminScheduleSummitActionSyncWorkRequest {
+  const SubType = "ADMIN_LOCATION";
 
-    /**
-     * @ORM\Column(name="LocationID", type="integer")
-     * @var int
-     */
-    private $location_id;
+  /**
+   * @ORM\Column(name="LocationID", type="integer")
+   * @var int
+   */
+  private $location_id;
 
-    /**
-     * @return SummitAbstractLocation
-     */
-    public function getLocation()
-    {
-        $id = $this->location_id;
-        try {
-            $location = $this->getEM()->find(SummitAbstractLocation::class, $id);
-        }
-        catch(\Exception $ex){
-            return null;
-        }
-        return $location;
+  /**
+   * @return SummitAbstractLocation
+   */
+  public function getLocation() {
+    $id = $this->location_id;
+    try {
+      $location = $this->getEM()->find(SummitAbstractLocation::class, $id);
+    } catch (\Exception $ex) {
+      return null;
     }
+    return $location;
+  }
 
-    /**
-     * @return int
-     */
-    public function getLocationId()
-    {
-        return $this->location_id;
-    }
+  /**
+   * @return int
+   */
+  public function getLocationId() {
+    return $this->location_id;
+  }
 
-    /**
-     * @param int $location_id
-     */
-    public function setLocationId($location_id)
-    {
-        $this->location_id = $location_id;
-    }
+  /**
+   * @param int $location_id
+   */
+  public function setLocationId($location_id) {
+    $this->location_id = $location_id;
+  }
 }

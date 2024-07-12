@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -20,19 +20,17 @@ use models\utils\SilverstripeBaseModel;
  * Class SupportChannelType
  * @package App\Models\Foundation\Marketplace
  */
-class SupportChannelType extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    protected $type;
+class SupportChannelType extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  protected $type;
 
-    /**
-     * @return string
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @return string
+   */
+  public function getType() {
+    return $this->type;
+  }
 }

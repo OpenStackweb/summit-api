@@ -17,10 +17,9 @@ use models\summit\PrivatePresentationCategoryGroup;
  * Class PresentationCategoryGroupConstants
  * @package App\Models\Foundation\Summit\Events\Presentations
  */
-final class PresentationCategoryGroupConstants
-{
-    public static $valid_class_names = [
-        PresentationCategoryGroup::ClassName,
-        PrivatePresentationCategoryGroup::ClassName,
-    ];
+final class PresentationCategoryGroupConstants {
+  public static $valid_class_names = [
+    PresentationCategoryGroup::ClassName,
+    PrivatePresentationCategoryGroup::ClassName,
+  ];
 }

@@ -22,117 +22,125 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitLeadReportSetting
  * @package models\summit
  */
-class SummitLeadReportSetting extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitLeadReportSetting extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    const AttendeeExtraQuestionsKey = 'attendee_extra_questions';
-    const SponsorExtraQuestionsKey = 'extra_questions';
+  const AttendeeExtraQuestionsKey = "attendee_extra_questions";
+  const SponsorExtraQuestionsKey = "extra_questions";
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var Sponsor
-     */
-    private $sponsor;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var Sponsor
+   */
+  private $sponsor;
 
-    /**
-     * @ORM\Column(name="Columns", type="json")
-     * @var array
-     */
-    protected $columns;
+  /**
+   * @ORM\Column(name="Columns", type="json")
+   * @var array
+   */
+  protected $columns;
 
-    /**
-     * Sponsor constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->columns = [];
+  /**
+   * Sponsor constructor.
+   */
+  public function __construct() {
+    parent::__construct();
+    $this->columns = [];
+  }
+
+  /**
+   * @return Sponsor
+   */
+  public function getSponsor(): Sponsor {
+    return $this->sponsor;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSponsorId(): int {
+    try {
+      return is_null($this->sponsor) ? 0 : $this->sponsor->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor(): Sponsor
-    {
-        return $this->sponsor;
-    }
+  /**
+   * @return bool
+   */
+  public function hasSponsor(): bool {
+    return $this->getSponsorId() > 0;
+  }
 
-    /**
-     * @return int
-     */
-    public function getSponsorId(): int
-    {
-        try {
-            return is_null($this->sponsor) ? 0: $this->sponsor->getId();
+  /**
+   * @param Sponsor $sponsor
+   */
+  public function setSponsor(Sponsor $sponsor): void {
+    $this->sponsor = $sponsor;
+  }
+
+  public function clearSponsor(): void {
+    $this->sponsor = null;
+  }
+
+  /**
+   * @return array
+   */
+  public function getColumns(): array {
+    return $this->columns;
+  }
+
+  /**
+   * @param array $columns
+   */
+  public function setColumns(array $columns): void {
+    $this->columns = $columns;
+  }
+
+  public function validateFor(Summit $summit, ?Sponsor $sponsor = null): void {
+    $columns = $this->getColumns();
+
+    // check if the extra questions belongs to the summit
+    if (array_key_exists(SummitLeadReportSetting::AttendeeExtraQuestionsKey, $columns)) {
+      foreach ($columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey] as $extra_question) {
+        if (
+          is_array($extra_question) &&
+          array_key_exists("id", $extra_question) &&
+          is_null($summit->getOrderExtraQuestionById($extra_question["id"]))
+        ) {
+          throw new ValidationException(
+            sprintf(
+              "Attendee extra question id %s doesn't belong to summit %s",
+              $extra_question["id"],
+              $summit->getId(),
+            ),
+          );
         }
-        catch(\Exception $ex){
-            return 0;
+      }
+    }
+
+    // check if the extra questions belongs to the sponsor
+    if (
+      !is_null($sponsor) &&
+      array_key_exists(SummitLeadReportSetting::SponsorExtraQuestionsKey, $columns)
+    ) {
+      foreach ($columns[SummitLeadReportSetting::SponsorExtraQuestionsKey] as $extra_question) {
+        if (
+          is_array($extra_question) &&
+          array_key_exists("id", $extra_question) &&
+          is_null($sponsor->getExtraQuestionById($extra_question["id"]))
+        ) {
+          throw new ValidationException(
+            sprintf(
+              "Sponsor extra question id %s doesn't belong to sponsor %s",
+              $extra_question["id"],
+              $sponsor->getId(),
+            ),
+          );
         }
+      }
     }
-
-    /**
-     * @return bool
-     */
-    public function hasSponsor(): bool
-    {
-        return $this->getSponsorId() > 0;
-    }
-
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
-    }
-
-    public function clearSponsor(): void
-    {
-        $this->sponsor = null;
-    }
-
-    /**
-     * @return array
-     */
-    public function getColumns(): array
-    {
-        return $this->columns;
-    }
-
-    /**
-     * @param array $columns
-     */
-    public function setColumns(array  $columns): void
-    {
-        $this->columns = $columns;
-    }
-
-    public function validateFor(Summit $summit, ?Sponsor $sponsor = null): void
-    {
-        $columns = $this->getColumns();
-
-        // check if the extra questions belongs to the summit
-        if (array_key_exists(SummitLeadReportSetting::AttendeeExtraQuestionsKey, $columns)) {
-            foreach ($columns[SummitLeadReportSetting::AttendeeExtraQuestionsKey] as $extra_question) {
-                if (is_array($extra_question) && array_key_exists('id', $extra_question) &&
-                    is_null($summit->getOrderExtraQuestionById($extra_question['id']))) {
-                    throw new ValidationException(
-                        sprintf("Attendee extra question id %s doesn't belong to summit %s", $extra_question['id'], $summit->getId()));
-                }
-            }
-        }
-
-        // check if the extra questions belongs to the sponsor
-        if (!is_null($sponsor) && array_key_exists(SummitLeadReportSetting::SponsorExtraQuestionsKey, $columns)) {
-            foreach ($columns[SummitLeadReportSetting::SponsorExtraQuestionsKey] as $extra_question) {
-                if (is_array($extra_question) && array_key_exists('id', $extra_question) &&
-                    is_null($sponsor->getExtraQuestionById($extra_question['id']))) {
-                    throw new ValidationException(
-                        sprintf("Sponsor extra question id %s doesn't belong to sponsor %s", $extra_question['id'], $sponsor->getId()));
-                }
-            }
-        }
-    }
+  }
 }

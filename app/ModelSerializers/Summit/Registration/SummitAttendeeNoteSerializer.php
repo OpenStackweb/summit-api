@@ -20,34 +20,32 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitAttendeeNoteSerializer
  * @package ModelSerializers
  */
-class SummitAttendeeNoteSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Content'   => 'content:json_string',
-        'AuthorId'  => 'author_id:json_int',
-        'OwnerId'   => 'owner_id:json_int',
-        'TicketId'  => 'ticket_id:json_int',
-    ];
+class SummitAttendeeNoteSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Content" => "content:json_string",
+    "AuthorId" => "author_id:json_int",
+    "OwnerId" => "owner_id:json_int",
+    "TicketId" => "ticket_id:json_int",
+  ];
 
-
-    protected static $expand_mappings = [
-        'author' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'author_id',
-            'getter' => 'getAuthor',
-            'has' => 'hasAuthor',
-        ],
-        'owner' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'owner_id',
-            'getter' => 'getOwner',
-            'has' => 'hasOwner',
-        ],
-        'ticket' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'ticket_id',
-            'getter' => 'getTicket',
-            'has' => 'hasTicket'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "author" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "author_id",
+      "getter" => "getAuthor",
+      "has" => "hasAuthor",
+    ],
+    "owner" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "owner_id",
+      "getter" => "getOwner",
+      "has" => "hasOwner",
+    ],
+    "ticket" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "ticket_id",
+      "getter" => "getTicket",
+      "has" => "hasTicket",
+    ],
+  ];
 }

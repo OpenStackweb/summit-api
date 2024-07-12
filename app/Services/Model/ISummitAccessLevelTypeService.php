@@ -19,31 +19,34 @@ use models\summit\SummitAccessLevelType;
  * Interface ISummitAccessLevelTypeService
  * @package App\Services\Model
  */
-interface ISummitAccessLevelTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitAccessLevelType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addAccessLevelType(Summit $summit, array $data):SummitAccessLevelType;
+interface ISummitAccessLevelTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitAccessLevelType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addAccessLevelType(Summit $summit, array $data): SummitAccessLevelType;
 
-    /**
-     * @param Summit $summit
-     * @param int $level_id
-     * @param array $data
-     * @return SummitAccessLevelType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateAccessLevelType(Summit $summit, int $level_id, array $data):SummitAccessLevelType;
+  /**
+   * @param Summit $summit
+   * @param int $level_id
+   * @param array $data
+   * @return SummitAccessLevelType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateAccessLevelType(
+    Summit $summit,
+    int $level_id,
+    array $data,
+  ): SummitAccessLevelType;
 
-    /**
-     * @param Summit $summit
-     * @param int $level_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteAccessLevelType(Summit $summit, int $level_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $level_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteAccessLevelType(Summit $summit, int $level_id): void;
 }

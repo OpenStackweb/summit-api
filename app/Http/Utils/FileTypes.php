@@ -12,13 +12,11 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class FileTypes
  * @package App\Http\Utils
  */
-final class FileTypes
-{
-    const SlidesExtensions = ['ppt', 'pptx', 'xps',  'key', 'pdf'];
-    const ImagesExntesions = ['jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'];
+final class FileTypes {
+  const SlidesExtensions = ["ppt", "pptx", "xps", "key", "pdf"];
+  const ImagesExntesions = ["jpg", "jpeg", "png", "svg", "bmp", "tga", "tiff", "gif"];
 }

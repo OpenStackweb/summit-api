@@ -12,30 +12,27 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class PresentationMaterialValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class PresentationMaterialValidationRulesFactory
-{
-    public static function build(array $data, $update = false){
-
-        if($update){
-          return [
-              'name'            => 'sometimes|required|string:512',
-              'description'     => 'sometimes|required|string',
-              'display_on_site' => 'sometimes|required|boolean',
-              'featured'        => 'sometimes|required|boolean',
-              'order'           => 'sometimes|integer|min:1',
-          ];
-        }
-
-        return [
-            'name'            => 'sometimes|required|string:512',
-            'description'     => 'sometimes|required|string',
-            'display_on_site' => 'sometimes|required|boolean',
-            'featured'        => 'sometimes|required|boolean',
-        ];
+final class PresentationMaterialValidationRulesFactory {
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|required|string:512",
+        "description" => "sometimes|required|string",
+        "display_on_site" => "sometimes|required|boolean",
+        "featured" => "sometimes|required|boolean",
+        "order" => "sometimes|integer|min:1",
+      ];
     }
+
+    return [
+      "name" => "sometimes|required|string:512",
+      "description" => "sometimes|required|string",
+      "display_on_site" => "sometimes|required|boolean",
+      "featured" => "sometimes|required|boolean",
+    ];
+  }
 }

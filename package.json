@@ -1,12 +1,17 @@
 {
   "private": true,
   "scripts": {
-    "prod": "gulp --production",
-    "dev": "gulp watch"
+    "prepare": "husky",
+    "lint": "eslint src",
+    "precommit": "yarn lint-staged --diff=origin/main --verbose"
+  },
+  "lint-staged": {
+    "*.php": "prettier --write --ignore-unknown"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "laravel-elixir": "^5.0.0",
-    "bootstrap-sass": "^3.3.0"
+    "@prettier/plugin-php": "^0.22.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.1.0",
+    "prettier": "^3.3.2"
   }
 }

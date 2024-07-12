@@ -16,7 +16,6 @@ use models\utils\IBaseRepository;
  * Interface ICompanyRepository
  * @package models\main
  */
-interface ICompanyRepository extends IBaseRepository
-{
-    public function getByName(string $name):?Company;
+interface ICompanyRepository extends IBaseRepository {
+  public function getByName(string $name): ?Company;
 }

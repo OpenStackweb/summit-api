@@ -16,53 +16,57 @@
  * Interface IFileDownloadStrategy
  * @package App\Services\FileSystem
  */
-interface IFileDownloadStrategy
-{
-    /**
-     * @return string
-     */
-    public function getDriver():string;
+interface IFileDownloadStrategy {
+  /**
+   * @return string
+   */
+  public function getDriver(): string;
 
-    /**
-     * @param string $path
-     * @return bool
-     */
-    public function exists(string $path):bool;
+  /**
+   * @param string $path
+   * @return bool
+   */
+  public function exists(string $path): bool;
 
-    /**
-     * @param string $path
-     * @param string $name
-     * @param array $options
-     * @return mixed`
-     */
-    public function download(string $path, string $name, array $options = []);
+  /**
+   * @param string $path
+   * @param string $name
+   * @param array $options
+   * @return mixed`
+   */
+  public function download(string $path, string $name, array $options = []);
 
-    /**
-     * @param string $relativeFileName
-     * @param boolean $useTemporaryUrl
-     * @param int $ttl time to live in minutes
-     * @param false boolean $avoidCache
-     * @return string|null
-     */
-    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10, bool $avoidCache = false):?string;
+  /**
+   * @param string $relativeFileName
+   * @param boolean $useTemporaryUrl
+   * @param int $ttl time to live in minutes
+   * @param false boolean $avoidCache
+   * @return string|null
+   */
+  public function getUrl(
+    string $relativeFileName,
+    bool $useTemporaryUrl = false,
+    int $ttl = 10,
+    bool $avoidCache = false,
+  ): ?string;
 
-    /**
-     * @param string $relativeFileName
-     * @return mixed
-     */
-    public function delete(string $relativeFileName);
+  /**
+   * @param string $relativeFileName
+   * @return mixed
+   */
+  public function delete(string $relativeFileName);
 
-    /**
-     * @param string $path
-     * @return string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function get(string $path):string;
+  /**
+   * @param string $path
+   * @return string
+   * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+   */
+  public function get(string $path): string;
 
-    /**
-     * @param string $path
-     * @return resource|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function readStream(string $path);
+  /**
+   * @param string $path
+   * @return resource|null
+   * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+   */
+  public function readStream(string $path);
 }

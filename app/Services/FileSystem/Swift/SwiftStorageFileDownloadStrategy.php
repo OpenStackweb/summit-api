@@ -17,12 +17,10 @@ use App\Services\FileSystem\AbstractFileDownloadStrategy;
  * Class SwiftStorageFileDownloadStrategy
  * @package App\Services\FileSystem\Swift
  */
-class SwiftStorageFileDownloadStrategy  extends AbstractFileDownloadStrategy
-{
-    const Driver = "swift";
+class SwiftStorageFileDownloadStrategy extends AbstractFileDownloadStrategy {
+  const Driver = "swift";
 
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

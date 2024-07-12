@@ -23,42 +23,37 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrinePresentationMediaUploadRepository
-extends SilverStripeDoctrineRepository
-    implements IPresentationMediaUploadRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PresentationMediaUpload::class;
-    }
+  extends SilverStripeDoctrineRepository
+  implements IPresentationMediaUploadRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PresentationMediaUpload::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'type_id' => 't.id'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "type_id" => "t.id",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return ['id'];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return ["id"];
+  }
 
-
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->innerJoin("e.media_upload_type", "t");
-        return $query;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.media_upload_type", "t");
+    return $query;
+  }
 }

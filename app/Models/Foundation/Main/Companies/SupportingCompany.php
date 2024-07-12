@@ -14,101 +14,93 @@
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Utils\BaseEntity;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="repositories\main\DoctrineSupportingCompanyRepository")
  * @ORM\Table(name="SupportingCompany")
  * Class SupportingCompany
  * @package models\main
  */
-class SupportingCompany extends BaseEntity implements IOrderable
-{
-    use One2ManyPropertyTrait;
+class SupportingCompany extends BaseEntity implements IOrderable {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getCompanyId' => 'company',
-        'getSponsorshipId' => 'sponsorship_type',
-    ];
+  protected $getIdMappings = [
+    "getCompanyId" => "company",
+    "getSponsorshipId" => "sponsorship_type",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasCompany' => 'company',
-        'hasSponsorshipType' => 'sponsorship_type',
-    ];
+  protected $hasPropertyMappings = [
+    "hasCompany" => "company",
+    "hasSponsorshipType" => "sponsorship_type",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Company", fetch="EXTRA_LAZY", inversedBy="project_sponsorships")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Company
-     */
-    private $company;
+  /**
+   * @ORM\ManyToOne(targetEntity="Company", fetch="EXTRA_LAZY", inversedBy="project_sponsorships")
+   * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Company
+   */
+  private $company;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="ProjectSponsorshipType", fetch="EXTRA_LAZY", inversedBy="supporting_companies")
-     * @ORM\JoinColumn(name="ProjectSponsorshipTypeID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var ProjectSponsorshipType
-     */
-    private $sponsorship_type;
+  /**
+   * @ORM\ManyToOne(targetEntity="ProjectSponsorshipType", fetch="EXTRA_LAZY", inversedBy="supporting_companies")
+   * @ORM\JoinColumn(name="ProjectSponsorshipTypeID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var ProjectSponsorshipType
+   */
+  private $sponsorship_type;
 
-    /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`CustomOrder`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @inheritDoc
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
+  /**
+   * @inheritDoc
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function getOrder()
-    {
-       return $this->order;
-    }
+  /**
+   * @inheritDoc
+   */
+  public function getOrder() {
+    return $this->order;
+  }
 
-    /**
-     * @return Company
-     */
-    public function getCompany(): Company
-    {
-        return $this->company;
-    }
+  /**
+   * @return Company
+   */
+  public function getCompany(): Company {
+    return $this->company;
+  }
 
-    /**
-     * @param Company $company
-     */
-    public function setCompany(Company $company): void
-    {
-        $this->company = $company;
-    }
+  /**
+   * @param Company $company
+   */
+  public function setCompany(Company $company): void {
+    $this->company = $company;
+  }
 
-    /**
-     * @return ProjectSponsorshipType
-     */
-    public function getSponsorshipType(): ProjectSponsorshipType
-    {
-        return $this->sponsorship_type;
-    }
+  /**
+   * @return ProjectSponsorshipType
+   */
+  public function getSponsorshipType(): ProjectSponsorshipType {
+    return $this->sponsorship_type;
+  }
 
-    /**
-     * @param ProjectSponsorshipType $sponsorship_type
-     */
-    public function setSponsorshipType(ProjectSponsorshipType $sponsorship_type): void
-    {
-        $this->sponsorship_type = $sponsorship_type;
-    }
+  /**
+   * @param ProjectSponsorshipType $sponsorship_type
+   */
+  public function setSponsorshipType(ProjectSponsorshipType $sponsorship_type): void {
+    $this->sponsorship_type = $sponsorship_type;
+  }
 
-    public function clearCompany(){
-        $this->company = null;
-    }
+  public function clearCompany() {
+    $this->company = null;
+  }
 
-    public function clearSponsorshipType(){
-        $this->sponsorship_type = null;
-    }
-
+  public function clearSponsorshipType() {
+    $this->sponsorship_type = null;
+  }
 }

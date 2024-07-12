@@ -19,10 +19,9 @@ use models\summit\Summit;
  * Interface IEncryptionAES256KeysGenerator
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IEncryptionAES256KeysGenerator
-{
-    /**
-     * @return string
-     */
-    public function generate(): string;
+interface IEncryptionAES256KeysGenerator {
+  /**
+   * @return string
+   */
+  public function generate(): string;
 }

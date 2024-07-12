@@ -17,16 +17,15 @@ use models\utils\IBaseRepository;
  * Interface ISpeakerOrganizationalRoleRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISpeakerOrganizationalRoleRepository extends IBaseRepository
-{
-    /**
-     * @param string $role
-     * @return SpeakerOrganizationalRole|null
-     */
-    public function getByRole($role);
+interface ISpeakerOrganizationalRoleRepository extends IBaseRepository {
+  /**
+   * @param string $role
+   * @return SpeakerOrganizationalRole|null
+   */
+  public function getByRole($role);
 
-    /**
-     * @return SpeakerOrganizationalRole[]
-     */
-    public function getDefaultOnes();
+  /**
+   * @return SpeakerOrganizationalRole[]
+   */
+  public function getDefaultOnes();
 }

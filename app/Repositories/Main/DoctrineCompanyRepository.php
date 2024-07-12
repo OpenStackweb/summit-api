@@ -19,54 +19,47 @@ use models\main\ICompanyRepository;
  * Class DoctrineCompanyRepository
  * @package repositories\main
  */
-final class DoctrineCompanyRepository
-    extends SilverStripeDoctrineRepository
-    implements ICompanyRepository
-{
+final class DoctrineCompanyRepository extends SilverStripeDoctrineRepository implements
+  ICompanyRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'e.name:json_string'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Company::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return Company::class;
-    }
-
-    /**
-     * @param string $name
-     * @return Company|null
-     */
-    public function getByName(string $name): ?Company
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("upper(e.name) = upper(:name)")
-            ->setParameter("name", trim($name))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+  /**
+   * @param string $name
+   * @return Company|null
+   */
+  public function getByName(string $name): ?Company {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->where("upper(e.name) = upper(:name)")
+      ->setParameter("name", trim($name))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 }

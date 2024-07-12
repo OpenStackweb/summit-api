@@ -11,56 +11,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrackSingleValueTemplateQuestion")
  * Class TrackSingleValueTemplateQuestion
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackSingleValueTemplateQuestion extends TrackQuestionTemplate
-{
-    /**
-     * @ORM\Column(name="InitialValue", type="string")
-     * @var string
-     */
-    protected $initial_value;
+class TrackSingleValueTemplateQuestion extends TrackQuestionTemplate {
+  /**
+   * @ORM\Column(name="InitialValue", type="string")
+   * @var string
+   */
+  protected $initial_value;
 
-    const ClassName = 'TrackSingleValueTemplateQuestion';
+  const ClassName = "TrackSingleValueTemplateQuestion";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public static $metadata = [
-        'class_name'  => self::ClassName,
-        'initial_value' => 'string',
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "initial_value" => "string",
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(TrackQuestionTemplate::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(TrackQuestionTemplate::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @return string
-     */
-    public function getInitialValue()
-    {
-        return $this->initial_value;
-    }
+  /**
+   * @return string
+   */
+  public function getInitialValue() {
+    return $this->initial_value;
+  }
 
-    /**
-     * @param string $initial_value
-     */
-    public function setInitialValue($initial_value)
-    {
-        $this->initial_value = $initial_value;
-    }
-
+  /**
+   * @param string $initial_value
+   */
+  public function setInitialValue($initial_value) {
+    $this->initial_value = $initial_value;
+  }
 }

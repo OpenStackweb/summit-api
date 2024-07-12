@@ -20,36 +20,33 @@ use utils\FilterParser;
  * Trait ParseAndGetFilter
  * @package App\Http\Controllers
  */
-trait ParseAndGetFilter
-{
-    /**
-     * @param callable $getFilterRules
-     * @param callable $getFilterValidatorRules
-     * @return Filter|null
-     * @throws \models\exceptions\ValidationException
-     * @throws \utils\FilterParserException
-     */
-    public static function getFilter(
-        callable $getFilterRules,
-        callable $getFilterValidatorRules
-    ){
-        $filter = null;
+trait ParseAndGetFilter {
+  /**
+   * @param callable $getFilterRules
+   * @param callable $getFilterValidatorRules
+   * @return Filter|null
+   * @throws \models\exceptions\ValidationException
+   * @throws \utils\FilterParserException
+   */
+  public static function getFilter(callable $getFilterRules, callable $getFilterValidatorRules) {
+    $filter = null;
 
-        if (FiltersParams::hasFilterParam()) {
-            $filter = FilterParser::parse
-            (
-                FiltersParams::getFilterParam(),
-                call_user_func($getFilterRules)
-            );
-        }
-
-        if (is_null($filter)) $filter = new Filter();
-
-        $filter_validator_rules = call_user_func($getFilterValidatorRules);
-        if (count($filter_validator_rules)) {
-            $filter->validate($filter_validator_rules);
-        }
-
-        return $filter;
+    if (FiltersParams::hasFilterParam()) {
+      $filter = FilterParser::parse(
+        FiltersParams::getFilterParam(),
+        call_user_func($getFilterRules),
+      );
     }
+
+    if (is_null($filter)) {
+      $filter = new Filter();
+    }
+
+    $filter_validator_rules = call_user_func($getFilterValidatorRules);
+    if (count($filter_validator_rules)) {
+      $filter->validate($filter_validator_rules);
+    }
+
+    return $filter;
+  }
 }

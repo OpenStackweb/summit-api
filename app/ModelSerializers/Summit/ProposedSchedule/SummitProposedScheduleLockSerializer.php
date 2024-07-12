@@ -19,26 +19,25 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitProposedScheduleLockSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SummitProposedScheduleLockSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Reason' => 'reason:json_string',
-        'CreatedById' => 'created_by_id:json_int',
-        'TrackId' => 'track_id:json_int',
-    ];
+final class SummitProposedScheduleLockSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Reason" => "reason:json_string",
+    "CreatedById" => "created_by_id:json_int",
+    "TrackId" => "track_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'track' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'track_id',
-            'getter' => 'getTrack',
-            'has' => 'hasTrack'
-        ],
-        'created_by' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'created_by_id',
-            'getter' => 'getCreatedBy',
-            'has' => 'hasCreatedBy'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "track" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "track_id",
+      "getter" => "getTrack",
+      "has" => "hasTrack",
+    ],
+    "created_by" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "created_by_id",
+      "getter" => "getCreatedBy",
+      "has" => "hasCreatedBy",
+    ],
+  ];
 }

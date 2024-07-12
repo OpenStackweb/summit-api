@@ -13,13 +13,11 @@ use ModelSerializers\SilverStripeSerializer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class PricingSchemaTypeSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Type'     => 'type:json_string',
-    ];
-
+final class PricingSchemaTypeSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+  ];
 }

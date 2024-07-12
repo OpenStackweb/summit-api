@@ -18,23 +18,25 @@ use models\summit\SummitEvent;
  * Class AdminSummitEventWithFileCSVSerializer
  * @package ModelSerializers
  */
-final class AdminSummitEventWithFileCSVSerializer extends AdminSummitEventWithFileSerializer
-{
-    protected static $allowed_fields = [
-        'location_name',
-    ];
+final class AdminSummitEventWithFileCSVSerializer extends AdminSummitEventWithFileSerializer {
+  protected static $allowed_fields = ["location_name"];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $summit_event = $this->object;
-        if(!$summit_event instanceof SummitEvent) return $values;
-
-        if(in_array("location_name",$fields) && $summit_event->hasLocation()){
-            $values['location_name'] = $summit_event->getLocation()->getName();
-        }
-
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $summit_event = $this->object;
+    if (!$summit_event instanceof SummitEvent) {
+      return $values;
     }
+
+    if (in_array("location_name", $fields) && $summit_event->hasLocation()) {
+      $values["location_name"] = $summit_event->getLocation()->getName();
+    }
+
+    return $values;
+  }
 }

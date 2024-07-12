@@ -16,9 +16,8 @@
  * Class TagSerializer
  * @package ModelSerializers
  */
-final class TagSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Tag' => 'tag:json_string',
-    ];
+final class TagSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Tag" => "tag:json_string",
+  ];
 }

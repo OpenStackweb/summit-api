@@ -24,114 +24,106 @@ use Doctrine\ORM\Mapping as ORM;
  * Class SummitAttendeeBadgePrint
  * @package models\summit
  */
-class SummitAttendeeBadgePrint extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SummitAttendeeBadgePrint extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getRequestorId' => 'requestor',
-        'getBadgeId' => 'badge',
-        'getViewTypeId' => 'view_type',
-    ];
+  protected $getIdMappings = [
+    "getRequestorId" => "requestor",
+    "getBadgeId" => "badge",
+    "getViewTypeId" => "view_type",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasRequestor' => 'requestor',
-        'hasBadge' => 'badge',
-        'hasViewType' => 'view_type',
-    ];
+  protected $hasPropertyMappings = [
+    "hasRequestor" => "requestor",
+    "hasBadge" => "badge",
+    "hasViewType" => "view_type",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeBadge", inversedBy="prints")
-     * @ORM\JoinColumn(name="BadgeID", referencedColumnName="ID")
-     * @var SummitAttendeeBadge
-     */
-    private $badge;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeBadge", inversedBy="prints")
+   * @ORM\JoinColumn(name="BadgeID", referencedColumnName="ID")
+   * @var SummitAttendeeBadge
+   */
+  private $badge;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeViewType")
-     * @ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")
-     * @var SummitBadgeViewType
-     */
-    private $view_type;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeViewType")
+   * @ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")
+   * @var SummitBadgeViewType
+   */
+  private $view_type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="RequestorID", referencedColumnName="ID")
-     * @var Member
-     */
-    private $requestor;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="RequestorID", referencedColumnName="ID")
+   * @var Member
+   */
+  private $requestor;
 
-    /**
-     * @ORM\Column(name="PrintDate", type="datetime", nullable=true)
-     * @var \DateTime
-     */
-    private $print_date;
+  /**
+   * @ORM\Column(name="PrintDate", type="datetime", nullable=true)
+   * @var \DateTime
+   */
+  private $print_date;
 
-    /**
-     * @return SummitAttendeeBadge
-     */
-    public function getBadge(): SummitAttendeeBadge
-    {
-        return $this->badge;
-    }
+  /**
+   * @return SummitAttendeeBadge
+   */
+  public function getBadge(): SummitAttendeeBadge {
+    return $this->badge;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getRequestor(): Member
-    {
-        return $this->requestor;
-    }
+  /**
+   * @return Member
+   */
+  public function getRequestor(): Member {
+    return $this->requestor;
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getPrintDate(): \DateTime
-    {
-        return $this->print_date;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getPrintDate(): \DateTime {
+    return $this->print_date;
+  }
 
-    /**
-     * @return SummitBadgeViewType
-     */
-    public function getViewType(): ?SummitBadgeViewType
-    {
-        return $this->view_type;
-    }
+  /**
+   * @return SummitBadgeViewType
+   */
+  public function getViewType(): ?SummitBadgeViewType {
+    return $this->view_type;
+  }
 
-    /**
-     * @param SummitBadgeViewType $view_type
-     */
-    public function setViewType(SummitBadgeViewType $view_type): void
-    {
-        $this->view_type = $view_type;
-    }
+  /**
+   * @param SummitBadgeViewType $view_type
+   */
+  public function setViewType(SummitBadgeViewType $view_type): void {
+    $this->view_type = $view_type;
+  }
 
-    /**
-     * @param SummitAttendeeBadge $badge
-     * @param Member $requestor
-     * @param SummitBadgeViewType|null $view_type
-     * @return SummitAttendeeBadgePrint
-     * @throws \Exception
-     */
-    public static function build
-    (
-        SummitAttendeeBadge $badge,
-        Member $requestor,
-        ?SummitBadgeViewType $view_type = null
-    ): SummitAttendeeBadgePrint
-    {
-        $print = new SummitAttendeeBadgePrint();
+  /**
+   * @param SummitAttendeeBadge $badge
+   * @param Member $requestor
+   * @param SummitBadgeViewType|null $view_type
+   * @return SummitAttendeeBadgePrint
+   * @throws \Exception
+   */
+  public static function build(
+    SummitAttendeeBadge $badge,
+    Member $requestor,
+    ?SummitBadgeViewType $view_type = null,
+  ): SummitAttendeeBadgePrint {
+    $print = new SummitAttendeeBadgePrint();
 
-        $print->badge = $badge;
-        $print->requestor = $requestor;
-        $print->print_date = new \DateTime('now', new \DateTimeZone('UTC'));
-        $print->view_type = $view_type;
+    $print->badge = $badge;
+    $print->requestor = $requestor;
+    $print->print_date = new \DateTime("now", new \DateTimeZone("UTC"));
+    $print->view_type = $view_type;
 
-        return $print;
-    }
+    return $print;
+  }
 
-    public function getViewTypeName():string{
-        return $this->view_type->getName();
-    }
+  public function getViewTypeName(): string {
+    return $this->view_type->getName();
+  }
 }

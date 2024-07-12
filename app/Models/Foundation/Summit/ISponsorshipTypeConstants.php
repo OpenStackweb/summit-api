@@ -16,18 +16,11 @@
  * Interface ISponsorshipTypeConstants
  * @package models\summit
  */
-interface ISponsorshipTypeConstants
-{
+interface ISponsorshipTypeConstants {
+  const SmallSize = "Small";
+  const MediumSize = "Medium";
+  const LargeSize = "Large";
+  const BigSize = "Big";
 
-    const SmallSize  = 'Small';
-    const MediumSize = 'Medium';
-    const LargeSize  = 'Large';
-    const BigSize    = 'Big';
-
-    const AllowedSizes = [
-        self::SmallSize,
-        self::MediumSize,
-        self::LargeSize,
-        self::BigSize
-    ];
+  const AllowedSizes = [self::SmallSize, self::MediumSize, self::LargeSize, self::BigSize];
 }

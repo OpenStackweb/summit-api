@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IAssetsSyncRequestRepository
  * @package models\main
  */
-interface IAssetsSyncRequestRepository extends IBaseRepository
-{
-
+interface IAssetsSyncRequestRepository extends IBaseRepository {
 }

@@ -18,12 +18,8 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestion
  * Class SummitSelectionPlanExtraQuestionTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitSelectionPlanExtraQuestionTypeFactory
-    extends ExtraQuestionTypeFactory
-{
-
-    protected static function getNewEntity(): ExtraQuestionType
-    {
-        return new SummitSelectionPlanExtraQuestionType();
-    }
+final class SummitSelectionPlanExtraQuestionTypeFactory extends ExtraQuestionTypeFactory {
+  protected static function getNewEntity(): ExtraQuestionType {
+    return new SummitSelectionPlanExtraQuestionType();
+  }
 }

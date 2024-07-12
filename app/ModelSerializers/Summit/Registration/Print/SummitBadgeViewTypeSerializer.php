@@ -16,12 +16,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitBadgeViewTypeSerializer
  * @package App\ModelSerializers
  */
-final class SummitBadgeViewTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'              => 'name:json_string',
-        'Description'       => 'description:json_string',
-        'Default'           => 'is_default:json_boolean',
-        'SummitId'          => 'summit_id:json_int',
-    ];
+final class SummitBadgeViewTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "Default" => "is_default:json_boolean",
+    "SummitId" => "summit_id:json_int",
+  ];
 }

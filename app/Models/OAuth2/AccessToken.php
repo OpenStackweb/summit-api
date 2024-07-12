@@ -17,200 +17,184 @@
  * http://tools.ietf.org/html/rfc6749#section-1.4
  * @package oauth2\models
  */
-final class AccessToken extends Token
-{
-    /**
-     * @var
-     */
-    private $auth_code;
+final class AccessToken extends Token {
+  /**
+   * @var
+   */
+  private $auth_code;
 
-    /**
-     * @var
-     */
-    private $refresh_token;
+  /**
+   * @var
+   */
+  private $refresh_token;
 
-    /**
-     * @var string
-     */
-    private $allowed_origins;
+  /**
+   * @var string
+   */
+  private $allowed_origins;
 
-    /**
-     * @var string
-     */
-    private $allowed_return_uris;
+  /**
+   * @var string
+   */
+  private $allowed_return_uris;
 
-    /**
-     * @var string
-     */
-    private $application_type;
+  /**
+   * @var string
+   */
+  private $application_type;
 
-    public function __construct()
-    {
-        parent::__construct(72);
+  public function __construct() {
+    parent::__construct(72);
+  }
+
+  /**
+   * @var null|int
+   */
+  private $user_external_id;
+
+  /**
+   * @var string|null
+   */
+  private $user_identifier;
+
+  /**
+   * @var string|null
+   */
+  private $user_email;
+
+  /**
+   * @var bool
+   */
+  private $user_email_verified;
+
+  /**
+   * @var string|null
+   */
+  private $user_first_name;
+
+  /**
+   * @var string|null
+   */
+  private $user_last_name;
+
+  /**
+   * @var array
+   */
+  private $user_groups;
+
+  private static function getValueFromInfo(string $key, array $token_info) {
+    return isset($token_info[$key]) ? $token_info[$key] : null;
+  }
+  /**
+   * @param array $token_info
+   * @return AccessToken
+   */
+  public static function createFromParams(array $token_info) {
+    $instance = new self();
+    $instance->value = $token_info["access_token"];
+    $instance->scope = $token_info["scope"];
+    $instance->client_id = $token_info["client_id"];
+    $instance->user_id = self::getValueFromInfo("user_id", $token_info);
+    $instance->user_external_id = self::getValueFromInfo("user_external_id", $token_info);
+    $instance->user_identifier = self::getValueFromInfo("user_identifier", $token_info);
+    $instance->user_email = self::getValueFromInfo("user_email", $token_info);
+    $instance->user_email_verified = boolval(
+      self::getValueFromInfo("user_email_verified", $token_info),
+    );
+    $instance->user_first_name = self::getValueFromInfo("user_first_name", $token_info);
+    $instance->user_last_name = self::getValueFromInfo("user_last_name", $token_info);
+    $instance->auth_code = null;
+    $instance->audience = $token_info["audience"];
+    $instance->refresh_token = null;
+    $instance->lifetime = intval($token_info["expires_in"]);
+    $instance->is_hashed = false;
+    $instance->allowed_return_uris = self::getValueFromInfo("allowed_return_uris", $token_info);
+    $instance->application_type = $token_info["application_type"];
+    $instance->allowed_origins = self::getValueFromInfo("allowed_origins", $token_info);
+    $instance->user_groups = self::getValueFromInfo("user_groups", $token_info);
+    if (!empty($instance->user_groups)) {
+      if (is_string($instance->user_groups)) {
+        $instance->user_groups = json_decode($instance->user_groups, true);
+      }
+    } else {
+      $instance->user_groups = [];
     }
+    return $instance;
+  }
 
-    /**
-     * @var null|int
-     */
-    private $user_external_id;
+  public function getAuthCode() {
+    return $this->auth_code;
+  }
 
-    /**
-     * @var string|null
-     */
-    private $user_identifier;
+  public function getRefreshToken() {
+    return $this->refresh_token;
+  }
 
-    /**
-     * @var string|null
-     */
-    private $user_email;
+  public function getApplicationType() {
+    return $this->application_type;
+  }
 
-    /**
-     * @var bool
-     */
-    private $user_email_verified;
+  public function getAllowedOrigins(): ?string {
+    return $this->allowed_origins;
+  }
 
-    /**
-     * @var string|null
-     */
-    private $user_first_name;
+  public function getAllowedReturnUris() {
+    return $this->allowed_return_uris;
+  }
 
-    /**
-     * @var string|null
-     */
-    private $user_last_name;
+  /**
+   * @return int|null
+   */
+  public function getUserExternalId() {
+    return $this->user_external_id;
+  }
 
-    /**
-     * @var array
-     */
-    private $user_groups;
+  public function toJSON() {
+    return "{}";
+  }
 
-    private static function getValueFromInfo(string $key, array $token_info){
-        return isset($token_info[$key])? $token_info[$key] :null;
-    }
-    /**
-     * @param array $token_info
-     * @return AccessToken
-     */
-    public static function createFromParams(array $token_info) {
-        $instance                      = new self();
-        $instance->value               = $token_info['access_token'];
-        $instance->scope               = $token_info['scope'];
-        $instance->client_id           = $token_info['client_id'];
-        $instance->user_id             = self::getValueFromInfo('user_id', $token_info);
-        $instance->user_external_id    = self::getValueFromInfo('user_external_id', $token_info);
-        $instance->user_identifier     = self::getValueFromInfo('user_identifier', $token_info);
-        $instance->user_email          = self::getValueFromInfo('user_email', $token_info);
-        $instance->user_email_verified = boolval(self::getValueFromInfo('user_email_verified', $token_info));
-        $instance->user_first_name     = self::getValueFromInfo('user_first_name', $token_info);
-        $instance->user_last_name      = self::getValueFromInfo('user_last_name', $token_info);
-        $instance->auth_code           = null;
-        $instance->audience            = $token_info['audience'];
-        $instance->refresh_token       = null;
-        $instance->lifetime            = intval($token_info['expires_in']);
-        $instance->is_hashed           = false;
-        $instance->allowed_return_uris = self::getValueFromInfo('allowed_return_uris', $token_info);
-        $instance->application_type    = $token_info['application_type'];
-        $instance->allowed_origins     = self::getValueFromInfo('allowed_origins', $token_info);
-        $instance->user_groups         = self::getValueFromInfo('user_groups', $token_info);
-        if(!empty($instance->user_groups)) {
-            if(is_string($instance->user_groups))
-                $instance->user_groups = json_decode($instance->user_groups, true);
-        }
-        else
-        {
-            $instance->user_groups = [];
-        }
-        return $instance;
-    }
+  public function fromJSON($json) {
+  }
 
-    public function getAuthCode()
-    {
-        return $this->auth_code;
-    }
+  /**
+   * @return null|string
+   */
+  public function getUserIdentifier(): ?string {
+    return $this->user_identifier;
+  }
 
-    public function getRefreshToken()
-    {
-        return $this->refresh_token;
-    }
+  /**
+   * @return null|string
+   */
+  public function getUserEmail(): ?string {
+    return $this->user_email;
+  }
 
-    public function getApplicationType()
-    {
-        return $this->application_type;
-    }
+  /**
+   * @return null|string
+   */
+  public function getUserFirstName(): ?string {
+    return $this->user_first_name;
+  }
 
-    public function getAllowedOrigins():?string
-    {
-        return $this->allowed_origins;
-    }
+  /**
+   * @return null|string
+   */
+  public function getUserLastName(): ?string {
+    return $this->user_last_name;
+  }
 
-    public function getAllowedReturnUris()
-    {
-        return $this->allowed_return_uris;
-    }
+  /**
+   * @return array
+   */
+  public function getUserGroups(): array {
+    return $this->user_groups;
+  }
 
-    /**
-     * @return int|null
-     */
-    public function getUserExternalId()
-    {
-        return $this->user_external_id;
-    }
-
-    public function toJSON()
-    {
-        return '{}';
-    }
-
-    public function fromJSON($json)
-    {
-
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getUserIdentifier(): ?string
-    {
-        return $this->user_identifier;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getUserEmail(): ?string
-    {
-        return $this->user_email;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getUserFirstName(): ?string
-    {
-        return $this->user_first_name;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getUserLastName(): ?string
-    {
-        return $this->user_last_name;
-    }
-
-    /**
-     * @return array
-     */
-    public function getUserGroups():array {
-        return $this->user_groups;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isUserEmailVerified(): bool
-    {
-        return $this->user_email_verified;
-    }
-
+  /**
+   * @return bool
+   */
+  public function isUserEmailVerified(): bool {
+    return $this->user_email_verified;
+  }
 }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 use models\utils\One2ManyPropertyTrait;
 /**
@@ -20,67 +20,62 @@ use models\utils\One2ManyPropertyTrait;
  * Class PresentationAttendeeVote
  * @package models\summit;
  */
-class PresentationAttendeeVote extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class PresentationAttendeeVote extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getVoterId' => 'voter',
-        'getPresentationId' => 'presentation',
-    ];
+  protected $getIdMappings = [
+    "getVoterId" => "voter",
+    "getPresentationId" => "presentation",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasVoter' => 'voter',
-        'hasPresentation' => 'presentation',
-    ];
+  protected $hasPropertyMappings = [
+    "hasVoter" => "voter",
+    "hasPresentation" => "presentation",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="presentation_votes")
-     * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var SummitAttendee
-     */
-    private $voter;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="presentation_votes")
+   * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var SummitAttendee
+   */
+  private $voter;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="attendees_votes")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var Presentation
-     */
-    private $presentation;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="attendees_votes")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var Presentation
+   */
+  private $presentation;
 
-    /**
-     * @return SummitAttendee
-     */
-    public function getVoter(): SummitAttendee
-    {
-        return $this->voter;
-    }
+  /**
+   * @return SummitAttendee
+   */
+  public function getVoter(): SummitAttendee {
+    return $this->voter;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation(): Presentation
-    {
-        return $this->presentation;
-    }
+  /**
+   * @return Presentation
+   */
+  public function getPresentation(): Presentation {
+    return $this->presentation;
+  }
 
-    /**
-     * @param SummitAttendee $voter
-     * @param Presentation $presentation
-     */
-    public function __construct(SummitAttendee $voter, Presentation $presentation)
-    {
-        parent::__construct();
-        $this->voter = $voter;
-        $this->presentation = $presentation;
-    }
+  /**
+   * @param SummitAttendee $voter
+   * @param Presentation $presentation
+   */
+  public function __construct(SummitAttendee $voter, Presentation $presentation) {
+    parent::__construct();
+    $this->voter = $voter;
+    $this->presentation = $presentation;
+  }
 
-    public function clearVoter():void{
-        $this->voter = null;
-    }
+  public function clearVoter(): void {
+    $this->voter = null;
+  }
 
-    public function clearPresentation():void{
-        $this->presentation = null;
-    }
-
+  public function clearPresentation(): void {
+    $this->presentation = null;
+  }
 }

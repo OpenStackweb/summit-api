@@ -20,49 +20,48 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitProposedScheduleSummitEventSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SummitProposedScheduleSummitEventSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'StartDate' => 'start_date:datetime_epoch',
-        'EndDate' => 'end_date:datetime_epoch',
-        'Duration' => 'duration:json_int',
-        'ScheduleId' => 'schedule_id:json_int',
-        'SummitEventId' => 'summit_event_id:json_int',
-        'LocationId' => 'location_id:json_int',
-        'CreatedById' => 'created_by_id:json_int',
-        'UpdatedById' => 'updated_by_id:json_int',
-    ];
+final class SummitProposedScheduleSummitEventSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "StartDate" => "start_date:datetime_epoch",
+    "EndDate" => "end_date:datetime_epoch",
+    "Duration" => "duration:json_int",
+    "ScheduleId" => "schedule_id:json_int",
+    "SummitEventId" => "summit_event_id:json_int",
+    "LocationId" => "location_id:json_int",
+    "CreatedById" => "created_by_id:json_int",
+    "UpdatedById" => "updated_by_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'schedule' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'schedule_id',
-            'getter' => 'getSchedule',
-            'has' => 'hasSchedule'
-        ],
-        'summit_event' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'summit_event_id',
-            'getter' => 'getSummitEvent',
-            'has' => 'hasSummitEvent'
-        ],
-        'location' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'location_id',
-            'getter' => 'getLocation',
-            'has' => 'hasLocation'
-        ],
-        'created_by' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'created_by_id',
-            'getter' => 'getCreatedBy',
-            'has' => 'hasCreatedBy'
-        ],
-        'updated_by' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'updated_by_id',
-            'getter' => 'getUpdatedBy',
-            'has' => 'hasUpdatedBy'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "schedule" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "schedule_id",
+      "getter" => "getSchedule",
+      "has" => "hasSchedule",
+    ],
+    "summit_event" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "summit_event_id",
+      "getter" => "getSummitEvent",
+      "has" => "hasSummitEvent",
+    ],
+    "location" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "location_id",
+      "getter" => "getLocation",
+      "has" => "hasLocation",
+    ],
+    "created_by" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "created_by_id",
+      "getter" => "getCreatedBy",
+      "has" => "hasCreatedBy",
+    ],
+    "updated_by" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "updated_by_id",
+      "getter" => "getUpdatedBy",
+      "has" => "hasUpdatedBy",
+    ],
+  ];
 }

@@ -16,22 +16,19 @@
  * Class PresentationSlideValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class PresentationSlideValidationRulesFactory
-{
-    public static function build(array $data, $update = false)
-    {
-
-        $former_rules = PresentationMaterialValidationRulesFactory::build($data,$update);
-        if ($update) {
-            return array_merge($former_rules, [
-                'link' => 'nullable|url',
-            ]);
-        }
-
-        return array_merge($former_rules, [
-            'file'            => 'required_without_all:link,filepath',
-            'link'            => 'required_without_all:file,filepath|url',
-            'filepath'        => 'required_without_all:link,file',
-        ]);
+final class PresentationSlideValidationRulesFactory {
+  public static function build(array $data, $update = false) {
+    $former_rules = PresentationMaterialValidationRulesFactory::build($data, $update);
+    if ($update) {
+      return array_merge($former_rules, [
+        "link" => "nullable|url",
+      ]);
     }
+
+    return array_merge($former_rules, [
+      "file" => "required_without_all:link,filepath",
+      "link" => "required_without_all:file,filepath|url",
+      "filepath" => "required_without_all:link,file",
+    ]);
+  }
 }

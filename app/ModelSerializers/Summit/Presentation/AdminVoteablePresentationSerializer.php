@@ -18,65 +18,63 @@ use models\summit\Presentation;
  * Class AdminVoteablePresentationSerializer
  * @package ModelSerializers
  */
-class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
-{
+class AdminVoteablePresentationSerializer extends AdminPresentationSerializer {
+  protected static $allowed_relations = ["voters"];
 
-    protected static $allowed_relations = [
-        'voters',
-    ];
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $presentation = $this->object;
+    if (!$presentation instanceof Presentation) {
+      return [];
+    }
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize
-    (
-        $expand = null, array $fields = [], array $relations = [], array $params = []
-    )
-    {
-        $presentation = $this->object;
-        if (!$presentation instanceof Presentation) return [];
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $values = parent::serialize($expand, $fields, $relations, $params);
+    $beginVotingDate = $params["begin_attendee_voting_period_date"] ?? null;
+    $endVotingDate = $params["end_attendee_voting_period_date"] ?? null;
+    $values["votes_count"] = $presentation->getAttendeeVotesCount($beginVotingDate, $endVotingDate);
 
-        $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
-        $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
-        $values['votes_count'] = $presentation->getAttendeeVotesCount($beginVotingDate, $endVotingDate);
+    if (in_array("voters", $relations)) {
+      $voters = [];
+      foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
+        $voters[] = $voter->getId();
+      }
+      $values["voters"] = $voters;
+    }
 
-        if(in_array("voters", $relations)) {
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "voters":
             $voters = [];
             foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
-                   $voters[] = $voter->getId();
+              $voters[] = SerializerRegistry::getInstance()
+                ->getSerializer($voter)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
-            $values['voters'] = $voters;
+            $values["voters"] = $voters;
+            break;
         }
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'voters':
-                    {
-                        $voters = [];
-                        foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
-                            $voters[] = SerializerRegistry::getInstance()->getSerializer($voter)->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        $values['voters'] = $voters;
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+      }
     }
+
+    return $values;
+  }
 }

@@ -16,11 +16,10 @@
  * Class AdminLawPayPaymentProfileSerializer
  * @package App\ModelSerializers\Summit
  */
-final class AdminLawPayPaymentProfileSerializer extends LawPayPaymentProfileSerializer
-{
-    protected static $array_mappings = [
-        'LiveSecretKey'     => 'live_secret_key:json_string',
-        'TestSecretKey'     => 'test_secret_key:json_string',
-        'MerchantAccountId' => 'merchant_account_id:json_string',
-    ];
+final class AdminLawPayPaymentProfileSerializer extends LawPayPaymentProfileSerializer {
+  protected static $array_mappings = [
+    "LiveSecretKey" => "live_secret_key:json_string",
+    "TestSecretKey" => "test_secret_key:json_string",
+    "MerchantAccountId" => "merchant_account_id:json_string",
+  ];
 }

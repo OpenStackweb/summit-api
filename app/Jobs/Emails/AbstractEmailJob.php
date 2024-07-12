@@ -23,126 +23,127 @@ use models\summit\Summit;
  * Class AbstractEmailJobmplements
  * @package App\Jobs\Emails
  */
-abstract class AbstractEmailJob implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+abstract class AbstractEmailJob implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 1;
+  public $tries = 1;
 
-    /**
-     * @var array
-     */
-    protected $payload;
+  /**
+   * @var array
+   */
+  protected $payload;
 
-    /**
-     * @var string
-     */
-    protected $template_identifier;
+  /**
+   * @var string
+   */
+  protected $template_identifier;
 
-    /**
-     * @var string
-     */
-    protected $to_email;
+  /**
+   * @var string
+   */
+  protected $to_email;
 
-    /**
-     * @var string|null
-     */
-    protected $cc_email;
+  /**
+   * @var string|null
+   */
+  protected $cc_email;
 
-    /**
-     * @var string|null
-     */
-    protected $bcc_email;
+  /**
+   * @var string|null
+   */
+  protected $bcc_email;
 
-    /**
-     * @var string|null
-     */
-    protected $subject;
+  /**
+   * @var string|null
+   */
+  protected $subject;
 
-    /**
-     * @param array $payload
-     * @param string|null $template_identifier
-     * @param string $to_email
-     * @param string|null $subject
-     * @param string|null $cc_email
-     * @param string|null $bcc_email
-     */
-    public function __construct
-    (
-        array $payload,
-        ?string $template_identifier,
-        string $to_email,
-        ?string $subject = null,
-        ?string $cc_email = null,
-        ?string $bcc_email = null
-    )
-    {
-        $this->template_identifier = $template_identifier;
-        Log::debug
-        (
-            sprintf
-            (
-                "AbstractEmailJob::__construct template_identifier %s to_email %s",
-                $template_identifier,
-                $to_email
-            )
-        );
+  /**
+   * @param array $payload
+   * @param string|null $template_identifier
+   * @param string $to_email
+   * @param string|null $subject
+   * @param string|null $cc_email
+   * @param string|null $bcc_email
+   */
+  public function __construct(
+    array $payload,
+    ?string $template_identifier,
+    string $to_email,
+    ?string $subject = null,
+    ?string $cc_email = null,
+    ?string $bcc_email = null,
+  ) {
+    $this->template_identifier = $template_identifier;
+    Log::debug(
+      sprintf(
+        "AbstractEmailJob::__construct template_identifier %s to_email %s",
+        $template_identifier,
+        $to_email,
+      ),
+    );
 
-        if(empty($this->template_identifier)){
-            throw new \InvalidArgumentException("missing template_identifier value");
-        }
-
-        $this->payload = $payload;
-        $this->to_email = $to_email;
-        $this->subject = $subject;
-        $this->cc_email = $cc_email;
-        $this->bcc_email = $bcc_email;
+    if (empty($this->template_identifier)) {
+      throw new \InvalidArgumentException("missing template_identifier value");
     }
 
-    /**
-     * @param IMailApi $api
-     * @return array
-     * @throws \Exception
-     */
-    public function handle
-    (
-        IMailApi $api
-    )
-    {
-        try {
-            Log::debug(sprintf("AbstractEmailJob::handle template_identifier %s to_email %s", $this->template_identifier, $this->to_email));
-            return $api->sendEmail
-            (
-                $this->payload,
-                $this->template_identifier,
-                $this->to_email,
-                $this->subject,
-                $this->cc_email,
-                $this->bcc_email
-            );
-        }
-        catch (\Exception $ex){
-            Log::error(sprintf("AbstractEmailJob::sendEmail template_identifier %s to_email %s",  $this->template_identifier, $this->to_email));
-            Log::error($ex);
-            throw $ex;
-        }
-    }
+    $this->payload = $payload;
+    $this->to_email = $to_email;
+    $this->subject = $subject;
+    $this->cc_email = $cc_email;
+    $this->bcc_email = $bcc_email;
+  }
 
-    abstract protected function getEmailEventSlug():string;
-
-    /**
-     * @param Summit $summit
-     * @return string|null
-     */
-    protected function getEmailTemplateIdentifierFromEmailEvent(Summit $summit):?string{
-        return $summit->getEmailIdentifierPerEmailEventFlowSlug($this->getEmailEventSlug());
+  /**
+   * @param IMailApi $api
+   * @return array
+   * @throws \Exception
+   */
+  public function handle(IMailApi $api) {
+    try {
+      Log::debug(
+        sprintf(
+          "AbstractEmailJob::handle template_identifier %s to_email %s",
+          $this->template_identifier,
+          $this->to_email,
+        ),
+      );
+      return $api->sendEmail(
+        $this->payload,
+        $this->template_identifier,
+        $this->to_email,
+        $this->subject,
+        $this->cc_email,
+        $this->bcc_email,
+      );
+    } catch (\Exception $ex) {
+      Log::error(
+        sprintf(
+          "AbstractEmailJob::sendEmail template_identifier %s to_email %s",
+          $this->template_identifier,
+          $this->to_email,
+        ),
+      );
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    /**
-     * @param Summit $summit
-     * @return string|null
-     */
-    protected function getEmailRecipientFromEmailEvent(Summit $summit):?string{
-        return $summit->getEmailRecipientPerEmailEventFlowSlug($this->getEmailEventSlug());
-    }
+  abstract protected function getEmailEventSlug(): string;
+
+  /**
+   * @param Summit $summit
+   * @return string|null
+   */
+  protected function getEmailTemplateIdentifierFromEmailEvent(Summit $summit): ?string {
+    return $summit->getEmailIdentifierPerEmailEventFlowSlug($this->getEmailEventSlug());
+  }
+
+  /**
+   * @param Summit $summit
+   * @return string|null
+   */
+  protected function getEmailRecipientFromEmailEvent(Summit $summit): ?string {
+    return $summit->getEmailRecipientPerEmailEventFlowSlug($this->getEmailEventSlug());
+  }
 }

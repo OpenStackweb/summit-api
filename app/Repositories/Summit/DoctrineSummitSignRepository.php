@@ -21,33 +21,28 @@ use utils\Filter;
  * Class DoctrineSummitSignRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitSignRepository
-    extends SilverStripeDoctrineRepository implements ISummitSignRepository
-{
+final class DoctrineSummitSignRepository extends SilverStripeDoctrineRepository implements
+  ISummitSignRepository {
+  protected function getBaseEntity() {
+    return SummitSign::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitSign::class;
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query = $query->leftJoin("e.summit", "s");
-        $query = $query->leftJoin("e.location", "l");
-        return $query;
-    }
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'summit_id' => Filter::buildIntField('s.id'),
-            'location_id' => Filter::buildIntField('l.id'),
-        ];
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->leftJoin("e.summit", "s");
+    $query = $query->leftJoin("e.location", "l");
+    return $query;
+  }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "summit_id" => Filter::buildIntField("s.id"),
+      "location_id" => Filter::buildIntField("l.id"),
+    ];
+  }
 }

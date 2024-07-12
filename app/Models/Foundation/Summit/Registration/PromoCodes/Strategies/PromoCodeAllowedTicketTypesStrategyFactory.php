@@ -24,25 +24,27 @@ use models\summit\SummitRegistrationPromoCode;
  * Class PromoCodeAllowedTicketTypesStrategyFactory
  * @package App\Models\Foundation\Summit\Registration\PromoCodes\Strategies
  */
-class PromoCodeAllowedTicketTypesStrategyFactory implements IPromoCodeAllowedTicketTypesStrategyFactory
-{
-    /**
-     * @inheritDoc
-     */
-    public function build(
-        Summit $summit, Member $member, ?SummitRegistrationPromoCode $promo_code): IPromoCodeAllowedTicketTypesStrategy
-    {
-        if (PromoCodesUtils::isPrePaidPromoCode($promo_code)){
-            Log::debug(
-                sprintf(
-                    "PromoCodeAllowedTicketTypesStrategyFactory::build applying prepaid promo code %s to ticket types for summit id %s and member %s",
-                    $promo_code->getCode(),
-                    $summit->getId(),
-                    $member->getId()
-                )
-            );
-            return new PrePaidPromoCodeTicketTypesStrategy($summit, $member, $promo_code);
-        }
-        return new RegularPromoCodeTicketTypesStrategy($summit, $member, $promo_code);
+class PromoCodeAllowedTicketTypesStrategyFactory implements
+  IPromoCodeAllowedTicketTypesStrategyFactory {
+  /**
+   * @inheritDoc
+   */
+  public function build(
+    Summit $summit,
+    Member $member,
+    ?SummitRegistrationPromoCode $promo_code,
+  ): IPromoCodeAllowedTicketTypesStrategy {
+    if (PromoCodesUtils::isPrePaidPromoCode($promo_code)) {
+      Log::debug(
+        sprintf(
+          "PromoCodeAllowedTicketTypesStrategyFactory::build applying prepaid promo code %s to ticket types for summit id %s and member %s",
+          $promo_code->getCode(),
+          $summit->getId(),
+          $member->getId(),
+        ),
+      );
+      return new PrePaidPromoCodeTicketTypesStrategy($summit, $member, $promo_code);
     }
+    return new RegularPromoCodeTicketTypesStrategy($summit, $member, $promo_code);
+  }
 }

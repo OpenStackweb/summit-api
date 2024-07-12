@@ -22,52 +22,44 @@ use utils\Filter;
  * Class DoctrineSummitEmailEventFlowRepository
  * @package App\Repositories\Summit
  */
-class DoctrineSummitEmailEventFlowRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitEmailEventFlowRepository
-{
+class DoctrineSummitEmailEventFlowRepository extends SilverStripeDoctrineRepository implements
+  ISummitEmailEventFlowRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitEmailEventFlow::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitEmailEventFlow::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->join("e.event_type", "et")->join("et.flow", "f");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->join('e.event_type', 'et')
-            ->join('et.flow', 'f');
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "email_template_identifier" => "e.email_template_identifier:json_string",
+      "event_type_name" => "et.name:json_string",
+      "flow_name" => "f.name:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'email_template_identifier' => 'e.email_template_identifier:json_string',
-            'event_type_name' =>  'et.name:json_string',
-            'flow_name' =>  'f.name:json_string',
-            'summit_id'   => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'email_template_identifier' => 'e.email_template_identifier',
-            'flow_name' =>  'f.name',
-        ];
-    }
-
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "email_template_identifier" => "e.email_template_identifier",
+      "flow_name" => "f.name",
+    ];
+  }
 }

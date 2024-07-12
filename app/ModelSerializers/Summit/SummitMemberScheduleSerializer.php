@@ -16,26 +16,21 @@
  * Class SummitMemberScheduleSerializer
  * @package ModelSerializers
  */
-final class SummitMemberScheduleSerializer extends SilverStripeSerializer
-{
+final class SummitMemberScheduleSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [];
 
-    protected static $array_mappings = array
-    (
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $schedule = $this->object;
 
-    );
+    $values = SerializerRegistry::getInstance()
+      ->getSerializer($schedule->getEvent())
+      ->serialize($expand, $fields, $relations, $params);
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $schedule                = $this->object;
-
-        $values                  = SerializerRegistry::getInstance()->getSerializer($schedule->getEvent())->serialize
-        (
-            $expand,
-            $fields,
-            $relations,
-            $params
-        );
-
-        return $values;
-    }
+    return $values;
+  }
 }

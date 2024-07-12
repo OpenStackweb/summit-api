@@ -15,26 +15,28 @@ namespace App\Audit\ConcreteFormatters\ChildEntityFormatters;
  * limitations under the License.
  **/
 
-
 /**
  * Class PresentationActionAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class PresentationActionAuditLogFormatter implements IChildEntityAuditLogFormatter
-{
-    /**
-     * @inheritDoc
-     */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""): ?string {
-        switch ($child_entity_action_type) {
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
-                $status_desc = $subject->isCompleted() ? "complete" : "incomplete";
-                return "A new PresentationAction of Type \"{$subject->getType()->getLabel()} ({$subject->getType()->getID()})\" and status \"{$status_desc}\" was added to the collection";
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_UPDATE:
-                return "A PresentationAction of Type \"{$subject->getType()->getLabel()} ({$subject->getType()->getID()})\" has changed. {$additional_info}";
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
-                return "PresentationAction with ID {$subject->getID()} was removed from the collection";
-        }
-        return "";
+class PresentationActionAuditLogFormatter implements IChildEntityAuditLogFormatter {
+  /**
+   * @inheritDoc
+   */
+  public function format(
+    $subject,
+    string $child_entity_action_type,
+    ?string $additional_info = "",
+  ): ?string {
+    switch ($child_entity_action_type) {
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
+        $status_desc = $subject->isCompleted() ? "complete" : "incomplete";
+        return "A new PresentationAction of Type \"{$subject->getType()->getLabel()} ({$subject->getType()->getID()})\" and status \"{$status_desc}\" was added to the collection";
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_UPDATE:
+        return "A PresentationAction of Type \"{$subject->getType()->getLabel()} ({$subject->getType()->getID()})\" has changed. {$additional_info}";
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
+        return "PresentationAction with ID {$subject->getID()} was removed from the collection";
     }
+    return "";
+  }
 }

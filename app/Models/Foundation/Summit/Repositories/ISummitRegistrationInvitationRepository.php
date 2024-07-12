@@ -18,24 +18,23 @@ use models\utils\IBaseRepository;
  * Interface ISummitRegistrationInvitationRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitRegistrationInvitationRepository extends IBaseRepository
-{
-    /**
-     * @param string $hash
-     * @return SummitRegistrationInvitation|null
-     */
-    public function getByHashExclusiveLock(string $hash):?SummitRegistrationInvitation;
+interface ISummitRegistrationInvitationRepository extends IBaseRepository {
+  /**
+   * @param string $hash
+   * @return SummitRegistrationInvitation|null
+   */
+  public function getByHashExclusiveLock(string $hash): ?SummitRegistrationInvitation;
 
-    /**
-     * @param Summit $summit
-     * @return array|int[]
-     */
-    public function getAllIdsNonAcceptedPerSummit(Summit $summit):array;
+  /**
+   * @param Summit $summit
+   * @return array|int[]
+   */
+  public function getAllIdsNonAcceptedPerSummit(Summit $summit): array;
 
-    /**
-     * @param string $hash
-     * @param Summit $summit
-     * @return SummitRegistrationInvitation|null
-     */
-    public function getByHashAndSummit(string $hash, Summit $summit):?SummitRegistrationInvitation;
+  /**
+   * @param string $hash
+   * @param Summit $summit
+   * @return SummitRegistrationInvitation|null
+   */
+  public function getByHashAndSummit(string $hash, Summit $summit): ?SummitRegistrationInvitation;
 }

@@ -16,15 +16,12 @@
  * Class BooleanCellFormatter
  * @package App\Http\Utils
  */
-final class BooleanCellFormatter implements ICellFormatter
-{
-
-    /**
-     * @param string $val
-     * @return string
-     */
-    public function format($val)
-    {
-        return boolval($val) ? '1' : '0';
-    }
+final class BooleanCellFormatter implements ICellFormatter {
+  /**
+   * @param string $val
+   * @return string
+   */
+  public function format($val) {
+    return boolval($val) ? "1" : "0";
+  }
 }

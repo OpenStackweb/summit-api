@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -22,196 +22,183 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\Table(name="SummitScheduleFilterElementConfig")
  * @package models\summit
  */
-class SummitScheduleFilterElementConfig
-    extends SilverstripeBaseModel
-    implements IOrderable
-{
-    const Type_Date = 'DATE';
-    const Type_Track = 'TRACK';
-    const Type_Tags  = 'TAGS';
-    const Type_TrackGroups = 'TRACK_GROUPS';
-    const Type_Company = 'COMPANY';
-    const Type_Level = 'LEVEL';
-    const Type_Speakers = 'SPEAKERS';
-    const Type_Venues = 'VENUES';
-    const Type_EventTypes = 'EVENT_TYPES';
-    const Type_Title = 'TITLE';
-    const Type_CustomOrder = 'CUSTOM_ORDER';
-    const Type_Abstract = 'ABSTRACT';
+class SummitScheduleFilterElementConfig extends SilverstripeBaseModel implements IOrderable {
+  const Type_Date = "DATE";
+  const Type_Track = "TRACK";
+  const Type_Tags = "TAGS";
+  const Type_TrackGroups = "TRACK_GROUPS";
+  const Type_Company = "COMPANY";
+  const Type_Level = "LEVEL";
+  const Type_Speakers = "SPEAKERS";
+  const Type_Venues = "VENUES";
+  const Type_EventTypes = "EVENT_TYPES";
+  const Type_Title = "TITLE";
+  const Type_CustomOrder = "CUSTOM_ORDER";
+  const Type_Abstract = "ABSTRACT";
 
-    const AllowedTypes =
-    [
-        self::Type_Date,
-        self::Type_Track,
-        self::Type_Tags,
-        self::Type_TrackGroups,
-        self::Type_Company,
-        self::Type_Level,
-        self::Type_Speakers,
-        self::Type_Venues,
-        self::Type_EventTypes,
-        self::Type_Title,
-        self::Type_CustomOrder,
-        self::Type_Abstract,
-    ];
+  const AllowedTypes = [
+    self::Type_Date,
+    self::Type_Track,
+    self::Type_Tags,
+    self::Type_TrackGroups,
+    self::Type_Company,
+    self::Type_Level,
+    self::Type_Speakers,
+    self::Type_Venues,
+    self::Type_EventTypes,
+    self::Type_Title,
+    self::Type_CustomOrder,
+    self::Type_Abstract,
+  ];
 
-    const NumericTypes = [
-        self::Type_Track,
-        self::Type_TrackGroups,
-        self::Type_Speakers,
-        self::Type_Venues,
-        self::Type_EventTypes,
-        self::Type_CustomOrder,
-    ];
+  const NumericTypes = [
+    self::Type_Track,
+    self::Type_TrackGroups,
+    self::Type_Speakers,
+    self::Type_Venues,
+    self::Type_EventTypes,
+    self::Type_CustomOrder,
+  ];
 
-    const DefaultLabelsByType = [
-        self::Type_Date => 'Date',
-        self::Type_Track => 'Categories',
-        self::Type_Tags => 'Tags',
-        self::Type_TrackGroups => 'Category Groups',
-        self::Type_Company => 'Company',
-        self::Type_Level => 'Level',
-        self::Type_Speakers => 'Speakers',
-        self::Type_Venues => 'Venues',
-        self::Type_EventTypes => 'Activity Types',
-        self::Type_Title => 'Title',
-        self::Type_CustomOrder => 'Custom Order',
-        self::Type_Abstract => 'Abstract',
-    ];
+  const DefaultLabelsByType = [
+    self::Type_Date => "Date",
+    self::Type_Track => "Categories",
+    self::Type_Tags => "Tags",
+    self::Type_TrackGroups => "Category Groups",
+    self::Type_Company => "Company",
+    self::Type_Level => "Level",
+    self::Type_Speakers => "Speakers",
+    self::Type_Venues => "Venues",
+    self::Type_EventTypes => "Activity Types",
+    self::Type_Title => "Title",
+    self::Type_CustomOrder => "Custom Order",
+    self::Type_Abstract => "Abstract",
+  ];
 
-    use One2ManyPropertyTrait;
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getConfigId' => 'config',
-    ];
+  protected $getIdMappings = [
+    "getConfigId" => "config",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasConfig' => 'config',
-    ];
+  protected $hasPropertyMappings = [
+    "hasConfig" => "config",
+  ];
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  private $type;
 
-    /**
-     * @ORM\Column(name="CustomOrder", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="CustomOrder", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    private $label;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  private $label;
 
-    /**
-     * @ORM\Column(name="IsEnabled", type="boolean")
-     * @var bool
-     */
-    private $is_enabled;
+  /**
+   * @ORM\Column(name="IsEnabled", type="boolean")
+   * @var bool
+   */
+  private $is_enabled;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="filters")
-     * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
-     * @var SummitScheduleConfig
-     */
-    protected $config;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="filters")
+   * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
+   * @var SummitScheduleConfig
+   */
+  protected $config;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->order = 1;
+  public function __construct() {
+    parent::__construct();
+    $this->order = 1;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOrder(): int {
+    return $this->order;
+  }
+
+  /**
+   * @param int $order
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
+
+  /**
+   * @return string
+   */
+  public function getType(): string {
+    return $this->type;
+  }
+
+  /**
+   * @param string $type
+   * @throws ValidationException
+   */
+  public function setType(string $type): void {
+    if (!in_array($type, self::AllowedTypes)) {
+      throw new ValidationException(sprintf("Type %s is not valid.", $type));
     }
-
-    /**
-     * @return int
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
+    $this->type = $type;
+    if (empty($this->label)) {
+      $this->label = self::DefaultLabelsByType[$type];
     }
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
+  /**
+   * @return string
+   */
+  public function getLabel(): string {
+    return $this->label;
+  }
 
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
+  /**
+   * @param string $label
+   */
+  public function setLabel(string $label): void {
+    $this->label = $label;
+  }
 
-    /**
-     * @param string $type
-     * @throws ValidationException
-     */
-    public function setType(string $type): void
-    {
-        if(!in_array($type, self::AllowedTypes))
-            throw new ValidationException(sprintf("Type %s is not valid.", $type));
-        $this->type = $type;
-        if(empty($this->label))
-            $this->label = self::DefaultLabelsByType[$type];
-    }
+  /**
+   * @return bool
+   */
+  public function isEnabled(): bool {
+    return $this->is_enabled;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLabel(): string
-    {
-        return $this->label;
-    }
+  /**
+   * @param bool $is_enabled
+   */
+  public function setIsEnabled(bool $is_enabled): void {
+    $this->is_enabled = $is_enabled;
+  }
 
-    /**
-     * @param string $label
-     */
-    public function setLabel(string $label): void
-    {
-        $this->label = $label;
-    }
+  /**
+   * @return SummitScheduleConfig
+   */
+  public function getConfig(): SummitScheduleConfig {
+    return $this->config;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isEnabled(): bool
-    {
-        return $this->is_enabled;
-    }
+  /**
+   * @param SummitScheduleConfig $config
+   */
+  public function setConfig(SummitScheduleConfig $config): void {
+    $this->config = $config;
+  }
 
-    /**
-     * @param bool $is_enabled
-     */
-    public function setIsEnabled(bool $is_enabled): void
-    {
-        $this->is_enabled = $is_enabled;
-    }
-
-    /**
-     * @return SummitScheduleConfig
-     */
-    public function getConfig(): SummitScheduleConfig
-    {
-        return $this->config;
-    }
-
-    /**
-     * @param SummitScheduleConfig $config
-     */
-    public function setConfig(SummitScheduleConfig $config): void
-    {
-        $this->config = $config;
-    }
-
-    public function clearConfig(){
-        $this->config = null;
-    }
+  public function clearConfig() {
+    $this->config = null;
+  }
 }

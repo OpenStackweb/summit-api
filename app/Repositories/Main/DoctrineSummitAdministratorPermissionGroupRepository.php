@@ -22,62 +22,54 @@ use utils\Filter;
  * @package repositories\main
  */
 class DoctrineSummitAdministratorPermissionGroupRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitAdministratorPermissionGroupRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitAdministratorPermissionGroupRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "title" => "e.title",
+      "member_id" => "m.id :operator :value",
+      "summit_id" => "s.id :operator :value",
+      "member_first_name" => "m.first_name :operator :value",
+      "member_last_name" => "m.last_name :operator :value",
+      "member_full_name" => "concat(m.first_name, ' ', m.last_name) :operator :value",
+      "member_email" => "m.email :operator :value",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'title' => 'e.title',
-            'member_id' => "m.id :operator :value",
-            'summit_id' => "s.id :operator :value",
-            'member_first_name' => "m.first_name :operator :value",
-            'member_last_name' => "m.last_name :operator :value",
-            'member_full_name' => "concat(m.first_name, ' ', m.last_name) :operator :value",
-            'member_email' => "m.email :operator :value",
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "created" => "e.created",
+      "title" => "e.title",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id' => 'e.id',
-            'created' => 'e.created',
-            'title' => "e.title",
-        ];
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->join("e.summits", "s")->join("e.members", "m");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query = $query->join('e.summits', 's')
-            ->join('e.members', 'm');
-        return $query;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitAdministratorPermissionGroup::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitAdministratorPermissionGroup::class;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getByTitle(string $title): ?SummitAdministratorPermissionGroup
-    {
-        return $this->findOneBy(['title' => trim($title)]);
-    }
+  /**
+   * @inheritDoc
+   */
+  public function getByTitle(string $title): ?SummitAdministratorPermissionGroup {
+    return $this->findOneBy(["title" => trim($title)]);
+  }
 }

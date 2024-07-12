@@ -19,11 +19,10 @@ use models\summit\SummitRegistrationPromoCode;
  * Interface IPromoCodeStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IPromoCodeStrategy
-{
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return SummitRegistrationPromoCode|null
-     */
-    public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode;
+interface IPromoCodeStrategy {
+  /**
+   * @param PresentationSpeaker $speaker
+   * @return SummitRegistrationPromoCode|null
+   */
+  public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode;
 }

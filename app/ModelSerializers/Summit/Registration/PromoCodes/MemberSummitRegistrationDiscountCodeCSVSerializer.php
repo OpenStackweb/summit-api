@@ -18,28 +18,31 @@ use models\summit\MemberSummitRegistrationDiscountCode;
  * Class MemberSummitRegistrationDiscountCodeCSVSerializer
  * @package ModelSerializers
  */
-class MemberSummitRegistrationDiscountCodeCSVSerializer
-extends MemberSummitRegistrationDiscountCodeSerializer
-{
+class MemberSummitRegistrationDiscountCodeCSVSerializer extends
+  MemberSummitRegistrationDiscountCodeSerializer {
+  use SummitRegistrationDiscountCodeCSVSerializerTrait;
 
-    use SummitRegistrationDiscountCodeCSVSerializerTrait;
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code = $this->object;
-        if(!$code instanceof MemberSummitRegistrationDiscountCode) return [];
-
-        return self::serializeFields2CSV
-        (
-            $code,
-            parent::serialize($expand, $fields, $relations, $params)
-        );
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof MemberSummitRegistrationDiscountCode) {
+      return [];
     }
+
+    return self::serializeFields2CSV(
+      $code,
+      parent::serialize($expand, $fields, $relations, $params),
+    );
+  }
 }

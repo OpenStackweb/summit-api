@@ -16,12 +16,10 @@
  * Class SummitHotelSerializer
  * @package ModelSerializers\Locations
  */
-final class SummitHotelSerializer extends SummitExternalLocationSerializer
-{
-    protected static $array_mappings = [
-        'BookingLink' => 'booking_link:json_string',
-        'HotelType'   => 'hotel_type:json_string',
-        'SoldOut'     => 'sold_out:json_boolean',
-    ];
-
+final class SummitHotelSerializer extends SummitExternalLocationSerializer {
+  protected static $array_mappings = [
+    "BookingLink" => "booking_link:json_string",
+    "HotelType" => "hotel_type:json_string",
+    "SoldOut" => "sold_out:json_boolean",
+  ];
 }

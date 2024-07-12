@@ -24,82 +24,79 @@ use utils\FilterParser;
  * Class ProcessAttendeesEmailRequestJob
  * @package App\Jobs\Emails
  */
-final class ProcessAttendeesEmailRequestJob implements ShouldQueue
-{
-    public $timeout = 0;
+final class ProcessAttendeesEmailRequestJob implements ShouldQueue {
+  public $timeout = 0;
 
-    public $tries = 1;
+  public $tries = 1;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $summit_id;
+  private $summit_id;
 
-    private $payload;
+  private $payload;
 
-    private $filter;
+  private $filter;
 
-    /**
-     * ProcessAttendeesEmailRequestJob constructor.
-     * @param Summit $summit
-     * @param array $payload
-     * @param $filter
-     */
-    public function __construct(Summit $summit, array $payload, $filter)
-    {
-        $this->summit_id = $summit->getId();
-        $this->payload = $payload;
-        $this->filter = $filter;
-    }
+  /**
+   * ProcessAttendeesEmailRequestJob constructor.
+   * @param Summit $summit
+   * @param array $payload
+   * @param $filter
+   */
+  public function __construct(Summit $summit, array $payload, $filter) {
+    $this->summit_id = $summit->getId();
+    $this->payload = $payload;
+    $this->filter = $filter;
+  }
 
-    public function handle(IAttendeeService $service){
-        Log::debug
-        (
-            sprintf
-            (
-                "ProcessAttendeesEmailRequestJob::handle summit id %s payload %s filter %s",
-                $this->summit_id,
-                json_encode($this->payload),
-                json_encode($this->filter)
-            )
-        );
+  public function handle(IAttendeeService $service) {
+    Log::debug(
+      sprintf(
+        "ProcessAttendeesEmailRequestJob::handle summit id %s payload %s filter %s",
+        $this->summit_id,
+        json_encode($this->payload),
+        json_encode($this->filter),
+      ),
+    );
 
-        $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'id' => ['=='],
-            'not_id' => ['=='],
-            'first_name' => ['=@', '=='],
-            'last_name' => ['=@', '=='],
-            'full_name' => ['=@', '=='],
-            'company' => ['=@', '=='],
-            'has_company' => ['=='],
-            'email' => ['=@', '=='],
-            'external_order_id' => ['=@', '=='],
-            'external_attendee_id' => ['=@', '=='],
-            'member_id' => ['==', '>'],
-            'ticket_type' => ['=@', '==', '@@'],
-            'ticket_type_id' => ['=='],
-            'badge_type' => ['=@', '==', '@@'],
-            'badge_type_id' => ['=='],
-            'features' => ['=@', '==', '@@'],
-            'features_id' => ['=='],
-            'access_levels' => ['=@', '==', '@@'],
-            'access_levels_id' => ['=='],
-            'status' => ['=@', '=='],
-            'has_member' => ['=='],
-            'has_tickets' => ['=='],
-            'has_virtual_checkin' => ['=='],
-            'has_checkin' => ['=='],
-            'tickets_count' => ['==', '>=', '<=', '>', '<'],
-            'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
-            'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
-            'presentation_votes_track_group_id' => ['=='],
-            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
-            'tags' => ['=@', '==', '@@'],
-            'tags_id' => ['=='],
-            'notes' => ['=@', '@@'],
-            'has_notes' => ['==']
-        ]) : null;
+    $filter = !is_null($this->filter)
+      ? FilterParser::parse($this->filter, [
+        "id" => ["=="],
+        "not_id" => ["=="],
+        "first_name" => ["=@", "=="],
+        "last_name" => ["=@", "=="],
+        "full_name" => ["=@", "=="],
+        "company" => ["=@", "=="],
+        "has_company" => ["=="],
+        "email" => ["=@", "=="],
+        "external_order_id" => ["=@", "=="],
+        "external_attendee_id" => ["=@", "=="],
+        "member_id" => ["==", ">"],
+        "ticket_type" => ["=@", "==", "@@"],
+        "ticket_type_id" => ["=="],
+        "badge_type" => ["=@", "==", "@@"],
+        "badge_type_id" => ["=="],
+        "features" => ["=@", "==", "@@"],
+        "features_id" => ["=="],
+        "access_levels" => ["=@", "==", "@@"],
+        "access_levels_id" => ["=="],
+        "status" => ["=@", "=="],
+        "has_member" => ["=="],
+        "has_tickets" => ["=="],
+        "has_virtual_checkin" => ["=="],
+        "has_checkin" => ["=="],
+        "tickets_count" => ["==", ">=", "<=", ">", "<"],
+        "presentation_votes_date" => ["==", ">=", "<=", ">", "<"],
+        "presentation_votes_count" => ["==", ">=", "<=", ">", "<"],
+        "presentation_votes_track_group_id" => ["=="],
+        "summit_hall_checked_in_date" => ["==", ">=", "<=", ">", "<", "[]"],
+        "tags" => ["=@", "==", "@@"],
+        "tags_id" => ["=="],
+        "notes" => ["=@", "@@"],
+        "has_notes" => ["=="],
+      ])
+      : null;
 
-        $service->send($this->summit_id, $this->payload, $filter);
-    }
-
+    $service->send($this->summit_id, $this->payload, $filter);
+  }
 }

@@ -12,20 +12,17 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class BookableRoomReservationCanceledEmail
  * @package App\Jobs\Emails\BookableRooms
  */
-class BookableRoomReservationCanceledEmail extends AbstractBookableRoomReservationEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class BookableRoomReservationCanceledEmail extends AbstractBookableRoomReservationEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_CANCELLED';
-    const EVENT_NAME = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_CANCELLED';
-    const DEFAULT_TEMPLATE = 'BOOKABLE_ROOMS_RESERVATION_CANCELED';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_CANCELLED";
+  const EVENT_NAME = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_CANCELLED";
+  const DEFAULT_TEMPLATE = "BOOKABLE_ROOMS_RESERVATION_CANCELED";
 }

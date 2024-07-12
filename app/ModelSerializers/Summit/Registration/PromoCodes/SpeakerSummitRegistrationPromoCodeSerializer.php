@@ -18,65 +18,64 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
  * Class SpeakerSummitRegistrationPromoCodeSerializer
  * @package ModelSerializers
  */
-class SpeakerSummitRegistrationPromoCodeSerializer
-    extends SummitRegistrationPromoCodeSerializer
-{
-    protected static $array_mappings = [
-        'Type'      => 'type:json_string',
-        'SpeakerId' => 'speaker_id:json_int',
-    ];
+class SpeakerSummitRegistrationPromoCodeSerializer extends SummitRegistrationPromoCodeSerializer {
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+    "SpeakerId" => "speaker_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code            = $this->object;
-        if(!$code instanceof SpeakerSummitRegistrationPromoCode) return [];
-        $values          = parent::serialize($expand, $fields, $relations, $params);
-        $serializer_type = SerializerRegistry::SerializerType_Public;
-
-        if(isset($params['serializer_type']))
-            $serializer_type = $params['serializer_type'];
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'speaker': {
-                        if($code->hasSpeaker()){
-                            unset($values['speaker_id']);
-                            $values['speaker'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $code->getSpeaker(),
-                                $serializer_type
-                            )->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation)
-                            );
-                        }
-                    }
-                    case 'owner_name': {
-                        if($code->hasSpeaker()){
-                            $values['owner_name'] = $code->getSpeaker()->getFullName();
-                        }
-                    }
-                        break;
-                    case 'owner_email': {
-                        if($code->hasSpeaker()){
-                            $values['owner_email'] = $code->getSpeaker()->getEmail();
-                        }
-                    }
-                        break;
-
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SpeakerSummitRegistrationPromoCode) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $serializer_type = SerializerRegistry::SerializerType_Public;
+
+    if (isset($params["serializer_type"])) {
+      $serializer_type = $params["serializer_type"];
+    }
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        switch (trim($relation)) {
+          case "speaker":
+            if ($code->hasSpeaker()) {
+              unset($values["speaker_id"]);
+              $values["speaker"] = SerializerRegistry::getInstance()
+                ->getSerializer($code->getSpeaker(), $serializer_type)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                );
+            }
+          case "owner_name":
+            if ($code->hasSpeaker()) {
+              $values["owner_name"] = $code->getSpeaker()->getFullName();
+            }
+            break;
+          case "owner_email":
+            if ($code->hasSpeaker()) {
+              $values["owner_email"] = $code->getSpeaker()->getEmail();
+            }
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

@@ -27,32 +27,33 @@ use models\summit\SummitEvent;
  * Class SummitEventAuditLogger
  * @package App\Audit\Loggers
  */
-class SummitEventAuditLogger implements ILogger
-{
-    /**
-     * @inheritDoc
-     */
-    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description) {
-
-        if (!$entity instanceof SummitEvent) return;
-
-        $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
-        $user_id = $resource_server_ctx->getCurrentUserId();
-        $rep = $entity_manager->getRepository(Member::class);
-        $user = $rep->findOneBy(["user_external_id" => $user_id]);
-
-        $entry = new SummitEventAuditLog(
-            $user,
-            $description,
-            $entity->getSummit(),
-            $entity
-        );
-        $entity_manager->persist($entry);
-
-        // For the onFlush handler, we need to compute the changeset for new entities manually:
-        // http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/events.html#onflush
-        // "If you create and persist a new entity in onFlush, then calling EntityManager#persist() is not enough. You
-        // have to execute an additional call to $unitOfWork->computeChangeSet($classMetadata, $entity)."
-        $entity_manager->getUnitOfWork()->computeChangeSet($entity_manager->getClassMetadata(get_class($entry)), $entry);
+class SummitEventAuditLogger implements ILogger {
+  /**
+   * @inheritDoc
+   */
+  public function createAuditLogEntry(
+    EntityManagerInterface $entity_manager,
+    BaseEntity $entity,
+    string $description,
+  ) {
+    if (!$entity instanceof SummitEvent) {
+      return;
     }
+
+    $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
+    $user_id = $resource_server_ctx->getCurrentUserId();
+    $rep = $entity_manager->getRepository(Member::class);
+    $user = $rep->findOneBy(["user_external_id" => $user_id]);
+
+    $entry = new SummitEventAuditLog($user, $description, $entity->getSummit(), $entity);
+    $entity_manager->persist($entry);
+
+    // For the onFlush handler, we need to compute the changeset for new entities manually:
+    // http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/events.html#onflush
+    // "If you create and persist a new entity in onFlush, then calling EntityManager#persist() is not enough. You
+    // have to execute an additional call to $unitOfWork->computeChangeSet($classMetadata, $entity)."
+    $entity_manager
+      ->getUnitOfWork()
+      ->computeChangeSet($entity_manager->getClassMetadata(get_class($entry)), $entry);
+  }
 }

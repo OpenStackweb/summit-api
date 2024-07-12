@@ -23,47 +23,62 @@ use models\summit\SummitAttendeeBadge;
  * Interface ISponsorBadgeScanService
  * @package App\Services\Model
  */
-interface ISponsorUserInfoGrantService
-{
+interface ISponsorUserInfoGrantService {
+  /**
+   * @param Summit $summit
+   * @param int $sponsor_id
+   * @param Member $current_member
+   * @return SponsorUserInfoGrant
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addGrant(
+    Summit $summit,
+    int $sponsor_id,
+    Member $current_member,
+  ): SponsorUserInfoGrant;
 
-    /**
-     * @param Summit $summit
-     * @param int $sponsor_id
-     * @param Member $current_member
-     * @return SponsorUserInfoGrant
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addGrant(Summit $summit, int $sponsor_id, Member $current_member):SponsorUserInfoGrant;
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param array $data
+   * @return SponsorBadgeScan
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addBadgeScan(
+    Summit $summit,
+    Member $current_member,
+    array $data,
+  ): SponsorBadgeScan;
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param array $data
-     * @return SponsorBadgeScan
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addBadgeScan(Summit $summit, Member $current_member, array $data):SponsorBadgeScan;
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param int $scan_id
+   * @param array $data
+   * @return SponsorBadgeScan
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateBadgeScan(
+    Summit $summit,
+    Member $current_member,
+    int $scan_id,
+    array $data,
+  ): SponsorBadgeScan;
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param int $scan_id
-     * @param array $data
-     * @return SponsorBadgeScan
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateBadgeScan(Summit $summit, Member $current_member, int $scan_id, array $data):SponsorBadgeScan;
-
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param int $scan_id
-     * @return SponsorBadgeScan
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function getBadgeScan(Summit $summit, Member $current_member, int $scan_id):SponsorBadgeScan;
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param int $scan_id
+   * @return SponsorBadgeScan
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function getBadgeScan(
+    Summit $summit,
+    Member $current_member,
+    int $scan_id,
+  ): SponsorBadgeScan;
 }

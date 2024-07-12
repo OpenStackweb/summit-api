@@ -16,8 +16,5 @@ use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
  * Interface ISummitSelectionPlanExtraQuestionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitSelectionPlanExtraQuestionTypeRepository
-extends IExtraQuestionTypeRepository
-{
-
+interface ISummitSelectionPlanExtraQuestionTypeRepository extends IExtraQuestionTypeRepository {
 }

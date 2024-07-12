@@ -16,7 +16,5 @@
  * Class RSVPUpdated
  * @package App\Events
  */
-class RSVPUpdated extends RSVPAction
-{
-
+class RSVPUpdated extends RSVPAction {
 }

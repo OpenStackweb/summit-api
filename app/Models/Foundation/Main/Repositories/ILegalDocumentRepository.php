@@ -16,17 +16,16 @@ use models\main\LegalDocument;
  * Interface ILegalDocumentRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface ILegalDocumentRepository
-{
-    /**
-     * @param string $slug
-     * @return LegalDocument|null
-     */
-    public function getBySlug(string $slug):?LegalDocument;
+interface ILegalDocumentRepository {
+  /**
+   * @param string $slug
+   * @return LegalDocument|null
+   */
+  public function getBySlug(string $slug): ?LegalDocument;
 
-    /**
-     * @param int $id
-     * @return LegalDocument|null
-     */
-    public function getById(int $id):?LegalDocument;
+  /**
+   * @param int $id
+   * @return LegalDocument|null
+   */
+  public function getById(int $id): ?LegalDocument;
 }

@@ -16,14 +16,12 @@
  * Class SummitQREncKeySerializer
  * @package ModelSerializers
  */
-class SummitQREncKeySerializer extends SilverStripeSerializer
-{
-    const SerializerType = 'SUMMIT_QR_KEY_SERIALIZER';
+class SummitQREncKeySerializer extends SilverStripeSerializer {
+  const SerializerType = "SUMMIT_QR_KEY_SERIALIZER";
 
-    protected static $array_mappings = array
-    (
-        'Id'            => 'id:json_int',
-        'Name'          => 'name:json_string',
-        'QRCodesEncKey' => 'qr_codes_enc_key:json_string',
-    );
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Name" => "name:json_string",
+    "QRCodesEncKey" => "qr_codes_enc_key:json_string",
+  ];
 }

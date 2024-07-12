@@ -20,14 +20,16 @@ use models\summit\SummitRegistrationPromoCode;
  * Interface IPromoCodeAllowedTicketTypesStrategyFactory
  * @package App\Models\Foundation\Summit\Registration\PromoCodes\Strategies
  */
-interface IPromoCodeAllowedTicketTypesStrategyFactory
-{
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param SummitRegistrationPromoCode|null $promo_code
-     * @return IPromoCodeAllowedTicketTypesStrategy
-     */
-    public function build(
-        Summit $summit, Member $member, ?SummitRegistrationPromoCode $promo_code): IPromoCodeAllowedTicketTypesStrategy;
+interface IPromoCodeAllowedTicketTypesStrategyFactory {
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param SummitRegistrationPromoCode|null $promo_code
+   * @return IPromoCodeAllowedTicketTypesStrategy
+   */
+  public function build(
+    Summit $summit,
+    Member $member,
+    ?SummitRegistrationPromoCode $promo_code,
+  ): IPromoCodeAllowedTicketTypesStrategy;
 }

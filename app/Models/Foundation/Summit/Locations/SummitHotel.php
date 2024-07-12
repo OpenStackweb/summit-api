@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
@@ -21,102 +21,92 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitHotel
  * @package models\summit
  */
-class SummitHotel extends SummitExternalLocation
-{
+class SummitHotel extends SummitExternalLocation {
+  const HotelTypePrimary = "Primary";
+  const HotelTypeAlternate = "Alternate";
 
-    const HotelTypePrimary   = "Primary";
-    const HotelTypeAlternate = "Alternate";
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  const ClassName = "SummitHotel";
 
-    const ClassName = 'SummitHotel';
+  /**
+   * @return string
+   */
+  public function getBookingLink() {
+    return $this->booking_link;
+  }
 
-    /**
-     * @return string
-     */
-    public function getBookingLink()
-    {
-        return $this->booking_link;
-    }
+  /**
+   * @param string $booking_link
+   */
+  public function setBookingLink($booking_link) {
+    $this->booking_link = $booking_link;
+  }
+  /**
+   * @ORM\Column(name="BookingLink", type="string")
+   */
+  private $booking_link;
 
-    /**
-     * @param string $booking_link
-     */
-    public function setBookingLink($booking_link)
-    {
-        $this->booking_link = $booking_link;
-    }
-    /**
-     * @ORM\Column(name="BookingLink", type="string")
-     */
-    private $booking_link;
+  /**
+   * @return bool
+   */
+  public function getSoldOut() {
+    return $this->sold_out;
+  }
 
-    /**
-     * @return bool
-     */
-    public function getSoldOut()
-    {
-        return $this->sold_out;
-    }
+  /**
+   * @param bool $sold_out
+   */
+  public function setSoldOut($sold_out) {
+    $this->sold_out = $sold_out;
+  }
 
-    /**
-     * @param bool $sold_out
-     */
-    public function setSoldOut($sold_out)
-    {
-        $this->sold_out = $sold_out;
-    }
+  /**
+   * @return string
+   */
+  public function getHotelType() {
+    return $this->hotel_type;
+  }
 
-    /**
-     * @return string
-     */
-    public function getHotelType()
-    {
-        return $this->hotel_type;
-    }
+  /**
+   * @param string $hotel_type
+   */
+  public function setHotelType($hotel_type) {
+    $this->hotel_type = $hotel_type;
+  }
 
-    /**
-     * @param string $hotel_type
-     */
-    public function setHotelType($hotel_type)
-    {
-        $this->hotel_type = $hotel_type;
-    }
+  /**
+   * @ORM\Column(name="SoldOut", type="boolean")
+   */
+  private $sold_out;
 
-    /**
-     * @ORM\Column(name="SoldOut", type="boolean")
-     */
-    private $sold_out;
+  /**
+   * @ORM\Column(name="Type", type="string")
+   */
+  private $hotel_type;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     */
-    private $hotel_type;
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "hotel_type" => [self::HotelTypePrimary, self::HotelTypeAlternate],
+    "sold_out" => "boolean",
+    "booking_link" => "string",
+  ];
 
-    public static $metadata = [
-        'class_name'    => self::ClassName,
-        'hotel_type'    => [self::HotelTypePrimary, self::HotelTypeAlternate],
-        'sold_out'      => 'boolean',
-        'booking_link'  => 'string',
-    ];
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitExternalLocation::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitExternalLocation::getMetadata(), self::$metadata);
-    }
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->sold_out   = false;
-        $this->hotel_type = self::HotelTypePrimary;
-    }
-
+  public function __construct() {
+    parent::__construct();
+    $this->sold_out = false;
+    $this->hotel_type = self::HotelTypePrimary;
+  }
 }

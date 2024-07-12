@@ -22,50 +22,50 @@ use models\summit\IAbstractCalendarSyncWorkRequestRepository;
  * Class AdminSummitLocationActionSyncWorkRequestUpdateStrategy
  * @package App\Services\Model\Strategies\AdminActions
  */
-final class AdminSummitLocationActionSyncWorkRequestUpdateStrategy
-    implements ICalendarSyncWorkRequestPreProcessorStrategy
-{
+final class AdminSummitLocationActionSyncWorkRequestUpdateStrategy implements
+  ICalendarSyncWorkRequestPreProcessorStrategy {
+  /**
+   * @var AdminScheduleWorkQueueManager
+   */
+  private $queue_manager;
 
-    /**
-     * @var AdminScheduleWorkQueueManager
-     */
-    private $queue_manager;
+  /**
+   * @var IAbstractCalendarSyncWorkRequestRepository
+   */
+  private $work_request_repository;
 
-    /**
-     * @var IAbstractCalendarSyncWorkRequestRepository
-     */
-    private $work_request_repository;
+  /**
+   * AdminSummitLocationActionSyncWorkRequestUpdateStrategy constructor.
+   * @param AdminScheduleWorkQueueManager $queue_manager
+   * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
+   */
+  public function __construct(
+    AdminScheduleWorkQueueManager $queue_manager,
+    IAbstractCalendarSyncWorkRequestRepository $work_request_repository,
+  ) {
+    $this->queue_manager = $queue_manager;
+    $this->work_request_repository = $work_request_repository;
+  }
 
-    /**
-     * AdminSummitLocationActionSyncWorkRequestUpdateStrategy constructor.
-     * @param AdminScheduleWorkQueueManager $queue_manager
-     * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
-     */
-    public function __construct
-    (
-        AdminScheduleWorkQueueManager $queue_manager,
-        IAbstractCalendarSyncWorkRequestRepository $work_request_repository
-    )
-    {
-        $this->queue_manager = $queue_manager;
-        $this->work_request_repository = $work_request_repository;
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return AbstractCalendarSyncWorkRequest|null
+   */
+  public function process(AbstractCalendarSyncWorkRequest $request) {
+    if (!$request instanceof AdminSummitLocationActionSyncWorkRequest) {
+      return null;
     }
-
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return AbstractCalendarSyncWorkRequest|null
-     */
-    public function process(AbstractCalendarSyncWorkRequest $request)
-    {
-        if(!$request instanceof AdminSummitLocationActionSyncWorkRequest) return null;
-        $pending_requests = $this->queue_manager->getSummitLocationRequestFor($request->getLocationId());
-        if(count($pending_requests) > 0 ){
-            // delete all former and pending  ...
-            foreach ($pending_requests as $pending_request) {
-                if($this->queue_manager->removeRequest($pending_request))
-                    $this->work_request_repository->delete($pending_request);
-            }
+    $pending_requests = $this->queue_manager->getSummitLocationRequestFor(
+      $request->getLocationId(),
+    );
+    if (count($pending_requests) > 0) {
+      // delete all former and pending  ...
+      foreach ($pending_requests as $pending_request) {
+        if ($this->queue_manager->removeRequest($pending_request)) {
+          $this->work_request_repository->delete($pending_request);
         }
-        return $request;
+      }
     }
+    return $request;
+  }
 }

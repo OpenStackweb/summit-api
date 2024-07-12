@@ -20,65 +20,59 @@ use Exception;
  * Class RegistrationSummitOrderReminderEmailCommand
  * @package App\Console\Commands
  */
-class RegistrationSummitOrderReminderEmailCommand extends Command
-{
+class RegistrationSummitOrderReminderEmailCommand extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:registration-order-reminder-action-email";
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:registration-order-reminder-action-email';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:registration-order-reminder-action-email";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:registration-order-reminder-action-email';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Process all Order without Action";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Process all Order without Action';
+  /**
+   * @var ISummitOrderService
+   */
+  private $order_service;
 
-    /**
-     * @var ISummitOrderService
-     */
-    private $order_service;
+  /**
+   * RegistrationSummitOrderRevocationCommand constructor.
+   * @param ISummitOrderService $order_service
+   */
+  public function __construct(ISummitOrderService $order_service) {
+    parent::__construct();
+    $this->order_service = $order_service;
+  }
 
-    /**
-     * RegistrationSummitOrderRevocationCommand constructor.
-     * @param ISummitOrderService $order_service
-     */
-    public function __construct(ISummitOrderService $order_service)
-    {
-        parent::__construct();
-        $this->order_service = $order_service;
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    try {
+      $this->info("processing summit orders without action");
+      $start = time();
+      Log::debug("RegistrationSummitOrderReminderEmailCommand::handle");
+      $this->order_service->processAllOrderReminder();
+
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-
-        try {
-            $this->info("processing summit orders without action");
-            $start   = time();
-            Log::debug("RegistrationSummitOrderReminderEmailCommand::handle");
-            $this->order_service->processAllOrderReminder();
-
-            $end   = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-        }
-    }
+  }
 }

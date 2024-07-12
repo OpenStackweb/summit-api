@@ -18,50 +18,46 @@ use App\Services\Model\Strategies\ICalendarSyncWorkRequestPreProcessorStrategyFa
  * Class AdminActionsCalendarSyncPreProcessor
  * @package App\Services\Model
  */
-final class AdminActionsCalendarSyncPreProcessor
-    implements ICalendarSyncWorkRequestPreProcessor
-{
+final class AdminActionsCalendarSyncPreProcessor implements ICalendarSyncWorkRequestPreProcessor {
+  /**
+   * @var ICalendarSyncWorkRequestQueueManager
+   */
+  private $queue_manager;
 
-    /**
-     * @var ICalendarSyncWorkRequestQueueManager
-     */
-    private $queue_manager;
+  /**
+   * @var ICalendarSyncWorkRequestPreProcessorStrategyFactory
+   */
+  private $strategy_factory;
 
+  /**
+   * AdminActionsCalendarSyncPreProcessor constructor.
+   * @param ICalendarSyncWorkRequestQueueManager $queue_manager
+   * @param ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory
+   */
+  public function __construct(
+    ICalendarSyncWorkRequestQueueManager $queue_manager,
+    ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory,
+  ) {
+    $this->queue_manager = $queue_manager;
+    $this->strategy_factory = $strategy_factory;
+  }
 
-    /**
-     * @var ICalendarSyncWorkRequestPreProcessorStrategyFactory
-     */
-    private $strategy_factory;
-
-    /**
-     * AdminActionsCalendarSyncPreProcessor constructor.
-     * @param ICalendarSyncWorkRequestQueueManager $queue_manager
-     * @param ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory
-     */
-    public function __construct
-    (
-        ICalendarSyncWorkRequestQueueManager $queue_manager,
-        ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory
-    )
-    {
-        $this->queue_manager = $queue_manager;
-        $this->strategy_factory = $strategy_factory;
+  /**
+   * @param array $requests
+   * @return array
+   */
+  public function preProcessActions(array $requests) {
+    foreach ($requests as $request) {
+      $strategy = $this->strategy_factory->build($this->queue_manager, $request);
+      if (is_null($strategy)) {
+        continue;
+      }
+      $request = $strategy->process($request);
+      if (!is_null($request)) {
+        $this->queue_manager->registerRequest($request);
+      }
     }
 
-    /**
-     * @param array $requests
-     * @return array
-     */
-    public function preProcessActions(array $requests)
-    {
-        foreach ($requests as $request){
-            $strategy = $this->strategy_factory->build($this->queue_manager, $request);
-            if(is_null($strategy)) continue;
-            $request = $strategy->process($request);
-            if(!is_null($request))
-                $this->queue_manager->registerRequest($request);
-        }
-
-        return $this->queue_manager->getPurgedRequests();
-    }
+    return $this->queue_manager->getPurgedRequests();
+  }
 }

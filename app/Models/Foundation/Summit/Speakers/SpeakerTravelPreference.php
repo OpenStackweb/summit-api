@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 use App\Models\Foundation\Main\CountryCodes;
 /**
@@ -20,81 +20,74 @@ use App\Models\Foundation\Main\CountryCodes;
  * Class SpeakerTravelPreference
  * @package models\summit
  */
-class SpeakerTravelPreference extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Country", type="string")
-     */
-    private $country;
+class SpeakerTravelPreference extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Country", type="string")
+   */
+  private $country;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="travel_preferences")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
-     * @var PresentationSpeaker
-     */
-    private $speaker;
+  /**
+   * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="travel_preferences")
+   * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
+   * @var PresentationSpeaker
+   */
+  private $speaker;
 
-    /**
-     * SpeakerTravelPreference constructor.
-     * @param string $country
-     */
-    public function __construct($country)
-    {
-        parent::__construct();
-        $this->country = $country;
+  /**
+   * SpeakerTravelPreference constructor.
+   * @param string $country
+   */
+  public function __construct($country) {
+    parent::__construct();
+    $this->country = $country;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSpeakerId() {
+    try {
+      return !is_null($this->speaker) ? $this->speaker->getId() : 0;
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getSpeakerId(){
-        try {
-            return !is_null($this->speaker) ? $this->speaker->getId() : 0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return string
+   */
+  public function getCountry() {
+    return $this->country;
+  }
+
+  /**
+   * @return string
+   */
+  public function getCountryName() {
+    if (isset(CountryCodes::$iso_3166_countryCodes[$this->country])) {
+      return CountryCodes::$iso_3166_countryCodes[$this->country];
     }
+    return "";
+  }
 
-    /**
-     * @return string
-     */
-    public function getCountry()
-    {
-        return $this->country;
-    }
+  /**
+   * @param string $country
+   */
+  public function setCountry($country) {
+    $this->country = $country;
+  }
 
-    /**
-     * @return string
-     */
-    public function getCountryName(){
-        if(isset(CountryCodes::$iso_3166_countryCodes[$this->country]))
-            return CountryCodes::$iso_3166_countryCodes[$this->country];
-        return '';
-    }
+  /**
+   * @return PresentationSpeaker
+   */
+  public function getSpeaker() {
+    return $this->speaker;
+  }
 
-    /**
-     * @param string $country
-     */
-    public function setCountry($country)
-    {
-        $this->country = $country;
-    }
-
-    /**
-     * @return PresentationSpeaker
-     */
-    public function getSpeaker()
-    {
-        return $this->speaker;
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function setSpeaker($speaker)
-    {
-        $this->speaker = $speaker;
-    }
-
+  /**
+   * @param PresentationSpeaker $speaker
+   */
+  public function setSpeaker($speaker) {
+    $this->speaker = $speaker;
+  }
 }

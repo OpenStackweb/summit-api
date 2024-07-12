@@ -19,61 +19,70 @@ use models\exceptions\ValidationException;
  * Class SummitLocationBannerValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitLocationBannerValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     * @throws ValidationException
-     */
-    public static function build(array $data, $update = false)
-    {
-        if(!isset($data['class_name']))
-            throw new ValidationException('class_name is not set');
+final class SummitLocationBannerValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   * @throws ValidationException
+   */
+  public static function build(array $data, $update = false) {
+    if (!isset($data["class_name"])) {
+      throw new ValidationException("class_name is not set");
+    }
 
-        $base_rules = [
-            'class_name' => sprintf('required|in:%s',  implode(",", SummitLocationBannerConstants::$valid_class_names)),
-            'title'      => 'required|string',
-            'content'    => 'required|string',
-            'type'       => sprintf('required|in:%s', implode(",", SummitLocationBannerConstants::$valid_types)),
-            'enabled'    => 'required|boolean'
+    $base_rules = [
+      "class_name" => sprintf(
+        "required|in:%s",
+        implode(",", SummitLocationBannerConstants::$valid_class_names),
+      ),
+      "title" => "required|string",
+      "content" => "required|string",
+      "type" => sprintf(
+        "required|in:%s",
+        implode(",", SummitLocationBannerConstants::$valid_types),
+      ),
+      "enabled" => "required|boolean",
+    ];
+
+    if ($update) {
+      $base_rules = [
+        "class_name" => sprintf(
+          "required|in:%s",
+          implode(",", SummitLocationBannerConstants::$valid_class_names),
+        ),
+        "title" => "sometimes|string",
+        "content" => "sometimes|string",
+        "type" => sprintf(
+          "sometimes|in:%s",
+          implode(",", SummitLocationBannerConstants::$valid_types),
+        ),
+        "enabled" => "sometimes|boolean",
+      ];
+    }
+
+    switch ($data["class_name"]) {
+      case SummitLocationBanner::ClassName:
+        return $base_rules;
+        break;
+      case ScheduledSummitLocationBanner::ClassName:
+        $extended_rules = [
+          "start_date" => "required|date_format:U",
+          "end_date" => "required_with:start_date|date_format:U|after:start_date",
         ];
 
-        if($update){
-            $base_rules = [
-                'class_name' => sprintf('required|in:%s',  implode(",", SummitLocationBannerConstants::$valid_class_names)),
-                'title'      => 'sometimes|string',
-                'content'    => 'sometimes|string',
-                'type'       => sprintf('sometimes|in:%s', implode(",", SummitLocationBannerConstants::$valid_types)),
-                'enabled'    => 'sometimes|boolean'
-            ];
+        if ($update) {
+          $extended_rules = [
+            "start_date" => "sometimes|date_format:U",
+            "end_date" => "required_with:start_date|date_format:U|after:start_date",
+          ];
         }
 
-        switch($data['class_name']){
-            case SummitLocationBanner::ClassName: {
-                return $base_rules;
-            }
-            break;
-            case ScheduledSummitLocationBanner::ClassName: {
-                $extended_rules = [
-                    'start_date'  => 'required|date_format:U',
-                    'end_date'    => 'required_with:start_date|date_format:U|after:start_date',
-                ];
-
-                if($update){
-                    $extended_rules = [
-                    'start_date'  => 'sometimes|date_format:U',
-                    'end_date'    => 'required_with:start_date|date_format:U|after:start_date',
-                    ];
-                }
-
-                return array_merge($base_rules, $extended_rules);
-            }
-            default:
-                throw new ValidationException("invalid class_name");
-            break;
-        }
-        return [];
+        return array_merge($base_rules, $extended_rules);
+      default:
+        throw new ValidationException("invalid class_name");
+        break;
     }
+    return [];
+  }
 }

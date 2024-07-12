@@ -16,13 +16,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class HyperVisorTypeSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class HyperVisorTypeSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Type'      => 'type:json_string',
-    ];
-
+final class HyperVisorTypeSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+  ];
 }

@@ -19,65 +19,66 @@ use models\summit\SummitRegistrationDiscountCode;
  * Class SummitRegistrationDiscountCodeSerializer
  * @package ModelSerializers
  */
-class SummitRegistrationDiscountCodeSerializer extends SummitRegistrationPromoCodeSerializer
-{
-    protected static $array_mappings = [
-        'Rate' => 'rate:json_float',
-        'Amount' => 'amount:json_float',
-    ];
+class SummitRegistrationDiscountCodeSerializer extends SummitRegistrationPromoCodeSerializer {
+  protected static $array_mappings = [
+    "Rate" => "rate:json_float",
+    "Amount" => "amount:json_float",
+  ];
 
-    protected static $allowed_relations = [
-        'ticket_types_rules',
-    ];
+  protected static $allowed_relations = ["ticket_types_rules"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code = $this->object;
-        if (!$code instanceof SummitRegistrationDiscountCode) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SummitRegistrationDiscountCode) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        unset($values['allowed_ticket_types']);
+    unset($values["allowed_ticket_types"]);
 
-        if (in_array('ticket_types_rules', $relations)) {
+    if (in_array("ticket_types_rules", $relations)) {
+      $ticket_types_rules = [];
+      foreach ($code->getTicketTypesRules() as $ticket_types_rule) {
+        $ticket_types_rules[] = $ticket_types_rule->getId();
+      }
+      $values["ticket_types_rules"] = $ticket_types_rules;
+    }
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "ticket_types_rules":
+            unset($values["ticket_types_rules"]);
             $ticket_types_rules = [];
             foreach ($code->getTicketTypesRules() as $ticket_types_rule) {
-                $ticket_types_rules[] = $ticket_types_rule->getId();
+              $ticket_types_rules[] = SerializerRegistry::getInstance()
+                ->getSerializer($ticket_types_rule)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
-            $values['ticket_types_rules'] = $ticket_types_rules;
+            $values["ticket_types_rules"] = $ticket_types_rules;
+            break;
         }
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'ticket_types_rules':
-                        {
-                            unset($values['ticket_types_rules']);
-                            $ticket_types_rules = [];
-                            foreach ($code->getTicketTypesRules() as $ticket_types_rule) {
-                                $ticket_types_rules[] = SerializerRegistry::getInstance()->getSerializer($ticket_types_rule)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['ticket_types_rules'] = $ticket_types_rules;
-                        }
-                        break;
-
-                }
-            }
-        }
-
-        return $values;
+      }
     }
+
+    return $values;
+  }
 }

@@ -12,13 +12,11 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class ForumTypes
  * @package App\Services\Apis\Samsung
  */
-final class ForumTypes
-{
-    const SFF = 'SFF';
-    const SAFE = 'SAFE™ Forum';
+final class ForumTypes {
+  const SFF = "SFF";
+  const SAFE = "SAFE™ Forum";
 }

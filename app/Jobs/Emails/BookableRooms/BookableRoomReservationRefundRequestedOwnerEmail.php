@@ -12,20 +12,18 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class BookableRoomReservationRefundRequestedOwnerEmail
  * @package App\Jobs\Emails\BookableRooms
  */
-class BookableRoomReservationRefundRequestedOwnerEmail extends AbstractBookableRoomReservationEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class BookableRoomReservationRefundRequestedOwnerEmail extends
+  AbstractBookableRoomReservationEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_OWNER';
-    const EVENT_NAME = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_OWNER';
-    const DEFAULT_TEMPLATE = 'BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_OWNER';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_OWNER";
+  const EVENT_NAME = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_OWNER";
+  const DEFAULT_TEMPLATE = "BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_OWNER";
 }

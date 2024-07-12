@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\Member;
 use models\main\SummitMemberSchedule;
 use models\summit\SummitOwned;
@@ -27,160 +27,152 @@ use models\utils\SilverstripeBaseModel;
  * Class CalendarSyncInfo
  * @package models\summit\CalendarSync
  */
-class CalendarSyncInfo extends SilverstripeBaseModel
-{
-    const ProviderGoogle  = 'Google';
-    const ProviderOutlook = 'Outlook';
-    const ProvideriCloud  = 'iCloud';
+class CalendarSyncInfo extends SilverstripeBaseModel {
+  const ProviderGoogle = "Google";
+  const ProviderOutlook = "Outlook";
+  const ProvideriCloud = "iCloud";
 
-    private static $valid_providers = [self::ProviderGoogle, self::ProviderOutlook, self::ProvideriCloud];
+  private static $valid_providers = [
+    self::ProviderGoogle,
+    self::ProviderOutlook,
+    self::ProvideriCloud,
+  ];
 
-    /**
-     * @param string $provider
-     * @return bool
-     */
-    public static function isValidProvider($provider){
-        if(empty($provider)) return false;
-        return in_array($provider, self::$valid_providers);
+  /**
+   * @param string $provider
+   * @return bool
+   */
+  public static function isValidProvider($provider) {
+    if (empty($provider)) {
+      return false;
     }
+    return in_array($provider, self::$valid_providers);
+  }
 
-    /**
-     * CalendarSyncInfo constructor.
-     */
-    public function __construct()
-    {
-        $this->synchronized_events = new ArrayCollection();
-    }
+  /**
+   * CalendarSyncInfo constructor.
+   */
+  public function __construct() {
+    $this->synchronized_events = new ArrayCollection();
+  }
 
-    /**
-     * @ORM\Column(name="Provider", type="string")
-     * @var string
-     */
-    protected $provider;
+  /**
+   * @ORM\Column(name="Provider", type="string")
+   * @var string
+   */
+  protected $provider;
 
-    /**
-     * @ORM\Column(name="CalendarExternalId", type="string")
-     * @var string
-     */
-    protected $external_id;
+  /**
+   * @ORM\Column(name="CalendarExternalId", type="string")
+   * @var string
+   */
+  protected $external_id;
 
-    /**
-     * @ORM\Column(name="ETag", type="string")
-     * @var string
-     */
-    protected $etag;
+  /**
+   * @ORM\Column(name="ETag", type="string")
+   * @var string
+   */
+  protected $etag;
 
-    /**
-     * @ORM\Column(name="Revoked", type="boolean")
-     * @var bool
-     */
-    protected $revoked;
+  /**
+   * @ORM\Column(name="Revoked", type="boolean")
+   * @var bool
+   */
+  protected $revoked;
 
-    use SummitOwned;
+  use SummitOwned;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="calendars_sync")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    protected $owner;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="calendars_sync")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  protected $owner;
 
-    /**
-     * @ORM\OneToMany(targetEntity="ScheduleCalendarSyncInfo", mappedBy="calendar_sync_info", cascade={"persist"}, orphanRemoval=true)
-     * @var ScheduleCalendarSyncInfo[]
-     */
-    protected $synchronized_events;
+  /**
+   * @ORM\OneToMany(targetEntity="ScheduleCalendarSyncInfo", mappedBy="calendar_sync_info", cascade={"persist"}, orphanRemoval=true)
+   * @var ScheduleCalendarSyncInfo[]
+   */
+  protected $synchronized_events;
 
-    /**
-     * @return string
-     */
-    public function getProvider()
-    {
-        return $this->provider;
-    }
+  /**
+   * @return string
+   */
+  public function getProvider() {
+    return $this->provider;
+  }
 
-    /**
-     * @param string $provider
-     */
-    public function setProvider($provider)
-    {
-        $this->provider = $provider;
-    }
+  /**
+   * @param string $provider
+   */
+  public function setProvider($provider) {
+    $this->provider = $provider;
+  }
 
-    /**
-     * @return string
-     */
-    public function getExternalId()
-    {
-        return $this->external_id;
-    }
+  /**
+   * @return string
+   */
+  public function getExternalId() {
+    return $this->external_id;
+  }
 
-    /**
-     * @param string $external_id
-     */
-    public function setExternalId($external_id)
-    {
-        $this->external_id = $external_id;
-    }
+  /**
+   * @param string $external_id
+   */
+  public function setExternalId($external_id) {
+    $this->external_id = $external_id;
+  }
 
-    /**
-     * @return string
-     */
-    public function getEtag()
-    {
-        return $this->etag;
-    }
+  /**
+   * @return string
+   */
+  public function getEtag() {
+    return $this->etag;
+  }
 
-    /**
-     * @param string $etag
-     */
-    public function setEtag($etag)
-    {
-        $this->etag = $etag;
-    }
+  /**
+   * @param string $etag
+   */
+  public function setEtag($etag) {
+    $this->etag = $etag;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
+  /**
+   * @return Member
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
 
-    /**
-     * @param Member $owner
-     */
-    public function setOwner($owner)
-    {
-        $this->owner = $owner;
-    }
+  /**
+   * @param Member $owner
+   */
+  public function setOwner($owner) {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @return ScheduleCalendarSyncInfo[]
-     */
-    public function getSynchronizedEvents()
-    {
-        return $this->synchronized_events;
-    }
+  /**
+   * @return ScheduleCalendarSyncInfo[]
+   */
+  public function getSynchronizedEvents() {
+    return $this->synchronized_events;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isRevoked()
-    {
-        return $this->revoked;
-    }
+  /**
+   * @return bool
+   */
+  public function isRevoked() {
+    return $this->revoked;
+  }
 
-    /**
-     * @param bool $revoked
-     */
-    public function setRevoked($revoked)
-    {
-        $this->revoked = $revoked;
-    }
+  /**
+   * @param bool $revoked
+   */
+  public function setRevoked($revoked) {
+    $this->revoked = $revoked;
+  }
 
-    public function clearOwner(){
-        $this->owner = null;
-    }
-
+  public function clearOwner() {
+    $this->owner = null;
+  }
 }

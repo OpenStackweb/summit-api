@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitPresentationComment
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitPresentationCommentRepository extends IBaseRepository
-{
-
+interface ISummitPresentationCommentRepository extends IBaseRepository {
 }

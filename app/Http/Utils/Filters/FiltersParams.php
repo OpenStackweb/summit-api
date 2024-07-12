@@ -18,14 +18,13 @@ use Illuminate\Support\Facades\Request;
  * Class FiltersParams
  * @package App\Http\Utils\Filters
  */
-final class FiltersParams
-{
-    const FilterRequestParamName = 'filter';
-    public static function hasFilterParam():bool{
-        return Request::has(self::FilterRequestParamName);
-    }
+final class FiltersParams {
+  const FilterRequestParamName = "filter";
+  public static function hasFilterParam(): bool {
+    return Request::has(self::FilterRequestParamName);
+  }
 
-    public static function getFilterParam(){
-        return Request::input(self::FilterRequestParamName);
-    }
+  public static function getFilterParam() {
+    return Request::input(self::FilterRequestParamName);
+  }
 }

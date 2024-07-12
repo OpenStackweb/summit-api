@@ -16,19 +16,18 @@
  * Class TrackQuestionValueTemplateValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class TrackQuestionValueTemplateValidationRulesFactory
-{
-    public static function build(array $data, $update = false){
-        if($update){
-            return [
-                'value' => 'sometimes|string|max:255',
-                'label' => 'sometimes|string',
-                'order' => 'sometimes|integer|min:1',
-            ];
-        }
-        return [
-            'value' => 'required|string|max:255',
-            'label' => 'required|string',
-        ];
+final class TrackQuestionValueTemplateValidationRulesFactory {
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "value" => "sometimes|string|max:255",
+        "label" => "sometimes|string",
+        "order" => "sometimes|integer|min:1",
+      ];
     }
+    return [
+      "value" => "required|string|max:255",
+      "label" => "required|string",
+    ];
+  }
 }

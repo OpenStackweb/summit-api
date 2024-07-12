@@ -12,60 +12,58 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerSummitRegistrationPromoCodeRepository")
  * @ORM\Table(name="SpeakerSummitRegistrationPromoCode")
  * Class SpeakerSummitRegistrationPromoCode
  * @package models\summit
  */
-class SpeakerSummitRegistrationPromoCode
-    extends SummitRegistrationPromoCode
-    implements IOwnablePromoCode
-{
-    use SpeakerPromoCodeTrait;
+class SpeakerSummitRegistrationPromoCode extends SummitRegistrationPromoCode implements
+  IOwnablePromoCode {
+  use SpeakerPromoCodeTrait;
 
-    const ClassName = 'SPEAKER_PROMO_CODE';
+  const ClassName = "SPEAKER_PROMO_CODE";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
+
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "type" => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
+    "speaker_id" => "integer",
+  ];
+
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
+  }
+
+  public function hasOwner(): bool {
+    return $this->hasSpeaker();
+  }
+
+  public function getOwnerFullname(): string {
+    if (!$this->hasOwner()) {
+      return "";
     }
+    return $this->getSpeaker()->getFullName();
+  }
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-        'type'       => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
-        'speaker_id' => 'integer'
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
+  public function getOwnerEmail(): string {
+    if (!$this->hasOwner()) {
+      return "";
     }
+    return $this->getSpeaker()->getEmail();
+  }
 
-    public function hasOwner(): bool
-    {
-        return $this->hasSpeaker();
-    }
-
-    public function getOwnerFullname(): string
-    {
-        if(!$this->hasOwner()) return '';
-        return  $this->getSpeaker()->getFullName();
-    }
-
-    public function getOwnerEmail(): string
-    {
-        if(!$this->hasOwner()) return '';
-        return $this->getSpeaker()->getEmail();
-    }
-
-    public function getOwnerType(): string
-    {
-        return "SPEAKER";
-    }
+  public function getOwnerType(): string {
+    return "SPEAKER";
+  }
 }

@@ -16,8 +16,7 @@
  * Class SponsoredProjectScope
  * @package App\Security
  */
-final class SponsoredProjectScope
-{
-    const Read = '%s/sponsored-projects/read';
-    const Write = '%s/sponsored-projects/write';
+final class SponsoredProjectScope {
+  const Read = "%s/sponsored-projects/read";
+  const Write = "%s/sponsored-projects/write";
 }

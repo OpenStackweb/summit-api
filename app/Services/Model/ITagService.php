@@ -19,27 +19,26 @@ use models\main\Tag;
  * Interface ITagService
  * @package App\Services\Model
  */
-interface ITagService
-{
-    /**
-     * @param array $payload
-     * @return Tag
-     */
-    public function addTag(array $payload):Tag;
+interface ITagService {
+  /**
+   * @param array $payload
+   * @return Tag
+   */
+  public function addTag(array $payload): Tag;
 
-    /**
-     * @param int $tag_id
-     * @param array $payload
-     * @return Tag
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTag(int $tag_id, array $payload):Tag;
+  /**
+   * @param int $tag_id
+   * @param array $payload
+   * @return Tag
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTag(int $tag_id, array $payload): Tag;
 
-    /**
-     * @param int $tag_id
-     * @return void
-     * @throws EntityNotFoundException
-     */
-    public function deleteTag(int $tag_id);
+  /**
+   * @param int $tag_id
+   * @return void
+   * @throws EntityNotFoundException
+   */
+  public function deleteTag(int $tag_id);
 }

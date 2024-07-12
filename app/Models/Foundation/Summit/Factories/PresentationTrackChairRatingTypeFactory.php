@@ -18,27 +18,30 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTr
  * Class PresentationTrackChairRatingTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationTrackChairRatingTypeFactory
-{
-    /**
-     * @param array $data
-     * @return PresentationTrackChairRatingType
-     */
-    public static function build(array $data):PresentationTrackChairRatingType {
-        return self::populate(new PresentationTrackChairRatingType, $data);
-    }
+final class PresentationTrackChairRatingTypeFactory {
+  /**
+   * @param array $data
+   * @return PresentationTrackChairRatingType
+   */
+  public static function build(array $data): PresentationTrackChairRatingType {
+    return self::populate(new PresentationTrackChairRatingType(), $data);
+  }
 
-    /**
-     * @param PresentationTrackChairRatingType $entity
-     * @param array $data
-     * @return PresentationTrackChairRatingType
-     */
-    public static function populate(PresentationTrackChairRatingType $entity, array $data):PresentationTrackChairRatingType{
-
-        if(isset($data['name']))
-            $entity->setName(trim($data['name']));
-        if(isset($data['weight']))
-            $entity->setWeight(floatval($data['weight']));
-        return $entity;
+  /**
+   * @param PresentationTrackChairRatingType $entity
+   * @param array $data
+   * @return PresentationTrackChairRatingType
+   */
+  public static function populate(
+    PresentationTrackChairRatingType $entity,
+    array $data,
+  ): PresentationTrackChairRatingType {
+    if (isset($data["name"])) {
+      $entity->setName(trim($data["name"]));
     }
+    if (isset($data["weight"])) {
+      $entity->setWeight(floatval($data["weight"]));
+    }
+    return $entity;
+  }
 }

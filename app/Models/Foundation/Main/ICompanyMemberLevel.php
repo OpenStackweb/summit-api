@@ -16,22 +16,20 @@
  * Interface ICompanyMemberLevel
  * @package App\Models\Foundation\Main
  */
-interface ICompanyMemberLevel
-{
-    const Platinum = 'Platinum';
-    const Gold = 'Gold';
-    const StartUp = 'StartUp';
-    const Corporate = 'Corporate';
-    const Mention = 'Mention';
-    const None = 'None';
+interface ICompanyMemberLevel {
+  const Platinum = "Platinum";
+  const Gold = "Gold";
+  const StartUp = "StartUp";
+  const Corporate = "Corporate";
+  const Mention = "Mention";
+  const None = "None";
 
-    const ValidLevels = [
-        self::Platinum,
-        self::Gold,
-        self::StartUp,
-        self::Corporate,
-        self::Mention,
-        self::None
-    ];
-
+  const ValidLevels = [
+    self::Platinum,
+    self::Gold,
+    self::StartUp,
+    self::Corporate,
+    self::Mention,
+    self::None,
+  ];
 }

@@ -16,28 +16,26 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SupportingCompanySerializer
  * @package ModelSerializers
  */
-final class SupportingCompanySerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'CompanyId' => 'company_id:json_int',
-        'SponsorshipId' => 'sponsorship_type_id:json_int',
-        'Order' => 'order:json_int',
-    ];
+final class SupportingCompanySerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "CompanyId" => "company_id:json_int",
+    "SponsorshipId" => "sponsorship_type_id:json_int",
+    "Order" => "order:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'company' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'company_id',
-            'getter' => 'getCompany',
-            'has' => 'hasCompany',
-            'serializer_type' => SerializerRegistry::SerializerType_Admin,
-        ],
-        'sponsorship_type' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'sponsorship_type_id',
-            'getter' => 'getSponsorshipType',
-            'has' => 'hasSponsorshipType'
-        ]
-    ];
-
+  protected static $expand_mappings = [
+    "company" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "company_id",
+      "getter" => "getCompany",
+      "has" => "hasCompany",
+      "serializer_type" => SerializerRegistry::SerializerType_Admin,
+    ],
+    "sponsorship_type" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "sponsorship_type_id",
+      "getter" => "getSponsorshipType",
+      "has" => "hasSponsorshipType",
+    ],
+  ];
 }

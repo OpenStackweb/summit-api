@@ -20,47 +20,47 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Class ExtraQuestionAnswerSet
  * @package App\Models\Foundation\Main\ExtraQuestions
  */
-final class ExtraQuestionAnswerSet
-{
-    /**
-     * @var array;
-     */
-    private $snapshot = [];
+final class ExtraQuestionAnswerSet {
+  /**
+   * @var array;
+   */
+  private $snapshot = [];
 
-    /**
-     * @param ArrayCollection|array $collection
-     */
-    public function __construct($collection){
-        foreach ($collection as $answer){
-            $this->snapshot[$answer->getQuestion()->getId()] = $answer;
-        }
+  /**
+   * @param ArrayCollection|array $collection
+   */
+  public function __construct($collection) {
+    foreach ($collection as $answer) {
+      $this->snapshot[$answer->getQuestion()->getId()] = $answer;
     }
+  }
 
-    public function getAnswersToDelete():array{
-        $res = [];
-        foreach ($this->snapshot as $key => $val){
-            if($val->shouldDeleteIt())
-                $res[] = $val;
-        }
-        return $res;
+  public function getAnswersToDelete(): array {
+    $res = [];
+    foreach ($this->snapshot as $key => $val) {
+      if ($val->shouldDeleteIt()) {
+        $res[] = $val;
+      }
     }
+    return $res;
+  }
 
-    /**
-     * @param ExtraQuestionType $question
-     * @return ExtraQuestionAnswer|null
-     */
-    public function getAnswerFor(ExtraQuestionType $question):?ExtraQuestionAnswer {
-        return $this->snapshot[$question->getId()] ?? null;
-    }
+  /**
+   * @param ExtraQuestionType $question
+   * @return ExtraQuestionAnswer|null
+   */
+  public function getAnswerFor(ExtraQuestionType $question): ?ExtraQuestionAnswer {
+    return $this->snapshot[$question->getId()] ?? null;
+  }
 
-    public function serialize():array {
-        $res =[];
-        foreach ($this->snapshot as $question_id => $answer){
-            $res[] = [
-                'question_id' => intval($question_id),
-                'answer' => $answer->getValue(),
-            ];
-        }
-        return $res;
+  public function serialize(): array {
+    $res = [];
+    foreach ($this->snapshot as $question_id => $answer) {
+      $res[] = [
+        "question_id" => intval($question_id),
+        "answer" => $answer->getValue(),
+      ];
     }
+    return $res;
+  }
 }

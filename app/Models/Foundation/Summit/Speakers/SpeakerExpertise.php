@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,71 +19,64 @@ use models\utils\SilverstripeBaseModel;
  * Class SpeakerExpertise
  * @package models\summit
  */
-class SpeakerExpertise extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Expertise", type="string")
-     */
-    private $expertise;
+class SpeakerExpertise extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Expertise", type="string")
+   */
+  private $expertise;
 
-    /**
-     * SpeakerExpertise constructor.
-     * @param string $expertise
-     */
-    public function __construct($expertise)
-    {
-        parent::__construct();
-        $this->expertise = $expertise;
+  /**
+   * SpeakerExpertise constructor.
+   * @param string $expertise
+   */
+  public function __construct($expertise) {
+    parent::__construct();
+    $this->expertise = $expertise;
+  }
+
+  /**
+   * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="areas_of_expertise")
+   * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
+   * @var PresentationSpeaker
+   */
+  private $speaker;
+
+  /**
+   * @return string
+   */
+  public function getExpertise() {
+    return $this->expertise;
+  }
+
+  /**
+   * @param string $expertise
+   */
+  public function setExpertise($expertise) {
+    $this->expertise = $expertise;
+  }
+
+  /**
+   * @return PresentationSpeaker
+   */
+  public function getSpeaker() {
+    return $this->speaker;
+  }
+
+  /**
+   * @param PresentationSpeaker $speaker
+   */
+  public function setSpeaker($speaker) {
+    $this->speaker = $speaker;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSpeakerId() {
+    try {
+      return !is_null($this->speaker) ? $this->speaker->getId() : 0;
+    } catch (\Exception $ex) {
+      return 0;
     }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="areas_of_expertise")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
-     * @var PresentationSpeaker
-     */
-    private $speaker;
-
-    /**
-     * @return string
-     */
-    public function getExpertise()
-    {
-        return $this->expertise;
-    }
-
-    /**
-     * @param string $expertise
-     */
-    public function setExpertise($expertise)
-    {
-        $this->expertise = $expertise;
-    }
-
-    /**
-     * @return PresentationSpeaker
-     */
-    public function getSpeaker()
-    {
-        return $this->speaker;
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function setSpeaker($speaker)
-    {
-        $this->speaker = $speaker;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSpeakerId(){
-        try {
-            return !is_null($this->speaker) ? $this->speaker->getId() : 0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
+  }
 }

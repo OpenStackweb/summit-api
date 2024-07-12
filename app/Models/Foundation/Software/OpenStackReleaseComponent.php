@@ -13,7 +13,7 @@
  **/
 
 use App\Models\Utils\BaseEntity;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 /**
  * @ORM\Entity
@@ -21,95 +21,87 @@ use models\utils\One2ManyPropertyTrait;
  * Class OpenStackReleaseComponent
  * @package App\Models\Foundation\Software
  */
-class OpenStackReleaseComponent extends BaseEntity
-{
+class OpenStackReleaseComponent extends BaseEntity {
+  use One2ManyPropertyTrait;
 
-    use One2ManyPropertyTrait;
+  protected $getIdMappings = [
+    "getComponentId" => "component",
+    "getReleaseId" => "release",
+  ];
 
-    protected $getIdMappings = [
-        'getComponentId' => 'component',
-        'getReleaseId' => 'release',
-    ];
+  protected $hasPropertyMappings = [
+    "hasComponent" => "component",
+    "hasRelease" => "release",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasComponent' => 'component',
-        'hasRelease' => 'release',
-    ];
+  /**
+   * @ORM\Column(name="Adoption", type="integer")
+   * @var int
+   */
+  private $adoption;
 
-    /**
-     * @ORM\Column(name="Adoption", type="integer")
-     * @var int
-     */
-    private $adoption;
+  /**
+   * @ORM\Column(name="MaturityPoints", type="integer")
+   * @var int
+   */
+  private $maturity_points;
 
-    /**
-     * @ORM\Column(name="MaturityPoints", type="integer")
-     * @var int
-     */
-    private $maturity_points;
+  /**
+   * @ORM\Column(name="HasInstallationGuide", type="boolean")
+   * @var bool
+   */
+  private $has_installation_guide;
 
-    /**
-     * @ORM\Column(name="HasInstallationGuide", type="boolean")
-     * @var bool
-     */
-    private $has_installation_guide;
+  /**
+   * @ORM\ManyToOne(targetEntity="OpenStackRelease", fetch="EXTRA_LAZY", cascade={"persist"},  inversedBy="components")
+   * @ORM\JoinColumn(name="OpenStackReleaseID", referencedColumnName="ID")
+   * @var OpenStackRelease
+   */
+  private $release;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="OpenStackRelease", fetch="EXTRA_LAZY", cascade={"persist"},  inversedBy="components")
-     * @ORM\JoinColumn(name="OpenStackReleaseID", referencedColumnName="ID")
-     * @var OpenStackRelease
-     */
-    private $release;
+  /**
+   * @ORM\ManyToOne(targetEntity="OpenStackComponent", fetch="EXTRA_LAZY", cascade={"persist"})
+   * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
+   * @var OpenStackComponent
+   */
+  private $component;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="OpenStackComponent", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
-     * @var OpenStackComponent
-     */
-    private $component;
+  public function __construct() {
+    $this->has_installation_guide = false;
+  }
 
-    public function __construct()
-    {
-        $this->has_installation_guide = false;
-    }
+  /**
+   * @return int
+   */
+  public function getAdoption(): int {
+    return $this->adoption;
+  }
 
-    /**
-     * @return int
-     */
-    public function getAdoption(): int
-    {
-        return $this->adoption;
-    }
+  /**
+   * @return int
+   */
+  public function getMaturityPoints(): int {
+    return $this->maturity_points;
+  }
 
-    /**
-     * @return int
-     */
-    public function getMaturityPoints(): int
-    {
-        return $this->maturity_points;
-    }
+  /**
+   * @return bool
+   */
+  public function isHasInstallationGuide(): bool {
+    return $this->has_installation_guide;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isHasInstallationGuide(): bool
-    {
-        return $this->has_installation_guide;
-    }
+  /**
+   * @return OpenStackRelease
+   */
+  public function getRelease(): OpenStackRelease {
+    return $this->release;
+  }
 
-    /**
-     * @return OpenStackRelease
-     */
-    public function getRelease(): OpenStackRelease
-    {
-        return $this->release;
-    }
-
-    /**
-     * @return OpenStackComponent
-     */
-    public function getComponent(): OpenStackComponent
-    {
-        return $this->component;
-    }
+  /**
+   * @return OpenStackComponent
+   */
+  public function getComponent(): OpenStackComponent {
+    return $this->component;
+  }
 }

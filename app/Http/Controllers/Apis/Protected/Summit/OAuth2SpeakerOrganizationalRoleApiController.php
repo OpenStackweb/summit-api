@@ -22,50 +22,38 @@ use Illuminate\Support\Facades\Request;
  * Class OAuth2SpeakerOrganizationalRoleApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2ProtectedController
-{
+final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2ProtectedController {
+  /**
+   * OAuth2SpeakerOrganizationalRoleApiController constructor.
+   * @param ISpeakerOrganizationalRoleRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISpeakerOrganizationalRoleRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+  }
 
-    /**
-     * OAuth2SpeakerOrganizationalRoleApiController constructor.
-     * @param ISpeakerOrganizationalRoleRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISpeakerOrganizationalRoleRepository $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    try {
+      $roles = $this->repository->getDefaultOnes();
+      $response = new PagingResponse(count($roles), count($roles), 1, 1, $roles);
+
+      return $this->ok($response->toArray($expand = Request::input("expand", "")));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @return mixed
-     */
-    public function getAll()
-    {
-        try {
-            $roles = $this->repository->getDefaultOnes();
-            $response = new PagingResponse
-            (
-                count($roles),
-                count($roles),
-                1,
-                1,
-                $roles
-            );
-
-            return $this->ok($response->toArray($expand = Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  }
 }

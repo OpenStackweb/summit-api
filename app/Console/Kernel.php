@@ -22,83 +22,124 @@ use models\summit\CalendarSync\CalendarSyncInfo;
  * Class Kernel
  * @package App\Console
  */
-class Kernel extends ConsoleKernel
-{
-    /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array
-     */
-    protected $commands = [
-        \App\Console\Commands\SummitJsonGenerator::class,
-        \App\Console\Commands\ChatTeamMessagesSender::class,
-        \App\Console\Commands\SummitListJsonGenerator::class,
-        \App\Console\Commands\EventBritePromoCodesRedeemProcessor::class,
-        \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
-        \App\Console\Commands\ExternalScheduleFeedIngestionCommand::class,
-        \App\Console\Commands\SummitEventSetAvgRateProcessor::class,
-        \App\Console\Commands\RegistrationSummitOrderRevocationCommand::class,
-        \App\Console\Commands\RegistrationSummitOrderReminderEmailCommand::class,
-        \App\Console\Commands\SummitForwardXDays::class,
-        \App\Console\Commands\SummitEmailFlowEventSeederCommand::class,
-        \App\Console\Commands\SummitEmailFlowTypeSeederCommand::class,
-        \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
-        \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
-        \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
-        \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
-        \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
-        \App\Console\Commands\PurgeAuditLogCommand::class,
-        \App\Console\Commands\SummitBadgesQREncryptor::class,
-        \App\Console\Commands\CreateTestDBCommand::class,
-        \App\Console\Commands\SeedTestDataCommand::class,
-    ];
+class Kernel extends ConsoleKernel {
+  /**
+   * The Artisan commands provided by your application.
+   *
+   * @var array
+   */
+  protected $commands = [
+    \App\Console\Commands\SummitJsonGenerator::class,
+    \App\Console\Commands\ChatTeamMessagesSender::class,
+    \App\Console\Commands\SummitListJsonGenerator::class,
+    \App\Console\Commands\EventBritePromoCodesRedeemProcessor::class,
+    \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
+    \App\Console\Commands\ExternalScheduleFeedIngestionCommand::class,
+    \App\Console\Commands\SummitEventSetAvgRateProcessor::class,
+    \App\Console\Commands\RegistrationSummitOrderRevocationCommand::class,
+    \App\Console\Commands\RegistrationSummitOrderReminderEmailCommand::class,
+    \App\Console\Commands\SummitForwardXDays::class,
+    \App\Console\Commands\SummitEmailFlowEventSeederCommand::class,
+    \App\Console\Commands\SummitEmailFlowTypeSeederCommand::class,
+    \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
+    \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
+    \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
+    \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
+    \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
+    \App\Console\Commands\PurgeAuditLogCommand::class,
+    \App\Console\Commands\SummitBadgesQREncryptor::class,
+    \App\Console\Commands\CreateTestDBCommand::class,
+    \App\Console\Commands\SeedTestDataCommand::class,
+  ];
 
-    /**
-     * Define the application's command schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
-     */
-    protected function schedule(Schedule $schedule)
-    {
-        // regenerate available summits cache
+  /**
+   * Define the application's command schedule.
+   *
+   * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+   * @return void
+   */
+  protected function schedule(Schedule $schedule) {
+    // regenerate available summits cache
 
-        $env = App::environment();
+    $env = App::environment();
 
-        // summit json cache
-        $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+    // summit json cache
+    $schedule
+      ->command("summit:json-generator")
+      ->everyFiveMinutes()
+      ->withoutOverlapping()
+      ->onOneServer();
 
-        // list of available summits
-        $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+    // list of available summits
+    $schedule
+      ->command("summit-list:json-generator")
+      ->everyFiveMinutes()
+      ->withoutOverlapping()
+      ->onOneServer();
 
-        // redeem code processor
+    // redeem code processor
 
-        //$schedule->command('summit:promo-codes-redeem-processor', [end($summit_ids)])->daily()->withoutOverlapping();
+    //$schedule->command('summit:promo-codes-redeem-processor', [end($summit_ids)])->daily()->withoutOverlapping();
 
-        // bookable rooms
+    // bookable rooms
 
-        $schedule->command('summit:room-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer();
-        // external schedule ingestion task
+    $schedule
+      ->command("summit:room-reservation-revocation")
+      ->everyMinute()
+      ->withoutOverlapping()
+      ->onOneServer();
+    // external schedule ingestion task
 
-        $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
+    $schedule
+      ->command("summit:external-schedule-feed-ingestion-process")
+      ->everyFifteenMinutes()
+      ->withoutOverlapping()
+      ->onOneServer();
 
-        // AVG schedule feedback rate
-        $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
-        // registration orders
+    // AVG schedule feedback rate
+    $schedule
+      ->command("summit:feedback-avg-rate-processor")
+      ->everyFifteenMinutes()
+      ->withoutOverlapping()
+      ->onOneServer();
+    // registration orders
 
-        $schedule->command('summit:order-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer();
+    $schedule
+      ->command("summit:order-reservation-revocation")
+      ->everyMinute()
+      ->withoutOverlapping()
+      ->onOneServer();
 
-        // reminder emails
+    // reminder emails
 
-        $schedule->command('summit:registration-order-reminder-action-email')->everyThirtyMinutes()->timezone(new \DateTimeZone('UTC'))->withoutOverlapping()->onOneServer();
+    $schedule
+      ->command("summit:registration-order-reminder-action-email")
+      ->everyThirtyMinutes()
+      ->timezone(new \DateTimeZone("UTC"))
+      ->withoutOverlapping()
+      ->onOneServer();
 
-        if ($env == 'production') {
-            // FNTECH production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
-            $schedule->command("summit:forward-x-days", ["FNTECH", 13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
-            // FNTECH production Hybrid Alive (30) advance AT 0700 AM ( 12:00 AM PST)
-            $schedule->command("summit:forward-x-days", ["FNTECH", 30, 3, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
-        }
-
-        $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
+    if ($env == "production") {
+      // FNTECH production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
+      $schedule
+        ->command("summit:forward-x-days", ["FNTECH", 13, 2, "--check-ended"])
+        ->dailyAt("07:00")
+        ->timezone("UTC")
+        ->withoutOverlapping()
+        ->onOneServer();
+      // FNTECH production Hybrid Alive (30) advance AT 0700 AM ( 12:00 AM PST)
+      $schedule
+        ->command("summit:forward-x-days", ["FNTECH", 30, 3, "--check-ended"])
+        ->dailyAt("07:00")
+        ->timezone("UTC")
+        ->withoutOverlapping()
+        ->onOneServer();
     }
+
+    $schedule
+      ->command("summit:presentations-regenerate-media-uploads-temporal-public-urls")
+      ->everyMinute()
+      ->withoutOverlapping()
+      ->onOneServer();
+  }
 }

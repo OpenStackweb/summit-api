@@ -21,68 +21,62 @@ use utils\FilterMapping;
  * Class DoctrineNotInFilterMapping
  * @package App\Http\Utils\Filters
  */
-class DoctrineInFilterMapping  extends FilterMapping implements IQueryApplyable
-{
+class DoctrineInFilterMapping extends FilterMapping implements IQueryApplyable {
+  protected $main_operator;
 
-    protected $main_operator;
+  const Operator = "IN";
+  /**
+   * DoctrineFilterMapping constructor.
+   * @param string $condition
+   */
+  public function __construct($condition) {
+    $this->main_operator = Filter::MainOperatorAnd;
+    $this->operator = "IN";
+    parent::__construct("", $condition);
+  }
 
-    const Operator = 'IN';
-    /**
-     * DoctrineFilterMapping constructor.
-     * @param string $condition
-     */
-    public function __construct($condition)
-    {
-        $this->main_operator = Filter::MainOperatorAnd;
-        $this->operator = 'IN';
-        parent::__construct("", $condition);
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  public function toRawSQL(FilterElement $filter, array $bindings = []): string {
+    throw new \Exception();
+  }
+
+  private function buildWhere(QueryBuilder $query, FilterElement $filter): string {
+    $value = $filter->getValue();
+    if (!is_array($value)) {
+      $value = [$value];
     }
+    $param_count = $query->getParameters()->count() + 1;
+    $query->setParameter(":value_" . $param_count, $value);
+    return sprintf("%s %s ( :value_%s )", $this->where, static::Operator, $param_count);
+  }
 
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public function toRawSQL(FilterElement $filter, array $bindings = []):string
-    {
-        throw new \Exception;
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return QueryBuilder
+   */
+  public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder {
+    if ($this->main_operator === Filter::MainOperatorAnd) {
+      return $query->andWhere($this->buildWhere($query, $filter));
+    } else {
+      return $query->orWhere($this->buildWhere($query, $filter));
     }
+  }
 
-    private function buildWhere(QueryBuilder $query, FilterElement $filter):string{
-        $value = $filter->getValue();
-        if (!is_array($value)) {
-            $value = [$value];
-        }
-        $param_count = $query->getParameters()->count() + 1;
-        $query->setParameter(":value_" . $param_count, $value);
-        return sprintf("%s %s ( :value_%s )", $this->where, static::Operator, $param_count);
-    }
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return string
+   */
+  public function applyOr(QueryBuilder $query, FilterElement $filter): string {
+    return $this->buildWhere($query, $filter);
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return QueryBuilder
-     */
-    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
-    {
-        if($this->main_operator === Filter::MainOperatorAnd)
-            return $query->andWhere($this->buildWhere($query, $filter));
-        else
-            return $query->orWhere($this->buildWhere($query, $filter));
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return string
-     */
-    public function applyOr(QueryBuilder $query, FilterElement $filter): string
-    {
-        return $this->buildWhere($query, $filter);
-    }
-
-    public function setMainOperator(string $op): void
-    {
-        $this->main_operator = $op;
-    }
+  public function setMainOperator(string $op): void {
+    $this->main_operator = $op;
+  }
 }

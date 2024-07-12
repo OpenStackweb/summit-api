@@ -18,32 +18,28 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SummitBadgeViewTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitBadgeViewTypeValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class SummitBadgeViewTypeValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "required|single_word|max:50",
+      "description" => "required|string|max:255",
+      "is_default" => "required|boolean",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name' => 'required|single_word|max:50',
-            'description' => 'required|string|max:255',
-            'is_default' => 'required|boolean',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'name' => 'sometimes|single_word|max:50',
-            'description' => 'sometimes|string|max:255',
-            'is_default' => 'sometimes|boolean',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "name" => "sometimes|single_word|max:50",
+      "description" => "sometimes|string|max:255",
+      "is_default" => "sometimes|boolean",
+    ];
+  }
 }

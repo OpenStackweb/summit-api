@@ -16,29 +16,25 @@ use Illuminate\Queue\SerializesModels;
  * Class SummitAttendeeTicketAction
  * @package App\Events
  */
-abstract class SummitAttendeeTicketAction
-{
+abstract class SummitAttendeeTicketAction {
+  use SerializesModels;
+  /**
+   * @var int
+   */
+  private $ticket_id;
 
-    use SerializesModels;
-    /**
-     * @var int
-     */
-    private $ticket_id;
+  /**
+   * BookableRoomReservationAction constructor.
+   * @param int $order_id
+   */
+  public function __construct(int $ticket_id) {
+    $this->ticket_id = $ticket_id;
+  }
 
-    /**
-     * BookableRoomReservationAction constructor.
-     * @param int $order_id
-     */
-    public function __construct(int $ticket_id)
-    {
-        $this->ticket_id = $ticket_id;
-    }
-
-    /**
-     * @return int
-     */
-    public function getTicketId(): int
-    {
-        return $this->ticket_id;
-    }
+  /**
+   * @return int
+   */
+  public function getTicketId(): int {
+    return $this->ticket_id;
+  }
 }

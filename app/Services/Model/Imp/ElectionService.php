@@ -26,85 +26,100 @@ use models\main\Member;
  * Class ElectionService
  * @package App\Services\Model\Imp
  */
-final class ElectionService
-    extends AbstractService
-    implements IElectionService
-{
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+final class ElectionService extends AbstractService implements IElectionService {
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    public function __construct
-    (
-        IMemberRepository $member_repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->member_repository = $member_repository;
-    }
+  public function __construct(
+    IMemberRepository $member_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->member_repository = $member_repository;
+  }
 
-    /**
-     * @param Member $candidate
-     * @param Election $election
-     * @param array $payload
-     * @return Member
-     * @throws \Exception
-     */
-    public function updateCandidateProfile(Member $candidate, Election $election, array $payload): Member
-    {
-        return $this->tx_service->transaction(function() use($candidate, $election, $payload){
+  /**
+   * @param Member $candidate
+   * @param Election $election
+   * @param array $payload
+   * @return Member
+   * @throws \Exception
+   */
+  public function updateCandidateProfile(
+    Member $candidate,
+    Election $election,
+    array $payload,
+  ): Member {
+    return $this->tx_service->transaction(function () use ($candidate, $election, $payload) {
+      if (!$candidate->isFoundationMember()) {
+        throw new ValidationException("Candidate is not valid.");
+      }
 
-            if(!$candidate->isFoundationMember())
-                throw new ValidationException("Candidate is not valid.");
+      $candidateProfile = $election->getCandidancyFor($candidate);
 
-            $candidateProfile = $election->getCandidancyFor($candidate);
+      if (
+        !$election->isNominationsOpen() &&
+        !is_null($candidateProfile) &&
+        !$candidateProfile->isGoldMember()
+      ) {
+        throw new ValidationException("Eleciton Nominations are closed.");
+      }
 
-            if(!$election->isNominationsOpen() && !is_null($candidateProfile) && !$candidateProfile->isGoldMember()){
-                throw new ValidationException("Eleciton Nominations are closed.");
-            }
+      if (!$election->isOpen()) {
+        throw new ValidationException("Election is Closed.");
+      }
 
-            if(!$election->isOpen()){
-                throw new ValidationException("Election is Closed.");
-            }
+      if (is_null($candidateProfile)) {
+        $candidateProfile = $election->createCandidancy($candidate);
+      }
 
-            if(is_null($candidateProfile)){
-                $candidateProfile = $election->createCandidancy($candidate);
-            }
+      if (isset($payload["bio"])) {
+        $candidateProfile->setBio(trim($payload["bio"]));
+      }
+      if (isset($payload["boards_role"])) {
+        $candidateProfile->setBoardsRole(trim($payload["boards_role"]));
+      }
+      if (isset($payload["experience"])) {
+        $candidateProfile->setExperience(trim($payload["experience"]));
+      }
+      if (isset($payload["relationship_to_openstack"])) {
+        $candidateProfile->setRelationshipToOpenstack(trim($payload["relationship_to_openstack"]));
+      }
+      if (isset($payload["top_priority"])) {
+        $candidateProfile->setTopPriority(trim($payload["top_priority"]));
+      }
 
-            if(isset($payload['bio']))
-                $candidateProfile->setBio(trim($payload['bio']));
-            if(isset($payload['boards_role']))
-                $candidateProfile->setBoardsRole(trim($payload['boards_role']));
-            if(isset($payload['experience']))
-                $candidateProfile->setExperience(trim($payload['experience']));
-            if(isset($payload['relationship_to_openstack']))
-                $candidateProfile->setRelationshipToOpenstack(trim($payload['relationship_to_openstack']));
-            if(isset($payload['top_priority']))
-                $candidateProfile->setTopPriority(trim($payload['top_priority']));
+      return $candidate;
+    });
+  }
 
-            return $candidate;
-        });
-    }
+  /**
+   * @param Member $nominator
+   * @param int $candidate_id
+   * @param Election $election
+   * @return Nomination
+   * @throws \Exception
+   */
+  public function nominateCandidate(
+    Member $nominator,
+    int $candidate_id,
+    Election $election,
+  ): Nomination {
+    $nomination = $this->tx_service->transaction(function () use (
+      $nominator,
+      $candidate_id,
+      $election,
+    ) {
+      $candidate = $this->member_repository->getById($candidate_id);
+      if (is_null($candidate) || !$candidate instanceof Member) {
+        throw new EntityNotFoundException("Candidate not found.");
+      }
+      return $nominator->nominateCandidate($candidate, $election);
+    });
 
-    /**
-     * @param Member $nominator
-     * @param int $candidate_id
-     * @param Election $election
-     * @return Nomination
-     * @throws \Exception
-     */
-    public function nominateCandidate(Member $nominator, int $candidate_id, Election $election): Nomination
-    {
-        $nomination = $this->tx_service->transaction(function() use($nominator, $candidate_id, $election){
-            $candidate = $this->member_repository->getById($candidate_id);
-            if(is_null($candidate) || !$candidate instanceof Member)
-                throw new EntityNotFoundException("Candidate not found.");
-            return $nominator->nominateCandidate($candidate, $election);
-        });
-
-        NominationEmail::dispatch($election, $nomination->getCandidate());
-        return $nomination;
-    }
+    NominationEmail::dispatch($election, $nomination->getCandidate());
+    return $nomination;
+  }
 }

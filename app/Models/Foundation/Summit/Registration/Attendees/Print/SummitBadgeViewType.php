@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBadgeViewTypeRepository")
  * @ORM\AssociationOverrides({
@@ -25,92 +25,84 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitBadgeViewType
  * @package models\summit
  */
-class SummitBadgeViewType extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitBadgeViewType extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="IsDefault", type="boolean")
-     * @var bool
-     */
-    private $default;
+  /**
+   * @ORM\Column(name="IsDefault", type="boolean")
+   * @var bool
+   */
+  private $default;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->default = false;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->default = false;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription(): ?string {
+    return $this->description;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
-    }
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description): void {
+    $this->description = $description;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isDefault(): bool
-    {
-        return $this->default;
-    }
+  /**
+   * @return bool
+   */
+  public function isDefault(): bool {
+    return $this->default;
+  }
 
-    /**
-     * @param bool $default
-     */
-    public function setDefault(bool $default): void
-    {
-        $this->default = $default;
-    }
+  /**
+   * @param bool $default
+   */
+  public function setDefault(bool $default): void {
+    $this->default = $default;
+  }
 
-    /**
-     * @param Summit $summit
-     * @return SummitBadgeViewType
-     */
-    public static function buildDefaultCardType(Summit $summit):SummitBadgeViewType{
-        $card = new SummitBadgeViewType;
-        $card->setName("Card");
-        $card->setDefault(true);
-        $card->setDescription("Badge Card View Type");
-        $summit->addBadgeViewType($card);
-        return $card;
-    }
+  /**
+   * @param Summit $summit
+   * @return SummitBadgeViewType
+   */
+  public static function buildDefaultCardType(Summit $summit): SummitBadgeViewType {
+    $card = new SummitBadgeViewType();
+    $card->setName("Card");
+    $card->setDefault(true);
+    $card->setDescription("Badge Card View Type");
+    $summit->addBadgeViewType($card);
+    return $card;
+  }
 }

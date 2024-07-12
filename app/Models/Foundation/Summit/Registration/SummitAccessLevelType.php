@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAccessLevelTypeRepository")
@@ -26,108 +26,96 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Class SummitAccessLevelType
  * @package models\summit
  */
-class SummitAccessLevelType extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitAccessLevelType extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    const IN_PERSON = 'IN_PERSON';
-    const VIRTUAL = 'VIRTUAL';
-    const CHAT = 'CHAT';
+  const IN_PERSON = "IN_PERSON";
+  const VIRTUAL = "VIRTUAL";
+  const CHAT = "CHAT";
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="TemplateContent", type="string")
-     * @var string
-     */
-    private $template_content;
+  /**
+   * @ORM\Column(name="TemplateContent", type="string")
+   * @var string
+   */
+  private $template_content;
 
-    /**
-     * @ORM\Column(name="IsDefault", type="boolean")
-     * @var bool
-     */
-    private $is_default;
+  /**
+   * @ORM\Column(name="IsDefault", type="boolean")
+   * @var bool
+   */
+  private $is_default;
 
-    /**
-     * @return string
-     */
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName(): ?string {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription(): ?string {
+    return $this->description;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
-    }
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description): void {
+    $this->description = $description;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTemplateContent(): ?string
-    {
-        return $this->template_content;
-    }
+  /**
+   * @return string
+   */
+  public function getTemplateContent(): ?string {
+    return $this->template_content;
+  }
 
-    /**
-     * @param string $template_content
-     */
-    public function setTemplateContent(string $template_content): void
-    {
-        $this->template_content = $template_content;
-    }
+  /**
+   * @param string $template_content
+   */
+  public function setTemplateContent(string $template_content): void {
+    $this->template_content = $template_content;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isDefault(): bool
-    {
-        return $this->is_default;
-    }
+  /**
+   * @return bool
+   */
+  public function isDefault(): bool {
+    return $this->is_default;
+  }
 
-    /**
-     * @param bool $is_default
-     */
-    public function setIsDefault(bool $is_default): void
-    {
-        $this->is_default = $is_default;
-    }
+  /**
+   * @param bool $is_default
+   */
+  public function setIsDefault(bool $is_default): void {
+    $this->is_default = $is_default;
+  }
 
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->template_content = '';
-        $this->is_default = false;
-    }
-
+  public function __construct() {
+    parent::__construct();
+    $this->template_content = "";
+    $this->is_default = false;
+  }
 }

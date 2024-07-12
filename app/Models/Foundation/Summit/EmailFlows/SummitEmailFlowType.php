@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @ORM\Entity
@@ -20,64 +20,64 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Class DefaultTrackTagGroup
  * @package models\summit\DefaultTrackTagGroup
  */
-class SummitEmailFlowType extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\OneToMany(targetEntity="SummitEmailEventFlowType", mappedBy="flow", cascade={"persist"}, orphanRemoval=true)
-     * @var SummitEmailEventFlowType[]
-     */
-    private $flow_event_types;
+class SummitEmailFlowType extends SilverstripeBaseModel {
+  /**
+   * @ORM\OneToMany(targetEntity="SummitEmailEventFlowType", mappedBy="flow", cascade={"persist"}, orphanRemoval=true)
+   * @var SummitEmailEventFlowType[]
+   */
+  private $flow_event_types;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * SummitEmailFlowType constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->flow_event_types = new ArrayCollection();
+  /**
+   * SummitEmailFlowType constructor.
+   */
+  public function __construct() {
+    parent::__construct();
+    $this->flow_event_types = new ArrayCollection();
+  }
+
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
+
+  /**
+   * @param SummitEmailEventFlowType $event_type
+   */
+  public function addFlowEventType(SummitEmailEventFlowType $event_type) {
+    if ($this->flow_event_types->contains($event_type)) {
+      return;
     }
+    $this->flow_event_types->add($event_type);
+    $event_type->setFlow($this);
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
+  public function removeFlowEventType(SummitEmailEventFlowType $event_type) {
+    if (!$this->flow_event_types->contains($event_type)) {
+      return;
     }
+    $this->flow_event_types->removeElement($event_type);
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  public function clearFlowEventType() {
+    $this->flow_event_types->clear();
+  }
 
-    /**
-     * @param SummitEmailEventFlowType $event_type
-     */
-    public function addFlowEventType(SummitEmailEventFlowType $event_type){
-        if($this->flow_event_types->contains($event_type)) return;
-        $this->flow_event_types->add($event_type);
-        $event_type->setFlow($this);
-    }
-
-    public function removeFlowEventType(SummitEmailEventFlowType $event_type){
-        if(!$this->flow_event_types->contains($event_type)) return;
-        $this->flow_event_types->removeElement($event_type);
-    }
-
-    public function clearFlowEventType(){
-        $this->flow_event_types->clear();
-    }
-
-    public function getEventTypes(){
-        return $this->flow_event_types;
-    }
+  public function getEventTypes() {
+    return $this->flow_event_types;
+  }
 }

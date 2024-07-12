@@ -13,7 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use App\Models\Utils\BaseEntity;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
@@ -32,75 +32,68 @@ use models\utils\One2ManyPropertyTrait;
  * Class FeaturedSpeaker
  * @package App\Models\Foundation\Summit\Speakers
  */
-class FeaturedSpeaker extends BaseEntity implements IOrderable
-{
-    use SummitOwned;
+class FeaturedSpeaker extends BaseEntity implements IOrderable {
+  use SummitOwned;
 
-    use One2ManyPropertyTrait;
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getSpeakerId' => 'speaker',
-    ];
+  protected $getIdMappings = [
+    "getSpeakerId" => "speaker",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSpeaker' => 'speaker',
-    ];
+  protected $hasPropertyMappings = [
+    "hasSpeaker" => "speaker",
+  ];
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var PresentationSpeaker
-     */
-    private $speaker;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var PresentationSpeaker
+   */
+  private $speaker;
 
-    /**
-     * @param Summit $summit
-     * @param PresentationSpeaker $speaker
-     * @param int $order
-     */
-    public function __construct(Summit $summit, PresentationSpeaker $speaker, int $order)
-    {
-        $this->summit = $summit;
-        $this->speaker = $speaker;
-        $this->order = $order;
-    }
+  /**
+   * @param Summit $summit
+   * @param PresentationSpeaker $speaker
+   * @param int $order
+   */
+  public function __construct(Summit $summit, PresentationSpeaker $speaker, int $order) {
+    $this->summit = $summit;
+    $this->speaker = $speaker;
+    $this->order = $order;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder(): int {
+    return $this->order;
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order): void
-    {
-        $this->order = $order;
-    }
+  /**
+   * @param int $order
+   */
+  public function setOrder($order): void {
+    $this->order = $order;
+  }
 
-    /**
-     * @return PresentationSpeaker
-     */
-    public function getSpeaker(): ?PresentationSpeaker
-    {
-        return $this->speaker;
-    }
+  /**
+   * @return PresentationSpeaker
+   */
+  public function getSpeaker(): ?PresentationSpeaker {
+    return $this->speaker;
+  }
 
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function setSpeaker(PresentationSpeaker $speaker): void
-    {
-        $this->speaker = $speaker;
-    }
-
+  /**
+   * @param PresentationSpeaker $speaker
+   */
+  public function setSpeaker(PresentationSpeaker $speaker): void {
+    $this->speaker = $speaker;
+  }
 }

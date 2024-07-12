@@ -25,54 +25,66 @@ use utils\Filter;
  * Class DoctrineSponsorRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSponsorRepository extends SilverStripeDoctrineRepository
-implements ISponsorRepository
-{
+final class DoctrineSponsorRepository extends SilverStripeDoctrineRepository implements
+  ISponsorRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "sponsor_id" => new DoctrineFilterMapping("e.id :operator :value"),
+      "company_name" => new DoctrineJoinFilterMapping("e.company", "c", "c.name :operator :value"),
+      "sponsorship_name" => new DoctrineJoinFilterMapping(
+        "e.sponsorship",
+        "sp",
+        "sp.name :operator :value",
+      ),
+      "sponsorship_label" => new DoctrineJoinFilterMapping(
+        "e.sponsorship",
+        "sp",
+        "sp.label :operator :value",
+      ),
+      "sponsorship_size" => new DoctrineJoinFilterMapping(
+        "e.sponsorship",
+        "sp",
+        "sp.size :operator :value",
+      ),
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+      "badge_scans_count" => new DoctrineHavingFilterMapping(
+        "",
+        "bs.sponsor",
+        "count(bs.id) :operator :value",
+      ),
+      "is_published" => Filter::buildBooleanField("e.is_published"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'sponsor_id'        => new DoctrineFilterMapping("e.id :operator :value"),
-            'company_name'      => new DoctrineJoinFilterMapping("e.company", "c" ,"c.name :operator :value"),
-            'sponsorship_name'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.name :operator :value"),
-            'sponsorship_label' => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.label :operator :value"),
-            'sponsorship_size'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.size :operator :value"),
-            'summit_id'         => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
-            'badge_scans_count' => new DoctrineHavingFilterMapping("", "bs.sponsor", "count(bs.id) :operator :value"),
-            'is_published' => Filter::buildBooleanField('e.is_published'),
-        ];
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    if ($filter->hasFilter("badge_scans_count")) {
+      $query = $query->leftJoin("e.user_info_grants", "bs");
     }
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        if($filter->hasFilter("badge_scans_count"))
-            $query = $query->leftJoin("e.user_info_grants", "bs");
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+      "order" => "e.order",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'name'  => 'e.name',
-            'order' => 'e.order',
-        ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return Sponsor::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Sponsor::class;
+  }
 }

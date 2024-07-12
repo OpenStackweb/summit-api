@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISponsorUserInfoGrantRepository
  * @package models\summit
  */
-interface ISponsorUserInfoGrantRepository extends IBaseRepository
-{
-
+interface ISponsorUserInfoGrantRepository extends IBaseRepository {
 }

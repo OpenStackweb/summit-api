@@ -17,7 +17,5 @@ use models\utils\IBaseRepository;
  * Interface IPresentationTrackChairScoreTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IPresentationTrackChairScoreTypeRepository extends IBaseRepository
-{
-
+interface IPresentationTrackChairScoreTypeRepository extends IBaseRepository {
 }

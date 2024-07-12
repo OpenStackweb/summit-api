@@ -16,28 +16,31 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTr
  * Class PresentationTrackChairScoreTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationTrackChairScoreTypeFactory
-{
-    /**
-     * @param array $data
-     * @return PresentationTrackChairScoreType
-     */
-    public static function build(array $data):PresentationTrackChairScoreType {
-        return self::populate(new PresentationTrackChairScoreType, $data);
+final class PresentationTrackChairScoreTypeFactory {
+  /**
+   * @param array $data
+   * @return PresentationTrackChairScoreType
+   */
+  public static function build(array $data): PresentationTrackChairScoreType {
+    return self::populate(new PresentationTrackChairScoreType(), $data);
+  }
+
+  /**
+   * @param PresentationTrackChairScoreType $entity
+   * @param array $data
+   * @return PresentationTrackChairScoreType
+   */
+  public static function populate(
+    PresentationTrackChairScoreType $entity,
+    array $data,
+  ): PresentationTrackChairScoreType {
+    if (isset($data["name"])) {
+      $entity->setName(trim($data["name"]));
+    }
+    if (isset($data["description"])) {
+      $entity->setDescription(trim($data["description"]));
     }
 
-    /**
-     * @param PresentationTrackChairScoreType $entity
-     * @param array $data
-     * @return PresentationTrackChairScoreType
-     */
-    public static function populate(PresentationTrackChairScoreType $entity, array $data):PresentationTrackChairScoreType{
-
-        if(isset($data['name']))
-            $entity->setName(trim($data['name']));
-        if(isset($data['description']))
-            $entity->setDescription(trim($data['description']));
-
-        return $entity;
-    }
+    return $entity;
+  }
 }

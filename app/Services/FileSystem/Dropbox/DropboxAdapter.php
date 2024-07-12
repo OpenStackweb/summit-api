@@ -19,38 +19,41 @@ use Exception;
  * Class DropboxAdapter
  * @package App\Services\FileSystem\Dropbox
  */
-final class DropboxAdapter extends BaseDropboxAdapter
-{
-    public function getUrl(string $path): string
-    {
-        Log::debug(sprintf("DropboxAdapter::getUrl %s", $path));
-        $client = $this->client;
+final class DropboxAdapter extends BaseDropboxAdapter {
+  public function getUrl(string $path): string {
+    Log::debug(sprintf("DropboxAdapter::getUrl %s", $path));
+    $client = $this->client;
+    try {
+      // default visibility is RequestedVisibility.public.
+      $res = $client->createSharedLinkWithSettings($path);
+      return $res["url"];
+    } catch (BadRequestException $ex) {
+      Log::warning(
+        sprintf("DropboxAdapter::getUrl %s code %s", $ex->getMessage(), $ex->dropboxCode),
+      );
+      if ($ex->dropboxCode === "shared_link_already_exists") {
         try {
-            // default visibility is RequestedVisibility.public.
-            $res = $client->createSharedLinkWithSettings($path);
-            return $res['url'];
-        }
-        catch (BadRequestException $ex){
-            Log::warning(sprintf("DropboxAdapter::getUrl %s code %s", $ex->getMessage(), $ex->dropboxCode));
-            if($ex->dropboxCode === 'shared_link_already_exists')
-            {
-                try {
-                    Log::debug(sprintf("DropboxAdapter::getUrl getting list of shared links for %s", $path));
-                    $res = $client->listSharedLinks($path);
-                    foreach ($res as $entry) {
-                        Log::debug(sprintf("DropboxAdapter::getUrl getting list of shared links for %s entry %s", $path, json_encode($entry)));
-                        if($entry['.tag'] === 'file' )
-                            return $entry['url'];
-                    }
-                }
-                catch (Exception $ex){
-                    Log::warning($ex);
-                }
+          Log::debug(sprintf("DropboxAdapter::getUrl getting list of shared links for %s", $path));
+          $res = $client->listSharedLinks($path);
+          foreach ($res as $entry) {
+            Log::debug(
+              sprintf(
+                "DropboxAdapter::getUrl getting list of shared links for %s entry %s",
+                $path,
+                json_encode($entry),
+              ),
+            );
+            if ($entry[".tag"] === "file") {
+              return $entry["url"];
             }
+          }
+        } catch (Exception $ex) {
+          Log::warning($ex);
         }
-        catch (Exception $ex){
-            Log::error($ex);
-        }
-        return '#';
+      }
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
+    return "#";
+  }
 }

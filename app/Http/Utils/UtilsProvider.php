@@ -17,17 +17,14 @@ use Illuminate\Support\Facades\App;
  * Class UtilsProvider
  * @package App\Http\Utils
  */
-final class UtilsProvider extends ServiceProvider
-{
-    protected $defer = false;
+final class UtilsProvider extends ServiceProvider {
+  protected $defer = false;
 
-    public function boot()
-    {
-    }
+  public function boot() {
+  }
 
-    public function register()
-    {
-        // file uploadedr service
-        App::singleton(IFileUploader ::class, FileUploader::class);
-    }
+  public function register() {
+    // file uploadedr service
+    App::singleton(IFileUploader::class, FileUploader::class);
+  }
 }

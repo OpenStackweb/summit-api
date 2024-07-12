@@ -18,15 +18,13 @@ use App\Jobs\Emails\AbstractExcerptEmailJob;
  * Class InvitationExcerptEmail
  * @package App\Jobs\Emails\Registration\Attendees
  */
-class InvitationExcerptEmail extends AbstractExcerptEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class InvitationExcerptEmail extends AbstractExcerptEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_INVITATION_EXCERPT';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_INVITATION_EXCERPT';
-    const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_INVITATION_EXCERPT';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_INVITATION_EXCERPT";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_INVITATION_EXCERPT";
+  const DEFAULT_TEMPLATE = "SUMMIT_REGISTRATION_INVITATION_EXCERPT";
 }

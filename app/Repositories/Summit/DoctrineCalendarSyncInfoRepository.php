@@ -20,16 +20,12 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * Class DoctrineCalendarSyncInfoRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineCalendarSyncInfoRepository
-    extends SilverStripeDoctrineRepository
-    implements ICalendarSyncInfoRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return CalendarSyncInfo::class;
-    }
+final class DoctrineCalendarSyncInfoRepository extends SilverStripeDoctrineRepository implements
+  ICalendarSyncInfoRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return CalendarSyncInfo::class;
+  }
 }

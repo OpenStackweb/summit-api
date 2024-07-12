@@ -21,52 +21,50 @@ use models\summit\PresentationSpeaker;
  * @package App\Repositories\Summit
  */
 final class DoctrineSpeakerEditPermissionRequestRepository
-    extends SilverStripeDoctrineRepository
-    implements ISpeakerEditPermissionRequestRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISpeakerEditPermissionRequestRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SpeakerEditPermissionRequest::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SpeakerEditPermissionRequest::class;
-    }
+  /**
+   * @param PresentationSpeaker $speaker
+   * @param Member $requestor
+   * @return ?SpeakerEditPermissionRequest
+   */
+  public function getBySpeakerAndRequestor(
+    PresentationSpeaker $speaker,
+    Member $requestor,
+  ): ?SpeakerEditPermissionRequest {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(SpeakerEditPermissionRequest::class, "r")
+      ->where("r.speaker = :speaker")
+      ->andWhere("r.requested_by = :requestor")
+      ->setParameter("speaker", $speaker)
+      ->setParameter("requestor", $requestor)
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param Member $requestor
-     * @return ?SpeakerEditPermissionRequest
-     */
-    public function getBySpeakerAndRequestor(PresentationSpeaker $speaker, Member $requestor): ?SpeakerEditPermissionRequest
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(SpeakerEditPermissionRequest::class, "r")
-            ->where("r.speaker = :speaker")
-            ->andWhere("r.requested_by = :requestor")
-            ->setParameter("speaker", $speaker)
-            ->setParameter("requestor", $requestor)
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    /**
-     * @param string $token
-     * @return ?SpeakerEditPermissionRequest
-     */
-    public function getByToken(string $token): ?SpeakerEditPermissionRequest
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(SpeakerEditPermissionRequest::class, "r")
-            ->where("r.hash = :hash")
-            ->setParameter("hash", SpeakerEditPermissionRequest::HashConfirmationToken($token))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+  /**
+   * @param string $token
+   * @return ?SpeakerEditPermissionRequest
+   */
+  public function getByToken(string $token): ?SpeakerEditPermissionRequest {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(SpeakerEditPermissionRequest::class, "r")
+      ->where("r.hash = :hash")
+      ->setParameter("hash", SpeakerEditPermissionRequest::HashConfirmationToken($token))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 }

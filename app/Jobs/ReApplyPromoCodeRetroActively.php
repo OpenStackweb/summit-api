@@ -24,38 +24,37 @@ use services\model\ISummitPromoCodeService;
  * Class ReApplyPromoCodeRetroActively
  * @package App\Jobs
  */
-final class ReApplyPromoCodeRetroActively implements ShouldQueue
-{
-    public $tries = 1;
+final class ReApplyPromoCodeRetroActively implements ShouldQueue {
+  public $tries = 1;
 
-    public $timeout = 0;
+  public $timeout = 0;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $promo_code_id;
+  /**
+   * @var int
+   */
+  private $promo_code_id;
 
-    /**
-     * @param int $promo_code_id
-     */
-    public function __construct(int $promo_code_id)
-    {
-        $this->promo_code_id = $promo_code_id;
-    }
+  /**
+   * @param int $promo_code_id
+   */
+  public function __construct(int $promo_code_id) {
+    $this->promo_code_id = $promo_code_id;
+  }
 
-    /**
-     * @param ISummitPromoCodeService $service
-     * @throws \models\exceptions\EntityNotFoundException
-     */
-    public function handle(ISummitPromoCodeService $service){
-        Log::debug(sprintf( "ReApplyPromoCodeRetroActively::handle promo code id %s", $this->promo_code_id));
-        $service->reApplyPromoCode($this->promo_code_id);
-    }
+  /**
+   * @param ISummitPromoCodeService $service
+   * @throws \models\exceptions\EntityNotFoundException
+   */
+  public function handle(ISummitPromoCodeService $service) {
+    Log::debug(
+      sprintf("ReApplyPromoCodeRetroActively::handle promo code id %s", $this->promo_code_id),
+    );
+    $service->reApplyPromoCode($this->promo_code_id);
+  }
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }

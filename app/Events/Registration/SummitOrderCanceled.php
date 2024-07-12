@@ -16,64 +16,60 @@
  * Class SummitOrderCanceled
  * @package App\Events
  */
-final class SummitOrderCanceled extends SummitRegistrationOrderAction
-{
+final class SummitOrderCanceled extends SummitRegistrationOrderAction {
+  /**
+   * @var array
+   */
+  private $tickets_to_return;
 
-    /**
-     * @var array
-     */
-    private $tickets_to_return;
+  /**
+   * @var array
+   */
+  private $promo_codes_to_return;
 
-    /**
-     * @var array
-     */
-    private $promo_codes_to_return;
+  /**
+   * @var bool
+   */
+  private $send_email;
 
-    /**
-     * @var bool
-     */
-    private $send_email;
+  /**
+   * SummitOrderCanceled constructor.
+   * @param int $order_id
+   * @param bool $send_email
+   * @param array $tickets_to_return
+   * @param array $promo_codes_to_return
+   */
+  public function __construct(
+    int $order_id,
+    bool $send_email,
+    array $tickets_to_return,
+    array $promo_codes_to_return,
+  ) {
+    parent::__construct($order_id);
 
-    /**
-     * SummitOrderCanceled constructor.
-     * @param int $order_id
-     * @param bool $send_email
-     * @param array $tickets_to_return
-     * @param array $promo_codes_to_return
-     */
-    public function __construct(int $order_id, bool $send_email, array $tickets_to_return, array $promo_codes_to_return)
-    {
-        parent::__construct($order_id);
+    $this->send_email = $send_email;
+    $this->tickets_to_return = $tickets_to_return;
+    $this->promo_codes_to_return = $promo_codes_to_return;
+  }
 
-        $this->send_email = $send_email;
-        $this->tickets_to_return = $tickets_to_return;
-        $this->promo_codes_to_return = $promo_codes_to_return;
-    }
+  /**
+   * @return bool
+   */
+  public function shouldSendEmail(): bool {
+    return $this->send_email;
+  }
 
-    /**
-     * @return bool
-     */
-    public function shouldSendEmail(): bool
-    {
-        return $this->send_email;
-    }
-    
-    /**
-     * @return array
-     */
-    public function getTicketsToReturn(): array
-    {
-        return $this->tickets_to_return;
-    }
+  /**
+   * @return array
+   */
+  public function getTicketsToReturn(): array {
+    return $this->tickets_to_return;
+  }
 
-    /**
-     * @return array
-     */
-    public function getPromoCodesToReturn(): array
-    {
-        return $this->promo_codes_to_return;
-    }
-
-
-
+  /**
+   * @return array
+   */
+  public function getPromoCodesToReturn(): array {
+    return $this->promo_codes_to_return;
+  }
 }

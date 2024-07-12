@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -21,98 +21,94 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\Table(name="SummitSchedulePreFilterElementConfig")
  * @package models\summit
  */
-class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getConfigId' => 'config',
-    ];
+  protected $getIdMappings = [
+    "getConfigId" => "config",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasConfig' => 'config',
-    ];
+  protected $hasPropertyMappings = [
+    "hasConfig" => "config",
+  ];
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  private $type;
 
-    /**
-     * @ORM\Column(name="Values", type="string")
-     * @var string
-     */
-    private $values;
+  /**
+   * @ORM\Column(name="Values", type="string")
+   * @var string
+   */
+  private $values;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="pre_filters")
-     * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
-     * @var SummitScheduleConfig
-     */
-    protected $config;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="pre_filters")
+   * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
+   * @var SummitScheduleConfig
+   */
+  protected $config;
 
-    /**
-     * @return SummitScheduleConfig
-     */
-    public function getConfig(): SummitScheduleConfig
-    {
-        return $this->config;
+  /**
+   * @return SummitScheduleConfig
+   */
+  public function getConfig(): SummitScheduleConfig {
+    return $this->config;
+  }
+
+  /**
+   * @param SummitScheduleConfig $config
+   */
+  public function setConfig(SummitScheduleConfig $config): void {
+    $this->config = $config;
+  }
+
+  public function clearConfig() {
+    $this->config = null;
+  }
+
+  /**
+   * @return array
+   */
+  public function getValues(): array {
+    if (empty($this->values)) {
+      return [];
     }
-
-    /**
-     * @param SummitScheduleConfig $config
-     */
-    public function setConfig(SummitScheduleConfig $config): void
-    {
-        $this->config = $config;
+    $res = explode(",", $this->values);
+    if ($this->hasNumericValues()) {
+      $res = array_map("intval", $res);
     }
+    return $res;
+  }
 
-    public function clearConfig(){
-        $this->config = null;
-    }
+  /**
+   * @param array $values
+   */
+  public function setValues(array $values): void {
+    $this->values = implode(",", $values);
+  }
 
-    /**
-     * @return array
-     */
-    public function getValues(): array
-    {
-        if(empty($this->values)) return [];
-        $res = explode(",", $this->values);
-        if($this->hasNumericValues()){
-            $res = array_map('intval', $res);
-        }
-        return $res;
-    }
+  private function hasNumericValues(): bool {
+    return in_array($this->type, SummitScheduleFilterElementConfig::NumericTypes);
+  }
 
-    /**
-     * @param array $values
-     */
-    public function setValues(array $values): void
-    {
-        $this->values = implode(',', $values);
-    }
+  /**
+   * @return string
+   */
+  public function getType(): string {
+    return $this->type;
+  }
 
-    private function hasNumericValues():bool{
-        return (in_array($this->type,SummitScheduleFilterElementConfig::NumericTypes));
+  /**
+   * @param string $type
+   * @throws ValidationException
+   */
+  public function setType(string $type): void {
+    if (!in_array($type, SummitScheduleFilterElementConfig::AllowedTypes)) {
+      throw new ValidationException(sprintf("Type %s is not valid.", $type));
     }
-
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string $type
-     * @throws ValidationException
-     */
-    public function setType(string $type): void
-    {
-        if(!in_array($type, SummitScheduleFilterElementConfig::AllowedTypes))
-            throw new ValidationException(sprintf("Type %s is not valid.", $type));
-        $this->type = $type;
-    }
+    $this->type = $type;
+  }
 }

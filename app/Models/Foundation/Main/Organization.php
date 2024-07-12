@@ -19,26 +19,23 @@ use models\utils\SilverstripeBaseModel;
  * Class Organization
  * @package models\main
  */
-class Organization extends SilverstripeBaseModel
-{
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+class Organization extends SilverstripeBaseModel {
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @param string $name
+   */
+  public function setName($name) {
+    $this->name = $name;
+  }
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 }

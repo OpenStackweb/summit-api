@@ -26,58 +26,59 @@ use utils\FilterParser;
  * Class ProcessSubmissionsInvitationsJob
  * @package App\Jobs
  */
-final class ProcessSubmissionsInvitationsJob
-    implements ShouldQueue
-{
-    public $tries = 1;
+final class ProcessSubmissionsInvitationsJob implements ShouldQueue {
+  public $tries = 1;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $summit_id;
+  private $summit_id;
 
-    private $payload;
+  private $payload;
 
-    private $filter;
+  private $filter;
 
-    /**
-     * ProcessRegistrationInvitationsJob constructor.
-     * @param Summit $summit
-     * @param array $payload
-     * @param $filter
-     */
-    public function __construct(Summit $summit, array $payload, $filter)
-    {
-        $this->summit_id = $summit->getId();
-        $this->payload = $payload;
-        $this->filter = $filter;
-    }
+  /**
+   * ProcessRegistrationInvitationsJob constructor.
+   * @param Summit $summit
+   * @param array $payload
+   * @param $filter
+   */
+  public function __construct(Summit $summit, array $payload, $filter) {
+    $this->summit_id = $summit->getId();
+    $this->payload = $payload;
+    $this->filter = $filter;
+  }
 
-    /**
-     * @param ISummitSubmissionInvitationService $service
-     * @throws \utils\FilterParserException
-     */
-    public function handle(ISummitSubmissionInvitationService $service)
-    {
+  /**
+   * @param ISummitSubmissionInvitationService $service
+   * @throws \utils\FilterParserException
+   */
+  public function handle(ISummitSubmissionInvitationService $service) {
+    Log::debug(sprintf("ProcessSubmissionsInvitationsJob::handle summit id %s", $this->summit_id));
 
-        Log::debug(sprintf("ProcessSubmissionsInvitationsJob::handle summit id %s", $this->summit_id));
+    $filter = !is_null($this->filter)
+      ? FilterParser::parse($this->filter, [
+        "id" => ["=="],
+        "not_id" => ["=="],
+        "is_sent" => ["=="],
+        "email" => ["@@", "=@", "=="],
+        "first_name" => ["@@", "=@", "=="],
+        "last_name" => ["@@", "=@", "=="],
+        "tags" => ["@@", "=@", "=="],
+        "tags_id" => ["=="],
+      ])
+      : null;
 
-        $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'id' => ['=='],
-            'not_id' => ['=='],
-            'is_sent' => ['=='],
-            'email' => ['@@', '=@', '=='],
-            'first_name' => ['@@', '=@', '=='],
-            'last_name' => ['@@', '=@', '=='],
-            'tags' => ['@@', '=@', '=='],
-            'tags_id' => ['=='],
-        ]) : null;
+    $service->send($this->summit_id, $this->payload, $filter);
 
-        $service->send($this->summit_id, $this->payload, $filter);
-
-        Log::debug(sprintf("ProcessSubmissionsInvitationsJob::handle summit id %s has finished", $this->summit_id));
-
-    }
+    Log::debug(
+      sprintf(
+        "ProcessSubmissionsInvitationsJob::handle summit id %s has finished",
+        $this->summit_id,
+      ),
+    );
+  }
 }

@@ -15,166 +15,170 @@
 use models\exceptions\ValidationException;
 use models\main\Member;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * Trait MemberPromoCodeTrait
  * @package models\summit
  */
-trait MemberPromoCodeTrait
-{
-     /**
-     * @ORM\Column(name="FirstName", type="string")
-     * @var string
-     */
-    protected $first_name;
+trait MemberPromoCodeTrait {
+  /**
+   * @ORM\Column(name="FirstName", type="string")
+   * @var string
+   */
+  protected $first_name;
 
-    /**
-     * @ORM\Column(name="LastName", type="string")
-     * @var string
-     */
-    protected $last_name;
+  /**
+   * @ORM\Column(name="LastName", type="string")
+   * @var string
+   */
+  protected $last_name;
 
-    /**
-     * @ORM\Column(name="Email", type="string")
-     * @var string
-     */
-    protected $email;
+  /**
+   * @ORM\Column(name="Email", type="string")
+   * @var string
+   */
+  protected $email;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    protected $type;
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  protected $type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
-     * @var Member
-     */
-    protected $owner;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
+   * @var Member
+   */
+  protected $owner;
 
-    /**
-     * @return mixed
-     */
-    public function getFirstName()
-    {
-        return $this->first_name;
+  /**
+   * @return mixed
+   */
+  public function getFirstName() {
+    return $this->first_name;
+  }
+
+  /**
+   * @param mixed $first_name
+   */
+  public function setFirstName($first_name) {
+    $this->first_name = $first_name;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLastName() {
+    return $this->last_name;
+  }
+
+  /**
+   * @param string $last_name
+   */
+  public function setLastName($last_name) {
+    $this->last_name = $last_name;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getEmail() {
+    if (!empty($this->email)) {
+      return $this->email;
     }
-
-    /**
-     * @param mixed $first_name
-     */
-    public function setFirstName($first_name)
-    {
-        $this->first_name = $first_name;
+    if ($this->hasOwner()) {
+      return $this->getOwner()->getEmail();
     }
+    return null;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLastName()
-    {
-        return $this->last_name;
+  public function getFullName() {
+    $fullname = $this->first_name;
+    if (!empty($this->last_name)) {
+      if (!empty($fullname)) {
+        $fullname .= ", ";
+      }
+      $fullname .= $this->last_name;
     }
+    if (!empty($fullname)) {
+      return $fullname;
+    }
+    if ($this->hasOwner()) {
+      return $this->getOwner()->getFullName();
+    }
+    return null;
+  }
 
-    /**
-     * @param string $last_name
-     */
-    public function setLastName($last_name)
-    {
-        $this->last_name = $last_name;
-    }
+  /**
+   * @param mixed $email
+   */
+  public function setEmail($email) {
+    $this->email = $email;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getEmail()
-    {
-        if(!empty($this->email)) return $this->email;
-        if($this->hasOwner()) return $this->getOwner()->getEmail();
-        return null;
-    }
+  /**
+   * @return mixed
+   */
+  public function getType() {
+    return $this->type;
+  }
 
-    public function getFullName(){
-        $fullname = $this->first_name;
-        if(!empty($this->last_name)){
-            if(!empty($fullname)) $fullname .= ', ';
-            $fullname .= $this->last_name;
-        }
-        if(!empty($fullname)) return $fullname;
-        if($this->hasOwner()) return $this->getOwner()->getFullName();
-        return null;
-    }
+  /**
+   * @param mixed $type
+   */
+  public function setType($type) {
+    $this->type = $type;
+  }
 
-    /**
-     * @param mixed $email
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-    }
+  /**
+   * @return Member
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @param Member $owner
+   */
+  public function setOwner($owner) {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @param mixed $type
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return is_null($this->owner) ? 0 : $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return Member
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
+  /**
+   * @return bool
+   */
+  public function hasOwner() {
+    return $this->getOwnerId() > 0;
+  }
 
-    /**
-     * @param Member $owner
-     */
-    public function setOwner($owner)
-    {
-        $this->owner = $owner;
+  /**
+   * @param string $email
+   * @param null|string $company
+   * @return bool
+   * @throw ValidationException
+   */
+  public function checkSubject(string $email, ?string $company): bool {
+    if ($this->hasOwner() && $this->getOwnerEmail() != $email) {
+      throw new ValidationException(
+        sprintf(
+          "The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.",
+          $this->getCode(),
+          $email,
+        ),
+      );
     }
-
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try {
-            return is_null($this->owner) ? 0: $this->owner->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasOwner(){
-        return $this->getOwnerId() > 0;
-    }
-
-    /**
-     * @param string $email
-     * @param null|string $company
-     * @return bool
-     * @throw ValidationException
-     */
-    public function checkSubject(string $email, ?string $company):bool{
-        if($this->hasOwner() && $this->getOwnerEmail() != $email){
-            throw new ValidationException(sprintf('The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.', $this->getCode(), $email));
-        }
-        return true;
-    }
+    return true;
+  }
 }

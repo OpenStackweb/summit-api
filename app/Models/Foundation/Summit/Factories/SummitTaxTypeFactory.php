@@ -16,32 +16,33 @@ use models\summit\SummitTaxType;
  * Class SummitTaxTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitTaxTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SummitTaxType
-     */
-    public static function build(array $data){
-        return self::populate(new SummitTaxType, $data);
+final class SummitTaxTypeFactory {
+  /**
+   * @param array $data
+   * @return SummitTaxType
+   */
+  public static function build(array $data) {
+    return self::populate(new SummitTaxType(), $data);
+  }
+
+  /**
+   * @param SummitTaxType $tax_type
+   * @param array $data
+   * @return SummitTaxType
+   */
+  public static function populate(SummitTaxType $tax_type, array $data) {
+    if (isset($data["name"])) {
+      $tax_type->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitTaxType $tax_type
-     * @param array $data
-     * @return SummitTaxType
-     */
-    public static function populate(SummitTaxType $tax_type, array $data){
-
-        if(isset($data['name']))
-            $tax_type->setName(trim($data['name']));
-
-        if(isset($data['tax_id']))
-            $tax_type->setTaxId(trim($data['tax_id']));
-
-        if(isset($data['rate']))
-            $tax_type->setRate(floatval($data['rate']));
-
-        return $tax_type;
+    if (isset($data["tax_id"])) {
+      $tax_type->setTaxId(trim($data["tax_id"]));
     }
+
+    if (isset($data["rate"])) {
+      $tax_type->setRate(floatval($data["rate"]));
+    }
+
+    return $tax_type;
+  }
 }

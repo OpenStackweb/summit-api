@@ -23,42 +23,34 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitProposedScheduleAllowedLocationRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitProposedScheduleAllowedLocationRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitProposedScheduleAllowedLocationRepository {
+  protected function getBaseEntity() {
+    return SummitProposedScheduleAllowedLocation::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitProposedScheduleAllowedLocation::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    return $query->innerJoin("e.track", "t")->innerJoin("e.location", "l");
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        return $query->innerJoin('e.track', 't')
-            ->innerJoin('e.location', 'l');
-    }
+  protected function getFilterMappings() {
+    return [
+      "track_id" => "t.id:json_int",
+      "location_id" => "l.id:json_int",
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'track_id'    => 't.id:json_int',
-            'location_id' => 'l.id:json_int',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings(): array
-    {
-        return [
-            'location_id' => 'l.id',
-        ];
-    }
-
+  /**
+   * @return array
+   */
+  protected function getOrderMappings(): array {
+    return [
+      "location_id" => "l.id",
+    ];
+  }
 }

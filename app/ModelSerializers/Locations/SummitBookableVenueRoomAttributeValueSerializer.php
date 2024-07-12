@@ -20,43 +20,44 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitBookableVenueRoomAttributeValueSerializer
  * @package App\ModelSerializers\Locations
  */
-class SummitBookableVenueRoomAttributeValueSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Value'  => 'value:json_string',
-        'TypeId' => 'type_id:json_int',
-    ];
+class SummitBookableVenueRoomAttributeValueSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Value" => "value:json_string",
+    "TypeId" => "type_id:json_int",
+  ];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $attr_value   = $this->object;
-        if(!$attr_value instanceof SummitBookableVenueRoomAttributeValue)
-            return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'type': {
-                        unset($values['type_id']);
-                        $values['type'] = SerializerRegistry::getInstance()->getSerializer
-                        (
-                            $attr_value->getType()
-                        )->serialize(
-                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            $params
-                        );
-                    }
-                    break;
-
-                }
-            }
-        }
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $attr_value = $this->object;
+    if (!$attr_value instanceof SummitBookableVenueRoomAttributeValue) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "type":
+            unset($values["type_id"]);
+            $values["type"] = SerializerRegistry::getInstance()
+              ->getSerializer($attr_value->getType())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

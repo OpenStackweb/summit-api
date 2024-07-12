@@ -19,69 +19,59 @@ use models\utils\SilverstripeBaseModel;
  * Class SponsorMemberSummitStrategy
  * @package App\Models\Foundation\Main\Strategies
  */
-class SponsorMemberSummitStrategy implements IMemberSummitStrategy
-{
-    private $member_id;
+class SponsorMemberSummitStrategy implements IMemberSummitStrategy {
+  private $member_id;
 
-    /**
-     * @param $member_id
-     */
-    public function __construct($member_id)
-    {
-        $this->member_id = $member_id;
+  /**
+   * @param $member_id
+   */
+  public function __construct($member_id) {
+    $this->member_id = $member_id;
+  }
+
+  /**
+   * @return array
+   */
+  public function getAllAllowedSummitIds(): array {
+    $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+
+    $sql = <<<SQL
+    SELECT DISTINCT(Sponsor.SummitID)
+    FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
+    WHERE Sponsor_Users.MemberID = :member_id;
+    SQL;
+
+    $stmt = DoctrineStatementValueBinder::bind($em->getConnection()->prepare($sql), [
+      "member_id" => $this->member_id,
+    ]);
+    $res = $stmt->executeQuery();
+    return $res->fetchFirstColumn();
+  }
+
+  /**
+   * @param Summit $summit
+   * @return bool
+   */
+  public function isSummitAllowed(Summit $summit): bool {
+    try {
+      $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+
+      $sql = <<<SQL
+      SELECT COUNT(Sponsor.SummitID)
+      FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
+      WHERE Sponsor_Users.MemberID = :member_id
+              AND Sponsor.SummitID = :summit_id
+      SQL;
+
+      $stmt = DoctrineStatementValueBinder::bind($em->getConnection()->prepare($sql), [
+        "member_id" => $this->member_id,
+        "summit_id" => $summit->getId(),
+      ]);
+      $res = $stmt->executeQuery();
+      $res = $res->fetchFirstColumn();
+      return intval($res[0]) > 0;
+    } catch (\Exception $ex) {
+      return false;
     }
-
-    /**
-     * @return array
-     */
-    public function getAllAllowedSummitIds(): array
-    {
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-
-        $sql = <<<SQL
-SELECT DISTINCT(Sponsor.SummitID)
-FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
-WHERE Sponsor_Users.MemberID = :member_id;
-SQL;
-
-        $stmt = DoctrineStatementValueBinder::bind(
-            $em->getConnection()->prepare($sql),
-            [
-                'member_id' => $this->member_id,
-            ]
-        );
-        $res = $stmt->executeQuery();
-        return $res->fetchFirstColumn();
-    }
-
-    /**
-     * @param Summit $summit
-     * @return bool
-     */
-    public function isSummitAllowed(Summit $summit): bool
-    {
-        try {
-            $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-
-            $sql = <<<SQL
-SELECT COUNT(Sponsor.SummitID)
-FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
-WHERE Sponsor_Users.MemberID = :member_id
-        AND Sponsor.SummitID = :summit_id
-SQL;
-
-            $stmt = DoctrineStatementValueBinder::bind(
-                $em->getConnection()->prepare($sql),
-                [
-                    'member_id' => $this->member_id,
-                    'summit_id' => $summit->getId(),
-                ]
-            );
-            $res = $stmt->executeQuery();
-            $res = $res->fetchFirstColumn();
-            return intval($res[0]) > 0;
-        } catch (\Exception $ex) {
-            return false;
-        }
-    }
+  }
 }

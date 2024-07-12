@@ -18,13 +18,12 @@ use models\summit\Summit;
  * Interface IProcessPaymentService
  * @package App\Services\Model
  */
-interface IProcessPaymentService
-{
-    /**
-     * @param array $payload
-     * @param Summit|null $summit
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function processPayment(array $payload, ?Summit $summit = null): void;
+interface IProcessPaymentService {
+  /**
+   * @param array $payload
+   * @param Summit|null $summit
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function processPayment(array $payload, ?Summit $summit = null): void;
 }

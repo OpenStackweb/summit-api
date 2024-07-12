@@ -19,39 +19,32 @@ use Doctrine\ORM\QueryBuilder;
  * Class DoctrineApiRepository
  * @package repositories\resource_server
  */
-final class DoctrineApiRepository extends ConfigDoctrineRepository
-implements IApiRepository
-{
+final class DoctrineApiRepository extends ConfigDoctrineRepository implements IApiRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return Api::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return Api::class;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getFilterMappings() {
+    return [];
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getFilterMappings()
-    {
-        return [];
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getOrderMappings() {
+    return [];
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getOrderMappings()
-    {
-       return [];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function applyExtraFilters(QueryBuilder $query)
-    {
-        return $query;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function applyExtraFilters(QueryBuilder $query) {
+    return $query;
+  }
 }

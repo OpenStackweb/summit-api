@@ -13,7 +13,7 @@
  **/
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PersonalCalendarShareInfo")
@@ -27,103 +27,99 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class PersonalCalendarShareInfo
  * @package models\main
  */
-class PersonalCalendarShareInfo extends SilverstripeBaseModel
-{
+class PersonalCalendarShareInfo extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Hash", type="string")
+   * @var string
+   */
+  private $cid;
 
-    /**
-     * @ORM\Column(name="Hash", type="string")
-     * @var string
-     */
-    private $cid;
+  /**
+   * @ORM\Column(name="Revoked", type="boolean")
+   * @var bool
+   */
+  private $revoked;
 
-    /**
-     * @ORM\Column(name="Revoked", type="boolean")
-     * @var bool
-     */
-    private $revoked;
+  use SummitOwned;
 
-    use SummitOwned;
+  /**
+   * @ORM\ManyToOne(targetEntity="Member", inversedBy="schedule_shareable_links")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  private $owner;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Member", inversedBy="schedule_shareable_links")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $owner;
+  public function __construct() {
+    parent::__construct();
+    $this->revoked = false;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->revoked = false;
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return is_null($this->owner) ? 0 : $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try {
-            return is_null($this->owner) ? 0 : $this->owner->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @return string
+   * @throws \Exception
+   */
+  public function generateCid(): string {
+    $this->cid = md5(strval($this->getOwnerId()) . strval($this->getSummitId()) . random_bytes(8));
+    return $this->cid;
+  }
 
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    public function generateCid():string{
-        $this->cid = md5(strval($this->getOwnerId()).strval($this->getSummitId()).random_bytes(8));
-        return $this->cid;
-    }
+  /**
+   * @return string
+   */
+  public function getCid(): string {
+    return $this->cid;
+  }
 
-    /**
-     * @return string
-     */
-    public function getCid(): string
-    {
-        return $this->cid;
-    }
+  /**
+   * @return bool
+   */
+  public function isRevoked(): bool {
+    return $this->revoked;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isRevoked(): bool
-    {
-        return $this->revoked;
-    }
+  public function revoke(): void {
+    $this->revoked = true;
+  }
 
-    public function revoke(): void
-    {
-        $this->revoked = true;
-    }
+  /**
+   * @return Member
+   */
+  public function getOwner(): Member {
+    return $this->owner;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getOwner(): Member
-    {
-        return $this->owner;
-    }
+  /**
+   * @param Member $owner
+   */
+  public function setOwner(Member $owner): void {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @param Member $owner
-     */
-    public function setOwner(Member $owner): void
-    {
-        $this->owner = $owner;
-    }
+  public function clearOwner() {
+    $this->owner = null;
+  }
 
-    public function clearOwner(){
-        $this->owner = null;
+  /**
+   * @return string|null
+   */
+  public function getLink(): ?string {
+    if ($this->isRevoked()) {
+      return null;
     }
-
-    /**
-     * @return string|null
-     */
-    public function getLink():?string{
-        if($this->isRevoked()) return null;
-        return action('OAuth2SummitMembersApiController@getCalendarFeedICS', ['id' => $this->getSummitId(), 'cid' => $this->cid]);
-    }
+    return action("OAuth2SummitMembersApiController@getCalendarFeedICS", [
+      "id" => $this->getSummitId(),
+      "cid" => $this->cid,
+    ]);
+  }
 }

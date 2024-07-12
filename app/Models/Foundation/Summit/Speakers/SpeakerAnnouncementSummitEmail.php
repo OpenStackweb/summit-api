@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 /**
@@ -26,91 +26,83 @@ use DateTime;
  * Class SpeakerAnnouncementSummitEmail
  * @package models\summit
  */
-class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
-{
+class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel {
+  const TypeAccepted = "ACCEPTED";
+  const TypeRejected = "REJECTED";
+  const TypeAlternate = "ALTERNATE";
+  const TypeAcceptedAlternate = "ACCEPTED_ALTERNATE";
+  const TypeAcceptedRejected = "ACCEPTED_REJECTED";
+  const TypeAlternateRejected = "ALTERNATE_REJECTED";
+  const TypeSecondBreakoutReminder = "SECOND_BREAKOUT_REMINDER";
+  const TypeSecondBreakoutRegister = "SECOND_BREAKOUT_REGISTER";
+  const TypeCreateMembership = "CREATE_MEMBERSHIP";
+  const TypeNone = "NONE";
 
-    const TypeAccepted                = 'ACCEPTED';
-    const TypeRejected                = 'REJECTED';
-    const TypeAlternate               = 'ALTERNATE';
-    const TypeAcceptedAlternate       = 'ACCEPTED_ALTERNATE';
-    const TypeAcceptedRejected        = 'ACCEPTED_REJECTED';
-    const TypeAlternateRejected       = 'ALTERNATE_REJECTED';
-    const TypeSecondBreakoutReminder  = 'SECOND_BREAKOUT_REMINDER';
-    const TypeSecondBreakoutRegister  = 'SECOND_BREAKOUT_REGISTER';
-    const TypeCreateMembership        = 'CREATE_MEMBERSHIP';
-    const TypeNone                    = 'NONE';
+  /**
+   * @ORM\Column(name="AnnouncementEmailTypeSent", type="string")
+   * @var string
+   */
+  private $type;
 
-    /**
-     * @ORM\Column(name="AnnouncementEmailTypeSent", type="string")
-     * @var string
-     */
-    private $type;
+  /**
+   * @ORM\Column(name="AnnouncementEmailSentDate", type="datetime")
+   * @var DateTime
+   */
+  private $send_date;
 
-    /**
-     * @ORM\Column(name="AnnouncementEmailSentDate", type="datetime")
-     * @var DateTime
-     */
-    private $send_date;
+  use SummitOwned;
 
-    Use SummitOwned;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", inversedBy="announcement_summit_emails")
+   * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
+   * @var PresentationSpeaker
+   */
+  protected $speaker;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", inversedBy="announcement_summit_emails")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
-     * @var PresentationSpeaker
-     */
-    protected $speaker;
+  /**
+   * @return string
+   */
+  public function getType(): ?string {
+    return $this->type;
+  }
 
-    /**
-     * @return string
-     */
-    public function getType():?string
-    {
-        return $this->type;
-    }
+  /**
+   * @param string $type
+   */
+  public function setType(string $type) {
+    $this->type = $type;
+  }
 
-    /**
-     * @param string $type
-     */
-    public function setType(string $type)
-    {
-        $this->type = $type;
-    }
+  /**
+   * @return DateTime
+   */
+  public function getSendDate(): ?DateTime {
+    return $this->send_date;
+  }
 
-    /**
-     * @return DateTime
-     */
-    public function getSendDate():?DateTime
-    {
-        return $this->send_date;
-    }
+  public function isSent(): bool {
+    return !is_null($this->send_date);
+  }
 
-    public function isSent():bool{
-        return !is_null($this->send_date);
-    }
+  public function markAsSent(): void {
+    $this->send_date = new DateTime("now", new \DateTimeZone("UTC"));
+  }
 
-    public function markAsSent():void{
-        $this->send_date = new DateTime('now', new \DateTimeZone('UTC'));
-    }
+  /**
+   * @return PresentationSpeaker
+   */
+  public function getSpeaker(): ?PresentationSpeaker {
+    return $this->speaker;
+  }
 
-    /**
-     * @return PresentationSpeaker
-     */
-    public function getSpeaker():?PresentationSpeaker
-    {
-        return $this->speaker;
-    }
+  /**
+   * @param PresentationSpeaker $speaker
+   */
+  public function setSpeaker($speaker) {
+    $this->speaker = $speaker;
+  }
 
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function setSpeaker($speaker)
-    {
-        $this->speaker = $speaker;
-    }
-
-    public function clearSpeaker():void{
-        $this->speaker = null;
-    }
-
+  public function clearSpeaker(): void {
+    $this->speaker = null;
+  }
 }

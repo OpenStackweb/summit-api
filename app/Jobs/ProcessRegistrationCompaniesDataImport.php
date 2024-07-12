@@ -24,60 +24,61 @@ use Exception;
  * Class ProcessRegistrationCompaniesDataImport
  * @package App\Jobs
  */
-class ProcessRegistrationCompaniesDataImport implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class ProcessRegistrationCompaniesDataImport implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 2;
+  public $tries = 2;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    /*
+  /*
    * @var int
    */
-    private $summit_id;
+  private $summit_id;
 
-    /**
-     * @var string
-     */
-    private $filename;
+  /**
+   * @var string
+   */
+  private $filename;
 
-    /**
-     * ProcessRegistrationCompaniesDataImport constructor.
-     * @param int $summit_id
-     * @param string $filename
-     */
-    public function __construct(int $summit_id, string $filename)
-    {
-        Log::debug(sprintf("ProcessRegistrationCompaniesDataImport::__construct"));
-        $this->summit_id = $summit_id;
-        $this->filename = $filename;
+  /**
+   * ProcessRegistrationCompaniesDataImport constructor.
+   * @param int $summit_id
+   * @param string $filename
+   */
+  public function __construct(int $summit_id, string $filename) {
+    Log::debug(sprintf("ProcessRegistrationCompaniesDataImport::__construct"));
+    $this->summit_id = $summit_id;
+    $this->filename = $filename;
+  }
+
+  /**
+   * @param ISummitService $service
+   */
+  public function handle(ISummitService $service) {
+    try {
+      Log::debug(
+        sprintf(
+          "ProcessRegistrationCompaniesDataImport::handle summit %s filename %s",
+          $this->summit_id,
+          $this->filename,
+        ),
+      );
+      $service->processRegistrationCompaniesData($this->summit_id, $this->filename);
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+  }
 
-    /**
-     * @param ISummitService $service
-     */
-    public function handle
-    (
-        ISummitService $service
-    )
-    {
-        try {
-            Log::debug(sprintf("ProcessRegistrationCompaniesDataImport::handle summit %s filename %s", $this->summit_id, $this->filename));
-            $service->processRegistrationCompaniesData($this->summit_id, $this->filename);
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
-    /**
-     * @param Exception $exception
-     */
-    public function failed(\Throwable $exception)
-    {
-        Log::error(sprintf( "ProcessRegistrationCompaniesDataImport::failed %s", $exception->getMessage()));
-    }
+  /**
+   * @param Exception $exception
+   */
+  public function failed(\Throwable $exception) {
+    Log::error(
+      sprintf("ProcessRegistrationCompaniesDataImport::failed %s", $exception->getMessage()),
+    );
+  }
 }

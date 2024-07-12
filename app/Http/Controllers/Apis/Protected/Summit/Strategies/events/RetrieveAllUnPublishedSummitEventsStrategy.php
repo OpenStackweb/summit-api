@@ -20,45 +20,41 @@ use Illuminate\Support\Facades\Request;
  * Class RetrieveAllUnPublishedSummitEventsStrategy
  * @package App\Http\Controllers
  */
-class RetrieveAllUnPublishedSummitEventsStrategy extends RetrieveAllSummitEventsBySummitStrategy
-{
-    /**
-     * @return array
-     */
-    protected function getValidFilters()
-    {
-        $valid_filters = parent::getValidFilters();
-        $valid_filters['published'] = ['=='];
-        return $valid_filters;
-    }
+class RetrieveAllUnPublishedSummitEventsStrategy extends RetrieveAllSummitEventsBySummitStrategy {
+  /**
+   * @return array
+   */
+  protected function getValidFilters() {
+    $valid_filters = parent::getValidFilters();
+    $valid_filters["published"] = ["=="];
+    return $valid_filters;
+  }
 
-    /**
-     * @return null|Filter
-     */
-    protected function buildFilter()
-    {
-        $filter = parent::buildFilter();
-        $filter->addFilterCondition(FilterParser::buildFilter('published','==','0'));
-        return $filter;
-    }
+  /**
+   * @return null|Filter
+   */
+  protected function buildFilter() {
+    $filter = parent::buildFilter();
+    $filter->addFilterCondition(FilterParser::buildFilter("published", "==", "0"));
+    return $filter;
+  }
 
-    /**
-     * @return null|Order
-     */
-    protected function buildOrder(){
-        $order = null;
-        if (Request::has('order'))
-        {
-            $order = OrderParser::parse(Request::input('order'), [
-                'title',
-                'start_date',
-                'end_date',
-                'id',
-                'created',
-                'track',
-                'trackchairsel'
-            ]);
-        }
-        return $order;
+  /**
+   * @return null|Order
+   */
+  protected function buildOrder() {
+    $order = null;
+    if (Request::has("order")) {
+      $order = OrderParser::parse(Request::input("order"), [
+        "title",
+        "start_date",
+        "end_date",
+        "id",
+        "created",
+        "track",
+        "trackchairsel",
+      ]);
     }
+    return $order;
+  }
 }

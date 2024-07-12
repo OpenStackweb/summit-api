@@ -18,9 +18,8 @@ use models\exceptions\ValidationException;
  * Class FilterParserException
  * @package utils
  */
-final class FilterParserException extends ValidationException
-{
-    public function __construct($message = "") {
-        parent::__construct($message, 0, null);
-    }
+final class FilterParserException extends ValidationException {
+  public function __construct($message = "") {
+    parent::__construct($message, 0, null);
+  }
 }

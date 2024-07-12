@@ -16,30 +16,26 @@ use Illuminate\Queue\SerializesModels;
  * Class NewMember
  * @package App\Events
  */
-final class NewMember
-{
-    use SerializesModels;
+final class NewMember {
+  use SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $member_id;
+  /**
+   * @var int
+   */
+  private $member_id;
 
-    /**
-     * NewMember constructor.
-     * @param int $member_id
-     */
-    public function __construct(int $member_id)
-    {
-        $this->member_id = $member_id;
-    }
+  /**
+   * NewMember constructor.
+   * @param int $member_id
+   */
+  public function __construct(int $member_id) {
+    $this->member_id = $member_id;
+  }
 
-    /**
-     * @return int
-     */
-    public function getMemberId(): int
-    {
-        return $this->member_id;
-    }
-
+  /**
+   * @return int
+   */
+  public function getMemberId(): int {
+    return $this->member_id;
+  }
 }

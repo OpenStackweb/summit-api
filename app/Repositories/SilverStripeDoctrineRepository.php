@@ -23,67 +23,64 @@ use utils\Filter;
  * Class SilverStripeDoctrineRepository
  * @package App\Repositories
  */
-abstract class SilverStripeDoctrineRepository extends DoctrineRepository
-{
+abstract class SilverStripeDoctrineRepository extends DoctrineRepository {
+  /**
+   * Initializes a new <tt>EntityRepository</tt>.
+   *
+   * @param EntityManager         $em    The EntityManager to use.
+   * @param ClassMetadata $class The class descriptor.
+   */
+  public function __construct($em, ClassMetadata $class) {
+    $this->manager_name = SilverstripeBaseModel::EntityManager;
+    parent::__construct(Registry::getManager(SilverstripeBaseModel::EntityManager), $class);
+  }
 
-    /**
-     * Initializes a new <tt>EntityRepository</tt>.
-     *
-     * @param EntityManager         $em    The EntityManager to use.
-     * @param ClassMetadata $class The class descriptor.
-     */
-    public function __construct($em, ClassMetadata $class)
-    {
-        $this->manager_name = SilverstripeBaseModel::EntityManager;
-        parent::__construct(Registry::getManager(SilverstripeBaseModel::EntityManager), $class);
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [];
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraFilters(QueryBuilder $query) {
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query){
-        return $query;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        return $query;
+  /**
+   * @param string $group_code
+   * @return bool
+   */
+  protected static function isCurrentMemberOnGroup($group_code) {
+    $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
+    $member = $resource_server_ctx->getCurrentUser();
+    if (is_null($member)) {
+      return false;
     }
+    return $member->isOnGroup($group_code);
+  }
 
-    /**
-     * @param string $group_code
-     * @return bool
-     */
-    protected static function isCurrentMemberOnGroup($group_code){
-        $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
-        $member              = $resource_server_ctx->getCurrentUser();
-        if(is_null($member)) return false;
-        return $member->isOnGroup($group_code);
+  public function deleteAll(): void {
+    foreach ($this->getAll() as $entity) {
+      $this->delete($entity);
     }
-
-    public function deleteAll():void{
-        foreach ($this->getAll() as $entity){
-            $this->delete($entity);
-        }
-    }
+  }
 }

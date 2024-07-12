@@ -18,52 +18,53 @@ use models\summit\SummitOrder;
  * Class UnregisteredMemberOrderPaidMail
  * @package App\Jobs\Emails
  */
-class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_UNREGISTERED_MEMBER_ORDER_PAID';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_UNREGISTERED_MEMBER_ORDER_PAID';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_UNREGISTERED_MEMBER_ORDER_PAID';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_UNREGISTERED_MEMBER_ORDER_PAID";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_UNREGISTERED_MEMBER_ORDER_PAID";
+  const DEFAULT_TEMPLATE = "REGISTRATION_UNREGISTERED_MEMBER_ORDER_PAID";
 
-    /**
-     * UnregisteredMemberOrderPaidMail constructor.
-     * @param SummitOrder $order
-     * @param string $set_password_link
-     */
-    public function __construct(SummitOrder $order, string $set_password_link)
-    {
-        Log::debug("UnregisteredMemberOrderPaidMail::__construct");
-        parent::__construct($order);
-        Log::debug(sprintf("UnregisteredMemberOrderPaidMail::__construct %s", $this->template_identifier));
+  /**
+   * UnregisteredMemberOrderPaidMail constructor.
+   * @param SummitOrder $order
+   * @param string $set_password_link
+   */
+  public function __construct(SummitOrder $order, string $set_password_link) {
+    Log::debug("UnregisteredMemberOrderPaidMail::__construct");
+    parent::__construct($order);
+    Log::debug(
+      sprintf("UnregisteredMemberOrderPaidMail::__construct %s", $this->template_identifier),
+    );
 
-        $summit = $order->getSummit();
-        $this->payload[IMailTemplatesConstants::set_password_link] = $set_password_link;
+    $summit = $order->getSummit();
+    $this->payload[IMailTemplatesConstants::set_password_link] = $set_password_link;
 
-        $this->payload[IMailTemplatesConstants::set_password_link_to_registration] = sprintf(
-            "%s?client_id=%s&redirect_uri=%s",
-            $set_password_link,
-            $summit->getMarketingSiteOAuth2ClientId(),
-            urlencode($summit->getMarketingSiteUrl())
-        );
+    $this->payload[IMailTemplatesConstants::set_password_link_to_registration] = sprintf(
+      "%s?client_id=%s&redirect_uri=%s",
+      $set_password_link,
+      $summit->getMarketingSiteOAuth2ClientId(),
+      urlencode($summit->getMarketingSiteUrl()),
+    );
 
-        $this->payload[IMailTemplatesConstants::manage_orders_url] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
+    $this->payload[IMailTemplatesConstants::manage_orders_url] = sprintf(
+      "%s/a/my-tickets",
+      $summit->getMarketingSiteUrl(),
+    );
+  }
 
-    }
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::set_password_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::set_password_link_to_registration]["type"] = "string";
+    $payload[IMailTemplatesConstants::manage_orders_url]["type"] = "string";
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = parent::getEmailTemplateSchema();
-        $payload[IMailTemplatesConstants::set_password_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::set_password_link_to_registration]['type'] = 'string';
-        $payload[IMailTemplatesConstants::manage_orders_url]['type'] = 'string';
-
-        return $payload;
-    }
+    return $payload;
+  }
 }

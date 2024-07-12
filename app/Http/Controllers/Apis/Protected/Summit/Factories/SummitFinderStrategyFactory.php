@@ -19,19 +19,16 @@ use models\utils\IBaseRepository;
  * Class SummitFinderStrategyFactory
  * @package App\Http\Controllers
  */
-final class SummitFinderStrategyFactory
-{
-    /**
-     * @param IBaseRepository $repository
-     * @param IResourceServerContext $resource_server_ctx
-     * @return ISummitFinderStrategy
-     */
-    public static function build
-    (
-        IBaseRepository $repository,
-        IResourceServerContext $resource_server_ctx
-    )
-    {
-        return new CurrentSummitFinderStrategy($repository, $resource_server_ctx);
-    }
+final class SummitFinderStrategyFactory {
+  /**
+   * @param IBaseRepository $repository
+   * @param IResourceServerContext $resource_server_ctx
+   * @return ISummitFinderStrategy
+   */
+  public static function build(
+    IBaseRepository $repository,
+    IResourceServerContext $resource_server_ctx,
+  ) {
+    return new CurrentSummitFinderStrategy($repository, $resource_server_ctx);
+  }
 }

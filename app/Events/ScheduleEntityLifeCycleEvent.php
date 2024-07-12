@@ -18,53 +18,54 @@ use Illuminate\Queue\SerializesModels;
  * Class ScheduleEntityLifeCycleEvent
  * @package App\Events
  */
-final class ScheduleEntityLifeCycleEvent extends Event
-{
-    use SerializesModels;
+final class ScheduleEntityLifeCycleEvent extends Event {
+  use SerializesModels;
 
-    /**
-     * @var string
-     */
-    public $entity_operator;
+  /**
+   * @var string
+   */
+  public $entity_operator;
 
-    /**
-     * @var int
-     */
-    public $summit_id;
+  /**
+   * @var int
+   */
+  public $summit_id;
 
-    /**
-     * @var int
-     */
-    public $entity_id;
+  /**
+   * @var int
+   */
+  public $entity_id;
 
-    /**
-     * @var string
-     */
-    public $entity_type;
+  /**
+   * @var string
+   */
+  public $entity_type;
 
-    /**
-     * @param string $entity_operator
-     * @param int $summit_id
-     * @param int $entity_id
-     * @param string $entity_type
-     */
-    public function __construct(string $entity_operator, int $summit_id, int $entity_id, string $entity_type)
-    {
-        $this->entity_operator = $entity_operator;
-        $this->summit_id = $summit_id;
-        $this->entity_id = $entity_id;
-        $this->entity_type = $entity_type;
-    }
+  /**
+   * @param string $entity_operator
+   * @param int $summit_id
+   * @param int $entity_id
+   * @param string $entity_type
+   */
+  public function __construct(
+    string $entity_operator,
+    int $summit_id,
+    int $entity_id,
+    string $entity_type,
+  ) {
+    $this->entity_operator = $entity_operator;
+    $this->summit_id = $summit_id;
+    $this->entity_id = $entity_id;
+    $this->entity_type = $entity_type;
+  }
 
-    public function __toString():string{
-        return sprintf
-        (
-            "%s %s %s %s",
-            $this->entity_operator,
-            $this->summit_id,
-            $this->entity_id,
-            $this->entity_type
-        );
-    }
-
+  public function __toString(): string {
+    return sprintf(
+      "%s %s %s %s",
+      $this->entity_operator,
+      $this->summit_id,
+      $this->entity_id,
+      $this->entity_type,
+    );
+  }
 }

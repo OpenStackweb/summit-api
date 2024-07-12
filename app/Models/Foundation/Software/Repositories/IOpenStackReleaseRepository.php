@@ -18,7 +18,6 @@ use models\utils\IBaseRepository;
 /**
  *
  */
-interface IOpenStackReleaseRepository extends IBaseRepository
-{
-    public function getCurrent():?OpenStackRelease;
+interface IOpenStackReleaseRepository extends IBaseRepository {
+  public function getCurrent(): ?OpenStackRelease;
 }

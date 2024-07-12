@@ -17,58 +17,61 @@ use models\summit\SummitEvent;
  * Class AdminSummitEventCSVSerializer
  * @package ModelSerializers
  */
-class AdminSummitEventCSVSerializer extends SummitEventSerializer
-{
-    protected static $array_mappings = [
-        'Occupancy' => 'occupancy:json_string',
-    ];
+class AdminSummitEventCSVSerializer extends SummitEventSerializer {
+  protected static $array_mappings = [
+    "Occupancy" => "occupancy:json_string",
+  ];
 
-    protected static $allowed_fields = [
-        'occupancy',
-        'created_by',
-        'type',
-        'track',
-        'location_name',
-    ];
+  protected static $allowed_fields = ["occupancy", "created_by", "type", "track", "location_name"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $summit_event = $this->object;
-        if(!$summit_event instanceof SummitEvent) return $values;
-
-        if(isset($values['description'])){
-            $values['description'] = strip_tags($values['description']);
-        }
-
-        if(in_array("type",$fields) && $summit_event->hasType()) {
-            $values['type'] = $summit_event->getType()->getType();
-        }
-
-        if(in_array("track",$fields) && $summit_event->hasCategory()){
-            $values['track'] = $summit_event->getCategory()->getTitle();
-        }
-
-        if(in_array("created_by",$fields)) {
-            $values['created_by'] = '';
-            if ($summit_event->hasCreatedBy()) {
-                unset($values['created_by_id']);
-                $created_by = $summit_event->getCreatedBy();
-                $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
-            }
-        }
-
-        if(in_array("location_name",$fields) && $summit_event->hasLocation()){
-            $values['location_name'] = $summit_event->getLocation()->getName();
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $summit_event = $this->object;
+    if (!$summit_event instanceof SummitEvent) {
+      return $values;
     }
+
+    if (isset($values["description"])) {
+      $values["description"] = strip_tags($values["description"]);
+    }
+
+    if (in_array("type", $fields) && $summit_event->hasType()) {
+      $values["type"] = $summit_event->getType()->getType();
+    }
+
+    if (in_array("track", $fields) && $summit_event->hasCategory()) {
+      $values["track"] = $summit_event->getCategory()->getTitle();
+    }
+
+    if (in_array("created_by", $fields)) {
+      $values["created_by"] = "";
+      if ($summit_event->hasCreatedBy()) {
+        unset($values["created_by_id"]);
+        $created_by = $summit_event->getCreatedBy();
+        $values["created_by"] = sprintf(
+          "%s (%s)",
+          $created_by->getFullName(),
+          $created_by->getEmail(),
+        );
+      }
+    }
+
+    if (in_array("location_name", $fields) && $summit_event->hasLocation()) {
+      $values["location_name"] = $summit_event->getLocation()->getName();
+    }
+
+    return $values;
+  }
 }

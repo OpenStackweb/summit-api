@@ -18,53 +18,48 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleLock;
  * Class UnsubmitForReviewEmail
  * @package App\Jobs\Emails\Schedule
  */
-class UnsubmitForReviewEmail extends AbstractSummitEmailJob
-{
+class UnsubmitForReviewEmail extends AbstractSummitEmailJob {
+  /**
+   * UnsubmitForReviewEmail constructor.
+   * @param SummitProposedScheduleLock $lock
+   * @param string $message
+   */
+  public function __construct(SummitProposedScheduleLock $lock, string $message) {
+    $summit = $lock->getProposedSchedule()->getSummit();
+    $submitter = $lock->getCreatedBy()->getMember();
+    $payload = [];
 
-    /**
-     * UnsubmitForReviewEmail constructor.
-     * @param SummitProposedScheduleLock $lock
-     * @param string $message
-     */
-    public function __construct(SummitProposedScheduleLock $lock, string $message)
-    {
-        $summit = $lock->getProposedSchedule()->getSummit();
-        $submitter = $lock->getCreatedBy()->getMember();
-        $payload = [];
+    $payload[IMailTemplatesConstants::submitter_fullname] = $submitter->getFullName();
+    $payload[IMailTemplatesConstants::submitter_email] = $submitter->getEmail();
+    $payload[IMailTemplatesConstants::track] = $lock->getTrack()->getTitle();
+    $payload[IMailTemplatesConstants::track_id] = $lock->getTrack()->getId();
+    $payload[IMailTemplatesConstants::message] = $message ?? "";
 
-        $payload[IMailTemplatesConstants::submitter_fullname]  = $submitter->getFullName();
-        $payload[IMailTemplatesConstants::submitter_email]     = $submitter->getEmail();
-        $payload[IMailTemplatesConstants::track]               = $lock->getTrack()->getTitle();
-        $payload[IMailTemplatesConstants::track_id]            = $lock->getTrack()->getId();
-        $payload[IMailTemplatesConstants::message]             = $message ?? "";
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    parent::__construct($summit, $payload, $template_identifier, $submitter->getEmail());
+  }
 
-        parent::__construct($summit, $payload, $template_identifier, $submitter->getEmail());
-    }
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::submitter_fullname]["type"] = "string";
+    $payload[IMailTemplatesConstants::submitter_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::track]["type"] = "string";
+    $payload[IMailTemplatesConstants::track_id]["type"] = "int";
+    $payload[IMailTemplatesConstants::message]["type"] = "string";
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
+    return $payload;
+  }
 
-        $payload = parent::getEmailTemplateSchema();
-        $payload[IMailTemplatesConstants::submitter_fullname]['type'] = 'string';
-        $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::track]['type'] = 'string';
-        $payload[IMailTemplatesConstants::track_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::message]['type'] = 'string';
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-        return $payload;
-    }
-
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
-
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_PROPOSED_SCHEDULE_UNSUBMIT_FOR_REVIEW';
-    const EVENT_NAME = 'SUMMIT_PROPOSED_SCHEDULE_UNSUBMIT_FOR_REVIEW';
-    const DEFAULT_TEMPLATE = 'PROPOSED_SCHEDULE_UNSUBMIT_FOR_REVIEW';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_PROPOSED_SCHEDULE_UNSUBMIT_FOR_REVIEW";
+  const EVENT_NAME = "SUMMIT_PROPOSED_SCHEDULE_UNSUBMIT_FOR_REVIEW";
+  const DEFAULT_TEMPLATE = "PROPOSED_SCHEDULE_UNSUBMIT_FOR_REVIEW";
 }

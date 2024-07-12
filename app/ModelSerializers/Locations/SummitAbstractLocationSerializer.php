@@ -19,39 +19,41 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitAbstractLocationSerializer
  * @package ModelSerializers\Locations
  */
-class SummitAbstractLocationSerializer
-    extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'         => 'name:json_string',
-        'ShortName'    => 'short_name:json_string',
-        'Description'  => 'description:json_string',
-        'LocationType' => 'location_type',
-        'Order'        => 'order:json_int',
-        'OpeningHour'  => 'opening_hour:json_int',
-        'ClosingHour'  => 'closing_hour:json_int',
-        'ClassName'    => 'class_name:json_string',
-    ];
+class SummitAbstractLocationSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "ShortName" => "short_name:json_string",
+    "Description" => "description:json_string",
+    "LocationType" => "location_type",
+    "Order" => "order:json_int",
+    "OpeningHour" => "opening_hour:json_int",
+    "ClosingHour" => "closing_hour:json_int",
+    "ClassName" => "class_name:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'published_events',
-    ];
+  protected static $allowed_relations = ["published_events"];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $location = $this->object;
-        if (!$location instanceof SummitAbstractLocation) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('published_events', $relations) && !isset($values['published_events'])){
-            $events = [];
-            foreach ($location->getPublishedEvents() as $e){
-                $events[] = $e->getId();
-            }
-            $values['published_events'] = $events;
-        }
-
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $location = $this->object;
+    if (!$location instanceof SummitAbstractLocation) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("published_events", $relations) && !isset($values["published_events"])) {
+      $events = [];
+      foreach ($location->getPublishedEvents() as $e) {
+        $events[] = $e->getId();
+      }
+      $values["published_events"] = $events;
+    }
+
+    return $values;
+  }
 }

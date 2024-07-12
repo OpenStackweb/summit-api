@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 use models\utils\One2ManyPropertyTrait;
@@ -22,47 +22,47 @@ use models\utils\One2ManyPropertyTrait;
  * Class SummitAttendeeBadgeAuditLog
  * @package models\main
  */
-class SummitAttendeeBadgeAuditLog extends SummitAuditLog
-{
-    const ClassName = 'SummitAttendeeBadgeAuditLog';
+class SummitAttendeeBadgeAuditLog extends SummitAuditLog {
+  const ClassName = "SummitAttendeeBadgeAuditLog";
 
-    use One2ManyPropertyTrait;
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getSummitAttendeeBadgeID' => 'related_entity',
-        'getUserId'  => 'user',
-    ];
+  protected $getIdMappings = [
+    "getSummitAttendeeBadgeID" => "related_entity",
+    "getUserId" => "user",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSummitAttendeeBadge' => 'related_entity',
-        'hasUser'  => 'user',
-    ];
+  protected $hasPropertyMappings = [
+    "hasSummitAttendeeBadge" => "related_entity",
+    "hasUser" => "user",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeBadge")
-     * @ORM\JoinColumn(name="SummitAttendeeBadgeID", referencedColumnName="ID")
-     * @var SummitAttendeeBadge
-     */
-    private $related_entity;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeBadge")
+   * @ORM\JoinColumn(name="SummitAttendeeBadgeID", referencedColumnName="ID")
+   * @var SummitAttendeeBadge
+   */
+  private $related_entity;
 
-    public function getClassName(): string
-    {
-        return self::ClassName;
-    }
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    public function getAttendeeBadge(): SummitAttendeeBadge
-    {
-        return $this->related_entity;
-    }
+  public function getAttendeeBadge(): SummitAttendeeBadge {
+    return $this->related_entity;
+  }
 
-    public function setAttendeeBadge(SummitAttendeeBadge $attendee_badge)
-    {
-        $this->related_entity = $attendee_badge;
-    }
+  public function setAttendeeBadge(SummitAttendeeBadge $attendee_badge) {
+    $this->related_entity = $attendee_badge;
+  }
 
-    public function __construct(?Member $user, string $action, ?Summit $summit, SummitAttendeeBadge $attendee_badge)
-    {
-        parent::__construct($user, $action, $summit);
-        $this->related_entity = $attendee_badge;
-    }
+  public function __construct(
+    ?Member $user,
+    string $action,
+    ?Summit $summit,
+    SummitAttendeeBadge $attendee_badge,
+  ) {
+    parent::__construct($user, $action, $summit);
+    $this->related_entity = $attendee_badge;
+  }
 }

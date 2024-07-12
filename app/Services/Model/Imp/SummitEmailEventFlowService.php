@@ -22,48 +22,49 @@ use App\Services\Model\ISummitEmailEventFlowService;
  * Class SummitEmailEventFlowService
  * @package App\Services\Model\Imp
  */
-final class SummitEmailEventFlowService
-    extends AbstractService
-    implements ISummitEmailEventFlowService
-{
-    public function __construct(ITransactionService $tx_service)
-    {
-        parent::__construct($tx_service);
-    }
+final class SummitEmailEventFlowService extends AbstractService implements
+  ISummitEmailEventFlowService {
+  public function __construct(ITransactionService $tx_service) {
+    parent::__construct($tx_service);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function updateEmailEventFlow(Summit $summit, int $event_id, array $data): SummitEmailEventFlow
-    {
-        return $this->tx_service->transaction(function () use ($summit, $event_id, $data) {
-            $event = $summit->getEmailEventById($event_id);
-            if (is_null($event))
-                throw new EntityNotFoundException("Email Event not found");
+  /**
+   * @inheritDoc
+   */
+  public function updateEmailEventFlow(
+    Summit $summit,
+    int $event_id,
+    array $data,
+  ): SummitEmailEventFlow {
+    return $this->tx_service->transaction(function () use ($summit, $event_id, $data) {
+      $event = $summit->getEmailEventById($event_id);
+      if (is_null($event)) {
+        throw new EntityNotFoundException("Email Event not found");
+      }
 
-            $event->setEmailTemplateIdentifier(trim($data['email_template_identifier']));
+      $event->setEmailTemplateIdentifier(trim($data["email_template_identifier"]));
 
-            if (isset($data['recipients']) && is_array($data['recipients'])) {
-                $event->setEmailRecipients($data['recipients']);
-            }
+      if (isset($data["recipients"]) && is_array($data["recipients"])) {
+        $event->setEmailRecipients($data["recipients"]);
+      }
 
-            return $event;
-        });
-    }
+      return $event;
+    });
+  }
 
-    /**
-     * @param Summit $summit
-     * @param int $event_id
-     * @throws \Exception
-     */
-    public function deleteEmailEventFlow(Summit $summit, int $event_id): void
-    {
-        $this->tx_service->transaction(function () use ($summit, $event_id) {
-            $event = $summit->getEmailEventById($event_id);
-            if (is_null($event))
-                throw new EntityNotFoundException("Email Event  not found");
+  /**
+   * @param Summit $summit
+   * @param int $event_id
+   * @throws \Exception
+   */
+  public function deleteEmailEventFlow(Summit $summit, int $event_id): void {
+    $this->tx_service->transaction(function () use ($summit, $event_id) {
+      $event = $summit->getEmailEventById($event_id);
+      if (is_null($event)) {
+        throw new EntityNotFoundException("Email Event  not found");
+      }
 
-            $summit->removeEmailEventFlow($event);
-        });
-    }
+      $summit->removeEmailEventFlow($event);
+    });
+  }
 }

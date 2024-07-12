@@ -18,87 +18,92 @@ use models\main\SummitAdministratorPermissionGroup;
  * Class SummitAdministratorPermissionGroupSerializer
  * @package ModelSerializers
  */
-final class SummitAdministratorPermissionGroupSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Title' => 'title:json_string',
-    ];
+final class SummitAdministratorPermissionGroupSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Title" => "title:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'members',
-        'summits',
-    ];
+  protected static $allowed_relations = ["members", "summits"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $group  = $this->object;
-        if(!$group instanceof SummitAdministratorPermissionGroup) return [];
-
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('members', $relations)) {
-            $members = [];
-            foreach ($group->getMembersIds() as $member_id)
-                $members[] = intval($member_id) ;
-            $values['members'] = $members;
-        }
-
-        if(in_array('summits', $relations)) {
-            $summits = [];
-            foreach ($group->getSummitsIds() as $summit_id){
-                $summits[] = intval($summit_id);
-            }
-            $values['summits'] = $summits;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'members': {
-                        if(!in_array('members', $relations)) break;
-                        $members = [];
-                        unset($values['members']);
-                        foreach ($group->getMembers() as $m) {
-                            $members[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        $values['members'] = $members;
-                    }
-                        break;
-                    case 'summits': {
-                        if(!in_array('summits', $relations)) break;
-                        $summits = [];
-                        unset($values['summits']);
-                        foreach ($group->getSummits() as $s) {
-                            $summits[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        $values['summits'] = $summits;
-                    }
-                        break;
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $group = $this->object;
+    if (!$group instanceof SummitAdministratorPermissionGroup) {
+      return [];
     }
 
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("members", $relations)) {
+      $members = [];
+      foreach ($group->getMembersIds() as $member_id) {
+        $members[] = intval($member_id);
+      }
+      $values["members"] = $members;
+    }
+
+    if (in_array("summits", $relations)) {
+      $summits = [];
+      foreach ($group->getSummitsIds() as $summit_id) {
+        $summits[] = intval($summit_id);
+      }
+      $values["summits"] = $summits;
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "members":
+            if (!in_array("members", $relations)) {
+              break;
+            }
+            $members = [];
+            unset($values["members"]);
+            foreach ($group->getMembers() as $m) {
+              $members[] = SerializerRegistry::getInstance()
+                ->getSerializer($m)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            $values["members"] = $members;
+            break;
+          case "summits":
+            if (!in_array("summits", $relations)) {
+              break;
+            }
+            $summits = [];
+            unset($values["summits"]);
+            foreach ($group->getSummits() as $s) {
+              $summits[] = SerializerRegistry::getInstance()
+                ->getSerializer($s)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            $values["summits"] = $summits;
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

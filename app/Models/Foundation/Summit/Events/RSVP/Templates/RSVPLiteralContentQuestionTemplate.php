@@ -11,55 +11,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPLiteralContentQuestionTemplate")
  * @ORM\Entity
  * Class RSVPLiteralContentQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPLiteralContentQuestionTemplate extends RSVPQuestionTemplate
-{
-    const ClassName = 'RSVPLiteralContentQuestionTemplate';
-    /**
-     * @ORM\Column(name="Content", type="string")
-     * @var string
-     */
-    protected $content;
+class RSVPLiteralContentQuestionTemplate extends RSVPQuestionTemplate {
+  const ClassName = "RSVPLiteralContentQuestionTemplate";
+  /**
+   * @ORM\Column(name="Content", type="string")
+   * @var string
+   */
+  protected $content;
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return string
-     */
-    public function getContent()
-    {
-        return $this->content;
-    }
+  /**
+   * @return string
+   */
+  public function getContent() {
+    return $this->content;
+  }
 
-    /**
-     * @param string $content
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
+  /**
+   * @param string $content
+   */
+  public function setContent($content) {
+    $this->content = $content;
+  }
 
-    public static $metadata = [
-        'content'    => 'string',
-        'class_name' => self::ClassName,
-    ];
+  public static $metadata = [
+    "content" => "string",
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(RSVPQuestionTemplate::getMetadata(), self::$metadata);
-    }
-
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(RSVPQuestionTemplate::getMetadata(), self::$metadata);
+  }
 }

@@ -24,33 +24,27 @@ use libs\utils\ICacheService;
  * Class UtilsProvider
  * @package App\Services\Utils
  */
-final class UtilsProvider extends ServiceProvider
-{
-    protected $defer = false;
+final class UtilsProvider extends ServiceProvider {
+  protected $defer = false;
 
-    public function boot()
-    {
-    }
+  public function boot() {
+  }
 
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        App::singleton(IPromoCodeGenerator::class, function () {
-            return new PromoCodeGenerator(
-                App::make(ICacheService::class),
-                PromoCodeGenerator::Length
-            );
-        });
+  /**
+   * Register the service provider.
+   *
+   * @return void
+   */
+  public function register() {
+    App::singleton(IPromoCodeGenerator::class, function () {
+      return new PromoCodeGenerator(App::make(ICacheService::class), PromoCodeGenerator::Length);
+    });
 
-        App::singleton(IEncryptionAES256KeysGenerator::class, function () {
-            return new EncryptionAES256KeysGenerator(
-                App::make(ICacheService::class),
-                EncryptionAES256KeysGenerator::Length
-            );
-        });
-    }
+    App::singleton(IEncryptionAES256KeysGenerator::class, function () {
+      return new EncryptionAES256KeysGenerator(
+        App::make(ICacheService::class),
+        EncryptionAES256KeysGenerator::Length,
+      );
+    });
+  }
 }

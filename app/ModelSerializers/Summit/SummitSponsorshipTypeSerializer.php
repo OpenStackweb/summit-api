@@ -20,40 +20,39 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitSponsorshipType
  * @package App\ModelSerializers\Summit
  */
-final class SummitSponsorshipTypeSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'WidgetTitle' => 'widget_title:json_string',
-        'LobbyTemplate' => 'lobby_template:json_string',
-        'ExpoHallTemplate' => 'expo_hall_template:json_string',
-        'SponsorPageTemplate' => 'sponsor_page_template:json_string',
-        'EventPageTemplate' => 'event_page_template:json_string',
-        'SponsorPageUseDisqusWidget' => 'sponsor_page_use_disqus_widget:json_boolean',
-        'SponsorPageUseLiveEventWidget' => 'sponsor_page_use_live_event_widget:json_boolean',
-        'SponsorPageUseScheduleWidget' => 'sponsor_page_use_schedule_widget:json_boolean',
-        'SponsorPageUseBannerWidget' => 'sponsor_page_use_banner_widget:json_boolean',
-        'TypeId' => 'type_id:json_int',
-        'BadgeImageUrl'  => 'badge_image:json_string',
-        'BadgeImageAltText'  => 'badge_image_alt_text:json_string',
-        'SummitID' => 'summit_id:json_int',
-        'Order' => 'order:json_int',
-        'ShouldDisplayOnExpoHallPage' => 'should_display_on_expo_hall_page:json_boolean',
-        'ShouldDisplayOnLobbyPage' => 'should_display_on_lobby_page:json_boolean',
-    ];
+final class SummitSponsorshipTypeSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "WidgetTitle" => "widget_title:json_string",
+    "LobbyTemplate" => "lobby_template:json_string",
+    "ExpoHallTemplate" => "expo_hall_template:json_string",
+    "SponsorPageTemplate" => "sponsor_page_template:json_string",
+    "EventPageTemplate" => "event_page_template:json_string",
+    "SponsorPageUseDisqusWidget" => "sponsor_page_use_disqus_widget:json_boolean",
+    "SponsorPageUseLiveEventWidget" => "sponsor_page_use_live_event_widget:json_boolean",
+    "SponsorPageUseScheduleWidget" => "sponsor_page_use_schedule_widget:json_boolean",
+    "SponsorPageUseBannerWidget" => "sponsor_page_use_banner_widget:json_boolean",
+    "TypeId" => "type_id:json_int",
+    "BadgeImageUrl" => "badge_image:json_string",
+    "BadgeImageAltText" => "badge_image_alt_text:json_string",
+    "SummitID" => "summit_id:json_int",
+    "Order" => "order:json_int",
+    "ShouldDisplayOnExpoHallPage" => "should_display_on_expo_hall_page:json_boolean",
+    "ShouldDisplayOnLobbyPage" => "should_display_on_lobby_page:json_boolean",
+  ];
 
-    protected static $expand_mappings = [
-        'summit' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'summit_id',
-            'getter' => 'getSummit',
-            'has' => 'hasSummit'
-        ],
-        'type' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'type_id',
-            'getter' => 'getType',
-            'has' => 'hasType'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "summit" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "summit_id",
+      "getter" => "getSummit",
+      "has" => "hasSummit",
+    ],
+    "type" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "type_id",
+      "getter" => "getType",
+      "has" => "hasType",
+    ],
+  ];
 }

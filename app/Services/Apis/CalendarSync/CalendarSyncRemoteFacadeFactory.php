@@ -18,30 +18,28 @@ use Illuminate\Support\Facades\Log;
  * Class CalendarSyncRemoteFacadeFactory
  * @package services\apis\CalendarSync
  */
-final class CalendarSyncRemoteFacadeFactory implements ICalendarSyncRemoteFacadeFactory
-{
-    /**
-     * @param CalendarSyncInfo $sync_calendar_info
-     * @return ICalendarSyncRemoteFacade|null
-     */
-    public function build(CalendarSyncInfo $sync_calendar_info){
-        try {
-            switch ($sync_calendar_info->getProvider()) {
-                case CalendarSyncInfo::ProviderGoogle:
-                    return new GoogleCalendarSyncRemoteFacade($sync_calendar_info);
-                    break;
-                case CalendarSyncInfo::ProvideriCloud:
-                    return new ICloudCalendarSyncRemoteFacade($sync_calendar_info);
-                    break;
-                case CalendarSyncInfo::ProviderOutlook:
-                    return new OutlookCalendarSyncRemoteFacade($sync_calendar_info);
-                    break;
-            }
-            return null;
-        }
-        catch (\Exception $ex){
-            Log::warning($ex);
-            return null;
-        }
+final class CalendarSyncRemoteFacadeFactory implements ICalendarSyncRemoteFacadeFactory {
+  /**
+   * @param CalendarSyncInfo $sync_calendar_info
+   * @return ICalendarSyncRemoteFacade|null
+   */
+  public function build(CalendarSyncInfo $sync_calendar_info) {
+    try {
+      switch ($sync_calendar_info->getProvider()) {
+        case CalendarSyncInfo::ProviderGoogle:
+          return new GoogleCalendarSyncRemoteFacade($sync_calendar_info);
+          break;
+        case CalendarSyncInfo::ProvideriCloud:
+          return new ICloudCalendarSyncRemoteFacade($sync_calendar_info);
+          break;
+        case CalendarSyncInfo::ProviderOutlook:
+          return new OutlookCalendarSyncRemoteFacade($sync_calendar_info);
+          break;
+      }
+      return null;
+    } catch (\Exception $ex) {
+      Log::warning($ex);
+      return null;
     }
+  }
 }

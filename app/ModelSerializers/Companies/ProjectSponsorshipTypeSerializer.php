@@ -17,27 +17,26 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class ProjectSponsorshipTypeSerializer
  * @package ModelSerializers
  */
-class ProjectSponsorshipTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Description' => 'description:json_string',
-        'Active' => 'is_active:json_boolean',
-        'Order' => 'order:json_int',
-        'SponsoredProjectId' => 'sponsored_project_id:json_int',
-        'SupportingCompaniesIds' => 'supporting_companies',
-    ];
+class ProjectSponsorshipTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "Active" => "is_active:json_boolean",
+    "Order" => "order:json_int",
+    "SponsoredProjectId" => "sponsored_project_id:json_int",
+    "SupportingCompaniesIds" => "supporting_companies",
+  ];
 
-    protected static $expand_mappings = [
-        'sponsored_project' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'sponsored_project_id',
-            'getter' => 'getSponsoredProject',
-            'has' => 'hasSponsoredProject'
-        ],
-        'supporting_companies' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getSupportingCompanies',
-        ]
-    ];
+  protected static $expand_mappings = [
+    "sponsored_project" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "sponsored_project_id",
+      "getter" => "getSponsoredProject",
+      "has" => "hasSponsoredProject",
+    ],
+    "supporting_companies" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getSupportingCompanies",
+    ],
+  ];
 }

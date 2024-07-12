@@ -46,1510 +46,1943 @@ use utils\PagingResponse;
  * Class OAuth2PresentationApiController
  * @package App\Http\Controllers
  */
-final class OAuth2PresentationApiController extends OAuth2ProtectedController
-{
-    use GetAndValidateJsonPayload;
+final class OAuth2PresentationApiController extends OAuth2ProtectedController {
+  use GetAndValidateJsonPayload;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    use GetAndValidateJsonPayload;
+  use GetAndValidateJsonPayload;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * @var IPresentationService
-     */
-    private $presentation_service;
+  /**
+   * @var IPresentationService
+   */
+  private $presentation_service;
 
-    /**
-     * @var ISummitEventRepository
-     */
-    private $presentation_repository;
+  /**
+   * @var ISummitEventRepository
+   */
+  private $presentation_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var ISummitPresentationCommentRepository
-     */
-    private $presentation_comments_repository;
+  /**
+   * @var ISummitPresentationCommentRepository
+   */
+  private $presentation_comments_repository;
 
-    /**
-     * OAuth2PresentationApiController constructor.
-     * @param IPresentationService $presentation_service
-     * @param ISummitRepository $summit_repository
-     * @param ISummitEventRepository $presentation_repository
-     * @param IMemberRepository $member_repository
-     * @params ISummitPresentationCommentRepository $presentation_comments_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IPresentationService                 $presentation_service,
-        ISummitRepository                    $summit_repository,
-        ISummitEventRepository               $presentation_repository,
-        IMemberRepository                    $member_repository,
-        ISummitPresentationCommentRepository $presentation_comments_repository,
-        IResourceServerContext               $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->presentation_repository = $presentation_repository;
-        $this->presentation_service = $presentation_service;
-        $this->member_repository = $member_repository;
-        $this->summit_repository = $summit_repository;
-        $this->presentation_comments_repository = $presentation_comments_repository;
-    }
+  /**
+   * OAuth2PresentationApiController constructor.
+   * @param IPresentationService $presentation_service
+   * @param ISummitRepository $summit_repository
+   * @param ISummitEventRepository $presentation_repository
+   * @param IMemberRepository $member_repository
+   * @params ISummitPresentationCommentRepository $presentation_comments_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IPresentationService $presentation_service,
+    ISummitRepository $summit_repository,
+    ISummitEventRepository $presentation_repository,
+    IMemberRepository $member_repository,
+    ISummitPresentationCommentRepository $presentation_comments_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->presentation_repository = $presentation_repository;
+    $this->presentation_service = $presentation_service;
+    $this->member_repository = $member_repository;
+    $this->summit_repository = $summit_repository;
+    $this->presentation_comments_repository = $presentation_comments_repository;
+  }
 
-    //presentations
+  //presentations
 
-    //videos
+  //videos
 
-    public function getPresentationVideos($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+  public function getPresentationVideos($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
 
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
 
-            if (!$presentation instanceof Presentation) return $this->error404();
+      $videos = $presentation->getVideos();
 
-            $videos = $presentation->getVideos();
-
-            $items = [];
-            foreach ($videos as $i) {
-                if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize
-                    (
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    );
-                }
-                $items[] = $i;
-            }
-
-            return $this->ok($items);
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $video_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationVideo($summit_id, $presentation_id, $video_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $video_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
-
-            if (!$presentation instanceof Presentation) return $this->error404();
-
-            $video = $presentation->getVideoBy(intval($video_id));
-
-            if (is_null($video)) return $this->error404();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($video)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function addVideo(LaravelRequest $request, $summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $payload = $this->getJsonPayload(PresentationVideoValidationRulesFactory::build($this->getJsonData()), true);
-
-            $video = $this->presentation_service->addVideoTo(intval($presentation_id), HTMLCleaner::cleanData($payload,
-                [
-                    'name',
-                    'description',
-                ]));
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($video)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $video_id
-     * @return JsonResponse|mixed
-     */
-    public function updateVideo(LaravelRequest $request, $summit_id, $presentation_id, $video_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $video_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $payload = $this->getJsonPayload(PresentationVideoValidationRulesFactory::build($this->getJsonData(), true), true);
-
-            $video = $this->presentation_service->updateVideo(intval($presentation_id), intval($video_id), HTMLCleaner::cleanData($payload, [
-                'name',
-                'description',
-            ]));
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($video)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $video_id
-     * @return JsonResponse|mixed
-     */
-    public function deleteVideo($summit_id, $presentation_id, $video_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $video_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $this->presentation_service->deleteVideo(intval($presentation_id), intval($video_id));
-
-            return $this->deleted();
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
-    public function submitPresentation($summit_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForSubmission($this->getJsonData()), true);
-
-            $presentation = $this->presentation_service->submitPresentation($summit, HTMLCleaner::cleanData($payload, [
-                'title',
-                'description',
-                'social_summary',
-                'attendees_expected_learnt',
-            ]));
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
-    public function getPresentationSubmission($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $presentation = $summit->getEvent(intval($presentation_id));
-            if(!$presentation instanceof Presentation) return $this->error404();
-
-            if(!$presentation->memberCanEdit($current_member))
-                return $this->error403();
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
-    public function updatePresentationSubmission($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForSubmission($this->getJsonData(), true), true);
-
-            Log::debug(sprintf("SummitEventApiController::updatePresentationSubmission presentation_id %s payload %s", $presentation_id, json_encode($payload)));
-            $presentation = $this->presentation_service->updatePresentationSubmission
-            (
-                $summit,
-                intval($presentation_id),
-                HTMLCleaner::cleanData($payload, [
-                    'title',
-                    'description',
-                    'social_summary',
-                    'attendees_expected_learnt',
-                ])
+      $items = [];
+      foreach ($videos as $i) {
+        if ($i instanceof IEntity) {
+          $i = SerializerRegistry::getInstance()
+            ->getSerializer($i)
+            ->serialize(
+              SerializerUtils::getExpand(),
+              SerializerUtils::getFields(),
+              SerializerUtils::getRelations(),
             );
+        }
+        $items[] = $i;
+      }
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->ok($items);
+    });
+  }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
-    public function completePresentationSubmission($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $video_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationVideo($summit_id, $presentation_id, $video_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $video_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
 
-            $presentation = $this->presentation_service->completePresentationSubmission
-            (
-                $summit,
-                intval($presentation_id)
+      $video = $presentation->getVideoBy(intval($video_id));
+
+      if (is_null($video)) {
+        return $this->error404();
+      }
+
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($video)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function addVideo(LaravelRequest $request, $summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $payload = $this->getJsonPayload(
+        PresentationVideoValidationRulesFactory::build($this->getJsonData()),
+        true,
+      );
+
+      $video = $this->presentation_service->addVideoTo(
+        intval($presentation_id),
+        HTMLCleaner::cleanData($payload, ["name", "description"]),
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($video)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $video_id
+   * @return JsonResponse|mixed
+   */
+  public function updateVideo(LaravelRequest $request, $summit_id, $presentation_id, $video_id) {
+    return $this->processRequest(function () use (
+      $request,
+      $summit_id,
+      $presentation_id,
+      $video_id,
+    ) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $payload = $this->getJsonPayload(
+        PresentationVideoValidationRulesFactory::build($this->getJsonData(), true),
+        true,
+      );
+
+      $video = $this->presentation_service->updateVideo(
+        intval($presentation_id),
+        intval($video_id),
+        HTMLCleaner::cleanData($payload, ["name", "description"]),
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($video)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $video_id
+   * @return JsonResponse|mixed
+   */
+  public function deleteVideo($summit_id, $presentation_id, $video_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $video_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $this->presentation_service->deleteVideo(intval($presentation_id), intval($video_id));
+
+      return $this->deleted();
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @return mixed
+   */
+  public function submitPresentation($summit_id) {
+    return $this->processRequest(function () use ($summit_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $payload = $this->getJsonPayload(
+        SummitEventValidationRulesFactory::buildForSubmission($this->getJsonData()),
+        true,
+      );
+
+      $presentation = $this->presentation_service->submitPresentation(
+        $summit,
+        HTMLCleaner::cleanData($payload, [
+          "title",
+          "description",
+          "social_summary",
+          "attendees_expected_learnt",
+        ]),
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($presentation)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return mixed
+   */
+  public function getPresentationSubmission($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $presentation = $summit->getEvent(intval($presentation_id));
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
+
+      if (!$presentation->memberCanEdit($current_member)) {
+        return $this->error403();
+      }
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($presentation)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return mixed
+   */
+  public function updatePresentationSubmission($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $payload = $this->getJsonPayload(
+        SummitEventValidationRulesFactory::buildForSubmission($this->getJsonData(), true),
+        true,
+      );
+
+      Log::debug(
+        sprintf(
+          "SummitEventApiController::updatePresentationSubmission presentation_id %s payload %s",
+          $presentation_id,
+          json_encode($payload),
+        ),
+      );
+      $presentation = $this->presentation_service->updatePresentationSubmission(
+        $summit,
+        intval($presentation_id),
+        HTMLCleaner::cleanData($payload, [
+          "title",
+          "description",
+          "social_summary",
+          "attendees_expected_learnt",
+        ]),
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($presentation)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return mixed
+   */
+  public function completePresentationSubmission($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $presentation = $this->presentation_service->completePresentationSubmission(
+        $summit,
+        intval($presentation_id),
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($presentation)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return mixed
+   */
+  public function deletePresentation($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $this->presentation_service->deletePresentation($summit, intval($presentation_id));
+
+      return $this->deleted();
+    });
+  }
+
+  // Slides
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationSlides($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
+
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
+
+      $slides = $presentation->getSlides();
+
+      $items = [];
+      foreach ($slides as $i) {
+        if ($i instanceof IEntity) {
+          $i = SerializerRegistry::getInstance()
+            ->getSerializer($i)
+            ->serialize(
+              SerializerUtils::getExpand(),
+              SerializerUtils::getFields(),
+              SerializerUtils::getRelations(),
             );
+        }
+        $items[] = $i;
+      }
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->ok($items);
+    });
+  }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
-    public function deletePresentation($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $slide_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationSlide($summit_id, $presentation_id, $slide_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $slide_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
 
-            $this->presentation_service->deletePresentation($summit, intval($presentation_id));
+      $slide = $presentation->getSlideBy(intval($slide_id));
 
-            return $this->deleted();
+      if (is_null($slide)) {
+        return $this->error404();
+      }
 
-        });
-    }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($slide)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-    // Slides
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function addPresentationSlide(LaravelRequest $request, $summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationSlides($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent($presentation_id);
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
 
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
+      $data = $request->all();
+      $data = MultipartFormDataCleaner::cleanBool("display_on_site", $data);
+      $data = MultipartFormDataCleaner::cleanBool("featured", $data);
 
-            if (!$presentation instanceof Presentation) return $this->error404();
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data, PresentationSlideValidationRulesFactory::build($data));
 
-            $slides = $presentation->getSlides();
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
 
-            $items = [];
-            foreach ($slides as $i) {
-                if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize(
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    );
-                }
-                $items[] = $i;
-            }
+      $fields = ["name", "description"];
 
-            return $this->ok($items);
+      $slide = $this->presentation_service->addSlideTo(
+        $request,
+        intval($presentation_id),
+        HTMLCleaner::cleanData($data, $fields),
+        array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions),
+        intval(Config::get("mediaupload.slides_max_file_size")),
+      );
 
-        });
-    }
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($slide)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $slide_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationSlide($summit_id, $presentation_id, $slide_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $slide_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $slide_id
+   * @return JsonResponse|mixed
+   */
+  public function updatePresentationSlide(
+    LaravelRequest $request,
+    $summit_id,
+    $presentation_id,
+    $slide_id,
+  ) {
+    return $this->processRequest(function () use (
+      $request,
+      $summit_id,
+      $presentation_id,
+      $slide_id,
+    ) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
 
-            if (!$presentation instanceof Presentation) return $this->error404();
+      $data = $request->all();
+      $data = MultipartFormDataCleaner::cleanBool("display_on_site", $data);
+      $data = MultipartFormDataCleaner::cleanBool("featured", $data);
+      $data = MultipartFormDataCleaner::cleanInt("order", $data);
 
-            $slide = $presentation->getSlideBy(intval($slide_id));
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make(
+        $data,
+        PresentationSlideValidationRulesFactory::build($data, true),
+      );
 
-            if (is_null($slide)) return $this->error404();
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($slide)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+      $fields = ["name", "description"];
 
-        });
-    }
+      $slide = $this->presentation_service->updateSlide(
+        $request,
+        intval($presentation_id),
+        intval($slide_id),
+        HTMLCleaner::cleanData($data, $fields),
+        array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions),
+        intval(Config::get("mediaupload.slides_max_file_size")),
+      );
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function addPresentationSlide(LaravelRequest $request, $summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($slide)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $slide_id
+   * @return JsonResponse|mixed
+   */
+  public function deletePresentationSlide($summit_id, $presentation_id, $slide_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $slide_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member))
-                return $this->error403();
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
 
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent($presentation_id);
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
+      $this->presentation_service->deleteSlide(intval($presentation_id), intval($slide_id));
 
-            $data = $request->all();
-            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
-            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
+      return $this->deleted();
+    });
+  }
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, PresentationSlideValidationRulesFactory::build($data));
+  // Links
 
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationLinks($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $fields = [
-                'name',
-                'description',
-            ];
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
 
-            $slide = $this->presentation_service->addSlideTo
-            (
-                $request,
-                intval($presentation_id),
-                HTMLCleaner::cleanData($data, $fields),
-                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions),
-                intval(Config::get("mediaupload.slides_max_file_size"))
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
+
+      $links = $presentation->getLinks();
+
+      $items = [];
+      foreach ($links as $i) {
+        if ($i instanceof IEntity) {
+          $i = SerializerRegistry::getInstance()
+            ->getSerializer($i)
+            ->serialize(
+              SerializerUtils::getExpand(),
+              SerializerUtils::getFields(),
+              SerializerUtils::getRelations(),
             );
+        }
+        $items[] = $i;
+      }
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($slide)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->ok($items);
+    });
+  }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $slide_id
-     * @return JsonResponse|mixed
-     */
-    public function updatePresentationSlide(LaravelRequest $request, $summit_id, $presentation_id, $slide_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $slide_id) {
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $link_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationLink($summit_id, $presentation_id, $link_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $link_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
 
-            $data = $request->all();
-            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
-            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
-            $data = MultipartFormDataCleaner::cleanInt('order', $data);
+      $link = $presentation->getLinkBy(intval($link_id));
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, PresentationSlideValidationRulesFactory::build($data, true));
+      if (is_null($link)) {
+        return $this->error404();
+      }
 
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($link)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-            $fields = [
-                'name',
-                'description',
-            ];
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function addPresentationLink(LaravelRequest $request, $summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $slide = $this->presentation_service->updateSlide
-            (
-                $request,
-                intval($presentation_id),
-                intval($slide_id),
-                HTMLCleaner::cleanData($data, $fields),
-                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions),
-                intval(Config::get("mediaupload.slides_max_file_size"))
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
+
+      $data = $request->all();
+      $data = MultipartFormDataCleaner::cleanBool("display_on_site", $data);
+      $data = MultipartFormDataCleaner::cleanBool("featured", $data);
+
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data, PresentationLinkValidationRulesFactory::build($data));
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
+
+      $fields = ["name", "description"];
+
+      $link = $this->presentation_service->addLinkTo(
+        intval($presentation_id),
+        HTMLCleaner::cleanData($data, $fields),
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($link)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $link_id
+   * @return JsonResponse|mixed
+   */
+  public function updatePresentationLink(
+    LaravelRequest $request,
+    $summit_id,
+    $presentation_id,
+    $link_id,
+  ) {
+    return $this->processRequest(function () use (
+      $request,
+      $summit_id,
+      $presentation_id,
+      $link_id,
+    ) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
+
+      $data = $request->all();
+      $data = MultipartFormDataCleaner::cleanBool("display_on_site", $data);
+      $data = MultipartFormDataCleaner::cleanBool("featured", $data);
+      $data = MultipartFormDataCleaner::cleanInt("order", $data);
+
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make(
+        $data,
+        PresentationLinkValidationRulesFactory::build($data, true),
+      );
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
+
+      $fields = ["name", "description"];
+
+      $link = $this->presentation_service->updateLink(
+        intval($presentation_id),
+        intval($link_id),
+        HTMLCleaner::cleanData($data, $fields),
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($link)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $link_id
+   * @return JsonResponse|mixed
+   */
+  public function deletePresentationLink($summit_id, $presentation_id, $link_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $link_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
+
+      $this->presentation_service->deleteLink(intval($presentation_id), intval($link_id));
+
+      return $this->deleted();
+    });
+  }
+
+  // MediaUploads
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationMediaUploads($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
+
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
+
+      $mediaUploads = $presentation->getMediaUploads();
+
+      $items = [];
+      foreach ($mediaUploads as $i) {
+        if ($i instanceof IEntity) {
+          $i = SerializerRegistry::getInstance()
+            ->getSerializer($i)
+            ->serialize(
+              SerializerUtils::getExpand(),
+              SerializerUtils::getFields(),
+              SerializerUtils::getRelations(),
             );
+        }
+        $items[] = $i;
+      }
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
+      return $this->ok($items);
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $media_upload_id
+   * @return JsonResponse|mixed
+   */
+  public function getPresentationMediaUpload($summit_id, $presentation_id, $media_upload_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $presentation = $this->presentation_repository->getById(intval($presentation_id));
+
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
+
+      $mediaUpload = $presentation->getMediaUploadBy(intval($media_upload_id));
+
+      if (is_null($mediaUpload)) {
+        return $this->error404();
+      }
+
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($mediaUpload)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function addPresentationMediaUpload(
+    LaravelRequest $request,
+    $summit_id,
+    $presentation_id,
+  ) {
+    return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $serializeType = SerializerRegistry::SerializerType_Private;
+
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        $serializeType = SerializerRegistry::SerializerType_Public;
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
+
+      $data = $request->all();
+
+      $rules = [
+        "media_upload_type_id" => "required|integer",
+        "display_on_site" => "sometimes|boolean",
+      ];
+
+      $data = MultipartFormDataCleaner::cleanBool("display_on_site", $data);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data, $rules);
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
+
+      $mediaUpload = $this->presentation_service->addMediaUploadTo(
+        $request,
+        $summit,
+        intval($presentation_id),
+        $data,
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($mediaUpload, $serializeType)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param LaravelRequest $request
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $media_upload_id
+   * @return JsonResponse|mixed
+   */
+  public function updatePresentationMediaUpload(
+    LaravelRequest $request,
+    $summit_id,
+    $presentation_id,
+    $media_upload_id,
+  ) {
+    return $this->processRequest(function () use (
+      $request,
+      $summit_id,
+      $presentation_id,
+      $media_upload_id,
+    ) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $serializeType = SerializerRegistry::SerializerType_Private;
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        $serializeType = SerializerRegistry::SerializerType_Public;
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
+
+      $data = $request->all();
+
+      $rules = [
+        "display_on_site" => "sometimes|boolean",
+      ];
+
+      $data = MultipartFormDataCleaner::cleanBool("display_on_site", $data);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data, $rules);
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
+
+      $mediaUpload = $this->presentation_service->updateMediaUploadFrom(
+        $request,
+        $summit,
+        intval($presentation_id),
+        intval($media_upload_id),
+        $data,
+        $current_member,
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($mediaUpload, $serializeType)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $media_upload_id
+   * @return JsonResponse|mixed
+   */
+  public function deletePresentationMediaUpload($summit_id, $presentation_id, $media_upload_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+      $isAdmin =
+        $current_member->isAdmin() ||
+        $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+      if (!$isAdmin) {
+        // check if we could edit presentation
+        $presentation = $summit->getEvent(intval($presentation_id));
+        if (!$presentation instanceof Presentation) {
+          return $this->error404();
+        }
+        if (
+          !$current_member->hasSpeaker() ||
+          !$presentation->canEdit($current_member->getSpeaker())
+        ) {
+          return $this->error403();
+        }
+      }
+
+      $this->presentation_service->deleteMediaUpload(
+        $summit,
+        intval($presentation_id),
+        intval($media_upload_id),
+        $current_member,
+      );
+
+      return $this->deleted();
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @return JsonResponse|mixed
+   */
+  public function importAssetsFromMUX($summit_id) {
+    return $this->processRequest(function () use ($summit_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $data = Request::json();
+      $data = $data->all();
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data, [
+        "mux_token_id" => "required|string",
+        "mux_token_secret" => "required|string",
+        "email_to" => "sometimes|email",
+      ]);
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        $ex->setMessages($validation->messages()->toArray());
+        throw $ex;
+      }
+
+      VideoStreamUrlMUXProcessingForSummitJob::dispatch(
+        $summit_id,
+        $data["mux_token_id"],
+        $data["mux_token_secret"],
+        $data["email_to"] ?? null,
+      )->delay(now()->addMinutes());
+
+      return $this->ok();
+    });
+  }
+
+  /**
+   * Attendees Votes
+   */
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function getAttendeeVotes($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      return $this->ok();
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function castAttendeeVote($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      Log::debug(
+        sprintf(
+          "OAuth2PresentationApiController::castAttendeeVote summit %s presentation %s",
+          $summit_id,
+          $presentation_id,
+        ),
+      );
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $vote = $this->presentation_service->castAttendeeVote(
+        $summit,
+        $current_member,
+        intval($presentation_id),
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($vote)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse|mixed
+   */
+  public function unCastAttendeeVote($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $this->presentation_service->unCastAttendeeVote(
+        $summit,
+        $current_member,
+        intval($presentation_id),
+      );
+
+      return $this->deleted();
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $selection_plan_id
+   * @param $presentation_id
+   * @param $score_type_id
+   * @return JsonResponse|mixed
+   */
+  public function addTrackChairScore(
+    $summit_id,
+    $selection_plan_id,
+    $presentation_id,
+    $score_type_id,
+  ) {
+    return $this->processRequest(function () use (
+      $summit_id,
+      $selection_plan_id,
+      $presentation_id,
+      $score_type_id,
+    ) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $score = $this->presentation_service->addTrackChairScore(
+        $summit,
+        $current_member,
+        intval($selection_plan_id),
+        intval($presentation_id),
+        intval($score_type_id),
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($score)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $selection_plan_id
+   * @param $presentation_id
+   * @param $score_type_id
+   * @return JsonResponse|mixed
+   */
+  public function removeTrackChairScore(
+    $summit_id,
+    $selection_plan_id,
+    $presentation_id,
+    $score_type_id,
+  ) {
+    return $this->processRequest(function () use (
+      $summit_id,
+      $selection_plan_id,
+      $presentation_id,
+      $score_type_id,
+    ) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $this->presentation_service->removeTrackChairScore(
+        $summit,
+        $current_member,
+        intval($selection_plan_id),
+        intval($presentation_id),
+        intval($score_type_id),
+      );
+
+      return $this->deleted();
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $speaker_id
+   * @return JsonResponse|mixed
+   */
+  public function addSpeaker2Presentation($summit_id, $presentation_id, $speaker_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find(intval($summit_id));
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $payload = $this->getJsonPayload([
+        "order" => "sometimes|integer|min:1",
+      ]);
+
+      $presentation = $this->presentation_service->upsertPresentationSpeaker(
+        $summit,
+        intval($presentation_id),
+        intval($speaker_id),
+        $payload,
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($presentation)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $speaker_id
+   * @return JsonResponse|mixed
+   */
+  public function updateSpeakerInPresentation($summit_id, $presentation_id, $speaker_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find(intval($summit_id));
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $payload = $this->getJsonPayload([
+        "order" => "required|integer|min:1",
+      ]);
+
+      $presentation = $this->presentation_service->upsertPresentationSpeaker(
+        $summit,
+        intval($presentation_id),
+        intval($speaker_id),
+        $payload,
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($presentation)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $speaker_id
+   * @return JsonResponse|mixed
+   */
+  public function removeSpeakerFromPresentation($summit_id, $presentation_id, $speaker_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find(intval($summit_id));
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $this->presentation_service->removeSpeakerFromPresentation(
+        $summit,
+        intval($presentation_id),
+        intval($speaker_id),
+      );
+
+      return $this->deleted();
+    });
+  }
+
+  use ParametrizedGetAll;
+
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return JsonResponse
+   */
+  public function getComments($summit_id, $presentation_id) {
+    $summit = SummitFinderStrategyFactory::build(
+      $this->summit_repository,
+      $this->getResourceServerContext(),
+    )->find($summit_id);
+    if (is_null($summit)) {
+      return $this->error404();
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $slide_id
-     * @return JsonResponse|mixed
-     */
-    public function deletePresentationSlide($summit_id, $presentation_id, $slide_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $slide_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $this->presentation_service->deleteSlide(intval($presentation_id), intval($slide_id));
-
-            return $this->deleted();
-
-        });
-    }
-
-    // Links
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationLinks($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
-
-            if (!$presentation instanceof Presentation) return $this->error404();
-
-            $links = $presentation->getLinks();
-
-            $items = [];
-            foreach ($links as $i) {
-                if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize(
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    );
-                }
-                $items[] = $i;
-            }
-
-            return $this->ok($items);
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $link_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationLink($summit_id, $presentation_id, $link_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $link_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
-
-            if (!$presentation instanceof Presentation) return $this->error404();
-
-            $link = $presentation->getLinkBy(intval($link_id));
-
-            if (is_null($link)) return $this->error404();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($link)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function addPresentationLink(LaravelRequest $request, $summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $data = $request->all();
-            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
-            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
-
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, PresentationLinkValidationRulesFactory::build($data));
-
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
-
-            $fields = [
-                'name',
-                'description',
-            ];
-
-            $link = $this->presentation_service->addLinkTo(intval($presentation_id), HTMLCleaner::cleanData($data, $fields));
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($link)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $link_id
-     * @return JsonResponse|mixed
-     */
-    public function updatePresentationLink(LaravelRequest $request, $summit_id, $presentation_id, $link_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $link_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $data = $request->all();
-            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
-            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
-            $data = MultipartFormDataCleaner::cleanInt('order', $data);
-
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, PresentationLinkValidationRulesFactory::build($data, true));
-
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
-
-            $fields = [
-                'name',
-                'description',
-            ];
-
-            $link = $this->presentation_service->updateLink(intval($presentation_id), intval($link_id), HTMLCleaner::cleanData($data, $fields));
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($link)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $link_id
-     * @return JsonResponse|mixed
-     */
-    public function deletePresentationLink($summit_id, $presentation_id, $link_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $link_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $this->presentation_service->deleteLink(intval($presentation_id), intval($link_id));
-
-            return $this->deleted();
-        });
-    }
-
-    // MediaUploads
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationMediaUploads($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
-
-            if (!$presentation instanceof Presentation) return $this->error404();
-
-            $mediaUploads = $presentation->getMediaUploads();
-
-            $items = [];
-            foreach ($mediaUploads as $i) {
-                if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize(
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    );
-                }
-                $items[] = $i;
-            }
-
-            return $this->ok($items);
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $media_upload_id
-     * @return JsonResponse|mixed
-     */
-    public function getPresentationMediaUpload($summit_id, $presentation_id, $media_upload_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $presentation = $this->presentation_repository->getById(intval($presentation_id));
-
-            if (!$presentation instanceof Presentation) return $this->error404();
-
-            $mediaUpload = $presentation->getMediaUploadBy(intval($media_upload_id));
-
-            if (is_null($mediaUpload)) return $this->error404();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($mediaUpload)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function addPresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $serializeType = SerializerRegistry::SerializerType_Private;
-
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                $serializeType = SerializerRegistry::SerializerType_Public;
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $data = $request->all();
-
-            $rules = [
-                'media_upload_type_id' => 'required|integer',
-                'display_on_site' => 'sometimes|boolean',
-            ];
-
-            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
-
-            $mediaUpload = $this->presentation_service->addMediaUploadTo
-            (
-                $request,
-                $summit,
-                intval($presentation_id),
-                $data
-            );
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer
-            (
-                $mediaUpload, $serializeType)
-                ->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                )
-            );
-        });
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $media_upload_id
-     * @return JsonResponse|mixed
-     */
-    public function updatePresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id, $media_upload_id)
-    {
-        return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $media_upload_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $serializeType = SerializerRegistry::SerializerType_Private;
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                $serializeType = SerializerRegistry::SerializerType_Public;
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $data = $request->all();
-
-            $rules = [
-                'display_on_site' => 'sometimes|boolean',
-            ];
-
-            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
-
-            $mediaUpload = $this->presentation_service->updateMediaUploadFrom
-            (
-                $request,
-                $summit,
-                intval($presentation_id),
-                intval($media_upload_id),
-                $data,
-                $current_member
-            );
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer
-            (
-                $mediaUpload, $serializeType)
-                ->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                )
-            );
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $media_upload_id
-     * @return JsonResponse|mixed
-     */
-    public function deletePresentationMediaUpload($summit_id, $presentation_id, $media_upload_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if (!$isAdmin) {
-                // check if we could edit presentation
-                $presentation = $summit->getEvent(intval($presentation_id));
-                if (!$presentation instanceof Presentation)
-                    return $this->error404();
-                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                    return $this->error403();
-            }
-
-            $this->presentation_service->deleteMediaUpload($summit, intval($presentation_id), intval($media_upload_id), $current_member);
-
-            return $this->deleted();
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @return JsonResponse|mixed
-     */
-    public function importAssetsFromMUX($summit_id)
-    {
-        return $this->processRequest(function () use ($summit_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            if (!Request::isJson()) return $this->error400();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $data = Request::json();
-            $data = $data->all();
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, [
-                'mux_token_id' => 'required|string',
-                'mux_token_secret' => 'required|string',
-                'email_to' => 'sometimes|email',
-            ]);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException;
-                $ex->setMessages($validation->messages()->toArray());
-                throw $ex;
-            }
-
-            VideoStreamUrlMUXProcessingForSummitJob::dispatch(
-                $summit_id,
-                $data['mux_token_id'],
-                $data['mux_token_secret'],
-                $data['email_to'] ?? null
-            )->delay(now()->addMinutes());
-
-            return $this->ok();
-
-        });
-
-    }
-
-    /**
-     * Attendees Votes
-     */
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function getAttendeeVotes($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            return $this->ok();
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function castAttendeeVote($summit_id, $presentation_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-            Log::debug(sprintf("OAuth2PresentationApiController::castAttendeeVote summit %s presentation %s", $summit_id, $presentation_id));
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $vote = $this->presentation_service->castAttendeeVote($summit, $current_member, intval($presentation_id));
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer
-            ($vote)
-                ->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                )
-            );
-
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
-    public function unCastAttendeeVote($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $this->presentation_service->unCastAttendeeVote($summit, $current_member, intval($presentation_id));
-
-            return $this->deleted();
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $presentation_id
-     * @param $score_type_id
-     * @return JsonResponse|mixed
-     */
-    public function addTrackChairScore($summit_id, $selection_plan_id, $presentation_id, $score_type_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id, $selection_plan_id, $presentation_id, $score_type_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member))
-                return $this->error403();
-
-            $score = $this->presentation_service->addTrackChairScore($summit, $current_member, intval($selection_plan_id), intval($presentation_id), intval($score_type_id));
-
-            return $this->created(
-                SerializerRegistry::getInstance()->getSerializer
-                ($score)
-                    ->serialize
-                    (
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    )
-            );
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $presentation_id
-     * @param $score_type_id
-     * @return JsonResponse|mixed
-     */
-    public function removeTrackChairScore($summit_id, $selection_plan_id, $presentation_id, $score_type_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id, $selection_plan_id, $presentation_id, $score_type_id) {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member))
-                return $this->error403();
-
-            $this->presentation_service->removeTrackChairScore($summit, $current_member, intval($selection_plan_id), intval($presentation_id), intval($score_type_id));
-
-            return $this->deleted();
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $speaker_id
-     * @return JsonResponse|mixed
-     */
-    public function addSpeaker2Presentation($summit_id, $presentation_id, $speaker_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
-
-            $summit = SummitFinderStrategyFactory::build(
-                $this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $payload = $this->getJsonPayload(['order' => 'sometimes|integer|min:1']);
-
-            $presentation = $this->presentation_service->upsertPresentationSpeaker(
-                $summit, intval($presentation_id), intval($speaker_id), $payload);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $speaker_id
-     * @return JsonResponse|mixed
-     */
-    public function updateSpeakerInPresentation($summit_id, $presentation_id, $speaker_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
-
-            $summit = SummitFinderStrategyFactory::build(
-                $this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $payload = $this->getJsonPayload(['order' => 'required|integer|min:1']);
-
-            $presentation = $this->presentation_service->upsertPresentationSpeaker
-            (
-                $summit,
-                intval($presentation_id), intval($speaker_id), $payload
-            );
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $speaker_id
-     * @return JsonResponse|mixed
-     */
-    public function removeSpeakerFromPresentation($summit_id, $presentation_id, $speaker_id)
-    {
-
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
-
-            $summit = SummitFinderStrategyFactory::build(
-                $this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $this->presentation_service->removeSpeakerFromPresentation(
-                $summit, intval($presentation_id), intval($speaker_id));
-
-            return $this->deleted();
-        });
-    }
-
-    use ParametrizedGetAll;
-
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse
-     */
-    public function getComments($summit_id, $presentation_id)
-    {
-
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
-
-        return $this->_getAll(
-            function () {
-                return [
-                    'is_activity' => ['=='],
-                    'is_public' => ['=='],
-                    'creator_id' => ['=='],
-                    'body' => ['==', '@@', '=@'],
-                ];
-            },
-            function () {
-                return [
-                    'is_activity' => 'sometimes|boolean',
-                    'is_public' => 'sometimes|boolean',
-                    'creator_id' => 'sometimes|integer',
-                    'body' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'creator_id'
-                ];
-            },
-            function ($filter) use ($summit, $presentation_id) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('presentation_id', intval($presentation_id)));
-                }
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            },
-            null,
-            null,
-            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
-                return $this->presentation_comments_repository->getAllByPage
-                (
-                    new PagingInfo($page, $per_page),
-                    call_user_func($applyExtraFilters, $filter),
-                    $order
-                );
-            }
+    return $this->_getAll(
+      function () {
+        return [
+          "is_activity" => ["=="],
+          "is_public" => ["=="],
+          "creator_id" => ["=="],
+          "body" => ["==", "@@", "=@"],
+        ];
+      },
+      function () {
+        return [
+          "is_activity" => "sometimes|boolean",
+          "is_public" => "sometimes|boolean",
+          "creator_id" => "sometimes|integer",
+          "body" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["id", "creator_id"];
+      },
+      function ($filter) use ($summit, $presentation_id) {
+        if ($filter instanceof Filter) {
+          $filter->addFilterCondition(
+            FilterElement::makeEqual("presentation_id", intval($presentation_id)),
+          );
+        }
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_Public;
+      },
+      null,
+      null,
+      function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+        return $this->presentation_comments_repository->getAllByPage(
+          new PagingInfo($page, $per_page),
+          call_user_func($applyExtraFilters, $filter),
+          $order,
         );
-    }
+      },
+    );
+  }
 
-    public function getComment($summit_id, $presentation_id, $comment_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+  public function getComment($summit_id, $presentation_id, $comment_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $presentation = $summit->getEvent(intval($presentation_id));
-            if (!$presentation instanceof Presentation)
-                return $this->error404();
-            $comment = $presentation->getComment(intval($comment_id));
-            if (!$comment instanceof SummitPresentationComment)
-                return $this->error404();
+      $presentation = $summit->getEvent(intval($presentation_id));
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
+      $comment = $presentation->getComment(intval($comment_id));
+      if (!$comment instanceof SummitPresentationComment) {
+        return $this->error404();
+      }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($comment)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $comment_id
-     * @return mixed
-     */
-    public function deleteComment($summit_id, $presentation_id, $comment_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $comment_id
+   * @return mixed
+   */
+  public function deleteComment($summit_id, $presentation_id, $comment_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $this->presentation_service->deletePresentationComment($summit, intval($presentation_id), intval($comment_id));
+      $this->presentation_service->deletePresentationComment(
+        $summit,
+        intval($presentation_id),
+        intval($comment_id),
+      );
 
-            return $this->deleted();
-        });
-    }
+      return $this->deleted();
+    });
+  }
 
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return mixed
+   */
+  public function addComment($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
-    public function addComment($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $payload = $this->getJsonPayload(
+        SummitPresentationCommentValidationRulesFactory::buildForAdd(),
+        true,
+      );
+      $current_user = $this->resource_server_context->getCurrentUser(false, false);
+      $comment = $this->presentation_service->createPresentationComment(
+        $summit,
+        intval($presentation_id),
+        $current_user,
+        $payload,
+      );
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($comment)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-            $payload = $this->getJsonPayload(SummitPresentationCommentValidationRulesFactory::buildForAdd(), true);
-            $current_user = $this->resource_server_context->getCurrentUser(false, false);
-            $comment = $this->presentation_service->createPresentationComment($summit, intval($presentation_id), $current_user, $payload);
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @param $comment_id
+   * @return mixed
+   */
+  public function updateComment($summit_id, $presentation_id, $comment_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      $payload = $this->getJsonPayload(
+        SummitPresentationCommentValidationRulesFactory::buildForUpdate(),
+        true,
+      );
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $comment_id
-     * @return mixed
-     */
-    public function updateComment($summit_id, $presentation_id, $comment_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
+      $comment = $this->presentation_service->updatePresentationComment(
+        $summit,
+        intval($presentation_id),
+        intval($comment_id),
+        $payload,
+      );
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($comment)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-            $payload = $this->getJsonPayload(SummitPresentationCommentValidationRulesFactory::buildForUpdate(), true);
+  /**
+   * @param $summit_id
+   * @param $presentation_id
+   * @return mixed
+   */
+  public function getPresentationsExtraQuestions($summit_id, $presentation_id) {
+    return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $comment = $this->presentation_service->updatePresentationComment($summit, intval($presentation_id), intval($comment_id), $payload);
+      $presentation = $summit->getEvent(intval($presentation_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      if (!$presentation instanceof Presentation) {
+        return $this->error404();
+      }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
-    public function getPresentationsExtraQuestions($summit_id, $presentation_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+      $filter = null;
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      if (Request::has("filter")) {
+        $filter = FilterParser::parse(Request::get("filter"), [
+          "selection_plan_id" => ["=="],
+        ]);
+      }
 
-            $presentation = $summit->getEvent(intval($presentation_id));
+      if (is_null($filter)) {
+        $filter = new Filter();
+      }
 
-            if (!$presentation instanceof Presentation) return $this->error404();
+      $filter->validate([
+        "selection_plan_id" => "sometimes|integer",
+      ]);
 
-            $filter = null;
+      $selection_plan_id = "all";
+      if ($filter->hasFilter("selection_plan_id")) {
+        $element = $filter->getUniqueFilter("selection_plan_id");
+        $selection_plan_id = intval($element->getRawValue());
+      }
 
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::get('filter'), [
-                    'selection_plan_id' => ['=='],
-                ]);
-            }
+      $selection_plan =
+        $selection_plan_id === "all"
+          ? null
+          : $summit->getSelectionPlanById(intval($selection_plan_id));
+      $res = [];
 
-            if (is_null($filter)) $filter = new Filter();
+      foreach ($presentation->getAllExtraQuestionAnswers() as $answer) {
+        if ($selection_plan instanceof SelectionPlan) {
+          if ($selection_plan->isExtraQuestionAssigned($answer->getQuestion())) {
+            $res[] = $answer;
+          }
+          continue;
+        }
+        $res[] = $answer;
+      }
 
-            $filter->validate([
-                'selection_plan_id' => 'sometimes|integer'
-            ]);
+      $response = new PagingResponse(count($res), count($res), 1, 1, $res);
 
-            $selection_plan_id = 'all';
-            if ($filter->hasFilter('selection_plan_id')) {
-                $element = $filter->getUniqueFilter('selection_plan_id');
-                $selection_plan_id = intval($element->getRawValue());
-            }
-
-            $selection_plan = $selection_plan_id === 'all' ? null : $summit->getSelectionPlanById(intval($selection_plan_id));
-            $res = [];
-
-            foreach ($presentation->getAllExtraQuestionAnswers() as $answer) {
-                if ($selection_plan instanceof SelectionPlan) {
-                    if ($selection_plan->isExtraQuestionAssigned($answer->getQuestion())) {
-                        $res[] = $answer;
-                    }
-                    continue;
-                }
-                $res[] = $answer;
-            }
-
-            $response = new PagingResponse
-            (
-                count($res),
-                count($res),
-                1,
-                1,
-                $res
-            );
-
-            return $this->ok($response->toArray(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->ok(
+        $response->toArray(
+          SerializerUtils::getExpand(),
+          SerializerUtils::getFields(),
+          SerializerUtils::getRelations(),
+        ),
+      );
+    });
+  }
 }

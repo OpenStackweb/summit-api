@@ -16,35 +16,37 @@ use models\summit\SummitBadgeType;
  * Class SummitBadgeTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitBadgeTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SummitBadgeType
-     */
-    public static function build(array $data):SummitBadgeType{
-        return self::populate(new SummitBadgeType, $data);
+final class SummitBadgeTypeFactory {
+  /**
+   * @param array $data
+   * @return SummitBadgeType
+   */
+  public static function build(array $data): SummitBadgeType {
+    return self::populate(new SummitBadgeType(), $data);
+  }
+
+  /**
+   * @param SummitBadgeType $badge_type
+   * @param array $data
+   * @return SummitBadgeType
+   */
+  public static function populate(SummitBadgeType $badge_type, array $data): SummitBadgeType {
+    if (isset($data["name"])) {
+      $badge_type->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitBadgeType $badge_type
-     * @param array $data
-     * @return SummitBadgeType
-     */
-    public static function populate(SummitBadgeType $badge_type, array $data):SummitBadgeType{
-
-        if(isset($data['name']))
-            $badge_type->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $badge_type->setDescription(trim($data['description']));
-
-        if(isset($data['template_content']))
-            $badge_type->setTemplateContent(trim($data['template_content']));
-
-        if(isset($data['is_default']))
-            $badge_type->setIsDefault(boolval($data['is_default']));
-
-        return $badge_type;
+    if (isset($data["description"])) {
+      $badge_type->setDescription(trim($data["description"]));
     }
+
+    if (isset($data["template_content"])) {
+      $badge_type->setTemplateContent(trim($data["template_content"]));
+    }
+
+    if (isset($data["is_default"])) {
+      $badge_type->setIsDefault(boolval($data["is_default"]));
+    }
+
+    return $badge_type;
+  }
 }

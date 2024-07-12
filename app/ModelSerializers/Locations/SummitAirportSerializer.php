@@ -15,10 +15,8 @@
  * Class SummitAirportSerializer
  * @package ModelSerializers\Locations
  */
-final class SummitAirportSerializer extends SummitExternalLocationSerializer
-{
-    protected static $array_mappings = [
-
-        'AirportType' => 'airport_type:json_string',
-    ];
+final class SummitAirportSerializer extends SummitExternalLocationSerializer {
+  protected static $array_mappings = [
+    "AirportType" => "airport_type:json_string",
+  ];
 }

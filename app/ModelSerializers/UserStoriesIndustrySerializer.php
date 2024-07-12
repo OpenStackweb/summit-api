@@ -18,10 +18,9 @@ use ModelSerializers\SilverStripeSerializer;
  * Class UserStoriesIndustrySerializer
  * @package App\ModelSerializers
  */
-class UserStoriesIndustrySerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'    => 'name:json_string',
-        'Active'  => 'active:json_boolean',
-    ];
+class UserStoriesIndustrySerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Active" => "active:json_boolean",
+  ];
 }

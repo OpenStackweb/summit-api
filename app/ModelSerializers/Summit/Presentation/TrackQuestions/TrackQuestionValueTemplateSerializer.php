@@ -16,12 +16,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class TrackQuestionValueTemplateSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-final class TrackQuestionValueTemplateSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Value' => 'value:json_string',
-        'Label' => 'label:json_string',
-        'Order' => 'order:json_int',
-        'OwnerId' => 'owner_id:json_int',
-    ];
+final class TrackQuestionValueTemplateSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Value" => "value:json_string",
+    "Label" => "label:json_string",
+    "Order" => "order:json_int",
+    "OwnerId" => "owner_id:json_int",
+  ];
 }

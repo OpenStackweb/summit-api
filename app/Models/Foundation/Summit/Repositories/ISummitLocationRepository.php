@@ -16,11 +16,10 @@ use models\summit\Summit;
  * Interface ISummitLocationRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitLocationRepository extends ISummitOwnedEntityRepository
-{
-    /**
-     * @param Summit $summit
-     * @return array
-     */
-    public function getMetadata(Summit $summit);
+interface ISummitLocationRepository extends ISummitOwnedEntityRepository {
+  /**
+   * @param Summit $summit
+   * @return array
+   */
+  public function getMetadata(Summit $summit);
 }

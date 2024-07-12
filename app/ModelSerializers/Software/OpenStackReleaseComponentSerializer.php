@@ -19,32 +19,31 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class OpenStackReleaseComponentSerializer
  * @package App\ModelSerializers\Software
  */
-final class OpenStackReleaseComponentSerializer extends AbstractSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Adoption' => 'adoption:json_int',
-        'MaturityPoints' => 'maturity_points:json_int',
-        'HasInstallationGuide' => 'has_installation_guide:json_boolean',
-        'ComponentId' => 'component_id:json_int',
-        'ReleaseId' => 'release_id:json_int',
-    ];
+final class OpenStackReleaseComponentSerializer extends AbstractSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Adoption" => "adoption:json_int",
+    "MaturityPoints" => "maturity_points:json_int",
+    "HasInstallationGuide" => "has_installation_guide:json_boolean",
+    "ComponentId" => "component_id:json_int",
+    "ReleaseId" => "release_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'component' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'component_id',
-            'getter' => 'getComponent',
-            'has' => 'hasComponent'
-        ],
-        'release' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'release_id',
-            'getter' => 'getRelease',
-            'has' => 'hasRelease'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "component" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "component_id",
+      "getter" => "getComponent",
+      "has" => "hasComponent",
+    ],
+    "release" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "release_id",
+      "getter" => "getRelease",
+      "has" => "hasRelease",
+    ],
+  ];
 }

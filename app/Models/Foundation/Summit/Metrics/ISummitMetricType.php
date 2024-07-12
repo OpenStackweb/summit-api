@@ -16,23 +16,22 @@
  * Interface ISummitMetricType
  * @package models\summit
  */
-interface ISummitMetricType
-{
-    const General = 'GENERAL';
-    const Lobby = 'LOBBY';
-    const Event = 'EVENT';
-    const Sponsor = 'SPONSOR';
-    const Poster = 'POSTER';
-    const Posters = 'POSTERS';
-    const Room = 'ROOM';
+interface ISummitMetricType {
+  const General = "GENERAL";
+  const Lobby = "LOBBY";
+  const Event = "EVENT";
+  const Sponsor = "SPONSOR";
+  const Poster = "POSTER";
+  const Posters = "POSTERS";
+  const Room = "ROOM";
 
-    const ValidTypes = [
-        self::General,
-        self::Lobby,
-        self::Event,
-        self::Sponsor,
-        self::Poster,
-        self::Posters,
-        self::Room,
-    ];
+  const ValidTypes = [
+    self::General,
+    self::Lobby,
+    self::Event,
+    self::Sponsor,
+    self::Poster,
+    self::Posters,
+    self::Room,
+  ];
 }

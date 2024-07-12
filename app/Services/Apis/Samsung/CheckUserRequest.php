@@ -12,25 +12,21 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class CheckUserRequest
  * @package App\Services\Apis\Samsung
  */
-final class CheckUserRequest extends AbstractPayload
-{
-    /**
-     * @param string $userId
-     * @param array $params
-     */
-    public function __construct(string $userId, array $params = []){
+final class CheckUserRequest extends AbstractPayload {
+  /**
+   * @param string $userId
+   * @param array $params
+   */
+  public function __construct(string $userId, array $params = []) {
+    parent::__construct($params);
 
-        parent::__construct($params);
-
-        $this->payload = array_merge($this->payload , [
-            PayloadParamNames::Type => RequestTypes::UserCheck,
-            PayloadParamNames::UserId => trim($userId),
-        ]);
-    }
-
+    $this->payload = array_merge($this->payload, [
+      PayloadParamNames::Type => RequestTypes::UserCheck,
+      PayloadParamNames::UserId => trim($userId),
+    ]);
+  }
 }

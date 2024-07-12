@@ -17,7 +17,5 @@ use Exception;
  * Class RateLimitExceededException
  * @package App\Services\Apis\CalendarSync\Exceptions
  */
-final class RateLimitExceededException extends Exception
-{
-
+final class RateLimitExceededException extends Exception {
 }

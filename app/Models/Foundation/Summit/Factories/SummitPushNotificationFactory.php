@@ -17,45 +17,48 @@ use models\summit\SummitPushNotification;
  * Class SummitPushNotificationFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitPushNotificationFactory
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @param array $params
-     * @return SummitPushNotification
-     */
-    public static function build(Summit $summit, array $data, array $params)
-    {
+final class SummitPushNotificationFactory {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @param array $params
+   * @return SummitPushNotification
+   */
+  public static function build(Summit $summit, array $data, array $params) {
+    $notification = new SummitPushNotification();
 
-        $notification = new SummitPushNotification;
-
-        if(isset($data['message']))
-            $notification->setMessage(trim($data['message']));
-
-        if(isset($data['channel']))
-            $notification->setChannel(trim($data['channel']));
-
-        if(isset($data['platform']))
-            $notification->setPlatform(trim($data['platform']));
-
-        if(isset($params['event']))
-            $notification->setSummitEvent($params['event']);
-
-        if(isset($params['group']))
-            $notification->setGroup($params['group']);
-
-        if(isset($params['owner']))
-            $notification->setOwner($params['owner']);
-
-        if(isset($params['recipients']))
-        {
-            foreach($params['recipients'] as $recipient)
-                $notification->addRecipient($recipient);
-        }
-
-        $notification->setSummit($summit);
-
-        return $notification;
+    if (isset($data["message"])) {
+      $notification->setMessage(trim($data["message"]));
     }
+
+    if (isset($data["channel"])) {
+      $notification->setChannel(trim($data["channel"]));
+    }
+
+    if (isset($data["platform"])) {
+      $notification->setPlatform(trim($data["platform"]));
+    }
+
+    if (isset($params["event"])) {
+      $notification->setSummitEvent($params["event"]);
+    }
+
+    if (isset($params["group"])) {
+      $notification->setGroup($params["group"]);
+    }
+
+    if (isset($params["owner"])) {
+      $notification->setOwner($params["owner"]);
+    }
+
+    if (isset($params["recipients"])) {
+      foreach ($params["recipients"] as $recipient) {
+        $notification->addRecipient($recipient);
+      }
+    }
+
+    $notification->setSummit($summit);
+
+    return $notification;
+  }
 }

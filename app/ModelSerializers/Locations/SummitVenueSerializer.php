@@ -19,65 +19,66 @@ use models\summit\SummitVenue;
  * Class SummitVenueSerializer
  * @package ModelSerializers\Locations
  */
-final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
-{
-    protected static $array_mappings = array
-    (
-        'IsMain' => 'is_main::json_boolean',
-    );
+final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer {
+  protected static $array_mappings = [
+    "IsMain" => "is_main::json_boolean",
+  ];
 
-    protected static $allowed_relations = [
-        'rooms',
-        'floors',
-    ];
+  protected static $allowed_relations = ["rooms", "floors"];
 
-    protected static $expand_mappings = [
-        'floors' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getFloors',
-        ],
-        'rooms' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getRooms',
-        ],
-    ];
+  protected static $expand_mappings = [
+    "floors" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getFloors",
+    ],
+    "rooms" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getRooms",
+    ],
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $venue  = $this->object;
-        if(!$venue instanceof  SummitVenue) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if(in_array('rooms', $relations) && !isset($values['rooms'])) {
-            // rooms
-            $rooms = [];
-            foreach ($venue->getRooms() as $room) {
-                $rooms[] = $room->getId();
-            }
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $venue = $this->object;
+    if (!$venue instanceof SummitVenue) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (in_array("rooms", $relations) && !isset($values["rooms"])) {
+      // rooms
+      $rooms = [];
+      foreach ($venue->getRooms() as $room) {
+        $rooms[] = $room->getId();
+      }
 
-            if (count($rooms) > 0)
-                $values['rooms'] = $rooms;
-        }
-
-        if(in_array('floors', $relations) && !isset($values['floors'])) {
-            // floors
-            $floors = [];
-            foreach ($venue->getFloors() as $floor) {
-                $floors[] = $floor->getId();
-            }
-
-            if (count($floors) > 0)
-                $values['floors'] = $floors;
-        }
-
-
-        return $values;
+      if (count($rooms) > 0) {
+        $values["rooms"] = $rooms;
+      }
     }
 
+    if (in_array("floors", $relations) && !isset($values["floors"])) {
+      // floors
+      $floors = [];
+      foreach ($venue->getFloors() as $floor) {
+        $floors[] = $floor->getId();
+      }
+
+      if (count($floors) > 0) {
+        $values["floors"] = $floors;
+      }
+    }
+
+    return $values;
+  }
 }

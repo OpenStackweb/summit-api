@@ -24,40 +24,39 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
  * Class SummitSpeakerValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitSpeakerEmailsValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'email_flow_event' => 'required|string|in:' . join(',', [
-                    PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG
-                ]),
-            'speaker_ids'               => 'sometimes|int_array',
-            'excluded_speaker_ids'      => 'sometimes|int_array',
-            'test_email_recipient'      => 'sometimes|email',
-            'outcome_email_recipient'   => 'sometimes|email',
-            'should_send_copy_2_submitter' => 'sometimes|boolean',
-            'should_resend' => 'sometimes|boolean',
-            'promo_code' => 'sometimes:promo_code_spec|string',
-            'promo_code_spec' => 'sometimes:promo_code|array',
-        ];
-    }
+final class SummitSpeakerEmailsValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "email_flow_event" =>
+        "required|string|in:" .
+        join(",", [
+          PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
+          PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
+          PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
+          PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
+          PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
+          PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG,
+        ]),
+      "speaker_ids" => "sometimes|int_array",
+      "excluded_speaker_ids" => "sometimes|int_array",
+      "test_email_recipient" => "sometimes|email",
+      "outcome_email_recipient" => "sometimes|email",
+      "should_send_copy_2_submitter" => "sometimes|boolean",
+      "should_resend" => "sometimes|boolean",
+      "promo_code" => "sometimes:promo_code_spec|string",
+      "promo_code_spec" => "sometimes:promo_code|array",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return self::buildForAdd($payload);
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return self::buildForAdd($payload);
+  }
 }

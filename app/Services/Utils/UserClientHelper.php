@@ -15,30 +15,27 @@
  * Class UserClientHelper
  * @package App\Services\Utils
  */
-final class UserClientHelper
-{
-    /**
-     * returns user current ip address
-     * @return string
-     */
-    public static function getUserIp(): ?string
-    {
-        return $_SERVER['HTTP_CLIENT_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? ''));
-    }
+final class UserClientHelper {
+  /**
+   * returns user current ip address
+   * @return string
+   */
+  public static function getUserIp(): ?string {
+    return $_SERVER["HTTP_CLIENT_IP"] ??
+      ($_SERVER["HTTP_X_FORWARDED_FOR"] ?? ($_SERVER["REMOTE_ADDR"] ?? ""));
+  }
 
-    /**
-     * @return string|null
-     */
-    public static function getUserOrigin():?string
-    {
-        return $_SERVER['HTTP_REFERER']?? ($_SERVER['HTTP_ORIGIN'] ?? '');
-    }
+  /**
+   * @return string|null
+   */
+  public static function getUserOrigin(): ?string {
+    return $_SERVER["HTTP_REFERER"] ?? ($_SERVER["HTTP_ORIGIN"] ?? "");
+  }
 
-    /**
-     * @return string|null
-     */
-    public static function getUserBrowser():?string
-    {
-        return $_SERVER['HTTP_USER_AGENT']??'';
-    }
+  /**
+   * @return string|null
+   */
+  public static function getUserBrowser(): ?string {
+    return $_SERVER["HTTP_USER_AGENT"] ?? "";
+  }
 }

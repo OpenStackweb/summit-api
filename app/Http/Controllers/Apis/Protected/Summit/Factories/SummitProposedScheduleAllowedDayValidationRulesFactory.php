@@ -18,25 +18,21 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SummitProposedScheduleAllowedDayValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitProposedScheduleAllowedDayValidationRulesFactory
-    extends AbstractValidationRulesFactory
-{
+final class SummitProposedScheduleAllowedDayValidationRulesFactory extends
+  AbstractValidationRulesFactory {
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "day" => "required|date_format:U",
+      "opening_hour" => "sometimes|int|min:0|max:2359",
+      "closing_hour" => "sometimes|int|min:0|max:2359|required_with:opening_hour|gt:opening_hour",
+    ];
+  }
 
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'day' => 'required|date_format:U',
-            'opening_hour' => 'sometimes|int|min:0|max:2359',
-            'closing_hour' => 'sometimes|int|min:0|max:2359|required_with:opening_hour|gt:opening_hour',
-        ];
-    }
-
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'day' => 'sometimes|date_format:U',
-            'opening_hour' => 'sometimes|int|min:0|max:2359',
-            'closing_hour' => 'sometimes|int|min:0|max:2359|required_with:opening_hour|gt:opening_hour',
-        ];
-    }
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "day" => "sometimes|date_format:U",
+      "opening_hour" => "sometimes|int|min:0|max:2359",
+      "closing_hour" => "sometimes|int|min:0|max:2359|required_with:opening_hour|gt:opening_hour",
+    ];
+  }
 }

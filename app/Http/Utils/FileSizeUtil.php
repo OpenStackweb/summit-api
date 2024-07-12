@@ -12,9 +12,8 @@
  * limitations under the License.
  **/
 
-final class FileSizeUtil
-{
-    public const Kb = 'KB';
-    public const MB = 'MB';
-    public const B = "Byte";
+final class FileSizeUtil {
+  public const Kb = "KB";
+  public const MB = "MB";
+  public const B = "Byte";
 }

@@ -19,89 +19,79 @@ use models\main\IFolderRepository;
  * Class DoctrineFolderRepository
  * @package repositories\main
  */
-final class DoctrineFolderRepository
-    extends SilverStripeDoctrineRepository
-    implements IFolderRepository
-{
+final class DoctrineFolderRepository extends SilverStripeDoctrineRepository implements
+  IFolderRepository {
+  /**
+   * @param string $folder_name
+   * @return File
+   */
+  public function getFolderByName($folder_name) {
+    $query = <<<SQL
+          select * from File where ClassName = 'Folder' AND
+          Name = :folder_name LIMIT 0,1;
+    SQL;
+    // build rsm here
+    $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+    $rsm->addRootEntityFromClassMetadata(\models\main\File::class, "f");
+    $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
-    /**
-     * @param string $folder_name
-     * @return File
-     */
-    public function getFolderByName($folder_name)
-    {
+    $native_query->setParameter("folder_name", $folder_name);
 
-        $query = <<<SQL
-      select * from File where ClassName = 'Folder' AND 
-      Name = :folder_name LIMIT 0,1;
-SQL;
-        // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
-        $rsm->addRootEntityFromClassMetadata(\models\main\File::class, 'f');
-        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
+    return $native_query->getOneOrNullResult();
+  }
 
-        $native_query->setParameter("folder_name", $folder_name);
+  /**
+   * @param string $file_name
+   * @return File
+   */
+  public function getFolderByFileName($file_name) {
+    $query = <<<SQL
+          select * from File where ClassName = 'Folder' AND
+          FileName = :file_name  LIMIT 0,1;
+    SQL;
+    // build rsm here
+    $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+    $rsm->addRootEntityFromClassMetadata(\models\main\File::class, "f");
+    $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
-        return $native_query->getOneOrNullResult();
-    }
+    $native_query->setParameter("file_name", $file_name);
 
-    /**
-     * @param string $file_name
-     * @return File
-     */
-    public function getFolderByFileName($file_name)
-    {
+    return $native_query->getOneOrNullResult();
+  }
 
-        $query = <<<SQL
-      select * from File where ClassName = 'Folder' AND 
-      FileName = :file_name  LIMIT 0,1;
-SQL;
-        // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
-        $rsm->addRootEntityFromClassMetadata(\models\main\File::class, 'f');
-        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return File::class;
+  }
 
-        $native_query->setParameter("file_name", $file_name);
+  /**
+   * @param string $folder_name
+   * @param File $parent
+   * @return File
+   */
+  public function getFolderByNameAndParent($folder_name, File $parent) {
+    $query = <<<SQL
+          select * from File where ClassName = 'Folder' AND
+          Name = :folder_name and ParentID = :parent_id LIMIT 0,1;
+    SQL;
+    // build rsm here
+    $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+    $rsm->addRootEntityFromClassMetadata(\models\main\File::class, "f");
+    $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
-        return $native_query->getOneOrNullResult();
-    }
+    $native_query->setParameter("folder_name", $folder_name);
+    $native_query->setParameter("parent_id", $parent->getId());
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return File::class;
-    }
+    return $native_query->getOneOrNullResult();
+  }
 
-    /**
-     * @param string $folder_name
-     * @param File $parent
-     * @return File
-     */
-    public function getFolderByNameAndParent($folder_name, File $parent)
-    {
-        $query = <<<SQL
-      select * from File where ClassName = 'Folder' AND 
-      Name = :folder_name and ParentID = :parent_id LIMIT 0,1;
-SQL;
-        // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
-        $rsm->addRootEntityFromClassMetadata(\models\main\File::class, 'f');
-        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
-
-        $native_query->setParameter("folder_name", $folder_name);
-        $native_query->setParameter("parent_id", $parent->getId());
-
-        return $native_query->getOneOrNullResult();
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function existByName(string $name): bool
-    {
-        return $this->count(['name'=> trim($name)]) > 0;
-    }
+  /**
+   * @param string $name
+   * @return bool
+   */
+  public function existByName(string $name): bool {
+    return $this->count(["name" => trim($name)]) > 0;
+  }
 }

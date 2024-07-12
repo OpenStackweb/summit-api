@@ -21,37 +21,34 @@ use utils\PagingResponse;
  * Interface ISummitNotificationRepository
  * @package models\summit
  */
-interface ISummitNotificationRepository extends IPushNotificationRepository
-{
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPageBySummit
-    (
-        Summit $summit,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    ):PagingResponse;
+interface ISummitNotificationRepository extends IPushNotificationRepository {
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPageBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 
-    /**
-     * @param Member|null $current_member
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPageByUserBySummit
-    (
-        ?Member $current_member,
-        Summit $summit,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    ):PagingResponse;
+  /**
+   * @param Member|null $current_member
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPageByUserBySummit(
+    ?Member $current_member,
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 }

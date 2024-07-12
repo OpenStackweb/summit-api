@@ -20,33 +20,27 @@ use ReflectionClass;
  * Trait CachedEntity
  * @package App\Models\Utils\Traits
  */
-trait CachedEntity
-{
-    /**
-     * @return string
-     */
-    protected function _getClassName(): string
-    {
-        try {
-            return (new ReflectionClass($this))->getShortName();
-        }
-        catch (\Exception $ex){
-
-        }
-        return '';
+trait CachedEntity {
+  /**
+   * @return string
+   */
+  protected function _getClassName(): string {
+    try {
+      return (new ReflectionClass($this))->getShortName();
+    } catch (\Exception $ex) {
     }
+    return "";
+  }
 
-    /**
-     * @ORM\preRemove:
-     */
-    public function deleted($args)
-    {
-        Cache::tags(sprintf("%s_%s", $this->_getClassName(), $this->id))->flush();
-    }
+  /**
+   * @ORM\preRemove:
+   */
+  public function deleted($args) {
+    Cache::tags(sprintf("%s_%s", $this->_getClassName(), $this->id))->flush();
+  }
 
-    public function updated($args)
-    {
-        Log::debug(sprintf("CachedEntity::updated id %s", $this->id));
-        Cache::tags(sprintf("%s_%s", $this->_getClassName(), $this->id))->flush();
-    }
+  public function updated($args) {
+    Log::debug(sprintf("CachedEntity::updated id %s", $this->id));
+    Cache::tags(sprintf("%s_%s", $this->_getClassName(), $this->id))->flush();
+  }
 }

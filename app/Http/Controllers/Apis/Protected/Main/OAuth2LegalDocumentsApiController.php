@@ -22,53 +22,45 @@ use Exception;
  * Class OAuth2LegalDocumentsApiController
  * @package App\Http\Controllers
  */
-final class OAuth2LegalDocumentsApiController extends OAuth2ProtectedController
-{
-    /**
-     * OAuth2LegalDocumentsApiController constructor.
-     * @param ILegalDocumentRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ILegalDocumentRepository $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
+final class OAuth2LegalDocumentsApiController extends OAuth2ProtectedController {
+  /**
+   * OAuth2LegalDocumentsApiController constructor.
+   * @param ILegalDocumentRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ILegalDocumentRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+  }
+
+  /**
+   * @param $id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function getById($id) {
+    try {
+      $document = $this->repository->getBySlug(trim($id));
+      if (is_null($document)) {
+        $document = $this->repository->getById(intval($id));
+      }
+
+      if (is_null($document)) {
+        return $this->error404();
+      }
+
+      return $this->ok(SerializerRegistry::getInstance()->getSerializer($document)->serialize());
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function getById($id){
-        try{
-
-            $document = $this->repository->getBySlug(trim($id));
-            if(is_null($document))
-                $document = $this->repository->getById(intval($id));
-
-            if(is_null($document)) return $this->error404();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer
-            (
-                $document
-            )->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  }
 }

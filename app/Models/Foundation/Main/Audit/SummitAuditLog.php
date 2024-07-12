@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\Summit;
 use models\summit\SummitOwned;
 
@@ -22,20 +22,17 @@ use models\summit\SummitOwned;
  * Class SummitAuditLog
  * @package models\main
  */
-class SummitAuditLog extends AuditLog
-{
-    use SummitOwned;
+class SummitAuditLog extends AuditLog {
+  use SummitOwned;
 
-    const ClassName = 'SummitAuditLog';
+  const ClassName = "SummitAuditLog";
 
-    public function getClassName(): string
-    {
-        return self::ClassName;
-    }
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    public function __construct(?Member $user, string $action, ?Summit $summit)
-    {
-        parent::__construct($user, $action);
-        $this->summit = $summit;
-    }
+  public function __construct(?Member $user, string $action, ?Summit $summit) {
+    parent::__construct($user, $action);
+    $this->summit = $summit;
+  }
 }

@@ -15,55 +15,51 @@ use ModelSerializers\SerializerRegistry;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-class CloudServiceSerializer extends OpenStackImplementationSerializer
-{
-    protected static $allowed_relations = [
-        'data_centers',
-        'data_center_regions',
-    ];
+class CloudServiceSerializer extends OpenStackImplementationSerializer {
+  protected static $allowed_relations = ["data_centers", "data_center_regions"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $cloud_service  = $this->object;
-        if(!$cloud_service instanceof CloudService) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('data_centers', $relations)){
-            $res = [];
-            foreach ($cloud_service->getDataCenters() as $dataCenter){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($dataCenter)
-                    ->serialize($expand);
-            }
-            $values['data_centers'] = $res;
-        }
-
-        if(in_array('data_center_regions', $relations)){
-            $res = [];
-            foreach ($cloud_service->getDataCenterRegions() as $region){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($region)
-                    ->serialize($expand);
-            }
-            $values['data_center_regions'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $cloud_service = $this->object;
+    if (!$cloud_service instanceof CloudService) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("data_centers", $relations)) {
+      $res = [];
+      foreach ($cloud_service->getDataCenters() as $dataCenter) {
+        $res[] = SerializerRegistry::getInstance()->getSerializer($dataCenter)->serialize($expand);
+      }
+      $values["data_centers"] = $res;
+    }
+
+    if (in_array("data_center_regions", $relations)) {
+      $res = [];
+      foreach ($cloud_service->getDataCenterRegions() as $region) {
+        $res[] = SerializerRegistry::getInstance()->getSerializer($region)->serialize($expand);
+      }
+      $values["data_center_regions"] = $res;
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+        }
+      }
+    }
+    return $values;
+  }
 }

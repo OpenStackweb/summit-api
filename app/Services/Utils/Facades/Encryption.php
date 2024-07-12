@@ -18,10 +18,8 @@ use Illuminate\Support\Facades\Facade;
  * Class Encryption
  * @package services\utils\Facades
  */
-class Encryption extends Facade
-{
-    protected static function getFacadeAccessor()
-    {
-        return 'encryption';
-    }
+class Encryption extends Facade {
+  protected static function getFacadeAccessor() {
+    return "encryption";
+  }
 }

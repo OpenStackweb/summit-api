@@ -12,33 +12,31 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class PresentationMaterialSerializer
  * @package ModelSerializers
  */
-class PresentationMaterialSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'           => 'name:json_text',
-        'Description'    => 'description:json_text',
-        'DisplayOnSite'  => 'display_on_site:json_boolean',
-        'Featured'       => 'featured:json_boolean',
-        'Order'          => 'order:json_int',
-        'PresentationId' => 'presentation_id:json_int',
-        'ClassName'      => 'class_name:json_text',
-    ];
+class PresentationMaterialSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_text",
+    "Description" => "description:json_text",
+    "DisplayOnSite" => "display_on_site:json_boolean",
+    "Featured" => "featured:json_boolean",
+    "Order" => "order:json_int",
+    "PresentationId" => "presentation_id:json_int",
+    "ClassName" => "class_name:json_text",
+  ];
 
-    protected static $allowed_fields = [
-        'id',
-        'created',
-        'last_edited',
-        'name',
-        'description',
-        'display_on_site',
-        'featured',
-        'order',
-        'presentation_id',
-        'class_name',
-    ];
+  protected static $allowed_fields = [
+    "id",
+    "created",
+    "last_edited",
+    "name",
+    "description",
+    "display_on_site",
+    "featured",
+    "order",
+    "presentation_id",
+    "class_name",
+  ];
 }

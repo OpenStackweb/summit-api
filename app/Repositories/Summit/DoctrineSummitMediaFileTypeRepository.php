@@ -20,31 +20,25 @@ use models\summit\SummitMediaFileType;
  * Class DoctrineSummitMediaFileTypeRepository
  * @package App\Repositories\Summit
  */
-class DoctrineSummitMediaFileTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitMediaFileTypeRepository
-{
+class DoctrineSummitMediaFileTypeRepository extends SilverStripeDoctrineRepository implements
+  ISummitMediaFileTypeRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'e.name:json_string',
-        ];
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitMediaFileType::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitMediaFileType::class;
-    }
-
-    public function getByName(string $name): ?SummitMediaFileType
-    {
-        return $this->findOneBy(['name'=> trim($name)]);
-    }
+  public function getByName(string $name): ?SummitMediaFileType {
+    return $this->findOneBy(["name" => trim($name)]);
+  }
 }

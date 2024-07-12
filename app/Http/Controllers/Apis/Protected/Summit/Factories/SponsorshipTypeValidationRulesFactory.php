@@ -17,32 +17,29 @@ use models\summit\ISponsorshipTypeConstants;
  * Class SponsorshipTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorshipTypeValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name'  => 'required|string',
-            'label' => 'required|string',
-            'size'  => 'required|string|in:'.implode(",", ISponsorshipTypeConstants::AllowedSizes),
-        ];
-    }
+final class SponsorshipTypeValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "required|string",
+      "label" => "required|string",
+      "size" => "required|string|in:" . implode(",", ISponsorshipTypeConstants::AllowedSizes),
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'name'   => 'sometimes|string',
-            'label'  => 'sometimes|string',
-            'size'   => 'sometimes|string|in:'.implode(",", ISponsorshipTypeConstants::AllowedSizes),
-            'order'  => 'sometimes|integer|min:1',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "name" => "sometimes|string",
+      "label" => "sometimes|string",
+      "size" => "sometimes|string|in:" . implode(",", ISponsorshipTypeConstants::AllowedSizes),
+      "order" => "sometimes|integer|min:1",
+    ];
+  }
 }

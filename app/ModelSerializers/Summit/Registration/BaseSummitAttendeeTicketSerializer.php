@@ -21,127 +21,129 @@ use models\summit\SummitAttendeeTicket;
  * Class BaseSummitAttendeeTicketSerializer
  * @package ModelSerializers
  */
-class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Number' => 'number:json_string',
-        'Status' => 'status:json_string',
-        'ExternalOrderId' => 'external_order_id:json_string',
-        'ExternalAttendeeId' => 'external_attendee_id:json_string',
-        'BoughtDate' => 'bought_date:datetime_epoch',
-        'TicketTypeId' => 'ticket_type_id:json_int',
-        'OwnerId' => 'owner_id:json_int',
-        'OrderId' => 'order_id:json_int',
-        'BadgeId' => 'badge_id:json_int',
-        'PromoCodeId' => 'promo_code_id:json_int',
-        'RawCost' => 'raw_cost:json_money',
-        'NetSellingPrice' => 'net_selling_cost:json_money',
-        'RawCostInCents' => 'raw_cost_in_cents:json_int',
-        'FinalAmount' => 'final_amount:json_float',
-        'FinalAmountInCents' => 'final_amount_in_cents:json_int',
-        'Discount' => 'discount:json_money',
-        'DiscountRate' => 'discount_rate:json_float',
-        'DiscountInCents' => 'discount_in_cents:json_int',
-        'RefundedAmount' => 'refunded_amount:json_money',
-        'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
-        'TotalRefundedAmount' => 'total_refunded_amount:json_money',
-        'TotalRefundedAmountInCents' => 'total_refunded_amount_in_cents:json_int',
-        'Currency' => 'currency:json_string',
-        'CurrencySymbol' => 'currency_symbol:json_string',
-        'TaxesAmount' => 'taxes_amount:json_money',
-        'TaxesAmountInCents' => 'taxes_amount_in_cents:json_int',
-        'Active' => 'is_active:json_bool',
-        'QRCode' => 'qr_code:json_string',
-    ];
+class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Number" => "number:json_string",
+    "Status" => "status:json_string",
+    "ExternalOrderId" => "external_order_id:json_string",
+    "ExternalAttendeeId" => "external_attendee_id:json_string",
+    "BoughtDate" => "bought_date:datetime_epoch",
+    "TicketTypeId" => "ticket_type_id:json_int",
+    "OwnerId" => "owner_id:json_int",
+    "OrderId" => "order_id:json_int",
+    "BadgeId" => "badge_id:json_int",
+    "PromoCodeId" => "promo_code_id:json_int",
+    "RawCost" => "raw_cost:json_money",
+    "NetSellingPrice" => "net_selling_cost:json_money",
+    "RawCostInCents" => "raw_cost_in_cents:json_int",
+    "FinalAmount" => "final_amount:json_float",
+    "FinalAmountInCents" => "final_amount_in_cents:json_int",
+    "Discount" => "discount:json_money",
+    "DiscountRate" => "discount_rate:json_float",
+    "DiscountInCents" => "discount_in_cents:json_int",
+    "RefundedAmount" => "refunded_amount:json_money",
+    "RefundedAmountInCents" => "refunded_amount_in_cents:json_int",
+    "TotalRefundedAmount" => "total_refunded_amount:json_money",
+    "TotalRefundedAmountInCents" => "total_refunded_amount_in_cents:json_int",
+    "Currency" => "currency:json_string",
+    "CurrencySymbol" => "currency_symbol:json_string",
+    "TaxesAmount" => "taxes_amount:json_money",
+    "TaxesAmountInCents" => "taxes_amount_in_cents:json_int",
+    "Active" => "is_active:json_bool",
+    "QRCode" => "qr_code:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'applied_taxes',
-        'refund_requests',
-    ];
+  protected static $allowed_relations = ["applied_taxes", "refund_requests"];
 
-    protected static $expand_mappings = [
-        'ticket_type' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'ticket_type_id',
-            'getter' => 'getTicketType',
-            'has' => 'hasTicketType'
-        ],
-        'badge' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'badge_id',
-            'getter' => 'getBadge',
-            'has' => 'hasBadge'
-        ],
-        'promo_code' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'promo_code_id',
-            'getter' => 'getPromoCode',
-            'has' => 'hasPromoCode'
-        ],
-        'owner' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'owner_id',
-            'getter' => 'getOwner',
-            'has' => 'hasOwner'
-        ],
-        'refund_requests' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getRefundedRequests',
-        ],
-        'applied_taxes' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getAppliedTaxes',
-        ],
-        'order' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'order_id',
-            'getter' => 'getOrder',
-            'has' => 'hasOrder'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "ticket_type" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "ticket_type_id",
+      "getter" => "getTicketType",
+      "has" => "hasTicketType",
+    ],
+    "badge" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "badge_id",
+      "getter" => "getBadge",
+      "has" => "hasBadge",
+    ],
+    "promo_code" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "promo_code_id",
+      "getter" => "getPromoCode",
+      "has" => "hasPromoCode",
+    ],
+    "owner" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "owner_id",
+      "getter" => "getOwner",
+      "has" => "hasOwner",
+    ],
+    "refund_requests" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getRefundedRequests",
+    ],
+    "applied_taxes" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getAppliedTaxes",
+    ],
+    "order" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "order_id",
+      "getter" => "getOrder",
+      "has" => "hasOrder",
+    ],
+  ];
 
-    use RequestScopedCache;
+  use RequestScopedCache;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        return $this->cache(
-            $this->getRequestKey
-            (
-                "BaseSummitAttendeeTicketSerializer",
-                $this->object->getIdentifier(),
-                $expand,
-                $fields,
-                $relations
-            ), function () use ($expand, $fields, $relations, $params) {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    return $this->cache(
+      $this->getRequestKey(
+        "BaseSummitAttendeeTicketSerializer",
+        $this->object->getIdentifier(),
+        $expand,
+        $fields,
+        $relations,
+      ),
+      function () use ($expand, $fields, $relations, $params) {
+        $ticket = $this->object;
+        if (!$ticket instanceof SummitAttendeeTicket) {
+          return [];
+        }
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
-            $ticket = $this->object;
-            if (!$ticket instanceof SummitAttendeeTicket) return [];
-            $values = parent::serialize($expand, $fields, $relations, $params);
+        if (in_array("applied_taxes", $relations) && !isset($values["applied_taxes"])) {
+          $applied_taxes = [];
+          foreach ($ticket->getAppliedTaxes() as $tax) {
+            $applied_taxes[] = $tax->getId();
+          }
+          $values["applied_taxes"] = $applied_taxes;
+        }
 
-            if (in_array('applied_taxes', $relations) && !isset($values['applied_taxes'])) {
-                $applied_taxes = [];
-                foreach ($ticket->getAppliedTaxes() as $tax) {
-                    $applied_taxes[] = $tax->getId();
-                }
-                $values['applied_taxes'] = $applied_taxes;
-            }
+        if (in_array("refund_requests", $relations) && !isset($values["refund_requests"])) {
+          $refund_requests = [];
+          foreach ($ticket->getRefundedRequests() as $request) {
+            $refund_requests[] = $request->getId();
+          }
+          $values["refund_requests"] = $refund_requests;
+        }
 
-            if (in_array('refund_requests', $relations) && !isset($values['refund_requests'])) {
-                $refund_requests = [];
-                foreach ($ticket->getRefundedRequests() as $request) {
-                    $refund_requests[] = $request->getId();
-                }
-                $values['refund_requests'] = $refund_requests;
-            }
-
-            return $values;
-        });
-    }
+        return $values;
+      },
+    );
+  }
 }

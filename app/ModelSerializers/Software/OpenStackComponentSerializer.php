@@ -16,14 +16,12 @@ use ModelSerializers\SilverStripeSerializer;
  * Class OpenStackComponentSerializer
  * @package App\ModelSerializers\Software
  */
-final class OpenStackComponentSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Name'           => 'name:json_string',
-        'CodeName'       => 'code_name:json_string',
-    ];
-
+final class OpenStackComponentSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "CodeName" => "code_name:json_string",
+  ];
 }

@@ -16,14 +16,13 @@ use ModelSerializers\SilverStripeSerializer;
  * Class MarketPlaceReviewSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class MarketPlaceReviewSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Title'     => 'title:json_string',
-        'Comment'   => 'comment:json_string',
-        'Rating'    => 'rating:json_int',
-    ];
+final class MarketPlaceReviewSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Title" => "title:json_string",
+    "Comment" => "comment:json_string",
+    "Rating" => "rating:json_int",
+  ];
 }

@@ -16,45 +16,49 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
  * Class ExtraQuestionTypeFactory
  * @package App\Models\Foundation\ExtraQuestions\Factories
  */
-abstract class ExtraQuestionTypeFactory
-{
-    abstract protected static function getNewEntity():ExtraQuestionType;
+abstract class ExtraQuestionTypeFactory {
+  abstract protected static function getNewEntity(): ExtraQuestionType;
 
-    /**
-     * @param array $data
-     * @return ExtraQuestionType
-     */
-    public static function build(array $data):ExtraQuestionType{
-        $e = static::populate(static::getNewEntity(), $data);
-        $e->seed();
-        return $e;
+  /**
+   * @param array $data
+   * @return ExtraQuestionType
+   */
+  public static function build(array $data): ExtraQuestionType {
+    $e = static::populate(static::getNewEntity(), $data);
+    $e->seed();
+    return $e;
+  }
+
+  /**
+   * @param ExtraQuestionType $question
+   * @param array $data
+   * @return ExtraQuestionType
+   */
+  public static function populate(ExtraQuestionType $question, array $data): ExtraQuestionType {
+    if (isset($data["name"])) {
+      $question->setName(trim($data["name"]));
     }
 
-    /**
-     * @param ExtraQuestionType $question
-     * @param array $data
-     * @return ExtraQuestionType
-     */
-    public static function populate(ExtraQuestionType $question, array $data):ExtraQuestionType{
-
-        if(isset($data['name']))
-            $question->setName(trim($data['name']));
-
-        if(isset($data['label']))
-            $question->setLabel(trim($data['label']));
-
-        if(isset($data['type']))
-            $question->setType(trim($data['type']));
-
-        if(isset($data['placeholder']))
-            $question->setPlaceholder(trim($data['placeholder']));
-
-        if(isset($data['mandatory']))
-            $question->setMandatory(boolval($data['mandatory']));
-
-        if(isset($data['max_selected_values']))
-            $question->setMaxSelectedValues(intval($data['max_selected_values']));
-
-        return $question;
+    if (isset($data["label"])) {
+      $question->setLabel(trim($data["label"]));
     }
+
+    if (isset($data["type"])) {
+      $question->setType(trim($data["type"]));
+    }
+
+    if (isset($data["placeholder"])) {
+      $question->setPlaceholder(trim($data["placeholder"]));
+    }
+
+    if (isset($data["mandatory"])) {
+      $question->setMandatory(boolval($data["mandatory"]));
+    }
+
+    if (isset($data["max_selected_values"])) {
+      $question->setMaxSelectedValues(intval($data["max_selected_values"]));
+    }
+
+    return $question;
+  }
 }

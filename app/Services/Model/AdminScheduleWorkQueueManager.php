@@ -20,133 +20,137 @@ use models\summit\CalendarSync\WorkQueue\AdminSummitLocationActionSyncWorkReques
  * Class AdminScheduleWorkQueueManager
  * @package App\Services\Model
  */
-final class AdminScheduleWorkQueueManager
-implements ICalendarSyncWorkRequestQueueManager
-{
-    /**
-     * @var array
-     */
-    private $registered_requests = [];
+final class AdminScheduleWorkQueueManager implements ICalendarSyncWorkRequestQueueManager {
+  /**
+   * @var array
+   */
+  private $registered_requests = [];
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return string
-     */
-    private function getKey(AbstractCalendarSyncWorkRequest $request){
-        $event_id    = null;
-        $location_id = null;
-        if($request instanceof AdminSummitEventActionSyncWorkRequest){
-            $event_id = $request->getSummitEventId();
-        }
-        if($request instanceof AdminSummitLocationActionSyncWorkRequest){
-            $location_id = $request->getLocationId();
-        }
-        return $this->generateKey($request->getType(), $event_id, $location_id);
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return string
+   */
+  private function getKey(AbstractCalendarSyncWorkRequest $request) {
+    $event_id = null;
+    $location_id = null;
+    if ($request instanceof AdminSummitEventActionSyncWorkRequest) {
+      $event_id = $request->getSummitEventId();
     }
-
-    /**
-     * @param string $type
-     * @param int $event_id
-     * @param int $location_id
-     * @return string
-     */
-    private function generateKey($type, $event_id = null, $location_id = null){
-        $sub_type = !is_null($event_id) ? AdminSummitEventActionSyncWorkRequest::SubType : AdminSummitLocationActionSyncWorkRequest::SubType;
-        $id       = !is_null($event_id) ? $event_id : $location_id;
-        $key      = "{$sub_type}_{$type}_{$id}";
-        return $key;
+    if ($request instanceof AdminSummitLocationActionSyncWorkRequest) {
+      $location_id = $request->getLocationId();
     }
+    return $this->generateKey($request->getType(), $event_id, $location_id);
+  }
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return bool
-     */
-    public function registerRequest(AbstractCalendarSyncWorkRequest $request){
-        $key = $this->getKey($request);
-        if(isset($this->registered_requests[$key])) return false;
-        $this->registered_requests[$key] = $request;
-        return true;
+  /**
+   * @param string $type
+   * @param int $event_id
+   * @param int $location_id
+   * @return string
+   */
+  private function generateKey($type, $event_id = null, $location_id = null) {
+    $sub_type = !is_null($event_id)
+      ? AdminSummitEventActionSyncWorkRequest::SubType
+      : AdminSummitLocationActionSyncWorkRequest::SubType;
+    $id = !is_null($event_id) ? $event_id : $location_id;
+    $key = "{$sub_type}_{$type}_{$id}";
+    return $key;
+  }
+
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return bool
+   */
+  public function registerRequest(AbstractCalendarSyncWorkRequest $request) {
+    $key = $this->getKey($request);
+    if (isset($this->registered_requests[$key])) {
+      return false;
     }
+    $this->registered_requests[$key] = $request;
+    return true;
+  }
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return bool
-     */
-    public function removeRequest(AbstractCalendarSyncWorkRequest $request){
-        $key = $this->getKey($request);
-        if(isset($this->registered_requests[$key])){
-            unset($this->registered_requests[$key]);
-            return true;
-        }
-        return false;
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return bool
+   */
+  public function removeRequest(AbstractCalendarSyncWorkRequest $request) {
+    $key = $this->getKey($request);
+    if (isset($this->registered_requests[$key])) {
+      unset($this->registered_requests[$key]);
+      return true;
     }
+    return false;
+  }
 
-    /**
-     * @param int $event_id
-     * @param string $type
-     * @return AdminSummitEventActionSyncWorkRequest[]
-     */
-    public function getSummitEventRequestFor($event_id, $type = null){
-        $types = [
-            AbstractCalendarSyncWorkRequest::TypeAdd,
-            AbstractCalendarSyncWorkRequest::TypeRemove,
-            AbstractCalendarSyncWorkRequest::TypeUpdate,
-        ];
+  /**
+   * @param int $event_id
+   * @param string $type
+   * @return AdminSummitEventActionSyncWorkRequest[]
+   */
+  public function getSummitEventRequestFor($event_id, $type = null) {
+    $types = [
+      AbstractCalendarSyncWorkRequest::TypeAdd,
+      AbstractCalendarSyncWorkRequest::TypeRemove,
+      AbstractCalendarSyncWorkRequest::TypeUpdate,
+    ];
 
-        if(!empty($type)) $types = [$type];
-        $list = [];
-        foreach ($types as $t){
-            $key = $this->generateKey($t, $event_id);
-            if(isset($this->registered_requests[$key])){
-                $list[] = $this->registered_requests[$key];
-            }
-        }
-        return $list;
+    if (!empty($type)) {
+      $types = [$type];
     }
-
-    /**
-     * @param int $location_id
-     * @param string $type
-     * @return AdminSummitLocationActionSyncWorkRequest[]
-     */
-    public function getSummitLocationRequestFor($location_id, $type = null){
-        $types = [
-            AbstractCalendarSyncWorkRequest::TypeAdd,
-            AbstractCalendarSyncWorkRequest::TypeRemove,
-            AbstractCalendarSyncWorkRequest::TypeUpdate,
-        ];
-
-        if(!empty($type)) $types = [$type];
-        $list = [];
-        foreach ($types as $t){
-            $key = $this->generateKey($t, null, $location_id);
-            if(isset($this->registered_requests[$key])){
-                $list[] = $this->registered_requests[$key];
-            }
-        }
-        return $list;
+    $list = [];
+    foreach ($types as $t) {
+      $key = $this->generateKey($t, $event_id);
+      if (isset($this->registered_requests[$key])) {
+        $list[] = $this->registered_requests[$key];
+      }
     }
-    /**
-     * @return array
-     */
-    public function getPurgedRequests(){
-        return array_values($this->registered_requests);
-    }
+    return $list;
+  }
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return bool
-     */
-    public function registerRequestForDelete(AbstractCalendarSyncWorkRequest $request)
-    {
-        // TODO: Implement registerRequestForDelete() method.
-    }
+  /**
+   * @param int $location_id
+   * @param string $type
+   * @return AdminSummitLocationActionSyncWorkRequest[]
+   */
+  public function getSummitLocationRequestFor($location_id, $type = null) {
+    $types = [
+      AbstractCalendarSyncWorkRequest::TypeAdd,
+      AbstractCalendarSyncWorkRequest::TypeRemove,
+      AbstractCalendarSyncWorkRequest::TypeUpdate,
+    ];
 
-    /**
-     * @return array
-     */
-    public function getRequestsToDelete()
-    {
-        // TODO: Implement getRequestsToDelete() method.
+    if (!empty($type)) {
+      $types = [$type];
     }
+    $list = [];
+    foreach ($types as $t) {
+      $key = $this->generateKey($t, null, $location_id);
+      if (isset($this->registered_requests[$key])) {
+        $list[] = $this->registered_requests[$key];
+      }
+    }
+    return $list;
+  }
+  /**
+   * @return array
+   */
+  public function getPurgedRequests() {
+    return array_values($this->registered_requests);
+  }
+
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return bool
+   */
+  public function registerRequestForDelete(AbstractCalendarSyncWorkRequest $request) {
+    // TODO: Implement registerRequestForDelete() method.
+  }
+
+  /**
+   * @return array
+   */
+  public function getRequestsToDelete() {
+    // TODO: Implement getRequestsToDelete() method.
+  }
 }

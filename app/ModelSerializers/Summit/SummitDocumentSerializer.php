@@ -17,69 +17,76 @@ use models\summit\SummitDocument;
  * Class SummitDocumentSerializer
  * @package ModelSerializers
  */
-class SummitDocumentSerializer extends SilverStripeSerializer
-{
+class SummitDocumentSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "ShowAlways" => "show_always:json_boolean",
+    "Label" => "label:json_string",
+    "SummitId" => "summit_id:json_int",
+    "FileUrl" => "file:json_url",
+    "SelectionPlanId" => "selection_plan_id:json_int",
+    "WebLink" => "web_link:json_url",
+  ];
 
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Description' => 'description:json_string',
-        'ShowAlways' => 'show_always:json_boolean',
-        'Label' => 'label:json_string',
-        'SummitId' => 'summit_id:json_int',
-        'FileUrl' => 'file:json_url',
-        'SelectionPlanId' => 'selection_plan_id:json_int',
-        'WebLink' => 'web_link:json_url',
-    ];
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $summit_document = $this->object;
-        if (!$summit_document instanceof SummitDocument) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $event_types  = [];
-        foreach ($summit_document->getEventTypes() as $event_type) {
-            $event_types[] = $event_type->getId();
-        }
-
-        $values['event_types'] = $event_types;
-
-        if (!empty($expand)) {
-            $relations = explode(',', $expand);
-            foreach ($relations as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'event_types':{
-                        $event_types  = [];
-                        foreach ($summit_document->getEventTypes() as $event_type) {
-                            $event_types[] = SerializerRegistry::getInstance()->getSerializer($event_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                        $values['event_types'] = $event_types;
-                    }
-                        break;
-                    case 'summit':{
-                        unset($values['summit_id']);
-                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($summit_document->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                    }
-                        break;
-                    case 'selection_plan':{
-                        if($summit_document->hasSelectionPlan()) {
-                            unset($values['selection_plan_id']);
-                            $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($summit_document->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                    }
-                        break;
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $summit_document = $this->object;
+    if (!$summit_document instanceof SummitDocument) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $event_types = [];
+    foreach ($summit_document->getEventTypes() as $event_type) {
+      $event_types[] = $event_type->getId();
+    }
+
+    $values["event_types"] = $event_types;
+
+    if (!empty($expand)) {
+      $relations = explode(",", $expand);
+      foreach ($relations as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "event_types":
+            $event_types = [];
+            foreach ($summit_document->getEventTypes() as $event_type) {
+              $event_types[] = SerializerRegistry::getInstance()
+                ->getSerializer($event_type)
+                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            }
+            $values["event_types"] = $event_types;
+            break;
+          case "summit":
+            unset($values["summit_id"]);
+            $values["summit"] = SerializerRegistry::getInstance()
+              ->getSerializer($summit_document->getSummit())
+              ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            break;
+          case "selection_plan":
+            if ($summit_document->hasSelectionPlan()) {
+              unset($values["selection_plan_id"]);
+              $values["selection_plan"] = SerializerRegistry::getInstance()
+                ->getSerializer($summit_document->getSelectionPlan())
+                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            }
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

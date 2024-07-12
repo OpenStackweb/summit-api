@@ -19,35 +19,40 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestion
  * Class SelectionPlanExtraQuestionTypeSerializer
  * @package ModelSerializers
  */
-final class SummitSelectionPlanExtraQuestionTypeSerializer extends ExtraQuestionTypeSerializer
-{
-    protected static $array_mappings = [
-        'SummitID' => 'summit_id:json_int',
-    ];
+final class SummitSelectionPlanExtraQuestionTypeSerializer extends ExtraQuestionTypeSerializer {
+  protected static $array_mappings = [
+    "SummitID" => "summit_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $question = $this->object;
-        if (!$question instanceof SummitSelectionPlanExtraQuestionType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if (isset($values['order']))
-            unset($values['order']);
-
-        if(isset($params['selection_plan_id'])){
-            $selection_plan_id = intval($params['selection_plan_id']);
-            $order = $question->getOrderByAssignedSelectionPlan($selection_plan_id);
-            if(!is_null($order)){
-                $values['order'] = $order;
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $question = $this->object;
+    if (!$question instanceof SummitSelectionPlanExtraQuestionType) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (isset($values["order"])) {
+      unset($values["order"]);
     }
 
+    if (isset($params["selection_plan_id"])) {
+      $selection_plan_id = intval($params["selection_plan_id"]);
+      $order = $question->getOrderByAssignedSelectionPlan($selection_plan_id);
+      if (!is_null($order)) {
+        $values["order"] = $order;
+      }
+    }
+    return $values;
+  }
 }

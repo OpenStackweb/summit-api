@@ -16,7 +16,5 @@
  * Class PublicMemberSerializer
  * @package ModelSerializers
  */
-final class PublicMemberSerializer extends AbstractMemberSerializer
-{
-
+final class PublicMemberSerializer extends AbstractMemberSerializer {
 }

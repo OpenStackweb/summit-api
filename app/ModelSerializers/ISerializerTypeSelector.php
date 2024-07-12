@@ -12,10 +12,9 @@
  * limitations under the License.
  **/
 
-interface ISerializerTypeSelector
-{
-    /**
-     * @return string
-     */
-    public function getSerializerType():string;
+interface ISerializerTypeSelector {
+  /**
+   * @return string
+   */
+  public function getSerializerType(): string;
 }

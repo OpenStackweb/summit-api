@@ -14,25 +14,28 @@
 
 use models\summit\SummitRoomReservation;
 
-
 /**
  * Class SummitRoomReservationCSVSerializer
  * @package App\ModelSerializers\Locations
  */
-final class SummitRoomReservationCSVSerializer extends SummitRoomReservationSerializer
-{
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $reservation = $this->object;
-        if (!$reservation instanceof SummitRoomReservation)
-            return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $values['owner_name'] = $reservation->getOwner()->getFullName();
-        $values['owner_email'] = $reservation->getOwner()->getEmail();
-        $values['start_datetime'] = $reservation->getLocalStartDatetime()->getTimestamp();
-        $values['end_datetime'] =  $reservation->getLocalEndDatetime()->getTimestamp();
-
-        return $values;
+final class SummitRoomReservationCSVSerializer extends SummitRoomReservationSerializer {
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $reservation = $this->object;
+    if (!$reservation instanceof SummitRoomReservation) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $values["owner_name"] = $reservation->getOwner()->getFullName();
+    $values["owner_email"] = $reservation->getOwner()->getEmail();
+    $values["start_datetime"] = $reservation->getLocalStartDatetime()->getTimestamp();
+    $values["end_datetime"] = $reservation->getLocalEndDatetime()->getTimestamp();
+
+    return $values;
+  }
 }

@@ -12,17 +12,14 @@
  * limitations under the License.
  **/
 
-
-
 /**
  * Class RequestTypes
  * @package App\Services\Apis\Samsung
  */
-final class RequestTypes
-{
-    const UserCheck = 'userCheck';
+final class RequestTypes {
+  const UserCheck = "userCheck";
 
-    const UserUncheck = 'userUncheck';
-    const EmailCheck = 'emailCheck';
-    const UserList = 'userList';
+  const UserUncheck = "userUncheck";
+  const EmailCheck = "emailCheck";
+  const UserList = "userList";
 }

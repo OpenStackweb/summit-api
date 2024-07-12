@@ -18,8 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitSponsorshipTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitSponsorshipTypeRepository
-    extends IBaseRepository
-{
-
+interface ISummitSponsorshipTypeRepository extends IBaseRepository {
 }

@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitMediaUploadTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitMediaUploadTypeRepository extends IBaseRepository
-{
-
+interface ISummitMediaUploadTypeRepository extends IBaseRepository {
 }

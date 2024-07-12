@@ -19,7 +19,5 @@ use models\utils\IBaseRepository;
  * Interface IUserStoryRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface IUserStoryRepository extends IBaseRepository
-{
-
+interface IUserStoryRepository extends IBaseRepository {
 }

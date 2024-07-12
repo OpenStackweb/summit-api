@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 use models\main\Member;
 
@@ -24,133 +24,123 @@ use models\main\Member;
  * Class SummitEventFeedback
  * @package models\summit
  */
-class SummitEventFeedback extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Rate", type="integer")
-     * @var int
-     */
-    private $rate;
+class SummitEventFeedback extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Rate", type="integer")
+   * @var int
+   */
+  private $rate;
 
-    /**
-     * @ORM\Column(name="note", type="string")
-     * @var string
-     */
-    private $note;
+  /**
+   * @ORM\Column(name="note", type="string")
+   * @var string
+   */
+  private $note;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="feedback")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $owner;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="feedback")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  private $owner;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="feedback", fetch="LAZY")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitEvent
-     */
-    private $event;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="feedback", fetch="LAZY")
+   * @ORM\JoinColumn(name="EventID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var SummitEvent
+   */
+  private $event;
 
-    /**
-     * @return int
-     */
-    public function getRate()
-    {
-        return $this->rate;
+  /**
+   * @return int
+   */
+  public function getRate() {
+    return $this->rate;
+  }
+
+  /**
+   * @param int $rate
+   */
+  public function setRate($rate) {
+    $this->rate = $rate;
+  }
+
+  /**
+   * @return string
+   */
+  public function getNote() {
+    return $this->note;
+  }
+
+  /**
+   * @param string $note
+   */
+  public function setNote($note) {
+    $this->note = $note;
+  }
+
+  /**
+   * @return Member
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
+
+  /**
+   * @param Member $owner
+   */
+  public function setOwner(Member $owner) {
+    $this->owner = $owner;
+  }
+
+  /**
+   * @return SummitEvent
+   */
+  public function getEvent() {
+    return $this->event;
+  }
+
+  /**
+   * @return int
+   */
+  public function getEventId() {
+    try {
+      return $this->event->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param int $rate
-     */
-    public function setRate($rate)
-    {
-        $this->rate = $rate;
+  /**
+   * @return bool
+   */
+  public function hasOwner() {
+    return $this->getOwnerId() > 0;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return string
-     */
-    public function getNote()
-    {
-        return $this->note;
-    }
+  public function clearOwner(): void {
+    $this->owner = null;
+  }
 
-    /**
-     * @param string $note
-     */
-    public function setNote($note)
-    {
-        $this->note = $note;
-    }
+  public function clearEvent(): void {
+    $this->event = null;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
-
-    /**
-     * @param Member $owner
-     */
-    public function setOwner(Member $owner){
-        $this->owner = $owner;
-    }
-
-    /**
-     * @return SummitEvent
-     */
-    public function getEvent()
-    {
-        return $this->event;
-    }
-
-    /**
-     * @return int
-     */
-    public function getEventId(){
-        try{
-            return $this->event->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasOwner(){
-        return $this->getOwnerId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try{
-            return $this->owner->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    public function clearOwner():void{
-        $this->owner = null;
-    }
-
-    public function clearEvent():void{
-        $this->event = null;
-    }
-
-    /**
-     * @param SummitEvent $event
-     */
-    public function setEvent(SummitEvent $event){
-        $this->event = $event;
-    }
-
+  /**
+   * @param SummitEvent $event
+   */
+  public function setEvent(SummitEvent $event) {
+    $this->event = $event;
+  }
 }

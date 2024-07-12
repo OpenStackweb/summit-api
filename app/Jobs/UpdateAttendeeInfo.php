@@ -24,36 +24,32 @@ use Illuminate\Support\Facades\Log;
  * Class UpdateAttendeeInfo
  * @package App\Jobs
  */
-class UpdateAttendeeInfo implements ShouldQueue
-{
-    public $tries = 2;
+class UpdateAttendeeInfo implements ShouldQueue {
+  public $tries = 2;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+  /**
+   * @var int
+   */
+  private $member_id;
 
-    /**
-     * @var int
-     */
-    private $member_id;
+  /**
+   * NewMember constructor.
+   * @param int $member_id
+   */
+  public function __construct(int $member_id) {
+    $this->member_id = $member_id;
+  }
 
-    /**
-     * NewMember constructor.
-     * @param int $member_id
-     */
-    public function __construct(int $member_id)
-    {
-        $this->member_id = $member_id;
-    }
-
-    /**
-     * @param IAttendeeService $service
-     */
-    public function handle(IAttendeeService $service)
-    {
-        Log::debug(sprintf("UpdateAttendeeInfo::handle member_id %s", $this->member_id));
-        $service->updateAttendeesByMemberId($this->member_id);
-    }
+  /**
+   * @param IAttendeeService $service
+   */
+  public function handle(IAttendeeService $service) {
+    Log::debug(sprintf("UpdateAttendeeInfo::handle member_id %s", $this->member_id));
+    $service->updateAttendeesByMemberId($this->member_id);
+  }
 }

@@ -18,54 +18,52 @@ use ModelSerializers\SilverStripeSerializer;
  * Class ConsultantServiceOfferedTypeSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class ConsultantServiceOfferedTypeSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
+final class ConsultantServiceOfferedTypeSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [];
 
-    ];
+  protected static $allowed_relations = ["service_offered_type", "region"];
 
-    protected static $allowed_relations = [
-        'service_offered_type',
-        'region',
-    ];
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $service  = $this->object;
-        if(!$service instanceof ConsultantServiceOfferedType) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('service_offered_type', $relations)){
-            $values['service_offered_type'] =  SerializerRegistry::getInstance()
-                ->getSerializer($service->getServiceOffered())
-                ->serialize($expand);
-        }
-
-        if(in_array('region', $relations)){
-            $values['region'] =  SerializerRegistry::getInstance()
-                ->getSerializer($service->getRegion())
-                ->serialize($expand);
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $service = $this->object;
+    if (!$service instanceof ConsultantServiceOfferedType) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("service_offered_type", $relations)) {
+      $values["service_offered_type"] = SerializerRegistry::getInstance()
+        ->getSerializer($service->getServiceOffered())
+        ->serialize($expand);
+    }
+
+    if (in_array("region", $relations)) {
+      $values["region"] = SerializerRegistry::getInstance()
+        ->getSerializer($service->getRegion())
+        ->serialize($expand);
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+        }
+      }
+    }
+    return $values;
+  }
 }

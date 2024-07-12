@@ -17,24 +17,23 @@ use models\summit\SummitMediaFileType;
  * Class SummitMediaFileTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitMediaFileTypeFactory
-{
-    public static function build(array $data):SummitMediaFileType{
-        return self::populate(new SummitMediaFileType(), $data);
-    }
+final class SummitMediaFileTypeFactory {
+  public static function build(array $data): SummitMediaFileType {
+    return self::populate(new SummitMediaFileType(), $data);
+  }
 
-    public static function populate(SummitMediaFileType $type, array $data):SummitMediaFileType{
-        if(isset($data['name'])){
-            $type->setName(trim($data['name']));
-        }
-        if(isset($data['description'])){
-            $type->setDescription(trim($data['description']));
-        }
-        if(isset($data['allowed_extensions'])){
-            $allowed_extensions = implode('|', $data['allowed_extensions']);
-            $type->setAllowedExtensions($allowed_extensions);
-        }
-        $type->markAsUserDefined();
-        return $type;
+  public static function populate(SummitMediaFileType $type, array $data): SummitMediaFileType {
+    if (isset($data["name"])) {
+      $type->setName(trim($data["name"]));
     }
+    if (isset($data["description"])) {
+      $type->setDescription(trim($data["description"]));
+    }
+    if (isset($data["allowed_extensions"])) {
+      $allowed_extensions = implode("|", $data["allowed_extensions"]);
+      $type->setAllowedExtensions($allowed_extensions);
+    }
+    $type->markAsUserDefined();
+    return $type;
+  }
 }

@@ -12,8 +12,6 @@
  * limitations under the License.
  **/
 
-
-
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 use models\summit\SponsorMaterial;
 
@@ -21,33 +19,29 @@ use models\summit\SponsorMaterial;
  * Class SponsorMaterialValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorMaterialValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class SponsorMaterialValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "link" => "required|url|max:255",
+      "name" => "required|string|max:255",
+      "type" => "required|string|in:" . implode(",", SponsorMaterial::ValidTypes),
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'link' => 'required|url|max:255',
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|in:'.implode(',', SponsorMaterial::ValidTypes),
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'link' => 'sometimes|url|max:255',
-            'name' => 'sometimes|string|max:255',
-            'type' => 'sometimes|string|in:'.implode(',', SponsorMaterial::ValidTypes),
-            'order' => 'sometimes|integer|min:1',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "link" => "sometimes|url|max:255",
+      "name" => "sometimes|string|max:255",
+      "type" => "sometimes|string|in:" . implode(",", SponsorMaterial::ValidTypes),
+      "order" => "sometimes|integer|min:1",
+    ];
+  }
 }

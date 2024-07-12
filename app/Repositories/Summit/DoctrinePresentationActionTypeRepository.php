@@ -26,50 +26,45 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrinePresentationActionTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements IPresentationActionTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements IPresentationActionTypeRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity(): string {
+    return PresentationActionType::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity(): string
-    {
-       return PresentationActionType::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder {
+    return $query
+      ->leftJoin("e.assigned_selection_plans", "asp")
+      ->leftJoin("asp.selection_plan", "sp");
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
-    {
-        return $query->leftJoin("e.assigned_selection_plans", "asp")
-            ->leftJoin("asp.selection_plan", "sp");
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings(): array {
+    return [
+      "label" => "e.label:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+      "selection_plan_id" => "sp.id",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings(): array
-    {
-        return [
-            'label' => 'e.label:json_string',
-            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
-            'selection_plan_id' => 'sp.id'
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings(): array
-    {
-        return [
-            'id' => 'e.id',
-            'order' => 'asp.order',
-            'label' => 'e.label',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings(): array {
+    return [
+      "id" => "e.id",
+      "order" => "asp.order",
+      "label" => "e.label",
+    ];
+  }
 }

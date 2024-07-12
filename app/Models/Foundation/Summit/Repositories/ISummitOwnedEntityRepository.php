@@ -21,20 +21,18 @@ use utils\PagingResponse;
  * Interface ISummitOwnedEntityRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitOwnedEntityRepository extends IBaseRepository
-{
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getBySummit
-    (
-        Summit $summit,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    );
+interface ISummitOwnedEntityRepository extends IBaseRepository {
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

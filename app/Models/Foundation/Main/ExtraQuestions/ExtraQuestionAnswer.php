@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="ExtraQuestionAnswer")
@@ -30,85 +30,79 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class ExtraQuestionAnswer
  * @package App\Models\Foundation\ExtraQuestionAnswer
  */
-abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+abstract class ExtraQuestionAnswer extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="ExtraQuestionType")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
-     * @var ExtraQuestionType
-     */
-    protected $question;
+  /**
+   * @ORM\ManyToOne(targetEntity="ExtraQuestionType")
+   * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
+   * @var ExtraQuestionType
+   */
+  protected $question;
 
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    protected $value;
+  /**
+   * @ORM\Column(name="Value", type="string")
+   * @var string
+   */
+  protected $value;
 
-    /**
-     * @var bool
-     */
-    private $should_delete_it;
+  /**
+   * @var bool
+   */
+  private $should_delete_it;
 
-    protected $getIdMappings = [
-        'getQuestionId' => 'question',
-    ];
+  protected $getIdMappings = [
+    "getQuestionId" => "question",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasQuestion' => 'question',
-    ];
+  protected $hasPropertyMappings = [
+    "hasQuestion" => "question",
+  ];
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->value = "";
-        $this->should_delete_it = false;
+  public function __construct() {
+    parent::__construct();
+    $this->value = "";
+    $this->should_delete_it = false;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasValue(): bool {
+    return !empty($this->value);
+  }
+
+  /**
+   * @return ExtraQuestionType
+   */
+  public function getQuestion(): ExtraQuestionType {
+    return $this->question;
+  }
+
+  /**
+   * @param ExtraQuestionType $question
+   */
+  public function setQuestion(ExtraQuestionType $question): void {
+    $this->question = $question;
+  }
+
+  /**
+   * @return string
+   */
+  public function getValue(): string {
+    return $this->value;
+  }
+
+  /**
+   * @param string|array $value
+   * @throws ValidationException
+   */
+  public function setValue($value): void {
+    if (is_null($this->question)) {
+      throw new ValidationException("Question is not set.");
     }
 
-    /**
-     * @return bool
-     */
-    public function hasValue():bool {
-        return !empty($this->value);
-    }
-
-    /**
-     * @return ExtraQuestionType
-     */
-    public function getQuestion(): ExtraQuestionType
-    {
-        return $this->question;
-    }
-
-    /**
-     * @param ExtraQuestionType $question
-     */
-    public function setQuestion(ExtraQuestionType $question): void
-    {
-        $this->question = $question;
-    }
-
-    /**
-     * @return string
-     */
-    public function getValue(): string
-    {
-        return $this->value;
-    }
-
-    /**
-     * @param string|array $value
-     * @throws ValidationException
-     */
-    public function setValue($value): void
-    {
-        if(is_null($this->question)){
-            throw new ValidationException("Question is not set.");
-        }
-
-        /*
+    /*
         if($this->question->isMandatory() && empty($value)){
             throw new ValidationException
             (
@@ -132,59 +126,61 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
             );
         }
         */
-        $res = $value;
-        if(is_array($res))
-        {
-            $res = implode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $value);
-        }
-
-        if($this->question->allowsValues() && $this->question->getMaxSelectedValues() > 0 && $this->question->getMaxSelectedValues() < count(explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $value)))
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "You can select a Max. of %s values for Question %s.",
-                    $this->question->getMaxSelectedValues(),
-                    $this->question->getId()
-                )
-            );
-
-        $this->value = $res;
+    $res = $value;
+    if (is_array($res)) {
+      $res = implode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $value);
     }
 
-    public function __toString():string
-    {
-        $value = $this->value;
-        if($this->question->allowsValues()){
-            $value = $this->question->getNiceValue($value);
-        }
-        return sprintf("%s : %s", strip_tags($this->question->getLabel()), $value);
+    if (
+      $this->question->allowsValues() &&
+      $this->question->getMaxSelectedValues() > 0 &&
+      $this->question->getMaxSelectedValues() <
+        count(explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $value))
+    ) {
+      throw new ValidationException(
+        sprintf(
+          "You can select a Max. of %s values for Question %s.",
+          $this->question->getMaxSelectedValues(),
+          $this->question->getId(),
+        ),
+      );
     }
 
-    /**
-     * @param string $val
-     * @return bool
-     */
-    public function contains(string $val):bool{
-        if(!$this->question->allowsValues()) return false;
-        return in_array($val, explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $this->value));
-    }
+    $this->value = $res;
+  }
 
-    public function markForDeletion():void{
-        Log::debug
-        (
-            sprintf
-            (
-                "ExtraQuestionAnswer::markForDeletion id %s value %s question %s",
-                $this->id,
-                $this->value,
-                $this->getQuestionId()
-            )
-        );
-        $this->should_delete_it = true;
+  public function __toString(): string {
+    $value = $this->value;
+    if ($this->question->allowsValues()) {
+      $value = $this->question->getNiceValue($value);
     }
+    return sprintf("%s : %s", strip_tags($this->question->getLabel()), $value);
+  }
 
-    public function shouldDeleteIt():bool{
-        return !is_null($this->should_delete_it) ? $this->should_delete_it: false;
+  /**
+   * @param string $val
+   * @return bool
+   */
+  public function contains(string $val): bool {
+    if (!$this->question->allowsValues()) {
+      return false;
     }
+    return in_array($val, explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $this->value));
+  }
+
+  public function markForDeletion(): void {
+    Log::debug(
+      sprintf(
+        "ExtraQuestionAnswer::markForDeletion id %s value %s question %s",
+        $this->id,
+        $this->value,
+        $this->getQuestionId(),
+      ),
+    );
+    $this->should_delete_it = true;
+  }
+
+  public function shouldDeleteIt(): bool {
+    return !is_null($this->should_delete_it) ? $this->should_delete_it : false;
+  }
 }

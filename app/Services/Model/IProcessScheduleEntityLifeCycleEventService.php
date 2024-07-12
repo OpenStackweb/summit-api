@@ -12,18 +12,21 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IProcessScheduleEntityLifeCycleEventService
  * @package App\Services\Model
  */
-interface IProcessScheduleEntityLifeCycleEventService
-{
-    /**
-     * @param string $entity_operator
-     * @param int $summit_id
-     * @param int $entity_id
-     * @param string $entity_type
-     */
-    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type):void;
+interface IProcessScheduleEntityLifeCycleEventService {
+  /**
+   * @param string $entity_operator
+   * @param int $summit_id
+   * @param int $entity_id
+   * @param string $entity_type
+   */
+  public function process(
+    string $entity_operator,
+    int $summit_id,
+    int $entity_id,
+    string $entity_type,
+  ): void;
 }

@@ -29,202 +29,217 @@ use models\summit\SummitAttendeeBadge;
  * Class SponsorUserInfoGrantService
  * @package App\Services\Model\Imp
  */
-final class SponsorUserInfoGrantService
-    extends AbstractService
-    implements ISponsorUserInfoGrantService
-{
+final class SponsorUserInfoGrantService extends AbstractService implements
+  ISponsorUserInfoGrantService {
+  /**
+   * @var ISponsorUserInfoGrantRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISponsorUserInfoGrantRepository
-     */
-    private $repository;
+  /**
+   * @var ISummitAttendeeBadgeRepository
+   */
+  private $badge_repository;
 
-    /**
-     * @var ISummitAttendeeBadgeRepository
-     */
-    private $badge_repository;
+  /**
+   * SponsorBadgeScanService constructor.
+   * @param ISponsorUserInfoGrantRepository $repository
+   * @param ISummitAttendeeBadgeRepository $badge_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    ISponsorUserInfoGrantRepository $repository,
+    ISummitAttendeeBadgeRepository $badge_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->repository = $repository;
+    $this->badge_repository = $badge_repository;
+  }
 
-    /**
-     * SponsorBadgeScanService constructor.
-     * @param ISponsorUserInfoGrantRepository $repository
-     * @param ISummitAttendeeBadgeRepository $badge_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        ISponsorUserInfoGrantRepository $repository,
-        ISummitAttendeeBadgeRepository $badge_repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->repository = $repository;
-        $this->badge_repository = $badge_repository;
-    }
+  /**
+   * @param Summit $summit
+   * @param int $sponsor_id
+   * @param Member $current_member
+   * @return SponsorUserInfoGrant
+   * @throws \Exception
+   */
+  public function addGrant(
+    Summit $summit,
+    int $sponsor_id,
+    Member $current_member,
+  ): SponsorUserInfoGrant {
+    return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $current_member) {
+      $sponsor = $summit->getSummitSponsorById($sponsor_id);
+      if (is_null($sponsor)) {
+        throw new EntityNotFoundException(sprintf("Sponsor not found."));
+      }
+      if ($sponsor->hasGrant($current_member)) {
+        Log::warning(
+          sprintf(
+            "User %s already gave grant to sponsor %s",
+            $current_member->getEmail(),
+            $sponsor_id,
+          ),
+        );
+        return $sponsor->getGrant($current_member);
+      }
+      $grant = SponsorUserInfoGrantFactory::build([
+        "class_name" => SponsorUserInfoGrant::ClassName,
+      ]);
+      $grant->setAllowedUser($current_member);
+      $sponsor->addUserInfoGrant($grant);
+      return $grant;
+    });
+  }
 
-    /**
-     * @param Summit $summit
-     * @param int $sponsor_id
-     * @param Member $current_member
-     * @return SponsorUserInfoGrant
-     * @throws \Exception
-     */
-    public function addGrant(Summit $summit, int $sponsor_id, Member $current_member):SponsorUserInfoGrant {
-        return $this->tx_service->transaction(function() use($summit, $sponsor_id, $current_member){
-            $sponsor = $summit->getSummitSponsorById($sponsor_id);
-            if(is_null($sponsor)){
-                throw new EntityNotFoundException(sprintf("Sponsor not found."));
-            }
-            if($sponsor->hasGrant($current_member)){
-                Log::warning(
-                    sprintf
-                    (
-                        "User %s already gave grant to sponsor %s",
-                        $current_member->getEmail(),
-                        $sponsor_id
-                    )
-                );
-                return $sponsor->getGrant($current_member);
-            }
-            $grant = SponsorUserInfoGrantFactory::build(['class_name' => SponsorUserInfoGrant::ClassName]);
-            $grant->setAllowedUser($current_member);
-            $sponsor->addUserInfoGrant($grant);
-            return $grant;
-        });
-    }
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param array $data
+   * @return SponsorBadgeScan
+   * @throws \Exception
+   */
+  public function addBadgeScan(
+    Summit $summit,
+    Member $current_member,
+    array $data,
+  ): SponsorBadgeScan {
+    return $this->tx_service->transaction(function () use ($summit, $current_member, $data) {
+      $qr_code = trim($data["qr_code"]);
+      $fields = SummitAttendeeBadge::parseQRCode($qr_code);
+      $prefix = $fields["prefix"];
+      $scan_date_epoch = intval($data["scan_date"]);
+      $scan_date = new \DateTime("@$scan_date_epoch");
+      $begin_date = $summit->getBeginDate();
+      $end_date = $summit->getEndDate();
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param array $data
-     * @return SponsorBadgeScan
-     * @throws \Exception
-     */
-    public function addBadgeScan(Summit $summit, Member $current_member, array $data): SponsorBadgeScan
-    {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $data){
-
-            $qr_code         = trim($data['qr_code']);
-            $fields          = SummitAttendeeBadge::parseQRCode($qr_code);
-            $prefix          = $fields['prefix'];
-            $scan_date_epoch = intval($data['scan_date']);
-            $scan_date       = new \DateTime("@$scan_date_epoch");
-            $begin_date      = $summit->getBeginDate();
-            $end_date        = $summit->getEndDate();
-
-            /*
+      /*
             if(!($scan_date >= $begin_date && $scan_date <= $end_date))
                 throw new ValidationException("scan_date is does not belong to summit period.");
             */
 
-            if($summit->getBadgeQRPrefix() != $prefix)
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "%s qr code is not valid for summit %s",
-                        $qr_code,
-                        $summit->getId()
-                    )
-                );
+      if ($summit->getBadgeQRPrefix() != $prefix) {
+        throw new ValidationException(
+          sprintf("%s qr code is not valid for summit %s", $qr_code, $summit->getId()),
+        );
+      }
 
-            $ticket_number = $fields['ticket_number'];
+      $ticket_number = $fields["ticket_number"];
 
-            $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
+      $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
 
-            if(is_null($badge))
-                throw new EntityNotFoundException("badge not found");
+      if (is_null($badge)) {
+        throw new EntityNotFoundException("badge not found");
+      }
 
-            $sponsor = $current_member->getSponsorBySummit($summit);
+      $sponsor = $current_member->getSponsorBySummit($summit);
 
-            if(is_null($sponsor))
-                throw new ValidationException("Current member does not belongs to any summit sponsor.");
+      if (is_null($sponsor)) {
+        throw new ValidationException("Current member does not belongs to any summit sponsor.");
+      }
 
-            $scan = new SponsorBadgeScan();
-            $scan->setScanDate($scan_date);
-            $scan->setQRCode($qr_code);
-            $scan->setUser($current_member);
-            $scan->setBadge($badge);
-            $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
+      $scan = new SponsorBadgeScan();
+      $scan->setScanDate($scan_date);
+      $scan->setQRCode($qr_code);
+      $scan->setUser($current_member);
+      $scan->setBadge($badge);
+      $scan->setNotes(isset($data["notes"]) ? trim($data["notes"]) : "");
 
-            $sponsor->addUserInfoGrant($scan);
+      $sponsor->addUserInfoGrant($scan);
 
-            // extra questions
-            $extra_questions = $data['extra_questions'] ?? [];
+      // extra questions
+      $extra_questions = $data["extra_questions"] ?? [];
 
-            if (count($extra_questions)) {
-                $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                if (!$res) {
-                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
-                }
-            }
+      if (count($extra_questions)) {
+        $res = $scan->hadCompletedExtraQuestions($extra_questions);
+        if (!$res) {
+          throw new ValidationException(
+            "You neglected to fill in all mandatory questions for the badge scan.",
+          );
+        }
+      }
 
-            return $scan;
-        });
-    }
+      return $scan;
+    });
+  }
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param int $scan_id
-     * @param array $payload
-     * @return SponsorBadgeScan
-     * @throws \Exception
-     */
-    public function updateBadgeScan(Summit $summit, Member $current_member, int $scan_id, array $payload): SponsorBadgeScan
-    {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $scan_id, $payload){
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param int $scan_id
+   * @param array $payload
+   * @return SponsorBadgeScan
+   * @throws \Exception
+   */
+  public function updateBadgeScan(
+    Summit $summit,
+    Member $current_member,
+    int $scan_id,
+    array $payload,
+  ): SponsorBadgeScan {
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $current_member,
+      $scan_id,
+      $payload,
+    ) {
+      $scan = $this->repository->getById($scan_id);
+      if (!$scan instanceof SponsorBadgeScan) {
+        throw new EntityNotFoundException("Scan not found.");
+      }
 
-            $scan = $this->repository->getById($scan_id);
-            if( !$scan instanceof SponsorBadgeScan){
-                throw new EntityNotFoundException("Scan not found.");
-            }
+      $sponsor = $scan->getSponsor();
 
-            $sponsor = $scan->getSponsor();
+      if (!$current_member->isAuthzFor($summit, $sponsor)) {
+        throw new ValidationException("You are not allowed to access to this scan.");
+      }
 
-            if(!$current_member->isAuthzFor($summit, $sponsor))
-                throw new ValidationException("You are not allowed to access to this scan.");
+      if (isset($payload["notes"])) {
+        $scan->setNotes(trim($payload["notes"]));
+      }
 
-            if(isset($payload['notes'])){
-                $scan->setNotes(trim($payload['notes']));
-            }
+      // extra questions
+      $extra_questions = $payload["extra_questions"] ?? [];
 
-            // extra questions
-            $extra_questions = $payload['extra_questions'] ?? [];
+      if (count($extra_questions)) {
+        $res = $scan->hadCompletedExtraQuestions($extra_questions);
+        if (!$res) {
+          throw new ValidationException(
+            "You neglected to fill in all mandatory questions for the badge scan.",
+          );
+        }
+      }
 
-            if (count($extra_questions)) {
-                $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                if (!$res) {
-                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
-                }
-            }
+      return $scan;
+    });
+  }
 
-            return $scan;
-        });
-    }
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param int $scan_id
+   * @return SponsorBadgeScan
+   * @throws \Exception
+   */
+  public function getBadgeScan(
+    Summit $summit,
+    Member $current_member,
+    int $scan_id,
+  ): SponsorBadgeScan {
+    return $this->tx_service->transaction(function () use ($summit, $current_member, $scan_id) {
+      $scan = $this->repository->getById($scan_id);
+      if (!$scan instanceof SponsorBadgeScan) {
+        throw new EntityNotFoundException("Scan not found.");
+      }
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param int $scan_id
-     * @return SponsorBadgeScan
-     * @throws \Exception
-     */
-    public function getBadgeScan(Summit $summit, Member $current_member, int $scan_id): SponsorBadgeScan
-    {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $scan_id){
+      $sponsor = $scan->getSponsor();
 
-            $scan = $this->repository->getById($scan_id);
-            if( !$scan instanceof SponsorBadgeScan){
-                throw new EntityNotFoundException("Scan not found.");
-            }
+      if (!$current_member->isAuthzFor($summit, $sponsor)) {
+        throw new ValidationException("You are not allowed to access to this scan.");
+      }
 
-            $sponsor = $scan->getSponsor();
-
-            if(!$current_member->isAuthzFor($summit, $sponsor))
-                throw new ValidationException("You are not allowed to access to this scan.");
-
-            return $scan;
-        });
-    }
+      return $scan;
+    });
+  }
 }

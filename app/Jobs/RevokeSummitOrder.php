@@ -24,38 +24,35 @@ use Illuminate\Support\Facades\Log;
  * Class RevokeSummitOrder
  * @package App\Jobs
  */
-final class RevokeSummitOrder implements ShouldQueue
-{
-    public $tries = 1;
+final class RevokeSummitOrder implements ShouldQueue {
+  public $tries = 1;
 
-    public $timeout = 0;
+  public $timeout = 0;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $order_id;
+  /**
+   * @var int
+   */
+  private $order_id;
 
-    /**
-     * @param int $order_id
-     */
-    public function __construct(int $order_id)
-    {
-        $this->order_id = $order_id;
-    }
+  /**
+   * @param int $order_id
+   */
+  public function __construct(int $order_id) {
+    $this->order_id = $order_id;
+  }
 
-    /**
-     * @param ISummitOrderService $service
-     * @throws \models\exceptions\EntityNotFoundException
-     */
-    public function handle(ISummitOrderService $service){
-        Log::debug(sprintf( "RevokeSummitOrder::handle order id %s", $this->order_id));
-        $service->processOrder2Revoke($this->order_id);
-    }
+  /**
+   * @param ISummitOrderService $service
+   * @throws \models\exceptions\EntityNotFoundException
+   */
+  public function handle(ISummitOrderService $service) {
+    Log::debug(sprintf("RevokeSummitOrder::handle order id %s", $this->order_id));
+    $service->processOrder2Revoke($this->order_id);
+  }
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }

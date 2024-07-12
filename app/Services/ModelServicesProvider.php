@@ -151,417 +151,266 @@ use services\model\SummitService;
  * Class ModelServicesProvider
  * @package services
  */
-final class ModelServicesProvider extends ServiceProvider
-{
-    protected $defer = true;
-
-    public function boot()
-    {
-    }
-
-    public function register()
-    {
-        App::when(SummitService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
-        App::when(SummitService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-
-        App::when(SummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
-        App::when(SummitOrderService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-
-        App::when(SummitSelectionPlanService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
-        App::when(SummitSelectionPlanService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-
-        // add bindings for service
-        App::singleton(ISummitService::class, SummitService::class);
-
-        App::singleton(ISpeakerService::class, SpeakerService::class);
-
-        App::singleton(ISubmitterService::class, SubmitterService::class);
-
-        App::singleton(IPresentationService::class, PresentationService::class);
-
-        App::singleton(IChatTeamService::class, ChatTeamService::class);
-
-        App::singleton
-        (
-            IAttendeeService::class,
-            AttendeeService::class
-        );
-
-        App::singleton(
-            IMemberService::class,
-            MemberService::class
-        );
-
-        App::singleton
-        (
-            ISummitPromoCodeService::class,
-            SummitPromoCodeService::class
-        );
-
-        App::singleton
-        (
-            ISummitEventTypeService::class,
-            SummitEventTypeService::class
-        );
-
-        App::singleton
-        (
-            ISummitTrackService::class,
-            SummitTrackService::class
-        );
-
-        App::singleton
-        (
-            ILocationService::class,
-            SummitLocationService::class
-        );
-
-        App::singleton
-        (
-            IRSVPTemplateService::class,
-            RSVPTemplateService::class
-        );
-
-        App::singleton
-        (
-            ISummitTicketTypeService::class,
-            SummitTicketTypeService::class
-        );
-
-        App::singleton
-        (
-            IPresentationCategoryGroupService::class,
-            PresentationCategoryGroupService::class
-        );
-
-        App::singleton(
-            ISummitPushNotificationService::class,
-            SummitPushNotificationService::class
-        );
-
-        App::singleton(
-            ISummitSelectionPlanService::class,
-            SummitSelectionPlanService::class
-        );
-
-        App::singleton(
-            IOrganizationService::class,
-            OrganizationService::class
-        );
-
-        App::singleton(
-            ICompanyService::class,
-            CompanyService::class
-        );
-
-        App::singleton(
-            ISummitTrackTagGroupService::class,
-            SummitTrackTagGroupService::class
-        );
-
-        App::singleton(
-            ITrackQuestionTemplateService::class,
-            TrackQuestionTemplateService::class
-        );
-
-        App::singleton(
-            ITagService::class,
-            TagService::class
-        );
-
-        App::singleton(
-            IExternalScheduleFeedFactory::class,
-            ExternalScheduleFeedFactory::class
-        );
-
-        App::singleton(
-            IScheduleIngestionService::class,
-            ScheduleIngestionService::class
-        );
-
-        App::singleton
-        (
-            ISummitAccessLevelTypeService::class,
-            SummitAccessLevelTypeService::class
-        );
-
-        App::singleton
-        (
-            ISummitTaxTypeService::class,
-            SummitTaxTypeService::class
-        );
-
-        App::singleton
-        (
-            ISummitBadgeFeatureTypeService::class,
-            SummitBadgeFeatureTypeService::class
-        );
-
-        App::singleton
-        (
-            ISummitBadgeTypeService::class,
-            SummitBadgeTypeService::class
-        );
-
-        App::singleton(
-            ISummitSponsorService::class,
-            SummitSponsorService::class
-        );
-
-        App::singleton(
-            ISummitRefundPolicyTypeService::class,
-            SummitRefundPolicyTypeService::class
-        );
-
-        App::singleton(
-            ISummitOrderExtraQuestionTypeService::class,
-            SummitOrderExtraQuestionTypeService::class
-        );
-
-        App::singleton(
-            ISponsorshipTypeService::class,
-            SponsorshipTypeService::class
-        );
-
-        App::singleton(ISummitOrderService::class, SummitOrderService::class);
-
-        App::singleton(ISponsorUserInfoGrantService::class,
-            SponsorUserInfoGrantService::class);
-
-        App::singleton(
-            IRegistrationIngestionService::class,
-            RegistrationIngestionService::class
-        );
-
-        App::singleton(
-            IExternalRegistrationFeedFactory::class,
-            ExternalRegistrationFeedFactory::class
-        );
-
-        App::singleton(
-            IPaymentGatewayProfileService::class,
-            PaymentGatewayProfileService::class
-        );
-
-        App::singleton(
-            IBuildDefaultPaymentGatewayProfileStrategy::class,
-            BuildDefaultPaymentGatewayProfileStrategy::class
-        );
-
-        App::singleton(
-            ISummitEmailEventFlowService::class,
-            SummitEmailEventFlowService::class
-        );
-
-        App::singleton(
-            ISummitDocumentService::class,
-            SummitDocumentService::class
-        );
-
-        App::singleton
-        (
-            ISummitRegistrationInvitationService::class,
-            SummitRegistrationInvitationService::class
-        );
-
-        App::singleton
-        (
-            ISummitAdministratorPermissionGroupService::class,
-            SummitAdministratorPermissionGroupService::class
-        );
-
-        App::singleton
-        (
-            ISummitMediaFileTypeService::class,
-            SummitMediaFileTypeService::class
-        );
-
-        App::singleton
-        (
-            ISummitMediaUploadTypeService::class,
-            SummitMediaUploadTypeService::class
-        );
-
-        App::singleton
-        (
-            IPresentationVideoMediaUploadProcessor::class,
-            PresentationVideoMediaUploadProcessor::class
-        );
-
-        App::singleton
-        (
-            ISummitMetricService::class,
-            SummitMetricService::class
-        );
-
-        App::singleton
-        (
-            ISponsoredProjectService::class,
-            SponsoredProjectService::class
-        );
-
-        App::singleton
-        (
-            ISummitSelectedPresentationListService::class,
-            SummitSelectedPresentationListService::class
-        );
-
-        App::singleton
-        (
-            ITrackChairService::class,
-            TrackChairService::class
-        );
-
-        App::singleton(
-            ISummitPresentationActionTypeService::class,
-            SummitPresentationActionTypeService::class
-        );
-
-        App::singleton(
-            ISummitPresentationActionService::class,
-            SummitPresentationActionService::class
-        );
-
-        App::singleton(
-            ISelectionPlanExtraQuestionTypeService::class,
-            SelectionPlanOrderExtraQuestionTypeService::class
-        );
-
-        App::singleton(
-            IElectionService::class,
-            ElectionService::class
-        );
-
-        App::singleton(
-            ISummitScheduleSettingsService::class,
-            SummitScheduleSettingsService::class
-        );
-
-        App::singleton(
-            ITrackChairRankingService::class,
-            TrackChairRankingService::class
-        );
-
-        App::singleton(
-            IBadgeViewTypeService::class,
-            BadgeViewTypeService::class,
-        );
-
-        App::singleton(
-            ISummitSponsorshipTypeService::class,
-            SummitSponsorshipTypeService::class
-        );
-
-        App::singleton(
-            IProcessScheduleEntityLifeCycleEventService::class,
-            ProcessScheduleEntityLifeCycleEventService::class,
-        );
-
-        App::singleton(
-            IScheduleService::class,
-            ScheduleService::class,
-        );
-
-        App::singleton(
-            ISummitSubmissionInvitationService::class,
-            SummitSubmissionInvitationService::class,
-        );
-
-        App::singleton(
-            ISummitSignService::class,
-            SummitSignService::class,
-        );
-
-        App::singleton(
-
-            ISummitProposedScheduleAllowedLocationService::class,
-            SummitProposedScheduleAllowedLocationService::class
-        );
-
-        App::singleton(
-            ITicketFinderStrategyFactory::class,
-            TicketFinderStrategyFactory::class
-        );
-        App::singleton(
-
-            IPromoCodeStrategyFactory::class,
-            PromoCodeStrategyFactory::class,
-        );
-
-        App::singleton(
-            ISummitAttendeeBadgePrintService::class,
-            SummitAttendeeBadgePrintService::class
-        );
-    }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return [
-            ISummitService::class,
-            ISpeakerService::class,
-            IPresentationService::class,
-            IChatTeamService::class,
-            IAttendeeService::class,
-            IMemberService::class,
-            ISummitPromoCodeService::class,
-            ISummitEventTypeService::class,
-            ISummitTrackService::class,
-            ILocationService::class,
-            IRSVPTemplateService::class,
-            ISummitTicketTypeService::class,
-            IPresentationCategoryGroupService::class,
-            ISummitPushNotificationService::class,
-            ISummitSelectionPlanService::class,
-            IOrganizationService::class,
-            ICompanyService::class,
-            ISummitTrackTagGroupService::class,
-            ITrackQuestionTemplateService::class,
-            ITagService::class,
-            IExternalScheduleFeedFactory::class,
-            IScheduleIngestionService::class,
-            ISummitAccessLevelTypeService::class,
-            ISummitTaxTypeService::class,
-            ISummitBadgeFeatureTypeService::class,
-            ISummitBadgeTypeService::class,
-            ISummitSponsorService::class,
-            ISummitRefundPolicyTypeService::class,
-            ISummitOrderExtraQuestionTypeService::class,
-            ISponsorshipTypeService::class,
-            ISummitOrderService::class,
-            IRegistrationIngestionService::class,
-            IExternalRegistrationFeedFactory::class,
-            IPaymentGatewayProfileService::class,
-            IBuildDefaultPaymentGatewayProfileStrategy::class,
-            ISummitEmailEventFlowService::class,
-            ISummitDocumentService::class,
-            ISummitRegistrationInvitationService::class,
-            ISummitAdministratorPermissionGroupService::class,
-            ISummitMediaFileTypeService::class,
-            ISummitMediaUploadTypeService::class,
-            IPresentationVideoMediaUploadProcessor::class,
-            ISummitMetricService::class,
-            ISummitSelectedPresentationListService::class,
-            ITrackChairService::class,
-            ISummitPresentationActionTypeService::class,
-            ISummitPresentationActionService::class,
-            ISelectionPlanExtraQuestionTypeService::class,
-            IElectionService::class,
-            ISummitScheduleSettingsService::class,
-            IBadgeViewTypeService::class,
-            ISummitSponsorshipTypeService::class,
-            IProcessScheduleEntityLifeCycleEventService::class,
-            IScheduleService::class,
-            ISummitSubmissionInvitationService::class,
-            ISummitSignService::class,
-            ISummitProposedScheduleAllowedLocationService::class,
-            ITicketFinderStrategyFactory::class,
-            IPromoCodeStrategyFactory::class,
-            ISummitAttendeeBadgePrintService::class,
-        ];
-    }
+final class ModelServicesProvider extends ServiceProvider {
+  protected $defer = true;
+
+  public function boot() {
+  }
+
+  public function register() {
+    App::when(SummitService::class)
+      ->needs(IFileDownloadStrategy::class)
+      ->give(SwiftStorageFileDownloadStrategy::class);
+    App::when(SummitService::class)
+      ->needs(IFileUploadStrategy::class)
+      ->give(SwiftStorageFileUploadStrategy::class);
+
+    App::when(SummitOrderService::class)
+      ->needs(IFileDownloadStrategy::class)
+      ->give(SwiftStorageFileDownloadStrategy::class);
+    App::when(SummitOrderService::class)
+      ->needs(IFileUploadStrategy::class)
+      ->give(SwiftStorageFileUploadStrategy::class);
+
+    App::when(SummitSelectionPlanService::class)
+      ->needs(IFileDownloadStrategy::class)
+      ->give(SwiftStorageFileDownloadStrategy::class);
+    App::when(SummitSelectionPlanService::class)
+      ->needs(IFileUploadStrategy::class)
+      ->give(SwiftStorageFileUploadStrategy::class);
+
+    // add bindings for service
+    App::singleton(ISummitService::class, SummitService::class);
+
+    App::singleton(ISpeakerService::class, SpeakerService::class);
+
+    App::singleton(ISubmitterService::class, SubmitterService::class);
+
+    App::singleton(IPresentationService::class, PresentationService::class);
+
+    App::singleton(IChatTeamService::class, ChatTeamService::class);
+
+    App::singleton(IAttendeeService::class, AttendeeService::class);
+
+    App::singleton(IMemberService::class, MemberService::class);
+
+    App::singleton(ISummitPromoCodeService::class, SummitPromoCodeService::class);
+
+    App::singleton(ISummitEventTypeService::class, SummitEventTypeService::class);
+
+    App::singleton(ISummitTrackService::class, SummitTrackService::class);
+
+    App::singleton(ILocationService::class, SummitLocationService::class);
+
+    App::singleton(IRSVPTemplateService::class, RSVPTemplateService::class);
+
+    App::singleton(ISummitTicketTypeService::class, SummitTicketTypeService::class);
+
+    App::singleton(
+      IPresentationCategoryGroupService::class,
+      PresentationCategoryGroupService::class,
+    );
+
+    App::singleton(ISummitPushNotificationService::class, SummitPushNotificationService::class);
+
+    App::singleton(ISummitSelectionPlanService::class, SummitSelectionPlanService::class);
+
+    App::singleton(IOrganizationService::class, OrganizationService::class);
+
+    App::singleton(ICompanyService::class, CompanyService::class);
+
+    App::singleton(ISummitTrackTagGroupService::class, SummitTrackTagGroupService::class);
+
+    App::singleton(ITrackQuestionTemplateService::class, TrackQuestionTemplateService::class);
+
+    App::singleton(ITagService::class, TagService::class);
+
+    App::singleton(IExternalScheduleFeedFactory::class, ExternalScheduleFeedFactory::class);
+
+    App::singleton(IScheduleIngestionService::class, ScheduleIngestionService::class);
+
+    App::singleton(ISummitAccessLevelTypeService::class, SummitAccessLevelTypeService::class);
+
+    App::singleton(ISummitTaxTypeService::class, SummitTaxTypeService::class);
+
+    App::singleton(ISummitBadgeFeatureTypeService::class, SummitBadgeFeatureTypeService::class);
+
+    App::singleton(ISummitBadgeTypeService::class, SummitBadgeTypeService::class);
+
+    App::singleton(ISummitSponsorService::class, SummitSponsorService::class);
+
+    App::singleton(ISummitRefundPolicyTypeService::class, SummitRefundPolicyTypeService::class);
+
+    App::singleton(
+      ISummitOrderExtraQuestionTypeService::class,
+      SummitOrderExtraQuestionTypeService::class,
+    );
+
+    App::singleton(ISponsorshipTypeService::class, SponsorshipTypeService::class);
+
+    App::singleton(ISummitOrderService::class, SummitOrderService::class);
+
+    App::singleton(ISponsorUserInfoGrantService::class, SponsorUserInfoGrantService::class);
+
+    App::singleton(IRegistrationIngestionService::class, RegistrationIngestionService::class);
+
+    App::singleton(IExternalRegistrationFeedFactory::class, ExternalRegistrationFeedFactory::class);
+
+    App::singleton(IPaymentGatewayProfileService::class, PaymentGatewayProfileService::class);
+
+    App::singleton(
+      IBuildDefaultPaymentGatewayProfileStrategy::class,
+      BuildDefaultPaymentGatewayProfileStrategy::class,
+    );
+
+    App::singleton(ISummitEmailEventFlowService::class, SummitEmailEventFlowService::class);
+
+    App::singleton(ISummitDocumentService::class, SummitDocumentService::class);
+
+    App::singleton(
+      ISummitRegistrationInvitationService::class,
+      SummitRegistrationInvitationService::class,
+    );
+
+    App::singleton(
+      ISummitAdministratorPermissionGroupService::class,
+      SummitAdministratorPermissionGroupService::class,
+    );
+
+    App::singleton(ISummitMediaFileTypeService::class, SummitMediaFileTypeService::class);
+
+    App::singleton(ISummitMediaUploadTypeService::class, SummitMediaUploadTypeService::class);
+
+    App::singleton(
+      IPresentationVideoMediaUploadProcessor::class,
+      PresentationVideoMediaUploadProcessor::class,
+    );
+
+    App::singleton(ISummitMetricService::class, SummitMetricService::class);
+
+    App::singleton(ISponsoredProjectService::class, SponsoredProjectService::class);
+
+    App::singleton(
+      ISummitSelectedPresentationListService::class,
+      SummitSelectedPresentationListService::class,
+    );
+
+    App::singleton(ITrackChairService::class, TrackChairService::class);
+
+    App::singleton(
+      ISummitPresentationActionTypeService::class,
+      SummitPresentationActionTypeService::class,
+    );
+
+    App::singleton(ISummitPresentationActionService::class, SummitPresentationActionService::class);
+
+    App::singleton(
+      ISelectionPlanExtraQuestionTypeService::class,
+      SelectionPlanOrderExtraQuestionTypeService::class,
+    );
+
+    App::singleton(IElectionService::class, ElectionService::class);
+
+    App::singleton(ISummitScheduleSettingsService::class, SummitScheduleSettingsService::class);
+
+    App::singleton(ITrackChairRankingService::class, TrackChairRankingService::class);
+
+    App::singleton(IBadgeViewTypeService::class, BadgeViewTypeService::class);
+
+    App::singleton(ISummitSponsorshipTypeService::class, SummitSponsorshipTypeService::class);
+
+    App::singleton(
+      IProcessScheduleEntityLifeCycleEventService::class,
+      ProcessScheduleEntityLifeCycleEventService::class,
+    );
+
+    App::singleton(IScheduleService::class, ScheduleService::class);
+
+    App::singleton(
+      ISummitSubmissionInvitationService::class,
+      SummitSubmissionInvitationService::class,
+    );
+
+    App::singleton(ISummitSignService::class, SummitSignService::class);
+
+    App::singleton(
+      ISummitProposedScheduleAllowedLocationService::class,
+      SummitProposedScheduleAllowedLocationService::class,
+    );
+
+    App::singleton(ITicketFinderStrategyFactory::class, TicketFinderStrategyFactory::class);
+    App::singleton(IPromoCodeStrategyFactory::class, PromoCodeStrategyFactory::class);
+
+    App::singleton(ISummitAttendeeBadgePrintService::class, SummitAttendeeBadgePrintService::class);
+  }
+
+  /**
+   * Get the services provided by the provider.
+   *
+   * @return array
+   */
+  public function provides() {
+    return [
+      ISummitService::class,
+      ISpeakerService::class,
+      IPresentationService::class,
+      IChatTeamService::class,
+      IAttendeeService::class,
+      IMemberService::class,
+      ISummitPromoCodeService::class,
+      ISummitEventTypeService::class,
+      ISummitTrackService::class,
+      ILocationService::class,
+      IRSVPTemplateService::class,
+      ISummitTicketTypeService::class,
+      IPresentationCategoryGroupService::class,
+      ISummitPushNotificationService::class,
+      ISummitSelectionPlanService::class,
+      IOrganizationService::class,
+      ICompanyService::class,
+      ISummitTrackTagGroupService::class,
+      ITrackQuestionTemplateService::class,
+      ITagService::class,
+      IExternalScheduleFeedFactory::class,
+      IScheduleIngestionService::class,
+      ISummitAccessLevelTypeService::class,
+      ISummitTaxTypeService::class,
+      ISummitBadgeFeatureTypeService::class,
+      ISummitBadgeTypeService::class,
+      ISummitSponsorService::class,
+      ISummitRefundPolicyTypeService::class,
+      ISummitOrderExtraQuestionTypeService::class,
+      ISponsorshipTypeService::class,
+      ISummitOrderService::class,
+      IRegistrationIngestionService::class,
+      IExternalRegistrationFeedFactory::class,
+      IPaymentGatewayProfileService::class,
+      IBuildDefaultPaymentGatewayProfileStrategy::class,
+      ISummitEmailEventFlowService::class,
+      ISummitDocumentService::class,
+      ISummitRegistrationInvitationService::class,
+      ISummitAdministratorPermissionGroupService::class,
+      ISummitMediaFileTypeService::class,
+      ISummitMediaUploadTypeService::class,
+      IPresentationVideoMediaUploadProcessor::class,
+      ISummitMetricService::class,
+      ISummitSelectedPresentationListService::class,
+      ITrackChairService::class,
+      ISummitPresentationActionTypeService::class,
+      ISummitPresentationActionService::class,
+      ISelectionPlanExtraQuestionTypeService::class,
+      IElectionService::class,
+      ISummitScheduleSettingsService::class,
+      IBadgeViewTypeService::class,
+      ISummitSponsorshipTypeService::class,
+      IProcessScheduleEntityLifeCycleEventService::class,
+      IScheduleService::class,
+      ISummitSubmissionInvitationService::class,
+      ISummitSignService::class,
+      ISummitProposedScheduleAllowedLocationService::class,
+      ITicketFinderStrategyFactory::class,
+      IPromoCodeStrategyFactory::class,
+      ISummitAttendeeBadgePrintService::class,
+    ];
+  }
 }

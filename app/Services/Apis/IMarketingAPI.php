@@ -16,14 +16,18 @@
  * Interface IMarketingAPI
  * @package services\apis
  */
-interface IMarketingAPI
-{
-    /**
-     * @param int $summit_id
-     * @param string $search_pattern
-     * @param int $page
-     * @param int $per_page
-     * @return array
-     */
-    public function getConfigValues(int $summit_id, string $search_pattern, int $page = 1, int $per_page = 100): array;
+interface IMarketingAPI {
+  /**
+   * @param int $summit_id
+   * @param string $search_pattern
+   * @param int $page
+   * @param int $per_page
+   * @return array
+   */
+  public function getConfigValues(
+    int $summit_id,
+    string $search_pattern,
+    int $page = 1,
+    int $per_page = 100,
+  ): array;
 }

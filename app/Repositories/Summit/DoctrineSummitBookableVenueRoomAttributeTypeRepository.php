@@ -21,42 +21,32 @@ use utils\DoctrineJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitBookableVenueRoomAttributeTypeRepository
-    extends SilverStripeDoctrineRepository implements ISummitBookableVenueRoomAttributeTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitBookableVenueRoomAttributeTypeRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "type" => "e.type:json_string",
+      "summit_id" => new DoctrineJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return
-        [
-            'type' => 'e.type:json_string',
-            'summit_id' => new DoctrineJoinFilterMapping
-            (
-                'e.summit',
-                's',
-                "s.id :operator :value"
-            ),
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "type" => "e.type",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'type' => 'e.type',
-        ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitBookableVenueRoomAttributeType::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitBookableVenueRoomAttributeType::class;
+  }
 }

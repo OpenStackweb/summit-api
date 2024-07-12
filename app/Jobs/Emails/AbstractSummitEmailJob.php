@@ -23,150 +23,147 @@ use services\apis\IMarketingAPI;
  * Class AbstractSummitEmailJob
  * @package App\Jobs\Emails
  */
-abstract class AbstractSummitEmailJob extends AbstractEmailJob
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @param string|null $template_identifier
-     * @param string $to_email
-     * @param string|null $subject
-     * @param string|null $cc_email
-     * @param string|null $bcc_email
-     */
-    public function __construct
-    (
-        Summit $summit,
-        array $payload,
-        ?string $template_identifier,
-        string $to_email,
-        ?string $subject = null,
-        ?string $cc_email = null,
-        ?string $bcc_email = null
-    )
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "AbstractSummitEmailJob::construct summit %s payload %s to_email %s",
-                $summit->getId(),
-                json_encode($payload),
-                $to_email
-            )
+abstract class AbstractSummitEmailJob extends AbstractEmailJob {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @param string|null $template_identifier
+   * @param string $to_email
+   * @param string|null $subject
+   * @param string|null $cc_email
+   * @param string|null $bcc_email
+   */
+  public function __construct(
+    Summit $summit,
+    array $payload,
+    ?string $template_identifier,
+    string $to_email,
+    ?string $subject = null,
+    ?string $cc_email = null,
+    ?string $bcc_email = null,
+  ) {
+    Log::debug(
+      sprintf(
+        "AbstractSummitEmailJob::construct summit %s payload %s to_email %s",
+        $summit->getId(),
+        json_encode($payload),
+        $to_email,
+      ),
+    );
+
+    $repository = App::make(ISummitRepository::class);
+    $summit = $repository->getByIdRefreshed($summit->getId());
+
+    // inject summit common data
+    $payload[IMailTemplatesConstants::summit_id] = $summit->getId();
+    $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
+    $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
+    $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+    $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
+    $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
+    $payload[
+      IMailTemplatesConstants::raw_summit_marketing_site_url
+    ] = $summit->getMarketingSiteUrl();
+
+    $summitBeginDate = $summit->getLocalBeginDate();
+    $payload[IMailTemplatesConstants::summit_date] = !is_null($summitBeginDate)
+      ? $summitBeginDate->format("F d, Y")
+      : "";
+    $payload[IMailTemplatesConstants::summit_dates_label] = $summit->getDatesLabel();
+    $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
+    $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
+    $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
+    $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
+
+    $payload = array_merge($payload, self::getMarketingVariables($summit));
+    parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
+  }
+
+  private static function getMarketingVariables(Summit $summit) {
+    Log::debug(
+      sprintf("AbstractSummitEmailJob::getMarketingVariables summit %s", $summit->getId()),
+    );
+
+    $default_email_template_vars = collect(Config::get("marketing.default_email_template_vars"))
+      ->mapWithKeys(function ($value, $key) {
+        return [strtoupper($key) => $value];
+      })
+      ->toArray();
+
+    $marketing_api = App::make(IMarketingApi::class);
+    if (is_null($marketing_api)) {
+      Log::warning(
+        sprintf(
+          "AbstractSummitEmailJob::getMarketingVariables Marketing API is not set returning default variables %s.",
+          json_encode($default_email_template_vars),
+        ),
+      );
+      return $default_email_template_vars;
+    }
+
+    try {
+      $marketing_vars = $marketing_api->getConfigValues($summit->getId(), "EMAIL_TEMPLATE_");
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      Log::warning(
+        sprintf(
+          "AbstractSummitEmailJob::getMarketingVariables Marketing API ERROR returning default variables %s.",
+          json_encode($default_email_template_vars),
+        ),
+      );
+      return $default_email_template_vars;
+    }
+
+    foreach ($default_email_template_vars as $key => $value) {
+      if (
+        !array_key_exists($key, $marketing_vars) ||
+        !is_string($marketing_vars[$key]) ||
+        empty($marketing_vars[$key])
+      ) {
+        Log::debug(
+          sprintf(
+            "AbstractSummitEmailJob::getMarketingVariables summit %s marketing var %s not found or empty, using default value (%s).",
+            $summit->getId(),
+            $key,
+            $value,
+          ),
         );
-
-        $repository = App::make(ISummitRepository::class);
-        $summit = $repository->getByIdRefreshed($summit->getId());
-
-        // inject summit common data
-        $payload[IMailTemplatesConstants::summit_id]   = $summit->getId();
-        $payload[IMailTemplatesConstants::summit_name] = $summit->getName();
-        $payload[IMailTemplatesConstants::summit_logo] = $summit->getLogoUrl();
-        $payload[IMailTemplatesConstants::summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url] = $summit->getVirtualSiteUrl();
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url] = $summit->getMarketingSiteUrl();
-
-        $summitBeginDate = $summit->getLocalBeginDate();
-        $payload[IMailTemplatesConstants::summit_date] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
-        $payload[IMailTemplatesConstants::summit_dates_label] = $summit->getDatesLabel();
-        $payload[IMailTemplatesConstants::summit_schedule_url] = $summit->getScheduleDefaultPageUrl();
-        $payload[IMailTemplatesConstants::summit_site_url] = $summit->getLink();
-        $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
-        $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
-
-        $payload = array_merge($payload, self::getMarketingVariables($summit));
-        parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
+        $marketing_vars[$key] = $value;
+      }
     }
 
-    private static function getMarketingVariables(Summit $summit) {
-
-        Log::debug(sprintf("AbstractSummitEmailJob::getMarketingVariables summit %s", $summit->getId()));
-
-        $default_email_template_vars = collect(Config::get('marketing.default_email_template_vars'))
-            ->mapWithKeys(function ($value, $key) {
-                return [strtoupper($key) => $value];
-            })->toArray();
-
-        $marketing_api = App::make(IMarketingApi::class);
-        if (is_null($marketing_api)) {
-            Log::warning
-            (
-                sprintf
-                (
-                    "AbstractSummitEmailJob::getMarketingVariables Marketing API is not set returning default variables %s.",
-                    json_encode($default_email_template_vars)
-                )
-            );
-            return $default_email_template_vars;
-        }
-
-        try {
-            $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
-        } catch(\Exception $ex){
-            Log::error($ex);
-            Log::warning
-            (
-                sprintf
-                (
-                    "AbstractSummitEmailJob::getMarketingVariables Marketing API ERROR returning default variables %s.",
-                    json_encode($default_email_template_vars)
-                )
-            );
-            return $default_email_template_vars;
-        }
-
-        foreach ($default_email_template_vars as $key => $value) {
-            if (!array_key_exists($key, $marketing_vars) || !is_string($marketing_vars[$key]) || empty($marketing_vars[$key])) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "AbstractSummitEmailJob::getMarketingVariables summit %s marketing var %s not found or empty, using default value (%s).",
-                        $summit->getId(),
-                        $key,
-                        $value
-                    )
-                );
-                $marketing_vars[$key] = $value;
-            }
-        }
-
-        if(count($marketing_vars) > 0) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "AbstractSummitEmailJob::getMarketingVariables summit %s injecting marketing_vars %s",
-                    $summit->getId(),
-                    json_encode($marketing_vars)
-                )
-            );
-        }
-
-        return $marketing_vars;
+    if (count($marketing_vars) > 0) {
+      Log::debug(
+        sprintf(
+          "AbstractSummitEmailJob::getMarketingVariables summit %s injecting marketing_vars %s",
+          $summit->getId(),
+          json_encode($marketing_vars),
+        ),
+      );
     }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::summit_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::summit_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_logo]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_date]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_dates_label]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_schedule_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
+    return $marketing_vars;
+  }
 
-        return $payload;
-    }
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = [];
+    $payload[IMailTemplatesConstants::summit_id]["type"] = "int";
+    $payload[IMailTemplatesConstants::summit_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_logo]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_virtual_site_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_marketing_site_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::raw_summit_virtual_site_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::raw_summit_marketing_site_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_date]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_dates_label]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_schedule_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_site_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::registration_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::virtual_event_site_link]["type"] = "string";
+
+    return $payload;
+  }
 }

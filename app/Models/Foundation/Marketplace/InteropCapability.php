@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,62 +19,57 @@ use models\utils\SilverstripeBaseModel;
  * Class InteropCapability
  * @package App\Models\Foundation\Marketplace
  */
-class InteropCapability extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class InteropCapability extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $descripion;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $descripion;
 
-    /**
-     * @ORM\Column(name="Status", type="string")
-     * @var string
-     */
-    private $status;
+  /**
+   * @ORM\Column(name="Status", type="string")
+   * @var string
+   */
+  private $status;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="InteropCapabilityType", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
-     * @var InteropCapabilityType
-     */
-    private $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="InteropCapabilityType", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
+   * @var InteropCapabilityType
+   */
+  private $type;
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescripion()
-    {
-        return $this->descripion;
-    }
+  /**
+   * @return string
+   */
+  public function getDescripion() {
+    return $this->descripion;
+  }
 
-    /**
-     * @return string
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
+  /**
+   * @return string
+   */
+  public function getStatus() {
+    return $this->status;
+  }
 
-    /**
-     * @return InteropCapabilityType
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @return InteropCapabilityType
+   */
+  public function getType() {
+    return $this->type;
+  }
 }

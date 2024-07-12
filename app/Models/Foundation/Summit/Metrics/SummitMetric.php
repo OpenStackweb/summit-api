@@ -15,7 +15,7 @@ use App\Services\Utils\UserClientHelper;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitMetricRepository")
  * @ORM\AssociationOverrides({
@@ -35,231 +35,214 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitMetric
  * @package models\summit
  */
-class SummitMetric extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitMetric extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="IngressDate", type="datetime")
-     * @var \DateTime
-     */
-    protected $ingress_date;
+  /**
+   * @ORM\Column(name="IngressDate", type="datetime")
+   * @var \DateTime
+   */
+  protected $ingress_date;
 
-    /**
-     * @ORM\Column(name="OutgressDate", type="datetime")
-     * @var \DateTime|null
-     */
-    protected $outgress_date;
+  /**
+   * @ORM\Column(name="OutgressDate", type="datetime")
+   * @var \DateTime|null
+   */
+  protected $outgress_date;
 
-    /**
-     * @ORM\Column(name="Ip", type="string")
-     * @var string|null
-     */
-    protected $ip;
+  /**
+   * @ORM\Column(name="Ip", type="string")
+   * @var string|null
+   */
+  protected $ip;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string|null
-     */
-    protected $type;
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string|null
+   */
+  protected $type;
 
-    /**
-     * @ORM\Column(name="Origin", type="string")
-     * @var string|null
-     */
-    protected $origin;
+  /**
+   * @ORM\Column(name="Origin", type="string")
+   * @var string|null
+   */
+  protected $origin;
 
-    /**
-     * @ORM\Column(name="Location", type="string")
-     * @var string|null
-     */
-    protected $location;
+  /**
+   * @ORM\Column(name="Location", type="string")
+   * @var string|null
+   */
+  protected $location;
 
-    /**
-     * @ORM\Column(name="Browser", type="string")
-     * @var string|null
-     */
-    protected $browser;
+  /**
+   * @ORM\Column(name="Browser", type="string")
+   * @var string|null
+   */
+  protected $browser;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="summit_attendance_metrics")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member|null
-     */
-    protected $member;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="summit_attendance_metrics")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member|null
+   */
+  protected $member;
 
-    const AccessTypeIngress = 'INGRESS';
-    const AccessTypeEgress = 'EGRESS';
+  const AccessTypeIngress = "INGRESS";
+  const AccessTypeEgress = "EGRESS";
 
-    const ValidAccessTypes = [
-        self::AccessTypeIngress,
-        self::AccessTypeEgress,
-    ];
+  const ValidAccessTypes = [self::AccessTypeIngress, self::AccessTypeEgress];
 
-    /**
-     * @return \DateTime
-     */
-    public function getIngressDate(): \DateTime
-    {
-        return $this->ingress_date;
+  /**
+   * @return \DateTime
+   */
+  public function getIngressDate(): \DateTime {
+    return $this->ingress_date;
+  }
+
+  /**
+   * @param \DateTime $ingress_date
+   */
+  public function setIngressDate(\DateTime $ingress_date): void {
+    $this->ingress_date = $ingress_date;
+  }
+
+  /**
+   * @return \DateTime
+   */
+  public function getOutgressDate(): ?\DateTime {
+    return $this->outgress_date;
+  }
+
+  /**
+   * @param \DateTime $outgress_date
+   */
+  public function setOutgressDate(\DateTime $outgress_date): void {
+    $this->outgress_date = $outgress_date;
+  }
+
+  /**
+   * @return Member
+   */
+  public function getMember(): ?Member {
+    return $this->member;
+  }
+
+  /**
+   * @param Member $member
+   */
+  public function setMember(Member $member): void {
+    $this->member = $member;
+  }
+
+  /**
+   * @throws ValidationException
+   */
+  public function abandon() {
+    if (is_null($this->ingress_date)) {
+      throw new ValidationException("You must enter first.");
     }
+    $this->outgress_date = new \DateTime("now", new \DateTimeZone("UTC"));
+  }
 
-    /**
-     * @param \DateTime $ingress_date
-     */
-    public function setIngressDate(\DateTime $ingress_date): void
-    {
-        $this->ingress_date = $ingress_date;
+  public function getMemberFirstName(): ?string {
+    return is_null($this->member) ? null : $this->member->getFirstName();
+  }
+
+  public function getMemberLastName(): ?string {
+    return is_null($this->member) ? null : $this->member->getLastName();
+  }
+
+  public function getMemberProfilePhotoUrl(): ?string {
+    return is_null($this->member) ? null : $this->member->getProfilePhotoUrl();
+  }
+
+  /**
+   * @param Member|null $member
+   * @return SummitMetric
+   * @throws \Exception
+   */
+  public static function build(?Member $member = null) {
+    $metric = new static();
+    $metric->member = $member;
+    $metric->ingress_date = new \DateTime("now", new \DateTimeZone("UTC"));
+    $metric->ip = UserClientHelper::getUserIp();
+    $metric->origin = UserClientHelper::getUserOrigin();
+    $metric->browser = UserClientHelper::getUserBrowser();
+    return $metric;
+  }
+
+  /**
+   * @return int
+   */
+  public function getMemberId() {
+    try {
+      return is_null($this->member) ? 0 : $this->member->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getOutgressDate(): ?\DateTime
-    {
-        return $this->outgress_date;
+  /**
+   * @return bool
+   */
+  public function hasMember(): bool {
+    return $this->getMemberId() > 0;
+  }
+
+  public function clearMember() {
+    $this->member = null;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getType(): ?string {
+    return $this->type;
+  }
+
+  /**
+   * @param string|null $type
+   * @throws ValidationException
+   */
+  public function setType(?string $type): void {
+    if (!in_array($type, ISummitMetricType::ValidTypes)) {
+      throw new ValidationException(sprintf("Type %s is not a valid one.", $type));
     }
+    $this->type = $type;
+  }
 
-    /**
-     * @param \DateTime $outgress_date
-     */
-    public function setOutgressDate(\DateTime $outgress_date): void
-    {
-        $this->outgress_date = $outgress_date;
-    }
+  /**
+   * @return string|null
+   */
+  public function getIp(): ?string {
+    return $this->ip;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getMember(): ?Member
-    {
-        return $this->member;
-    }
+  /**
+   * @return string|null
+   */
+  public function getOrigin(): ?string {
+    return $this->origin;
+  }
 
-    /**
-     * @param Member $member
-     */
-    public function setMember(Member $member): void
-    {
-        $this->member = $member;
-    }
+  /**
+   * @return string|null
+   */
+  public function getBrowser(): ?string {
+    return $this->browser;
+  }
 
-    /**
-     * @throws ValidationException
-     */
-    public function abandon(){
-        if(is_null($this->ingress_date))
-            throw new ValidationException('You must enter first.');
-        $this->outgress_date = new \DateTime('now', new \DateTimeZone('UTC'));
-    }
+  /**
+   * @return string|null
+   */
+  public function getLocation(): ?string {
+    return $this->location;
+  }
 
-    public function getMemberFirstName():?string{
-        return is_null($this->member) ? null : $this->member->getFirstName();
-    }
-
-    public function getMemberLastName():?string{
-        return is_null($this->member) ? null : $this->member->getLastName();
-    }
-
-    public function getMemberProfilePhotoUrl():?string{
-        return is_null($this->member) ? null : $this->member->getProfilePhotoUrl();
-    }
-
-    /**
-     * @param Member|null $member
-     * @return SummitMetric
-     * @throws \Exception
-     */
-    public static function build(?Member $member = null){
-        $metric = new static();
-        $metric->member = $member;
-        $metric->ingress_date = new \DateTime('now', new \DateTimeZone('UTC'));
-        $metric->ip = UserClientHelper::getUserIp();
-        $metric->origin = UserClientHelper::getUserOrigin();
-        $metric->browser = UserClientHelper::getUserBrowser();
-        return $metric;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMemberId(){
-        try {
-            return is_null($this->member) ? 0 : $this->member->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasMember():bool{
-        return $this->getMemberId() > 0;
-    }
-
-    public function clearMember(){
-        $this->member = null;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string|null $type
-     * @throws ValidationException
-     */
-    public function setType(?string $type): void
-    {
-        if(!in_array($type, ISummitMetricType::ValidTypes))
-            throw new ValidationException(sprintf("Type %s is not a valid one.", $type));
-        $this->type = $type;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getIp(): ?string
-    {
-        return $this->ip;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getOrigin(): ?string
-    {
-        return $this->origin;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getBrowser(): ?string
-    {
-        return $this->browser;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getLocation(): ?string
-    {
-        return $this->location;
-    }
-
-    /**
-     * @param string|null $location
-     */
-    public function setLocation(?string $location): void
-    {
-        $this->location = $location;
-    }
-
+  /**
+   * @param string|null $location
+   */
+  public function setLocation(?string $location): void {
+    $this->location = $location;
+  }
 }

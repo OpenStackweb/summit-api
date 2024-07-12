@@ -17,11 +17,10 @@ use models\utils\IBaseRepository;
  * Interface ISummitAdministratorPermissionGroupRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface ISummitAdministratorPermissionGroupRepository extends IBaseRepository
-{
-    /**
-     * @param string $title
-     * @return SummitAdministratorPermissionGroup|null
-     */
-    public function getByTitle(string $title):?SummitAdministratorPermissionGroup;
+interface ISummitAdministratorPermissionGroupRepository extends IBaseRepository {
+  /**
+   * @param string $title
+   * @return SummitAdministratorPermissionGroup|null
+   */
+  public function getByTitle(string $title): ?SummitAdministratorPermissionGroup;
 }

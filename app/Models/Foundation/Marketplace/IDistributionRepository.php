@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IDistributionRepository
  * @package App\Models\Foundation\Marketplace
  */
-interface IDistributionRepository extends IBaseRepository
-{
-
+interface IDistributionRepository extends IBaseRepository {
 }

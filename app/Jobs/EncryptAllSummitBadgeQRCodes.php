@@ -24,36 +24,32 @@ use services\model\ISummitService;
  * Class EncryptAllSummitBadgeQRCodes
  * @package App\Jobs
  */
-class EncryptAllSummitBadgeQRCodes implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class EncryptAllSummitBadgeQRCodes implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /*
-     * @var int
-     */
-    public $summit_id;
+  /*
+   * @var int
+   */
+  public $summit_id;
 
-    /**
-     * @param int $summit_id
-     */
-    public function __construct(int $summit_id)
-    {
-        $this->summit_id = $summit_id;
+  /**
+   * @param int $summit_id
+   */
+  public function __construct(int $summit_id) {
+    $this->summit_id = $summit_id;
+  }
+
+  public function handle(ISummitService $service) {
+    try {
+      Log::debug("EncryptAllSummitBadgeQRCodes::handle summit id {$this->summit_id}");
+      $service->regenerateBadgeQRCodes($this->summit_id);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    public function handle(ISummitService $service)
-    {
-        try {
-            Log::debug("EncryptAllSummitBadgeQRCodes::handle summit id {$this->summit_id}");
-            $service->regenerateBadgeQRCodes($this->summit_id);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            throw $ex;
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }

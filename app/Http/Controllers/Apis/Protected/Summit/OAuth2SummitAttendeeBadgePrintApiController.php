@@ -25,150 +25,158 @@ use utils\FilterElement;
  * Class OAuth2SummitAttendeeBadgePrintApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SummitAttendeeBadgePrintApiController
-    extends OAuth2ProtectedController
-{
-    /**
-     * @var ISummitAttendeeBadgePrintService
-     */
-    private $service;
+final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedController {
+  /**
+   * @var ISummitAttendeeBadgePrintService
+   */
+  private $service;
 
-    public function __construct
-    (
-        ISummitRepository                   $summit_repository,
-        ISummitAttendeeBadgePrintRepository $repository,
-        ISummitAttendeeBadgePrintService    $service,
-        IResourceServerContext              $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-        $this->summit_repository = $summit_repository;
-        $this->service = $service;
+  public function __construct(
+    ISummitRepository $summit_repository,
+    ISummitAttendeeBadgePrintRepository $repository,
+    ISummitAttendeeBadgePrintService $service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+    $this->summit_repository = $summit_repository;
+    $this->service = $service;
+  }
+
+  use ParametrizedGetAll;
+
+  public function getAllBySummitAndTicket($summit_id, $ticket_id) {
+    $summit = SummitFinderStrategyFactory::build(
+      $this->summit_repository,
+      $this->getResourceServerContext(),
+    )->find($summit_id);
+    if (is_null($summit)) {
+      return $this->error404();
     }
 
-    use ParametrizedGetAll;
+    return $this->_getAll(
+      function () {
+        return [
+          "id" => ["=="],
+          "view_type_id" => ["=="],
+          "created" => [">", "<", "<=", ">=", "==", "[]"],
+          "print_date" => [">", "<", "<=", ">=", "==", "[]"],
+          "requestor_full_name" => ["==", "@@", "=@"],
+          "requestor_email" => ["==", "@@", "=@"],
+        ];
+      },
+      function () {
+        return [
+          "id" => "sometimes|integer",
+          "view_type_id" => "sometimes|integer",
+          "created" => "sometimes|date_format:U",
+          "print_date" => "sometimes|date_format:U",
+          "requestor_full_name" => "sometimes|string",
+          "requestor_email" => "sometimes|string",
+        ];
+      },
+      function () {
+        return [
+          "id",
+          "created",
+          "view_type_id",
+          "print_date",
+          "requestor_full_name",
+          "requestor_email",
+        ];
+      },
+      function ($filter) use ($summit, $ticket_id) {
+        if ($filter instanceof Filter) {
+          $filter->addFilterCondition(FilterElement::makeEqual("summit_id", $summit->getId()));
+          $filter->addFilterCondition(FilterElement::makeEqual("ticket_id", intval($ticket_id)));
+        }
+        return $filter;
+      },
+    );
+  }
 
-    public function getAllBySummitAndTicket($summit_id, $ticket_id)
-    {
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
-
-        return $this->_getAll(
-            function () {
-                return [
-                    'id' =>  ['=='],
-                    'view_type_id' =>  ['=='],
-                    'created' =>  ['>', '<', '<=', '>=', '==','[]'],
-                    'print_date' =>  ['>', '<', '<=', '>=', '==','[]'],
-                    'requestor_full_name' => ['==','@@','=@'],
-                    'requestor_email' => ['==','@@','=@'],
-                ];
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'view_type_id' => 'sometimes|integer',
-                    'created' =>  'sometimes|date_format:U',
-                    'print_date'=>  'sometimes|date_format:U',
-                    'requestor_full_name' => 'sometimes|string',
-                    'requestor_email' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'created',
-                    'view_type_id',
-                    'print_date',
-                    'requestor_full_name',
-                    'requestor_email',
-                ];
-            },
-            function ($filter) use ($summit, $ticket_id) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    $filter->addFilterCondition(FilterElement::makeEqual('ticket_id', intval($ticket_id)));
-                }
-                return $filter;
-            }
-        );
+  public function getAllBySummitAndTicketCSV($summit_id, $ticket_id) {
+    $summit = SummitFinderStrategyFactory::build(
+      $this->summit_repository,
+      $this->getResourceServerContext(),
+    )->find($summit_id);
+    if (is_null($summit)) {
+      return $this->error404();
     }
 
-    public function getAllBySummitAndTicketCSV($summit_id, $ticket_id)
-    {
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+    return $this->_getAllCSV(
+      function () {
+        return [
+          "id" => ["=="],
+          "view_type_id" => ["=="],
+          "created" => [">", "<", "<=", ">=", "==", "[]"],
+          "print_date" => [">", "<", "<=", ">=", "==", "[]"],
+          "requestor_full_name" => ["==", "@@", "=@"],
+          "requestor_email" => ["==", "@@", "=@"],
+        ];
+      },
+      function () {
+        return [
+          "id" => "sometimes|integer",
+          "view_type_id" => "sometimes|integer",
+          "created" => "sometimes|date_format:U",
+          "print_date" => "sometimes|date_format:U",
+          "requestor_full_name" => "sometimes|string",
+          "requestor_email" => "sometimes|string",
+        ];
+      },
+      function () {
+        return [
+          "id",
+          "created",
+          "view_type_id",
+          "print_date",
+          "requestor_full_name",
+          "requestor_email",
+        ];
+      },
+      function ($filter) use ($summit, $ticket_id) {
+        if ($filter instanceof Filter) {
+          $filter->addFilterCondition(FilterElement::makeEqual("summit_id", $summit->getId()));
+          $filter->addFilterCondition(FilterElement::makeEqual("ticket_id", intval($ticket_id)));
+        }
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_CSV;
+      },
+      function () {
+        return [
+          "created" => new EpochCellFormatter(),
+          "last_edited" => new EpochCellFormatter(),
+          "print_date" => new EpochCellFormatter(),
+        ];
+      },
+      function () {
+        return [];
+      },
+      "badge-prints-",
+    );
+  }
 
-        return $this->_getAllCSV(
-            function () {
-                return [
-                    'id' =>  ['=='],
-                    'view_type_id' =>  ['=='],
-                    'created' =>   ['>', '<', '<=', '>=', '==','[]'],
-                    'print_date' =>   ['>', '<', '<=', '>=', '==','[]'],
-                    'requestor_full_name' => ['==','@@','=@'],
-                    'requestor_email' => ['==','@@','=@'],
-                ];
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'view_type_id' => 'sometimes|integer',
-                    'created' =>  'sometimes|date_format:U',
-                    'print_date'=>  'sometimes|date_format:U',
-                    'requestor_full_name' => 'sometimes|string',
-                    'requestor_email' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'created',
-                    'view_type_id',
-                    'print_date',
-                    'requestor_full_name',
-                    'requestor_email',
-                ];
-            },
-            function ($filter) use ($summit, $ticket_id) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    $filter->addFilterCondition(FilterElement::makeEqual('ticket_id', intval($ticket_id)));
-                }
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_CSV;
-            },
-            function () {
-                return [
-                    'created' => new EpochCellFormatter(),
-                    'last_edited' => new EpochCellFormatter(),
-                    'print_date' => new EpochCellFormatter(),
-                ];
-            },
-            function () {
-                return [];
-            },
-            'badge-prints-'
-        );
-    }
+  /**
+   * @param $summit_id
+   * @param $ticket_id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function deleteBadgePrints($summit_id, $ticket_id) {
+    return $this->processRequest(function () use ($summit_id, $ticket_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->getResourceServerContext(),
+      )->find(intval($summit_id));
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function deleteBadgePrints($summit_id, $ticket_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $ticket_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
+      $this->service->deleteBadgePrintsByTicket($summit, intval($ticket_id));
 
-            $this->service->deleteBadgePrintsByTicket($summit, intval($ticket_id));
-
-            return $this->deleted();
-        });
-    }
+      return $this->deleted();
+    });
+  }
 }

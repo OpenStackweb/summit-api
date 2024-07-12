@@ -18,18 +18,14 @@ use models\summit\SummitAttendeeTicket;
  * Class TicketFinderByIdStrategy
  * @package App\Services\Model\Strategies\TicketFinder\Strategies
  */
-final class TicketFinderByIdStrategy
-    extends AbstractTicketFinderStrategy
-    implements ITicketFinderStrategy
-{
-
-    /**
-     * @return SummitAttendeeTicket|null
-     */
-    public function find(): ?SummitAttendeeTicket
-    {
-        Log::debug(sprintf("TicketFinderByIdStrategy::find id %s", $this->ticket_criteria));
-        $res = $this->repository->getById(intval($this->ticket_criteria));
-        return $res instanceof SummitAttendeeTicket ? $res : null;
-    }
+final class TicketFinderByIdStrategy extends AbstractTicketFinderStrategy implements
+  ITicketFinderStrategy {
+  /**
+   * @return SummitAttendeeTicket|null
+   */
+  public function find(): ?SummitAttendeeTicket {
+    Log::debug(sprintf("TicketFinderByIdStrategy::find id %s", $this->ticket_criteria));
+    $res = $this->repository->getById(intval($this->ticket_criteria));
+    return $res instanceof SummitAttendeeTicket ? $res : null;
+  }
 }

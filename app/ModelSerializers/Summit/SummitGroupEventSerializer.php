@@ -17,42 +17,47 @@ use models\summit\SummitGroupEvent;
  * Class SummitGroupEventSerializer
  * @package ModelSerializers
  */
-class SummitGroupEventSerializer extends SummitEventSerializer
-{
+class SummitGroupEventSerializer extends SummitEventSerializer {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $event  = $this->object;
-        if(!$event instanceof SummitGroupEvent) return [];
-
-        $values['groups'] = $event->getGroupsIds();
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'groups': {
-                        $groups = array();
-                        unset($values['groups']);
-                        foreach ($event->getGroups() as $g) {
-                            $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(null, [], ['none']);
-                        }
-                        $values['groups'] = $groups;
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+    $event = $this->object;
+    if (!$event instanceof SummitGroupEvent) {
+      return [];
     }
+
+    $values["groups"] = $event->getGroupsIds();
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "groups":
+            $groups = [];
+            unset($values["groups"]);
+            foreach ($event->getGroups() as $g) {
+              $groups[] = SerializerRegistry::getInstance()
+                ->getSerializer($g)
+                ->serialize(null, [], ["none"]);
+            }
+            $values["groups"] = $groups;
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

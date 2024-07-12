@@ -12,19 +12,17 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class TrackQuestionTemplateConstants
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-final class TrackQuestionTemplateConstants
-{
-    public static $valid_class_names = [
-        TrackCheckBoxListQuestionTemplate::ClassName,
-        TrackCheckBoxQuestionTemplate::ClassName,
-        TrackDropDownQuestionTemplate::ClassName,
-        TrackLiteralContentQuestionTemplate::ClassName,
-        TrackRadioButtonListQuestionTemplate::ClassName,
-        TrackTextBoxQuestionTemplate::ClassName,
-    ];
+final class TrackQuestionTemplateConstants {
+  public static $valid_class_names = [
+    TrackCheckBoxListQuestionTemplate::ClassName,
+    TrackCheckBoxQuestionTemplate::ClassName,
+    TrackDropDownQuestionTemplate::ClassName,
+    TrackLiteralContentQuestionTemplate::ClassName,
+    TrackRadioButtonListQuestionTemplate::ClassName,
+    TrackTextBoxQuestionTemplate::ClassName,
+  ];
 }

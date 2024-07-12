@@ -14,26 +14,24 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
  * limitations under the License.
  **/
 
-
 /**
  * Class SelectionPlanExtraQuestionValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SelectionPlanExtraQuestionValidationRulesFactory extends ExtraQuestionTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class SelectionPlanExtraQuestionValidationRulesFactory extends
+  ExtraQuestionTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = parent::build($data, $update);
 
-        $rules = parent::build($data, $update);
-
-        if($update){
-            return array_merge($rules, ['is_editable' => 'sometimes|boolean']);
-        }
-
-        return array_merge($rules, ['is_editable' => 'required|boolean']);
+    if ($update) {
+      return array_merge($rules, ["is_editable" => "sometimes|boolean"]);
     }
+
+    return array_merge($rules, ["is_editable" => "required|boolean"]);
+  }
 }

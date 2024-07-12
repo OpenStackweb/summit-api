@@ -18,59 +18,61 @@ use utils\PagingResponse;
 /**
  * Interface IBaseRepository
  */
-interface IBaseRepository
-{
-    /**
-     * @param int $id
-     * @return IEntity
-     */
-    public function getById($id);
+interface IBaseRepository {
+  /**
+   * @param int $id
+   * @return IEntity
+   */
+  public function getById($id);
 
-    /**
-     * @param int $id
-     * @return IEntity
-     */
-    public function getByIdRefreshed($id);
+  /**
+   * @param int $id
+   * @return IEntity
+   */
+  public function getByIdRefreshed($id);
 
-    /**
-     * @param int $id
-     * @param bool $refresh
-     * @return IEntity
-     */
-    public function getByIdExclusiveLock($id, bool $refresh = false);
+  /**
+   * @param int $id
+   * @param bool $refresh
+   * @return IEntity
+   */
+  public function getByIdExclusiveLock($id, bool $refresh = false);
 
-    /**
-     * @param IEntity $entity
-     * @param bool $sync
-     * @return void
-     */
-    public function add($entity, $sync = false);
+  /**
+   * @param IEntity $entity
+   * @param bool $sync
+   * @return void
+   */
+  public function add($entity, $sync = false);
 
-    /**
-     * @param IEntity $entity
-     * @return void
-     */
-    public function delete($entity);
+  /**
+   * @param IEntity $entity
+   * @return void
+   */
+  public function delete($entity);
 
-    /**
-     * @return IEntity[]
-     */
-    public function getAll();
+  /**
+   * @return IEntity[]
+   */
+  public function getAll();
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return array
-     */
-    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array;
-
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return array
+   */
+  public function getAllIdsByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): array;
 }

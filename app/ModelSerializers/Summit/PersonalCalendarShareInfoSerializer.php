@@ -17,28 +17,32 @@ use ModelSerializers\SilverStripeSerializer;
  * Class PersonalCalendarShareInfoSerializer
  * @package App\ModelSerializers\Summit
  */
-final class PersonalCalendarShareInfoSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Link'       => 'link:json_url',
-        'SummitId'   => 'summit_id:json_int',
-        'OwnerId'    => 'owner_id:json_int',
-        'Cid'        => 'cid:json_string',
-    ];
+final class PersonalCalendarShareInfoSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Link" => "link:json_url",
+    "SummitId" => "summit_id:json_int",
+    "OwnerId" => "owner_id:json_int",
+    "Cid" => "cid:json_string",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $link = $this->object;
-        if (!$link instanceof PersonalCalendarShareInfo) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $link = $this->object;
+    if (!$link instanceof PersonalCalendarShareInfo) {
+      return [];
     }
-
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    return $values;
+  }
 }

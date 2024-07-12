@@ -16,7 +16,5 @@
  * Class PaymentSummitRegistrationOrderConfirmed
  * @package App\Events
  */
-final class PaymentSummitRegistrationOrderConfirmed extends SummitRegistrationOrderAction
-{
-
+final class PaymentSummitRegistrationOrderConfirmed extends SummitRegistrationOrderAction {
 }

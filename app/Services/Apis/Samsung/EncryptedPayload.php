@@ -19,23 +19,22 @@ use Illuminate\Support\Facades\Log;
  * Class EncryptedRequest
  * @package App\Services\Apis\Samsung
  */
-final class EncryptedPayload extends AbstractPayload
-{
-    /**
-     * @param string $key
-     * @param AbstractPayload $request
-     * @throws \Exception
-     */
-    public function __construct(string $key, AbstractPayload $request){
-
-        $data =(string)$request;
-        Log::debug(sprintf("EncryptedPayload::constructor request %s.", $data));
-        $enc = AES256GCM::encrypt($key, $data);
-        if($enc->hasError())
-            throw new \Exception($enc->getErrorMessage());
-
-        $this->payload = [
-            PayloadParamNames::Data => $enc->getData()
-        ];
+final class EncryptedPayload extends AbstractPayload {
+  /**
+   * @param string $key
+   * @param AbstractPayload $request
+   * @throws \Exception
+   */
+  public function __construct(string $key, AbstractPayload $request) {
+    $data = (string) $request;
+    Log::debug(sprintf("EncryptedPayload::constructor request %s.", $data));
+    $enc = AES256GCM::encrypt($key, $data);
+    if ($enc->hasError()) {
+      throw new \Exception($enc->getErrorMessage());
     }
+
+    $this->payload = [
+      PayloadParamNames::Data => $enc->getData(),
+    ];
+  }
 }

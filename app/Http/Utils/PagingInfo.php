@@ -12,56 +12,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-class PagingInfo
-{
-    /**
-     * @var int
-     */
-    private $page;
-    /**
-     * @var int
-     */
-    private $per_page;
+class PagingInfo {
+  /**
+   * @var int
+   */
+  private $page;
+  /**
+   * @var int
+   */
+  private $per_page;
 
-    /**
-     * @param int $page
-     * @param int $per_page
-     */
-    public function __construct($page = 1, $per_page = 10)
-    {
-        $this->page = $page;
-        $this->per_page = $per_page;
-    }
+  /**
+   * @param int $page
+   * @param int $per_page
+   */
+  public function __construct($page = 1, $per_page = 10) {
+    $this->page = $page;
+    $this->per_page = $per_page;
+  }
 
-    /**
-     * @return int
-     */
-    public function getCurrentPage()
-    {
-        return $this->page;
-    }
+  /**
+   * @return int
+   */
+  public function getCurrentPage() {
+    return $this->page;
+  }
 
-    /**
-     * @return int
-     */
-    public function getPerPage()
-    {
-        return $this->per_page;
-    }
+  /**
+   * @return int
+   */
+  public function getPerPage() {
+    return $this->per_page;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOffset()
-    {
-        return ($this->page - 1) * $this->per_page;
-    }
+  /**
+   * @return int
+   */
+  public function getOffset() {
+    return ($this->page - 1) * $this->per_page;
+  }
 
-    /**
-     * @param int $count
-     * @return int
-     */
-    public function getLastPage($count){
-        return intval(ceil($count/$this->per_page));
-    }
+  /**
+   * @param int $count
+   * @return int
+   */
+  public function getLastPage($count) {
+    return intval(ceil($count / $this->per_page));
+  }
 }

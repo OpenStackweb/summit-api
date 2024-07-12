@@ -18,20 +18,23 @@ use ModelSerializers\SilverStripeSerializer;
  * Class ElectionSerializer
  * @package App\ModelSerializers\Elections
  */
-class ElectionSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Status' => 'status:json_string',
-        'Opens' => 'opens:datetime_epoch',
-        'Closes' => 'closes:datetime_epoch',
-        'NominationOpens' => 'nomination_opens:datetime_epoch',
-        'NominationCloses' => 'nomination_closes:datetime_epoch',
-        'NominationDeadline' => 'nomination_application_deadline:datetime_epoch',
-        'CandidateApplicationFormRelationshipToOpenstackLabel' => 'candidate_application_form_relationship_to_openstack_label:json_string',
-        'CandidateApplicationFormExperienceLabel' => 'candidate_application_form_experience_label:json_string',
-        'CandidateApplicationFormBoardsRoleLabel' => 'candidate_application_form_boards_role_label:json_string',
-        'CandidateApplicationFormTopPriorityLabel' => 'candidate_application_form_top_priority_label:json_string',
-        'NominationsLimit' => 'nominations_limit:json_int'
-    ];
+class ElectionSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Status" => "status:json_string",
+    "Opens" => "opens:datetime_epoch",
+    "Closes" => "closes:datetime_epoch",
+    "NominationOpens" => "nomination_opens:datetime_epoch",
+    "NominationCloses" => "nomination_closes:datetime_epoch",
+    "NominationDeadline" => "nomination_application_deadline:datetime_epoch",
+    "CandidateApplicationFormRelationshipToOpenstackLabel" =>
+      "candidate_application_form_relationship_to_openstack_label:json_string",
+    "CandidateApplicationFormExperienceLabel" =>
+      "candidate_application_form_experience_label:json_string",
+    "CandidateApplicationFormBoardsRoleLabel" =>
+      "candidate_application_form_boards_role_label:json_string",
+    "CandidateApplicationFormTopPriorityLabel" =>
+      "candidate_application_form_top_priority_label:json_string",
+    "NominationsLimit" => "nominations_limit:json_int",
+  ];
 }

@@ -22,35 +22,30 @@ use utils\DoctrineLeftJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitRegistrationFeedMetadataRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitRegistrationFeedMetadataRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitRegistrationFeedMetadataRepository {
+  protected function getBaseEntity() {
+    return SummitRegistrationFeedMetadata::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitRegistrationFeedMetadata::class;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "key" => "e.key:json_string",
+      "value" => "e.value:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'key' => 'e.key:json_string',
-            'value' => 'e.value:json_string',
-            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id' => 'e.id',
-            'key' => 'e.key',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "key" => "e.key",
+    ];
+  }
 }

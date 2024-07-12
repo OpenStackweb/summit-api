@@ -11,12 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SpeakerPresentationLinkSerializer
-    extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Link'      => 'link:json_string',
-        'Title'     => 'title:json_string',
-        'SpeakerId' => 'speaker_id:json_int',
-    ];
+final class SpeakerPresentationLinkSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Link" => "link:json_string",
+    "Title" => "title:json_string",
+    "SpeakerId" => "speaker_id:json_int",
+  ];
 }

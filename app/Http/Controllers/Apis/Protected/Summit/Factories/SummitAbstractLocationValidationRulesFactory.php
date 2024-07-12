@@ -16,32 +16,32 @@
  * Class SummitAbstractLocationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitAbstractLocationValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'name'         => 'sometimes|string|max:255',
-                'short_name'   => 'sometimes|string|max:255',
-                'description'  => 'sometimes|string',
-                'opening_hour' => 'nullable|sometimes|integer|min:0|max:2359',
-                'closing_hour' => 'nullable|required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359',
-                'order'        => 'sometimes|integer|min:1'
-            ];
-        }
-
-        return [
-            'name'        => 'required|string|max:255',
-            'short_name'  => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'opening_hour' => 'nullable|sometimes|integer|min:0|max:2359',
-            'closing_hour' => 'nullable|required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359'
-        ];
+final class SummitAbstractLocationValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string|max:255",
+        "short_name" => "sometimes|string|max:255",
+        "description" => "sometimes|string",
+        "opening_hour" => "nullable|sometimes|integer|min:0|max:2359",
+        "closing_hour" =>
+          "nullable|required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359",
+        "order" => "sometimes|integer|min:1",
+      ];
     }
+
+    return [
+      "name" => "required|string|max:255",
+      "short_name" => "sometimes|string|max:255",
+      "description" => "sometimes|string",
+      "opening_hour" => "nullable|sometimes|integer|min:0|max:2359",
+      "closing_hour" =>
+        "nullable|required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359",
+    ];
+  }
 }

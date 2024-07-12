@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,63 +19,57 @@ use models\utils\SilverstripeBaseModel;
  * Class CompanyServiceResource
  * @package App\Models\Foundation\Marketplace
  */
-class CompanyServiceResource extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class CompanyServiceResource extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Uri", type="string")
-     * @var string
-     */
-    private $uri;
+  /**
+   * @ORM\Column(name="Uri", type="string")
+   * @var string
+   */
+  private $uri;
 
-    /**
-     * @ORM\Column(name="Order", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="Order", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="resources", fetch="LAZY")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
-     * @var CompanyService
-     */
-    private $company_service;
+  /**
+   * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="resources", fetch="LAZY")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
+   * @var CompanyService
+   */
+  private $company_service;
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getUri()
-    {
-        return $this->uri;
-    }
+  /**
+   * @return string
+   */
+  public function getUri() {
+    return $this->uri;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
 
-    /**
-     * @return CompanyService
-     */
-    public function getCompanyService()
-    {
-        return $this->company_service;
-    }
-
+  /**
+   * @return CompanyService
+   */
+  public function getCompanyService() {
+    return $this->company_service;
+  }
 }

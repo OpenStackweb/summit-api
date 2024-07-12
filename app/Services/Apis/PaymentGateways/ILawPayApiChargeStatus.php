@@ -12,31 +12,29 @@
  * limitations under the License.
  **/
 
-
 /**
  * @see https://developers.affinipay.com/reference/api.html#charge
  */
-interface ILawPayApiChargeStatus
-{
-    /**
-     * The Gateway is awaiting confirmation from the processor of the transaction's creation.
-     */
-    const Pending = 'PENDING';
-    /**
-     * The transaction has been authorized.
-     */
-    const Authorized = 'AUTHORIZED';
-    /**
-     * The Gateway has completed processing the transaction. Depending on the configuration and type of underlying
-     * Merchant or eCheck Account, settlement is either in process or complete.
-     */
-    const Completed = 'COMPLETED';
-    /**
-     * The transaction has been voided
-     */
-    const Voided = 'VOIDED';
-    /**
-     * The transaction failed. Consult the failure code for details.
-     */
-    const Failed = 'FAILED';
+interface ILawPayApiChargeStatus {
+  /**
+   * The Gateway is awaiting confirmation from the processor of the transaction's creation.
+   */
+  const Pending = "PENDING";
+  /**
+   * The transaction has been authorized.
+   */
+  const Authorized = "AUTHORIZED";
+  /**
+   * The Gateway has completed processing the transaction. Depending on the configuration and type of underlying
+   * Merchant or eCheck Account, settlement is either in process or complete.
+   */
+  const Completed = "COMPLETED";
+  /**
+   * The transaction has been voided
+   */
+  const Voided = "VOIDED";
+  /**
+   * The transaction failed. Consult the failure code for details.
+   */
+  const Failed = "FAILED";
 }

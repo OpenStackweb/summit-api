@@ -17,10 +17,9 @@ use models\utils\IBaseRepository;
  * Interface ISpeakerActiveInvolvementRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISpeakerActiveInvolvementRepository extends IBaseRepository
-{
-    /**
-     * @return SpeakerActiveInvolvement[]
-     */
-    public function getDefaultOnes();
+interface ISpeakerActiveInvolvementRepository extends IBaseRepository {
+  /**
+   * @return SpeakerActiveInvolvement[]
+   */
+  public function getDefaultOnes();
 }

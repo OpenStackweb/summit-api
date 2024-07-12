@@ -14,7 +14,7 @@
 use models\utils\SilverstripeBaseModel;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorUserInfoGrantRepository")
  * @ORM\Table(name="SponsorUserInfoGrant")
@@ -27,76 +27,71 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SponsorUserInfoGrant
  * @package models\summit
  */
-class SponsorUserInfoGrant extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SponsorUserInfoGrant extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    const ClassName = 'SponsorUserInfoGrant';
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="user_info_grants")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
-     * @var Sponsor
-     */
-    protected $sponsor;
+  const ClassName = "SponsorUserInfoGrant";
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="user_info_grants")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
+   * @var Sponsor
+   */
+  protected $sponsor;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="AllowedUserID", referencedColumnName="ID")
-     * @var Member|null
-     */
-    protected $allowed_user;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="AllowedUserID", referencedColumnName="ID")
+   * @var Member|null
+   */
+  protected $allowed_user;
 
-    protected $getIdMappings = [
-        'getSponsorId' => 'sponsor',
-        'getAllowedUserId'    => 'allowed_user',
-    ];
+  protected $getIdMappings = [
+    "getSponsorId" => "sponsor",
+    "getAllowedUserId" => "allowed_user",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSponsor' => 'sponsor',
-        'hasAllowedUser' => 'allowed_user',
-    ];
+  protected $hasPropertyMappings = [
+    "hasSponsor" => "sponsor",
+    "hasAllowedUser" => "allowed_user",
+  ];
 
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor(): Sponsor
-    {
-        return $this->sponsor;
-    }
+  /**
+   * @return Sponsor
+   */
+  public function getSponsor(): Sponsor {
+    return $this->sponsor;
+  }
 
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
-    }
+  /**
+   * @param Sponsor $sponsor
+   */
+  public function setSponsor(Sponsor $sponsor): void {
+    $this->sponsor = $sponsor;
+  }
 
-    /**
-     * @return Member|null
-     */
-    public function getAllowedUser(): ?Member
-    {
-        return $this->allowed_user;
-    }
+  /**
+   * @return Member|null
+   */
+  public function getAllowedUser(): ?Member {
+    return $this->allowed_user;
+  }
 
-    /**
-     * @param Member|null $allowed_user
-     */
-    public function setAllowedUser(?Member $allowed_user): void
-    {
-        $this->allowed_user = $allowed_user;
-    }
+  /**
+   * @param Member|null $allowed_user
+   */
+  public function setAllowedUser(?Member $allowed_user): void {
+    $this->allowed_user = $allowed_user;
+  }
 
-    public function getAttendeeFirstName():?string{
-        return $this->allowed_user->getFirstName();
-    }
+  public function getAttendeeFirstName(): ?string {
+    return $this->allowed_user->getFirstName();
+  }
 
-    public function getAttendeeLastName():?string{
-        return $this->allowed_user->getLastName();
-    }
+  public function getAttendeeLastName(): ?string {
+    return $this->allowed_user->getLastName();
+  }
 
-    public function getAttendeeEmail():?string{
-        return $this->allowed_user->getEmail();
-    }
+  public function getAttendeeEmail(): ?string {
+    return $this->allowed_user->getEmail();
+  }
 }

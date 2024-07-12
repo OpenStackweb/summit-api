@@ -20,36 +20,31 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * Class DoctrineUserStoryRepository
  * @package repositories\main
  */
-final class DoctrineUserStoryRepository
-    extends SilverStripeDoctrineRepository
-    implements IUserStoryRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return UserStory::class;
-    }
+final class DoctrineUserStoryRepository extends SilverStripeDoctrineRepository implements
+  IUserStoryRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return UserStory::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings(): array
-    {
-        return [
-            'name' => 'e.name:json_string',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings(): array {
+    return [
+      "name" => "e.name:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'name'  => 'e.name',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 }

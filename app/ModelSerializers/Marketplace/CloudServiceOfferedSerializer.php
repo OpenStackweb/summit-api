@@ -19,45 +19,43 @@ use ModelSerializers\SilverStripeSerializer;
  * Class CloudServiceOfferedSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class CloudServiceOfferedSerializer extends SilverStripeSerializer
-{
+final class CloudServiceOfferedSerializer extends SilverStripeSerializer {
+  protected static $allowed_relations = ["pricing_schemas"];
 
-    protected static $allowed_relations = [
-        'pricing_schemas',
-    ];
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $service  = $this->object;
-        if(!$service instanceof CloudServiceOffered) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('pricing_schemas', $relations)){
-            $res = [];
-            foreach ($service->getPricingSchemas() as $schema){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($schema)
-                    ->serialize($expand);
-            }
-            $values['pricing_schemas'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $service = $this->object;
+    if (!$service instanceof CloudServiceOffered) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("pricing_schemas", $relations)) {
+      $res = [];
+      foreach ($service->getPricingSchemas() as $schema) {
+        $res[] = SerializerRegistry::getInstance()->getSerializer($schema)->serialize($expand);
+      }
+      $values["pricing_schemas"] = $res;
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+        }
+      }
+    }
+    return $values;
+  }
 }

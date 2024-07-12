@@ -25,57 +25,57 @@ use models\summit\SummitVenueRoom;
  * Class SummitSignService
  * @package App\Services\Model\Imp
  */
-final class SummitSignService extends AbstractService
-implements ISummitSignService
-{
+final class SummitSignService extends AbstractService implements ISummitSignService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitSign|null
+   * @throws \Exception
+   */
+  public function add(Summit $summit, array $payload): ?SummitSign {
+    return $this->tx_service->transaction(function () use ($summit, $payload) {
+      $location_id = $payload["location_id"] ?? 0;
+      $location = $summit->getLocation($location_id);
+      if (is_null($location)) {
+        throw new EntityNotFoundException("Location not found.");
+      }
+      if (!($location instanceof SummitVenue || $location instanceof SummitVenueRoom)) {
+        throw new ValidationException("Location must be a venue or a room.");
+      }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitSign|null
-     * @throws \Exception
-     */
-    public function add(Summit $summit, array $payload): ?SummitSign
-    {
-        return $this->tx_service->transaction(function() use($summit, $payload){
+      $formerSign = $summit->getSignByLocationId($location_id);
+      if (!is_null($formerSign)) {
+        throw new ValidationException("Location already has a sign assigned.");
+      }
 
-            $location_id = $payload['location_id'] ?? 0;
-            $location = $summit->getLocation($location_id);
-            if(is_null($location)) throw new EntityNotFoundException('Location not found.');
-            if(!($location instanceof SummitVenue || $location instanceof SummitVenueRoom))
-                throw new ValidationException("Location must be a venue or a room.");
+      $sign = new SummitSign();
+      $sign->setLocation($location);
+      $sign->setTemplate($payload["template"] ?? "");
 
-            $formerSign = $summit->getSignByLocationId($location_id);
-            if(!is_null($formerSign))
-                throw new ValidationException("Location already has a sign assigned.");
+      $summit->addSign($sign);
+      return $sign;
+    });
+  }
 
-            $sign = new SummitSign();
-            $sign->setLocation($location);
-            $sign->setTemplate($payload['template'] ?? '');
+  /**
+   * @param Summit $summit
+   * @param int $sign_id
+   * @param array $payload
+   * @return SummitSign|null
+   * @throws \Exception
+   */
+  public function update(Summit $summit, int $sign_id, array $payload): ?SummitSign {
+    return $this->tx_service->transaction(function () use ($summit, $sign_id, $payload) {
+      $sign = $summit->getSignById($sign_id);
+      if (is_null($sign)) {
+        throw new EntityNotFoundException("Sign not found.");
+      }
 
-            $summit->addSign($sign);
-            return $sign;
-        });
-    }
+      if (isset($payload["template"])) {
+        $sign->setTemplate($payload["template"]);
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $sign_id
-     * @param array $payload
-     * @return SummitSign|null
-     * @throws \Exception
-     */
-    public function update(Summit $summit, int $sign_id, array $payload): ?SummitSign
-    {
-       return $this->tx_service->transaction(function() use($summit, $sign_id, $payload){
-          $sign = $summit->getSignById($sign_id);
-          if(is_null($sign))
-              throw new EntityNotFoundException('Sign not found.');
-
-          if(isset($payload['template']))
-            $sign->setTemplate($payload['template']);
-
-          return $sign;
-       });
-    }
+      return $sign;
+    });
+  }
 }

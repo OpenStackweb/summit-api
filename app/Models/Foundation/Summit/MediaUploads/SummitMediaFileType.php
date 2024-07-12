@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitMediaFileTypeRepository")
@@ -19,100 +19,91 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitMediaFileType
  * @package models\summit
  */
-class SummitMediaFileType extends SilverstripeBaseModel
-{
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_system_defined = false;
-        $this->description = '';
-    }
+class SummitMediaFileType extends SilverstripeBaseModel {
+  public function __construct() {
+    parent::__construct();
+    $this->is_system_defined = false;
+    $this->description = "";
+  }
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="AllowedExtensions", type="string")
-     * @var string
-     */
-    private $allowed_extensions;
+  /**
+   * @ORM\Column(name="AllowedExtensions", type="string")
+   * @var string
+   */
+  private $allowed_extensions;
 
-    /**
-     * @ORM\Column(name="IsSystemDefine", type="boolean")
-     * @var bool
-     */
-    private $is_system_defined;
+  /**
+   * @ORM\Column(name="IsSystemDefine", type="boolean")
+   * @var bool
+   */
+  private $is_system_defined;
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription(): ?string {
+    return $this->description;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
-    }
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description): void {
+    $this->description = $description;
+  }
 
-    /**
-     * @return string
-     */
-    public function getAllowedExtensions(): ?string
-    {
-        return $this->allowed_extensions;
-    }
+  /**
+   * @return string
+   */
+  public function getAllowedExtensions(): ?string {
+    return $this->allowed_extensions;
+  }
 
-    /**
-     * @param string $allowed_extensions
-     */
-    public function setAllowedExtensions(string $allowed_extensions): void
-    {
-        $this->allowed_extensions = strtoupper($allowed_extensions);
-    }
+  /**
+   * @param string $allowed_extensions
+   */
+  public function setAllowedExtensions(string $allowed_extensions): void {
+    $this->allowed_extensions = strtoupper($allowed_extensions);
+  }
 
-    /**
-     * @return bool
-     */
-    public function IsSystemDefined(): bool
-    {
-        return $this->is_system_defined;
-    }
+  /**
+   * @return bool
+   */
+  public function IsSystemDefined(): bool {
+    return $this->is_system_defined;
+  }
 
-    public function markAsSystemDefined(): void {
-        $this->is_system_defined = true;
-    }
+  public function markAsSystemDefined(): void {
+    $this->is_system_defined = true;
+  }
 
-    public function markAsUserDefined(): void {
-        $this->is_system_defined = false;
-    }
+  public function markAsUserDefined(): void {
+    $this->is_system_defined = false;
+  }
 }

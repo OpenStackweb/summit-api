@@ -16,19 +16,17 @@ use libs\utils\ITransactionService;
  * Class AbstractService
  * @package App\Services\Model
  */
-abstract class AbstractService
-{
-    /**
-     * @var ITransactionService
-     */
-    protected $tx_service;
+abstract class AbstractService {
+  /**
+   * @var ITransactionService
+   */
+  protected $tx_service;
 
-    /**
-     * AbstractService constructor.
-     * @param ITransactionService $tx_service
-     */
-    public function __construct(ITransactionService $tx_service)
-    {
-        $this->tx_service = $tx_service;
-    }
+  /**
+   * AbstractService constructor.
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(ITransactionService $tx_service) {
+    $this->tx_service = $tx_service;
+  }
 }

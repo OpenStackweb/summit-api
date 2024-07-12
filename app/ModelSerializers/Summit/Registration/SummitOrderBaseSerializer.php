@@ -20,99 +20,100 @@ use models\summit\SummitOrder;
  * Class SummitOrderBaseSerializer
  * @package App\ModelSerializers
  */
-class SummitOrderBaseSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Number' => 'number:json_string',
-        'Status' => 'status:json_string',
-        'PaymentMethod' => 'payment_method:json_string',
-        'OwnerFirstName' => 'owner_first_name:json_string',
-        'OwnerSurname' => 'owner_last_name:json_string',
-        'OwnerEmail' => 'owner_email:json_string',
-        'OwnerCompanyName' => 'owner_company:json_string',
-        'CompanyId' => 'owner_company_id:json_int',
-        'OwnerId' => 'owner_id:json_string',
-        'SummitId' => 'summit_id:json_int',
-        'Currency' => 'currency:json_string',
-        'CurrencySymbol' => 'currency_symbol:json_string',
-    ];
+class SummitOrderBaseSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Number" => "number:json_string",
+    "Status" => "status:json_string",
+    "PaymentMethod" => "payment_method:json_string",
+    "OwnerFirstName" => "owner_first_name:json_string",
+    "OwnerSurname" => "owner_last_name:json_string",
+    "OwnerEmail" => "owner_email:json_string",
+    "OwnerCompanyName" => "owner_company:json_string",
+    "CompanyId" => "owner_company_id:json_int",
+    "OwnerId" => "owner_id:json_string",
+    "SummitId" => "summit_id:json_int",
+    "Currency" => "currency:json_string",
+    "CurrencySymbol" => "currency_symbol:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'extra_questions',
-        'tickets',
-    ];
+  protected static $allowed_relations = ["extra_questions", "tickets"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $order = $this->object;
-        if (!$order instanceof SummitOrder) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $order = $this->object;
+    if (!$order instanceof SummitOrder) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (in_array('tickets', $relations)) {
+    if (in_array("tickets", $relations)) {
+      $tickets = [];
+
+      foreach ($order->getTickets() as $ticket) {
+        $tickets[] = $ticket->getId();
+      }
+      $values["tickets"] = $tickets;
+    }
+
+    if (in_array("extra_questions", $relations)) {
+      $extra_question_answers = [];
+
+      foreach ($order->getExtraQuestionAnswers() as $answer) {
+        $extra_question_answers[] = $answer->getId();
+      }
+      $values["extra_questions"] = $extra_question_answers;
+    }
+
+    if (!empty($expand)) {
+      Log::debug(sprintf("SummitOrderBaseSerializer::serialize expand %s", $expand));
+
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "tickets":
+            if (!in_array("tickets", $relations)) {
+              break;
+            }
             $tickets = [];
-
+            unset($values["tickets"]);
             foreach ($order->getTickets() as $ticket) {
-                $tickets[] = $ticket->getId();
+              $tickets[] = SerializerRegistry::getInstance()
+                ->getSerializer($ticket)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
-            $values['tickets'] = $tickets;
-        }
-
-        if (in_array('extra_questions', $relations)) {
-            $extra_question_answers = [];
-
-            foreach ($order->getExtraQuestionAnswers() as $answer) {
-                $extra_question_answers[] = $answer->getId();
+            $values["tickets"] = $tickets;
+            break;
+          case "owner":
+            if ($order->hasOwner()) {
+              unset($values["owner_id"]);
+              $values["owner"] = SerializerRegistry::getInstance()
+                ->getSerializer($order->getOwner())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
-            $values['extra_questions'] = $extra_question_answers;
-        }
-
-        if (!empty($expand)) {
-            Log::debug(sprintf("SummitOrderBaseSerializer::serialize expand %s", $expand));
-
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'tickets':
-                        {
-                            if (!in_array('tickets', $relations)) break;
-                            $tickets = [];
-                            unset($values['tickets']);
-                            foreach ($order->getTickets() as $ticket) {
-                                $tickets[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['tickets'] = $tickets;
-                        }
-                        break;
-                    case 'owner':
-                        {
-
-                            if ($order->hasOwner()) {
-                                unset($values['owner_id']);
-                                $values['owner'] = SerializerRegistry::getInstance()->getSerializer($order->getOwner())->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                        }
-                        break;
-                    /*
+            break;
+          /*
                     case 'summit':{
                         unset($values['summit_id']);
                         $values['summit'] = SerializerRegistry::getInstance()->getSerializer($order->getSummit())->serialize(null,
@@ -127,43 +128,41 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
                     }
                     break;
                     */
-                    case 'owner_company':
-                        {
-
-                            if ($order->hasOwnerCompany()) {
-                                unset($values['owner_company_id']);
-                                $values['owner_company'] = SerializerRegistry::getInstance()->getSerializer($order->getCompany())->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                        }
-                        break;
-                    case 'extra_questions':
-                        {
-                            if (!in_array('extra_questions', $relations)) break;
-                            $extra_question_answers = [];
-                            unset($values['extra_questions']);
-                            foreach ($order->getExtraQuestionAnswers() as $answer) {
-                                $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['extra_questions'] = $extra_question_answers;
-                        }
-                        break;
-                }
+          case "owner_company":
+            if ($order->hasOwnerCompany()) {
+              unset($values["owner_company_id"]);
+              $values["owner_company"] = SerializerRegistry::getInstance()
+                ->getSerializer($order->getCompany())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
+            break;
+          case "extra_questions":
+            if (!in_array("extra_questions", $relations)) {
+              break;
+            }
+            $extra_question_answers = [];
+            unset($values["extra_questions"]);
+            foreach ($order->getExtraQuestionAnswers() as $answer) {
+              $extra_question_answers[] = SerializerRegistry::getInstance()
+                ->getSerializer($answer)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            $values["extra_questions"] = $extra_question_answers;
+            break;
         }
-
-
-        return $values;
+      }
     }
+
+    return $values;
+  }
 }

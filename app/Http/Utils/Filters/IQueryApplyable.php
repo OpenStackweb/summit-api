@@ -19,20 +19,19 @@ use utils\FilterElement;
  * Interface IQueryApplyable
  * @package App\Http\Utils\Filters
  */
-interface IQueryApplyable
-{
-    public function setMainOperator(string $op):void;
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return QueryBuilder
-     */
-    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder;
+interface IQueryApplyable {
+  public function setMainOperator(string $op): void;
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return QueryBuilder
+   */
+  public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder;
 
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return string
-     */
-    public function applyOr(QueryBuilder $query, FilterElement $filter):string;
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return string
+   */
+  public function applyOr(QueryBuilder $query, FilterElement $filter): string;
 }

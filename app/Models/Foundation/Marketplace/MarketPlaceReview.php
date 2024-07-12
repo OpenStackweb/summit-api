@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,78 +19,70 @@ use models\utils\SilverstripeBaseModel;
  * Class MarketPlaceReview
  * @package App\Models\Foundation\Marketplace
  */
-class MarketPlaceReview extends SilverstripeBaseModel
-{
+class MarketPlaceReview extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Title", type="string")
+   * @var string
+   */
+  protected $title;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     * @var string
-     */
-    protected $title;
+  /**
+   * @ORM\Column(name="Comment", type="string")
+   * @var string
+   */
+  protected $comment;
 
-    /**
-     * @ORM\Column(name="Comment", type="string")
-     * @var string
-     */
-    protected $comment;
+  /**
+   * @ORM\Column(name="Rating", type="float")
+   * @var string
+   */
+  protected $rating;
 
-    /**
-     * @ORM\Column(name="Rating", type="float")
-     * @var string
-     */
-    protected $rating;
+  /**
+   * @ORM\Column(name="Approved", type="boolean")
+   * @var bool
+   */
+  protected $is_approved;
 
-    /**
-     * @ORM\Column(name="Approved", type="boolean")
-     * @var bool
-     */
-    protected $is_approved;
+  /**
+   * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="reviews", fetch="LAZY")
+   * @ORM\JoinColumn(name="CompanyServiceID", referencedColumnName="ID")
+   * @var CompanyService
+   */
+  protected $company_service;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="reviews", fetch="LAZY")
-     * @ORM\JoinColumn(name="CompanyServiceID", referencedColumnName="ID")
-     * @var CompanyService
-     */
-    protected $company_service;
+  /**
+   * @return string
+   */
+  public function getTitle() {
+    return $this->title;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->title;
-    }
+  /**
+   * @return string
+   */
+  public function getComment() {
+    return $this->comment;
+  }
 
-    /**
-     * @return string
-     */
-    public function getComment()
-    {
-        return $this->comment;
-    }
+  /**
+   * @return string
+   */
+  public function getRating() {
+    return $this->rating;
+  }
 
-    /**
-     * @return string
-     */
-    public function getRating()
-    {
-        return $this->rating;
-    }
+  /**
+   * @return bool
+   */
+  public function isApproved() {
+    return $this->is_approved;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isApproved()
-    {
-        return $this->is_approved;
-    }
-
-    /**
-     * @return CompanyService
-     */
-    public function getCompanyService()
-    {
-        return $this->company_service;
-    }
-
+  /**
+   * @return CompanyService
+   */
+  public function getCompanyService() {
+    return $this->company_service;
+  }
 }

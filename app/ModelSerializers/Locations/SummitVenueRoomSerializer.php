@@ -18,40 +18,47 @@ use ModelSerializers\SerializerRegistry;
  * Class SummitVenueRoomSerializer
  * @package ModelSerializers\Locations
  */
-class SummitVenueRoomSerializer extends SummitAbstractLocationSerializer
-{
-    protected static $array_mappings = [
-        'VenueId'           => 'venue_id:json_int',
-        'FloorId'           => 'floor_id:json_int',
-        'Capacity'          => 'capacity:json_int',
-        'OverrideBlackouts' => 'override_blackouts:json_boolean',
-    ];
+class SummitVenueRoomSerializer extends SummitAbstractLocationSerializer {
+  protected static $array_mappings = [
+    "VenueId" => "venue_id:json_int",
+    "FloorId" => "floor_id:json_int",
+    "Capacity" => "capacity:json_int",
+    "OverrideBlackouts" => "override_blackouts:json_boolean",
+  ];
 
-    protected static $expand_mappings = [
-        'venue' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'venue_id',
-            'getter' => 'getVenue',
-            'has' => 'hasVenue'
-        ],
-        'floor' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'floor_id',
-            'getter' => 'getFloor',
-            'has' => 'hasFloor'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "venue" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "venue_id",
+      "getter" => "getVenue",
+      "has" => "hasVenue",
+    ],
+    "floor" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "floor_id",
+      "getter" => "getFloor",
+      "has" => "hasFloor",
+    ],
+  ];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $room   = $this->object;
-        if(!$room instanceof SummitVenueRoom) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if($room->hasImage()){
-            $values['image'] = SerializerRegistry::getInstance()->getSerializer($room->getImage())->serialize();
-        }
-
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $room = $this->object;
+    if (!$room instanceof SummitVenueRoom) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if ($room->hasImage()) {
+      $values["image"] = SerializerRegistry::getInstance()
+        ->getSerializer($room->getImage())
+        ->serialize();
+    }
+
+    return $values;
+  }
 }

@@ -13,49 +13,53 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class SummitEventFeedbackSerializer
  * @package ModelSerializers
  */
-final class SummitEventFeedbackSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'Rate'       => 'rate:json_int',
-        'Note'       => 'note:json_string',
-        'CreatedUTC' => 'created_date:datetime_epoch',
-        'EventId'    => 'event_id:json_int',
-    );
+final class SummitEventFeedbackSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Rate" => "rate:json_int",
+    "Note" => "note:json_string",
+    "CreatedUTC" => "created_date:datetime_epoch",
+    "EventId" => "event_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $feedback = $this->object;
-        $values   = parent::serialize($expand, $fields, $relations, $params);
-        $member   = $feedback->hasOwner() ? $feedback->getOwner() : null;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $feedback = $this->object;
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $member = $feedback->hasOwner() ? $feedback->getOwner() : null;
 
-        if (is_null($member)) return $values;
-
-        $values['owner_id'] = intval($member->getId());
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'owner': {
-                        unset($values['owner_id']);
-                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($member)->serialize('', [], ['none']);
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+    if (is_null($member)) {
+      return $values;
     }
+
+    $values["owner_id"] = intval($member->getId());
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        switch (trim($relation)) {
+          case "owner":
+            unset($values["owner_id"]);
+            $values["owner"] = SerializerRegistry::getInstance()
+              ->getSerializer($member)
+              ->serialize("", [], ["none"]);
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

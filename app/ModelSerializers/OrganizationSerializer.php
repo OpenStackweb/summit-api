@@ -16,9 +16,8 @@
  * Class OrganizationSerializer
  * @package ModelSerializers
  */
-final class OrganizationSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-      'Name'  => 'name:json_string',
-    ];
+final class OrganizationSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+  ];
 }

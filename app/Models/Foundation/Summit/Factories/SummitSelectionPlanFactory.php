@@ -17,148 +17,165 @@ use models\summit\Summit;
  * Class SummitSelectionPlanFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitSelectionPlanFactory
-{
-    /**
-     * @param array $data
-     * @param Summit $summit
-     * @return SelectionPlan
-     */
-    public static function build(array $data, Summit $summit){
-        return self::populate(new SelectionPlan, $data, $summit);
+final class SummitSelectionPlanFactory {
+  /**
+   * @param array $data
+   * @param Summit $summit
+   * @return SelectionPlan
+   */
+  public static function build(array $data, Summit $summit) {
+    return self::populate(new SelectionPlan(), $data, $summit);
+  }
+
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param Summit $summit
+   * @param array $data
+   * @return SelectionPlan
+   */
+  public static function populate(SelectionPlan $selection_plan, array $data, Summit $summit) {
+    $selection_plan->setSummit($summit);
+
+    if (isset($data["name"])) {
+      $selection_plan->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param Summit $summit
-     * @param array $data
-     * @return SelectionPlan
-     */
-    public static function populate(SelectionPlan $selection_plan, array $data, Summit $summit){
-
-        $selection_plan->setSummit($summit);
-
-        if(isset($data['name']))
-            $selection_plan->setName(trim($data['name']));
-
-        if(isset($data['is_enabled']))
-            $selection_plan->setIsEnabled(boolval($data['is_enabled']));
-
-        if(isset($data['is_hidden']))
-            $selection_plan->setIsHidden(boolval($data['is_hidden']));
-
-        if(isset($data['allow_new_presentations']))
-            $selection_plan->setAllowNewPresentations(boolval($data['allow_new_presentations']));
-
-        if(isset($data['allow_proposed_schedules']))
-            $selection_plan->setAllowProposedSchedules(boolval($data['allow_proposed_schedules']));
-
-        if(isset($data['allow_track_change_requests']))
-            $selection_plan->setAllowTrackChangeRequests(boolval($data['allow_track_change_requests']));
-
-        if(isset($data['max_submission_allowed_per_user']) ){
-            $selection_plan->setMaxSubmissionAllowedPerUser(intval($data['max_submission_allowed_per_user']));
-        }
-
-        if(array_key_exists('submission_begin_date', $data) && array_key_exists('submission_end_date', $data)) {
-            if (isset($data['submission_begin_date']) && isset($data['submission_end_date'])) {
-                $start_datetime = intval($data['submission_begin_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $end_datetime = intval($data['submission_end_date']);
-                $end_datetime = new \DateTime("@$end_datetime");
-                $end_datetime->setTimezone($summit->getTimeZone());
-
-                // set local time from UTC
-                $selection_plan->setSubmissionBeginDate($start_datetime);
-                $selection_plan->setSubmissionEndDate($end_datetime);
-            }
-            else{
-                $selection_plan->clearSubmissionDates();
-            }
-        }
-
-        if(array_key_exists('voting_begin_date', $data) && array_key_exists('voting_end_date', $data)) {
-            if (isset($data['voting_begin_date']) && isset($data['voting_end_date'])) {
-                $start_datetime = intval($data['voting_begin_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $end_datetime = intval($data['voting_end_date']);
-                $end_datetime = new \DateTime("@$end_datetime");
-                $end_datetime->setTimezone($summit->getTimeZone());
-
-                // set local time from UTC
-                $selection_plan->setVotingBeginDate($start_datetime);
-                $selection_plan->setVotingEndDate($end_datetime);
-            }
-            else{
-                $selection_plan->clearVotingDates();
-            }
-        }
-
-        if(array_key_exists('selection_begin_date', $data) && array_key_exists('selection_end_date', $data)) {
-            if (isset($data['selection_begin_date']) && isset($data['selection_end_date'])) {
-                $start_datetime = intval($data['selection_begin_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $end_datetime = intval($data['selection_end_date']);
-                $end_datetime = new \DateTime("@$end_datetime");
-                $end_datetime->setTimezone($summit->getTimeZone());
-
-                // set local time from UTC
-                $selection_plan->setSelectionBeginDate($start_datetime);
-                $selection_plan->setSelectionEndDate($end_datetime);
-            }
-            else{
-                $selection_plan->clearSelectionDates();
-            }
-        }
-
-        if(array_key_exists('submission_lock_down_presentation_status_date', $data)){
-            if (isset($data['submission_lock_down_presentation_status_date']) && $data['submission_lock_down_presentation_status_date'] > 0){
-                $start_datetime = intval($data['submission_lock_down_presentation_status_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $selection_plan->setSubmissionLockDownPresentationStatusDate($start_datetime);
-            }
-            else{
-                $selection_plan->clearSubmissionLockDownPresentationStatusDate();
-            }
-        }
-
-        if(isset($data['submission_period_disclaimer']))
-            $selection_plan->setSubmissionPeriodDisclaimer(trim($data['submission_period_disclaimer']));
-
-        if(isset($data['presentation_creator_notification_email_template'])) {
-            $selection_plan->setPresentationCreatorNotificationEmailTemplate(
-                trim($data['presentation_creator_notification_email_template'])
-            );
-        }
-
-        if(isset($data['presentation_moderator_notification_email_template'])) {
-            $selection_plan->setPresentationModeratorNotificationEmailTemplate(
-                trim($data['presentation_moderator_notification_email_template'])
-            );
-        }
-
-        if(isset($data['presentation_speaker_notification_email_template'])) {
-            $selection_plan->setPresentationSpeakerNotificationEmailTemplate(
-                trim($data['presentation_speaker_notification_email_template'])
-            );
-        }
-
-        if(isset($data['allowed_presentation_questions'])){
-            $selection_plan->clearAllAllowedPresentationQuestions();
-            foreach($data['allowed_presentation_questions'] as $type)
-                $selection_plan->addPresentationAllowedQuestion($type);
-        }
-
-        if(isset($data['allowed_presentation_editable_questions'])){
-            $selection_plan->clearAllAllowedEditablePresentationQuestions();
-            foreach($data['allowed_presentation_editable_questions'] as $type)
-                $selection_plan->addPresentationAllowedEditableQuestion($type);
-        }
-
-        return $selection_plan;
+    if (isset($data["is_enabled"])) {
+      $selection_plan->setIsEnabled(boolval($data["is_enabled"]));
     }
+
+    if (isset($data["is_hidden"])) {
+      $selection_plan->setIsHidden(boolval($data["is_hidden"]));
+    }
+
+    if (isset($data["allow_new_presentations"])) {
+      $selection_plan->setAllowNewPresentations(boolval($data["allow_new_presentations"]));
+    }
+
+    if (isset($data["allow_proposed_schedules"])) {
+      $selection_plan->setAllowProposedSchedules(boolval($data["allow_proposed_schedules"]));
+    }
+
+    if (isset($data["allow_track_change_requests"])) {
+      $selection_plan->setAllowTrackChangeRequests(boolval($data["allow_track_change_requests"]));
+    }
+
+    if (isset($data["max_submission_allowed_per_user"])) {
+      $selection_plan->setMaxSubmissionAllowedPerUser(
+        intval($data["max_submission_allowed_per_user"]),
+      );
+    }
+
+    if (
+      array_key_exists("submission_begin_date", $data) &&
+      array_key_exists("submission_end_date", $data)
+    ) {
+      if (isset($data["submission_begin_date"]) && isset($data["submission_end_date"])) {
+        $start_datetime = intval($data["submission_begin_date"]);
+        $start_datetime = new \DateTime("@$start_datetime");
+        $start_datetime->setTimezone($summit->getTimeZone());
+        $end_datetime = intval($data["submission_end_date"]);
+        $end_datetime = new \DateTime("@$end_datetime");
+        $end_datetime->setTimezone($summit->getTimeZone());
+
+        // set local time from UTC
+        $selection_plan->setSubmissionBeginDate($start_datetime);
+        $selection_plan->setSubmissionEndDate($end_datetime);
+      } else {
+        $selection_plan->clearSubmissionDates();
+      }
+    }
+
+    if (
+      array_key_exists("voting_begin_date", $data) &&
+      array_key_exists("voting_end_date", $data)
+    ) {
+      if (isset($data["voting_begin_date"]) && isset($data["voting_end_date"])) {
+        $start_datetime = intval($data["voting_begin_date"]);
+        $start_datetime = new \DateTime("@$start_datetime");
+        $start_datetime->setTimezone($summit->getTimeZone());
+        $end_datetime = intval($data["voting_end_date"]);
+        $end_datetime = new \DateTime("@$end_datetime");
+        $end_datetime->setTimezone($summit->getTimeZone());
+
+        // set local time from UTC
+        $selection_plan->setVotingBeginDate($start_datetime);
+        $selection_plan->setVotingEndDate($end_datetime);
+      } else {
+        $selection_plan->clearVotingDates();
+      }
+    }
+
+    if (
+      array_key_exists("selection_begin_date", $data) &&
+      array_key_exists("selection_end_date", $data)
+    ) {
+      if (isset($data["selection_begin_date"]) && isset($data["selection_end_date"])) {
+        $start_datetime = intval($data["selection_begin_date"]);
+        $start_datetime = new \DateTime("@$start_datetime");
+        $start_datetime->setTimezone($summit->getTimeZone());
+        $end_datetime = intval($data["selection_end_date"]);
+        $end_datetime = new \DateTime("@$end_datetime");
+        $end_datetime->setTimezone($summit->getTimeZone());
+
+        // set local time from UTC
+        $selection_plan->setSelectionBeginDate($start_datetime);
+        $selection_plan->setSelectionEndDate($end_datetime);
+      } else {
+        $selection_plan->clearSelectionDates();
+      }
+    }
+
+    if (array_key_exists("submission_lock_down_presentation_status_date", $data)) {
+      if (
+        isset($data["submission_lock_down_presentation_status_date"]) &&
+        $data["submission_lock_down_presentation_status_date"] > 0
+      ) {
+        $start_datetime = intval($data["submission_lock_down_presentation_status_date"]);
+        $start_datetime = new \DateTime("@$start_datetime");
+        $start_datetime->setTimezone($summit->getTimeZone());
+        $selection_plan->setSubmissionLockDownPresentationStatusDate($start_datetime);
+      } else {
+        $selection_plan->clearSubmissionLockDownPresentationStatusDate();
+      }
+    }
+
+    if (isset($data["submission_period_disclaimer"])) {
+      $selection_plan->setSubmissionPeriodDisclaimer(trim($data["submission_period_disclaimer"]));
+    }
+
+    if (isset($data["presentation_creator_notification_email_template"])) {
+      $selection_plan->setPresentationCreatorNotificationEmailTemplate(
+        trim($data["presentation_creator_notification_email_template"]),
+      );
+    }
+
+    if (isset($data["presentation_moderator_notification_email_template"])) {
+      $selection_plan->setPresentationModeratorNotificationEmailTemplate(
+        trim($data["presentation_moderator_notification_email_template"]),
+      );
+    }
+
+    if (isset($data["presentation_speaker_notification_email_template"])) {
+      $selection_plan->setPresentationSpeakerNotificationEmailTemplate(
+        trim($data["presentation_speaker_notification_email_template"]),
+      );
+    }
+
+    if (isset($data["allowed_presentation_questions"])) {
+      $selection_plan->clearAllAllowedPresentationQuestions();
+      foreach ($data["allowed_presentation_questions"] as $type) {
+        $selection_plan->addPresentationAllowedQuestion($type);
+      }
+    }
+
+    if (isset($data["allowed_presentation_editable_questions"])) {
+      $selection_plan->clearAllAllowedEditablePresentationQuestions();
+      foreach ($data["allowed_presentation_editable_questions"] as $type) {
+        $selection_plan->addPresentationAllowedEditableQuestion($type);
+      }
+    }
+
+    return $selection_plan;
+  }
 }

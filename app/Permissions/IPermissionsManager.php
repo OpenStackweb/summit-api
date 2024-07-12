@@ -16,13 +16,12 @@ use models\main\Member;
  * Interface IPermissionsManager
  * @package App\Permissions
  */
-interface IPermissionsManager
-{
-    /**
-     * @param Member $current_user
-     * @param string $entity_name
-     * @param array $data
-     * @return bool
-     */
-    public function canEditFields(Member $current_user, $entity_name, array $data);
+interface IPermissionsManager {
+  /**
+   * @param Member $current_user
+   * @param string $entity_name
+   * @param array $data
+   * @return bool
+   */
+  public function canEditFields(Member $current_user, $entity_name, array $data);
 }

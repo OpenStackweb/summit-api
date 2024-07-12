@@ -12,63 +12,61 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class SummitOwned
  * @package models\summit
  */
-trait SummitOwned
-{
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Summit")
-     * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
-     * @var Summit
-     */
-    protected $summit;
+trait SummitOwned {
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Summit")
+   * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
+   * @var Summit
+   */
+  protected $summit;
 
-    /**
-     * @param Summit $summit
-     */
-    public function setSummit(Summit $summit){
-        $this->summit = $summit;
+  /**
+   * @param Summit $summit
+   */
+  public function setSummit(Summit $summit) {
+    $this->summit = $summit;
+  }
+
+  /**
+   * @return Summit|null
+   */
+  public function getSummit(): ?Summit {
+    return $this->summit;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSummitId(): int {
+    try {
+      return is_null($this->summit) ? 0 : $this->summit->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return Summit|null
-     */
-    public function getSummit():?Summit{
-        return $this->summit;
+  /**
+   * @return bool
+   */
+  public function hasSummit(): bool {
+    return $this->getSummitId() > 0;
+  }
+
+  /**
+   * @var int
+   */
+  public $former_summit_id = 0;
+
+  public function clearSummit(): void {
+    if ($this->former_summit_id == 0) {
+      $this->former_summit_id = is_null($this->summit) ? 0 : $this->summit->getId();
     }
-
-    /**
-     * @return int
-     */
-    public function getSummitId():int{
-        try {
-            return is_null($this->summit) ? 0 : $this->summit->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasSummit():bool{
-        return $this->getSummitId() > 0;
-    }
-
-    /**
-     * @var int
-     */
-    public $former_summit_id = 0;
-
-    public function clearSummit():void{
-        if ($this->former_summit_id == 0) {
-            $this->former_summit_id = is_null($this->summit) ? 0 : $this->summit->getId();
-        }
-        $this->summit = null;
-    }
+    $this->summit = null;
+  }
 }

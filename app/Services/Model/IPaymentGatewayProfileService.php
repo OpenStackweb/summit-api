@@ -19,31 +19,34 @@ use models\summit\Summit;
  * Interface IPaymentGatewayProfileService
  * @package App\Services\Model
  */
-interface IPaymentGatewayProfileService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return PaymentGatewayProfile|null
-     * @throws ValidationException
-     */
-    public function addPaymentProfile(Summit $summit, array $payload):?PaymentGatewayProfile;
+interface IPaymentGatewayProfileService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return PaymentGatewayProfile|null
+   * @throws ValidationException
+   */
+  public function addPaymentProfile(Summit $summit, array $payload): ?PaymentGatewayProfile;
 
-    /**
-     * @param Summit $summit
-     * @param int $child_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deletePaymentProfile(Summit $summit, int $child_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $child_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deletePaymentProfile(Summit $summit, int $child_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $child_id
-     * @param array $payload
-     * @return PaymentGatewayProfile|null
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updatePaymentProfile(Summit $summit, int $child_id, array $payload):?PaymentGatewayProfile;
+  /**
+   * @param Summit $summit
+   * @param int $child_id
+   * @param array $payload
+   * @return PaymentGatewayProfile|null
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updatePaymentProfile(
+    Summit $summit,
+    int $child_id,
+    array $payload,
+  ): ?PaymentGatewayProfile;
 }

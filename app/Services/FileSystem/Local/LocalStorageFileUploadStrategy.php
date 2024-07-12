@@ -16,12 +16,10 @@ use App\Services\FileSystem\AbstractFileUploadStrategy;
  * Class LocalStorageFileUploadStrategy
  * @package App\Services\FileSystem\Local
  */
-final class LocalStorageFileUploadStrategy extends AbstractFileUploadStrategy
-{
-    const Driver = 'local';
+final class LocalStorageFileUploadStrategy extends AbstractFileUploadStrategy {
+  const Driver = "local";
 
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

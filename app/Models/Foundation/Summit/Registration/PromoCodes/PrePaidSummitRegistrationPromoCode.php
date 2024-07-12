@@ -13,34 +13,32 @@
  **/
 
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PrePaidSummitRegistrationPromoCode")
  * Class PrePaidSummitRegistrationPromoCode
  * @package models\summit
  */
-class PrePaidSummitRegistrationPromoCode
-    extends SummitRegistrationPromoCode
-{
-    use PrePaidPromoCodeTrait;
-    const ClassName = 'PRE_PAID_PROMO_CODE';
+class PrePaidSummitRegistrationPromoCode extends SummitRegistrationPromoCode {
+  use PrePaidPromoCodeTrait;
+  const ClassName = "PRE_PAID_PROMO_CODE";
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 }

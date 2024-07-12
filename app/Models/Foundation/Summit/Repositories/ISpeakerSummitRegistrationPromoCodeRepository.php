@@ -16,41 +16,42 @@ use models\utils\IBaseRepository;
  * Interface ISpeakerSummitRegistrationPromoCodeRepository
  * @package models\summit
  */
-interface ISpeakerSummitRegistrationPromoCodeRepository
-    extends IBaseRepository
-{
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
-     */
-    public function getBySpeakerAndSummit(PresentationSpeaker $speaker, Summit $summit);
+interface ISpeakerSummitRegistrationPromoCodeRepository extends IBaseRepository {
+  /**
+   * @param PresentationSpeaker $speaker
+   * @param Summit $summit
+   * @return SpeakerSummitRegistrationPromoCode
+   */
+  public function getBySpeakerAndSummit(PresentationSpeaker $speaker, Summit $summit);
 
-    /**
-     * @param string $code
-     * @param Summit $summit
-     * @return bool
-     */
-    public function isAssignedCode($code, Summit $summit);
+  /**
+   * @param string $code
+   * @param Summit $summit
+   * @return bool
+   */
+  public function isAssignedCode($code, Summit $summit);
 
-    /**
-     * @param string $code
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
-     */
-    public function getNotAssignedCode($code, Summit $summit);
+  /**
+   * @param string $code
+   * @param Summit $summit
+   * @return SpeakerSummitRegistrationPromoCode
+   */
+  public function getNotAssignedCode($code, Summit $summit);
 
-    /**
-     * @param string $code
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
-     */
-    public function getAssignedCode($code, Summit $summit);
+  /**
+   * @param string $code
+   * @param Summit $summit
+   * @return SpeakerSummitRegistrationPromoCode
+   */
+  public function getAssignedCode($code, Summit $summit);
 
-    /**
-     * @param Summit $summit
-     * @param string $type
-     * @return SummitRegistrationPromoCode|null
-     */
-    public function getNextAvailableByType(Summit $summit, string $type):?SummitRegistrationPromoCode;
+  /**
+   * @param Summit $summit
+   * @param string $type
+   * @return SummitRegistrationPromoCode|null
+   */
+  public function getNextAvailableByType(
+    Summit $summit,
+    string $type,
+  ): ?SummitRegistrationPromoCode;
 }

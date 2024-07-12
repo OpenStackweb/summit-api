@@ -24,48 +24,38 @@ use Closure;
  * Trait RequestProcessor
  * @package App\Http\Controllers
  */
-trait RequestProcessor
-{
-    /**
-     * @param Closure $callback
-     * @return mixed
-     */
-    public function processRequest(Closure $callback){
-        try{
-            return $callback($this);
-        }
-        catch (AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages(), $ex->getCode());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch(HTTP403ForbiddenException $ex){
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch(HTTP400BadRequestException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+trait RequestProcessor {
+  /**
+   * @param Closure $callback
+   * @return mixed
+   */
+  public function processRequest(Closure $callback) {
+    try {
+      return $callback($this);
+    } catch (AuthzException $ex) {
+      Log::warning($ex);
+      return $this->error403($ex->getMessage());
+    } catch (\InvalidArgumentException $ex) {
+      Log::warning($ex);
+      return $this->error400();
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412($ex->getMessages(), $ex->getCode());
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404($ex->getMessage());
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (HTTP400BadRequestException $ex) {
+      Log::warning($ex);
+      return $this->error400();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

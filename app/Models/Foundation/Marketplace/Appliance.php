@@ -11,22 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineApplianceRepository")
  * @ORM\Table(name="Appliance")
  * Class Appliance
  * @package App\Models\Foundation\Marketplace
  */
-class Appliance extends OpenStackImplementation
-{
-    const ClassName = 'Appliance';
+class Appliance extends OpenStackImplementation {
+  const ClassName = "Appliance";
 
-    /**
-     * @return string
-     */
-    public function getClassName():string
-    {
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 }

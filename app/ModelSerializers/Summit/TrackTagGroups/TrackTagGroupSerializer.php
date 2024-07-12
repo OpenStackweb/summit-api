@@ -20,61 +20,63 @@ use ModelSerializers\SilverStripeSerializer;
  * Class TrackTagGroupSerializer
  * @package App\ModelSerializers\Summit\TrackTagGroups
  */
-final class TrackTagGroupSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'         => 'name:json_string',
-        'Label'        => 'label:json_string',
-        'Order'        => 'order:json_int',
-        'Mandatory'    => 'is_mandatory:json_boolean',
-        'SummitId'     => 'summit_id:json_int',
-    ];
+final class TrackTagGroupSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Label" => "label:json_string",
+    "Order" => "order:json_int",
+    "Mandatory" => "is_mandatory:json_boolean",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $track_tag_group = $this->object;
-        if (!$track_tag_group instanceof TrackTagGroup) return [];
-        $allowed_tags = [];
-
-        foreach($track_tag_group->getAllowedTags() as $allowed_tag){
-            $allowed_tags[] = $allowed_tag->getId();
-        }
-
-        $values['allowed_tags'] = $allowed_tags;
-
-        if (!empty($expand)) {
-            $relations = explode(',', $expand);
-            foreach ($relations as $relation) {
-                switch (trim($relation)) {
-
-                    case 'allowed_tags':{
-                        unset($values['allowed_tags']);
-                        $allowed_tags = [];
-                        foreach($track_tag_group->getAllowedTags() as $allowed_tag){
-                            $allowed_tags[] = SerializerRegistry::getInstance()
-                                ->getSerializer($allowed_tag)
-                                ->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                        }
-                        $values['allowed_tags'] = $allowed_tags;
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $track_tag_group = $this->object;
+    if (!$track_tag_group instanceof TrackTagGroup) {
+      return [];
     }
+    $allowed_tags = [];
+
+    foreach ($track_tag_group->getAllowedTags() as $allowed_tag) {
+      $allowed_tags[] = $allowed_tag->getId();
+    }
+
+    $values["allowed_tags"] = $allowed_tags;
+
+    if (!empty($expand)) {
+      $relations = explode(",", $expand);
+      foreach ($relations as $relation) {
+        switch (trim($relation)) {
+          case "allowed_tags":
+            unset($values["allowed_tags"]);
+            $allowed_tags = [];
+            foreach ($track_tag_group->getAllowedTags() as $allowed_tag) {
+              $allowed_tags[] = SerializerRegistry::getInstance()
+                ->getSerializer($allowed_tag)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            $values["allowed_tags"] = $allowed_tags;
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

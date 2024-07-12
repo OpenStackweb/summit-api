@@ -16,17 +16,12 @@
  * Trait QRGeneratorTrait
  * @package models\summit
  */
-trait QRGeneratorTrait
-{
-    /**
-     * @param array $fields
-     * @return string
-     */
-    public function generateQRFromFields(array $fields):string{
-        return implode
-        (
-            IQREntity::QRRegistryFieldDelimiterChar,
-            $fields
-        );
-    }
+trait QRGeneratorTrait {
+  /**
+   * @param array $fields
+   * @return string
+   */
+  public function generateQRFromFields(array $fields): string {
+    return implode(IQREntity::QRRegistryFieldDelimiterChar, $fields);
+  }
 }

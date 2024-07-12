@@ -18,15 +18,13 @@ use App\Jobs\Emails\AbstractExcerptEmailJob;
  * Class PresentationSubmitterSelectionProcessExcerptEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
  */
-class PresentationSubmitterSelectionProcessExcerptEmail extends AbstractExcerptEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class PresentationSubmitterSelectionProcessExcerptEmail extends AbstractExcerptEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_EXCERPT";
 }

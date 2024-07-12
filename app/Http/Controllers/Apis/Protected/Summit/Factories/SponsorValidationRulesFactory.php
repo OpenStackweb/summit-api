@@ -17,55 +17,51 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SponsorValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "company_id" => "required|integer",
+      "featured_event_id" => "sometimes|integer",
+      "sponsorship_id" => "required|integer",
+      "is_published" => "sometimes|boolean",
+      "show_logo_in_event_page" => "sometimes|boolean",
+      "marquee" => "sometimes|string|max:150",
+      "intro" => "sometimes|string|max:1500",
+      "external_link" => "sometimes|url|max:255",
+      "video_link" => "sometimes|url|max:255",
+      "chat_link" => "sometimes|url|max:255",
+      "side_image_alt_text" => "sometimes|string|max:255",
+      "header_image_alt_text" => "sometimes|string|max:255",
+      "header_image_mobile_alt_text" => "sometimes|string|max:255",
+      "carousel_advertise_image_alt_text" => "sometimes|string|max:255",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'company_id' => 'required|integer',
-            'featured_event_id' => 'sometimes|integer',
-            'sponsorship_id' => 'required|integer',
-            'is_published'   => 'sometimes|boolean',
-            'show_logo_in_event_page'   => 'sometimes|boolean',
-            'marquee' => 'sometimes|string|max:150',
-            'intro' => 'sometimes|string|max:1500',
-            'external_link' => 'sometimes|url|max:255',
-            'video_link' => 'sometimes|url|max:255',
-            'chat_link'=> 'sometimes|url|max:255',
-            'side_image_alt_text' => 'sometimes|string|max:255',
-            'header_image_alt_text' => 'sometimes|string|max:255',
-            'header_image_mobile_alt_text' => 'sometimes|string|max:255',
-            'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'company_id'     => 'sometimes|integer',
-            'featured_event_id' => 'sometimes|integer',
-            'sponsorship_id' => 'sometimes|integer',
-            'order'          => 'sometimes|integer|min:1',
-            'is_published'   => 'sometimes|boolean',
-            'show_logo_in_event_page'   => 'sometimes|boolean',
-            'marquee' => 'sometimes|string|max:150',
-            'intro' => 'sometimes|string|max:1500',
-            'external_link' => 'sometimes|string|max:255',
-            'video_link' => 'sometimes|string|max:255',
-            'chat_link'=> 'sometimes|string|max:255',
-            'side_image_alt_text' => 'sometimes|string|max:255',
-            'header_image_alt_text' => 'sometimes|string|max:255',
-            'header_image_mobile_alt_text' => 'sometimes|string|max:255',
-            'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "company_id" => "sometimes|integer",
+      "featured_event_id" => "sometimes|integer",
+      "sponsorship_id" => "sometimes|integer",
+      "order" => "sometimes|integer|min:1",
+      "is_published" => "sometimes|boolean",
+      "show_logo_in_event_page" => "sometimes|boolean",
+      "marquee" => "sometimes|string|max:150",
+      "intro" => "sometimes|string|max:1500",
+      "external_link" => "sometimes|string|max:255",
+      "video_link" => "sometimes|string|max:255",
+      "chat_link" => "sometimes|string|max:255",
+      "side_image_alt_text" => "sometimes|string|max:255",
+      "header_image_alt_text" => "sometimes|string|max:255",
+      "header_image_mobile_alt_text" => "sometimes|string|max:255",
+      "carousel_advertise_image_alt_text" => "sometimes|string|max:255",
+    ];
+  }
 }

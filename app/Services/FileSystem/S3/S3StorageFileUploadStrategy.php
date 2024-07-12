@@ -16,13 +16,10 @@ use App\Services\FileSystem\AbstractFileUploadStrategy;
  * Class S3StorageFileUploadStrategy
  * @package App\Services\FileSystem\S3
  */
-final class S3StorageFileUploadStrategy extends AbstractFileUploadStrategy
-{
+final class S3StorageFileUploadStrategy extends AbstractFileUploadStrategy {
+  const Driver = "s3";
 
-    const Driver = "s3";
-
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

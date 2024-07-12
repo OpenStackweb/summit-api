@@ -13,7 +13,7 @@
  **/
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
@@ -21,35 +21,31 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class RegionalSupportedCompanyService
  * @package App\Models\Foundation\Marketplace
  */
-class RegionalSupportedCompanyService extends CompanyService
-{
-    const ClassName = 'RegionalSupportedCompanyService';
+class RegionalSupportedCompanyService extends CompanyService {
+  const ClassName = "RegionalSupportedCompanyService";
 
-    /**
-     * @ORM\OneToMany(targetEntity="RegionalSupport", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
-     * @var RegionalSupport[]
-     */
-    protected $regional_supports;
+  /**
+   * @ORM\OneToMany(targetEntity="RegionalSupport", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
+   * @var RegionalSupport[]
+   */
+  protected $regional_supports;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->regional_supports = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->regional_supports = new ArrayCollection();
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName():string
-    {
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    /**
-     * @return RegionalSupport[]
-     */
-    public function getRegionalSupports()
-    {
-        return $this->regional_supports->toArray();
-    }
+  /**
+   * @return RegionalSupport[]
+   */
+  public function getRegionalSupports() {
+    return $this->regional_supports->toArray();
+  }
 }

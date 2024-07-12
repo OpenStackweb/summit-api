@@ -23,90 +23,85 @@ use models\summit\SummitBadgeViewTypeFactory;
  * Class BadgeViewTypeService
  * @package App\Services\Model\Imp
  */
-final class BadgeViewTypeService
-extends AbstractService
-    implements IBadgeViewTypeService
+final class BadgeViewTypeService extends AbstractService implements IBadgeViewTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitBadgeViewType|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): ?SummitBadgeViewType {
+    return $this->tx_service->transaction(function () use ($summit, $payload) {
+      if (boolval($payload["is_default"])) {
+        $formerDefault = $summit->getDefaultBadgeViewType();
+        if (!is_null($formerDefault)) {
+          throw new ValidationException(sprintf("There is a former default view."));
+        }
+      }
 
-{
+      $name = trim($payload["name"]);
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitBadgeViewType|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload): ?SummitBadgeViewType
-    {
-        return $this->tx_service->transaction(function() use($summit, $payload){
+      $former = $summit->getBadgeViewTypeByName($name);
+      if (!is_null($former)) {
+        throw new ValidationException(sprintf("There is a former view called %s.", $name));
+      }
 
-            if(boolval($payload['is_default'])){
-                $formerDefault = $summit->getDefaultBadgeViewType();
-                if(!is_null($formerDefault))
-                    throw new ValidationException(sprintf("There is a former default view."));
-            }
+      $viewType = SummitBadgeViewTypeFactory::build($payload);
 
-            $name = trim($payload['name']);
+      $summit->addBadgeViewType($viewType);
 
-            $former = $summit->getBadgeViewTypeByName($name);
-            if(!is_null($former))
-                throw new ValidationException(sprintf("There is a former view called %s.", $name));
+      return $viewType;
+    });
+  }
 
-            $viewType =  SummitBadgeViewTypeFactory::build($payload);
+  /**
+   * @param Summit $summit
+   * @param int $id
+   * @param array $payload
+   * @return SummitBadgeViewType|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(Summit $summit, int $id, array $payload): ?SummitBadgeViewType {
+    return $this->tx_service->transaction(function () use ($summit, $id, $payload) {
+      $viewType = $summit->getBadgeViewTypeById($id);
+      if (is_null($viewType)) {
+        throw new EntityNotFoundException("View Type not found.");
+      }
 
-            $summit->addBadgeViewType($viewType);
+      if (boolval($payload["is_default"])) {
+        $formerDefault = $summit->getDefaultBadgeViewType();
+        if (!is_null($formerDefault) && $formerDefault->getId() !== $id) {
+          throw new ValidationException(sprintf("There is a former default view."));
+        }
+      }
 
-            return $viewType;
+      $name = trim($payload["name"]);
 
-        });
-    }
+      $former = $summit->getBadgeViewTypeByName($name);
+      if (!is_null($former) && $former->getId() !== $id) {
+        throw new ValidationException(sprintf("There is a former view called %s.", $name));
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $id
-     * @param array $payload
-     * @return SummitBadgeViewType|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $id, array $payload): ?SummitBadgeViewType
-    {
-        return $this->tx_service->transaction(function() use($summit, $id, $payload){
+      return SummitBadgeViewTypeFactory::populate($viewType, $payload);
+    });
+  }
 
-            $viewType = $summit->getBadgeViewTypeById($id);
-            if(is_null($viewType))
-                throw new EntityNotFoundException("View Type not found.");
+  /**
+   * @param Summit $summit
+   * @param int $id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $id): void {
+    $this->tx_service->transaction(function () use ($summit, $id) {
+      $viewType = $summit->getBadgeViewTypeById($id);
+      if (is_null($viewType)) {
+        throw new EntityNotFoundException("View Type not found.");
+      }
 
-            if(boolval($payload['is_default'])){
-                $formerDefault = $summit->getDefaultBadgeViewType();
-                if(!is_null($formerDefault) && $formerDefault->getId() !== $id)
-                    throw new ValidationException(sprintf("There is a former default view."));
-            }
-
-            $name = trim($payload['name']);
-
-            $former = $summit->getBadgeViewTypeByName($name);
-            if(!is_null($former) && $former->getId() !== $id)
-                throw new ValidationException(sprintf("There is a former view called %s.", $name));
-
-            return SummitBadgeViewTypeFactory::populate($viewType, $payload);
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $id): void
-    {
-        $this->tx_service->transaction(function () use ($summit, $id) {
-            $viewType = $summit->getBadgeViewTypeById($id);
-            if(is_null($viewType))
-                throw new EntityNotFoundException("View Type not found.");
-
-            $summit->removeBadgeViewType($viewType);
-        });
-    }
+      $summit->removeBadgeViewType($viewType);
+    });
+  }
 }

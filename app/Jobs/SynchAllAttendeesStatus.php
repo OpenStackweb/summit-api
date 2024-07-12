@@ -27,43 +27,38 @@ use models\summit\ISummitRepository;
  * Class SynchAllAttendeesStatus
  * @package App\Jobs
  */
-final class SynchAllAttendeesStatus implements ShouldQueue
-{
-    public $tries = 1;
+final class SynchAllAttendeesStatus implements ShouldQueue {
+  public $tries = 1;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $summit_id;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * SynchAllAttendeesStatus constructor.
-     * @param int $summit_id
-     */
-    public function __construct(int $summit_id)
-    {
-        $this->summit_id = $summit_id;
-    }
+  /**
+   * SynchAllAttendeesStatus constructor.
+   * @param int $summit_id
+   */
+  public function __construct(int $summit_id) {
+    $this->summit_id = $summit_id;
+  }
 
-    /**
-     * @param IAttendeeService $service
-     * @param ISummitRepository $repository
-     * @param ISummitAttendeeRepository $attendeeRepository
-     * @param ITransactionService $tx_service
-     * @return void
-     * @throws \Exception
-     */
-    public function handle(IAttendeeService $service)
-    {
-        Log::debug(sprintf("SynchAllAttendeesStatus::handle summit %s", $this->summit_id));
-        $service->resynchAttendeesStatusBySummit($this->summit_id);
-    }
+  /**
+   * @param IAttendeeService $service
+   * @param ISummitRepository $repository
+   * @param ISummitAttendeeRepository $attendeeRepository
+   * @param ITransactionService $tx_service
+   * @return void
+   * @throws \Exception
+   */
+  public function handle(IAttendeeService $service) {
+    Log::debug(sprintf("SynchAllAttendeesStatus::handle summit %s", $this->summit_id));
+    $service->resynchAttendeesStatusBySummit($this->summit_id);
+  }
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }
-

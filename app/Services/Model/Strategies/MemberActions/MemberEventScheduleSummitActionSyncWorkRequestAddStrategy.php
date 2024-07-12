@@ -22,63 +22,66 @@ use App\Services\Model\MemberScheduleWorkQueueManager;
  * Class MemberEventScheduleSummitActionSyncWorkRequestAddStrategy
  * @package App\Services\Model\Strategies\MemberActions
  */
-final class MemberEventScheduleSummitActionSyncWorkRequestAddStrategy
-implements ICalendarSyncWorkRequestPreProcessorStrategy
-{
+final class MemberEventScheduleSummitActionSyncWorkRequestAddStrategy implements
+  ICalendarSyncWorkRequestPreProcessorStrategy {
+  /**
+   * @var MemberScheduleWorkQueueManager
+   */
+  private $work_queue_manager;
 
-    /**
-     * @var MemberScheduleWorkQueueManager
-     */
-    private $work_queue_manager;
+  /**
+   * @var IAbstractCalendarSyncWorkRequestRepository
+   */
+  private $work_request_repository;
 
-    /**
-     * @var IAbstractCalendarSyncWorkRequestRepository
-     */
-    private $work_request_repository;
+  /**
+   * MemberEventScheduleSummitActionSyncWorkRequestAddStrategy constructor.
+   * @param MemberScheduleWorkQueueManager $work_queue_manager
+   * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
+   */
+  public function __construct(
+    MemberScheduleWorkQueueManager $work_queue_manager,
+    IAbstractCalendarSyncWorkRequestRepository $work_request_repository,
+  ) {
+    $this->work_queue_manager = $work_queue_manager;
+    $this->work_request_repository = $work_request_repository;
+  }
 
-    /**
-     * MemberEventScheduleSummitActionSyncWorkRequestAddStrategy constructor.
-     * @param MemberScheduleWorkQueueManager $work_queue_manager
-     * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
-     */
-    public function __construct
-    (
-        MemberScheduleWorkQueueManager $work_queue_manager,
-        IAbstractCalendarSyncWorkRequestRepository $work_request_repository
-    )
-    {
-        $this->work_queue_manager      = $work_queue_manager;
-        $this->work_request_repository = $work_request_repository;
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return AbstractCalendarSyncWorkRequest|null
+   */
+  public function process(AbstractCalendarSyncWorkRequest $request) {
+    if (!$request instanceof MemberEventScheduleSummitActionSyncWorkRequest) {
+      return null;
     }
-
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return AbstractCalendarSyncWorkRequest|null
-     */
-    public function process(AbstractCalendarSyncWorkRequest $request)
-    {
-        if(!$request instanceof MemberEventScheduleSummitActionSyncWorkRequest) return null;
-        $summit_event_id      = $request->getSummitEventId();
-        $calendar_sync_info   = $request->getCalendarSyncInfo();
-        // check if there is a former add, disregard and omit
-        $pending_requests     = $this->work_queue_manager->getSummitEventRequestFor($calendar_sync_info->getId(), $summit_event_id);
-        if(count($pending_requests) > 0 ) {
-            foreach ($pending_requests as $pending_request) {
-                if($request->getType() == AbstractCalendarSyncWorkRequest::TypeUpdate)
-                {
-                    $this->work_queue_manager->registerRequestForDelete($request);
-                    continue;
-                }
-                if($this->work_queue_manager->removeRequest($pending_request))
-                    $this->work_request_repository->delete($pending_request);
-            }
-            // if the event is not already synchronized disregard add
-            if($request->getOwner()->isEventSynchronized($calendar_sync_info, $summit_event_id)) {
-                $this->work_queue_manager->unRegisterRequestForDelete($request, AbstractCalendarSyncWorkRequest::TypeUpdate);
-                $this->work_request_repository->delete($request);
-                return null;
-            }
+    $summit_event_id = $request->getSummitEventId();
+    $calendar_sync_info = $request->getCalendarSyncInfo();
+    // check if there is a former add, disregard and omit
+    $pending_requests = $this->work_queue_manager->getSummitEventRequestFor(
+      $calendar_sync_info->getId(),
+      $summit_event_id,
+    );
+    if (count($pending_requests) > 0) {
+      foreach ($pending_requests as $pending_request) {
+        if ($request->getType() == AbstractCalendarSyncWorkRequest::TypeUpdate) {
+          $this->work_queue_manager->registerRequestForDelete($request);
+          continue;
         }
-        return $request;
+        if ($this->work_queue_manager->removeRequest($pending_request)) {
+          $this->work_request_repository->delete($pending_request);
+        }
+      }
+      // if the event is not already synchronized disregard add
+      if ($request->getOwner()->isEventSynchronized($calendar_sync_info, $summit_event_id)) {
+        $this->work_queue_manager->unRegisterRequestForDelete(
+          $request,
+          AbstractCalendarSyncWorkRequest::TypeUpdate,
+        );
+        $this->work_request_repository->delete($request);
+        return null;
+      }
     }
+    return $request;
+  }
 }

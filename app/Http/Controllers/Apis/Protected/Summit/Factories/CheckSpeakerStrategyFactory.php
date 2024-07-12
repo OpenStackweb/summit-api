@@ -18,27 +18,25 @@ use models\oauth2\IResourceServerContext;
  * Class CheckSpeakerStrategyFactory
  * @package App\Http\Controllers
  */
-final class CheckSpeakerStrategyFactory
-{
-    const Me  = 'me';
-    const Own = 'own';
+final class CheckSpeakerStrategyFactory {
+  const Me = "me";
+  const Own = "own";
 
-    /**
-     * @param string $type
-     * @param IResourceServerContext $resource_server_context
-     * @return ICheckSpeakerStrategy|null
-     */
-    public static function build($type, IResourceServerContext $resource_server_context){
-        $strategy = null;
-        switch(strtolower($type))
-        {
-            case 'me':
-                $strategy = new CheckMeSpeakerStrategy($resource_server_context);
-                break;
-            default:
-                throw new \InvalidArgumentException('not recognized type!');
-                break;
-        }
-        return $strategy;
+  /**
+   * @param string $type
+   * @param IResourceServerContext $resource_server_context
+   * @return ICheckSpeakerStrategy|null
+   */
+  public static function build($type, IResourceServerContext $resource_server_context) {
+    $strategy = null;
+    switch (strtolower($type)) {
+      case "me":
+        $strategy = new CheckMeSpeakerStrategy($resource_server_context);
+        break;
+      default:
+        throw new \InvalidArgumentException("not recognized type!");
+        break;
     }
+    return $strategy;
+  }
 }

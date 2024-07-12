@@ -16,14 +16,18 @@ use models\main\PushNotificationMessagePriority;
  * Interface IPushNotificationApi
  * @package services\apis
  */
-interface IPushNotificationApi
-{
-    /**
-     * @param string $to
-     * @param array $data
-     * @param string $priority
-     * @param null|int $ttl
-     * @return bool
-     */
-    function sendPush($to,  array $data, $priority = PushNotificationMessagePriority::Normal, $ttl = null);
+interface IPushNotificationApi {
+  /**
+   * @param string $to
+   * @param array $data
+   * @param string $priority
+   * @param null|int $ttl
+   * @return bool
+   */
+  function sendPush(
+    $to,
+    array $data,
+    $priority = PushNotificationMessagePriority::Normal,
+    $ttl = null,
+  );
 }

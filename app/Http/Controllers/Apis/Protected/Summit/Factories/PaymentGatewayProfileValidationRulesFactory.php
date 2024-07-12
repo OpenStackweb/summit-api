@@ -20,64 +20,64 @@ use models\summit\PaymentGatewayProfile;
  * Class PaymentGatewayProfileValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class PaymentGatewayProfileValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class PaymentGatewayProfileValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      $rules = [
+        "active" => "sometimes|boolean",
+        "application_type" =>
+          "sometimes|string|in:" . implode(",", IPaymentConstants::ValidApplicationTypes),
+        "provider" => "required|string|in:" . implode(",", IPaymentConstants::ValidProviderTypes),
+      ];
 
-        if($update){
-            $rules = [
-                'active'             => 'sometimes|boolean',
-                'application_type'   => 'sometimes|string|in:'.implode(',',IPaymentConstants::ValidApplicationTypes),
-                'provider'           => 'required|string|in:'.implode(',',IPaymentConstants::ValidProviderTypes),
-            ];
+      if (isset($data["provider"]) && $data["provider"] == IPaymentConstants::ProviderStripe) {
+        $rules = array_merge($rules, [
+          "test_mode_enabled" => "required|boolean",
+          "live_secret_key" => "sometimes|string",
+          "live_publishable_key" => "required_with:live_secret_key|string",
+          "test_secret_key" => "sometimes|string",
+          "test_publishable_key" => "required_with:test_secret_key|string",
+          "send_email_receipt" => "sometimes|boolean",
+        ]);
+      }
 
-            if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderStripe){
-                $rules = array_merge($rules, [
-                    'test_mode_enabled'    => 'required|boolean',
-                    'live_secret_key'      => 'sometimes|string',
-                    'live_publishable_key' => 'required_with:live_secret_key|string',
-                    'test_secret_key'      => 'sometimes|string',
-                    'test_publishable_key' => 'required_with:test_secret_key|string',
-                    'send_email_receipt'   => 'sometimes|boolean',
-                ]);
-            }
-
-            if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderLawPay){
-                $rules = array_merge($rules, [
-                    'merchant_account_id' => 'sometimes|string',
-                ]);
-            }
-            return $rules;
-        }
-
-        $rules =  [
-            'active'             => 'required|boolean',
-            'application_type'   => 'required|string|in:'.implode(',',IPaymentConstants::ValidApplicationTypes),
-            'provider'           => 'required|string|in:'.implode(',',IPaymentConstants::ValidProviderTypes),
-        ];
-
-        if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderStripe){
-            $rules = array_merge($rules, [
-                'test_mode_enabled'    => 'required|boolean',
-                'live_secret_key'      => 'sometimes|string',
-                'live_publishable_key' => 'required_with:live_secret_key|string',
-                'test_secret_key'      => 'sometimes|string',
-                'test_publishable_key' => 'required_with:test_secret_key|string',
-                'send_email_receipt'   => 'sometimes|boolean',
-            ]);
-        }
-
-        if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderLawPay){
-            $rules = array_merge($rules, [
-                'merchant_account_id' => 'sometimes|string',
-            ]);
-        }
-
-        return $rules;
+      if (isset($data["provider"]) && $data["provider"] == IPaymentConstants::ProviderLawPay) {
+        $rules = array_merge($rules, [
+          "merchant_account_id" => "sometimes|string",
+        ]);
+      }
+      return $rules;
     }
+
+    $rules = [
+      "active" => "required|boolean",
+      "application_type" =>
+        "required|string|in:" . implode(",", IPaymentConstants::ValidApplicationTypes),
+      "provider" => "required|string|in:" . implode(",", IPaymentConstants::ValidProviderTypes),
+    ];
+
+    if (isset($data["provider"]) && $data["provider"] == IPaymentConstants::ProviderStripe) {
+      $rules = array_merge($rules, [
+        "test_mode_enabled" => "required|boolean",
+        "live_secret_key" => "sometimes|string",
+        "live_publishable_key" => "required_with:live_secret_key|string",
+        "test_secret_key" => "sometimes|string",
+        "test_publishable_key" => "required_with:test_secret_key|string",
+        "send_email_receipt" => "sometimes|boolean",
+      ]);
+    }
+
+    if (isset($data["provider"]) && $data["provider"] == IPaymentConstants::ProviderLawPay) {
+      $rules = array_merge($rules, [
+        "merchant_account_id" => "sometimes|string",
+      ]);
+    }
+
+    return $rules;
+  }
 }

@@ -33,422 +33,526 @@ use models\summit\SummitVenueRoom;
  * Class SummitMetricService
  * @package App\Services\Model\Imp
  */
-final class SummitMetricService
-    extends AbstractService
-    implements ISummitMetricService
-{
+final class SummitMetricService extends AbstractService implements ISummitMetricService {
+  /**
+   * @var ISummitMetricRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISummitMetricRepository
-     */
-    private $repository;
+  /**
+   * @var ISummitEventRepository
+   */
+  private $event_repository;
 
-    /**
-     * @var ISummitEventRepository
-     */
-    private $event_repository;
+  /**
+   * SummitMetricService constructor.
+   * @param ISummitMetricRepository $repository
+   * @param ISummitEventRepository $event_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    ISummitMetricRepository $repository,
+    ISummitEventRepository $event_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->repository = $repository;
+    $this->event_repository = $event_repository;
+  }
 
-    /**
-     * SummitMetricService constructor.
-     * @param ISummitMetricRepository $repository
-     * @param ISummitEventRepository $event_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        ISummitMetricRepository $repository,
-        ISummitEventRepository  $event_repository,
-        ITransactionService     $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->repository = $repository;
-        $this->event_repository = $event_repository;
-    }
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param array $payload
+   * @return SummitMetric
+   * @throws \Exception
+   */
+  public function enter(Summit $summit, Member $current_member, array $payload): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::enter summit %s member %s payload %s",
+        $summit->getId(),
+        $current_member->getId(),
+        json_encode($payload),
+      ),
+    );
+    $metric = $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
+      $metric = SummitMetricFactory::build($current_member, $payload);
+      $metric->setMember($current_member);
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param array $payload
-     * @return SummitMetric
-     * @throws \Exception
-     */
-    public function enter(Summit $summit, Member $current_member, array $payload): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::enter summit %s member %s payload %s", $summit->getId(), $current_member->getId(), json_encode($payload)));
-        $metric = $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
+      $source_id = null;
+      if (isset($payload["source_id"])) {
+        $source_id = intval($payload["source_id"]);
+      }
 
-            $metric = SummitMetricFactory::build($current_member, $payload);
-            $metric->setMember($current_member);
+      $formerMetric = $this->repository->getNonAbandoned(
+        $current_member,
+        $metric->getType(),
+        $source_id,
+      );
 
-            $source_id = null;
-            if (isset($payload['source_id']))
-                $source_id = intval($payload['source_id']);
-
-            $formerMetric = $this->repository->getNonAbandoned($current_member, $metric->getType(), $source_id);
-
-            if (!is_null($formerMetric)) {
-                // mark as leave
-                Log::debug(sprintf("SummitMetricService::enter there is a former metric (%s)", $formerMetric->getId()));
-                $formerMetric->abandon();
-            }
-
-            Log::debug(sprintf("SummitMetricService::enter continuing"));
-
-            if ($metric instanceof SummitEventAttendanceMetric) {
-                Log::debug(sprintf("SummitMetricService::enter SummitEventAttendanceMetric"));
-                if (!isset($payload['source_id'])) {
-                    throw new ValidationException("source_id param is missing.");
-                }
-                $event_id = intval($payload['source_id']);
-                $event = $this->event_repository->getById($event_id);
-
-                if (is_null($event) || !$event instanceof SummitEvent) {
-                    throw new EntityNotFoundException(sprintf("Event %s does not belongs to summit %s.", $event_id, $summit->getId()));
-                }
-
-                if (!$event->isPublished()) {
-                    throw new ValidationException(sprintf("Event %s is not published.", $event->getId()));
-                }
-                $metric->markAsVirtual();
-                $metric->setEvent($event);
-            }
-
-            if ($metric instanceof SummitSponsorMetric) {
-                Log::debug(sprintf("SummitMetricService::enter SummitSponsorMetric"));
-                if (!isset($payload['source_id'])) {
-                    throw new ValidationException("source_id param is missing.");
-                }
-                $sponsor_id = intval($payload['source_id']);
-
-                $sponsor = $summit->getSummitSponsorById($sponsor_id);
-
-                if (is_null($sponsor)) {
-                    throw new EntityNotFoundException(sprintf("Sponsor %s does not belongs to summit %s.", $sponsor_id, $summit->getId()));
-                }
-                $metric->setSponsor($sponsor);
-            }
-
-            Log::debug(sprintf("SummitMetricService::enter adding"));
-            $metric->setSummit($summit);
-            $this->repository->add($metric);
-            return $metric;
-        });
-
-        Log::debug(sprintf("SummitMetricService::enter summit %s member %s payload %s created metric %s", $summit->getId(), $current_member->getId(), json_encode($payload), $metric->getId()));
-
-        return $metric;
-    }
-
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param array $payload
-     * @return SummitMetric
-     * @throws \Exception
-     */
-    public function leave(Summit $summit, Member $current_member, array $payload): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::leave summit %s member %s payload %s", $summit->getId(), $current_member->getId(), json_encode($payload)));
-
-        return $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
-
-            if (!isset($payload['type']))
-                throw new ValidationException("Type is required.");
-
-            $source_id = null;
-            if (isset($payload['source_id']))
-                $source_id = intval($payload['source_id']);
-
-            $formerMetric = $this->repository->getNonAbandoned($current_member, trim($payload['type']), $source_id);
-
-            if (!$formerMetric)
-                throw new ValidationException(sprintf("User %s has not a pending %s metric", $current_member->getId(), $payload['type']));
-
-            $formerMetric->abandon();
-
-            return $formerMetric;
-        });
-    }
-
-
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param int $attendee_id
-     * @param array $required_access_levels
-     * @param int|null $room_id
-     * @param int|null $event_id
-     * @param bool $check_ingress
-     * @return SummitMetric
-     * @throws \Exception
-     */
-    private function registerAttendeePhysicalIngress
-    (
-        Summit $summit,
-        Member $current_user,
-        int    $attendee_id,
-        array  $required_access_levels = [],
-        ?int   $room_id = null,
-        ?int   $event_id = null,
-        bool   $check_ingress = false
-    ): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
-
-        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $required_access_levels, $room_id, $event_id, $check_ingress) {
-
-            $attendee = $summit->getAttendeeById($attendee_id);
-            if (is_null($attendee))
-                throw new EntityNotFoundException("Attendee not found.");
-
-            if (!$attendee->checkAccessLevels($required_access_levels)) {
-                throw new ValidationException(sprintf("Attendee %s is not authorized.", $attendee->getEmail()));
-            }
-
-            $event = null;
-            $room = null;
-
-            if (!is_null($room_id)) {
-                $room = $summit->getLocation($room_id);
-                if (is_null($room) || !$room instanceof SummitVenueRoom)
-                    throw new EntityNotFoundException("Room not found.");
-            }
-
-            if (!is_null($event_id)) {
-                $event = $summit->getEvent($event_id);
-                if (is_null($event))
-                    throw new EntityNotFoundException("Event not found.");
-            }
-
-            $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
-
-            if ($check_ingress && !is_null($metric)) {
-               throw new ValidationException
-               (
-                   sprintf
-                   (
-                       "There is already a registered ingress scan for attendee %s",
-                       $attendee->getEmail()
-                   )
-               );
-            }
-
-            $metric = SummitEventAttendanceMetric::buildOnSiteMetric($current_user, $attendee, $room, $event);
-            $metric->setSummit($summit);
-            $this->repository->add($metric);
-
-            return $metric;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $attendee_id
-     * @param array $required_access_levels
-     * @param int|null $room_id
-     * @param int|null $event_id
-     * @return SummitMetric
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    private function registerAttendeePhysicalEgress
-    (
-        Summit $summit,
-        Member $current_user,
-        int    $attendee_id,
-        array  $required_access_levels = [],
-        ?int   $room_id = null,
-        ?int   $event_id = null
-    ): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalEgress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
-        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $required_access_levels, $room_id, $event_id) {
-            $attendee = $summit->getAttendeeById($attendee_id);
-            if (is_null($attendee))
-                throw new EntityNotFoundException("Attendee not found.");
-
-            if (!$attendee->checkAccessLevels($required_access_levels)) {
-                throw new ValidationException(sprintf("Attendee %s is not authorized.", $attendee->getEmail()));
-            }
-
-            $event = null;
-            $room = null;
-
-            if (!is_null($room_id)) {
-                $room = $summit->getLocation($room_id);
-                if (is_null($room) || !$room instanceof SummitVenueRoom)
-                    throw new EntityNotFoundException("Room mot found.");
-            }
-
-            if (!is_null($event_id)) {
-                $event = $summit->getEvent($event_id);
-                if (is_null($event))
-                    throw new EntityNotFoundException("Event not found.");
-            }
-
-            $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
-
-            if (!$metric) {
-
-                $metric = SummitEventAttendanceMetric::buildOnSiteMetric($current_user, $attendee, $room, $event);
-                $metric->setSummit($summit);
-                $this->repository->add($metric);
-            }
-
-            $metric->abandon();
-
-            return $metric;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param array $payload
-     * @return SummitMetric
-     */
-    public function onSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitMetricService::onSiteEnter summit %s payload %s",
-                $summit->getId(),
-                json_encode($payload)
-            )
+      if (!is_null($formerMetric)) {
+        // mark as leave
+        Log::debug(
+          sprintf(
+            "SummitMetricService::enter there is a former metric (%s)",
+            $formerMetric->getId(),
+          ),
         );
+        $formerMetric->abandon();
+      }
 
-        $room_id = $payload['room_id'] ?? null;
-        if(!is_null($room_id))
-            $room_id = intval($room_id);
+      Log::debug(sprintf("SummitMetricService::enter continuing"));
 
-        $event_id = $payload['event_id'] ?? null;
-        if(!is_null($event_id))
-            $event_id = intval($event_id);
+      if ($metric instanceof SummitEventAttendanceMetric) {
+        Log::debug(sprintf("SummitMetricService::enter SummitEventAttendanceMetric"));
+        if (!isset($payload["source_id"])) {
+          throw new ValidationException("source_id param is missing.");
+        }
+        $event_id = intval($payload["source_id"]);
+        $event = $this->event_repository->getById($event_id);
 
-        $check_ingress = false;
-        if(isset($payload['check_ingress']))
-            $check_ingress = to_boolean($payload['check_ingress']);
+        if (is_null($event) || !$event instanceof SummitEvent) {
+          throw new EntityNotFoundException(
+            sprintf("Event %s does not belongs to summit %s.", $event_id, $summit->getId()),
+          );
+        }
 
-        return $this->registerAttendeePhysicalIngress
-        (
-            $summit,
-            $current_user,
-            intval($payload['attendee_id']),
-            $payload['required_access_levels'] ?? [],
-            $room_id,
-            $event_id,
-            $check_ingress
+        if (!$event->isPublished()) {
+          throw new ValidationException(sprintf("Event %s is not published.", $event->getId()));
+        }
+        $metric->markAsVirtual();
+        $metric->setEvent($event);
+      }
+
+      if ($metric instanceof SummitSponsorMetric) {
+        Log::debug(sprintf("SummitMetricService::enter SummitSponsorMetric"));
+        if (!isset($payload["source_id"])) {
+          throw new ValidationException("source_id param is missing.");
+        }
+        $sponsor_id = intval($payload["source_id"]);
+
+        $sponsor = $summit->getSummitSponsorById($sponsor_id);
+
+        if (is_null($sponsor)) {
+          throw new EntityNotFoundException(
+            sprintf("Sponsor %s does not belongs to summit %s.", $sponsor_id, $summit->getId()),
+          );
+        }
+        $metric->setSponsor($sponsor);
+      }
+
+      Log::debug(sprintf("SummitMetricService::enter adding"));
+      $metric->setSummit($summit);
+      $this->repository->add($metric);
+      return $metric;
+    });
+
+    Log::debug(
+      sprintf(
+        "SummitMetricService::enter summit %s member %s payload %s created metric %s",
+        $summit->getId(),
+        $current_member->getId(),
+        json_encode($payload),
+        $metric->getId(),
+      ),
+    );
+
+    return $metric;
+  }
+
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param array $payload
+   * @return SummitMetric
+   * @throws \Exception
+   */
+  public function leave(Summit $summit, Member $current_member, array $payload): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::leave summit %s member %s payload %s",
+        $summit->getId(),
+        $current_member->getId(),
+        json_encode($payload),
+      ),
+    );
+
+    return $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
+      if (!isset($payload["type"])) {
+        throw new ValidationException("Type is required.");
+      }
+
+      $source_id = null;
+      if (isset($payload["source_id"])) {
+        $source_id = intval($payload["source_id"]);
+      }
+
+      $formerMetric = $this->repository->getNonAbandoned(
+        $current_member,
+        trim($payload["type"]),
+        $source_id,
+      );
+
+      if (!$formerMetric) {
+        throw new ValidationException(
+          sprintf(
+            "User %s has not a pending %s metric",
+            $current_member->getId(),
+            $payload["type"],
+          ),
         );
-    }
+      }
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param array $payload
-     * @return SummitMetric
-     */
-    public function onSiteLeave(Summit $summit, Member $current_user, array $payload): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::onSiteLeave summit %s payload %s", $summit->getId(), json_encode($payload)));
-        $room_id = $payload['room_id'] ?? null;
-        if(!is_null($room_id))
-            $room_id = intval($room_id);
-        $event_id = $payload['event_id'] ?? null;
-        if(!is_null($event_id))
-            $event_id = intval($event_id);
+      $formerMetric->abandon();
 
-        return $this->registerAttendeePhysicalEgress
-        (
-            $summit,
-            $current_user,
-            intval($payload['attendee_id']),
-            $payload['required_access_levels'] ?? [],
-            $room_id,
-            $event_id
+      return $formerMetric;
+    });
+  }
+
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param int $attendee_id
+   * @param array $required_access_levels
+   * @param int|null $room_id
+   * @param int|null $event_id
+   * @param bool $check_ingress
+   * @return SummitMetric
+   * @throws \Exception
+   */
+  private function registerAttendeePhysicalIngress(
+    Summit $summit,
+    Member $current_user,
+    int $attendee_id,
+    array $required_access_levels = [],
+    ?int $room_id = null,
+    ?int $event_id = null,
+    bool $check_ingress = false,
+  ): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ",
+        $summit->getId(),
+        $attendee_id,
+      ),
+    );
+
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $current_user,
+      $attendee_id,
+      $required_access_levels,
+      $room_id,
+      $event_id,
+      $check_ingress,
+    ) {
+      $attendee = $summit->getAttendeeById($attendee_id);
+      if (is_null($attendee)) {
+        throw new EntityNotFoundException("Attendee not found.");
+      }
+
+      if (!$attendee->checkAccessLevels($required_access_levels)) {
+        throw new ValidationException(
+          sprintf("Attendee %s is not authorized.", $attendee->getEmail()),
         );
-    }
+      }
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param array $payload
-     * @return SummitMetric
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function checkOnSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::checkOnSiteEnter summit %s payload %s", $summit->getId(), json_encode($payload)));
+      $event = null;
+      $room = null;
 
-        $room_id = $payload['room_id'] ?? null;
-        if(!is_null($room_id))
-            $room_id = intval($room_id);
+      if (!is_null($room_id)) {
+        $room = $summit->getLocation($room_id);
+        if (is_null($room) || !$room instanceof SummitVenueRoom) {
+          throw new EntityNotFoundException("Room not found.");
+        }
+      }
 
-        $event_id = $payload['event_id'] ?? null;
-        if(!is_null($event_id))
-            $event_id = intval($event_id);
+      if (!is_null($event_id)) {
+        $event = $summit->getEvent($event_id);
+        if (is_null($event)) {
+          throw new EntityNotFoundException("Event not found.");
+        }
+      }
 
-        return $this->checkAttendeePhysicalIngress
-        (
-            $summit,
-            $current_user,
-            intval($payload['attendee_id']),
-            $room_id,
-            $event_id
+      $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
+
+      if ($check_ingress && !is_null($metric)) {
+        throw new ValidationException(
+          sprintf(
+            "There is already a registered ingress scan for attendee %s",
+            $attendee->getEmail(),
+          ),
         );
+      }
+
+      $metric = SummitEventAttendanceMetric::buildOnSiteMetric(
+        $current_user,
+        $attendee,
+        $room,
+        $event,
+      );
+      $metric->setSummit($summit);
+      $this->repository->add($metric);
+
+      return $metric;
+    });
+  }
+
+  /**
+   * @param Summit $summit
+   * @param int $attendee_id
+   * @param array $required_access_levels
+   * @param int|null $room_id
+   * @param int|null $event_id
+   * @return SummitMetric
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  private function registerAttendeePhysicalEgress(
+    Summit $summit,
+    Member $current_user,
+    int $attendee_id,
+    array $required_access_levels = [],
+    ?int $room_id = null,
+    ?int $event_id = null,
+  ): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::registerAttendeePhysicalEgress summit %s attendee_id %s ",
+        $summit->getId(),
+        $attendee_id,
+      ),
+    );
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $current_user,
+      $attendee_id,
+      $required_access_levels,
+      $room_id,
+      $event_id,
+    ) {
+      $attendee = $summit->getAttendeeById($attendee_id);
+      if (is_null($attendee)) {
+        throw new EntityNotFoundException("Attendee not found.");
+      }
+
+      if (!$attendee->checkAccessLevels($required_access_levels)) {
+        throw new ValidationException(
+          sprintf("Attendee %s is not authorized.", $attendee->getEmail()),
+        );
+      }
+
+      $event = null;
+      $room = null;
+
+      if (!is_null($room_id)) {
+        $room = $summit->getLocation($room_id);
+        if (is_null($room) || !$room instanceof SummitVenueRoom) {
+          throw new EntityNotFoundException("Room mot found.");
+        }
+      }
+
+      if (!is_null($event_id)) {
+        $event = $summit->getEvent($event_id);
+        if (is_null($event)) {
+          throw new EntityNotFoundException("Event not found.");
+        }
+      }
+
+      $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
+
+      if (!$metric) {
+        $metric = SummitEventAttendanceMetric::buildOnSiteMetric(
+          $current_user,
+          $attendee,
+          $room,
+          $event,
+        );
+        $metric->setSummit($summit);
+        $this->repository->add($metric);
+      }
+
+      $metric->abandon();
+
+      return $metric;
+    });
+  }
+
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param array $payload
+   * @return SummitMetric
+   */
+  public function onSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::onSiteEnter summit %s payload %s",
+        $summit->getId(),
+        json_encode($payload),
+      ),
+    );
+
+    $room_id = $payload["room_id"] ?? null;
+    if (!is_null($room_id)) {
+      $room_id = intval($room_id);
     }
 
-    /**
-     * @param Summit $summit
-     * @param int $attendee_id
-     * @param int|null $room_id
-     * @param int|null $event_id
-     * @return SummitMetric
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    private function checkAttendeePhysicalIngress
-    (
-        Summit $summit,
-        Member $current_user,
-        int    $attendee_id,
-        ?int   $room_id = null,
-        ?int   $event_id = null
-    ): SummitMetric
-    {
-        Log::debug(sprintf("SummitMetricService::checkAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
-
-        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $room_id, $event_id) {
-
-            $attendee = $summit->getAttendeeById($attendee_id);
-            if (is_null($attendee))
-                throw new EntityNotFoundException("Attendee not found.");
-
-            $event = null;
-            $room = null;
-
-            if (!is_null($room_id)) {
-                $room = $summit->getLocation($room_id);
-                if (!$room instanceof SummitVenueRoom)
-                    throw new EntityNotFoundException("Room not found.");
-            }
-
-            if (!is_null($event_id)) {
-                $event = $summit->getEvent($event_id);
-                if (is_null($event))
-                    throw new EntityNotFoundException("Event not found.");
-            }
-
-            $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
-
-            if (is_null($metric)) {
-                throw new EntityNotFoundException("Metric not found.");
-            }
-
-            return $metric;
-        });
+    $event_id = $payload["event_id"] ?? null;
+    if (!is_null($event_id)) {
+      $event_id = intval($event_id);
     }
+
+    $check_ingress = false;
+    if (isset($payload["check_ingress"])) {
+      $check_ingress = to_boolean($payload["check_ingress"]);
+    }
+
+    return $this->registerAttendeePhysicalIngress(
+      $summit,
+      $current_user,
+      intval($payload["attendee_id"]),
+      $payload["required_access_levels"] ?? [],
+      $room_id,
+      $event_id,
+      $check_ingress,
+    );
+  }
+
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param array $payload
+   * @return SummitMetric
+   */
+  public function onSiteLeave(Summit $summit, Member $current_user, array $payload): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::onSiteLeave summit %s payload %s",
+        $summit->getId(),
+        json_encode($payload),
+      ),
+    );
+    $room_id = $payload["room_id"] ?? null;
+    if (!is_null($room_id)) {
+      $room_id = intval($room_id);
+    }
+    $event_id = $payload["event_id"] ?? null;
+    if (!is_null($event_id)) {
+      $event_id = intval($event_id);
+    }
+
+    return $this->registerAttendeePhysicalEgress(
+      $summit,
+      $current_user,
+      intval($payload["attendee_id"]),
+      $payload["required_access_levels"] ?? [],
+      $room_id,
+      $event_id,
+    );
+  }
+
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param array $payload
+   * @return SummitMetric
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function checkOnSiteEnter(
+    Summit $summit,
+    Member $current_user,
+    array $payload,
+  ): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::checkOnSiteEnter summit %s payload %s",
+        $summit->getId(),
+        json_encode($payload),
+      ),
+    );
+
+    $room_id = $payload["room_id"] ?? null;
+    if (!is_null($room_id)) {
+      $room_id = intval($room_id);
+    }
+
+    $event_id = $payload["event_id"] ?? null;
+    if (!is_null($event_id)) {
+      $event_id = intval($event_id);
+    }
+
+    return $this->checkAttendeePhysicalIngress(
+      $summit,
+      $current_user,
+      intval($payload["attendee_id"]),
+      $room_id,
+      $event_id,
+    );
+  }
+
+  /**
+   * @param Summit $summit
+   * @param int $attendee_id
+   * @param int|null $room_id
+   * @param int|null $event_id
+   * @return SummitMetric
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  private function checkAttendeePhysicalIngress(
+    Summit $summit,
+    Member $current_user,
+    int $attendee_id,
+    ?int $room_id = null,
+    ?int $event_id = null,
+  ): SummitMetric {
+    Log::debug(
+      sprintf(
+        "SummitMetricService::checkAttendeePhysicalIngress summit %s attendee_id %s ",
+        $summit->getId(),
+        $attendee_id,
+      ),
+    );
+
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $current_user,
+      $attendee_id,
+      $room_id,
+      $event_id,
+    ) {
+      $attendee = $summit->getAttendeeById($attendee_id);
+      if (is_null($attendee)) {
+        throw new EntityNotFoundException("Attendee not found.");
+      }
+
+      $event = null;
+      $room = null;
+
+      if (!is_null($room_id)) {
+        $room = $summit->getLocation($room_id);
+        if (!$room instanceof SummitVenueRoom) {
+          throw new EntityNotFoundException("Room not found.");
+        }
+      }
+
+      if (!is_null($event_id)) {
+        $event = $summit->getEvent($event_id);
+        if (is_null($event)) {
+          throw new EntityNotFoundException("Event not found.");
+        }
+      }
+
+      $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
+
+      if (is_null($metric)) {
+        throw new EntityNotFoundException("Metric not found.");
+      }
+
+      return $metric;
+    });
+  }
 }

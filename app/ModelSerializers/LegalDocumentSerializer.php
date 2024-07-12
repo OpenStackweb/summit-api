@@ -17,12 +17,11 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class LegalDocumentSerializer
  * @package ModelSerializers
  */
-final class LegalDocumentSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id'  => 'id:json_int',
-        'Title' => 'title:json_string',
-        'Slug' => 'slug:json_string',
-        'Content' => 'content:json_string',
-    ];
+final class LegalDocumentSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Title" => "title:json_string",
+    "Slug" => "slug:json_string",
+    "Content" => "content:json_string",
+  ];
 }

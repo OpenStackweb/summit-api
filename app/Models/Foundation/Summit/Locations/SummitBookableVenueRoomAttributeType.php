@@ -13,7 +13,7 @@
  **/
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
@@ -29,83 +29,78 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitBookableVenueRoomAttributeType
  * @package models\summit
  */
-class SummitBookableVenueRoomAttributeType extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
+class SummitBookableVenueRoomAttributeType extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  private $type;
 
-    use SummitOwned;
+  use SummitOwned;
 
-    /**
-     * @ORM\OneToMany(targetEntity="SummitBookableVenueRoomAttributeValue", mappedBy="type", cascade={"persist"}, orphanRemoval=true)
-     * @var ArrayCollection
-     */
-    private $values;
+  /**
+   * @ORM\OneToMany(targetEntity="SummitBookableVenueRoomAttributeValue", mappedBy="type", cascade={"persist"}, orphanRemoval=true)
+   * @var ArrayCollection
+   */
+  private $values;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->values = new ArrayCollection();
+  public function __construct() {
+    parent::__construct();
+    $this->values = new ArrayCollection();
+  }
+
+  /**
+   * @return string
+   */
+  public function getType(): string {
+    return $this->type;
+  }
+
+  /**
+   * @param string $type
+   */
+  public function setType(string $type): void {
+    $this->type = $type;
+  }
+
+  public function getValues() {
+    return $this->values;
+  }
+
+  public function addValue(SummitBookableVenueRoomAttributeValue $value) {
+    if ($this->values->contains($value)) {
+      return;
     }
+    $this->values->add($value);
+    $value->setType($this);
+  }
 
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
+  public function removeValue(SummitBookableVenueRoomAttributeValue $value) {
+    if (!$this->values->contains($value)) {
+      return;
     }
+    $this->values->removeElement($value);
+  }
 
-    /**
-     * @param string $type
-     */
-    public function setType(string $type): void
-    {
-        $this->type = $type;
-    }
+  /**
+   * @param int $id
+   * @return SummitBookableVenueRoomAttributeValue|null
+   */
+  public function getValueById(int $id): ?SummitBookableVenueRoomAttributeValue {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("id", intval($id)));
+    $value = $this->values->matching($criteria)->first();
+    return $value === false ? null : $value;
+  }
 
-    public function getValues()
-    {
-        return $this->values;
-    }
-
-    public function addValue(SummitBookableVenueRoomAttributeValue $value){
-        if($this->values->contains($value)) return;
-        $this->values->add($value);
-        $value->setType($this);
-    }
-
-    public function removeValue(SummitBookableVenueRoomAttributeValue $value){
-        if(!$this->values->contains($value)) return;
-        $this->values->removeElement($value);
-    }
-
-    /**
-     * @param int $id
-     * @return SummitBookableVenueRoomAttributeValue|null
-     */
-    public function getValueById(int $id):?SummitBookableVenueRoomAttributeValue
-    {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($id)));
-        $value = $this->values->matching($criteria)->first();
-        return $value === false ? null : $value;
-    }
-
-
-    /**
-     * @param string $value
-     * @return SummitBookableVenueRoomAttributeValue|null
-     */
-    public function getValueByValue(string $value):?SummitBookableVenueRoomAttributeValue
-    {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('value', trim($value)));
-        $value = $this->values->matching($criteria)->first();
-        return $value === false ? null : $value;
-    }
-
+  /**
+   * @param string $value
+   * @return SummitBookableVenueRoomAttributeValue|null
+   */
+  public function getValueByValue(string $value): ?SummitBookableVenueRoomAttributeValue {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("value", trim($value)));
+    $value = $this->values->matching($criteria)->first();
+    return $value === false ? null : $value;
+  }
 }

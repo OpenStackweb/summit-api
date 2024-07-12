@@ -19,100 +19,96 @@ use Illuminate\Support\Facades\Storage;
  * Class AbstractFileDownloadStrategy
  * @package App\Services\FileSystem
  */
-abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
-{
-    /**
-     * @param string $path
-     * @return bool
-     */
-    public function exists(string $path):bool{
-        return Storage::disk($this->getDriver())->exists($path);
-    }
+abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy {
+  /**
+   * @param string $path
+   * @return bool
+   */
+  public function exists(string $path): bool {
+    return Storage::disk($this->getDriver())->exists($path);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function download(string $path, string $name, array $options = [])
-    {
-        return Storage::disk($this->getDriver())->download(
-            $path,
-            $name,
-            $options
-        );
-    }
+  /**
+   * @inheritDoc
+   */
+  public function download(string $path, string $name, array $options = []) {
+    return Storage::disk($this->getDriver())->download($path, $name, $options);
+  }
 
-    /**
-     * @param string $path
-     * @return string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function get(string $path):string
-    {
-        return Storage::disk($this->getDriver())->get(
-            $path,
-        );
-    }
+  /**
+   * @param string $path
+   * @return string
+   * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+   */
+  public function get(string $path): string {
+    return Storage::disk($this->getDriver())->get($path);
+  }
 
-    /**
-     * @param string $path
-     * @return resource|null
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function readStream(string $path){
-        return Storage::disk($this->getDriver())->readStream($path);
-    }
+  /**
+   * @param string $path
+   * @return resource|null
+   * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+   */
+  public function readStream(string $path) {
+    return Storage::disk($this->getDriver())->readStream($path);
+  }
 
-    /**
-     * @param string $relativeFileName
-     * @param bool $useTemporaryUrl
-     * @param int $ttl
-     * @param false $avoidCache
-     * @return string|null
-     */
-    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10, bool $avoidCache = false): ?string
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "AbstractFileDownloadStrategy::getUrl relativeFileName %s useTemporaryUrl %b ttl %s avoidCache %b",
-                $relativeFileName,
-                $useTemporaryUrl,
-                $ttl,
-                $avoidCache
-            )
-        );
+  /**
+   * @param string $relativeFileName
+   * @param bool $useTemporaryUrl
+   * @param int $ttl
+   * @param false $avoidCache
+   * @return string|null
+   */
+  public function getUrl(
+    string $relativeFileName,
+    bool $useTemporaryUrl = false,
+    int $ttl = 10,
+    bool $avoidCache = false,
+  ): ?string {
+    Log::debug(
+      sprintf(
+        "AbstractFileDownloadStrategy::getUrl relativeFileName %s useTemporaryUrl %b ttl %s avoidCache %b",
+        $relativeFileName,
+        $useTemporaryUrl,
+        $ttl,
+        $avoidCache,
+      ),
+    );
 
-        $key = sprintf("%s/%s_%b_%s", $this->getDriver(), $relativeFileName, $useTemporaryUrl, $ttl);
-        $res = Cache::get($key);
-        if(!empty($res) && $res != '#' && !$avoidCache) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "AbstractFileDownloadStrategy::getUrl cache hit for %s val %s",
-                    $key,
-                    $res
-                )
-            );
-            return $res;
-        }
-        // @see https://laravel.com/docs/8.x/filesystem#temporary-urls
-        $res = $useTemporaryUrl ? Storage::disk($this->getDriver())->temporaryUrl($relativeFileName, now()->addMinutes($ttl))
-            : Storage::disk($this->getDriver())->url($relativeFileName);
-        if(!empty($res) && $res != '#') {
-            $ttl = $useTemporaryUrl ? ($ttl - 1) : intval(Config::get('cache_api_response.file_url_lifetime', 3600));
-            Log::debug(sprintf("AbstractFileDownloadStrategy::getUrl adding key %s res %s ttl %s to cache", $key, $res, $ttl));
-            Cache::add($key, $res, $ttl);
-        }
-        return $res;
+    $key = sprintf("%s/%s_%b_%s", $this->getDriver(), $relativeFileName, $useTemporaryUrl, $ttl);
+    $res = Cache::get($key);
+    if (!empty($res) && $res != "#" && !$avoidCache) {
+      Log::debug(
+        sprintf("AbstractFileDownloadStrategy::getUrl cache hit for %s val %s", $key, $res),
+      );
+      return $res;
     }
+    // @see https://laravel.com/docs/8.x/filesystem#temporary-urls
+    $res = $useTemporaryUrl
+      ? Storage::disk($this->getDriver())->temporaryUrl($relativeFileName, now()->addMinutes($ttl))
+      : Storage::disk($this->getDriver())->url($relativeFileName);
+    if (!empty($res) && $res != "#") {
+      $ttl = $useTemporaryUrl
+        ? $ttl - 1
+        : intval(Config::get("cache_api_response.file_url_lifetime", 3600));
+      Log::debug(
+        sprintf(
+          "AbstractFileDownloadStrategy::getUrl adding key %s res %s ttl %s to cache",
+          $key,
+          $res,
+          $ttl,
+        ),
+      );
+      Cache::add($key, $res, $ttl);
+    }
+    return $res;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function delete(string $relativeFileName)
-    {
-        return Storage::disk($this->getDriver())->delete($relativeFileName);
-    }
+  /**
+   * @inheritDoc
+   */
+  public function delete(string $relativeFileName) {
+    return Storage::disk($this->getDriver())->delete($relativeFileName);
+  }
 }

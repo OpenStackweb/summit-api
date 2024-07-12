@@ -17,31 +17,28 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class RatingTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class RatingTypeValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'weight'  => 'required|numeric|min:0',
-            'name'    => 'required|string',
-            'order'   => 'sometimes|integer|min:1',
-        ];
-    }
+final class RatingTypeValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "weight" => "required|numeric|min:0",
+      "name" => "required|string",
+      "order" => "sometimes|integer|min:1",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'weight'  => 'sometimes|numeric|min:0',
-            'name'    => 'sometimes|string',
-            'order'   => 'sometimes|required|integer|min:1',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "weight" => "sometimes|numeric|min:0",
+      "name" => "sometimes|string",
+      "order" => "sometimes|required|integer|min:1",
+    ];
+  }
 }

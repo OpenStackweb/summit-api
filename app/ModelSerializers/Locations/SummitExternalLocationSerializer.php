@@ -16,9 +16,8 @@
  * Class SummitExternalLocationSerializer
  * @package ModelSerializers\Locations
  */
-class SummitExternalLocationSerializer extends SummitGeoLocatedLocationSerializer
-{
-    protected static $array_mappings = [
-        'Capacity' => 'capacity:json_int',
-    ];
+class SummitExternalLocationSerializer extends SummitGeoLocatedLocationSerializer {
+  protected static $array_mappings = [
+    "Capacity" => "capacity:json_int",
+  ];
 }

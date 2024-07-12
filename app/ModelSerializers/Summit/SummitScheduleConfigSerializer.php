@@ -19,64 +19,67 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitScheduleConfigSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SummitScheduleConfigSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Key' => 'key:json_string',
-        'SummitId' => 'summit_id:json_int',
-        'MySchedule' => 'is_my_schedule:json_boolean',
-        'OnlyEventsWithAttendeeAccess' => 'only_events_with_attendee_access:json_boolean',
-        'ColorSource' => 'color_source:json_string',
-        'Enabled' => 'is_enabled:json_boolean',
-        'Default' => 'is_default:json_boolean',
-        'HidePastEventsWithShowAlwaysOnSchedule' => 'hide_past_events_with_show_always_on_schedule:json_boolean',
-        'TimeFormat' => 'time_format:json_string',
-    ];
+final class SummitScheduleConfigSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Key" => "key:json_string",
+    "SummitId" => "summit_id:json_int",
+    "MySchedule" => "is_my_schedule:json_boolean",
+    "OnlyEventsWithAttendeeAccess" => "only_events_with_attendee_access:json_boolean",
+    "ColorSource" => "color_source:json_string",
+    "Enabled" => "is_enabled:json_boolean",
+    "Default" => "is_default:json_boolean",
+    "HidePastEventsWithShowAlwaysOnSchedule" =>
+      "hide_past_events_with_show_always_on_schedule:json_boolean",
+    "TimeFormat" => "time_format:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'filters',
-        'pre_filters',
-    ];
+  protected static $allowed_relations = ["filters", "pre_filters"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relation
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $config = $this->object;
-        if (!$config instanceof SummitScheduleConfig) return [];
-
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('filters', $relations) && !isset($values['filters'])){
-            $filters = [];
-            foreach ($config->getFilters() as $filter){
-                $filters[] = $filter->getId();
-            }
-            $values['filters'] = $filters;
-        }
-        if(in_array('pre_filters', $relations) && !isset($values['pre_filters'])){
-            $filters = [];
-            foreach ($config->getPreFilters() as $filter){
-                $filters[] = $filter->getId();
-            }
-            $values['pre_filters'] = $filters;
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relation
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $config = $this->object;
+    if (!$config instanceof SummitScheduleConfig) {
+      return [];
     }
 
-    protected static $expand_mappings = [
-        'filters' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getFilters',
-        ],
-        'pre_filters' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getPreFilters',
-        ]
-    ];
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("filters", $relations) && !isset($values["filters"])) {
+      $filters = [];
+      foreach ($config->getFilters() as $filter) {
+        $filters[] = $filter->getId();
+      }
+      $values["filters"] = $filters;
+    }
+    if (in_array("pre_filters", $relations) && !isset($values["pre_filters"])) {
+      $filters = [];
+      foreach ($config->getPreFilters() as $filter) {
+        $filters[] = $filter->getId();
+      }
+      $values["pre_filters"] = $filters;
+    }
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "filters" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getFilters",
+    ],
+    "pre_filters" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getPreFilters",
+    ],
+  ];
 }

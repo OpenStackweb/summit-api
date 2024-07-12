@@ -24,71 +24,68 @@ use utils\FilterParser;
  * Class ProcessSponsorPromoCodesJob
  * @package App\Jobs\Emails\Registration\Invitations
  */
-class ProcessSponsorPromoCodesJob implements ShouldQueue
-{
-    public $tries = 1;
+class ProcessSponsorPromoCodesJob implements ShouldQueue {
+  public $tries = 1;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $summit_id;
+  private $summit_id;
 
-    private $payload;
+  private $payload;
 
-    private $filter;
+  private $filter;
 
-    /**
-     * ProcessSponsorPromoCodesJob constructor.
-     * @param Summit $summit
-     * @param array $payload
-     * @param $filter
-     */
-    public function __construct(Summit $summit, array $payload, $filter)
-    {
-        $this->summit_id = $summit->getId();
-        $this->payload = $payload;
-        $this->filter = $filter;
+  /**
+   * ProcessSponsorPromoCodesJob constructor.
+   * @param Summit $summit
+   * @param array $payload
+   * @param $filter
+   */
+  public function __construct(Summit $summit, array $payload, $filter) {
+    $this->summit_id = $summit->getId();
+    $this->payload = $payload;
+    $this->filter = $filter;
+  }
 
+  /**
+   * @param ISummitPromoCodeService $service
+   * @throws \utils\FilterParserException
+   */
+  public function handle(ISummitPromoCodeService $service) {
+    Log::debug(sprintf("ProcessSponsorPromoCodesJob::handle summit id %s", $this->summit_id));
+
+    try {
+      $filter = !is_null($this->filter)
+        ? FilterParser::parse($this->filter, [
+          "id" => ["=="],
+          "not_id" => ["=="],
+          "code" => ["@@", "=@", "=="],
+          "notes" => ["@@", "=@", "=="],
+          "description" => ["@@", "=@"],
+          "tag" => ["@@", "=@", "=="],
+          "tag_id" => ["=="],
+          "sponsor_company_name" => ["@@", "=@", "=="],
+          "sponsor_id" => ["=="],
+          "contact_email" => ["@@", "=@", "=="],
+          "tier_name" => ["@@", "=@", "=="],
+          "email_sent" => ["=="],
+        ])
+        : null;
+
+      $service->sendSponsorPromoCodes($this->summit_id, $this->payload, $filter);
+
+      Log::debug(
+        sprintf("ProcessSponsorPromoCodesJob::handle summit id %s has finished", $this->summit_id),
+      );
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+  }
 
-    /**
-     * @param ISummitPromoCodeService $service
-     * @throws \utils\FilterParserException
-     */
-    public function handle(ISummitPromoCodeService $service)
-    {
-
-        Log::debug(sprintf("ProcessSponsorPromoCodesJob::handle summit id %s", $this->summit_id));
-
-        try {
-            $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-                'id'            => ['=='],
-                'not_id'        => ['=='],
-                'code' => ['@@', '=@', '=='],
-                'notes' => ['@@', '=@', '=='],
-                'description' => ['@@', '=@'],
-                'tag' => ['@@','=@', '=='],
-                'tag_id' => ['=='],
-                'sponsor_company_name' => ['@@', '=@', '=='],
-                'sponsor_id' => ['=='],
-                'contact_email' =>  ['@@', '=@', '=='],
-                'tier_name' =>  ['@@', '=@', '=='],
-                'email_sent' => ['=='],
-            ]) : null;
-
-            $service->sendSponsorPromoCodes($this->summit_id, $this->payload, $filter);
-
-            Log::debug(sprintf("ProcessSponsorPromoCodesJob::handle summit id %s has finished", $this->summit_id));
-        } catch (\Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error(sprintf( "ProcessSponsorPromoCodesJob::failed %s", $exception->getMessage()));
-    }
-
+  public function failed(\Throwable $exception) {
+    Log::error(sprintf("ProcessSponsorPromoCodesJob::failed %s", $exception->getMessage()));
+  }
 }

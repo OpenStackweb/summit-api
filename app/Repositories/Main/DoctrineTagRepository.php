@@ -21,57 +21,50 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * Class DoctrineTagRepository
  * @package repositories\main
  */
-final class DoctrineTagRepository
-    extends SilverStripeDoctrineRepository
-    implements ITagRepository
-{
+final class DoctrineTagRepository extends SilverStripeDoctrineRepository implements ITagRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "tag" => "e.tag:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'tag' => 'e.tag:json_string',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "tag" => "e.tag",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id' => 'e.id',
-            'tag' => 'e.tag',
-        ];
+  /**
+   * @param string $tag
+   * @return Tag
+   */
+  public function getByTag($tag) {
+    try {
+      return $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select("t")
+        ->from(\models\main\Tag::class, "t")
+        ->where("UPPER(TRIM(t.tag)) = UPPER(TRIM(:tag))")
+        ->setParameter("tag", trim($tag))
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getOneOrNullResult();
+    } catch (NoResultException $e) {
+      return null;
     }
+  }
 
-    /**
-     * @param string $tag
-     * @return Tag
-     */
-    public function getByTag($tag)
-    {
-        try {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("t")
-                ->from(\models\main\Tag::class, "t")
-                ->where('UPPER(TRIM(t.tag)) = UPPER(TRIM(:tag))')
-                ->setParameter('tag', trim($tag))
-                ->setMaxResults(1)
-                ->getQuery()->getOneOrNullResult();
-        }
-        catch(NoResultException $e){
-            return null;
-        }
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return Tag::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Tag::class;
+  }
 }

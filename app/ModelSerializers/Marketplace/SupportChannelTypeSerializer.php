@@ -16,12 +16,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SupportChannelTypeSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class SupportChannelTypeSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Type'      => 'type:json_string',
-    ];
+final class SupportChannelTypeSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+  ];
 }

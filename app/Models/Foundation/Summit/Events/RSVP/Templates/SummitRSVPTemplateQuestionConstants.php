@@ -24,17 +24,16 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTextBoxQuestionTemplate;
  * Class SummitRSVPTemplateQuestionConstants
  * @package App\Models\Foundation\Summit\Events\RSVP\Templates
  */
-final class SummitRSVPTemplateQuestionConstants
-{
-    public static $valid_class_names = [
-        RSVPMemberEmailQuestionTemplate::ClassName,
-        RSVPMemberFirstNameQuestionTemplate::ClassName,
-        RSVPMemberLastNameQuestionTemplate::ClassName,
-        RSVPTextBoxQuestionTemplate::ClassName,
-        RSVPTextAreaQuestionTemplate::ClassName,
-        RSVPCheckBoxListQuestionTemplate::ClassName,
-        RSVPRadioButtonListQuestionTemplate::ClassName,
-        RSVPDropDownQuestionTemplate::ClassName,
-        RSVPLiteralContentQuestionTemplate::ClassName,
-    ];
+final class SummitRSVPTemplateQuestionConstants {
+  public static $valid_class_names = [
+    RSVPMemberEmailQuestionTemplate::ClassName,
+    RSVPMemberFirstNameQuestionTemplate::ClassName,
+    RSVPMemberLastNameQuestionTemplate::ClassName,
+    RSVPTextBoxQuestionTemplate::ClassName,
+    RSVPTextAreaQuestionTemplate::ClassName,
+    RSVPCheckBoxListQuestionTemplate::ClassName,
+    RSVPRadioButtonListQuestionTemplate::ClassName,
+    RSVPDropDownQuestionTemplate::ClassName,
+    RSVPLiteralContentQuestionTemplate::ClassName,
+  ];
 }

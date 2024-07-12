@@ -18,23 +18,24 @@ use models\summit\SummitAttendee;
  * Class CheckMyOwnAttendeeStrategy
  * @package App\Http\Controllers
  */
-final class CheckMyOwnAttendeeStrategy extends CheckMeAttendeeStrategy implements ICheckAttendeeStrategy
-{
-
-    /**
-     * @param int $attendee_id
-     * @param Summit $summit
-     * @return null|SummitAttendee
-     * @throws \HTTP401UnauthorizedException
-     */
-    public function check($attendee_id, Summit $summit)
-    {
-        $attendee = parent::check($attendee_id, $summit);
-        if(!$attendee) return null;
-        $attendee_member_id = intval($attendee->getMember()->getId());
-        $current_member  = $this->resource_server_context->getCurrentUser();
-        if(is_null($current_member) || ($attendee_member_id !== $current_member->getId()))
-            throw new \HTTP401UnauthorizedException;
-        return $attendee;
+final class CheckMyOwnAttendeeStrategy extends CheckMeAttendeeStrategy implements
+  ICheckAttendeeStrategy {
+  /**
+   * @param int $attendee_id
+   * @param Summit $summit
+   * @return null|SummitAttendee
+   * @throws \HTTP401UnauthorizedException
+   */
+  public function check($attendee_id, Summit $summit) {
+    $attendee = parent::check($attendee_id, $summit);
+    if (!$attendee) {
+      return null;
     }
+    $attendee_member_id = intval($attendee->getMember()->getId());
+    $current_member = $this->resource_server_context->getCurrentUser();
+    if (is_null($current_member) || $attendee_member_id !== $current_member->getId()) {
+      throw new \HTTP401UnauthorizedException();
+    }
+    return $attendee;
+  }
 }

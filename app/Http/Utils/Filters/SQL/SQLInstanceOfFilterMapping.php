@@ -19,48 +19,46 @@ use utils\FilterMapping;
  * Class SQLInstanceOfFilterMapping
  * @package App\Http\Utils\Filters\SQL
  */
-final class SQLInstanceOfFilterMapping extends FilterMapping
-{
+final class SQLInstanceOfFilterMapping extends FilterMapping {
+  private $class_names = [];
 
-    private $class_names = [];
+  /**
+   * @param string $alias
+   * @param array $class_names
+   */
+  public function __construct(string $alias, array $class_names = []) {
+    $this->class_names = $class_names;
+    parent::__construct($alias, sprintf("%s.ClassName = ':class_name'", $alias));
+  }
 
-    /**
-     * @param string $alias
-     * @param array $class_names
-     */
-    public function __construct(string $alias, array $class_names = [])
-    {
-        $this->class_names = $class_names;
-        parent::__construct($alias, sprintf("%s.ClassName = ':class_name'", $alias));
+  private function translateClassName(string $value): string {
+    if (isset($this->class_names[$value])) {
+      $parts = explode("\\", $this->class_names[$value]);
+      return $parts[count($parts) - 1];
+    }
+    return $value;
+  }
+
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  public function toRawSQL(FilterElement $filter, array $bindings = []): string {
+    $value = $filter->getValue();
+
+    if (is_array($value)) {
+      $where_components = [];
+      foreach ($value as $val) {
+        $where_components[] = str_replace(
+          ":class_name",
+          $this->translateClassName($val),
+          $this->where,
+        );
+      }
+      return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
     }
 
-    private function translateClassName(string $value):string
-    {
-        if (isset($this->class_names[$value])) {
-            $parts = explode("\\", $this->class_names[$value]);
-            return $parts[count(($parts))-1];
-        }
-        return $value;
-    }
-
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public function toRawSQL(FilterElement $filter, array $bindings = []):string
-    {
-        $value = $filter->getValue();
-
-        if (is_array($value)) {
-            $where_components = [];
-            foreach ($value as $val) {
-                $where_components[] =  str_replace(":class_name", $this->translateClassName($val), $this->where);
-            }
-            return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
-        }
-
-        return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-    }
-
+    return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
+  }
 }

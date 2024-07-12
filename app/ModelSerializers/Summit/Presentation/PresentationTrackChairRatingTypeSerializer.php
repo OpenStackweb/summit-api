@@ -20,53 +20,56 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class PresentationTrackChairRatingTypeSerializer
  * @package ModelSerializers
  */
-final class PresentationTrackChairRatingTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Weight'          => 'weight:json_float',
-        'Name'            => 'name:json_string',
-        'Order'           => 'order:json_int',
-        'SelectionPlanId' => 'selection_plan_id:json_int',
-    ];
+final class PresentationTrackChairRatingTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Weight" => "weight:json_float",
+    "Name" => "name:json_string",
+    "Order" => "order:json_int",
+    "SelectionPlanId" => "selection_plan_id:json_int",
+  ];
 
-    protected static $allowed_relations = [
-        'score_types',
-    ];
+  protected static $allowed_relations = ["score_types"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $ratingType = $this->object;
-        if (!$ratingType instanceof PresentationTrackChairRatingType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $ratingType = $this->object;
+    if (!$ratingType instanceof PresentationTrackChairRatingType) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (in_array('score_types', $relations) && !isset($values['score_types'])) {
-            $score_type_values = [];
-            foreach ($ratingType->getScoreTypes() as $scoreType) {
-                $score_type_values[] = $scoreType->getId();
-            }
-            $values['score_types'] = $score_type_values;
-        }
-
-        return $values;
+    if (in_array("score_types", $relations) && !isset($values["score_types"])) {
+      $score_type_values = [];
+      foreach ($ratingType->getScoreTypes() as $scoreType) {
+        $score_type_values[] = $scoreType->getId();
+      }
+      $values["score_types"] = $score_type_values;
     }
 
-    protected static $expand_mappings = [
-        'score_types' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getScoreTypes',
-        ],
-        'selection_plan' => [
-            'type'                  => One2ManyExpandSerializer::class,
-            'original_attribute'    => 'selection_plan_id',
-            'getter'                => 'getSelectionPlan',
-            'has'                   => 'hasSelectionPlan'
-        ]
-    ];
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "score_types" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getScoreTypes",
+    ],
+    "selection_plan" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "selection_plan_id",
+      "getter" => "getSelectionPlan",
+      "has" => "hasSelectionPlan",
+    ],
+  ];
 }

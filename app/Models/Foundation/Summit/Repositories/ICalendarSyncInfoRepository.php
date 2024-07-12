@@ -18,7 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ICalendarSyncInfoRepository
  * @package models\summit
  */
-interface ICalendarSyncInfoRepository extends IBaseRepository
-{
-
+interface ICalendarSyncInfoRepository extends IBaseRepository {
 }

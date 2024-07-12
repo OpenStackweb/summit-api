@@ -16,15 +16,13 @@
  * Class SummitTicketRefundAccepted
  * @package App\Jobs\Emails\Registration\Refunds
  */
-class SummitTicketRefundAccepted extends SummitTicketRefundRequestOwner
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class SummitTicketRefundAccepted extends SummitTicketRefundRequestOwner {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_TICKET_REFUND_ACCEPTED';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_TICKET_REFUND_ACCEPTED';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_TICKET_REFUND_ACCEPTED';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_TICKET_REFUND_ACCEPTED";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_TICKET_REFUND_ACCEPTED";
+  const DEFAULT_TEMPLATE = "REGISTRATION_TICKET_REFUND_ACCEPTED";
 }

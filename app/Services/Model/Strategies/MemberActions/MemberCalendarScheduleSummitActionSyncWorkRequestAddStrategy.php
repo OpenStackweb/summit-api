@@ -20,17 +20,16 @@ use models\summit\CalendarSync\WorkQueue\MemberCalendarScheduleSummitActionSyncW
  * Class MemberCalendarScheduleSummitActionSyncWorkRequestAddStrategy
  * @package App\Services\Model\Strategies\MemberActions
  */
-final class MemberCalendarScheduleSummitActionSyncWorkRequestAddStrategy
-implements ICalendarSyncWorkRequestPreProcessorStrategy
-{
-
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return AbstractCalendarSyncWorkRequest|null
-     */
-    public function process(AbstractCalendarSyncWorkRequest $request)
-    {
-        if(!$request instanceof MemberCalendarScheduleSummitActionSyncWorkRequest) return null;
-        return $request;
+final class MemberCalendarScheduleSummitActionSyncWorkRequestAddStrategy implements
+  ICalendarSyncWorkRequestPreProcessorStrategy {
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return AbstractCalendarSyncWorkRequest|null
+   */
+  public function process(AbstractCalendarSyncWorkRequest $request) {
+    if (!$request instanceof MemberCalendarScheduleSummitActionSyncWorkRequest) {
+      return null;
     }
+    return $request;
+  }
 }

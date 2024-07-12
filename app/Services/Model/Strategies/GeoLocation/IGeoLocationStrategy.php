@@ -17,12 +17,11 @@ use models\summit\SummitGeoLocatedLocation;
  * Interface IGeoLocationStrategy
  * @package App\Services\Model\Strategies\GeoLocation
  */
-interface IGeoLocationStrategy
-{
-    /**
-     * @param SummitGeoLocatedLocation $location
-     * @param IGeoCodingAPI $geo_coding_api
-     * @return SummitGeoLocatedLocation
-     */
-    public function doGeoLocation(SummitGeoLocatedLocation $location, IGeoCodingAPI $geo_coding_api);
+interface IGeoLocationStrategy {
+  /**
+   * @param SummitGeoLocatedLocation $location
+   * @param IGeoCodingAPI $geo_coding_api
+   * @return SummitGeoLocatedLocation
+   */
+  public function doGeoLocation(SummitGeoLocatedLocation $location, IGeoCodingAPI $geo_coding_api);
 }

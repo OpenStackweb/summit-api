@@ -16,15 +16,13 @@
  * Class SQLNotInFilterMapping
  * @package App\Http\Utils\Filters\SQL
  */
-final class SQLNotInFilterMapping extends SQLInFilterMapping
-{
-    /**
-     * DoctrineFilterMapping constructor.
-     * @param string $alias
-     */
-    public function __construct(string $alias)
-    {
-        parent::__construct($alias, '');
-        $this->operator = 'NOT IN';
-    }
+final class SQLNotInFilterMapping extends SQLInFilterMapping {
+  /**
+   * DoctrineFilterMapping constructor.
+   * @param string $alias
+   */
+  public function __construct(string $alias) {
+    parent::__construct($alias, "");
+    $this->operator = "NOT IN";
+  }
 }

@@ -18,7 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ISponsorSocialNetworkRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISponsorSocialNetworkRepository extends IBaseRepository
-{
-
+interface ISponsorSocialNetworkRepository extends IBaseRepository {
 }

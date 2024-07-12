@@ -16,42 +16,38 @@
  * Class GeoCoordinatesInfo
  * @package App\Services\Apis
  */
-final class GeoCoordinatesInfo
-{
-    /**
-     * @var string
-     */
-    private $lat;
+final class GeoCoordinatesInfo {
+  /**
+   * @var string
+   */
+  private $lat;
 
-    /**
-     * @var string
-     */
-    private $lng;
+  /**
+   * @var string
+   */
+  private $lng;
 
-    /**
-     * GeoCoordinatesInfo constructor.
-     * @param string $lat
-     * @param string $lng
-     */
-    public function __construct(string $lat = '', string $lng = '')
-    {
-        $this->lat = $lat;
-        $this->lng = $lng;
-    }
+  /**
+   * GeoCoordinatesInfo constructor.
+   * @param string $lat
+   * @param string $lng
+   */
+  public function __construct(string $lat = "", string $lng = "") {
+    $this->lat = $lat;
+    $this->lng = $lng;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLat()
-    {
-        return $this->lat;
-    }
+  /**
+   * @return string
+   */
+  public function getLat() {
+    return $this->lat;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLng()
-    {
-        return $this->lng;
-    }
+  /**
+   * @return string
+   */
+  public function getLng() {
+    return $this->lng;
+  }
 }

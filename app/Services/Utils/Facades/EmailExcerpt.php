@@ -18,10 +18,8 @@ use Illuminate\Support\Facades\Facade;
  * Class EmailExcerpt
  * @package services\utils\Facades
  */
-class EmailExcerpt extends Facade
-{
-    protected static function getFacadeAccessor(): string
-    {
-        return EmailExcerpt::class;
-    }
+class EmailExcerpt extends Facade {
+  protected static function getFacadeAccessor(): string {
+    return EmailExcerpt::class;
+  }
 }

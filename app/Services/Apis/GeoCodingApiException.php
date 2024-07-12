@@ -16,25 +16,22 @@
  * Class GeoCodingApiException
  * @package App\Services\Apis
  */
-final class GeoCodingApiException extends \Exception
-{
-    private $status;
+final class GeoCodingApiException extends \Exception {
+  private $status;
 
-    /**
-     * GeoCodingApiException constructor.
-     * @param $status
-     */
-    public function __construct($status)
-    {
-        parent::__construct($status);
-        $this->status = $status;
-    }
+  /**
+   * GeoCodingApiException constructor.
+   * @param $status
+   */
+  public function __construct($status) {
+    parent::__construct($status);
+    $this->status = $status;
+  }
 
-    /**
-     * @return string
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
+  /**
+   * @return string
+   */
+  public function getStatus() {
+    return $this->status;
+  }
 }

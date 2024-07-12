@@ -16,36 +16,41 @@ use App\ModelSerializers\Traits\RequestScopedCache;
  * Class SummitBadgeFeatureType
  * @package SummitBadgeFeatureTypeSerializer
  */
-final class SummitBadgeFeatureTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'              => 'name:json_string',
-        'Description'       => 'description:json_string',
-        'TemplateContent'   => 'template_content:json_string',
-        'SummitId'          => 'summit_id:json_int',
-        'ImageUrl'          => 'image:json_url',
-    ];
+final class SummitBadgeFeatureTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "TemplateContent" => "template_content:json_string",
+    "SummitId" => "summit_id:json_int",
+    "ImageUrl" => "image:json_url",
+  ];
 
-    use RequestScopedCache;
+  use RequestScopedCache;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        return $this->cache($this->getRequestKey
-        (
-            "SummitBadgeFeatureTypeSerializer",
-            $this->object->getIdentifier(),
-            $expand,
-            $fields,
-            $relations
-        ), function () use ($expand, $fields, $relations, $params) {
-            return parent::serialize($expand, $fields, $relations, $params);
-        });
-    }
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    return $this->cache(
+      $this->getRequestKey(
+        "SummitBadgeFeatureTypeSerializer",
+        $this->object->getIdentifier(),
+        $expand,
+        $fields,
+        $relations,
+      ),
+      function () use ($expand, $fields, $relations, $params) {
+        return parent::serialize($expand, $fields, $relations, $params);
+      },
+    );
+  }
 }

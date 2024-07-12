@@ -12,12 +12,9 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class SummitOrderAdminSerializer
  * @package App\ModelSerializers
  */
-final class SummitOrderAdminSerializer extends SummitOrderCheckoutSerializer
-{
-
+final class SummitOrderAdminSerializer extends SummitOrderCheckoutSerializer {
 }

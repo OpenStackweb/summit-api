@@ -16,31 +16,29 @@ use models\utils\IBaseRepository;
  * Interface IFolderRepository
  * @package models\main
  */
-interface IFolderRepository extends IBaseRepository
-{
-    /**
-     * @param string $folder_name
-     * @return File
-     */
-    public function getFolderByName($folder_name);
+interface IFolderRepository extends IBaseRepository {
+  /**
+   * @param string $folder_name
+   * @return File
+   */
+  public function getFolderByName($folder_name);
 
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function existByName(string $name):bool;
+  /**
+   * @param string $name
+   * @return bool
+   */
+  public function existByName(string $name): bool;
 
-    /**
-     * @param string $file_name
-     * @return File
-     */
-    public function getFolderByFileName($file_name);
+  /**
+   * @param string $file_name
+   * @return File
+   */
+  public function getFolderByFileName($file_name);
 
-    /**
-     * @param string $folder_name
-     * @param File $parent
-     * @return File
-     */
-    public function getFolderByNameAndParent($folder_name, File $parent);
-
+  /**
+   * @param string $folder_name
+   * @param File $parent
+   * @return File
+   */
+  public function getFolderByNameAndParent($folder_name, File $parent);
 }

@@ -20,71 +20,65 @@ use ModelSerializers\SerializerRegistry;
  * Class AbstractCompanyServiceApiController
  * @package App\Http\Controllers
  */
-abstract class AbstractCompanyServiceApiController extends JsonController
-{
-    /**
-     * @var IBaseRepository
-     */
-    protected $repository;
+abstract class AbstractCompanyServiceApiController extends JsonController {
+  /**
+   * @var IBaseRepository
+   */
+  protected $repository;
 
-    /**
-     * @var IResourceServerContext
-     */
-    protected $resource_server_context;
+  /**
+   * @var IResourceServerContext
+   */
+  protected $resource_server_context;
 
-    /**
-     * @param IBaseRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct(IBaseRepository $repository, IResourceServerContext $resource_server_context)
-    {
-        parent::__construct();
-        $this->repository = $repository;
-        $this->resource_server_context = $resource_server_context;
-    }
+  /**
+   * @param IBaseRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IBaseRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct();
+    $this->repository = $repository;
+    $this->resource_server_context = $resource_server_context;
+  }
 
+  protected function getResourceServerContext(): IResourceServerContext {
+    return $this->resource_server_context;
+  }
 
-    protected function getResourceServerContext(): IResourceServerContext
-    {
-        return $this->resource_server_context;
-    }
+  protected function getRepository(): IBaseRepository {
+    return $this->repository;
+  }
 
-    protected function getRepository(): IBaseRepository
-    {
-        return $this->repository;
-    }
-
-    use ParametrizedGetAll;
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        return $this->_getAll(
-            function () {
-                return [
-                    'name'    => ['=@', '==','@@'],
-                    'company' => ['=@', '==','@@'],
-                ];
-            },
-            function () {
-                return [
-                    'name' => 'sometimes|string',
-                    'company' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'name',
-                    'company',
-                    'id',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
-    }
+  use ParametrizedGetAll;
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    return $this->_getAll(
+      function () {
+        return [
+          "name" => ["=@", "==", "@@"],
+          "company" => ["=@", "==", "@@"],
+        ];
+      },
+      function () {
+        return [
+          "name" => "sometimes|string",
+          "company" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["name", "company", "id"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_Public;
+      },
+    );
+  }
 }

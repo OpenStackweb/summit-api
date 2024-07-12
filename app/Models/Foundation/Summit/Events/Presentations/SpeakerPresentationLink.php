@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,96 +19,85 @@ use models\utils\SilverstripeBaseModel;
  * Class SpeakerPresentationLink
  * @package models\summit
  */
-class SpeakerPresentationLink extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="LinkUrl", type="string")
-     */
-    private $link;
+class SpeakerPresentationLink extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="LinkUrl", type="string")
+   */
+  private $link;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     */
-    private $title;
+  /**
+   * @ORM\Column(name="Title", type="string")
+   */
+  private $title;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="other_presentation_links")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
-     * @var PresentationSpeaker
-     */
-    private $speaker;
+  /**
+   * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="other_presentation_links")
+   * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
+   * @var PresentationSpeaker
+   */
+  private $speaker;
 
-    /**
-     * SpeakerPresentationLink constructor.
-     * @param string $link
-     * @param string|null $title
-     */
-    public function __construct($link, $title = null)
-    {
-        parent::__construct();
-        $this->link = $link;
-        $this->title = $title;
+  /**
+   * SpeakerPresentationLink constructor.
+   * @param string $link
+   * @param string|null $title
+   */
+  public function __construct($link, $title = null) {
+    parent::__construct();
+    $this->link = $link;
+    $this->title = $title;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLink() {
+    return $this->link;
+  }
+
+  /**
+   * @param string $link
+   */
+  public function setLink($link) {
+    $this->link = $link;
+  }
+
+  /**
+   * @return string
+   */
+  public function getTitle() {
+    return $this->title;
+  }
+
+  /**
+   * @param string $title
+   */
+  public function setTitle($title) {
+    $this->title = $title;
+  }
+
+  /**
+   * @return PresentationSpeaker
+   */
+  public function getSpeaker() {
+    return $this->speaker;
+  }
+
+  /**
+   * @param PresentationSpeaker $speaker
+   */
+  public function setSpeaker($speaker) {
+    $this->speaker = $speaker;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSpeakerId() {
+    try {
+      return !is_null($this->speaker) ? $this->speaker->getId() : 0;
+    } catch (\Exception $ex) {
+      return 0;
     }
-
-    /**
-     * @return string
-     */
-    public function getLink()
-    {
-        return $this->link;
-    }
-
-    /**
-     * @param string $link
-     */
-    public function setLink($link)
-    {
-        $this->link = $link;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->title;
-    }
-
-    /**
-     * @param string $title
-     */
-    public function setTitle($title)
-    {
-        $this->title = $title;
-    }
-
-    /**
-     * @return PresentationSpeaker
-     */
-    public function getSpeaker()
-    {
-        return $this->speaker;
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function setSpeaker($speaker)
-    {
-        $this->speaker = $speaker;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSpeakerId(){
-        try {
-            return !is_null($this->speaker) ? $this->speaker->getId() : 0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-
+  }
 }

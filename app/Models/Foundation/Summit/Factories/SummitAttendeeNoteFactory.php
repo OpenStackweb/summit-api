@@ -21,45 +21,52 @@ use models\summit\SummitAttendeeNote;
  * Class SummitAttendeeNoteFactory
  * @package models\summit\factories
  */
-final class SummitAttendeeNoteFactory
-{
-    /**
-     * @param SummitAttendee $attendee
-     * @param array $payload
-     * @return SummitAttendeeNote
-     * @throws EntityNotFoundException
-     */
-    public static function build(SummitAttendee $attendee, Member $author, array $payload)
-    {
-        return self::populate($attendee, $author, new SummitAttendeeNote($payload['content'], $attendee), $payload);
-    }
+final class SummitAttendeeNoteFactory {
+  /**
+   * @param SummitAttendee $attendee
+   * @param array $payload
+   * @return SummitAttendeeNote
+   * @throws EntityNotFoundException
+   */
+  public static function build(SummitAttendee $attendee, Member $author, array $payload) {
+    return self::populate(
+      $attendee,
+      $author,
+      new SummitAttendeeNote($payload["content"], $attendee),
+      $payload,
+    );
+  }
 
-    /**
-     * @param SummitAttendee $attendee
-     * @param Member $author
-     * @param SummitAttendeeNote $attendee_note
-     * @param array $payload
-     * @return SummitAttendeeNote
-     * @throws EntityNotFoundException
-     */
-    public static function populate
-    (
-        SummitAttendee      $attendee,
-        Member              $author,
-        SummitAttendeeNote  $attendee_note,
-        array               $payload
-    )
-    {
-        if (isset($payload['ticket_id'])) {
-            $ticket_id = intval($payload['ticket_id']);
-            $ticket = $attendee->getTicketById($ticket_id);
-            if (is_null($ticket))
-                throw new EntityNotFoundException(sprintf("Ticket id %s does not belong to attendee id %s.",
-                    $ticket_id, $attendee->getId()));
+  /**
+   * @param SummitAttendee $attendee
+   * @param Member $author
+   * @param SummitAttendeeNote $attendee_note
+   * @param array $payload
+   * @return SummitAttendeeNote
+   * @throws EntityNotFoundException
+   */
+  public static function populate(
+    SummitAttendee $attendee,
+    Member $author,
+    SummitAttendeeNote $attendee_note,
+    array $payload,
+  ) {
+    if (isset($payload["ticket_id"])) {
+      $ticket_id = intval($payload["ticket_id"]);
+      $ticket = $attendee->getTicketById($ticket_id);
+      if (is_null($ticket)) {
+        throw new EntityNotFoundException(
+          sprintf(
+            "Ticket id %s does not belong to attendee id %s.",
+            $ticket_id,
+            $attendee->getId(),
+          ),
+        );
+      }
 
-            $attendee_note->setTicket($ticket);
-        }
-        $attendee_note->setAuthor($author);
-        return $attendee_note;
+      $attendee_note->setTicket($ticket);
     }
+    $attendee_note->setAuthor($author);
+    return $attendee_note;
+  }
 }

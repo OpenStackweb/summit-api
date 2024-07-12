@@ -16,11 +16,10 @@
  * Interface ISummitCategoryChangeStatus
  * @package models\summit
  */
-interface ISummitCategoryChangeStatus
-{
-    const Pending = 0;
-    const Approved = 1;
-    const Rejected = 2;
+interface ISummitCategoryChangeStatus {
+  const Pending = 0;
+  const Approved = 1;
+  const Rejected = 2;
 
-    const AllowedStatus = [ self::Pending, self::Approved, self::Rejected ];
+  const AllowedStatus = [self::Pending, self::Approved, self::Rejected];
 }

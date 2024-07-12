@@ -16,11 +16,10 @@ use models\main\File;
  * Interface IFolderService
  * @package App\Services\Model
  */
-interface IFolderService
-{
-    /**
-     * @param $string $folder_name
-     * @return File
-     */
-    public function findOrMake($folder_name);
+interface IFolderService {
+  /**
+   * @param $string $folder_name
+   * @return File
+   */
+  public function findOrMake($folder_name);
 }

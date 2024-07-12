@@ -23,18 +23,17 @@ use ReflectionClass;
  * @package App\Audit\ConcreteFormatters\ChildEntityFormatter
  */
 class ChildEntityFormatterFactory {
-
-    public static function build($entity): ?IChildEntityAuditLogFormatter {
-        try {
-            $class_name = (new ReflectionClass($entity))->getShortName();
-            $class_name = "App\\Audit\\ConcreteFormatters\\ChildEntityFormatters\\{$class_name}AuditLogFormatter";
-            if(class_exists($class_name)) {
-                return new $class_name();
-            }
-            return null;
-        } catch (\ReflectionException $e) {
-            Log::error($e);
-            return null;
-        }
+  public static function build($entity): ?IChildEntityAuditLogFormatter {
+    try {
+      $class_name = (new ReflectionClass($entity))->getShortName();
+      $class_name = "App\\Audit\\ConcreteFormatters\\ChildEntityFormatters\\{$class_name}AuditLogFormatter";
+      if (class_exists($class_name)) {
+        return new $class_name();
+      }
+      return null;
+    } catch (\ReflectionException $e) {
+      Log::error($e);
+      return null;
     }
+  }
 }

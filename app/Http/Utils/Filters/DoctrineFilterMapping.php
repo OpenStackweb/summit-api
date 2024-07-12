@@ -19,166 +19,163 @@ use Doctrine\ORM\QueryBuilder;
  * Class DoctrineFilterMapping
  * @package utils
  */
-class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
-{
+class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable {
+  protected $main_operator;
+  /**
+   * DoctrineFilterMapping constructor.
+   * @param string $condition
+   */
+  public function __construct($condition) {
+    $this->main_operator = Filter::MainOperatorAnd;
+    parent::__construct("", $condition);
+  }
 
-    protected $main_operator;
-    /**
-     * DoctrineFilterMapping constructor.
-     * @param string $condition
-     */
-    public function __construct($condition)
-    {
-        $this->main_operator = Filter::MainOperatorAnd;
-        parent::__construct("", $condition);
-    }
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  public function toRawSQL(FilterElement $filter, array $bindings = []): string {
+    throw new \Exception();
+  }
 
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public function toRawSQL(FilterElement $filter, array $bindings = []):string
-    {
-        throw new \Exception;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return QueryBuilder
+   */
+  public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder {
+    $value = $filter->getValue();
+    if (is_array($value)) {
+      $inner_where = "( ";
 
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return QueryBuilder
-     */
-    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder
-    {
-        $value = $filter->getValue();
-        if (is_array($value)) {
-            $inner_where = '( ';
-
-            foreach ($value as $idx => $val) {
-                $param_count = $query->getParameters()->count() + 1;
-                $where = $this->where;
-
-                $has_param = false;
-                if (strstr($where, ":i")) {
-                    $where = str_replace(':i', $param_count, $where);
-                }
-
-                if (strstr($where, ":value")) {
-                    $where = str_replace(":value", ":value_" . $param_count, $where);
-                    $has_param = true;
-                }
-
-                if (strstr($where, ":operator")) {
-                    $operator = $filter->getOperator();
-                    if(is_array($operator)){
-                        $operator = $operator[$idx];
-                    }
-                    $where = str_replace(":operator", $operator, $where);
-                }
-
-                if ($has_param) {
-                    $query = $query->setParameter(":value_" . $param_count, $val);
-                }
-                $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
-            }
-            $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
-            $inner_where .= ' )';
-            if($this->main_operator === Filter::MainOperatorAnd)
-                $query = $query->andWhere($inner_where);
-            else
-                $query = $query->orWhere($inner_where);
-        } else {
-            $param_count = $query->getParameters()->count() + 1;
-            $where = $this->where;
-            $has_param = false;
-            if (strstr($where, ":i")) {
-                $where = str_replace(':i', $param_count, $where);
-            }
-
-            if (strstr($where, ":value")) {
-                $where = str_replace(":value", ":value_" . $param_count, $where);
-                $has_param = true;
-            }
-
-            if (strstr($where, ":operator"))
-                $where = str_replace(":operator", $filter->getOperator(), $where);
-
-            if($this->main_operator === Filter::MainOperatorAnd)
-                $query = $query->andWhere($where);
-            else
-                $query = $query->orWhere($where);
-
-            if ($has_param) {
-                $query = $query->setParameter(":value_" . $param_count, $filter->getValue());
-            }
-        }
-        return $query;
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return string
-     */
-    public function applyOr(QueryBuilder $query, FilterElement $filter):string
-    {
-        $value = $filter->getValue();
-        if (is_array($value)) {
-
-            $inner_where = '( ';
-
-            foreach ($value as $val) {
-                $param_count = $query->getParameters()->count() + 1;
-                $where = $this->where;
-                $has_param = false;
-                if (strstr($where, ":i")) {
-                    $where = str_replace(':i', $param_count, $where);
-                }
-                if (strstr($where, ":value")) {
-                    $where = str_replace(":value", ":value_" . $param_count, $where);
-                    $has_param = true;
-                }
-
-                if (strstr($where, ":operator"))
-                    $where = str_replace(":operator", $filter->getOperator(), $where);
-
-                if ($has_param) {
-                    $query->setParameter(":value_" . $param_count, $val);
-                }
-
-                $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
-            }
-
-            $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
-            $inner_where .= ' )';
-
-            return $inner_where;
-        }
-
+      foreach ($value as $idx => $val) {
         $param_count = $query->getParameters()->count() + 1;
         $where = $this->where;
-        $has_param = false;
 
+        $has_param = false;
         if (strstr($where, ":i")) {
-            $where = str_replace(':i', $param_count, $where);
+          $where = str_replace(":i", $param_count, $where);
         }
 
         if (strstr($where, ":value")) {
-            $where = str_replace(":value", ":value_" . $param_count, $where);
-            $has_param = true;
+          $where = str_replace(":value", ":value_" . $param_count, $where);
+          $has_param = true;
         }
 
-        if (strstr($where, ":operator"))
-            $where = str_replace(":operator", $filter->getOperator(), $where);
+        if (strstr($where, ":operator")) {
+          $operator = $filter->getOperator();
+          if (is_array($operator)) {
+            $operator = $operator[$idx];
+          }
+          $where = str_replace(":operator", $operator, $where);
+        }
 
         if ($has_param) {
-            $query->setParameter(":value_" . $param_count, $filter->getValue());
+          $query = $query->setParameter(":value_" . $param_count, $val);
         }
-        return $where;
+        $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
+      }
+      $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
+      $inner_where .= " )";
+      if ($this->main_operator === Filter::MainOperatorAnd) {
+        $query = $query->andWhere($inner_where);
+      } else {
+        $query = $query->orWhere($inner_where);
+      }
+    } else {
+      $param_count = $query->getParameters()->count() + 1;
+      $where = $this->where;
+      $has_param = false;
+      if (strstr($where, ":i")) {
+        $where = str_replace(":i", $param_count, $where);
+      }
+
+      if (strstr($where, ":value")) {
+        $where = str_replace(":value", ":value_" . $param_count, $where);
+        $has_param = true;
+      }
+
+      if (strstr($where, ":operator")) {
+        $where = str_replace(":operator", $filter->getOperator(), $where);
+      }
+
+      if ($this->main_operator === Filter::MainOperatorAnd) {
+        $query = $query->andWhere($where);
+      } else {
+        $query = $query->orWhere($where);
+      }
+
+      if ($has_param) {
+        $query = $query->setParameter(":value_" . $param_count, $filter->getValue());
+      }
+    }
+    return $query;
+  }
+
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return string
+   */
+  public function applyOr(QueryBuilder $query, FilterElement $filter): string {
+    $value = $filter->getValue();
+    if (is_array($value)) {
+      $inner_where = "( ";
+
+      foreach ($value as $val) {
+        $param_count = $query->getParameters()->count() + 1;
+        $where = $this->where;
+        $has_param = false;
+        if (strstr($where, ":i")) {
+          $where = str_replace(":i", $param_count, $where);
+        }
+        if (strstr($where, ":value")) {
+          $where = str_replace(":value", ":value_" . $param_count, $where);
+          $has_param = true;
+        }
+
+        if (strstr($where, ":operator")) {
+          $where = str_replace(":operator", $filter->getOperator(), $where);
+        }
+
+        if ($has_param) {
+          $query->setParameter(":value_" . $param_count, $val);
+        }
+
+        $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
+      }
+
+      $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
+      $inner_where .= " )";
+
+      return $inner_where;
     }
 
-    public function setMainOperator(string $op): void
-    {
-        $this->main_operator = $op;
+    $param_count = $query->getParameters()->count() + 1;
+    $where = $this->where;
+    $has_param = false;
+
+    if (strstr($where, ":i")) {
+      $where = str_replace(":i", $param_count, $where);
     }
+
+    if (strstr($where, ":value")) {
+      $where = str_replace(":value", ":value_" . $param_count, $where);
+      $has_param = true;
+    }
+
+    if (strstr($where, ":operator")) {
+      $where = str_replace(":operator", $filter->getOperator(), $where);
+    }
+
+    if ($has_param) {
+      $query->setParameter(":value_" . $param_count, $filter->getValue());
+    }
+    return $where;
+  }
+
+  public function setMainOperator(string $op): void {
+    $this->main_operator = $op;
+  }
 }

@@ -26,58 +26,55 @@ use models\summit\SummitRegistrationPromoCode;
  * Class ExistingSpeakersPromoCodeStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class ExistingMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
-{
-    /**
-     * @var ITransactionService
-     */
-    protected $tx_service;
+final class ExistingMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy {
+  /**
+   * @var ITransactionService
+   */
+  protected $tx_service;
 
-    /**
-     * @var Summit
-     */
-    private $summit;
+  /**
+   * @var Summit
+   */
+  private $summit;
 
-    /**
-     * @var array
-     */
-    private $data;
+  /**
+   * @var array
+   */
+  private $data;
 
-    /**
-     * PromoCodeStrategy constructor.
-     * @param Summit $summit
-     * @param ITransactionService $tx_service
-     * @param array $data
-     */
-    public function __construct(Summit $summit,
-                                ITransactionService $tx_service,
-                                array $data)
-    {
-        $this->summit = $summit;
-        $this->tx_service = $tx_service;
-        $this->data = $data;
-    }
+  /**
+   * PromoCodeStrategy constructor.
+   * @param Summit $summit
+   * @param ITransactionService $tx_service
+   * @param array $data
+   */
+  public function __construct(Summit $summit, ITransactionService $tx_service, array $data) {
+    $this->summit = $summit;
+    $this->tx_service = $tx_service;
+    $this->data = $data;
+  }
 
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return SummitRegistrationPromoCode|null
-     * @throws \Exception
-     */
-    public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
+  /**
+   * @param PresentationSpeaker $speaker
+   * @return SummitRegistrationPromoCode|null
+   * @throws \Exception
+   */
+  public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
+    return $this->tx_service->transaction(function () use ($speaker) {
+      $promo_code = $this->summit->getPromoCodeByCode($this->data["promo_code"]);
+      if (is_null($promo_code)) {
+        throw new EntityNotFoundException("Promo Code not found!.");
+      }
+      if (
+        !$promo_code instanceof SpeakersSummitRegistrationPromoCode &&
+        !$promo_code instanceof SpeakersRegistrationDiscountCode
+      ) {
+        throw new ValidationException("Invalid Promo Code.");
+      }
 
-        return $this->tx_service->transaction(function () use ($speaker) {
-            $promo_code = $this->summit->getPromoCodeByCode($this->data["promo_code"]);
-            if (is_null($promo_code)) {
-                throw new EntityNotFoundException('Promo Code not found!.');
-            }
-            if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode &&
-                !$promo_code instanceof SpeakersRegistrationDiscountCode) {
-                throw new ValidationException('Invalid Promo Code.');
-            }
+      $promo_code->setSourceAdmin();
 
-            $promo_code->setSourceAdmin();
-
-            return $promo_code->assignSpeaker($speaker);
-        });
-    }
+      return $promo_code->assignSpeaker($speaker);
+    });
+  }
 }

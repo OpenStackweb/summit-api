@@ -18,11 +18,10 @@ use models\summit\SummitRegistrationPromoCode;
  * Interface IPromoCodeValidationStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IPromoCodeValidationStrategy
-{
-    /**
-     * @param SummitRegistrationPromoCode $promo_code
-     * @return bool
-     */
-    public function isValid(SummitRegistrationPromoCode $promo_code): bool;
+interface IPromoCodeValidationStrategy {
+  /**
+   * @param SummitRegistrationPromoCode $promo_code
+   * @return bool
+   */
+  public function isValid(SummitRegistrationPromoCode $promo_code): bool;
 }

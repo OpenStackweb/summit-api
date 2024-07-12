@@ -22,57 +22,60 @@ use utils\Filter;
  * Interface ISummitTicketTypeService
  * @package App\Services\Model
  */
-interface ISummitTicketTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitTicketType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTicketType(Summit $summit, array $data);
+interface ISummitTicketTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitTicketType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTicketType(Summit $summit, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param int $ticket_type_id
-     * @param array $data
-     * @return SummitTicketType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTicketType(Summit $summit, $ticket_type_id, array $data);
+  /**
+   * @param Summit $summit
+   * @param int $ticket_type_id
+   * @param array $data
+   * @return SummitTicketType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTicketType(Summit $summit, $ticket_type_id, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param int $ticket_type_id
-     * @return SummitTicketType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteTicketType(Summit $summit, $ticket_type_id);
+  /**
+   * @param Summit $summit
+   * @param int $ticket_type_id
+   * @return SummitTicketType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteTicketType(Summit $summit, $ticket_type_id);
 
-    /**
-     * @param Summit $summit
-     * @return SummitTicketType[]
-     * @throws ValidationException
-     */
-    public function seedSummitTicketTypesFromEventBrite(Summit $summit);
+  /**
+   * @param Summit $summit
+   * @return SummitTicketType[]
+   * @throws ValidationException
+   */
+  public function seedSummitTicketTypesFromEventBrite(Summit $summit);
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param string|null $promocode_code
-     * @return SummitTicketType[]
-     * @throws \Exception
-     */
-    public function getAllowedTicketTypes(Summit $summit, Member $member, ?string $promocode_code = null): array;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param string|null $promocode_code
+   * @return SummitTicketType[]
+   * @throws \Exception
+   */
+  public function getAllowedTicketTypes(
+    Summit $summit,
+    Member $member,
+    ?string $promocode_code = null,
+  ): array;
 
-    /**
-     * @param Summit $summit
-     * @param String $currency_symbol
-     * @return void
-     * @throws \Exception
-     */
-    public function updateCurrencySymbol(Summit $summit, string $currency_symbol): void;
+  /**
+   * @param Summit $summit
+   * @param String $currency_symbol
+   * @return void
+   * @throws \Exception
+   */
+  public function updateCurrencySymbol(Summit $summit, string $currency_symbol): void;
 }

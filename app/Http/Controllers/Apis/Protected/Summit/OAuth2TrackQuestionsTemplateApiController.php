@@ -32,444 +32,415 @@ use utils\PagingInfo;
  * Class OAuth2TrackQuestionsTemplateApiController
  * @package App\Http\Controllers
  */
-final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedController
-{
-    /**
-     * @var ITrackQuestionTemplateService
-     */
-    private $track_question_template_service;
+final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedController {
+  /**
+   * @var ITrackQuestionTemplateService
+   */
+  private $track_question_template_service;
 
-    /**
-     * @var ITrackQuestionTemplateRepository
-     */
-    private $track_question_template_repository;
+  /**
+   * @var ITrackQuestionTemplateRepository
+   */
+  private $track_question_template_repository;
 
-    /**
-     * OAuth2TrackQuestionsTemplateApiController constructor.
-     * @param ITrackQuestionTemplateService $track_question_template_service
-     * @param ITrackQuestionTemplateRepository $track_question_template_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ITrackQuestionTemplateService $track_question_template_service,
-        ITrackQuestionTemplateRepository $track_question_template_repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->track_question_template_repository = $track_question_template_repository;
-        $this->track_question_template_service = $track_question_template_service;
+  /**
+   * OAuth2TrackQuestionsTemplateApiController constructor.
+   * @param ITrackQuestionTemplateService $track_question_template_service
+   * @param ITrackQuestionTemplateRepository $track_question_template_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ITrackQuestionTemplateService $track_question_template_service,
+    ITrackQuestionTemplateRepository $track_question_template_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->track_question_template_repository = $track_question_template_repository;
+    $this->track_question_template_service = $track_question_template_service;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getTrackQuestionTemplates() {
+    $values = Request::all();
+    $rules = PaginationValidationRules::get();
+
+    try {
+      $validation = Validator::make($values, $rules);
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        throw $ex->setMessages($validation->messages()->toArray());
+      }
+
+      // default values
+      $page = 1;
+      $per_page = 5;
+
+      if (Request::has("page")) {
+        $page = intval(Request::input("page"));
+        $per_page = intval(Request::input("per_page"));
+      }
+
+      $filter = null;
+
+      if (Request::has("filter")) {
+        $filter = FilterParser::parse(Request::input("filter"), [
+          "name" => ["=@", "=="],
+          "label" => ["=@", "=="],
+          "class_name" => ["=="],
+        ]);
+      }
+
+      if (is_null($filter)) {
+        $filter = new Filter();
+      }
+
+      $filter->validate(
+        [
+          "class_name" => sprintf(
+            "sometimes|in:%s",
+            implode(",", TrackQuestionTemplateConstants::$valid_class_names),
+          ),
+          "name" => "sometimes|string",
+          "label" => "sometimes|string",
+        ],
+        [
+          "class_name.in" => sprintf(
+            ":attribute has an invalid value ( valid values are %s )",
+            implode(", ", TrackQuestionTemplateConstants::$valid_class_names),
+          ),
+        ],
+      );
+
+      $order = null;
+
+      if (Request::has("order")) {
+        $order = OrderParser::parse(Request::input("order"), ["id", "name", "label"]);
+      }
+
+      $data = $this->track_question_template_repository->getAllByPage(
+        new PagingInfo($page, $per_page),
+        $filter,
+        $order,
+      );
+
+      return $this->ok($data->toArray(Request::input("expand", ""), [], [], []));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex3) {
+      Log::warning($ex3);
+      return $this->error401();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getTrackQuestionTemplates(){
-        $values = Request::all();
-        $rules  = PaginationValidationRules::get();
+  /**
+   * @return mixed
+   */
+  public function addTrackQuestionTemplate() {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-        try {
+      $rules = TrackQuestionTemplateValidationRulesFactory::build($payload);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $validation = Validator::make($values, $rules);
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
+        return $this->error412($messages);
+      }
 
-            // default values
-            $page     = 1;
-            $per_page = 5;
+      $question = $this->track_question_template_service->addTrackQuestionTemplate($payload);
 
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'  => ['=@', '=='],
-                    'label' => ['=@', '=='],
-                    'class_name' => ['=='],
-                ]);
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'class_name'      => sprintf('sometimes|in:%s',implode(',', TrackQuestionTemplateConstants::$valid_class_names)),
-                'name'            => 'sometimes|string',
-                'label'           => 'sometimes|string',
-            ], [
-                'class_name.in' =>  sprintf
-                (
-                    ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", TrackQuestionTemplateConstants::$valid_class_names)
-                ),
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
-
-                    'id',
-                    'name',
-                    'label',
-                ]);
-            }
-
-            $data = $this->track_question_template_repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $data->toArray
-                (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
-                )
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($question)
+          ->serialize(Request::input("expand", "")),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @return mixed
-     */
-    public function addTrackQuestionTemplate(){
-        try {
+  /**
+   * @param $track_question_template_id
+   * @return mixed
+   */
+  public function getTrackQuestionTemplate($track_question_template_id) {
+    try {
+      $track_question_template = $this->track_question_template_repository->getById(
+        $track_question_template_id,
+      );
+      if (is_null($track_question_template)) {
+        return $this->error404();
+      }
 
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-
-            $rules = TrackQuestionTemplateValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $question = $this->track_question_template_service->addTrackQuestionTemplate($payload);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($question)->serialize(
-                Request::input('expand', '')
-            ));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($track_question_template)
+          ->serialize(Request::input("expand", "")),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
+  /**
+   * @param $track_question_template_id
+   * @return mixed
+   */
+  public function updateTrackQuestionTemplate($track_question_template_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-    /**
-     * @param $track_question_template_id
-     * @return mixed
-     */
-    public function getTrackQuestionTemplate($track_question_template_id){
-        try {
+      $rules = TrackQuestionTemplateValidationRulesFactory::build($payload, true);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $track_question_template = $this->track_question_template_repository->getById($track_question_template_id);
-            if (is_null($track_question_template)) return $this->error404();
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_question_template)->serialize(
-                Request::input('expand', '')
-            ));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        return $this->error412($messages);
+      }
+
+      $question = $this->track_question_template_service->updateTrackQuestionTemplate(
+        $track_question_template_id,
+        $payload,
+      );
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($question)
+          ->serialize(Request::input("expand", "")),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $track_question_template_id
-     * @return mixed
-     */
-    public function updateTrackQuestionTemplate($track_question_template_id){
-        try {
-
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-
-            $rules = TrackQuestionTemplateValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $question = $this->track_question_template_service->updateTrackQuestionTemplate($track_question_template_id, $payload);
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($question)->serialize(
-                Request::input('expand', '')
-            ));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * @param $track_question_template_id
+   * @return mixed
+   */
+  public function deleteTrackQuestionTemplate($track_question_template_id) {
+    try {
+      $this->track_question_template_service->deleteTrackQuestionTemplate(
+        $track_question_template_id,
+      );
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $track_question_template_id
-     * @return mixed
-     */
-    public function deleteTrackQuestionTemplate($track_question_template_id){
-        try {
+  /**
+   * @return mixed
+   */
+  public function getTrackQuestionTemplateMetadata() {
+    return $this->ok($this->track_question_template_repository->getQuestionsMetadata());
+  }
 
-            $this->track_question_template_service->deleteTrackQuestionTemplate($track_question_template_id);
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * values endpoints
+   */
+
+  /**
+   * @param $track_question_template_id
+   * @param $track_question_template_value_id
+   * @return mixed
+   */
+  public function getTrackQuestionTemplateValue(
+    $track_question_template_id,
+    $track_question_template_value_id,
+  ) {
+    try {
+      $track_question_template = $this->track_question_template_repository->getById(
+        $track_question_template_id,
+      );
+      if (is_null($track_question_template)) {
+        return $this->error404();
+      }
+
+      if (!$track_question_template instanceof TrackMultiValueQuestionTemplate) {
+        return $this->error404();
+      }
+
+      $value = $track_question_template->getValueById($track_question_template_value_id);
+      if (is_null($value)) {
+        return $this->error404();
+      }
+
+      return $this->ok(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getTrackQuestionTemplateMetadata(){
-        return $this->ok
-        (
-            $this->track_question_template_repository->getQuestionsMetadata()
-        );
+  /**
+   * @param $track_question_template_id
+   * @return mixed
+   */
+  public function addTrackQuestionTemplateValue($track_question_template_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
+
+      $rules = TrackQuestionValueTemplateValidationRulesFactory::build($payload);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
+
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
+
+        return $this->error412($messages);
+      }
+
+      $value = $this->track_question_template_service->addTrackQuestionValueTemplate(
+        $track_question_template_id,
+        $payload,
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($value)
+          ->serialize(Request::input("expand", "")),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * values endpoints
-     */
+  /**
+   * @param $track_question_template_id
+   * @param $track_question_template_value_id
+   * @return mixed
+   */
+  public function updateTrackQuestionTemplateValue(
+    $track_question_template_id,
+    $track_question_template_value_id,
+  ) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-    /**
-     * @param $track_question_template_id
-     * @param $track_question_template_value_id
-     * @return mixed
-     */
-    public function getTrackQuestionTemplateValue($track_question_template_id, $track_question_template_value_id){
-        try {
+      $rules = TrackQuestionValueTemplateValidationRulesFactory::build($payload, true);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $track_question_template = $this->track_question_template_repository->getById($track_question_template_id);
-            if (is_null($track_question_template)) return $this->error404();
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if (!$track_question_template instanceof TrackMultiValueQuestionTemplate) return $this->error404();
+        return $this->error412($messages);
+      }
 
-            $value = $track_question_template->getValueById($track_question_template_value_id);
-            if (is_null($value)) return $this->error404();
+      $value = $this->track_question_template_service->updateTrackQuestionValueTemplate(
+        $track_question_template_id,
+        $track_question_template_value_id,
+        $payload,
+      );
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($value)
+          ->serialize(Request::input("expand", "")),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $track_question_template_id
-     * @return mixed
-     */
-    public function addTrackQuestionTemplateValue($track_question_template_id){
-        try {
-
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-
-            $rules = TrackQuestionValueTemplateValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $value = $this->track_question_template_service->addTrackQuestionValueTemplate
-            (
-                $track_question_template_id,
-                $payload
-            );
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($value)->serialize(
-                Request::input('expand', '')
-            ));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * @param $track_question_template_id
+   * @param $track_question_template_value_id
+   * @return mixed
+   */
+  public function deleteTrackQuestionTemplateValue(
+    $track_question_template_id,
+    $track_question_template_value_id,
+  ) {
+    try {
+      $this->track_question_template_service->deleteTrackQuestionValueTemplate(
+        $track_question_template_id,
+        $track_question_template_value_id,
+      );
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @param $track_question_template_id
-     * @param $track_question_template_value_id
-     * @return mixed
-     */
-    public function updateTrackQuestionTemplateValue($track_question_template_id, $track_question_template_value_id){
-        try {
-
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-
-            $rules = TrackQuestionValueTemplateValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $value = $this->track_question_template_service->updateTrackQuestionValueTemplate
-            (
-                $track_question_template_id,
-                $track_question_template_value_id,
-                $payload
-            );
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($value)->serialize(
-                Request::input('expand', '')
-            ));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param $track_question_template_id
-     * @param $track_question_template_value_id
-     * @return mixed
-     */
-    public function deleteTrackQuestionTemplateValue($track_question_template_id, $track_question_template_value_id){
-        try {
-            $this->track_question_template_service->deleteTrackQuestionValueTemplate
-            (
-                $track_question_template_id,
-                $track_question_template_value_id
-            );
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  }
 }

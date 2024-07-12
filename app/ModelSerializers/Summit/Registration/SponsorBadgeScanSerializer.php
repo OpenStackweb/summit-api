@@ -20,95 +20,103 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SponsorBadgeScanSerializer
  * @package ModelSerializers
  */
-final class SponsorBadgeScanSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'ScanDate'     => 'scan_date:datetime_epoch',
-        'QRCode'       => 'qr_code:json_string',
-        'SponsorId'    => 'sponsor_id:json_int',
-        'UserId'       => 'scanned_by_id:json_int',
-        'BadgeId'      => 'badge_id:json_int',
-        'Notes'        => 'notes:json_string'
-    ];
+final class SponsorBadgeScanSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "ScanDate" => "scan_date:datetime_epoch",
+    "QRCode" => "qr_code:json_string",
+    "SponsorId" => "sponsor_id:json_int",
+    "UserId" => "scanned_by_id:json_int",
+    "BadgeId" => "badge_id:json_int",
+    "Notes" => "notes:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'extra_questions',
-    ];
+  protected static $allowed_relations = ["extra_questions"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $scan = $this->object;
-        if (!$scan instanceof SponsorBadgeScan) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('extra_questions', $relations) && !isset($values['extra_questions'])){
-            $extra_question_answers = [];
-            foreach ($scan->getExtraQuestionAnswers() as $extra_question_answer){
-                $extra_question_answers[] = $extra_question_answer->getId();
-            }
-            $values['extra_questions'] = $extra_question_answers;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'sponsor': {
-                        if(!$scan->hasSponsor()) break;
-                        unset($values['sponsor_id']);
-                        $values['sponsor'] = SerializerRegistry::getInstance()->getSerializer($scan->getSponsor())->serialize
-                        (
-                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            $params
-                        );
-                    }
-                    break;
-                    case 'scanned_by_id': {
-                        if(!$scan->hasUser()) break;
-                        unset($values['scanned_by_id']);
-                        $values['scanned_by'] = SerializerRegistry::getInstance()->getSerializer($scan->getUser())->serialize
-                        (
-                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            $params
-                        );
-                    }
-                        break;
-                    case 'badge': {
-                        if(!$scan->hasBadge()) break;
-                        unset($values['badge_id']);
-                        $values['badge'] = SerializerRegistry::getInstance()->getSerializer($scan->getBadge())->serialize
-                        (
-                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            $params
-                        );
-                    }
-                        break;
-                }
-
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $scan = $this->object;
+    if (!$scan instanceof SponsorBadgeScan) {
+      return [];
     }
 
-    protected static $expand_mappings = [
-        'extra_questions' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getExtraQuestionAnswers',
-        ]
-    ];
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("extra_questions", $relations) && !isset($values["extra_questions"])) {
+      $extra_question_answers = [];
+      foreach ($scan->getExtraQuestionAnswers() as $extra_question_answer) {
+        $extra_question_answers[] = $extra_question_answer->getId();
+      }
+      $values["extra_questions"] = $extra_question_answers;
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "sponsor":
+            if (!$scan->hasSponsor()) {
+              break;
+            }
+            unset($values["sponsor_id"]);
+            $values["sponsor"] = SerializerRegistry::getInstance()
+              ->getSerializer($scan->getSponsor())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+          case "scanned_by_id":
+            if (!$scan->hasUser()) {
+              break;
+            }
+            unset($values["scanned_by_id"]);
+            $values["scanned_by"] = SerializerRegistry::getInstance()
+              ->getSerializer($scan->getUser())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+          case "badge":
+            if (!$scan->hasBadge()) {
+              break;
+            }
+            unset($values["badge_id"]);
+            $values["badge"] = SerializerRegistry::getInstance()
+              ->getSerializer($scan->getBadge())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+        }
+      }
+    }
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "extra_questions" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getExtraQuestionAnswers",
+    ],
+  ];
 }

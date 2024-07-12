@@ -18,32 +18,27 @@ use models\summit\SummitGeoLocatedLocation;
  * Class GeoLocationAddressInfoStrategy
  * @package App\Services\Model\Strategies\GeoLocation
  */
-final class GeoLocationAddressInfoStrategy implements IGeoLocationStrategy
-{
+final class GeoLocationAddressInfoStrategy implements IGeoLocationStrategy {
+  /**
+   * @param SummitGeoLocatedLocation $location
+   * @param IGeoCodingAPI $geo_coding_api
+   * @return SummitGeoLocatedLocation
+   */
+  public function doGeoLocation(SummitGeoLocatedLocation $location, IGeoCodingAPI $geo_coding_api) {
+    $response = $geo_coding_api->getGeoCoordinates(
+      new AddressInfo(
+        $location->getAddress1(),
+        $location->getAddress2(),
+        $location->getZipCode(),
+        $location->getState(),
+        $location->getCity(),
+        $location->getCountry(),
+      ),
+    );
 
-    /**
-     * @param SummitGeoLocatedLocation $location
-     * @param IGeoCodingAPI $geo_coding_api
-     * @return SummitGeoLocatedLocation
-     */
-    public function doGeoLocation(SummitGeoLocatedLocation $location, IGeoCodingAPI $geo_coding_api)
-    {
-        $response = $geo_coding_api->getGeoCoordinates
-        (
-            new AddressInfo
-            (
-                $location->getAddress1(),
-                $location->getAddress2(),
-                $location->getZipCode(),
-                $location->getState(),
-                $location->getCity(),
-                $location->getCountry()
-            )
-        );
+    $location->setLat($response->getLat());
+    $location->setLng($response->getLng());
 
-        $location->setLat($response->getLat());
-        $location->setLng($response->getLng());
-
-        return $location;
-    }
+    return $location;
+  }
 }

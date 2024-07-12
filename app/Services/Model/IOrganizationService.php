@@ -18,29 +18,28 @@ use models\main\Organization;
  * Interface IOrganizationService
  * @package App\Services\Model
  */
-interface IOrganizationService
-{
-    /**
-     * @param array $data
-     * @return Organization
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addOrganization(array $data);
+interface IOrganizationService {
+  /**
+   * @param array $data
+   * @return Organization
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addOrganization(array $data);
 
-    /**
-     * @param array $data
-     * @param int $organization_id
-     * @return Organization
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateOrganization(array $data, $organization_id);
+  /**
+   * @param array $data
+   * @param int $organization_id
+   * @return Organization
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateOrganization(array $data, $organization_id);
 
-    /**
-     * @param int $organization_id
-     * @return void
-     * @throws EntityNotFoundException
-     */
-    public function deleteOrganization($organization_id);
+  /**
+   * @param int $organization_id
+   * @return void
+   * @throws EntityNotFoundException
+   */
+  public function deleteOrganization($organization_id);
 }

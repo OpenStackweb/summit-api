@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISponsorRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISponsorRepository extends IBaseRepository
-{
-
+interface ISponsorRepository extends IBaseRepository {
 }

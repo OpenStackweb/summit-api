@@ -18,76 +18,64 @@
  * Defines the common behavior for all emitted tokens
  * @package oauth2\models
  */
-abstract class Token
-{
+abstract class Token {
+  const DefaultByteLength = 32;
 
-    const DefaultByteLength = 32;
+  protected $value;
+  protected $lifetime;
 
-    protected $value;
-    protected $lifetime;
+  protected $client_id;
+  protected $len;
+  protected $scope;
+  protected $audience;
+  protected $from_ip;
+  protected $is_hashed;
+  /**
+   * @var null|int
+   */
+  protected $user_id;
 
-    protected $client_id;
-    protected $len;
-    protected $scope;
-    protected $audience;
-    protected $from_ip;
-    protected $is_hashed;
-    /**
-     * @var null|int
-     */
-    protected $user_id;
+  public function __construct($len = self::DefaultByteLength) {
+    $this->len = $len;
+    $this->is_hashed = false;
+  }
 
-    public function __construct($len = self::DefaultByteLength)
-    {
-        $this->len = $len;
-        $this->is_hashed = false;
-    }
+  public function getValue() {
+    return $this->value;
+  }
 
-    public function getValue()
-    {
-        return $this->value;
-    }
+  public function getLifetime() {
+    return intval($this->lifetime);
+  }
 
-    public function getLifetime()
-    {
-        return intval($this->lifetime);
-    }
+  public function getScope() {
+    return $this->scope;
+  }
 
-    public function getScope()
-    {
-        return $this->scope;
-    }
+  public function getClientId() {
+    return $this->client_id;
+  }
 
-    public function getClientId()
-    {
-        return $this->client_id;
-    }
+  public function getAudience() {
+    return $this->audience;
+  }
 
-    public function getAudience()
-    {
-        return $this->audience;
-    }
+  public function getFromIp() {
+    return $this->from_ip;
+  }
 
-    public function getFromIp()
-    {
-        return $this->from_ip;
-    }
+  /**
+   * @return null|int
+   */
+  public function getUserId() {
+    return $this->user_id;
+  }
 
-    /**
-     * @return null|int
-     */
-    public function getUserId()
-    {
-        return $this->user_id;
-    }
+  public function isHashed() {
+    return $this->is_hashed;
+  }
 
-    public function isHashed()
-    {
-        return $this->is_hashed;
-    }
+  abstract public function toJSON();
 
-    public abstract function toJSON();
-
-
-    public abstract function fromJSON($json);
+  abstract public function fromJSON($json);
 }

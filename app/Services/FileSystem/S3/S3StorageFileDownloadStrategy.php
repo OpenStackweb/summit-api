@@ -17,12 +17,10 @@ use App\Services\FileSystem\AbstractFileDownloadStrategy;
  * Class S3StorageFileDownloadStrategy
  * @package App\Services\FileSystem\S3
  */
-final class S3StorageFileDownloadStrategy extends AbstractFileDownloadStrategy
-{
-    const Driver = "s3";
+final class S3StorageFileDownloadStrategy extends AbstractFileDownloadStrategy {
+  const Driver = "s3";
 
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

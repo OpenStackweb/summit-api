@@ -16,32 +16,36 @@ use models\summit\SummitRefundPolicyType;
  * Class SummitRefundPolicyTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitRefundPolicyTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SummitRefundPolicyType
-     */
-    public static function build(array $data):SummitRefundPolicyType{
-        return self::populate(new SummitRefundPolicyType, $data);
+final class SummitRefundPolicyTypeFactory {
+  /**
+   * @param array $data
+   * @return SummitRefundPolicyType
+   */
+  public static function build(array $data): SummitRefundPolicyType {
+    return self::populate(new SummitRefundPolicyType(), $data);
+  }
+
+  /**
+   * @param SummitRefundPolicyType $policy
+   * @param array $data
+   * @return SummitRefundPolicyType
+   */
+  public static function populate(
+    SummitRefundPolicyType $policy,
+    array $data,
+  ): SummitRefundPolicyType {
+    if (isset($data["name"])) {
+      $policy->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitRefundPolicyType $policy
-     * @param array $data
-     * @return SummitRefundPolicyType
-     */
-    public static function populate(SummitRefundPolicyType $policy, array $data):SummitRefundPolicyType{
-
-        if(isset($data['name']))
-            $policy->setName(trim($data['name']));
-
-        if(isset($data['refund_rate']))
-            $policy->setRefundRate(floatval($data['refund_rate']));
-
-        if(isset($data['until_x_days_before_event_starts']))
-            $policy->setUntilXDaysBeforeEventStarts(intval($data['until_x_days_before_event_starts']));
-
-        return $policy;
+    if (isset($data["refund_rate"])) {
+      $policy->setRefundRate(floatval($data["refund_rate"]));
     }
+
+    if (isset($data["until_x_days_before_event_starts"])) {
+      $policy->setUntilXDaysBeforeEventStarts(intval($data["until_x_days_before_event_starts"]));
+    }
+
+    return $policy;
+  }
 }

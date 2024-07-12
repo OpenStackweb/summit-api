@@ -16,17 +16,16 @@ use models\utils\IBaseRepository;
  * Interface SummitAttendeeBadgePrintRuleRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitAttendeeBadgePrintRuleRepository extends IBaseRepository
-{
-    /**
-     * @param array $group_ids
-     * @return mixed
-     */
-    public function getByGroupsIds(array $group_ids);
+interface ISummitAttendeeBadgePrintRuleRepository extends IBaseRepository {
+  /**
+   * @param array $group_ids
+   * @return mixed
+   */
+  public function getByGroupsIds(array $group_ids);
 
-    /**
-     * @param array $group_slugs
-     * @return mixed
-     */
-    public function getByGroupsSlugs(array $group_slugs);
+  /**
+   * @param array $group_slugs
+   * @return mixed
+   */
+  public function getByGroupsSlugs(array $group_slugs);
 }

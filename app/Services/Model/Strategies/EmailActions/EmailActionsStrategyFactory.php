@@ -22,25 +22,24 @@ use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
  * Class IEmailActionsStrategyFactory
  * @package App\Services\Model\Strategies
  */
-final class EmailActionsStrategyFactory implements IEmailActionsStrategyFactory
-{
-    /**
-     * @param String $flow_event
-     * @return AbstractEmailAction|null
-     */
-    public function build(String $flow_event): ?AbstractEmailAction {
-        switch ($flow_event) {
-            case SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG:
-            case InviteAttendeeTicketEditionMail::EVENT_SLUG:
-                return new SummitAttendeeTicketEmailStrategy($flow_event);
-            case SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG:
-                return new SummitAttendeeAllCurrentTicketsEmailStrategy($flow_event);
-            case SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG:
-                return new SummitAttendeeRegistrationIncompleteReminderStrategy($flow_event);
-            case GenericSummitAttendeeEmail::EVENT_SLUG:
-                return new SummitAttendeeGenericEmailStrategy($flow_event);
-            default:
-                return null;
-        }
+final class EmailActionsStrategyFactory implements IEmailActionsStrategyFactory {
+  /**
+   * @param String $flow_event
+   * @return AbstractEmailAction|null
+   */
+  public function build(string $flow_event): ?AbstractEmailAction {
+    switch ($flow_event) {
+      case SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG:
+      case InviteAttendeeTicketEditionMail::EVENT_SLUG:
+        return new SummitAttendeeTicketEmailStrategy($flow_event);
+      case SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG:
+        return new SummitAttendeeAllCurrentTicketsEmailStrategy($flow_event);
+      case SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG:
+        return new SummitAttendeeRegistrationIncompleteReminderStrategy($flow_event);
+      case GenericSummitAttendeeEmail::EVENT_SLUG:
+        return new SummitAttendeeGenericEmailStrategy($flow_event);
+      default:
+        return null;
     }
+  }
 }

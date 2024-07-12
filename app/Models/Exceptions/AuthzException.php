@@ -16,7 +16,5 @@ use Exception;
  * Class AuthzException
  * @package App\Models\Exceptions
  */
-final class AuthzException extends Exception
-{
-
+final class AuthzException extends Exception {
 }

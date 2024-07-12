@@ -19,35 +19,43 @@ use models\summit\Summit;
  * Interface IExtraQuestionTypeService
  * @package App\Services\Model
  */
-interface IExtraQuestionTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param int $parent_id
-     * @param array $payload
-     * @return SubQuestionRule
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addSubQuestionRule(Summit $summit, int $parent_id, array $payload):SubQuestionRule;
+interface IExtraQuestionTypeService {
+  /**
+   * @param Summit $summit
+   * @param int $parent_id
+   * @param array $payload
+   * @return SubQuestionRule
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addSubQuestionRule(
+    Summit $summit,
+    int $parent_id,
+    array $payload,
+  ): SubQuestionRule;
 
-    /**
-     * @param Summit $summit
-     * @param int $parent_id
-     * @param int $rule_id
-     * @param array $payload
-     * @return SubQuestionRule
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateSubQuestionRule(Summit $summit, int $parent_id, int $rule_id, array $payload):SubQuestionRule;
+  /**
+   * @param Summit $summit
+   * @param int $parent_id
+   * @param int $rule_id
+   * @param array $payload
+   * @return SubQuestionRule
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateSubQuestionRule(
+    Summit $summit,
+    int $parent_id,
+    int $rule_id,
+    array $payload,
+  ): SubQuestionRule;
 
-    /**
-     * @param Summit $summit
-     * @param int $parent_id
-     * @param int $rule_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteSubQuestionRule(Summit $summit, int $parent_id, int $rule_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $parent_id
+   * @param int $rule_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteSubQuestionRule(Summit $summit, int $parent_id, int $rule_id): void;
 }

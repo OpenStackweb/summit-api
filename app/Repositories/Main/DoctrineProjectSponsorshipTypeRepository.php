@@ -22,52 +22,45 @@ use utils\Filter;
  * @package repositories\main
  */
 final class DoctrineProjectSponsorshipTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements IProjectSponsorshipTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements IProjectSponsorshipTypeRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "slug" => "e.slug:json_string",
+      "is_active" => "e.is_active:json_int",
+      "sponsored_project_slug" => "sp.slug:json_string",
+      "sponsored_project_id" => "sp.id:json_int",
+    ];
+  }
 
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.sponsored_project", "sp");
+    return $query;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'e.name:json_string',
-            'slug' => 'e.slug:json_string',
-            'is_active' => 'e.is_active:json_int',
-            'sponsored_project_slug' => 'sp.slug:json_string',
-            'sponsored_project_id' => 'sp.id:json_int'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+      "order" => "e.order",
+    ];
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->innerJoin("e.sponsored_project", "sp");
-        return $query;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-            'order'=> 'e.order',
-        ];
-    }
-
-
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return ProjectSponsorshipType::class;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return ProjectSponsorshipType::class;
+  }
 }

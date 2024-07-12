@@ -18,32 +18,31 @@ use models\summit\Summit;
  * Interface ISamsungRegistrationAPI
  * @package App\Services\Apis\Samsung
  */
-interface ISamsungRegistrationAPI
-{
-    /**
-     * @param Summit $summit
-     * @param string $userId
-     * @return mixed
-     */
-    public function checkUser(Summit $summit, string $userId);
+interface ISamsungRegistrationAPI {
+  /**
+   * @param Summit $summit
+   * @param string $userId
+   * @return mixed
+   */
+  public function checkUser(Summit $summit, string $userId);
 
-    /**
-     * @param Summit $summit
-     * @param string $userId
-     * @return mixed
-     */
-    public function uncheckUser(Summit $summit, string $userId);
+  /**
+   * @param Summit $summit
+   * @param string $userId
+   * @return mixed
+   */
+  public function uncheckUser(Summit $summit, string $userId);
 
-    /**
-     * @param Summit $summit
-     * @param string $email
-     * @return mixed
-     */
-    public function checkEmail(Summit $summit, string $email);
+  /**
+   * @param Summit $summit
+   * @param string $email
+   * @return mixed
+   */
+  public function checkEmail(Summit $summit, string $email);
 
-    /**
-     * @param Summit $summit
-     * @return mixed
-     */
-    public function userList(Summit $summit);
+  /**
+   * @param Summit $summit
+   * @return mixed
+   */
+  public function userList(Summit $summit);
 }

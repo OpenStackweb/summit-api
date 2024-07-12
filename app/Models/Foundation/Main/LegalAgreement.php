@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,95 +19,83 @@ use models\utils\SilverstripeBaseModel;
  * Class LegalAgreement
  * @package models\main
  */
-class LegalAgreement extends SilverstripeBaseModel
-{
+class LegalAgreement extends SilverstripeBaseModel {
+  const Slug = "the-openstack-foundation-individual-member-agreement";
+  /**
+   * @ORM\Column(name="Signature", type="string")
+   * @var string
+   */
+  private $signature;
 
-    const Slug = 'the-openstack-foundation-individual-member-agreement';
-    /**
-     * @ORM\Column(name="Signature", type="string")
-     * @var string
-     */
-    private $signature;
+  /**
+   * @ORM\Column(name="LegalDocumentPageID", type="integer")
+   * @var int
+   */
+  private $document_id;
 
-    /**
-     * @ORM\Column(name="LegalDocumentPageID", type="integer")
-     * @var int
-     */
-    private $document_id;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="legal_agreements")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
+   * @var Member
+   */
+  private $owner;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="legal_agreements")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
-     * @var Member
-     */
-    private $owner;
+  /**
+   * @return string
+   */
+  public function getSignature(): ?string {
+    return $this->signature;
+  }
 
-    /**
-     * @return string
-     */
-    public function getSignature(): ?string
-    {
-        return $this->signature;
+  /**
+   * @param string $signature
+   */
+  public function setSignature(string $signature): void {
+    $this->signature = $signature;
+  }
+
+  /**
+   * @return int
+   */
+  public function getDocumentId(): int {
+    return $this->document_id;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param string $signature
-     */
-    public function setSignature(string $signature): void
-    {
-        $this->signature = $signature;
-    }
+  /**
+   * @param LegalDocument $document
+   */
+  public function setDocument(LegalDocument $document): void {
+    $this->document_id = $document->getId();
+  }
 
-    /**
-     * @return int
-     */
-    public function getDocumentId(): int
-    {
-        return $this->document_id;
-    }
+  /**
+   * @return Member
+   */
+  public function getOwner(): Member {
+    return $this->owner;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try {
-            return $this->owner->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @param Member $owner
+   */
+  public function setOwner(Member $owner): void {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @param LegalDocument $document
-     */
-    public function setDocument(LegalDocument $document): void
-    {
-        $this->document_id = $document->getId();
-    }
+  public function getContent(): ?string {
+  }
 
-    /**
-     * @return Member
-     */
-    public function getOwner(): Member
-    {
-        return $this->owner;
-    }
-
-    /**
-     * @param Member $owner
-     */
-    public function setOwner(Member $owner): void
-    {
-        $this->owner = $owner;
-    }
-
-    public function getContent():?String{
-
-    }
-
-    public function getTitle():?string{
-
-    }
-
+  public function getTitle(): ?string {
+  }
 }

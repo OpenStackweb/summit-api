@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -20,82 +20,75 @@ use models\utils\SilverstripeBaseModel;
  * Class DataCenterRegion
  * @package App\Models\Foundation\Marketplace
  */
-class DataCenterRegion extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class DataCenterRegion extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Endpoint", type="string")
-     * @var string
-     */
-    private $endpoint;
+  /**
+   * @ORM\Column(name="Endpoint", type="string")
+   * @var string
+   */
+  private $endpoint;
 
-    /**
-     * @ORM\Column(name="Color", type="string")
-     * @var string
-     */
-    private $color;
+  /**
+   * @ORM\Column(name="Color", type="string")
+   * @var string
+   */
+  private $color;
 
-    /**
-     * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="region", cascade={"persist"}, orphanRemoval=true)
-     * @var DataCenterLocation[]
-     */
-    private $locations;
+  /**
+   * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="region", cascade={"persist"}, orphanRemoval=true)
+   * @var DataCenterLocation[]
+   */
+  private $locations;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="CloudService",inversedBy="data_center_regions", fetch="LAZY")
-     * @ORM\JoinColumn(name="CloudServiceID", referencedColumnName="ID")
-     * @var CloudService
-     */
-    private $cloud_service;
+  /**
+   * @ORM\ManyToOne(targetEntity="CloudService",inversedBy="data_center_regions", fetch="LAZY")
+   * @ORM\JoinColumn(name="CloudServiceID", referencedColumnName="ID")
+   * @var CloudService
+   */
+  private $cloud_service;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->locations = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->locations = new ArrayCollection();
+  }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getEndpoint()
-    {
-        return $this->endpoint;
-    }
+  /**
+   * @return string
+   */
+  public function getEndpoint() {
+    return $this->endpoint;
+  }
 
-    /**
-     * @return string
-     */
-    public function getColor()
-    {
-        return $this->color;
-    }
+  /**
+   * @return string
+   */
+  public function getColor() {
+    return $this->color;
+  }
 
-    /**
-     * @return DataCenterLocation[]
-     */
-    public function getLocations()
-    {
-        return $this->locations->toArray();
-    }
+  /**
+   * @return DataCenterLocation[]
+   */
+  public function getLocations() {
+    return $this->locations->toArray();
+  }
 
-    /**
-     * @return CloudService
-     */
-    public function getCloudService()
-    {
-        return $this->cloud_service;
-    }
+  /**
+   * @return CloudService
+   */
+  public function getCloudService() {
+    return $this->cloud_service;
+  }
 }

@@ -18,49 +18,49 @@ use models\summit\PresentationExtraQuestionAnswer;
  * Class PresentationExtraQuestionAnswerSerializer
  * @package ModelSerializers
  */
-final class PresentationExtraQuestionAnswerSerializer
-    extends ExtraQuestionAnswerSerializer
-{
-    protected static $array_mappings = [
-        'PresentationId'    => 'presentation_id:json_int',
-    ];
+final class PresentationExtraQuestionAnswerSerializer extends ExtraQuestionAnswerSerializer {
+  protected static $array_mappings = [
+    "PresentationId" => "presentation_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $answer = $this->object;
-        if (!$answer instanceof PresentationExtraQuestionAnswer) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-
-                    case 'presentation':
-                        {
-
-                            unset($values['presentation_id']);
-                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer($answer->getPresentation())
-                            ->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        break;
-
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $answer = $this->object;
+    if (!$answer instanceof PresentationExtraQuestionAnswer) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "presentation":
+            unset($values["presentation_id"]);
+            $values["presentation"] = SerializerRegistry::getInstance()
+              ->getSerializer($answer->getPresentation())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

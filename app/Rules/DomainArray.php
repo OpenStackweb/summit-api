@@ -19,36 +19,36 @@ use Illuminate\Support\Facades\Log;
  * Class DomainArray
  * @package App\Rules
  */
-final class DomainArray implements Rule
-{
-    /**
-     * Determine if the validation rule passes.
-     *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @return bool
-     */
-    public function passes($attribute, $value): bool
-    {
-        if (!is_array($value))
-            return false;
-        foreach ($value as $element) {
-            if (!is_string($element))
-                return false;
-            Log::debug(sprintf("DomainArray::passes %s", $element));
-            if (!Domain::validate($attribute, $element))
-                return false;
-        }
-        return true;
+final class DomainArray implements Rule {
+  /**
+   * Determine if the validation rule passes.
+   *
+   * @param  string  $attribute
+   * @param  mixed  $value
+   * @return bool
+   */
+  public function passes($attribute, $value): bool {
+    if (!is_array($value)) {
+      return false;
     }
+    foreach ($value as $element) {
+      if (!is_string($element)) {
+        return false;
+      }
+      Log::debug(sprintf("DomainArray::passes %s", $element));
+      if (!Domain::validate($attribute, $element)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message(): string
-    {
-        return trans('The :attribute is not a valid array of domains.');
-    }
+  /**
+   * Get the validation error message.
+   *
+   * @return string
+   */
+  public function message(): string {
+    return trans("The :attribute is not a valid array of domains.");
+  }
 }

@@ -16,194 +16,182 @@
  * Class AES256GCM
  * @package App\Utils
  */
-final class AES256GCM
-{
+final class AES256GCM {
+  const CIPHER = "AES-256-GCM";
 
-    const CIPHER = 'AES-256-GCM';
+  /**
+   * Encoded/Decoded data
+   *
+   * @var null|string
+   */
+  protected $data;
+  /**
+   * Initialization vector value
+   *
+   * @var string
+   */
+  protected $iv;
+  /**
+   * Error message if operation failed
+   *
+   * @var null|string
+   */
+  protected $errorMessage;
 
-    /**
-     * Encoded/Decoded data
-     *
-     * @var null|string
-     */
-    protected $data;
-    /**
-     * Initialization vector value
-     *
-     * @var string
-     */
-    protected $iv;
-    /**
-     * Error message if operation failed
-     *
-     * @var null|string
-     */
-    protected $errorMessage;
+  /**
+   * AesCipher constructor.
+   *
+   * @param string $iv Initialization vector value
+   * @param string|null $data Encoded/Decoded data
+   * @param string|null $errorMessage Error message if operation failed
+   */
+  public function __construct(string $iv, string $data = null, string $errorMessage = null) {
+    $this->iv = $iv;
+    $this->data = $data;
+    $this->errorMessage = $errorMessage;
+  }
 
-    /**
-     * AesCipher constructor.
-     *
-     * @param string $iv Initialization vector value
-     * @param string|null $data Encoded/Decoded data
-     * @param string|null $errorMessage Error message if operation failed
-     */
-    public function __construct(string $iv, string $data = null, string $errorMessage = null)
-    {
-        $this->iv = $iv;
-        $this->data = $data;
-        $this->errorMessage = $errorMessage;
+  /**
+   * @param string $key
+   * @param string $data
+   * @return AES256GCM
+   */
+  public static function encrypt(string $key, string $data): AES256GCM {
+    try {
+      // Check secret length
+      if (!AES256GCM::isKeyLengthValid($key)) {
+        throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits.");
+      }
+
+      $iv_len = 16;
+      // Get random initialization vector
+      $iv = random_bytes($iv_len);
+      $tag = "";
+      // Encrypt input text
+      $raw = openssl_encrypt(
+        $data,
+        AES256GCM::CIPHER,
+        $key,
+        OPENSSL_RAW_DATA | OPENSSL_NO_PADDING,
+        $iv,
+        $tag,
+        "",
+        16,
+      );
+
+      // Return base64-encoded string: initVector + encrypted result
+      $result = base64_encode($iv . $raw . $tag);
+
+      if ($result === false) {
+        // Operation failed
+        return new AES256GCM($iv, null, openssl_error_string());
+      }
+
+      // Return successful encoded object
+      return new AES256GCM($iv, $result);
+    } catch (\Exception $e) {
+      // Operation failed
+      return new AES256GCM(isset($iv), null, $e->getMessage());
     }
+  }
 
-    /**
-     * @param string $key
-     * @param string $data
-     * @return AES256GCM
-     */
-    public static function encrypt(string $key, string $data): AES256GCM
-    {
-        try {
-            // Check secret length
-            if (!AES256GCM::isKeyLengthValid($key)) {
-                throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits.");
-            }
+  /**
+   * @param string $key
+   * @param string $data
+   * @return AES256GCM
+   */
+  public static function decrypt(string $key, string $data): AES256GCM {
+    try {
+      // Check secret length
+      if (!AES256GCM::isKeyLengthValid($key)) {
+        throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits.");
+      }
 
-            $iv_len = 16;
-            // Get random initialization vector
-            $iv = random_bytes($iv_len);
-            $tag = '';
-            // Encrypt input text
-            $raw = openssl_encrypt
-            (
-                $data,
-                AES256GCM::CIPHER,
-                $key,
-                OPENSSL_RAW_DATA|OPENSSL_NO_PADDING,
-                $iv,
-                $tag,
-                '',
-                16
-            );
+      $bytes = base64_decode($data);
+      $ivlen = 16;
+      $tag_length = 16;
+      $iv = substr($bytes, 0, $ivlen);
+      $tag = substr($bytes, -$tag_length);
+      $ciphertext = substr($bytes, $ivlen, -$tag_length);
 
-            // Return base64-encoded string: initVector + encrypted result
-            $result = base64_encode($iv . $raw . $tag);
+      // Trying to get decrypted text
+      $decoded = openssl_decrypt(
+        $ciphertext,
+        AES256GCM::CIPHER,
+        $key,
+        OPENSSL_RAW_DATA | OPENSSL_NO_PADDING,
+        $iv,
+        $tag,
+      );
 
-            if ($result === false) {
-                // Operation failed
-                return new AES256GCM($iv, null, openssl_error_string());
-            }
+      if ($decoded === false) {
+        // Operation failed
+        return new AES256GCM(isset($iv), null, openssl_error_string());
+      }
 
-            // Return successful encoded object
-            return new AES256GCM($iv, $result);
-        } catch (\Exception $e) {
-            // Operation failed
-            return new AES256GCM(isset($iv), null, $e->getMessage());
-        }
+      // Return successful decoded object
+      return new AES256GCM($iv, $decoded);
+    } catch (\Exception $e) {
+      // Operation failed
+      return new AES256GCM(isset($iv), null, $e->getMessage());
     }
+  }
 
-    /**
-     * @param string $key
-     * @param string $data
-     * @return AES256GCM
-     */
-    public static function decrypt(string $key, string $data): AES256GCM
-    {
-        try {
-            // Check secret length
-            if (!AES256GCM::isKeyLengthValid($key)) {
-                throw new \InvalidArgumentException("Secret key's length must be 128, 192 or 256 bits.");
-            }
+  /**
+   * Check that secret password length is valid
+   *
+   * @param string $key 16/24/32 -characters secret password
+   *
+   * @return bool
+   */
+  public static function isKeyLengthValid(string $key): bool {
+    $length = strlen($key);
 
-            $bytes = base64_decode($data);
-            $ivlen = 16;
-            $tag_length = 16;
-            $iv = substr($bytes, 0, $ivlen);
-            $tag = substr($bytes, -$tag_length);
-            $ciphertext = substr($bytes, $ivlen, -$tag_length);
+    return $length == 16 || $length == 24 || $length == 32;
+  }
 
-            // Trying to get decrypted text
-            $decoded = openssl_decrypt(
-                $ciphertext,
-                AES256GCM::CIPHER,
-                $key,
-                OPENSSL_RAW_DATA|OPENSSL_NO_PADDING,
-                $iv,
-                $tag
-            );
+  /**
+   * Get encoded/decoded data
+   *
+   * @return string|null
+   */
+  public function getData(): ?string {
+    return $this->data;
+  }
 
-            if ($decoded === false) {
-                // Operation failed
-                return new AES256GCM(isset($iv), null, openssl_error_string());
-            }
+  /**
+   * Get initialization vector value
+   *
+   * @return string|null
+   */
+  public function getInitVector(): ?string {
+    return $this->iv;
+  }
 
-            // Return successful decoded object
-            return new AES256GCM($iv, $decoded);
-        } catch (\Exception $e) {
-            // Operation failed
-            return new AES256GCM(isset($iv), null, $e->getMessage());
-        }
-    }
+  /**
+   * Get error message
+   *
+   * @return string|null
+   */
+  public function getErrorMessage(): ?string {
+    return $this->errorMessage;
+  }
 
-    /**
-     * Check that secret password length is valid
-     *
-     * @param string $key 16/24/32 -characters secret password
-     *
-     * @return bool
-     */
-    public static function isKeyLengthValid(string $key): bool
-    {
-        $length = strlen($key);
+  /**
+   * Check that operation failed
+   *
+   * @return bool
+   */
+  public function hasError(): bool {
+    return $this->errorMessage !== null;
+  }
 
-        return $length == 16 || $length == 24 || $length == 32;
-    }
-
-    /**
-     * Get encoded/decoded data
-     *
-     * @return string|null
-     */
-    public function getData(): ?string
-    {
-        return $this->data;
-    }
-
-    /**
-     * Get initialization vector value
-     *
-     * @return string|null
-     */
-    public function getInitVector(): ?string
-    {
-        return $this->iv;
-    }
-
-    /**
-     * Get error message
-     *
-     * @return string|null
-     */
-    public function getErrorMessage(): ?string
-    {
-        return $this->errorMessage;
-    }
-
-    /**
-     * Check that operation failed
-     *
-     * @return bool
-     */
-    public function hasError(): bool
-    {
-        return $this->errorMessage !== null;
-    }
-
-    /**
-     * To string return resulting data
-     *
-     * @return null|string
-     */
-    public function __toString(): ?string
-    {
-        return $this->getData();
-    }
+  /**
+   * To string return resulting data
+   *
+   * @return null|string
+   */
+  public function __toString(): ?string {
+    return $this->getData();
+  }
 }

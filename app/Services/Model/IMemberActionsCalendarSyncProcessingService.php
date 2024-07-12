@@ -16,12 +16,11 @@
  * Interface IMemberActionsCalendarSyncProcessingService
  * @package App\Services\Model
  */
-interface IMemberActionsCalendarSyncProcessingService
-{
-    /**
-     * @param string $provider
-     * @param int $batch_size
-     * @return int
-     */
-    public function processActions($provider = 'ALL', $batch_size = 1000);
+interface IMemberActionsCalendarSyncProcessingService {
+  /**
+   * @param string $provider
+   * @param int $batch_size
+   * @return int
+   */
+  public function processActions($provider = "ALL", $batch_size = 1000);
 }

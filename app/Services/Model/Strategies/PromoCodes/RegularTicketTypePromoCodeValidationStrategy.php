@@ -24,83 +24,86 @@ use models\summit\SummitTicketType;
  * Class RegularTicketTypePromoCodeValidationStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeValidationStrategy
-{
-    /**
-     * @var SummitTicketType
-     */
-    private $ticket_type;
+final class RegularTicketTypePromoCodeValidationStrategy implements IPromoCodeValidationStrategy {
+  /**
+   * @var SummitTicketType
+   */
+  private $ticket_type;
 
-    /**
-     * @var Member
-     */
-    private $owner;
+  /**
+   * @var Member
+   */
+  private $owner;
 
-    /**
-     * @var int
-     */
-    private $qty;
+  /**
+   * @var int
+   */
+  private $qty;
 
-    /**
-     * @param SummitTicketType $ticket_type
-     * @param Member $owner
-     * @param int $qty
-     */
-    public function __construct(SummitTicketType $ticket_type, Member $owner, int $qty)
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "RegularTicketTypePromoCodeValidationStrategy::construct ticket type %s owner %s qty %s",
-                $ticket_type->getId(),
-                $owner->getId(),
-                $qty
-            )
-        );
+  /**
+   * @param SummitTicketType $ticket_type
+   * @param Member $owner
+   * @param int $qty
+   */
+  public function __construct(SummitTicketType $ticket_type, Member $owner, int $qty) {
+    Log::debug(
+      sprintf(
+        "RegularTicketTypePromoCodeValidationStrategy::construct ticket type %s owner %s qty %s",
+        $ticket_type->getId(),
+        $owner->getId(),
+        $qty,
+      ),
+    );
 
-        $this->ticket_type = $ticket_type;
-        $this->owner = $owner;
-        $this->qty = $qty;
+    $this->ticket_type = $ticket_type;
+    $this->owner = $owner;
+    $this->qty = $qty;
+  }
+
+  /**
+   * @throws ValidationException
+   */
+  public function isValid(SummitRegistrationPromoCode $promo_code): bool {
+    if (PromoCodesUtils::isPrePaidPromoCode($promo_code)) {
+      return false;
     }
 
-    /**
-     * @throws ValidationException
-     */
-    public function isValid(SummitRegistrationPromoCode $promo_code): bool
-    {
-        if(PromoCodesUtils::isPrePaidPromoCode($promo_code)) return false;
+    Log::debug(
+      sprintf(
+        "RegularTicketTypePromoCodeValidationStrategy::isValid promo_code %s ticket type %s owner %s qty %s",
+        $promo_code->getCode(),
+        $this->ticket_type->getId(),
+        $this->owner->getId(),
+        $this->qty,
+      ),
+    );
 
-        Log::debug
-        (
-            sprintf
-            (
-                "RegularTicketTypePromoCodeValidationStrategy::isValid promo_code %s ticket type %s owner %s qty %s",
-                $promo_code->getCode(),
-                $this->ticket_type->getId(),
-                $this->owner->getId(),
-                $this->qty
-            )
-        );
+    $owner_email = $this->owner->getEmail();
+    $owner_company_name = $this->owner->getCompany();
 
-        $owner_email = $this->owner->getEmail();
-        $owner_company_name = $this->owner->getCompany();
+    $promo_code->validate($owner_email, $owner_company_name);
 
-        $promo_code->validate($owner_email, $owner_company_name);
-
-        if (!$promo_code->canBeAppliedTo($this->ticket_type)) {
-            $error = sprintf("Promo code %s can not be applied to Ticket Type %s.", $promo_code->getCode(), $this->ticket_type->getName());
-            Log::debug($error);
-            throw new ValidationException($error);
-        }
-
-        if (!$promo_code->isInfinite() && $this->qty > $promo_code->getQuantityAvailable()) {
-            $error = sprintf("Promo code %s can not be applied to Ticket Type %s more than %s times.",
-                $promo_code->getCode(), $this->ticket_type->getName(), $promo_code->getQuantityAvailable());
-            Log::debug($error);
-            throw new ValidationException($error);
-        }
-
-        return true;
+    if (!$promo_code->canBeAppliedTo($this->ticket_type)) {
+      $error = sprintf(
+        "Promo code %s can not be applied to Ticket Type %s.",
+        $promo_code->getCode(),
+        $this->ticket_type->getName(),
+      );
+      Log::debug($error);
+      throw new ValidationException($error);
     }
+
+    if (!$promo_code->isInfinite() && $this->qty > $promo_code->getQuantityAvailable()) {
+      $error = sprintf(
+        "Promo code %s can not be applied to Ticket Type %s more than %s times.",
+        $promo_code->getCode(),
+        $this->ticket_type->getName(),
+        $promo_code->getQuantityAvailable(),
+      );
+      Log::debug($error);
+      throw new ValidationException($error);
+    }
+
+    return true;
+  }
 }

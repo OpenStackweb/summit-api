@@ -12,16 +12,14 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IQREntity
  * @package models\summit
  */
-interface IQREntity
-{
-    public function getQRCode():?string;
+interface IQREntity {
+  public function getQRCode(): ?string;
 
-    public function generateQRCode():string;
+  public function generateQRCode(): string;
 
-    const QRRegistryFieldDelimiterChar = '|';
+  const QRRegistryFieldDelimiterChar = "|";
 }

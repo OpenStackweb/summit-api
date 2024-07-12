@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -36,189 +36,173 @@ use models\utils\SilverstripeBaseModel;
  * Class RSVPQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPQuestionTemplate extends SilverstripeBaseModel implements IOrderable
-{
+class RSVPQuestionTemplate extends SilverstripeBaseModel implements IOrderable {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  protected $name;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    protected $name;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  protected $label;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    protected $label;
+  /**
+   * @ORM\Column(name="Mandatory", type="boolean")
+   * @var boolean
+   */
+  protected $is_mandatory;
 
-    /**
-     * @ORM\Column(name="Mandatory", type="boolean")
-     * @var boolean
-     */
-    protected $is_mandatory;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  protected $order;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    protected $order;
+  /**
+   * @ORM\Column(name="ReadOnly", type="boolean")
+   * @var boolean
+   */
+  protected $is_read_only;
 
-    /**
-     * @ORM\Column(name="ReadOnly", type="boolean")
-     * @var boolean
-     */
-    protected $is_read_only;
+  /**
+   * @ORM\ManyToOne(targetEntity="RSVPTemplate", fetch="EXTRA_LAZY", inversedBy="questions")
+   * @ORM\JoinColumn(name="RSVPTemplateID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var RSVPTemplate
+   */
+  protected $template;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="RSVPTemplate", fetch="EXTRA_LAZY", inversedBy="questions")
-     * @ORM\JoinColumn(name="RSVPTemplateID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var RSVPTemplate
-     */
-    protected $template;
+  /**
+   * @ORM\OneToMany(targetEntity="RSVPQuestionDependsOn", mappedBy="parent", cascade={"persist", "remove"}, orphanRemoval=true)
+   * @var RSVPQuestionDependsOn[]
+   */
+  protected $depends_on;
 
-    /**
-     * @ORM\OneToMany(targetEntity="RSVPQuestionDependsOn", mappedBy="parent", cascade={"persist", "remove"}, orphanRemoval=true)
-     * @var RSVPQuestionDependsOn[]
-     */
-    protected $depends_on;
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName($name) {
+    $this->name = $name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
+  /**
+   * @return string
+   */
+  public function getLabel() {
+    return $this->label;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLabel()
-    {
-        return $this->label;
-    }
+  /**
+   * @param string $label
+   */
+  public function setLabel($label) {
+    $this->label = $label;
+  }
 
-    /**
-     * @param string $label
-     */
-    public function setLabel($label)
-    {
-        $this->label = $label;
-    }
+  /**
+   * @return bool
+   */
+  public function isMandatory() {
+    return $this->is_mandatory;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isMandatory()
-    {
-        return $this->is_mandatory;
-    }
+  /**
+   * @param bool $is_mandatory
+   */
+  public function setIsMandatory($is_mandatory) {
+    $this->is_mandatory = $is_mandatory;
+  }
 
-    /**
-     * @param bool $is_mandatory
-     */
-    public function setIsMandatory($is_mandatory)
-    {
-        $this->is_mandatory = $is_mandatory;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
+  /**
+   * @param int $order
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
+  /**
+   * @return bool
+   */
+  public function isReadOnly() {
+    return $this->is_read_only;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isReadOnly()
-    {
-        return $this->is_read_only;
-    }
+  /**
+   * @param bool $is_read_only
+   */
+  public function setIsReadOnly($is_read_only) {
+    $this->is_read_only = $is_read_only;
+  }
 
-    /**
-     * @param bool $is_read_only
-     */
-    public function setIsReadOnly($is_read_only)
-    {
-        $this->is_read_only = $is_read_only;
-    }
+  /**
+   * @return RSVPTemplate
+   */
+  public function getTemplate() {
+    return $this->template;
+  }
 
-    /**
-     * @return RSVPTemplate
-     */
-    public function getTemplate()
-    {
-        return $this->template;
-    }
+  /**
+   * @param RSVPTemplate $template
+   */
+  public function setTemplate(RSVPTemplate $template) {
+    $this->template = $template;
+  }
 
-    /**
-     * @param RSVPTemplate $template
-     */
-    public function setTemplate(RSVPTemplate $template)
-    {
-        $this->template = $template;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return "RSVPQuestionTemplate";
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return 'RSVPQuestionTemplate';
-    }
+  public function clearTemplate() {
+    $this->template = null;
+  }
 
-    public function clearTemplate(){
-        $this->template = null;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->is_mandatory = false;
+    $this->is_read_only = false;
+    $this->order = 0;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_mandatory = false;
-        $this->is_read_only = false;
-        $this->order        = 0;
-    }
+  public static $metadata = [
+    "name" => "string",
+    "label" => "string",
+    "is_mandatory" => "boolean",
+    "is_read_only" => "boolean",
+    "template_id" => "integer",
+    "order" => "integer",
+  ];
 
-    public static $metadata = [
-        'name'         => 'string',
-        'label'        => 'string',
-        'is_mandatory' => 'boolean',
-        'is_read_only' => 'boolean',
-        'template_id'  => 'integer',
-        'order'        => 'integer'
-    ];
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return self::$metadata;
+  }
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return self::$metadata;
-    }
-
-    /**
-     * @param array|string|null $value
-     * @return bool
-     */
-    public function isValidValue($value):bool {
-        return true;
-    }
-
+  /**
+   * @param array|string|null $value
+   * @return bool
+   */
+  public function isValidValue($value): bool {
+    return true;
+  }
 }

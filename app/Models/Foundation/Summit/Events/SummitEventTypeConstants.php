@@ -17,22 +17,18 @@ use models\summit\SummitEventType;
  * Class SummitEventTypeConstants
  * @package App\Models\Foundation\Summit\Events
  */
-final class SummitEventTypeConstants
-{
-    public static $valid_class_names = [
-        SummitEventType::ClassName,
-        PresentationType::ClassName,
-    ];
+final class SummitEventTypeConstants {
+  public static $valid_class_names = [SummitEventType::ClassName, PresentationType::ClassName];
 
-    const BLACKOUT_TIME_FINAL = 'Final';
-    const BLACKOUT_TIME_PROPOSED = 'Proposed';
-    const BLACKOUT_TIME_ALL = 'All';
-    const BLACKOUT_TIME_NONE = 'None';
+  const BLACKOUT_TIME_FINAL = "Final";
+  const BLACKOUT_TIME_PROPOSED = "Proposed";
+  const BLACKOUT_TIME_ALL = "All";
+  const BLACKOUT_TIME_NONE = "None";
 
-    public static $valid_blackout_times = [
-        self::BLACKOUT_TIME_FINAL,
-        self::BLACKOUT_TIME_PROPOSED,
-        self::BLACKOUT_TIME_ALL,
-        self::BLACKOUT_TIME_NONE
-    ];
+  public static $valid_blackout_times = [
+    self::BLACKOUT_TIME_FINAL,
+    self::BLACKOUT_TIME_PROPOSED,
+    self::BLACKOUT_TIME_ALL,
+    self::BLACKOUT_TIME_NONE,
+  ];
 }

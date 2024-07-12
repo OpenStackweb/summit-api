@@ -19,65 +19,69 @@ use models\summit\PresentationSpeaker;
  * Class PresentationSpeakerBaseSerializer
  * @package ModelSerializers
  */
-abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'FirstName' => 'first_name:json_string',
-        'LastName' => 'last_name:json_string',
-        'Title' => 'title:json_string',
-        'Bio' => 'bio:json_string',
-        'IRCHandle' => 'irc:json_string',
-        'TwitterName' => 'twitter:json_string',
-        'OrgHasCloud' => 'org_has_cloud:json_boolean',
-        'Country' => 'country:json_string',
-        'AvailableForBureau' => 'available_for_bureau:json_boolean',
-        'FundedTravel' => 'funded_travel:json_boolean',
-        'WillingToTravel' => 'willing_to_travel:json_boolean',
-        'WillingToPresentVideo' => 'willing_to_present_video:json_boolean',
-        'MemberID' => 'member_id:json_int',
-        'RegistrationRequestId' => 'registration_request_id:json_int',
-        'ProfilePhotoUrl' => 'pic:json_url',
-        'BigProfilePhotoUrl' => 'big_pic:json_url',
-        'Company' => 'company:json_string',
-        'PhoneNumber' => 'phone_number:json_string',
-    ];
+abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "FirstName" => "first_name:json_string",
+    "LastName" => "last_name:json_string",
+    "Title" => "title:json_string",
+    "Bio" => "bio:json_string",
+    "IRCHandle" => "irc:json_string",
+    "TwitterName" => "twitter:json_string",
+    "OrgHasCloud" => "org_has_cloud:json_boolean",
+    "Country" => "country:json_string",
+    "AvailableForBureau" => "available_for_bureau:json_boolean",
+    "FundedTravel" => "funded_travel:json_boolean",
+    "WillingToTravel" => "willing_to_travel:json_boolean",
+    "WillingToPresentVideo" => "willing_to_present_video:json_boolean",
+    "MemberID" => "member_id:json_int",
+    "RegistrationRequestId" => "registration_request_id:json_int",
+    "ProfilePhotoUrl" => "pic:json_url",
+    "BigProfilePhotoUrl" => "big_pic:json_url",
+    "Company" => "company:json_string",
+    "PhoneNumber" => "phone_number:json_string",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $speaker = $this->object;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $speaker = $this->object;
 
-        if (!$speaker instanceof PresentationSpeaker) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (empty($values['first_name']) || empty($values['last_name'])) {
-
-            $first_name = '';
-            $last_name = '';
-            if ($speaker->hasMember()) {
-                $member = $speaker->getMember();
-                $first_name = $member->getFirstName();
-                $last_name = $member->getLastName();
-            }
-            $values['first_name'] = $first_name;
-            $values['last_name'] = $last_name;
-        }
-
-
-        $application_type = $this->resource_server_context->getApplicationType();
-        // choose email serializer depending on user permissions
-        // is current user is null then is a service account
-        $values['email'] = $application_type == "SERVICE" ?
-            JsonUtils::toNullEmail($speaker->getEmail()) :
-            JsonUtils::toObfuscatedEmail($speaker->getEmail());
-
-        return $values;
+    if (!$speaker instanceof PresentationSpeaker) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (empty($values["first_name"]) || empty($values["last_name"])) {
+      $first_name = "";
+      $last_name = "";
+      if ($speaker->hasMember()) {
+        $member = $speaker->getMember();
+        $first_name = $member->getFirstName();
+        $last_name = $member->getLastName();
+      }
+      $values["first_name"] = $first_name;
+      $values["last_name"] = $last_name;
+    }
+
+    $application_type = $this->resource_server_context->getApplicationType();
+    // choose email serializer depending on user permissions
+    // is current user is null then is a service account
+    $values["email"] =
+      $application_type == "SERVICE"
+        ? JsonUtils::toNullEmail($speaker->getEmail())
+        : JsonUtils::toObfuscatedEmail($speaker->getEmail());
+
+    return $values;
+  }
 }

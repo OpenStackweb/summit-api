@@ -16,15 +16,14 @@
  * Interface IStatsConstants
  * @package models\summit
  */
-interface IStatsConstants
-{
-    const GroupByDay    = 'Day';
-    const GroupByHour   = 'Hour';
-    const GroupByMinute = 'Minute';
+interface IStatsConstants {
+  const GroupByDay = "Day";
+  const GroupByHour = "Hour";
+  const GroupByMinute = "Minute";
 
-    const AttendeesCheckinsAllowedGroupBy = [
-        self::GroupByDay,
-        self::GroupByHour,
-        self::GroupByMinute
-    ];
+  const AttendeesCheckinsAllowedGroupBy = [
+    self::GroupByDay,
+    self::GroupByHour,
+    self::GroupByMinute,
+  ];
 }

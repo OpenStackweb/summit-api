@@ -19,22 +19,19 @@ use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
  * Class ExternalScheduleFeedFactory
  * @package App\Services\Apis\ExternalScheduleFeeds
  */
-final class ExternalScheduleFeedFactory implements IExternalScheduleFeedFactory
-{
-
-    /**
-     * @param Summit $summit
-     * @return IExternalScheduleFeed
-     */
-    public function build(Summit $summit): ?IExternalScheduleFeed
-    {
-       $client = App::make(ClientInterface::class);
-       switch ($summit->getApiFeedType()){
-           case ISummitExternalScheduleFeedType::SchedType:
-               return new SchedScheduleFeed($summit, $client);
-           case ISummitExternalScheduleFeedType::VanderpoelType:
-               return new VanderpoelScheduleFeed($summit, $client);
-       }
-       return null;
+final class ExternalScheduleFeedFactory implements IExternalScheduleFeedFactory {
+  /**
+   * @param Summit $summit
+   * @return IExternalScheduleFeed
+   */
+  public function build(Summit $summit): ?IExternalScheduleFeed {
+    $client = App::make(ClientInterface::class);
+    switch ($summit->getApiFeedType()) {
+      case ISummitExternalScheduleFeedType::SchedType:
+        return new SchedScheduleFeed($summit, $client);
+      case ISummitExternalScheduleFeedType::VanderpoelType:
+        return new VanderpoelScheduleFeed($summit, $client);
     }
+    return null;
+  }
 }

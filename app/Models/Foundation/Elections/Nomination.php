@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -22,84 +22,73 @@ use models\utils\SilverstripeBaseModel;
  * Class Nomination
  * @package App\Models\Foundation\Elections
  */
-class Nomination extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class Nomination extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getCandidateId' => 'candidate',
-        'getNominatorId' => 'nominator',
-        'getElectionId' => 'election',
-    ];
+  protected $getIdMappings = [
+    "getCandidateId" => "candidate",
+    "getNominatorId" => "nominator",
+    "getElectionId" => "election",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasCandidate' => 'candidate',
-        'hasNominator' => 'nominator',
-        'hasElection' => 'election',
-    ];
+  protected $hasPropertyMappings = [
+    "hasCandidate" => "candidate",
+    "hasNominator" => "nominator",
+    "hasElection" => "election",
+  ];
 
-    /**
-     * @var Election
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Elections\Election", inversedBy="nominations")
-     * @ORM\JoinColumn(name="ElectionID", referencedColumnName="ID")
-     */
-    private $election;
+  /**
+   * @var Election
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Elections\Election", inversedBy="nominations")
+   * @ORM\JoinColumn(name="ElectionID", referencedColumnName="ID")
+   */
+  private $election;
 
-    /**
-     * @var Member
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="election_applications")
-     * @ORM\JoinColumn(name="CandidateID", referencedColumnName="ID")
-     */
-    private $candidate;
+  /**
+   * @var Member
+   * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="election_applications")
+   * @ORM\JoinColumn(name="CandidateID", referencedColumnName="ID")
+   */
+  private $candidate;
 
-    /**
-     * @var Member
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="election_nominations")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
-     */
-    private $nominator;
+  /**
+   * @var Member
+   * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="election_nominations")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
+   */
+  private $nominator;
 
-    /**
-     * Nomination constructor.
-     * @param Member $nominator
-     * @param Member $candidate
-     * @param Election $election
-     */
-    public function __construct
-    (
-        Member $nominator,
-        Member $candidate,
-        Election $election
-    )
-    {
-        parent::__construct();
-        $this->nominator = $nominator;
-        $this->candidate = $candidate;
-        $this->election = $election;
-    }
+  /**
+   * Nomination constructor.
+   * @param Member $nominator
+   * @param Member $candidate
+   * @param Election $election
+   */
+  public function __construct(Member $nominator, Member $candidate, Election $election) {
+    parent::__construct();
+    $this->nominator = $nominator;
+    $this->candidate = $candidate;
+    $this->election = $election;
+  }
 
-    /**
-     * @return Election
-     */
-    public function getElection(): Election
-    {
-        return $this->election;
-    }
+  /**
+   * @return Election
+   */
+  public function getElection(): Election {
+    return $this->election;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getCandidate(): Member
-    {
-        return $this->candidate;
-    }
+  /**
+   * @return Member
+   */
+  public function getCandidate(): Member {
+    return $this->candidate;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getNominator(): Member
-    {
-        return $this->nominator;
-    }
-
+  /**
+   * @return Member
+   */
+  public function getNominator(): Member {
+    return $this->nominator;
+  }
 }

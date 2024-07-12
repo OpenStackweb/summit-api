@@ -15,25 +15,27 @@ namespace App\Audit\ConcreteFormatters\ChildEntityFormatters;
  * limitations under the License.
  **/
 
-
 /**
  * Class PresentationActionAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class PresentationExtraQuestionAnswerAuditLogFormatter implements IChildEntityAuditLogFormatter
-{
-    /**
-     * @inheritDoc
-     */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""): ?string {
-        switch ($child_entity_action_type) {
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
-                return "A new PresentationExtraQuestionAnswer for Question \"{$subject->getQuestion()->getName()} ({$subject->getQuestion()->getID()})\" and value \"{$subject->getValue()}\" was added to the collection";
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_UPDATE:
-                return "A PresentationExtraQuestionAnswer for Question \"{$subject->getQuestion()->getName()} ({$subject->getQuestion()->getID()})\" and value \"{$subject->getValue()}\" has changed. {$additional_info}";
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
-                return "PresentationExtraQuestionAnswer with ID {$subject->getID()} was removed from the collection";
-        }
-        return "";
+class PresentationExtraQuestionAnswerAuditLogFormatter implements IChildEntityAuditLogFormatter {
+  /**
+   * @inheritDoc
+   */
+  public function format(
+    $subject,
+    string $child_entity_action_type,
+    ?string $additional_info = "",
+  ): ?string {
+    switch ($child_entity_action_type) {
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
+        return "A new PresentationExtraQuestionAnswer for Question \"{$subject->getQuestion()->getName()} ({$subject->getQuestion()->getID()})\" and value \"{$subject->getValue()}\" was added to the collection";
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_UPDATE:
+        return "A PresentationExtraQuestionAnswer for Question \"{$subject->getQuestion()->getName()} ({$subject->getQuestion()->getID()})\" and value \"{$subject->getValue()}\" has changed. {$additional_info}";
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
+        return "PresentationExtraQuestionAnswer with ID {$subject->getID()} was removed from the collection";
     }
+    return "";
+  }
 }

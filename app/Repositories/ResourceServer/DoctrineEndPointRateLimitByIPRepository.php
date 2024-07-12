@@ -27,106 +27,98 @@ use utils\PagingResponse;
  * Class DoctrineEndPointRateLimitByIPRepository
  * @package repositories\resource_server
  */
-final class DoctrineEndPointRateLimitByIPRepository
-    extends ConfigDoctrineRepository
-    implements IEndpointRateLimitByIPRepository
-{
-    /**
-     * @param string $ip
-     * @param string $route
-     * @param string $http_method
-     * @return EndPointRateLimitByIP
-     */
-    public function getByIPRouteMethod($ip, $route, $http_method)
-    {
-        try {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("c")
-                ->from(\App\Models\ResourceServer\EndPointRateLimitByIP::class, "c")
-                ->where('c.route = :route')
-                ->andWhere('c.http_method = :http_method')
-                ->andWhere('c.ip = :ip')
-                ->andWhere('c.active = 1')
-                ->setParameter('ip', trim($ip))
-                ->setParameter('route', trim($route))
-                ->setParameter('http_method', trim($http_method))
-                ->getQuery()
-                ->getOneOrNullResult();
-        }
-        catch(\Exception $ex){
-            Log::error($ex);
-            return null;
-        }
+final class DoctrineEndPointRateLimitByIPRepository extends ConfigDoctrineRepository implements
+  IEndpointRateLimitByIPRepository {
+  /**
+   * @param string $ip
+   * @param string $route
+   * @param string $http_method
+   * @return EndPointRateLimitByIP
+   */
+  public function getByIPRouteMethod($ip, $route, $http_method) {
+    try {
+      return $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select("c")
+        ->from(\App\Models\ResourceServer\EndPointRateLimitByIP::class, "c")
+        ->where("c.route = :route")
+        ->andWhere("c.http_method = :http_method")
+        ->andWhere("c.ip = :ip")
+        ->andWhere("c.active = 1")
+        ->setParameter("ip", trim($ip))
+        ->setParameter("route", trim($route))
+        ->setParameter("http_method", trim($http_method))
+        ->getQuery()
+        ->getOneOrNullResult();
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return null;
     }
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return EndPointRateLimitByIP::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return EndPointRateLimitByIP::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [];
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query)
-    {
-       return $query;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraFilters(QueryBuilder $query) {
+    return $query;
+  }
 
-    /**
-     * @param int $id
-     * @return IEntity
-     */
-    public function getById($id)
-    {
-        // TODO: Implement getById() method.
-    }
+  /**
+   * @param int $id
+   * @return IEntity
+   */
+  public function getById($id) {
+    // TODO: Implement getById() method.
+  }
 
+  /**
+   * @param IEntity $entity
+   * @return void
+   */
+  public function delete($entity) {
+    // TODO: Implement delete() method.
+  }
 
-    /**
-     * @param IEntity $entity
-     * @return void
-     */
-    public function delete($entity)
-    {
-        // TODO: Implement delete() method.
-    }
+  /**
+   * @return IEntity[]
+   */
+  public function getAll() {
+    // TODO: Implement getAll() method.
+  }
 
-    /**
-     * @return IEntity[]
-     */
-    public function getAll()
-    {
-        // TODO: Implement getAll() method.
-    }
-
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
-        // TODO: Implement getAllByPage() method.
-    }
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    // TODO: Implement getAllByPage() method.
+  }
 }

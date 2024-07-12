@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\Member;
 /**
  * Class SummitSponsorMetric
@@ -19,48 +19,43 @@ use models\main\Member;
  * @ORM\Table(name="SummitSponsorMetric")
  * @package models\summit
  */
-class SummitSponsorMetric extends SummitMetric
-{
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Sponsor|null
-     */
-    protected $sponsor;
+class SummitSponsorMetric extends SummitMetric {
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Sponsor|null
+   */
+  protected $sponsor;
 
-    /**
-     * @return int
-     */
-    public function getSponsorId(){
-        try {
-            return is_null($this->sponsor) ? 0 : $this->sponsor->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getSponsorId() {
+    try {
+      return is_null($this->sponsor) ? 0 : $this->sponsor->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasSponsor():bool{
-        return $this->getSponsorId() > 0;
-    }
+  /**
+   * @return bool
+   */
+  public function hasSponsor(): bool {
+    return $this->getSponsorId() > 0;
+  }
 
-    /**
-     * @return Sponsor|null
-     */
-    public function getSponsor(): ?Sponsor
-    {
-        return $this->sponsor;
-    }
+  /**
+   * @return Sponsor|null
+   */
+  public function getSponsor(): ?Sponsor {
+    return $this->sponsor;
+  }
 
-    /**
-     * @param Sponsor|null $sponsor
-     */
-    public function setSponsor(?Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
-    }
-
+  /**
+   * @param Sponsor|null $sponsor
+   */
+  public function setSponsor(?Sponsor $sponsor): void {
+    $this->sponsor = $sponsor;
+  }
 }

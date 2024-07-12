@@ -29,147 +29,145 @@ use utils\Filter;
  * Class SubmitterActionsEmailStrategy
  * @package App\Services\Model\Strategies\EmailActions
  */
-final class SubmitterActionsEmailStrategy
-{
-    /**
-     * @var Summit
-     */
-    private $summit;
+final class SubmitterActionsEmailStrategy {
+  /**
+   * @var Summit
+   */
+  private $summit;
 
-    /**
-     * @var string
-     */
-    private $flow_event;
+  /**
+   * @var string
+   */
+  private $flow_event;
 
-    /**
-     * SubmitterActionsEmailStrategy constructor.
-     * @param Summit $summit
-     * @param string $flow_event
-     */
-    public function __construct(Summit $summit, string $flow_event)
-    {
-        $this->summit = $summit;
-        $this->flow_event = $flow_event;
-    }
+  /**
+   * SubmitterActionsEmailStrategy constructor.
+   * @param Summit $summit
+   * @param string $flow_event
+   */
+  public function __construct(Summit $summit, string $flow_event) {
+    $this->summit = $summit;
+    $this->flow_event = $flow_event;
+  }
 
-    /**
-     * @param Member $submitter
-     * @param string|null $test_email_recipient
-     * @param Filter|null $filter
-     * @param callable|null $onSuccess
-     * @param callable|null $onInfo
-     * @param callable|null $onError
-     * @return void
-     */
-    public function process(Member  $submitter,
-                            ?string $test_email_recipient,
-                            ?Filter $filter = null,
-                            callable $onSuccess = null,
-                            callable $onInfo = null,
-                            callable $onError = null
-    ): void
-    {
-        try {
-            $type = null;
+  /**
+   * @param Member $submitter
+   * @param string|null $test_email_recipient
+   * @param Filter|null $filter
+   * @param callable|null $onSuccess
+   * @param callable|null $onInfo
+   * @param callable|null $onError
+   * @return void
+   */
+  public function process(
+    Member $submitter,
+    ?string $test_email_recipient,
+    ?Filter $filter = null,
+    callable $onSuccess = null,
+    callable $onInfo = null,
+    callable $onError = null,
+  ): void {
+    try {
+      $type = null;
 
-            Log::debug("SubmitterActionsEmailStrategy::send processing submitter {$submitter->getEmail()} - original flow event {$this->flow_event}");
+      Log::debug(
+        "SubmitterActionsEmailStrategy::send processing submitter {$submitter->getEmail()} - original flow event {$this->flow_event}",
+      );
 
-            $has_accepted_presentations = $submitter->hasAcceptedPresentations($this->summit, $filter);
+      $has_accepted_presentations = $submitter->hasAcceptedPresentations($this->summit, $filter);
 
-            $has_alternate_presentations = $submitter->hasAlternatePresentations($this->summit, $filter);
+      $has_alternate_presentations = $submitter->hasAlternatePresentations($this->summit, $filter);
 
-            $has_rejected_presentations = $submitter->hasRejectedPresentations($this->summit, $filter);
+      $has_rejected_presentations = $submitter->hasRejectedPresentations($this->summit, $filter);
 
-            Log::debug
-            (
-                sprintf
-                (
-                    "SubmitterActionsEmailStrategy::send submitter %s accepted %b alternates %b rejected %b.",
-                    $submitter->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations
-                )
-            );
+      Log::debug(
+        sprintf(
+          "SubmitterActionsEmailStrategy::send submitter %s accepted %b alternates %b rejected %b.",
+          $submitter->getEmail(),
+          $has_accepted_presentations,
+          $has_alternate_presentations,
+          $has_rejected_presentations,
+        ),
+      );
 
-            if(!is_null($onInfo))
-                $onInfo(
-                    sprintf
-                    (
-                        "Trying to send email %s to submitter %s accepted %b alternate %b rejected %b.",
-                        $this->flow_event,
-                        $submitter->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations
-                    )
-                );
+      if (!is_null($onInfo)) {
+        $onInfo(
+          sprintf(
+            "Trying to send email %s to submitter %s accepted %b alternate %b rejected %b.",
+            $this->flow_event,
+            $submitter->getEmail(),
+            $has_accepted_presentations,
+            $has_alternate_presentations,
+            $has_rejected_presentations,
+          ),
+        );
+      }
 
-            switch ($this->flow_event) {
-                case PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
-                    $type = SubmitterAnnouncementSummitEmail::TypeAcceptedAlternate;
-                    break;
-                case PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG:
-                    $type = SubmitterAnnouncementSummitEmail::TypeAccepted;
-                    break;
-                case PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG:
-                    $type = SubmitterAnnouncementSummitEmail::TypeAcceptedRejected;
-                    break;
-                case PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG:
-                    $type = SubmitterAnnouncementSummitEmail::TypeAlternate;
-                    break;
-                case PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG:
-                    $type = SubmitterAnnouncementSummitEmail::TypeAlternateRejected;
-                    break;
-                case PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG:
-                    $type = SubmitterAnnouncementSummitEmail::TypeRejected;
-                    break;
-                default:
-                    break;
-            }
+      switch ($this->flow_event) {
+        case PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
+          $type = SubmitterAnnouncementSummitEmail::TypeAcceptedAlternate;
+          break;
+        case PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG:
+          $type = SubmitterAnnouncementSummitEmail::TypeAccepted;
+          break;
+        case PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG:
+          $type = SubmitterAnnouncementSummitEmail::TypeAcceptedRejected;
+          break;
+        case PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG:
+          $type = SubmitterAnnouncementSummitEmail::TypeAlternate;
+          break;
+        case PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG:
+          $type = SubmitterAnnouncementSummitEmail::TypeAlternateRejected;
+          break;
+        case PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG:
+          $type = SubmitterAnnouncementSummitEmail::TypeRejected;
+          break;
+        default:
+          break;
+      }
 
-            if (!is_null($type)) {
-                if(!is_null($onInfo))
-                    $onInfo(
-                        sprintf
-                        (
-                            "Submitter %s accepted %b alternate %b rejected %b already has an email of type %s.",
-                            $submitter->getEmail(),
-                            $has_accepted_presentations,
-                            $has_alternate_presentations,
-                            $has_rejected_presentations,
-                            $this->flow_event
-                        )
-                    );
-
-                PresentationSubmitterSelectionProcessEmailFactory::send
-                (
-                    $this->summit,
-                    $submitter,
-                    $type,
-                    $test_email_recipient,
-                    $filter,
-                    $onSuccess
-                );
-                return;
-            }
-
-            if(!is_null($onInfo))
-                $onInfo(
-                    sprintf
-                    (
-                        "Excluded submitter %s accepted %b alternate %b rejected %b for original email %s.",
-                        $submitter->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations,
-                        $this->flow_event
-                    )
-                );
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            if(!is_null($onError))
-                $onError($ex->getMessage());
+      if (!is_null($type)) {
+        if (!is_null($onInfo)) {
+          $onInfo(
+            sprintf(
+              "Submitter %s accepted %b alternate %b rejected %b already has an email of type %s.",
+              $submitter->getEmail(),
+              $has_accepted_presentations,
+              $has_alternate_presentations,
+              $has_rejected_presentations,
+              $this->flow_event,
+            ),
+          );
         }
+
+        PresentationSubmitterSelectionProcessEmailFactory::send(
+          $this->summit,
+          $submitter,
+          $type,
+          $test_email_recipient,
+          $filter,
+          $onSuccess,
+        );
+        return;
+      }
+
+      if (!is_null($onInfo)) {
+        $onInfo(
+          sprintf(
+            "Excluded submitter %s accepted %b alternate %b rejected %b for original email %s.",
+            $submitter->getEmail(),
+            $has_accepted_presentations,
+            $has_alternate_presentations,
+            $has_rejected_presentations,
+            $this->flow_event,
+          ),
+        );
+      }
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      if (!is_null($onError)) {
+        $onError($ex->getMessage());
+      }
     }
+  }
 }

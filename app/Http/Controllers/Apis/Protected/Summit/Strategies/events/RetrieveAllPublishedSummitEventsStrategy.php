@@ -18,28 +18,26 @@ use utils\FilterParser;
  * Class RetrieveAllPublishedSummitEventsStrategy
  * @package App\Http\Controllers
  */
-final class RetrieveAllPublishedSummitEventsStrategy extends RetrieveAllSummitEventsStrategy
-{
+final class RetrieveAllPublishedSummitEventsStrategy extends RetrieveAllSummitEventsStrategy {
+  /**
+   * @return array
+   */
+  protected function getValidFilters() {
+    $valid_filters = parent::getValidFilters();
+    $valid_filters["published"] = ["=="];
+    return $valid_filters;
+  }
 
-    /**
-    * @return array
-     */
-    protected function getValidFilters()
-    {
-        $valid_filters = parent::getValidFilters();
-        $valid_filters['published'] = ['=='];
-        return $valid_filters;
-    }
-
-    /**
-     * @return null|Filter
-     */
-    protected function buildFilter()
-    {
-        $filter = parent::buildFilter();
-        $filter->addFilterCondition(FilterParser::buildFilter('published','==','1'));
-        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_publishing_dates','==','1'));
-        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_location','==','1'));
-        return $filter;
-    }
+  /**
+   * @return null|Filter
+   */
+  protected function buildFilter() {
+    $filter = parent::buildFilter();
+    $filter->addFilterCondition(FilterParser::buildFilter("published", "==", "1"));
+    $filter->addFilterCondition(
+      FilterParser::buildFilter("type_allows_publishing_dates", "==", "1"),
+    );
+    $filter->addFilterCondition(FilterParser::buildFilter("type_allows_location", "==", "1"));
+    return $filter;
+  }
 }

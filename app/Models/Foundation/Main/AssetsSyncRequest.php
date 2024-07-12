@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use DateTime;
 
 /**
@@ -21,89 +21,80 @@ use DateTime;
  * Class File
  * @package models\main
  */
-class AssetsSyncRequest extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="`Origin`", type="string")
-     */
-    private $from;
+class AssetsSyncRequest extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="`Origin`", type="string")
+   */
+  private $from;
 
-    /**
-     * @ORM\Column(name="`Destination`", type="string")
-     */
-    private $to;
+  /**
+   * @ORM\Column(name="`Destination`", type="string")
+   */
+  private $to;
 
-    /**
-     * @ORM\Column(name="Processed", type="boolean")
-     */
-    private $processed;
+  /**
+   * @ORM\Column(name="Processed", type="boolean")
+   */
+  private $processed;
 
-    /**
-     * @ORM\Column(name="ProcessedDate", type="datetime")
-     */
-    private $processed_date;
+  /**
+   * @ORM\Column(name="ProcessedDate", type="datetime")
+   */
+  private $processed_date;
 
-    /**
-     * @return string
-     */
-    public function getFrom()
-    {
-        return $this->from;
-    }
+  /**
+   * @return string
+   */
+  public function getFrom() {
+    return $this->from;
+  }
 
-    /**
-     * @param string $from
-     */
-    public function setFrom($from)
-    {
-        $this->from = $from;
-    }
+  /**
+   * @param string $from
+   */
+  public function setFrom($from) {
+    $this->from = $from;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTo()
-    {
-        return $this->to;
-    }
+  /**
+   * @return string
+   */
+  public function getTo() {
+    return $this->to;
+  }
 
-    /**
-     * @param string $to
-     */
-    public function setTo($to)
-    {
-        $this->to = $to;
-    }
+  /**
+   * @param string $to
+   */
+  public function setTo($to) {
+    $this->to = $to;
+  }
 
-    /**
-     * @return string
-     */
-    public function getProcessed()
-    {
-        return $this->processed;
-    }
+  /**
+   * @return string
+   */
+  public function getProcessed() {
+    return $this->processed;
+  }
 
-    /**
-     * @param string $processed
-     */
-    public function setProcessed($processed)
-    {
-        $this->processed = $processed;
-    }
+  /**
+   * @param string $processed
+   */
+  public function setProcessed($processed) {
+    $this->processed = $processed;
+  }
 
-    /**
-     * @return DateTime
-     */
-    public function getProcessedDate()
-    {
-        return $this->processed_date;
-    }
+  /**
+   * @return DateTime
+   */
+  public function getProcessedDate() {
+    return $this->processed_date;
+  }
 
-    /**
-     * @param DateTime $processed_date
-     */
-    public function setProcessedDate($processed_date)
-    {
-        $this->processed_date = $processed_date;
-    }
+  /**
+   * @param DateTime $processed_date
+   */
+  public function setProcessedDate($processed_date) {
+    $this->processed_date = $processed_date;
+  }
 }

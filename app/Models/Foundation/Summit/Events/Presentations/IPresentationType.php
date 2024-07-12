@@ -12,12 +12,11 @@
  * limitations under the License.
  **/
 
-interface IPresentationType
-{
-    const Presentation  = 'Presentation';
-    const Keynotes      = 'Keynotes';
-    const Panel         = 'Panel';
-    const LightingTalks = 'Lightning Talks';
-    const Fishbowl      = 'Fishbowl';
-    const Workshop      = 'Workshop';
+interface IPresentationType {
+  const Presentation = "Presentation";
+  const Keynotes = "Keynotes";
+  const Panel = "Panel";
+  const LightingTalks = "Lightning Talks";
+  const Fishbowl = "Fishbowl";
+  const Workshop = "Workshop";
 }

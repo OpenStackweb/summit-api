@@ -18,7 +18,5 @@ use models\utils\IBaseRepository;
  * Interface IRSVPRepository
  * @package models\summit
  */
-interface IRSVPRepository extends IBaseRepository
-{
-
+interface IRSVPRepository extends IBaseRepository {
 }

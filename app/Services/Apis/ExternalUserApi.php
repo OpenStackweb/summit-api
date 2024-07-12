@@ -25,307 +25,301 @@ use Exception;
  * Class ExternalUserApi
  * @package App\Services
  */
-final class ExternalUserApi extends AbstractOAuth2Api
-    implements IExternalUserApi
-{
+final class ExternalUserApi extends AbstractOAuth2Api implements IExternalUserApi {
+  /**
+   * @var Client
+   */
+  private $client;
 
-    /**
-     * @var Client
-     */
-    private $client;
+  /**
+   * @var string
+   */
+  private $scopes;
 
-    /**
-     * @var string
-     */
-    private $scopes;
+  /**
+   * ExternalUserApi constructor.
+   * @param ICacheService $cacheService
+   */
+  public function __construct(ICacheService $cacheService) {
+    parent::__construct($cacheService);
+    $stack = HandlerStack::create();
+    $stack->push(GuzzleRetryMiddleware::factory());
 
-    /**
-     * ExternalUserApi constructor.
-     * @param ICacheService $cacheService
-     */
-    public function __construct(ICacheService $cacheService)
-    {
-        parent::__construct($cacheService);
-        $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
+    $this->client = new Client([
+      "handler" => $stack,
+      "base_uri" => Config::get("idp.base_url") ?? "",
+      "timeout" => Config::get("curl.timeout", 60),
+      "allow_redirects" => Config::get("curl.allow_redirects", false),
+      "verify" => Config::get("curl.verify_ssl_cert", true),
+    ]);
+  }
 
-        $this->client = new Client([
-            'handler'         => $stack,
-            'base_uri'        => Config::get('idp.base_url') ?? '',
-            'timeout'         => Config::get('curl.timeout', 60),
-            'allow_redirects' => Config::get('curl.allow_redirects', false),
-            'verify'          => Config::get('curl.verify_ssl_cert', true),
-        ]);
+  /**
+   * @param string $email
+   * @return null|mixed
+   * @throws Exception
+   */
+  public function getUserByEmail(string $email) {
+    try {
+      Log::debug(sprintf("ExternalUserApi::getUserByEmail email %s", $email));
+
+      $query = [
+        "access_token" => $this->getAccessToken(),
+      ];
+
+      $params = [
+        "filter" => "primary_email==" . $email,
+      ];
+
+      foreach ($params as $param => $value) {
+        $query[$param] = $value;
+      }
+
+      $response = $this->client->get("/api/v1/users", [
+        "query" => $query,
+      ]);
+
+      $data = json_decode($response->getBody()->getContents(), true);
+
+      return intval($data["total"]) > 0 ? $data["data"][0] : null;
+    } catch (RequestException $ex) {
+      $this->cleanAccessToken();
+      Log::warning($ex);
+      if ($ex->getCode() == 404) {
+        return null;
+      }
+      throw $ex;
+    } catch (Exception $ex) {
+      $this->cleanAccessToken();
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    /**
-     * @param string $email
-     * @return null|mixed
-     * @throws Exception
-     */
-    public function getUserByEmail(string $email)
-    {
-        try {
-            Log::debug(sprintf("ExternalUserApi::getUserByEmail email %s", $email));
+  /**
+   * @param string $email
+   * @param string $first_name
+   * @param string $last_name
+   * @param string $company
+   * @return mixed
+   * @throws Exception
+   */
+  public function registerUser(
+    string $email,
+    ?string $first_name,
+    ?string $last_name,
+    ?string $company = "",
+  ) {
+    Log::debug(
+      sprintf(
+        "ExternalUserApi::registerUser email %s first_name %s last_name %s",
+        $email,
+        $first_name,
+        $last_name,
+      ),
+    );
 
-            $query = [
-                'access_token' => $this->getAccessToken()
-            ];
+    try {
+      $query = [
+        "access_token" => $this->getAccessToken(),
+      ];
 
-            $params = [
-                'filter' => 'primary_email==' . $email
-            ];
+      if (empty($email)) {
+        throw new ValidationException("Email field es required.");
+      }
 
-            foreach ($params as $param => $value) {
-                $query[$param] = $value;
-            }
+      $response = $this->client->post("/api/v1/user-registration-requests", [
+        "query" => $query,
+        RequestOptions::JSON => [
+          "email" => $email,
+          "first_name" => $first_name,
+          "last_name" => $last_name,
+          "company" => $company,
+        ],
+      ]);
 
-            $response = $this->client->get('/api/v1/users', [
-                    'query' => $query,
-                ]
-            );
-
-            $data = json_decode($response->getBody()->getContents(), true);
-
-            return intval($data['total']) > 0 ? $data['data'][0] : null;
-        }
-        catch (RequestException $ex){
-            $this->cleanAccessToken();
-            Log::warning($ex);
-            if($ex->getCode() == 404){
-                return null;
-            }
-            throw $ex;
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+      return json_decode($response->getBody()->getContents(), true);
+    } catch (Exception $ex) {
+      $this->cleanAccessToken();
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    /**
-     * @param string $email
-     * @param string $first_name
-     * @param string $last_name
-     * @param string $company
-     * @return mixed
-     * @throws Exception
-     */
-    public function registerUser(string $email, ?string $first_name, ?string $last_name, ?string $company = '')
-    {
-        Log::debug(sprintf("ExternalUserApi::registerUser email %s first_name %s last_name %s", $email, $first_name, $last_name));
+  const AppName = "REGISTRATION_SERVICE";
 
-        try {
-            $query = [
-                'access_token' => $this->getAccessToken()
-            ];
+  /**
+   * @return string
+   */
+  public function getAppName(): string {
+    return self::AppName;
+  }
 
-            if(empty($email))
-                throw new ValidationException("Email field es required.");
+  /**
+   * @return array
+   */
+  public function getAppConfig(): array {
+    return [
+      "client_id" => Config::get("registration.service_client_id"),
+      "client_secret" => Config::get("registration.service_client_secret"),
+      "scopes" => Config::get("registration.service_client_scopes"),
+    ];
+  }
 
-            $response = $this->client->post('/api/v1/user-registration-requests', [
-                    'query' => $query,
-                    RequestOptions::JSON => [
-                        'email'      => $email,
-                        'first_name' => $first_name,
-                        'last_name'  => $last_name,
-                        'company'    => $company
-                    ]
-                ]
-            );
+  /**
+   * @param int $id
+   * @return mixed|null
+   * @throws Exception
+   */
+  public function getUserById(int $id) {
+    try {
+      Log::debug(sprintf("ExternalUserApi::getUserById id %s", $id));
 
-            return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+      $query = [
+        "access_token" => $this->getAccessToken(),
+      ];
+
+      $response = $this->client->get(sprintf("/api/v1/users/%s", $id), [
+        "query" => $query,
+      ]);
+
+      return json_decode($response->getBody()->getContents(), true);
+    } catch (RequestException $ex) {
+      $this->cleanAccessToken();
+      Log::warning($ex);
+      if ($ex->getCode() == 404) {
+        return null;
+      }
+      throw $ex;
+    } catch (Exception $ex) {
+      $this->cleanAccessToken();
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    const AppName = 'REGISTRATION_SERVICE';
+  /**
+   * @param int $id
+   * @param string|null $first_name
+   * @param string|null $last_name
+   * @param string|null $company_name
+   * @return mixed
+   * @throws Exception
+   */
+  public function updateUser(
+    int $id,
+    ?string $first_name,
+    ?string $last_name,
+    ?string $company_name,
+  ) {
+    Log::debug(
+      sprintf(
+        "ExternalUserApi::updateUser first_name %s last_name %s company_name %s",
+        $first_name,
+        $last_name,
+        $company_name,
+      ),
+    );
 
-    /**
-     * @return string
-     */
-    public function getAppName(): string
-    {
-        return self::AppName;
+    try {
+      $query = [
+        "access_token" => $this->getAccessToken(),
+      ];
+
+      $response = $this->client->put(sprintf("/api/v1/users/%s", $id), [
+        "query" => $query,
+        RequestOptions::JSON => [
+          "first_name" => $first_name,
+          "last_name" => $last_name,
+          "company" => $company_name,
+        ],
+      ]);
+
+      return json_decode($response->getBody()->getContents(), true);
+    } catch (RequestException $ex) {
+      $this->cleanAccessToken();
+      Log::warning($ex);
+      return null;
+    } catch (Exception $ex) {
+      $this->cleanAccessToken();
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    /**
-     * @return array
-     */
-    public function getAppConfig(): array
-    {
-        return [
-            'client_id' => Config::get("registration.service_client_id"),
-            'client_secret' => Config::get("registration.service_client_secret"),
-            'scopes' => Config::get("registration.service_client_scopes")
-        ];
+  /**
+   * @param string $email
+   * @param string $first_name
+   * @param string $last_name
+   * @param bool $is_redeemed
+   * @return mixed
+   * @throws Exception
+   */
+  public function getUserRegistrationRequest(string $email) {
+    try {
+      Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
+
+      $query = [
+        "access_token" => $this->getAccessToken(),
+      ];
+
+      $params = [
+        "filter" => "email==" . $email,
+      ];
+
+      foreach ($params as $param => $value) {
+        $query[$param] = $value;
+      }
+
+      $response = $this->client->get("/api/v1/user-registration-requests", [
+        "query" => $query,
+      ]);
+
+      return json_decode($response->getBody()->getContents(), true);
+    } catch (Exception $ex) {
+      $this->cleanAccessToken();
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    /**
-     * @param int $id
-     * @return mixed|null
-     * @throws Exception
-     */
-    public function getUserById(int $id)
-    {
-        try {
-            Log::debug(sprintf("ExternalUserApi::getUserById id %s", $id));
+  /**
+   * @param int $id
+   * @param string|null $first_name
+   * @param string|null $last_name
+   * @param string|null $company_name
+   * @param string|null $country
+   * @return mixed
+   * @throws Exception
+   */
+  public function updateUserRegistrationRequest(
+    int $id,
+    ?string $first_name,
+    ?string $last_name,
+    ?string $company_name,
+    ?string $country,
+  ) {
+    Log::debug(sprintf("ExternalUserApi::updateUserRegistrationRequest id %s", $id));
 
-            $query = [
-                'access_token' => $this->getAccessToken()
-            ];
+    try {
+      $query = [
+        "access_token" => $this->getAccessToken(),
+      ];
 
-            $response = $this->client->get(sprintf('/api/v1/users/%s', $id), [
-                    'query' => $query,
-                ]
-            );
-
-            return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (RequestException $ex){
-            $this->cleanAccessToken();
-            Log::warning($ex);
-            if($ex->getCode() == 404){
-                return null;
-            }
-            throw $ex;
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+      $response = $this->client->put(sprintf("/api/v1/user-registration-requests/%s", $id), [
+        "query" => $query,
+        RequestOptions::JSON => [
+          "first_name" => $first_name,
+          "last_name" => $last_name,
+          "company" => $company_name,
+          "country" => $country,
+        ],
+      ]);
+      return json_decode($response->getBody()->getContents(), true);
+    } catch (Exception $ex) {
+      $this->cleanAccessToken();
+      Log::error($ex);
+      throw $ex;
     }
-
-    /**
-     * @param int $id
-     * @param string|null $first_name
-     * @param string|null $last_name
-     * @param string|null $company_name
-     * @return mixed
-     * @throws Exception
-     */
-    public function updateUser(int $id, ?string $first_name, ?string $last_name, ?string $company_name)
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "ExternalUserApi::updateUser first_name %s last_name %s company_name %s",
-                $first_name,
-                $last_name,
-                $company_name
-            )
-        );
-
-        try {
-            $query = [
-                'access_token' => $this->getAccessToken()
-            ];
-
-            $response = $this->client->put(sprintf('/api/v1/users/%s', $id), [
-                    'query' => $query,
-                    RequestOptions::JSON => [
-                        'first_name' => $first_name,
-                        'last_name'  => $last_name,
-                        'company'   => $company_name
-                    ]
-                ]
-            );
-
-            return json_decode($response->getBody()->getContents(), true);
-        }
-        catch(RequestException $ex){
-            $this->cleanAccessToken();
-            Log::warning($ex);
-            return null;
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
-    }
-
-    /**
-     * @param string $email
-     * @param string $first_name
-     * @param string $last_name
-     * @param bool $is_redeemed
-     * @return mixed
-     * @throws Exception
-     */
-    public function getUserRegistrationRequest(string $email)
-    {
-        try {
-            Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
-
-            $query = [
-                'access_token' => $this->getAccessToken(),
-            ];
-
-            $params = [
-                'filter' => 'email==' . $email
-            ];
-
-            foreach ($params as $param => $value) {
-                $query[$param] = $value;
-            }
-
-            $response = $this->client->get('/api/v1/user-registration-requests', [
-                'query' => $query,
-            ]);
-
-            return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
-    }
-
-    /**
-     * @param int $id
-     * @param string|null $first_name
-     * @param string|null $last_name
-     * @param string|null $company_name
-     * @param string|null $country
-     * @return mixed
-     * @throws Exception
-     */
-    public function updateUserRegistrationRequest(
-        int $id, ?string $first_name, ?string $last_name, ?string $company_name, ?string $country)
-    {
-        Log::debug(sprintf("ExternalUserApi::updateUserRegistrationRequest id %s", $id));
-
-        try {
-            $query = [
-                'access_token' => $this->getAccessToken()
-            ];
-
-            $response = $this->client->put(sprintf('/api/v1/user-registration-requests/%s', $id), [
-                    'query' => $query,
-                    RequestOptions::JSON => [
-                        'first_name'    => $first_name,
-                        'last_name'     => $last_name,
-                        'company'       => $company_name,
-                        'country'       => $country
-                    ]
-                ]
-            );
-            return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
-    }
+  }
 }
-

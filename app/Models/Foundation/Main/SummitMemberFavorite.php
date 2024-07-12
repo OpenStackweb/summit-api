@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Utils\BaseEntity;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\SummitEvent;
 /**
  * @ORM\Entity
@@ -20,58 +20,51 @@ use models\summit\SummitEvent;
  * Class SummitMemberSchedule
  * @package models\main
  */
-class SummitMemberFavorite extends BaseEntity
-{
+class SummitMemberFavorite extends BaseEntity {
+  /**
+   * @return Member
+   */
+  public function getMember() {
+    return $this->member;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getMember()
-    {
-        return $this->member;
-    }
+  /**
+   * @param Member $member
+   */
+  public function setMember($member) {
+    $this->member = $member;
+  }
 
-    /**
-     * @param Member $member
-     */
-    public function setMember($member)
-    {
-        $this->member = $member;
-    }
+  public function clearOwner() {
+    $this->member = null;
+    $this->event = null;
+  }
 
+  /**
+   * @return SummitEvent
+   */
+  public function getEvent() {
+    return $this->event;
+  }
 
-    public function clearOwner(){
-        $this->member = null;
-        $this->event  = null;
-    }
+  /**
+   * @param SummitEvent $event
+   */
+  public function setEvent($event) {
+    $this->event = $event;
+  }
 
-    /**
-     * @return SummitEvent
-     */
-    public function getEvent()
-    {
-        return $this->event;
-    }
+  /**
+   * @ORM\ManyToOne(targetEntity="Member", inversedBy="favorites")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  private $member;
 
-    /**
-     * @param SummitEvent $event
-     */
-    public function setEvent($event)
-    {
-        $this->event = $event;
-    }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Member", inversedBy="favorites")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $member;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitEvent
-     */
-    private $event;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
+   * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var SummitEvent
+   */
+  private $event;
 }

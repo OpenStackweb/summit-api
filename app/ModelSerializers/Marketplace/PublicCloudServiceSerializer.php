@@ -15,7 +15,5 @@
  * Class PublicCloudServiceSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class PublicCloudServiceSerializer extends CloudServiceSerializer
-{
-
+final class PublicCloudServiceSerializer extends CloudServiceSerializer {
 }

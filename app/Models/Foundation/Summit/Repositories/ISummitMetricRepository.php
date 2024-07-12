@@ -21,23 +21,29 @@ use models\utils\IBaseRepository;
  * Interface ISummitMetricRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitMetricRepository extends IBaseRepository
-{
-    /**
-     * @param Member $member
-     * @param string $type
-     * @param int|null $source_id
-     * @return SummitMetric|null
-     */
-    public function getNonAbandoned(Member $member, string $type, ?int $source_id = null):?SummitMetric;
+interface ISummitMetricRepository extends IBaseRepository {
+  /**
+   * @param Member $member
+   * @param string $type
+   * @param int|null $source_id
+   * @return SummitMetric|null
+   */
+  public function getNonAbandoned(
+    Member $member,
+    string $type,
+    ?int $source_id = null,
+  ): ?SummitMetric;
 
-    /**
-     * @param SummitAttendee $attendee
-     * @param SummitVenueRoom|null $room
-     * @param SummitEvent|null $event
-     * @return SummitMetric|null
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitMetric;
-
+  /**
+   * @param SummitAttendee $attendee
+   * @param SummitVenueRoom|null $room
+   * @param SummitEvent|null $event
+   * @return SummitMetric|null
+   * @throws \Doctrine\ORM\NonUniqueResultException
+   */
+  public function getNonAbandonedOnSiteMetric(
+    SummitAttendee $attendee,
+    ?SummitVenueRoom $room,
+    ?SummitEvent $event,
+  ): ?SummitMetric;
 }

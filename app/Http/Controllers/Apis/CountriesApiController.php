@@ -21,44 +21,32 @@ use Illuminate\Support\Facades\Request;
  * Class CountriesApiController
  * @package App\Http\Controllers
  */
-final class CountriesApiController extends JsonController
-{
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        try {
-            $countries = [];
-            foreach(CountryCodes::$iso_3166_countryCodes as $iso_code => $name){
-                $countries[] = [
-                    'iso_code' => $iso_code,
-                    'name' => $name,
-                ];
-            }
+final class CountriesApiController extends JsonController {
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    try {
+      $countries = [];
+      foreach (CountryCodes::$iso_3166_countryCodes as $iso_code => $name) {
+        $countries[] = [
+          "iso_code" => $iso_code,
+          "name" => $name,
+        ];
+      }
 
-            $response    = new PagingResponse
-            (
-                count($countries),
-                count($countries),
-                1,
-                1,
-                $countries
-            );
+      $response = new PagingResponse(count($countries), count($countries), 1, 1, $countries);
 
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->ok($response->toArray($expand = Request::input("expand", "")));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

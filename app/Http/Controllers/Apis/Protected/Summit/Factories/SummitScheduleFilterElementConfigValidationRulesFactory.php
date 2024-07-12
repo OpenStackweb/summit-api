@@ -14,25 +14,23 @@
 
 use models\summit\SummitScheduleFilterElementConfig;
 
-
 /**
  * Class SummitScheduleFilterElementConfigValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitScheduleFilterElementConfigValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-
-        return [
-            'type' => 'required|string|in:'.implode(',', SummitScheduleFilterElementConfig::AllowedTypes),
-            'label' => 'required|string|max:255',
-            'is_enabled' => 'required|boolean',
-            'prefilter_values' => 'sometimes|string_array',
-        ];
-    }
+final class SummitScheduleFilterElementConfigValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    return [
+      "type" =>
+        "required|string|in:" . implode(",", SummitScheduleFilterElementConfig::AllowedTypes),
+      "label" => "required|string|max:255",
+      "is_enabled" => "required|boolean",
+      "prefilter_values" => "sometimes|string_array",
+    ];
+  }
 }

@@ -20,31 +20,34 @@ use models\summit\Summit;
  * Interface ISummitPresentationActionTypeService
  * @package App\Services\Model
  */
-interface ISummitPresentationActionTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return PresentationActionType
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload):PresentationActionType;
+interface ISummitPresentationActionTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return PresentationActionType
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): PresentationActionType;
 
-    /**
-     * @param Summit $summit
-     * @param int $action_type_id
-     * @param array $payload
-     * @return PresentationActionType|null
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function update(Summit $summit, int $action_type_id, array $payload):?PresentationActionType;
+  /**
+   * @param Summit $summit
+   * @param int $action_type_id
+   * @param array $payload
+   * @return PresentationActionType|null
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function update(
+    Summit $summit,
+    int $action_type_id,
+    array $payload,
+  ): ?PresentationActionType;
 
-    /**
-     * @param Summit $summit
-     * @param int $action_type_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function delete(Summit $summit, int $action_type_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $action_type_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function delete(Summit $summit, int $action_type_id): void;
 }

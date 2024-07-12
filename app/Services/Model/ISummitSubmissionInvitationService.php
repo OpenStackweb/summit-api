@@ -22,57 +22,60 @@ use utils\Filter;
  * Interface ISummitSubmissionInvitationService
  * @package App\Services\Model
  */
-interface ISummitSubmissionInvitationService
-{
-    /**
-     * @param Summit $summit
-     * @param UploadedFile $csv_file
-     */
-    public function importInvitationData(Summit $summit, UploadedFile $csv_file):void;
+interface ISummitSubmissionInvitationService {
+  /**
+   * @param Summit $summit
+   * @param UploadedFile $csv_file
+   */
+  public function importInvitationData(Summit $summit, UploadedFile $csv_file): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $invitation_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $invitation_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $invitation_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $invitation_id): void;
 
-    /**
-     * @param Summit $summit
-     */
-    public function deleteAll(Summit $summit):void;
+  /**
+   * @param Summit $summit
+   */
+  public function deleteAll(Summit $summit): void;
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitSubmissionInvitation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload):SummitSubmissionInvitation;
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitSubmissionInvitation
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): SummitSubmissionInvitation;
 
-    /**
-     * @param Summit $summit
-     * @param int $invitation_id
-     * @param array $payload
-     * @return SummitSubmissionInvitation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $invitation_id, array $payload):SummitSubmissionInvitation;
+  /**
+   * @param Summit $summit
+   * @param int $invitation_id
+   * @param array $payload
+   * @return SummitSubmissionInvitation
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(
+    Summit $summit,
+    int $invitation_id,
+    array $payload,
+  ): SummitSubmissionInvitation;
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @param mixed $filter
-     */
-    public function triggerSend(Summit $summit, array $payload, $filter = null):void;
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @param mixed $filter
+   */
+  public function triggerSend(Summit $summit, array $payload, $filter = null): void;
 
-    /**
-     * @param int $summit_id
-     * @param array $payload
-     * @param Filter|null $filter
-     */
-    public function send(int $summit_id, array $payload, Filter $filter = null):void;
+  /**
+   * @param int $summit_id
+   * @param array $payload
+   * @param Filter|null $filter
+   */
+  public function send(int $summit_id, array $payload, Filter $filter = null): void;
 }

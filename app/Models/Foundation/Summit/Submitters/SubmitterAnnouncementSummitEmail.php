@@ -16,14 +16,13 @@ use models\utils\SilverstripeBaseModel;
  * Class SubmitterAnnouncementSummitEmail
  * @package models\summit
  */
-class SubmitterAnnouncementSummitEmail extends SilverstripeBaseModel
-{
-    const TypeAccepted                = 'ACCEPTED';
-    const TypeRejected                = 'REJECTED';
-    const TypeAlternate               = 'ALTERNATE';
-    const TypeAcceptedAlternate       = 'ACCEPTED_ALTERNATE';
-    const TypeAcceptedRejected        = 'ACCEPTED_REJECTED';
-    const TypeAlternateRejected       = 'ALTERNATE_REJECTED';
-    const TypeCreateMembership        = 'CREATE_MEMBERSHIP';
-    const TypeNone                    = 'NONE';
+class SubmitterAnnouncementSummitEmail extends SilverstripeBaseModel {
+  const TypeAccepted = "ACCEPTED";
+  const TypeRejected = "REJECTED";
+  const TypeAlternate = "ALTERNATE";
+  const TypeAcceptedAlternate = "ACCEPTED_ALTERNATE";
+  const TypeAcceptedRejected = "ACCEPTED_REJECTED";
+  const TypeAlternateRejected = "ALTERNATE_REJECTED";
+  const TypeCreateMembership = "CREATE_MEMBERSHIP";
+  const TypeNone = "NONE";
 }

@@ -20,37 +20,33 @@ use models\summit\Summit;
  * Class CheckMeSpeakerStrategy
  * @package App\Http\Controllers
  */
-class CheckMeSpeakerStrategy implements ICheckSpeakerStrategy
-{
+class CheckMeSpeakerStrategy implements ICheckSpeakerStrategy {
+  /**
+   * @var IResourceServerContext
+   */
+  protected $resource_server_context;
 
-    /**
-     * @var IResourceServerContext
-     */
-    protected $resource_server_context;
+  /**
+   * CheckMeAttendeeStrategy constructor.
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(IResourceServerContext $resource_server_context) {
+    $this->resource_server_context = $resource_server_context;
+  }
 
-    /**
-     * CheckMeAttendeeStrategy constructor.
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct(IResourceServerContext $resource_server_context)
-    {
-        $this->resource_server_context = $resource_server_context;
+  /**
+   * @param int $speaker_id
+   * @param Summit $summit
+   * @return null|PresentationSpeaker
+   */
+  public function check($speaker_id, Summit $summit) {
+    if (strtolower($speaker_id) === "me") {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return null;
+      }
+      return $summit->getSpeakerByMemberId($current_member->getId(), false);
     }
-
-    /**
-     * @param int $speaker_id
-     * @param Summit $summit
-     * @return null|PresentationSpeaker
-     */
-    public function check($speaker_id, Summit $summit)
-    {
-        if (strtolower($speaker_id) === 'me') {
-            $current_member  = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) {
-                return null;
-            }
-            return $summit->getSpeakerByMemberId($current_member->getId(), false);
-        }
-        return $summit->getSpeaker(intval($speaker_id, false));
-    }
+    return $summit->getSpeaker(intval($speaker_id, false));
+  }
 }

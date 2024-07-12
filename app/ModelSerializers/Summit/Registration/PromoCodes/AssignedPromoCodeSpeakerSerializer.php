@@ -19,22 +19,21 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class AssignedPromoCodeSpeakerSerializer
  * @package ModelSerializers
  */
-class AssignedPromoCodeSpeakerSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id'         => 'id:json_int',
-        'SpeakerId'  => 'speaker_id:integer',
-        'RedeemedAt' => 'redeemed:datetime_epoch',
-        'SentAt'     => 'sent:datetime_epoch',
-    ];
+class AssignedPromoCodeSpeakerSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "SpeakerId" => "speaker_id:integer",
+    "RedeemedAt" => "redeemed:datetime_epoch",
+    "SentAt" => "sent:datetime_epoch",
+  ];
 
-    protected static $expand_mappings = [
-        'speaker' => [
-            'type' => One2ManyExpandSerializer::class,
-            'getter' => 'getSpeaker',
-            'has' => 'hasSpeaker',
-            'serializer_type' => SerializerRegistry::SerializerType_Private,
-            'original_attribute' => 'speaker_id',
-        ],
-    ];
+  protected static $expand_mappings = [
+    "speaker" => [
+      "type" => One2ManyExpandSerializer::class,
+      "getter" => "getSpeaker",
+      "has" => "hasSpeaker",
+      "serializer_type" => SerializerRegistry::SerializerType_Private,
+      "original_attribute" => "speaker_id",
+    ],
+  ];
 }

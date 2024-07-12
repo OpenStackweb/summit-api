@@ -17,32 +17,31 @@
  * Interface EmailExcerptService
  * @package App\Services\utils
  */
-interface IEmailExcerptService
-{
-    const InfoType  = 'INFO';
-    const ErrorType = 'ERROR';
-    const EmailLineType = 'EMAIL_LINE';
-    /**
-     * @param array $value
-     * @return void
-     */
-    public function add(array $value) : void;
+interface IEmailExcerptService {
+  const InfoType = "INFO";
+  const ErrorType = "ERROR";
+  const EmailLineType = "EMAIL_LINE";
+  /**
+   * @param array $value
+   * @return void
+   */
+  public function add(array $value): void;
 
-    /**
-     * @return void
-     */
-    public function clearReport() : void;
+  /**
+   * @return void
+   */
+  public function clearReport(): void;
 
-    /**
-     * @return array
-     */
-    public function getReport(): array;
+  /**
+   * @return array
+   */
+  public function getReport(): array;
 
-    public function addEmailSent():void;
+  public function addEmailSent(): void;
 
-    public function generateEmailCountLine():void;
+  public function generateEmailCountLine(): void;
 
-    public function addInfoMessage(string $message):void;
+  public function addInfoMessage(string $message): void;
 
-    public function addErrorMessage(string $message):void;
+  public function addErrorMessage(string $message): void;
 }

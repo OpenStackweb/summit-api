@@ -16,33 +16,34 @@ use models\summit\PresentationVideo;
  * Class PresentationVideoFactory
  * @package factories
  */
-final class PresentationVideoFactory
-{
-    /**
-     * @param array $data
-     * @return PresentationVideo
-     */
-    public static function build(array $data){
-        return self::populate(new PresentationVideo, $data);
+final class PresentationVideoFactory {
+  /**
+   * @param array $data
+   * @return PresentationVideo
+   */
+  public static function build(array $data) {
+    return self::populate(new PresentationVideo(), $data);
+  }
+
+  /**
+   * @param PresentationVideo $video
+   * @param array $data
+   * @return PresentationVideo
+   */
+  public static function populate(PresentationVideo $video, array $data) {
+    PresentationMaterialFactory::populate($video, $data);
+
+    if (isset($data["youtube_id"])) {
+      $video->setYoutubeId(trim($data["youtube_id"]));
     }
 
-    /**
-     * @param PresentationVideo $video
-     * @param array $data
-     * @return PresentationVideo
-     */
-    public static function populate(PresentationVideo $video, array $data){
-
-        PresentationMaterialFactory::populate($video, $data);
-
-        if(isset($data['youtube_id']))
-            $video->setYoutubeId(trim($data['youtube_id']));
-
-        if(isset($data['external_url']))
-            $video->setExternalUrl(trim($data['external_url']));
-
-        if($video->getId() == 0)
-            $video->setDateUploaded(new \DateTime());
-        return $video;
+    if (isset($data["external_url"])) {
+      $video->setExternalUrl(trim($data["external_url"]));
     }
+
+    if ($video->getId() == 0) {
+      $video->setDateUploaded(new \DateTime());
+    }
+    return $video;
+  }
 }

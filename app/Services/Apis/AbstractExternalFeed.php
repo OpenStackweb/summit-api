@@ -20,63 +20,67 @@ use models\summit\Summit;
  * Class AbstractExternalFeed
  * @package App\Services\Apis
  */
-abstract class AbstractExternalFeed
-{
-    /**
-     * @var ClientInterface
-     */
-    protected $client;
+abstract class AbstractExternalFeed {
+  /**
+   * @var ClientInterface
+   */
+  protected $client;
 
-    /**
-     * @var Summit
-     */
-    protected $summit;
+  /**
+   * @var Summit
+   */
+  protected $summit;
 
-    /**
-     * AbstractExternalFeed constructor.
-     * @param ClientInterface $client
-     * @param Summit $summit
-     */
-    public function __construct(Summit $summit, ClientInterface $client)
-    {
-        $this->client = $client;
-        $this->summit = $summit;
+  /**
+   * AbstractExternalFeed constructor.
+   * @param ClientInterface $client
+   * @param Summit $summit
+   */
+  public function __construct(Summit $summit, ClientInterface $client) {
+    $this->client = $client;
+    $this->summit = $summit;
+  }
+
+  /**
+   * @param string $url
+   * @return array
+   * @throws Exception
+   */
+  protected function get(string $url): array {
+    try {
+      $response = $this->client->get($url);
+
+      if ($response->getStatusCode() !== 200) {
+        throw new Exception("invalid status code!");
+      }
+
+      $json = $response->getBody()->getContents();
+      Log::debug(sprintf("AbstractExternalFeed get from %s - %s", $url, $json));
+      $res = json_decode($json, true);
+      return $res ?? [];
+    } catch (RequestException $ex) {
+      Log::warning($ex->getMessage());
+      throw $ex;
     }
+  }
 
-    /**
-     * @param string $url
-     * @return array
-     * @throws Exception
-     */
-    protected function get(string $url):array {
-        try {
-            $response = $this->client->get($url);
-
-            if ($response->getStatusCode() !== 200)
-                throw new Exception('invalid status code!');
-
-            $json = $response->getBody()->getContents();
-            Log::debug(sprintf("AbstractExternalFeed get from %s - %s", $url, $json));
-            $res = json_decode($json, true);
-            return $res ?? [];
-        }
-        catch(RequestException $ex){
-            Log::warning($ex->getMessage());
-            throw $ex;
-        }
+  /**
+   * @param null|string $content
+   * @return string
+   */
+  public static function convert2UTF8(?string $content): string {
+    if (empty($content)) {
+      return "";
     }
-
-    /**
-     * @param null|string $content
-     * @return string
-     */
-    public static function convert2UTF8(?string $content):string{
-        if(empty($content)) return '';
-        if(!mb_check_encoding($content, 'UTF-8')
-            OR !($content === mb_convert_encoding(mb_convert_encoding($content, 'UTF-32', 'UTF-8' ), 'UTF-8', 'UTF-32'))) {
-            $content = mb_convert_encoding($content, 'UTF-8');
-        }
-        return $content;
+    if (
+      !mb_check_encoding($content, "UTF-8") or
+      !(
+        $content ===
+        mb_convert_encoding(mb_convert_encoding($content, "UTF-32", "UTF-8"), "UTF-8", "UTF-32")
+      )
+    ) {
+      $content = mb_convert_encoding($content, "UTF-8");
     }
-
+    return $content;
+  }
 }

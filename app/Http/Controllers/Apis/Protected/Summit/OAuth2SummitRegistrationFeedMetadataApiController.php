@@ -24,147 +24,131 @@ use services\model\ISummitService;
  * Class OAuth2SummitRegistrationFeedMetadataApiController
  * @package App\Http\Controllers
  */
-class OAuth2SummitRegistrationFeedMetadataApiController
-    extends OAuth2ProtectedController
-{
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+class OAuth2SummitRegistrationFeedMetadataApiController extends OAuth2ProtectedController {
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * @var ISummitService
-     */
-    private $service;
+  /**
+   * @var ISummitService
+   */
+  private $service;
 
-    /**
-     * @param ISummitRegistrationFeedMetadataRepository $repository
-     * @param ISummitRepository $summit_repository
-     * @param ISummitService $service
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISummitRegistrationFeedMetadataRepository $repository,
-        ISummitRepository $summit_repository,
-        ISummitService $service,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-        $this->summit_repository = $summit_repository;
-        $this->service = $service;
-    }
+  /**
+   * @param ISummitRegistrationFeedMetadataRepository $repository
+   * @param ISummitRepository $summit_repository
+   * @param ISummitService $service
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISummitRegistrationFeedMetadataRepository $repository,
+    ISummitRepository $summit_repository,
+    ISummitService $service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+    $this->summit_repository = $summit_repository;
+    $this->service = $service;
+  }
 
-    use GetAllBySummit;
+  use GetAllBySummit;
 
-    use GetSummitChildElementById;
+  use GetSummitChildElementById;
 
-    use AddSummitChildElement;
+  use AddSummitChildElement;
 
-    use UpdateSummitChildElement;
+  use UpdateSummitChildElement;
 
-    use DeleteSummitChildElement;
+  use DeleteSummitChildElement;
 
-    /**
-     * @return array
-     */
-    protected function getFilterRules():array
-    {
-        return [
-            'key' => ['=@', '@@'],
-            'value' => ['=@', '@@'],
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterRules(): array {
+    return [
+      "key" => ["=@", "@@"],
+      "value" => ["=@", "@@"],
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterValidatorRules():array{
-        return [
-            'key' => 'sometimes|required|string',
-            'value' => 'sometimes|required|string',
-        ];
-    }
-    /**
-     * @return array
-     */
-    protected function getOrderRules():array{
-        return [
-            'id',
-            'key',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterValidatorRules(): array {
+    return [
+      "key" => "sometimes|required|string",
+      "value" => "sometimes|required|string",
+    ];
+  }
+  /**
+   * @return array
+   */
+  protected function getOrderRules(): array {
+    return ["id", "key"];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    function getAddValidationRules(array $payload): array
-    {
-        return [
-            'key' => 'required|string',
-            'value' => 'required|string',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  function getAddValidationRules(array $payload): array {
+    return [
+      "key" => "required|string",
+      "value" => "required|string",
+    ];
+  }
 
-    function getUpdateValidationRules(array $payload): array
-    {
-        return [
-            'key' => 'sometimes|string',
-            'value' => 'sometimes|string',
-        ];
-    }
+  function getUpdateValidationRules(array $payload): array {
+    return [
+      "key" => "sometimes|string",
+      "value" => "sometimes|string",
+    ];
+  }
 
-    function updateChild(Summit $summit, $child_id, array $payload): IEntity
-    {
-        return $this->service->updateRegistrationFeedMetadata($summit, intval($child_id), $payload);
-    }
+  function updateChild(Summit $summit, $child_id, array $payload): IEntity {
+    return $this->service->updateRegistrationFeedMetadata($summit, intval($child_id), $payload);
+  }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return IEntity
-     */
-    protected function addChild(Summit $summit, array $payload): IEntity
-    {
-        return $this->service->addRegistrationFeedMetadata($summit, $payload);
-    }
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return IEntity
+   */
+  protected function addChild(Summit $summit, array $payload): IEntity {
+    return $this->service->addRegistrationFeedMetadata($summit, $payload);
+  }
 
-    /**
-     * @return ISummitRepository
-     */
-    protected function getSummitRepository(): ISummitRepository
-    {
-        return $this->summit_repository;
-    }
+  /**
+   * @return ISummitRepository
+   */
+  protected function getSummitRepository(): ISummitRepository {
+    return $this->summit_repository;
+  }
 
-    /**
-     * @return IBaseRepository
-     */
-    protected function getRepository(): IBaseRepository
-    {
-        return $this->repository;
-    }
+  /**
+   * @return IBaseRepository
+   */
+  protected function getRepository(): IBaseRepository {
+    return $this->repository;
+  }
 
-    /**
-     * @param Summit $summit
-     * @param $child_id
-     * @return void
-     */
-    protected function deleteChild(Summit $summit, $child_id): void
-    {
-        $this->service->removeRegistrationFeedMetadata($summit, intval($child_id));
-    }
+  /**
+   * @param Summit $summit
+   * @param $child_id
+   * @return void
+   */
+  protected function deleteChild(Summit $summit, $child_id): void {
+    $this->service->removeRegistrationFeedMetadata($summit, intval($child_id));
+  }
 
-    /**
-     * @param Summit $summit
-     * @param $child_id
-     * @return IEntity|null
-     */
-    protected function getChildFromSummit(Summit $summit,$child_id): ?IEntity
-    {
-        return $summit->getRegistrationFeedMetadataById(intval($child_id));
-    }
+  /**
+   * @param Summit $summit
+   * @param $child_id
+   * @return IEntity|null
+   */
+  protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity {
+    return $summit->getRegistrationFeedMetadataById(intval($child_id));
+  }
 }

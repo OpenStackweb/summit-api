@@ -21,39 +21,37 @@ use models\exceptions\ValidationException;
  * Trait DeleteEntity
  * @package App\Http\Controllers
  */
-trait DeleteEntity
-{
-    use BaseAPI;
+trait DeleteEntity {
+  use BaseAPI;
 
-    /**
-     * @param int $id
-     */
-    abstract protected function deleteEntity(int $id): void;
+  /**
+   * @param int $id
+   */
+  abstract protected function deleteEntity(int $id): void;
 
-    /**
-     * @param $id
-     * @return mixed
-     */
-    public function delete($id)
-    {
-        try {
-            $this->deleteEntity($id);
-            return $this->deleted();
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * @param $id
+   * @return mixed
+   */
+  public function delete($id) {
+    try {
+      $this->deleteEntity($id);
+      return $this->deleted();
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412([$ex->getMessage()]);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404(["message" => $ex->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

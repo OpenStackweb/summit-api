@@ -25,165 +25,186 @@ use models\summit\SummitAttendeeTicket;
  * Class TicketFinderByExternalFeedStrategy
  * @package App\Services\Model\Strategies\TicketFinder\Strategies
  */
-final class TicketFinderByExternalFeedStrategy
-    extends AbstractTicketFinderStrategy
-    implements ITicketFinderStrategy
-{
+final class TicketFinderByExternalFeedStrategy extends AbstractTicketFinderStrategy implements
+  ITicketFinderStrategy {
+  /**
+   * @var IRegistrationIngestionService
+   */
+  private $service;
+  /**
+   * @var IExternalRegistrationFeed
+   */
+  private $feed;
 
-    /**
-     * @var IRegistrationIngestionService
-     */
-    private $service;
-    /**
-     * @var IExternalRegistrationFeed
-     */
-    private $feed;
+  /**
+   * @var ISummitAttendeeRepository
+   */
+  private $attendee_repository;
 
-    /**
-     * @var ISummitAttendeeRepository
-     */
-    private $attendee_repository;
+  /**
+   * @param IRegistrationIngestionService $service
+   * @param IExternalRegistrationFeed $feed
+   * @param ISummitAttendeeTicketRepository $repository
+   * @param Summit $summit
+   * @param $ticket_criteria
+   */
+  public function __construct(
+    IRegistrationIngestionService $service,
+    IExternalRegistrationFeed $feed,
+    ISummitAttendeeRepository $attendee_repository,
+    ISummitAttendeeTicketRepository $repository,
+    Summit $summit,
+    $ticket_criteria,
+  ) {
+    parent::__construct($repository, $summit, $ticket_criteria);
+    $this->feed = $feed;
+    $this->service = $service;
+    $this->attendee_repository = $attendee_repository;
+  }
 
-    /**
-     * @param IRegistrationIngestionService $service
-     * @param IExternalRegistrationFeed $feed
-     * @param ISummitAttendeeTicketRepository $repository
-     * @param Summit $summit
-     * @param $ticket_criteria
-     */
-    public function __construct
-    (
-        IRegistrationIngestionService $service,
-        IExternalRegistrationFeed $feed,
-        ISummitAttendeeRepository $attendee_repository,
-        ISummitAttendeeTicketRepository $repository,
-        Summit $summit,
-        $ticket_criteria
-    )
-    {
-        parent::__construct($repository, $summit, $ticket_criteria);
-        $this->feed = $feed;
-        $this->service = $service;
-        $this->attendee_repository = $attendee_repository;
+  /**
+   * @return SummitAttendeeTicket|null
+   */
+  public function find(): ?SummitAttendeeTicket {
+    if (empty($this->ticket_criteria)) {
+      return null;
     }
+    Log::debug(
+      sprintf(
+        "TicketFinderByExternalFeedStrategy::find ticket_criteria %s",
+        $this->ticket_criteria,
+      ),
+    );
 
-    /**
-     * @return SummitAttendeeTicket|null
-     */
-    public function find(): ?SummitAttendeeTicket
-    {
-        if(empty($this->ticket_criteria)) return null;
-        Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s", $this->ticket_criteria));
+    if ($this->feed->isValidQRCode($this->ticket_criteria)) {
+      Log::debug(
+        sprintf(
+          "TicketFinderByExternalFeedStrategy::find ticket_criteria %s is a valid QRCode",
+          $this->ticket_criteria,
+        ),
+      );
+      $externalAttendeeId = $this->feed->getExternalUserIdFromQRCode($this->ticket_criteria);
+      // check first if we have it locally
+      $attendee = $this->attendee_repository->getBySummitAndExternalId(
+        $this->summit,
+        $externalAttendeeId,
+      );
 
-        if($this->feed->isValidQRCode($this->ticket_criteria)){
-            Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s is a valid QRCode", $this->ticket_criteria));
-            $externalAttendeeId = $this->feed->getExternalUserIdFromQRCode($this->ticket_criteria);
-            // check first if we have it locally
-            $attendee = $this->attendee_repository->getBySummitAndExternalId
-            (
-                $this->summit, $externalAttendeeId
-            );
+      if (!is_null($attendee) && !$attendee->hasTickets()) {
+        Log::debug(
+          sprintf(
+            "TicketFinderByExternalFeedStrategy::find attendee %s has no tickets, re fetch it from external feed",
+            $externalAttendeeId,
+          ),
+        );
+        $attendee = null;
+      }
 
-            if(!is_null($attendee) && !$attendee->hasTickets()){
-                Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find attendee %s has no tickets, re fetch it from external feed", $externalAttendeeId));
-                $attendee = null;
-            }
+      if (is_null($attendee)) {
+        Log::debug(
+          sprintf(
+            "TicketFinderByExternalFeedStrategy::find attendee %s not found locally, fetching from external feed",
+            $externalAttendeeId,
+          ),
+        );
 
-            if(is_null($attendee)) {
+        $res = $this->feed->getAttendeeByQRCode($this->ticket_criteria);
 
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "TicketFinderByExternalFeedStrategy::find attendee %s not found locally, fetching from external feed",
-                        $externalAttendeeId
-                    )
-                );
-
-                $res = $this->feed->getAttendeeByQRCode($this->ticket_criteria);
-
-                if (!count($res)){
-                    Log::warning(sprintf("TicketFinderByExternalFeedStrategy::find attendee %s not found on external feed", $externalAttendeeId));
-                    return null;
-                }
-
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "TicketFinderByExternalFeedStrategy::find attendee %s found on external feed payload %s",
-                        $externalAttendeeId,
-                        json_encode($res)
-                    )
-                );
-
-                $attendee = $this->service->ingestExternalAttendee
-                (
-
-                    $this->summit->getId(),
-                    1,
-                    $res,
-                    $this->feed
-                );
-            }
-
-            return $attendee->getFirstTicket();
+        if (!count($res)) {
+          Log::warning(
+            sprintf(
+              "TicketFinderByExternalFeedStrategy::find attendee %s not found on external feed",
+              $externalAttendeeId,
+            ),
+          );
+          return null;
         }
 
-        if(filter_var($this->ticket_criteria, FILTER_VALIDATE_EMAIL)){
+        Log::debug(
+          sprintf(
+            "TicketFinderByExternalFeedStrategy::find attendee %s found on external feed payload %s",
+            $externalAttendeeId,
+            json_encode($res),
+          ),
+        );
 
-            Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s is a valid email", $this->ticket_criteria));
-            $externalAttendeeEmail = $this->ticket_criteria;
-            // check first if we have it locally
-            $attendee = $this->attendee_repository->getBySummitAndEmail
-            (
-                $this->summit, $externalAttendeeEmail
-            );
+        $attendee = $this->service->ingestExternalAttendee(
+          $this->summit->getId(),
+          1,
+          $res,
+          $this->feed,
+        );
+      }
 
-            if(!is_null($attendee) && !$attendee->hasTickets()){
-                Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find attendee %s has no tickets, re fetch it from external feed", $externalAttendeeEmail));
-                $attendee = null;
-            }
-
-            if(is_null($attendee)) {
-
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "TicketFinderByExternalFeedStrategy::find attendee %s not found locally, fetching from external feed",
-                        $externalAttendeeEmail
-                    )
-                );
-
-                $res = $this->feed->getAttendeeByEmail($externalAttendeeEmail);
-                if (!count($res)){
-                    Log::warning(sprintf("TicketFinderByExternalFeedStrategy::find attendee %s not found on external feed", $externalAttendeeEmail));
-                    return null;
-                }
-
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "TicketFinderByExternalFeedStrategy::find attendee %s found on external feed payload %s",
-                        $this->ticket_criteria,
-                        json_encode($res)
-                    )
-                );
-
-                $attendee = $this->service->ingestExternalAttendee
-                (
-
-                    $this->summit->getId(),
-                    1,
-                    $res,
-                    $this->feed
-                );
-            }
-            return $attendee->getFirstTicket();
-        }
-        Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s is not a valid QRCode or email", $this->ticket_criteria));
-        return null;
+      return $attendee->getFirstTicket();
     }
+
+    if (filter_var($this->ticket_criteria, FILTER_VALIDATE_EMAIL)) {
+      Log::debug(
+        sprintf(
+          "TicketFinderByExternalFeedStrategy::find ticket_criteria %s is a valid email",
+          $this->ticket_criteria,
+        ),
+      );
+      $externalAttendeeEmail = $this->ticket_criteria;
+      // check first if we have it locally
+      $attendee = $this->attendee_repository->getBySummitAndEmail(
+        $this->summit,
+        $externalAttendeeEmail,
+      );
+
+      if (!is_null($attendee) && !$attendee->hasTickets()) {
+        Log::debug(
+          sprintf(
+            "TicketFinderByExternalFeedStrategy::find attendee %s has no tickets, re fetch it from external feed",
+            $externalAttendeeEmail,
+          ),
+        );
+        $attendee = null;
+      }
+
+      if (is_null($attendee)) {
+        Log::debug(
+          sprintf(
+            "TicketFinderByExternalFeedStrategy::find attendee %s not found locally, fetching from external feed",
+            $externalAttendeeEmail,
+          ),
+        );
+
+        $res = $this->feed->getAttendeeByEmail($externalAttendeeEmail);
+        if (!count($res)) {
+          Log::warning(
+            sprintf(
+              "TicketFinderByExternalFeedStrategy::find attendee %s not found on external feed",
+              $externalAttendeeEmail,
+            ),
+          );
+          return null;
+        }
+
+        Log::debug(
+          sprintf(
+            "TicketFinderByExternalFeedStrategy::find attendee %s found on external feed payload %s",
+            $this->ticket_criteria,
+            json_encode($res),
+          ),
+        );
+
+        $attendee = $this->service->ingestExternalAttendee(
+          $this->summit->getId(),
+          1,
+          $res,
+          $this->feed,
+        );
+      }
+      return $attendee->getFirstTicket();
+    }
+    Log::debug(
+      sprintf(
+        "TicketFinderByExternalFeedStrategy::find ticket_criteria %s is not a valid QRCode or email",
+        $this->ticket_criteria,
+      ),
+    );
+    return null;
+  }
 }

@@ -16,12 +16,11 @@
  * Class SpeakerEditPermissionRequestSerializer
  * @package ModelSerializers
  */
-class SpeakerEditPermissionRequestSerializer  extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Approved'      => 'approved:json_boolean',
-        'ApprovedDate'  => 'approved_date:datetime_epoch',
-        'SpeakerId'     => 'speaker_id:json_int',
-        'RequestedById' => 'requested_by_id:json_int',
-    ];
+class SpeakerEditPermissionRequestSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Approved" => "approved:json_boolean",
+    "ApprovedDate" => "approved_date:datetime_epoch",
+    "SpeakerId" => "speaker_id:json_int",
+    "RequestedById" => "requested_by_id:json_int",
+  ];
 }

@@ -20,58 +20,67 @@ use models\summit\SummitTicketType;
  * Class SummitTicketTypeSerializer
  * @package ModelSerializers
  */
-class SummitTicketTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Description' => 'description:json_string',
-        'ExternalId' => 'external_id:json_string',
-        'SummitId' => 'summit_id:json_int',
-        'Cost' => 'cost:json_float',
-        'Currency' => 'currency:json_string',
-        'CurrencySymbol' => 'currency_symbol:json_string',
-        'Quantity2Sell' => 'quantity_2_sell:json_int',
-        'MaxQuantityPerOrder' => 'max_quantity_per_order:json_int',
-        'SalesStartDate' => 'sales_start_date:datetime_epoch',
-        'SalesEndDate' => 'sales_end_date:datetime_epoch',
-        'BadgeTypeId' => 'badge_type_id:json_int',
-        'QuantitySold' => 'quantity_sold:json_int',
-        'Audience' => 'audience:json_string',
-    ];
+class SummitTicketTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "ExternalId" => "external_id:json_string",
+    "SummitId" => "summit_id:json_int",
+    "Cost" => "cost:json_float",
+    "Currency" => "currency:json_string",
+    "CurrencySymbol" => "currency_symbol:json_string",
+    "Quantity2Sell" => "quantity_2_sell:json_int",
+    "MaxQuantityPerOrder" => "max_quantity_per_order:json_int",
+    "SalesStartDate" => "sales_start_date:datetime_epoch",
+    "SalesEndDate" => "sales_end_date:datetime_epoch",
+    "BadgeTypeId" => "badge_type_id:json_int",
+    "QuantitySold" => "quantity_sold:json_int",
+    "Audience" => "audience:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'applied_taxes',
-    ];
+  protected static $allowed_relations = ["applied_taxes"];
 
-    use RequestScopedCache;
+  use RequestScopedCache;
 
-    use SummitTicketTypeCommonSerializer;
+  use SummitTicketTypeCommonSerializer;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        return $this->cache(
-            $this->getRequestKey
-            (
-                "SummitTicketTypeSerializer",
-                $this->object->getIdentifier(),
-                $expand,
-                $fields,
-                $relations
-            ), function () use ($expand, $fields, $relations, $params) {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    return $this->cache(
+      $this->getRequestKey(
+        "SummitTicketTypeSerializer",
+        $this->object->getIdentifier(),
+        $expand,
+        $fields,
+        $relations,
+      ),
+      function () use ($expand, $fields, $relations, $params) {
+        $ticket_type = $this->object;
+        if (!$ticket_type instanceof SummitTicketType) {
+          return [];
+        }
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
-            $ticket_type = $this->object;
-            if (!$ticket_type instanceof SummitTicketType) return [];
-            $values = parent::serialize($expand, $fields, $relations, $params);
-
-            return self::serializeCommonFields($ticket_type, $values, $expand, $fields, $relations, $params);
-        });
-
-    }
+        return self::serializeCommonFields(
+          $ticket_type,
+          $values,
+          $expand,
+          $fields,
+          $relations,
+          $params,
+        );
+      },
+    );
+  }
 }

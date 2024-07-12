@@ -22,53 +22,46 @@ use utils\Filter;
  * Class DoctrineSupportingCompanyRepository
  * @package App\Repositories\Main
  */
-final class DoctrineSupportingCompanyRepository
-    extends SilverStripeDoctrineRepository
-    implements ISupportingCompanyRepository
-{
+final class DoctrineSupportingCompanyRepository extends SilverStripeDoctrineRepository implements
+  ISupportingCompanyRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "c.name",
+      "sponsorship_type_id" => "st.id",
+      "sponsorship_type_slug" => "st.slug",
+      "sponsored_project_id" => "sp.id",
+      "sponsored_project_slug" => "sp.slug",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'c.name',
-            'sponsorship_type_id' => 'st.id',
-            'sponsorship_type_slug' => 'st.slug',
-            'sponsored_project_id' => 'sp.id',
-            'sponsored_project_slug' => 'sp.slug',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "name" => "c.name",
+      "order" => "e.order",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'name' => 'c.name',
-            'order' => 'e.order',
-        ];
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.sponsorship_type", "st");
+    $query = $query->innerJoin("e.company", "c");
+    $query = $query->innerJoin("st.sponsored_project", "sp");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query = $query->innerJoin("e.sponsorship_type", "st");
-        $query = $query->innerJoin("e.company", "c");
-        $query = $query->innerJoin("st.sponsored_project", "sp");
-        return $query;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SupportingCompany::class;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SupportingCompany::class;
+  }
 }

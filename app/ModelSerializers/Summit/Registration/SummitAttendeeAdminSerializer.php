@@ -17,21 +17,18 @@ use Libs\ModelSerializers\Many2OneExpandSerializer;
  * Class SummitAttendeeAdminSerializer
  * @package ModelSerializers
  */
-class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer
-{
-    protected static $array_mappings = [
-        'VirtualCheckedIn' => 'has_virtual_check_in:json_boolean',
-    ];
+class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer {
+  protected static $array_mappings = [
+    "VirtualCheckedIn" => "has_virtual_check_in:json_boolean",
+  ];
 
-    protected static $allowed_relations = [
-        'notes',
-    ];
+  protected static $allowed_relations = ["notes"];
 
-    protected static $expand_mappings = [
-        'notes' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getNotes',
-            'should_verify_relation' => true
-        ],
-    ];
+  protected static $expand_mappings = [
+    "notes" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getNotes",
+      "should_verify_relation" => true,
+    ],
+  ];
 }

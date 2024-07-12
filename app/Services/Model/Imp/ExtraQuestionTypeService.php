@@ -30,267 +30,285 @@ use models\summit\Summit;
  * Class ExtraQuestionTypeService
  * @package App\Services\Model\Imp
  */
-abstract class ExtraQuestionTypeService
-    extends AbstractService
-    implements IExtraQuestionTypeService
-{
-    /**
-     * @var IExtraQuestionTypeRepository
-     */
-    protected $repository;
+abstract class ExtraQuestionTypeService extends AbstractService implements
+  IExtraQuestionTypeService {
+  /**
+   * @var IExtraQuestionTypeRepository
+   */
+  protected $repository;
 
-    /**
-     * @param ExtraQuestionType $question
-     * @param array $payload
-     * @return ExtraQuestionTypeValue
-     * @throws \Exception
-     */
-    protected function _addExtraQuestionValue(ExtraQuestionType $question, array $payload): ExtraQuestionTypeValue
-    {
-        return $this->tx_service->transaction(function () use ($question, $payload) {
+  /**
+   * @param ExtraQuestionType $question
+   * @param array $payload
+   * @return ExtraQuestionTypeValue
+   * @throws \Exception
+   */
+  protected function _addExtraQuestionValue(
+    ExtraQuestionType $question,
+    array $payload,
+  ): ExtraQuestionTypeValue {
+    return $this->tx_service->transaction(function () use ($question, $payload) {
+      $name = trim($payload["value"]);
+      $former_value = $question->getValueByName($name);
+      if (!is_null($former_value)) {
+        throw new ValidationException("Value already exists.");
+      }
 
-            $name   = trim($payload['value']);
-            $former_value = $question->getValueByName($name);
-            if(!is_null($former_value))
-                throw new ValidationException("Value already exists.");
+      if (isset($payload["label"])) {
+        $label = trim($payload["label"]);
+        $former_value = $question->getValueByLabel($label);
+        if (!is_null($former_value)) {
+          throw new ValidationException("Value already exists.");
+        }
+      }
 
-            if(isset($payload['label'])) {
-                $label = trim($payload['label']);
-                $former_value = $question->getValueByLabel($label);
-                if (!is_null($former_value))
-                    throw new ValidationException("Value already exists.");
-            }
+      $value = ExtraQuestionTypeValueFactory::build($payload);
 
-            $value = ExtraQuestionTypeValueFactory::build($payload);
+      if ($value->isDefault()) {
+        // clear the rest of values
+        $question->resetDefaultValues();
+      }
 
-            if($value->isDefault()){
-                // clear the rest of values
-                $question->resetDefaultValues();
-            }
+      $question->addValue($value);
 
-            $question->addValue($value);
+      return $value;
+    });
+  }
 
-            return $value;
+  /**
+   * @param ExtraQuestionType $question
+   * @param int $value_id
+   * @param array $payload
+   * @return ExtraQuestionTypeValue
+   * @throws \Exception
+   */
+  protected function _updateExtraQuestionValue(
+    ExtraQuestionType $question,
+    int $value_id,
+    array $payload,
+  ): ExtraQuestionTypeValue {
+    return $this->tx_service->transaction(function () use ($question, $value_id, $payload) {
+      $value = $question->getValueById($value_id);
+      if (is_null($value)) {
+        throw new EntityNotFoundException("Value not found.");
+      }
 
-        });
-    }
+      if (isset($payload["value"])) {
+        $name = trim($payload["value"]);
+        $former_value = $question->getValueByName($name);
+        if (!is_null($former_value) && $former_value->getId() != $value_id) {
+          throw new ValidationException("Value already exists.");
+        }
+      }
 
+      if (isset($payload["label"])) {
+        $label = trim($payload["label"]);
+        $former_value = $question->getValueByLabel($label);
+        if (!is_null($former_value) && $former_value->getId() != $value_id) {
+          throw new ValidationException("Label already exists.");
+        }
+      }
 
-    /**
-     * @param ExtraQuestionType $question
-     * @param int $value_id
-     * @param array $payload
-     * @return ExtraQuestionTypeValue
-     * @throws \Exception
-     */
-    protected function _updateExtraQuestionValue(ExtraQuestionType $question, int $value_id, array $payload): ExtraQuestionTypeValue
-    {
-        return $this->tx_service->transaction(function () use ($question, $value_id, $payload) {
+      if (isset($payload["order"]) && intval($payload["order"]) != $value->getOrder()) {
+        // request to update order
+        $question->recalculateValueOrder($value, intval($payload["order"]));
+      }
 
-            $value = $question->getValueById($value_id);
-            if(is_null($value))
-                throw new EntityNotFoundException("Value not found.");
+      if (isset($payload["is_default"]) && boolval($payload["is_default"])) {
+        // clear the rest of values
+        $question->resetDefaultValues();
+      }
 
-            if(isset($payload['value'])) {
-                $name = trim($payload['value']);
-                $former_value = $question->getValueByName($name);
-                if (!is_null($former_value) && $former_value->getId() != $value_id)
-                    throw new ValidationException("Value already exists.");
-            }
+      return ExtraQuestionTypeValueFactory::populate($value, $payload);
+    });
+  }
 
-            if(isset($payload['label'])) {
-                $label = trim($payload['label']);
-                $former_value = $question->getValueByLabel($label);
-                if (!is_null($former_value) && $former_value->getId() != $value_id)
-                    throw new ValidationException("Label already exists.");
-            }
+  /**
+   * @param ExtraQuestionType $question
+   * @param int $value_id
+   * @throws \Exception
+   */
+  protected function _deleteExtraQuestionValue(ExtraQuestionType $question, int $value_id): void {
+    $this->tx_service->transaction(function () use ($question, $value_id) {
+      $value = $question->getValueById($value_id);
 
-            if (isset($payload['order']) && intval($payload['order']) != $value->getOrder()) {
-                // request to update order
-                $question->recalculateValueOrder($value,  intval($payload['order']) );
-            }
+      if (is_null($value)) {
+        throw new EntityNotFoundException("value not found");
+      }
 
-            if(isset($payload['is_default']) && boolval($payload['is_default'])){
-                // clear the rest of values
-                $question->resetDefaultValues();
-            }
+      // check if question has answers
 
-            return ExtraQuestionTypeValueFactory::populate($value, $payload);
-        });
-    }
+      if ($this->repository->hasAnswers($question)) {
+        throw new ValidationException(
+          sprintf(
+            "You can not delete question value %s bc already has answers from attendees.",
+            $value_id,
+          ),
+        );
+      }
 
+      $question->removeValue($value);
+    });
+  }
 
-    /**
-     * @param ExtraQuestionType $question
-     * @param int $value_id
-     * @throws \Exception
-     */
-    protected function _deleteExtraQuestionValue(ExtraQuestionType $question, int $value_id): void
-    {
-        $this->tx_service->transaction(function () use ($question, $value_id) {
+  /**
+   * @param Summit $summit
+   * @param int $parent_id
+   * @param array $payload
+   * @return SubQuestionRule
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addSubQuestionRule(
+    Summit $summit,
+    int $parent_id,
+    array $payload,
+  ): SubQuestionRule {
+    return $this->tx_service->transaction(function () use ($summit, $parent_id, $payload) {
+      $sub_question_id = intval($payload["sub_question_id"]);
 
-            $value = $question->getValueById($value_id);
+      if ($parent_id === $sub_question_id) {
+        throw new ValidationException("Parent Question can not be the same as the Sub Question.");
+      }
 
-            if(is_null($value))
-                throw new EntityNotFoundException("value not found");
+      $parent = $summit->getOrderExtraQuestionById($parent_id);
+      if (is_null($parent)) {
+        throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+      }
 
-            // check if question has answers
+      $subQuestion = $summit->getOrderExtraQuestionById($sub_question_id);
+      if (is_null($subQuestion)) {
+        throw new EntityNotFoundException(sprintf("Sub Question %s not found.", $parent_id));
+      }
 
-            if($this->repository->hasAnswers($question)){
-                throw new ValidationException(sprintf("You can not delete question value %s bc already has answers from attendees.", $value_id));
-            }
+      if ($subQuestion->getClass() !== ExtraQuestionTypeConstants::QuestionClassMain) {
+        throw new ValidationException(
+          sprintf(
+            "Question %s is already a Sub Question of another main Question.",
+            $sub_question_id,
+          ),
+        );
+      }
 
-            $question->removeValue($value);
-        });
-    }
+      if (!$parent->allowsValues()) {
+        throw new ValidationException(
+          sprintf("Parent Question %s does not allows MultiValues.", $parent_id),
+        );
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $parent_id
-     * @param array $payload
-     * @return SubQuestionRule
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addSubQuestionRule(Summit $summit, int $parent_id, array $payload):SubQuestionRule{
-        return $this->tx_service->transaction(function () use ($summit, $parent_id, $payload) {
-            $sub_question_id = intval($payload['sub_question_id']);
+      return SubQuestionRuleFactory::build($parent, $subQuestion, $payload);
+    });
+  }
 
-            if($parent_id === $sub_question_id)
-                throw new ValidationException("Parent Question can not be the same as the Sub Question.");
+  /**
+   * @param Summit $summit
+   * @param int $parent_id
+   * @param int $rule_id
+   * @param array $payload
+   * @return SubQuestionRule
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateSubQuestionRule(
+    Summit $summit,
+    int $parent_id,
+    int $rule_id,
+    array $payload,
+  ): SubQuestionRule {
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $parent_id,
+      $rule_id,
+      $payload,
+    ) {
+      Log::debug(
+        sprintf(
+          "ExtraQuestionTypeService::updateSubQuestionRule summit %s parent %s rule %s payload %s",
+          $summit->getId(),
+          $parent_id,
+          $rule_id,
+          json_encode($payload),
+        ),
+      );
 
-            $parent = $summit->getOrderExtraQuestionById($parent_id);
-            if(is_null($parent))
-                throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+      $parent = $summit->getOrderExtraQuestionById($parent_id);
+      if (is_null($parent)) {
+        throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+      }
 
-            $subQuestion = $summit->getOrderExtraQuestionById($sub_question_id);
-            if(is_null($subQuestion))
-                throw new EntityNotFoundException(sprintf("Sub Question %s not found.", $parent_id));
+      $rule = $parent->getSubQuestionRulesById($rule_id);
 
-            if($subQuestion->getClass() !== ExtraQuestionTypeConstants::QuestionClassMain)
-                throw new ValidationException(sprintf("Question %s is already a Sub Question of another main Question.", $sub_question_id));
+      if (is_null($rule)) {
+        throw new EntityNotFoundException(
+          sprintf("Rule %s does not belongs to question %s.", $rule_id, $parent_id),
+        );
+      }
 
-            if(!$parent->allowsValues()){
-                throw new ValidationException(sprintf("Parent Question %s does not allows MultiValues.", $parent_id));
-            }
-
-            return SubQuestionRuleFactory::build($parent, $subQuestion, $payload);
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $parent_id
-     * @param int $rule_id
-     * @param array $payload
-     * @return SubQuestionRule
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateSubQuestionRule(Summit $summit, int $parent_id, int $rule_id, array $payload):SubQuestionRule{
-        return $this->tx_service->transaction(function () use ($summit, $parent_id, $rule_id, $payload) {
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "ExtraQuestionTypeService::updateSubQuestionRule summit %s parent %s rule %s payload %s",
-                    $summit->getId(),
-                    $parent_id,
-                    $rule_id,
-                    json_encode($payload)
-                )
+      $subQuestion = $rule->getSubQuestion();
+      if (isset($payload["sub_question_id"])) {
+        $sub_question_id = intval($payload["sub_question_id"]);
+        if ($subQuestion->getId() !== $sub_question_id) {
+          $subQuestion = $summit->getOrderExtraQuestionById($sub_question_id);
+          if (is_null($subQuestion)) {
+            throw new EntityNotFoundException(
+              sprintf("Sub Question %s not found.", $sub_question_id),
             );
+          }
+        }
+      }
 
-            $parent = $summit->getOrderExtraQuestionById($parent_id);
-            if(is_null($parent))
-                throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+      $rule = SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
 
-            $rule = $parent->getSubQuestionRulesById($rule_id);
+      Log::debug(
+        sprintf(
+          "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s",
+          $rule_id,
+          $rule->getOrder(),
+        ),
+      );
 
-            if(is_null($rule))
-                throw new EntityNotFoundException
-                (
-                    sprintf
-                    (
-                        "Rule %s does not belongs to question %s.",
-                        $rule_id,
-                        $parent_id
-                    )
-                );
+      if (isset($payload["order"]) && intval($payload["order"]) != $rule->getOrder()) {
+        // request to update order
+        Log::debug(
+          sprintf(
+            "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s newOrder %s",
+            $rule_id,
+            $rule->getOrder(),
+            $payload["order"],
+          ),
+        );
+        $parent->recalculateSubQuestionRuleOrder($rule, intval($payload["order"]));
+      }
 
-            $subQuestion = $rule->getSubQuestion();
-            if(isset($payload['sub_question_id'])){
-                $sub_question_id = intval($payload['sub_question_id']);
-                if($subQuestion->getId() !== $sub_question_id){
-                    $subQuestion = $summit->getOrderExtraQuestionById($sub_question_id);
-                    if(is_null($subQuestion))
-                        throw new EntityNotFoundException(sprintf("Sub Question %s not found.", $sub_question_id));
-                }
-            }
+      return $rule;
+    });
+  }
 
-            $rule =  SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
+  /**
+   * @param Summit $summit
+   * @param int $parent_id
+   * @param int $rule_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteSubQuestionRule(Summit $summit, int $parent_id, int $rule_id): void {
+    $this->tx_service->transaction(function () use ($summit, $parent_id, $rule_id) {
+      $parent = $summit->getOrderExtraQuestionById($parent_id);
+      if (is_null($parent)) {
+        throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+      }
 
-            Log::debug
-            (
-                sprintf
-                (
-                    "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s",
-                    $rule_id,
-                    $rule->getOrder(),
-                )
-            );
+      $rule = $parent->getSubQuestionRulesById($rule_id);
 
-            if (isset($payload['order']) && intval($payload['order']) != $rule->getOrder()) {
-                // request to update order
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s newOrder %s",
-                        $rule_id,
-                        $rule->getOrder(),
-                        $payload['order']
-                    )
-                );
-                $parent->recalculateSubQuestionRuleOrder($rule, intval($payload['order']));
-            }
+      if (is_null($rule)) {
+        throw new EntityNotFoundException(
+          sprintf("Rule %s does not belongs to question %s", $rule_id, $parent_id),
+        );
+      }
 
-            return $rule;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $parent_id
-     * @param int $rule_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteSubQuestionRule(Summit $summit, int $parent_id, int $rule_id):void{
-         $this->tx_service->transaction(function () use ($summit, $parent_id, $rule_id) {
-             $parent = $summit->getOrderExtraQuestionById($parent_id);
-             if(is_null($parent))
-                 throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
-
-             $rule = $parent->getSubQuestionRulesById($rule_id);
-
-             if(is_null($rule))
-                 throw new EntityNotFoundException
-                 (
-                     sprintf
-                     (
-                         "Rule %s does not belongs to question %s",
-                         $rule_id,
-                         $parent_id
-                     )
-                 );
-
-             $parent->removeSubQuestionRule($rule);
-             $subQuestion = $rule->getSubQuestion();
-             $subQuestion->removeParentRule($rule);
-        });
-    }
-
-
+      $parent->removeSubQuestionRule($rule);
+      $subQuestion = $rule->getSubQuestion();
+      $subQuestion->removeParentRule($rule);
+    });
+  }
 }

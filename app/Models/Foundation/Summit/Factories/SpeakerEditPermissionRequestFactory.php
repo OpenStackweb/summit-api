@@ -18,17 +18,16 @@ use models\summit\PresentationSpeaker;
  * Class SpeakerEditPermissionRequestFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SpeakerEditPermissionRequestFactory
-{
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param Member $requestor
-     * @return SpeakerEditPermissionRequest
-     */
-    public static function build(PresentationSpeaker $speaker, Member $requestor){
-        $request =  new  SpeakerEditPermissionRequest();
-        $request->setSpeaker($speaker);
-        $request->setRequestedBy($requestor);
-        return $request;
-    }
+final class SpeakerEditPermissionRequestFactory {
+  /**
+   * @param PresentationSpeaker $speaker
+   * @param Member $requestor
+   * @return SpeakerEditPermissionRequest
+   */
+  public static function build(PresentationSpeaker $speaker, Member $requestor) {
+    $request = new SpeakerEditPermissionRequest();
+    $request->setSpeaker($speaker);
+    $request->setRequestedBy($requestor);
+    return $request;
+  }
 }

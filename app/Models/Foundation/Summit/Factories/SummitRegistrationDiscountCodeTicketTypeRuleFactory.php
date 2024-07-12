@@ -16,29 +16,30 @@ use models\summit\SummitRegistrationDiscountCodeTicketTypeRule;
  * Class SummitRegistrationDiscountCodeTicketTypeRuleFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitRegistrationDiscountCodeTicketTypeRuleFactory
-{
-    /**
-     * @param array $data
-     * @return SummitRegistrationDiscountCodeTicketTypeRule
-     */
-    public static function build(array $data){
-        return self::populate(new SummitRegistrationDiscountCodeTicketTypeRule, $data);
-    }
+final class SummitRegistrationDiscountCodeTicketTypeRuleFactory {
+  /**
+   * @param array $data
+   * @return SummitRegistrationDiscountCodeTicketTypeRule
+   */
+  public static function build(array $data) {
+    return self::populate(new SummitRegistrationDiscountCodeTicketTypeRule(), $data);
+  }
 
-    /**
-     * @param SummitRegistrationDiscountCodeTicketTypeRule $rule
-     * @param array $data
-     * @return SummitRegistrationDiscountCodeTicketTypeRule
-     */
-    public static function populate(SummitRegistrationDiscountCodeTicketTypeRule $rule, array $data){
-
-        if(isset($data['amount']))
-            $rule->setAmount(floatval($data['amount']));
-        if(isset($data['rate']))
-            $rule->setRate(floatval($data['rate']));
-        if(isset($data['ticket_type']))
-            $rule->setTicketType($data['ticket_type']);
-        return $rule;
+  /**
+   * @param SummitRegistrationDiscountCodeTicketTypeRule $rule
+   * @param array $data
+   * @return SummitRegistrationDiscountCodeTicketTypeRule
+   */
+  public static function populate(SummitRegistrationDiscountCodeTicketTypeRule $rule, array $data) {
+    if (isset($data["amount"])) {
+      $rule->setAmount(floatval($data["amount"]));
     }
+    if (isset($data["rate"])) {
+      $rule->setRate(floatval($data["rate"]));
+    }
+    if (isset($data["ticket_type"])) {
+      $rule->setTicketType($data["ticket_type"]);
+    }
+    return $rule;
+  }
 }

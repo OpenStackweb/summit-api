@@ -16,17 +16,16 @@
  * Class SummitMetricSerializer
  * @package ModelSerializers
  */
-class SummitMetricSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'MemberFirstName' => 'member_first_name:json_string',
-        'MemberLastName' => 'member_last_name:json_string',
-        'MemberProfilePhotoUrl' => 'member_pic:json_url',
-        'Type' => 'type:json_string',
-        'Ip' => 'ip:json_string',
-        'Origin' => 'origin:json_string',
-        'Browser' => 'browser:json_string',
-        'OutgressDate' => 'outgress_date:datetime_epoch',
-        'IngressDate' => 'ingress_date:datetime_epoch'
-    ];
+class SummitMetricSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "MemberFirstName" => "member_first_name:json_string",
+    "MemberLastName" => "member_last_name:json_string",
+    "MemberProfilePhotoUrl" => "member_pic:json_url",
+    "Type" => "type:json_string",
+    "Ip" => "ip:json_string",
+    "Origin" => "origin:json_string",
+    "Browser" => "browser:json_string",
+    "OutgressDate" => "outgress_date:datetime_epoch",
+    "IngressDate" => "ingress_date:datetime_epoch",
+  ];
 }

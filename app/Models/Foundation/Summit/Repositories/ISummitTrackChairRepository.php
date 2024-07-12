@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitTrackChairRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitTrackChairRepository extends IBaseRepository
-{
-
+interface ISummitTrackChairRepository extends IBaseRepository {
 }

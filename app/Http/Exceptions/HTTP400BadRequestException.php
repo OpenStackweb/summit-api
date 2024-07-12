@@ -12,12 +12,9 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class HTTP400BadRequestException
  * @package App\Http\Exceptions
  */
-final class HTTP400BadRequestException extends \Exception
-{
-
+final class HTTP400BadRequestException extends \Exception {
 }

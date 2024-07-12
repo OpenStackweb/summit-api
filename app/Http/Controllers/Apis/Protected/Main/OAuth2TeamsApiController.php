@@ -34,511 +34,465 @@ use utils\PagingResponse;
  * Class OAuth2TeamsApiController
  * @package App\Http\Controllers
  */
-final class OAuth2TeamsApiController extends OAuth2ProtectedController
-{
+final class OAuth2TeamsApiController extends OAuth2ProtectedController {
+  /**
+   * @var IChatTeamService
+   */
+  private $service;
 
-    /**
-     * @var IChatTeamService
-     */
-    private $service;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * @var IChatTeamPushNotificationMessageRepository
+   */
+  private $message_repository;
 
-    /**
-     * @var IChatTeamPushNotificationMessageRepository
-     */
-    private $message_repository;
+  /**
+   * OAuth2TeamsApiController constructor.
+   * @param IChatTeamService $service
+   * @param IMemberRepository $member_repository
+   * @param IChatTeamPushNotificationMessageRepository $message_repository
+   * @param IChatTeamRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IChatTeamService $service,
+    IMemberRepository $member_repository,
+    IChatTeamPushNotificationMessageRepository $message_repository,
+    IChatTeamRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->service = $service;
+    $this->repository = $repository;
+    $this->message_repository = $message_repository;
+    $this->member_repository = $member_repository;
+  }
 
-    /**
-     * OAuth2TeamsApiController constructor.
-     * @param IChatTeamService $service
-     * @param IMemberRepository $member_repository
-     * @param IChatTeamPushNotificationMessageRepository $message_repository
-     * @param IChatTeamRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IChatTeamService $service,
-        IMemberRepository $member_repository,
-        IChatTeamPushNotificationMessageRepository $message_repository,
-        IChatTeamRepository $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->service            = $service;
-        $this->repository         = $repository;
-        $this->message_repository = $message_repository;
-        $this->member_repository  = $member_repository;
+  /**
+   * @return mixed
+   */
+  public function getMyTeams() {
+    try {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $teams = $this->repository->getTeamsByMember($current_member);
+
+      $response = new PagingResponse(count($teams), count($teams), 1, 1, $teams);
+
+      return $this->ok(
+        $response->toArray(
+          $expand = Request::input("expand", ""),
+          $fields = [],
+          $relations = [],
+          $params = [
+            "current_member" => $current_member,
+          ],
+        ),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getMyTeams(){
-        try {
+  /**
+   * @param $team_id
+   * @return mixed
+   */
+  public function getMyTeam($team_id) {
+    try {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+      $team = $this->repository->getById($team_id);
 
-            $teams    = $this->repository->getTeamsByMember($current_member);
+      if (is_null($team)) {
+        throw new EntityNotFoundException();
+      }
 
-            $response = new PagingResponse
-            (
-                count($teams),
-                count($teams),
-                1,
-                1,
-                $teams
-            );
+      if (!$team->isMember($current_member)) {
+        throw new EntityNotFoundException();
+      }
 
-            return $this->ok
-            (
-                $response->toArray
-                (
-                    $expand    = Request::input('expand',''),
-                    $fields    = [],
-                    $relations = [],
-                    $params    = [
-                        'current_member' => $current_member
-                    ]
-                )
-            );
-
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($team)
+          ->serialize(
+            $expand = Request::input("expand", ""),
+            $fields = [],
+            $relations = [],
+            $params = [
+              "current_member" => $current_member,
+            ],
+          ),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $team_id
-     * @return mixed
-     */
-    public function getMyTeam($team_id){
-        try {
+  /**
+   * @return mixed
+   */
+  public function addTeam() {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+      $data = Request::json();
 
-            $team  = $this->repository->getById($team_id);
+      $rules = [
+        "name" => "required|string|max:255",
+        "description" => "required|sometimes|string|max:512",
+      ];
 
-            if(is_null($team)) throw new EntityNotFoundException();
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data->all(), $rules);
 
-            if(!$team->isMember($current_member))
-                throw new EntityNotFoundException();
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            return $this->ok
-            (
-                SerializerRegistry::getInstance()
-                    ->getSerializer($team)
-                    ->serialize
-                    (
-                        $expand = Request::input('expand', ''),
-                        $fields = [],
-                        $relations = [],
-                        $params = [
-                            'current_member' => $current_member
-                        ]
-                    )
-            );
+        return $this->error412($messages);
+      }
 
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      $fields = ["name", "description"];
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $team = $this->service->addTeam(
+        HTMLCleaner::cleanData($data->all(), $fields),
+        $current_member,
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($team)
+          ->serialize($expand = "owner,members,member"),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @return mixed
-     */
-    public function addTeam(){
-        try {
+  /**
+   * @param $team_id
+   * @return mixed
+   */
+  public function deleteTeam($team_id) {
+    try {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
 
-            if(!Request::isJson()) return $this->error400();
+      $this->service->deleteTeam($team_id);
 
-            $data = Request::json();
-
-            $rules = array
-            (
-                'name'            => 'required|string|max:255',
-                'description'     => 'required|sometimes|string|max:512',
-            );
-
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $fields = array
-            (
-                'name',
-                'description',
-            );
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $team = $this->service->addTeam(HTMLCleaner::cleanData($data->all(), $fields), $current_member);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($team)->serialize($expand = 'owner,members,member'));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $team_id
-     * @return mixed
-     */
-    public function deleteTeam($team_id){
-        try {
+  /**
+   * @param $team_id
+   * @return mixed
+   */
+  public function updateTeam($team_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+      $data = Request::json();
 
-            $this->service->deleteTeam($team_id);
+      $rules = [
+        "name" => "required|string|max:255",
+        "description" => "string|max:512",
+      ];
 
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data->all(), $rules);
+
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
+
+        return $this->error412($messages);
+      }
+
+      $fields = ["name", "description"];
+
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $team = $this->service->updateTeam(HTMLCleaner::cleanData($data->all(), $fields), $team_id);
+
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($team)
+          ->serialize($expand = "owner,members,member"),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $team_id
-     * @return mixed
-     */
-    public function updateTeam($team_id){
-        try {
+  /**
+   * @param $team_id
+   * @return mixed
+   */
+  public function getMyTeamMessages($team_id) {
+    $values = Request::all();
 
-            if(!Request::isJson()) return $this->error400();
+    $rules = PaginationValidationRules::get();
 
-            $data = Request::json();
+    try {
+      $validation = Validator::make($values, $rules);
 
-            $rules = array
-            (
-                'name'            => 'required|string|max:255',
-                'description'     => 'string|max:512',
-            );
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        throw $ex->setMessages($validation->messages()->toArray());
+      }
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+      // default values
+      $page = 1;
+      $per_page = 5;
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+      if (Request::has("page")) {
+        $page = intval(Request::input("page"));
+        $per_page = intval(Request::input("per_page"));
+      }
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+      $filter = null;
 
-            $fields = array
-            (
-                'name',
-                'description',
-            );
+      if (Request::has("filter")) {
+        $filter = FilterParser::parse(Request::input("filter"), [
+          "owner_id" => ["=="],
+          "sent_date" => [">", "<", "<=", ">=", "=="],
+        ]);
+      }
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+      $order = null;
 
-            $team = $this->service->updateTeam(HTMLCleaner::cleanData($data->all(), $fields), $team_id);
+      if (Request::has("order")) {
+        $order = OrderParser::parse(Request::input("order"), ["sent_date", "id"]);
+      }
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($team)->serialize($expand = 'owner,members,member'));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      if (is_null($filter)) {
+        $filter = new Filter();
+      }
 
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
+
+      $team = $this->repository->getById($team_id);
+
+      if (is_null($team)) {
+        throw new EntityNotFoundException();
+      }
+
+      if (!$team->isMember($current_member)) {
+        throw new EntityNotFoundException();
+      }
+
+      $data = $this->message_repository->getAllSentByTeamPaginated(
+        $team_id,
+        new PagingInfo($page, $per_page),
+        $filter,
+        $order,
+      );
+
+      return $this->ok($data->toArray(Request::input("expand", "")));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $team_id
-     * @return mixed
-     */
-    public function getMyTeamMessages($team_id){
+  /**
+   * @param $team_id
+   * @return mixed
+   */
+  public function postTeamMessage($team_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
 
-        $values = Request::all();
+      $data = Request::json();
 
-        $rules = PaginationValidationRules::get();
+      $rules = [
+        "body" => "required|string",
+        "priority" => "required|sometimes|string|chat_message_priority",
+      ];
 
-        try {
+      $values = $data->all();
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($values, $rules);
 
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            $validation = Validator::make($values, $rules);
+        return $this->error412($messages);
+      }
 
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
 
-            // default values
-            $page     = 1;
-            $per_page = 5;
+      if (!isset($values["priority"])) {
+        $values["priority"] = PushNotificationMessagePriority::Normal;
+      }
 
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'),  array
-                (
-                    'owner_id'   => ['=='],
-                    'sent_date'  => ['>', '<', '<=', '>=', '=='],
-                ));
-            }
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), array
-                (
-                    'sent_date',
-                    'id',
-                ));
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $team  = $this->repository->getById($team_id);
-
-            if(is_null($team)) throw new EntityNotFoundException();
-
-            if(!$team->isMember($current_member))
-                throw new EntityNotFoundException();
-
-            $data = $this->message_repository->getAllSentByTeamPaginated
-            (
-                $team_id,
-                new PagingInfo($page, $per_page),
-                $filter,
-                $order
-            );
-
-            return $this->ok($data->toArray(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      $message = $this->service->postMessage($team_id, $values);
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($message)
+          ->serialize($expand = "team,owner"),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $team_id
-     * @return mixed
-     */
-    public function postTeamMessage($team_id){
-        try {
+  /**
+   * @param $team_id
+   * @param $member_id
+   * @return mixed
+   */
+  public function addMember2MyTeam($team_id, $member_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
 
-            if(!Request::isJson()) return $this->error400();
+      $data = Request::json();
 
-            $data = Request::json();
+      $rules = [
+        "permission" => "required|string|team_permission",
+      ];
 
-            $rules = array
-            (
-                'body'     => 'required|string',
-                'priority' => 'required|sometimes|string|chat_message_priority',
-            );
+      $values = $data->all();
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($values, $rules);
 
-            $values     = $data->all();
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($values, $rules);
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+        return $this->error412($messages);
+      }
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            if(!isset($values['priority']))
-                $values['priority'] =  PushNotificationMessagePriority::Normal;
-
-            $message = $this->service->postMessage($team_id, $values);
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($message)->serialize($expand = 'team,owner'));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      $invitation = $this->service->addMember2Team($team_id, $member_id, $values["permission"]);
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($invitation)
+          ->serialize($expand = "team,inviter,invitee"),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $team_id
-     * @param $member_id
-     * @return mixed
-     */
-    public function addMember2MyTeam($team_id, $member_id){
-        try {
+  /**
+   * @param $team_id
+   * @param $member_id
+   * @return mixed
+   */
+  public function removedMemberFromMyTeam($team_id, $member_id) {
+    try {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
+        return $this->error403();
+      }
 
-            if(!Request::isJson()) return $this->error400();
+      $this->service->removeMemberFromTeam($team_id, $member_id);
 
-            $data = Request::json();
-
-            $rules = array
-            (
-                'permission' => 'required|string|team_permission',
-            );
-
-            $values     = $data->all();
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $invitation = $this->service->addMember2Team($team_id, $member_id, $values['permission']);
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize($expand = 'team,inviter,invitee'));
-
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @param $team_id
-     * @param $member_id
-     * @return mixed
-     */
-    public function removedMemberFromMyTeam($team_id, $member_id){
-        try {
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $this->service->removeMemberFromTeam($team_id, $member_id);
-
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
+  }
 }

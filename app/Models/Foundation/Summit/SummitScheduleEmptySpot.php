@@ -16,68 +16,63 @@ use DateTime;
  * Class SummitScheduleEmptySpot
  * @package models\summit
  */
-final class SummitScheduleEmptySpot
-{
-    /**
-     * @var int
-     */
-    private $location_id;
+final class SummitScheduleEmptySpot {
+  /**
+   * @var int
+   */
+  private $location_id;
 
-    /**
-     * @var DateTime
-     */
-    private $start_date_time;
+  /**
+   * @var DateTime
+   */
+  private $start_date_time;
 
-    /**
-     * @var DateTime
-     */
-    private $end_date_time;
+  /**
+   * @var DateTime
+   */
+  private $end_date_time;
 
-    /**
-     * SummitScheduleEmptySpot constructor.
-     * @param int $location_id
-     * @param DateTime $start_date_time
-     * @param DateTime $end_date_time
-     */
-    public function __construct($location_id, DateTime $start_date_time, DateTime $end_date_time)
-    {
-        $this->location_id     = $location_id;
-        $this->start_date_time = $start_date_time;
-        $this->end_date_time   = $end_date_time;
-    }
+  /**
+   * SummitScheduleEmptySpot constructor.
+   * @param int $location_id
+   * @param DateTime $start_date_time
+   * @param DateTime $end_date_time
+   */
+  public function __construct($location_id, DateTime $start_date_time, DateTime $end_date_time) {
+    $this->location_id = $location_id;
+    $this->start_date_time = $start_date_time;
+    $this->end_date_time = $end_date_time;
+  }
 
-    /**
-     * @return int
-     */
-    public function getLocationId()
-    {
-        return $this->location_id;
-    }
+  /**
+   * @return int
+   */
+  public function getLocationId() {
+    return $this->location_id;
+  }
 
-    /**
-     * @return DateTime
-     */
-    public function getStartDateTime()
-    {
-        return $this->start_date_time;
-    }
+  /**
+   * @return DateTime
+   */
+  public function getStartDateTime() {
+    return $this->start_date_time;
+  }
 
-    /**
-     * @return DateTime
-     */
-    public function getEndDateTime()
-    {
-        return $this->end_date_time;
-    }
+  /**
+   * @return DateTime
+   */
+  public function getEndDateTime() {
+    return $this->end_date_time;
+  }
 
-    /**
-     * @return int
-     */
-    public function getTotalMinutes(){
-        $interval       = $this->end_date_time->diff($this->start_date_time);
-        $total_minutes  = $interval->days * 24 * 60;
-        $total_minutes += $interval->h * 60;
-        $total_minutes += $interval->i;
-        return intval($total_minutes);
-    }
+  /**
+   * @return int
+   */
+  public function getTotalMinutes() {
+    $interval = $this->end_date_time->diff($this->start_date_time);
+    $total_minutes = $interval->days * 24 * 60;
+    $total_minutes += $interval->h * 60;
+    $total_minutes += $interval->i;
+    return intval($total_minutes);
+  }
 }

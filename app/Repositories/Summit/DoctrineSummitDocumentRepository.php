@@ -22,55 +22,49 @@ use utils\Filter;
  * Class DoctrineSummitDocumentRepository
  * @package App\Repositories\Summit
  */
-class DoctrineSummitDocumentRepository extends SilverStripeDoctrineRepository
-implements ISummitDocumentRepository
-{
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitDocument::class;
-    }
+class DoctrineSummitDocumentRepository extends SilverStripeDoctrineRepository implements
+  ISummitDocumentRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitDocument::class;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-
-        $query = $query->join('e.summit', 's')
-            ->leftJoin('e.event_types', 'et');
-        if($filter->hasFilter("selection_plan_id")){
-            $query = $query->leftJoin("e.selection_plan", "sp");
-        }
-        return $query;
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->join("e.summit", "s")->leftJoin("e.event_types", "et");
+    if ($filter->hasFilter("selection_plan_id")) {
+      $query = $query->leftJoin("e.selection_plan", "sp");
     }
+    return $query;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'e.name:json_string',
-            'description' => 'e.description:json_string',
-            'label' => 'e.label:json_string',
-            'event_type' =>  'et.type:json_string',
-            'selection_plan_id' => 'sp.id',
-            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "description" => "e.description:json_string",
+      "label" => "e.label:json_string",
+      "event_type" => "et.type:json_string",
+      "selection_plan_id" => "sp.id",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-            'label' => 'e.label',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+      "label" => "e.label",
+    ];
+  }
 }

@@ -16,10 +16,9 @@ use App\Services\Apis\AbstractExternalFeed;
  * Class AbstractExternalScheduleFeed
  * @package App\Services\Apis\ExternalScheduleFeeds
  */
-abstract class AbstractExternalScheduleFeed extends AbstractExternalFeed implements IExternalScheduleFeed
-{
-    const CHARS_TO_REMOVE = array("-", "_");
+abstract class AbstractExternalScheduleFeed extends AbstractExternalFeed implements
+  IExternalScheduleFeed {
+  const CHARS_TO_REMOVE = ["-", "_"];
 
-    abstract public function getDefaultSpeakerEmail(string $speakerFullName):string;
-
+  abstract public function getDefaultSpeakerEmail(string $speakerFullName): string;
 }

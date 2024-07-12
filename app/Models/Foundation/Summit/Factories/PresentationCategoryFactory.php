@@ -17,66 +17,78 @@ use models\summit\Summit;
  * Class PresentationCategoryFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationCategoryFactory
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return PresentationCategory
-     */
-    public static function build(Summit $summit, array $data){
-        $track = new PresentationCategory();
-        self::populate($track, $data);
-        return $track;
+final class PresentationCategoryFactory {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return PresentationCategory
+   */
+  public static function build(Summit $summit, array $data) {
+    $track = new PresentationCategory();
+    self::populate($track, $data);
+    return $track;
+  }
+
+  /**
+   * @param PresentationCategory $track
+   * @param array $data
+   * @return PresentationCategory
+   */
+  public static function populate(PresentationCategory $track, array $data) {
+    if (isset($data["name"])) {
+      $track->setTitle(trim($data["name"]));
     }
 
-    /**
-     * @param PresentationCategory $track
-     * @param array $data
-     * @return PresentationCategory
-     */
-    public static function populate(PresentationCategory $track, array $data){
-        if(isset($data['name']))
-            $track->setTitle(trim($data['name']));
-
-        if(isset($data['code']) && !empty($data['code']))
-            $track->setCode(trim($data['code']));
-
-        if(isset($data['color']))
-            $track->setColor(trim($data['color']));
-
-        if(isset($data['text_color']))
-            $track->setTextColor(trim($data['text_color']));
-
-        if(isset($data['description']))
-            $track->setDescription(trim($data['description']));
-
-        $track->calculateSlug();
-
-        if(isset($data['session_count']))
-            $track->setSessionCount(intval($data['session_count']));
-
-        if(isset($data['alternate_count']))
-            $track->setAlternateCount(intval($data['alternate_count']));
-
-        if(isset($data['lightning_count']))
-            $track->setLightningCount(intval($data['lightning_count']));
-
-        if(isset($data['lightning_alternate_count']))
-            $track->setLightningAlternateCount(intval($data['lightning_alternate_count']));
-
-        if(isset($data['voting_visible']))
-            $track->setVotingVisible(boolval($data['voting_visible']));
-
-        if(isset($data['chair_visible']))
-            $track->setChairVisible(boolval($data['chair_visible']));
-
-        if(array_key_exists('proposed_schedule_transition_time',$data))
-            $track->setProposedScheduleTransitionTime(
-                is_null($data['proposed_schedule_transition_time']) ? null : intval($data['proposed_schedule_transition_time'])
-            );
-
-        return $track;
+    if (isset($data["code"]) && !empty($data["code"])) {
+      $track->setCode(trim($data["code"]));
     }
 
+    if (isset($data["color"])) {
+      $track->setColor(trim($data["color"]));
+    }
+
+    if (isset($data["text_color"])) {
+      $track->setTextColor(trim($data["text_color"]));
+    }
+
+    if (isset($data["description"])) {
+      $track->setDescription(trim($data["description"]));
+    }
+
+    $track->calculateSlug();
+
+    if (isset($data["session_count"])) {
+      $track->setSessionCount(intval($data["session_count"]));
+    }
+
+    if (isset($data["alternate_count"])) {
+      $track->setAlternateCount(intval($data["alternate_count"]));
+    }
+
+    if (isset($data["lightning_count"])) {
+      $track->setLightningCount(intval($data["lightning_count"]));
+    }
+
+    if (isset($data["lightning_alternate_count"])) {
+      $track->setLightningAlternateCount(intval($data["lightning_alternate_count"]));
+    }
+
+    if (isset($data["voting_visible"])) {
+      $track->setVotingVisible(boolval($data["voting_visible"]));
+    }
+
+    if (isset($data["chair_visible"])) {
+      $track->setChairVisible(boolval($data["chair_visible"]));
+    }
+
+    if (array_key_exists("proposed_schedule_transition_time", $data)) {
+      $track->setProposedScheduleTransitionTime(
+        is_null($data["proposed_schedule_transition_time"])
+          ? null
+          : intval($data["proposed_schedule_transition_time"]),
+      );
+    }
+
+    return $track;
+  }
 }

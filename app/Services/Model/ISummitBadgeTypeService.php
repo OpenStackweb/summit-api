@@ -19,80 +19,102 @@ use models\summit\SummitBadgeType;
  * Interface ISummitBadgeTypeService
  * @package App\Services\Model
  */
-interface ISummitBadgeTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitBadgeType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addBadgeType(Summit $summit, array $data):SummitBadgeType;
+interface ISummitBadgeTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitBadgeType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addBadgeType(Summit $summit, array $data): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param array $data
-     * @return SummitBadgeType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateBadgeType(Summit $summit, int $badge_type_id, array $data):SummitBadgeType;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param array $data
+   * @return SummitBadgeType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateBadgeType(Summit $summit, int $badge_type_id, array $data): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteBadgeType(Summit $summit, int $badge_type_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteBadgeType(Summit $summit, int $badge_type_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param int $access_level_id
-     * @return SummitBadgeType
-     */
-    public function addAccessLevelToBadgeType(Summit $summit, int $badge_type_id,int $access_level_id):SummitBadgeType;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param int $access_level_id
+   * @return SummitBadgeType
+   */
+  public function addAccessLevelToBadgeType(
+    Summit $summit,
+    int $badge_type_id,
+    int $access_level_id,
+  ): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param int $access_level_id
-     * @return SummitBadgeType
-     */
-    public function removeAccessLevelFromBadgeType(Summit $summit, int $badge_type_id,int $access_level_id):SummitBadgeType;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param int $access_level_id
+   * @return SummitBadgeType
+   */
+  public function removeAccessLevelFromBadgeType(
+    Summit $summit,
+    int $badge_type_id,
+    int $access_level_id,
+  ): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param int $feature_id
-     * @return SummitBadgeType
-     */
-    public function addFeatureToBadgeType(Summit $summit, int $badge_type_id,int $feature_id):SummitBadgeType;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param int $feature_id
+   * @return SummitBadgeType
+   */
+  public function addFeatureToBadgeType(
+    Summit $summit,
+    int $badge_type_id,
+    int $feature_id,
+  ): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param int $feature_id
-     * @return SummitBadgeType
-     */
-    public function removeFeatureFromBadgeType(Summit $summit, int $badge_type_id,int $feature_id):SummitBadgeType;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param int $feature_id
+   * @return SummitBadgeType
+   */
+  public function removeFeatureFromBadgeType(
+    Summit $summit,
+    int $badge_type_id,
+    int $feature_id,
+  ): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param int $view_type_id
-     * @return SummitBadgeType
-     */
-    public function addViewTypeToBadgeType(Summit $summit, int $badge_type_id,int $view_type_id):SummitBadgeType;
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param int $view_type_id
+   * @return SummitBadgeType
+   */
+  public function addViewTypeToBadgeType(
+    Summit $summit,
+    int $badge_type_id,
+    int $view_type_id,
+  ): SummitBadgeType;
 
-    /**
-     * @param Summit $summit
-     * @param int $badge_type_id
-     * @param int $view_type_id
-     * @return SummitBadgeType
-     */
-    public function removeViewTypeFromBadgeType(Summit $summit, int $badge_type_id,int $view_type_id):SummitBadgeType;
-
+  /**
+   * @param Summit $summit
+   * @param int $badge_type_id
+   * @param int $view_type_id
+   * @return SummitBadgeType
+   */
+  public function removeViewTypeFromBadgeType(
+    Summit $summit,
+    int $badge_type_id,
+    int $view_type_id,
+  ): SummitBadgeType;
 }

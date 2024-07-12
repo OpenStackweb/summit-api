@@ -18,16 +18,15 @@ use models\utils\IBaseRepository;
  * Interface IChatTeamRepository
  * @package models\main
  */
-interface IChatTeamRepository extends IBaseRepository
-{
-    /**
-     * @param Member $member
-     * @return ChatTeam[]
-     */
-    function getTeamsByMember(Member $member);
+interface IChatTeamRepository extends IBaseRepository {
+  /**
+   * @param Member $member
+   * @return ChatTeam[]
+   */
+  function getTeamsByMember(Member $member);
 
-    /**
-     * @return int[]
-     */
-    function getAllTeamsIdsWithPendingMessages2Sent();
+  /**
+   * @return int[]
+   */
+  function getAllTeamsIdsWithPendingMessages2Sent();
 }

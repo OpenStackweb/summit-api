@@ -19,36 +19,34 @@ use models\exceptions\ValidationException;
  * Trait ParametrizedDeleteEntity
  * @package App\Http\Controllers
  */
-trait ParametrizedDeleteEntity
-{
-    use BaseAPI;
+trait ParametrizedDeleteEntity {
+  use BaseAPI;
 
-    /**
-     * @param $id
-     * @param callable $deleteEntityFn
-     * @param mixed ...$args
-     * @return mixed
-     */
-    public function _delete($id, callable $deleteEntityFn, ...$args)
-    {
-        try {
-            $deleteEntityFn($id,...$args);
-            return $this->deleted();
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * @param $id
+   * @param callable $deleteEntityFn
+   * @param mixed ...$args
+   * @return mixed
+   */
+  public function _delete($id, callable $deleteEntityFn, ...$args) {
+    try {
+      $deleteEntityFn($id, ...$args);
+      return $this->deleted();
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412([$ex->getMessage()]);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404(["message" => $ex->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

@@ -17,25 +17,30 @@ use models\summit\SummitAttendeeTicket;
  * Class GuestEditionSummitAttendeeTicketSerializer
  * @package ModelSerializers
  */
-class GuestEditionSummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer
-{
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $ticket = $this->object;
-        if (!$ticket instanceof SummitAttendeeTicket) return [];
-        $values   = parent::serialize($expand, $fields, $relations, $params);
-
-        $order = $ticket->getOrder();
-        $summit = $order->getSummit();
-        $values['edit_link'] = sprintf("%s/a/my-tickets",$summit->getMarketingSiteUrl());
-
-        return $values;
+class GuestEditionSummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $ticket = $this->object;
+    if (!$ticket instanceof SummitAttendeeTicket) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $order = $ticket->getOrder();
+    $summit = $order->getSummit();
+    $values["edit_link"] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
+
+    return $values;
+  }
 }

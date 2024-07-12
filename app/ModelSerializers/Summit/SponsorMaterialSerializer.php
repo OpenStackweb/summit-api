@@ -16,13 +16,12 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SponsorMaterialSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SponsorMaterialSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Order' => 'order:json_int',
-        'SponsorId' => 'sponsor_id:json_int',
-        'Link' => 'link:json_string',
-        'Name' => 'name:json_string',
-        'Type' => 'type:json_string',
-    ];
+final class SponsorMaterialSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Order" => "order:json_int",
+    "SponsorId" => "sponsor_id:json_int",
+    "Link" => "link:json_string",
+    "Name" => "name:json_string",
+    "Type" => "type:json_string",
+  ];
 }

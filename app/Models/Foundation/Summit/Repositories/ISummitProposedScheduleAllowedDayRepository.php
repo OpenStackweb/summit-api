@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitProposedScheduleAllowedDayRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitProposedScheduleAllowedDayRepository extends IBaseRepository
-{
-
+interface ISummitProposedScheduleAllowedDayRepository extends IBaseRepository {
 }

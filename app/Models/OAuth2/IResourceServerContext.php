@@ -17,92 +17,92 @@ use models\main\Member;
  * Current Request OAUTH2 security context
  * @package oauth2
  */
-interface IResourceServerContext
-{
+interface IResourceServerContext {
+  const UserId = "user_id";
+  const UserFirstName = "user_first_name";
+  const UserLastName = "user_last_name";
+  const UserEmail = "user_email";
+  const UserEmailVerified = "user_email_verified";
 
-    const UserId = 'user_id';
-    const UserFirstName = 'user_first_name';
-    const UserLastName = 'user_last_name';
-    const UserEmail = 'user_email';
-    const UserEmailVerified = 'user_email_verified';
+  /**
+   * returns given scopes for current request
+   * @return array
+   */
+  public function getCurrentScope();
 
-    /**
-     * returns given scopes for current request
-     * @return array
-     */
-    public function getCurrentScope();
+  /**
+   * gets current access token values
+   * @return string
+   */
+  public function getCurrentAccessToken();
 
-    /**
-     * gets current access token values
-     * @return string
-     */
-    public function getCurrentAccessToken();
+  /**
+   * gets current access token lifetime
+   * @return mixed
+   */
+  public function getCurrentAccessTokenLifetime();
 
-    /**
-     * gets current access token lifetime
-     * @return mixed
-     */
-    public function getCurrentAccessTokenLifetime();
+  /**
+   * gets current client id
+   * @return string
+   */
+  public function getCurrentClientId();
 
-    /**
-     * gets current client id
-     * @return string
-     */
-    public function getCurrentClientId();
+  /**
+   * gets current user id (if was set)
+   * @return int|null
+   */
+  public function getCurrentUserId();
 
-    /**
-     * gets current user id (if was set)
-     * @return int|null
-     */
-    public function getCurrentUserId();
+  /**
+   * @return int|null
+   */
+  public function getCurrentUserExternalId();
 
-    /**
-     * @return int|null
-     */
-    public function getCurrentUserExternalId();
+  /**
+   * @return string
+   */
+  public function getApplicationType();
 
-    /**
-     * @return string
-     */
-    public function getApplicationType();
+  /**
+   * @param array $auth_context
+   * @return void
+   */
+  public function setAuthorizationContext(array $auth_context);
 
-    /**
-     * @param array $auth_context
-     * @return void
-     */
-    public function setAuthorizationContext(array $auth_context);
+  /**
+   * @return null|string
+   */
+  public function getAllowedOrigins();
 
-    /**
-     * @return null|string
-     */
-    public function getAllowedOrigins();
+  /**
+   * @return null|string
+   */
+  public function getAllowedReturnUris();
 
-    /**
-     * @return null|string
-     */
-    public function getAllowedReturnUris();
+  /**
+   * @param bool $synch_groups
+   * @param bool $update_member_fields
+   * @return Member|null
+   */
+  public function getCurrentUser(
+    bool $synch_groups = true,
+    bool $update_member_fields = true,
+  ): ?Member;
 
-    /**
-     * @param bool $synch_groups
-     * @param bool $update_member_fields
-     * @return Member|null
-     */
-    public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true):?Member;
+  /**
+   * @return array
+   */
+  public function getCurrentUserGroups(): array;
 
-    /**
-     * @return array
-     */
-    public function getCurrentUserGroups():array;
+  /**
+   * @param string $varName
+   * @param mixed $value
+   */
+  public function updateAuthContextVar(string $varName, $value): void;
 
-    /**
-     * @param string $varName
-     * @param mixed $value
-     */
-    public function updateAuthContextVar(string $varName, $value):void;
-
-    /**
-     * @return string|null
-     */
-    public function getCurrentUserEmail():?string;
-
+  /**
+   * @return string|null
+   */
+  public function getCurrentUserEmail(): ?string;
 }

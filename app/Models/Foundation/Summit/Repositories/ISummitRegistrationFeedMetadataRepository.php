@@ -17,8 +17,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitRegistrationFeedMetadataRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitRegistrationFeedMetadataRepository
-    extends IBaseRepository
-{
-
+interface ISummitRegistrationFeedMetadataRepository extends IBaseRepository {
 }

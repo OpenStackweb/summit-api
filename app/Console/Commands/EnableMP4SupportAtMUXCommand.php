@@ -18,40 +18,38 @@ use Illuminate\Support\Facades\Log;
  * Class EnableMP4SupportAtMUXCommand
  * @package App\Console\Commands
  */
-class EnableMP4SupportAtMUXCommand extends Command
-{
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:enable-mp4-support-mux';
+class EnableMP4SupportAtMUXCommand extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:enable-mp4-support-mux";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:enable-mp4-support-mux {event_id}';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:enable-mp4-support-mux {event_id}";
 
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Enable MP4 Support at Mux";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Enable MP4 Support at Mux';
+  /**
+   * @param IPresentationVideoMediaUploadProcessor $service
+   */
+  public function handle(IPresentationVideoMediaUploadProcessor $service) {
+    $event_id = $this->argument("event_id");
 
-    /**
-     * @param IPresentationVideoMediaUploadProcessor $service
-     */
-    public function handle(IPresentationVideoMediaUploadProcessor $service)
-    {
-        $event_id = $this->argument('event_id');
-
-        if(empty($event_id))
-            throw new \InvalidArgumentException("event_id is required");
-
-        $service->enableMP4Support(intval($event_id));
+    if (empty($event_id)) {
+      throw new \InvalidArgumentException("event_id is required");
     }
+
+    $service->enableMP4Support(intval($event_id));
+  }
 }

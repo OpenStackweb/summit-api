@@ -17,32 +17,28 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SummitPresentationCommentValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitPresentationCommentValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class SummitPresentationCommentValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "body" => "required|string|max:1024",
+      "is_activity" => "sometimes|boolean",
+      "is_public" => "sometimes|boolean",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'body' => 'required|string|max:1024',
-            'is_activity' => 'sometimes|boolean',
-            'is_public' => 'sometimes|boolean',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'body' => 'sometimes|string|max:1024',
-            'is_activity' => 'sometimes|boolean',
-            'is_public' => 'sometimes|boolean',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "body" => "sometimes|string|max:1024",
+      "is_activity" => "sometimes|boolean",
+      "is_public" => "sometimes|boolean",
+    ];
+  }
 }

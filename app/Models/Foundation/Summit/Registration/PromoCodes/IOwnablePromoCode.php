@@ -16,13 +16,12 @@
  * Interface IOwnablePromoCode
  * @package models\summit
  */
-interface IOwnablePromoCode
-{
-    public function hasOwner();
+interface IOwnablePromoCode {
+  public function hasOwner();
 
-    public function getOwnerFullname():string;
+  public function getOwnerFullname(): string;
 
-    public function getOwnerEmail():string;
+  public function getOwnerEmail(): string;
 
-    public function getOwnerType():string;
+  public function getOwnerType(): string;
 }

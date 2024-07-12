@@ -18,38 +18,34 @@ use models\summit\Sponsor;
  * Class SponsorExtraQuestionValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorExtraQuestionValidationRulesFactory
-    extends ExtraQuestionTypeValidationRulesFactory
-{
+final class SponsorExtraQuestionValidationRulesFactory extends
+  ExtraQuestionTypeValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "required|string",
+      "type" => "required|string|in:" . implode(",", Sponsor::getAllowedQuestionTypes()),
+      "label" => "required|string",
+      "mandatory" => "required|boolean",
+      "placeholder" => "sometimes|nullable|string",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name'        => 'required|string',
-            'type'        => 'required|string|in:'.implode(",", Sponsor::getAllowedQuestionTypes()),
-            'label'       => 'required|string',
-            'mandatory'   => 'required|boolean',
-            'placeholder' => 'sometimes|nullable|string',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'name'        => 'sometimes|string',
-            'type'        => 'sometimes|string|in:'.implode(",", Sponsor::getAllowedQuestionTypes()),
-            'label'       => 'sometimes|string',
-            'mandatory'   => 'sometimes|boolean',
-            'placeholder' => 'sometimes|nullable|string',
-            'order'       => 'sometimes|integer|min:1',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "name" => "sometimes|string",
+      "type" => "sometimes|string|in:" . implode(",", Sponsor::getAllowedQuestionTypes()),
+      "label" => "sometimes|string",
+      "mandatory" => "sometimes|boolean",
+      "placeholder" => "sometimes|nullable|string",
+      "order" => "sometimes|integer|min:1",
+    ];
+  }
 }

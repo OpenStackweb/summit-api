@@ -19,35 +19,42 @@ use models\summit\SummitMediaUploadType;
  * Class PresentationMediaUploadFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-class PresentationMediaUploadFactory
-{
-    /**
-     * @param array $data
-     * @return PresentationMediaUpload
-     */
-    public static function build(array $data){
-        return self::populate(new PresentationMediaUpload, $data);
+class PresentationMediaUploadFactory {
+  /**
+   * @param array $data
+   * @return PresentationMediaUpload
+   */
+  public static function build(array $data) {
+    return self::populate(new PresentationMediaUpload(), $data);
+  }
+
+  /**
+   * @param PresentationMediaUpload $media_upload
+   * @param array $data
+   * @return PresentationMediaUpload
+   */
+  public static function populate(PresentationMediaUpload $media_upload, array $data) {
+    if (isset($data["display_on_site"])) {
+      $media_upload->setDisplayOnSite(
+        isset($data["display_on_site"]) ? boolval($data["display_on_site"]) : true,
+      );
     }
 
-    /**
-     * @param PresentationMediaUpload $media_upload
-     * @param array $data
-     * @return PresentationMediaUpload
-     */
-    public static function populate(PresentationMediaUpload $media_upload, array $data){
-
-        if(isset($data['display_on_site']))
-            $media_upload->setDisplayOnSite(isset($data['display_on_site']) ? boolval($data['display_on_site']) : true);
-
-        if(isset($data['file_name']))
-            $media_upload->setFilename(trim($data['file_name']));
-
-        if(isset($data['presentation']) && $data['presentation'] instanceof Presentation)
-            $media_upload->setPresentation($data['presentation']);
-
-        if(isset($data['media_upload_type']) && $data['media_upload_type'] instanceof SummitMediaUploadType)
-            $media_upload->setMediaUploadType($data['media_upload_type']);
-
-        return $media_upload;
+    if (isset($data["file_name"])) {
+      $media_upload->setFilename(trim($data["file_name"]));
     }
+
+    if (isset($data["presentation"]) && $data["presentation"] instanceof Presentation) {
+      $media_upload->setPresentation($data["presentation"]);
+    }
+
+    if (
+      isset($data["media_upload_type"]) &&
+      $data["media_upload_type"] instanceof SummitMediaUploadType
+    ) {
+      $media_upload->setMediaUploadType($data["media_upload_type"]);
+    }
+
+    return $media_upload;
+  }
 }

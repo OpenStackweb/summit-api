@@ -18,25 +18,22 @@ use models\summit\CalendarSync\CalendarSyncInfo;
  * Class AbstractCalendarSyncRemoteFacade
  * @package services\apis\CalendarSync
  */
-abstract class AbstractCalendarSyncRemoteFacade
-    implements ICalendarSyncRemoteFacade
-{
-    /**
-     * @var CalendarSyncInfo
-     */
-    protected $sync_calendar_info;
+abstract class AbstractCalendarSyncRemoteFacade implements ICalendarSyncRemoteFacade {
+  /**
+   * @var CalendarSyncInfo
+   */
+  protected $sync_calendar_info;
 
-    /**
-     * AbstractCalendarSyncRemoteFacade constructor.
-     * @param CalendarSyncInfo $sync_calendar_info
-     */
-    public function __construct(CalendarSyncInfo $sync_calendar_info)
-    {
-        $this->sync_calendar_info = $sync_calendar_info;
-    }
+  /**
+   * AbstractCalendarSyncRemoteFacade constructor.
+   * @param CalendarSyncInfo $sync_calendar_info
+   */
+  public function __construct(CalendarSyncInfo $sync_calendar_info) {
+    $this->sync_calendar_info = $sync_calendar_info;
+  }
 
-    /**
-     * @return mixed
-     */
-    abstract public function getSleepInterval();
+  /**
+   * @return mixed
+   */
+  abstract public function getSleepInterval();
 }

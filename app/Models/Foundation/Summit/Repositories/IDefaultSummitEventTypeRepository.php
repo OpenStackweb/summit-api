@@ -17,12 +17,10 @@ use models\utils\IBaseRepository;
  * Interface IDefaultSummitEventTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IDefaultSummitEventTypeRepository
-    extends IBaseRepository
-{
-    /**
-     * @param string $type
-     * @return null|DefaultSummitEventType
-     */
-    public function getByType($type);
+interface IDefaultSummitEventTypeRepository extends IBaseRepository {
+  /**
+   * @param string $type
+   * @return null|DefaultSummitEventType
+   */
+  public function getByType($type);
 }

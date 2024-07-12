@@ -20,60 +20,67 @@ use models\main\File;
  * Interface ICompanyService
  * @package App\Services\Model
  */
-interface ICompanyService
-{
-    /**
-     * @param array $payload
-     * @throws ValidationException
-     * @return Company
-     */
-    public function addCompany(array $payload):Company;
+interface ICompanyService {
+  /**
+   * @param array $payload
+   * @throws ValidationException
+   * @return Company
+   */
+  public function addCompany(array $payload): Company;
 
-    /**
-     * @param int $company_id
-     * @param array $payload
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     * @return Company
-     */
-    public function updateCompany(int $company_id, array $payload):Company;
+  /**
+   * @param int $company_id
+   * @param array $payload
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   * @return Company
+   */
+  public function updateCompany(int $company_id, array $payload): Company;
 
-    /**
-     * @param int $company_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deleteCompany(int $company_id):void;
+  /**
+   * @param int $company_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deleteCompany(int $company_id): void;
 
-    /**
-     * @param int $company_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return File
-     */
-    public function addCompanyLogo(int $company_id,  UploadedFile $file,  $max_file_size = 10485760):File;
+  /**
+   * @param int $company_id
+   * @param UploadedFile $file
+   * @param int $max_file_size
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return File
+   */
+  public function addCompanyLogo(
+    int $company_id,
+    UploadedFile $file,
+    $max_file_size = 10485760,
+  ): File;
 
-    /**
-     * @throws EntityNotFoundException
-     * @param int $company_id
-     */
-    public function deleteCompanyLogo(int $company_id):void;
+  /**
+   * @throws EntityNotFoundException
+   * @param int $company_id
+   */
+  public function deleteCompanyLogo(int $company_id): void;
 
-    /**
-     * @param int $company_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return File
-     */
-    public function addCompanyBigLogo(int $company_id,  UploadedFile $file,  $max_file_size = 10485760):File;
+  /**
+   * @param int $company_id
+   * @param UploadedFile $file
+   * @param int $max_file_size
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return File
+   */
+  public function addCompanyBigLogo(
+    int $company_id,
+    UploadedFile $file,
+    $max_file_size = 10485760,
+  ): File;
 
-    /**
-     * @throws EntityNotFoundException
-     * @param int $company_id
-     */
-    public function deleteCompanyBigLogo(int $company_id):void;
+  /**
+   * @throws EntityNotFoundException
+   * @param int $company_id
+   */
+  public function deleteCompanyBigLogo(int $company_id): void;
 }

@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ICompanyServiceRepository
  * @package App\Models\Foundation\Marketplace
  */
-interface ICompanyServiceRepository extends IBaseRepository
-{
-
+interface ICompanyServiceRepository extends IBaseRepository {
 }

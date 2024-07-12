@@ -12,12 +12,10 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IRenderer
  * @package App\Http\Renderers
  */
-interface IRenderer
-{
-    public function render():string;
+interface IRenderer {
+  public function render(): string;
 }

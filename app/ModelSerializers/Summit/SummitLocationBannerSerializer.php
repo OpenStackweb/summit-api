@@ -18,39 +18,44 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitLocationBannerSerializer
  * @package App\ModelSerializers\Summit
  */
-class SummitLocationBannerSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Title'         => 'title:json_string',
-        'Content'       => 'content:json_string',
-        'Type'          => 'type:json_string',
-        'Enabled'       => 'enabled:json_boolean',
-        'LocationId'    => 'location_id:json_int',
-        'ClassName'     => 'class_name:json_string',
-    ];
+class SummitLocationBannerSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Title" => "title:json_string",
+    "Content" => "content:json_string",
+    "Type" => "type:json_string",
+    "Enabled" => "enabled:json_boolean",
+    "LocationId" => "location_id:json_int",
+    "ClassName" => "class_name:json_string",
+  ];
 
-    protected static $expand_mappings = [
-        'location' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'location_id',
-            'getter' => 'getLocation',
-            'has' => 'hasLocation'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "location" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "location_id",
+      "getter" => "getLocation",
+      "has" => "hasLocation",
+    ],
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $banner  = $this->object;
-        if(!$banner instanceof SummitLocationBanner) return [];
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $banner = $this->object;
+    if (!$banner instanceof SummitLocationBanner) {
+      return [];
     }
+
+    return $values;
+  }
 }

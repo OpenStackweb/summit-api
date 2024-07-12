@@ -18,50 +18,55 @@ use models\summit\PresentationActionType;
  * Class PresentationActionTypeSerializer
  * @package ModelSerializers
  */
-final class PresentationActionTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Label' => 'label:json_string',
-        'SummitId' => 'summit_id:json_int',
-    ];
+final class PresentationActionTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Label" => "label:json_string",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $action = $this->object;
-        if (!$action instanceof PresentationActionType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (array_has($params, 'selection_plan_id'))
-            $values['order'] = $action->getSelectionPlanAssignmentOrder(intval($params['selection_plan_id']));
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'summit':
-                        {
-                            unset($values['summit_id']);
-                            $values['summit'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $action->getSummit()
-                            )->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        break;
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $action = $this->object;
+    if (!$action instanceof PresentationActionType) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (array_has($params, "selection_plan_id")) {
+      $values["order"] = $action->getSelectionPlanAssignmentOrder(
+        intval($params["selection_plan_id"]),
+      );
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "summit":
+            unset($values["summit_id"]);
+            $values["summit"] = SerializerRegistry::getInstance()
+              ->getSerializer($action->getSummit())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

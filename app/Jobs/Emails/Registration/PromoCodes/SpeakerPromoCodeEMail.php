@@ -17,17 +17,13 @@ namespace App\Jobs\Emails\Registration\PromoCodes;
  * Class SpeakerPromoCodeEMail
  * @package App\Jobs\Emails\Registration
  */
-class SpeakerPromoCodeEMail extends PromoCodeEmail
-{
+class SpeakerPromoCodeEMail extends PromoCodeEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
-
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
-    const DEFAULT_TEMPLATE = 'SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE";
+  const DEFAULT_TEMPLATE = "SUMMIT_REGISTRATION_SPEAKER_PROMO_CODE";
 }

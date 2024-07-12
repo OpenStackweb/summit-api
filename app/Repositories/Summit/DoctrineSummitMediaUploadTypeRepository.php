@@ -20,37 +20,32 @@ use utils\DoctrineLeftJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitMediaUploadTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitMediaUploadTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitMediaUploadTypeRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitMediaUploadType::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitMediaUploadType::class;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'        => 'e.name:json_string',
-            'summit_id'   => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 }

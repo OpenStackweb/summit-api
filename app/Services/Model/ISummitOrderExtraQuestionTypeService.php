@@ -20,70 +20,88 @@ use models\summit\SummitOrderExtraQuestionType;
  * Interface ISummitOrderExtraQuestionTypeService
  * @package App\Services\Model
  */
-interface ISummitOrderExtraQuestionTypeService extends IExtraQuestionTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitOrderExtraQuestionType
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addOrderExtraQuestion(Summit $summit, array $payload):SummitOrderExtraQuestionType;
+interface ISummitOrderExtraQuestionTypeService extends IExtraQuestionTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitOrderExtraQuestionType
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function addOrderExtraQuestion(
+    Summit $summit,
+    array $payload,
+  ): SummitOrderExtraQuestionType;
 
-    /**
-     * @param Summit $summit
-     * @param int $question_id
-     * @param array $payload
-     * @return SummitOrderExtraQuestionType
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateOrderExtraQuestion(Summit $summit, int $question_id, array $payload):SummitOrderExtraQuestionType;
+  /**
+   * @param Summit $summit
+   * @param int $question_id
+   * @param array $payload
+   * @return SummitOrderExtraQuestionType
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updateOrderExtraQuestion(
+    Summit $summit,
+    int $question_id,
+    array $payload,
+  ): SummitOrderExtraQuestionType;
 
-    /**
-     * @param Summit $summit
-     * @param int $question_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deleteOrderExtraQuestion(Summit $summit, int $question_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $question_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deleteOrderExtraQuestion(Summit $summit, int $question_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $question_id
-     * @param array $payload
-     * @return ExtraQuestionTypeValue
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addOrderExtraQuestionValue(Summit $summit, int $question_id, array $payload):ExtraQuestionTypeValue;
+  /**
+   * @param Summit $summit
+   * @param int $question_id
+   * @param array $payload
+   * @return ExtraQuestionTypeValue
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function addOrderExtraQuestionValue(
+    Summit $summit,
+    int $question_id,
+    array $payload,
+  ): ExtraQuestionTypeValue;
 
-    /**
-     * @param Summit $summit
-     * @param int $question_id
-     * @param int $value_id
-     * @param array $payload
-     * @return ExtraQuestionTypeValue
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
+  /**
+   * @param Summit $summit
+   * @param int $question_id
+   * @param int $value_id
+   * @param array $payload
+   * @return ExtraQuestionTypeValue
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updateOrderExtraQuestionValue(
+    Summit $summit,
+    int $question_id,
+    int $value_id,
+    array $payload,
+  ): ExtraQuestionTypeValue;
 
-    /**
-     * @param Summit $summit
-     * @param int $question_id
-     * @param int $value_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deleteOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $question_id
+   * @param int $value_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deleteOrderExtraQuestionValue(
+    Summit $summit,
+    int $question_id,
+    int $value_id,
+  ): void;
 
-    /**
-     * @param Summit $summit
-     * @return SummitOrderExtraQuestionType[]
-     * @throws ValidationException
-     */
-    public function seedSummitOrderExtraQuestionTypesFromEventBrite(Summit $summit):array;
-
+  /**
+   * @param Summit $summit
+   * @return SummitOrderExtraQuestionType[]
+   * @throws ValidationException
+   */
+  public function seedSummitOrderExtraQuestionTypesFromEventBrite(Summit $summit): array;
 }

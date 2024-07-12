@@ -12,25 +12,19 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class UserListRequest
  * @package App\Services\Apis\Samsung
  */
-final class UserListRequest extends AbstractPayload
-{
-    /**
-     * @param array $params
-     */
-    public function __construct(array $params = []){
+final class UserListRequest extends AbstractPayload {
+  /**
+   * @param array $params
+   */
+  public function __construct(array $params = []) {
+    parent::__construct($params);
 
-        parent::__construct
-        (
-            $params
-        );
-
-        $this->payload = array_merge($this->payload,[
-            PayloadParamNames::Type => RequestTypes::UserList,
-        ]);
-    }
+    $this->payload = array_merge($this->payload, [
+      PayloadParamNames::Type => RequestTypes::UserList,
+    ]);
+  }
 }

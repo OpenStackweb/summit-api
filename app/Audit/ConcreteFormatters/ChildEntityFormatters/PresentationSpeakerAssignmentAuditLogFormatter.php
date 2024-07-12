@@ -15,23 +15,25 @@ namespace App\Audit\ConcreteFormatters\ChildEntityFormatters;
  * limitations under the License.
  **/
 
-
 /**
  * Class PresentationSpeakerAssignmentAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class PresentationSpeakerAssignmentAuditLogFormatter implements IChildEntityAuditLogFormatter
-{
-    /**
-     * @inheritDoc
-     */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""): ?string {
-        switch ($child_entity_action_type) {
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
-                return "Speaker {$subject->getSpeaker()->getEmail()} was added to the collection";
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
-                return "Speaker {$subject->getSpeaker()->getEmail()} was removed from the collection";
-        }
-        return "";
+class PresentationSpeakerAssignmentAuditLogFormatter implements IChildEntityAuditLogFormatter {
+  /**
+   * @inheritDoc
+   */
+  public function format(
+    $subject,
+    string $child_entity_action_type,
+    ?string $additional_info = "",
+  ): ?string {
+    switch ($child_entity_action_type) {
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
+        return "Speaker {$subject->getSpeaker()->getEmail()} was added to the collection";
+      case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
+        return "Speaker {$subject->getSpeaker()->getEmail()} was removed from the collection";
     }
+    return "";
+  }
 }

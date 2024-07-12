@@ -16,7 +16,6 @@
  * Interface
  * @package App\Models\Foundation\Summit
  */
-interface IPublishableEventWithSpeakerConstraint extends IPublishableEvent
-{
-    public function getSpeakers();
+interface IPublishableEventWithSpeakerConstraint extends IPublishableEvent {
+  public function getSpeakers();
 }

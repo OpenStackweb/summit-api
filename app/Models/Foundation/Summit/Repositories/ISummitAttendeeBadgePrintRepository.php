@@ -18,8 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitAttendeeBadgePrintRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitAttendeeBadgePrintRepository
-    extends IBaseRepository
-{
-
+interface ISummitAttendeeBadgePrintRepository extends IBaseRepository {
 }

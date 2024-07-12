@@ -16,14 +16,12 @@
  * Class SummitScheduleFilterElementConfigSerializer
  * @package ModelSerializers
  */
-final class AdminSummitScheduleFilterElementConfigSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Type' => 'type:json_string',
-        'Label' => 'label:json_string',
-        'Enabled' => 'is_enabled:json_boolean',
-        'ConfigId' => 'config_id:json_int',
-        "Order" => 'order:json_int'
-    ];
-
+final class AdminSummitScheduleFilterElementConfigSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+    "Label" => "label:json_string",
+    "Enabled" => "is_enabled:json_boolean",
+    "ConfigId" => "config_id:json_int",
+    "Order" => "order:json_int",
+  ];
 }

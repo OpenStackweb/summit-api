@@ -24,143 +24,128 @@ use models\utils\SilverstripeBaseModel;
  * Class SponsorMaterial
  * @package models\summit
  */
-class SponsorMaterial extends SilverstripeBaseModel
-    implements IOrderable
-{
-    use One2ManyPropertyTrait;
+class SponsorMaterial extends SilverstripeBaseModel implements IOrderable {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getSponsorId' => 'sponsor',
-    ];
+  protected $getIdMappings = [
+    "getSponsorId" => "sponsor",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSponsor' => 'sponsor',
-    ];
+  protected $hasPropertyMappings = [
+    "hasSponsor" => "sponsor",
+  ];
 
-    const VideoType = 'Video';
-    const LinkType = 'Link';
-    const SlideType = 'Slide';
+  const VideoType = "Video";
+  const LinkType = "Link";
+  const SlideType = "Slide";
 
-    const ValidTypes = [
-        self::LinkType,
-        self::VideoType,
-        self::SlideType
-    ];
+  const ValidTypes = [self::LinkType, self::VideoType, self::SlideType];
 
-    /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`CustomOrder`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="materials", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Sponsor
-     */
-    private $sponsor;
+  /**
+   * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="materials", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Sponsor
+   */
+  private $sponsor;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  private $type;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Link", type="string")
-     * @var string
-     */
-    private $link;
+  /**
+   * @ORM\Column(name="Link", type="string")
+   * @var string
+   */
+  private $link;
 
-    /**
-     * @return int
-     */
-    public function getOrder(): ?int
-    {
-        return $this->order;
+  /**
+   * @return int
+   */
+  public function getOrder(): ?int {
+    return $this->order;
+  }
+
+  /**
+   * @param int $order
+   */
+  public function setOrder($order): void {
+    $this->order = $order;
+  }
+
+  /**
+   * @return string
+   */
+  public function getType(): string {
+    return $this->type;
+  }
+
+  /**
+   * @param string $type
+   */
+  public function setType(string $type): void {
+    if (!in_array($type, self::ValidTypes)) {
+      throw new ValidationException(sprintf("%s is not a valid type.", $type));
     }
+    $this->type = $type;
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order): void
-    {
-        $this->order = $order;
-    }
+  /**
+   * @return string|null
+   */
+  public function getName(): ?string {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
 
-    /**
-     * @param string $type
-     */
-    public function setType(string $type): void
-    {
-        if(!in_array($type, self::ValidTypes))
-            throw new ValidationException(sprintf("%s is not a valid type.", $type));
-        $this->type = $type;
-    }
+  /**
+   * @return string|null
+   */
+  public function getLink(): ?string {
+    return $this->link;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+  /**
+   * @param string $link
+   */
+  public function setLink(string $link): void {
+    $this->link = $link;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  /**
+   * @return Sponsor
+   */
+  public function getSponsor(): Sponsor {
+    return $this->sponsor;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getLink(): ?string
-    {
-        return $this->link;
-    }
+  /**
+   * @param Sponsor $sponsor
+   */
+  public function setSponsor(Sponsor $sponsor): void {
+    $this->sponsor = $sponsor;
+  }
 
-    /**
-     * @param string $link
-     */
-    public function setLink(string $link): void
-    {
-        $this->link = $link;
-    }
-
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor(): Sponsor
-    {
-        return $this->sponsor;
-    }
-
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
-    }
-
-    public function clearSponsor():void{
-        $this->sponsor = null;
-    }
+  public function clearSponsor(): void {
+    $this->sponsor = null;
+  }
 }

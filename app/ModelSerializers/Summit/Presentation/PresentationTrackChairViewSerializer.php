@@ -16,10 +16,9 @@
  * Class PresentationTrackChairViewSerializer
  * @package ModelSerializers
  */
-final class PresentationTrackChairViewSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'ViewerId' => 'viewer_id:json_int',
-        'PresentationId' => 'presentation_id:json_int',
-    ];
+final class PresentationTrackChairViewSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "ViewerId" => "viewer_id:json_int",
+    "PresentationId" => "presentation_id:json_int",
+  ];
 }

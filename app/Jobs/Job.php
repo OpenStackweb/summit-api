@@ -4,9 +4,8 @@ namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
 
-abstract class Job
-{
-    /*
+abstract class Job {
+  /*
     |--------------------------------------------------------------------------
     | Queueable Jobs
     |--------------------------------------------------------------------------
@@ -17,5 +16,5 @@ abstract class Job
     |
     */
 
-    use Queueable;
+  use Queueable;
 }

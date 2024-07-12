@@ -18,19 +18,24 @@ use models\summit\SummitAirport;
  * Class SummitAirportValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitAirportValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class SummitAirportValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = SummitExternalLocationValidationRulesFactory::build($data, $update);
 
-        $rules = SummitExternalLocationValidationRulesFactory::build($data, $update);
-
-        return array_merge([
-            'airport_type'   => sprintf('sometimes|in:%s,%s',SummitAirport::AirportTypeInternational, SummitAirport::AirportTypeDomestic),
-        ], $rules);
-    }
+    return array_merge(
+      [
+        "airport_type" => sprintf(
+          "sometimes|in:%s,%s",
+          SummitAirport::AirportTypeInternational,
+          SummitAirport::AirportTypeDomestic,
+        ),
+      ],
+      $rules,
+    );
+  }
 }

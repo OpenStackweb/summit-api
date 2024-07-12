@@ -18,32 +18,28 @@ use models\oauth2\IResourceServerContext;
  * Class CheckAttendeeStrategyFactory
  * @package App\Http\Controllers
  */
-final class CheckAttendeeStrategyFactory
-{
+final class CheckAttendeeStrategyFactory {
+  const Me = "me";
+  const Own = "own";
 
-    const Me  = 'me';
-    const Own = 'own';
-
-    /**
-     * @param string $type
-     * @param IResourceServerContext $resource_server_context
-     * @return ICheckAttendeeStrategy|null
-     */
-    public static function build($type, IResourceServerContext $resource_server_context)
-    {
-        $strategy = null;
-        switch(strtolower($type))
-        {
-            case 'me':
-                $strategy = new CheckMeAttendeeStrategy($resource_server_context);
-                break;
-            case 'own':
-                $strategy = new CheckMyOwnAttendeeStrategy($resource_server_context);
-                break;
-            default:
-                throw new \InvalidArgumentException('not recognized type!');
-                break;
-        }
-        return $strategy;
+  /**
+   * @param string $type
+   * @param IResourceServerContext $resource_server_context
+   * @return ICheckAttendeeStrategy|null
+   */
+  public static function build($type, IResourceServerContext $resource_server_context) {
+    $strategy = null;
+    switch (strtolower($type)) {
+      case "me":
+        $strategy = new CheckMeAttendeeStrategy($resource_server_context);
+        break;
+      case "own":
+        $strategy = new CheckMyOwnAttendeeStrategy($resource_server_context);
+        break;
+      default:
+        throw new \InvalidArgumentException("not recognized type!");
+        break;
     }
+    return $strategy;
+  }
 }

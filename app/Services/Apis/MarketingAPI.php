@@ -24,170 +24,163 @@ use models\exceptions\ValidationException;
  * Class MarketingAPI
  * @package services\apis
  */
-final class MarketingAPI implements IMarketingAPI
-{
-    /**
-     * @var Client
-     */
-    private $client;
+final class MarketingAPI implements IMarketingAPI {
+  /**
+   * @var Client
+   */
+  private $client;
 
-    /**
-     * @var string
-     */
-    private $base_url;
+  /**
+   * @var string
+   */
+  private $base_url;
 
-    /**
-     * @var int
-     */
-    private $cache_ttl;
+  /**
+   * @var int
+   */
+  private $cache_ttl;
 
-    /**
-     * @var ICacheService
-     */
-    private $cache_service;
+  /**
+   * @var ICacheService
+   */
+  private $cache_service;
 
-    /**
-     * @param ICacheService $cache_service
-     * @throws ValidationException
-     */
-    public function __construct(ICacheService $cache_service)
-    {
-        try {
-            $this->cache_service = $cache_service;
-            $this->cache_ttl = Config::get('marketing.cache_ttl');
-            $this->base_url = Config::get('marketing.base_url');
-            if (is_null($this->base_url))
-                throw new ValidationException("Config entry marketing.base_url not set.");
+  /**
+   * @param ICacheService $cache_service
+   * @throws ValidationException
+   */
+  public function __construct(ICacheService $cache_service) {
+    try {
+      $this->cache_service = $cache_service;
+      $this->cache_ttl = Config::get("marketing.cache_ttl");
+      $this->base_url = Config::get("marketing.base_url");
+      if (is_null($this->base_url)) {
+        throw new ValidationException("Config entry marketing.base_url not set.");
+      }
 
-            $stack = HandlerStack::create();
-            $stack->push(GuzzleRetryMiddleware::factory());
+      $stack = HandlerStack::create();
+      $stack->push(GuzzleRetryMiddleware::factory());
 
-            $this->client = new Client([
-                'handler' => $stack,
-                'base_uri' => $this->base_url,
-                'timeout' => Config::get('curl.timeout', 60),
-                'allow_redirects' => Config::get('curl.allow_redirects', false),
-                'verify' => Config::get('curl.verify_ssl_cert', true),
-            ]);
-
-
-        }
-        catch (Exception $ex){
-            //Log::warning($ex);
-            $this->client = null;
-        }
+      $this->client = new Client([
+        "handler" => $stack,
+        "base_uri" => $this->base_url,
+        "timeout" => Config::get("curl.timeout", 60),
+        "allow_redirects" => Config::get("curl.allow_redirects", false),
+        "verify" => Config::get("curl.verify_ssl_cert", true),
+      ]);
+    } catch (Exception $ex) {
+      //Log::warning($ex);
+      $this->client = null;
     }
+  }
 
-    /**
-     * @param string $api_url
-     * @param array $params
-     * @return mixed
-     * @throws Exception
-     */
-    protected function getEntity(string $api_url, array $params)
-    {
-        try {
-            if(is_null($this->client))
-                throw new Exception('invalid client!');
-            foreach ($params as $param => $value) {
-                $query[$param] = $value;
-            }
+  /**
+   * @param string $api_url
+   * @param array $params
+   * @return mixed
+   * @throws Exception
+   */
+  protected function getEntity(string $api_url, array $params) {
+    try {
+      if (is_null($this->client)) {
+        throw new Exception("invalid client!");
+      }
+      foreach ($params as $param => $value) {
+        $query[$param] = $value;
+      }
 
+      $response = $this->client->get($api_url, ["query" => $query]);
 
-            $response = $this->client->get($api_url, ['query' => $query]);
+      if ($response->getStatusCode() !== 200) {
+        throw new Exception("invalid status code!");
+      }
 
-            if ($response->getStatusCode() !== 200)
-                throw new Exception('invalid status code!');
+      $content_type = $response->getHeaderLine("content-type");
 
-            $content_type = $response->getHeaderLine('content-type');
+      if (empty($content_type)) {
+        throw new Exception("invalid content type!");
+      }
 
-            if (empty($content_type))
-                throw new Exception('invalid content type!');
+      if ($content_type !== "application/json") {
+        throw new Exception("invalid content type!");
+      }
 
-            if ($content_type !== 'application/json')
-                throw new Exception('invalid content type!');
-
-            return json_decode($response->getBody()->getContents(), true);
-        }
-        catch(RequestException $ex){
-            Log::warning($ex->getMessage());
-            throw $ex;
-        }
-        catch(Exception $ex){
-            Log::warning($ex->getMessage());
-            return ['data' => []];
-        }
+      return json_decode($response->getBody()->getContents(), true);
+    } catch (RequestException $ex) {
+      Log::warning($ex->getMessage());
+      throw $ex;
+    } catch (Exception $ex) {
+      Log::warning($ex->getMessage());
+      return ["data" => []];
     }
+  }
 
-    /**
-     * @inheritdoc
-     */
-    public function getConfigValues(int $summit_id, string $search_pattern, int $page = 1, int $per_page = 100): array
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s",
-                $summit_id,
-                $search_pattern,
-                $page,
-                $per_page
-            )
+  /**
+   * @inheritdoc
+   */
+  public function getConfigValues(
+    int $summit_id,
+    string $search_pattern,
+    int $page = 1,
+    int $per_page = 100,
+  ): array {
+    Log::debug(
+      sprintf(
+        "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s",
+        $summit_id,
+        $search_pattern,
+        $page,
+        $per_page,
+      ),
+    );
+
+    try {
+      $cache_key = "show_{$summit_id}_email_templates_marketing_vars";
+      $cached_data = $this->cache_service->getSingleValue($cache_key);
+      if (!is_null($cached_data)) {
+        $payload = json_decode($cached_data, true);
+        Log::debug(
+          sprintf(
+            "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache hit payload %s",
+            $summit_id,
+            $search_pattern,
+            $page,
+            $per_page,
+            json_encode($payload),
+          ),
         );
 
-        try {
-            $cache_key = "show_{$summit_id}_email_templates_marketing_vars";
-            $cached_data = $this->cache_service->getSingleValue($cache_key);
-            if (!is_null($cached_data)) {
-                $payload =  json_decode($cached_data, true);
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache hit payload %s",
-                        $summit_id,
-                        $search_pattern,
-                        $page,
-                        $per_page,
-                        json_encode($payload)
-                    )
-                );
+        return $payload;
+      }
 
-                return $payload;
-            }
+      $res = $this->getEntity("/api/public/v1/config-values/all/shows/{$summit_id}", [
+        "page" => $page,
+        "per_page" => $per_page,
+        "key__contains" => trim($search_pattern),
+      ]);
 
-            $res = $this->getEntity("/api/public/v1/config-values/all/shows/{$summit_id}",
-                [
-                    'page' => $page,
-                    'per_page' => $per_page,
-                    'key__contains' => trim($search_pattern)
-                ]
-            );
+      $payload = [];
 
-            $payload = [];
+      foreach ($res["data"] as $setting) {
+        $payload[$setting["key"]] =
+          $setting["type"] === "FILE" ? $setting["file"] : $setting["value"];
+      }
 
-            foreach ($res['data'] as $setting) {
-                $payload[$setting['key']] =$setting['type'] === 'FILE' ? $setting['file'] : $setting['value'];
-            }
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache miss payload %s",
-                    $summit_id,
-                    $search_pattern,
-                    $page,
-                    $per_page,
-                    json_encode($payload)
-                )
-            );
-            $this->cache_service->setSingleValue($cache_key, json_encode($payload), $this->cache_ttl);
-            return $payload;
-        } catch (\Exception $ex){
-            Log::error($ex);
-            return [];
-        }
+      Log::debug(
+        sprintf(
+          "MarketingAPI::getConfigValues summit %s search_pattern %s page %s per_page %s cache miss payload %s",
+          $summit_id,
+          $search_pattern,
+          $page,
+          $per_page,
+          json_encode($payload),
+        ),
+      );
+      $this->cache_service->setSingleValue($cache_key, json_encode($payload), $this->cache_ttl);
+      return $payload;
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return [];
     }
+  }
 }

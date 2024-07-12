@@ -16,53 +16,51 @@ use models\main\File;
  * Trait HasImageTrait
  * @package App\Models\Utils\Traits
  */
-trait HasImageTrait
-{
-    /**
-     * @param File $image
-     */
-    public function setImage(File $image): void
-    {
-        $this->image = $image;
-    }
+trait HasImageTrait {
+  /**
+   * @param File $image
+   */
+  public function setImage(File $image): void {
+    $this->image = $image;
+  }
 
-    public function clearImage():void{
-        $this->image = null;
-    }
+  public function clearImage(): void {
+    $this->image = null;
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasImage():bool{
-        return $this->getImageId() > 0;
-    }
+  /**
+   * @return bool
+   */
+  public function hasImage(): bool {
+    return $this->getImageId() > 0;
+  }
 
-    /**
-     * @return int
-     */
-    public function getImageId():int
-    {
-        try{
-            if(is_null($this->image)) return 0;
-            return $this->image->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getImageId(): int {
+    try {
+      if (is_null($this->image)) {
+        return 0;
+      }
+      return $this->image->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    public function getImage():?File{
-        return $this->image;
-    }
+  public function getImage(): ?File {
+    return $this->image;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getImageUrl():?string{
-        $photoUrl = null;
-        if($this->hasImage() && $photo = $this->getImage()){
-            $photoUrl =  $photo->getUrl();
-        }
-        return $photoUrl;
+  /**
+   * @return string|null
+   */
+  public function getImageUrl(): ?string {
+    $photoUrl = null;
+    if ($this->hasImage() && ($photo = $this->getImage())) {
+      $photoUrl = $photo->getUrl();
     }
+    return $photoUrl;
+  }
 }

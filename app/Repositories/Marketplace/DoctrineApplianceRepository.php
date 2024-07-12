@@ -17,15 +17,12 @@ use App\Models\Foundation\Marketplace\IApplianceRepository;
  * Class DoctrineApplianceRepository
  * @package App\Repositories\Marketplace
  */
-final class DoctrineApplianceRepository
-    extends DoctrineCompanyServiceRepository
-    implements IApplianceRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return Appliance::class;
-    }
+final class DoctrineApplianceRepository extends DoctrineCompanyServiceRepository implements
+  IApplianceRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Appliance::class;
+  }
 }

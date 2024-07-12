@@ -23,155 +23,157 @@ use App\Services\Model\ITagService;
  * Class OAuth2TagsApiController
  * @package App\Http\Controllers
  */
-final class OAuth2TagsApiController extends OAuth2ProtectedController
-{
-    use ParametrizedGetAll;
+final class OAuth2TagsApiController extends OAuth2ProtectedController {
+  use ParametrizedGetAll;
 
-    use GetAndValidateJsonPayload;
+  use GetAndValidateJsonPayload;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    /**
-     * @var ITagService
-     */
-    private $tag_service;
+  /**
+   * @var ITagService
+   */
+  private $tag_service;
 
-    /**
-     * OAuth2TagsApiController constructor.
-     * @param ITagService $tag_service
-     * @param ITagRepository $tag_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ITagService $tag_service,
-        ITagRepository $tag_repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $tag_repository;
-        $this->tag_service = $tag_service;
-    }
+  /**
+   * OAuth2TagsApiController constructor.
+   * @param ITagService $tag_service
+   * @param ITagRepository $tag_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ITagService $tag_service,
+    ITagRepository $tag_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $tag_repository;
+    $this->tag_service = $tag_service;
+  }
 
-    public function getAll(){
-        return $this->_getAll(
-            function () {
-                return [
-                    'tag' => ['=@', '==', '@@'],
-                ];
-            },
-            function () {
-                return [
-                    'tag' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'tag',
-                    'id',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-                $current_member = $this->resource_server_context->getCurrentUser();
-                $serializer_type = SerializerRegistry::SerializerType_Public;
+  public function getAll() {
+    return $this->_getAll(
+      function () {
+        return [
+          "tag" => ["=@", "==", "@@"],
+        ];
+      },
+      function () {
+        return [
+          "tag" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["tag", "id"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        $current_member = $this->resource_server_context->getCurrentUser();
+        $serializer_type = SerializerRegistry::SerializerType_Public;
 
-                if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())) {
-                    $serializer_type = SerializerRegistry::SerializerType_Admin;
-                }
+        if (
+          !is_null($current_member) &&
+          ($current_member->isAdmin() || $current_member->isSummitAdmin())
+        ) {
+          $serializer_type = SerializerRegistry::SerializerType_Admin;
+        }
 
-                return $serializer_type;
-            }
-        );
-    }
+        return $serializer_type;
+      },
+    );
+  }
 
-    public function getTag($tag_id){
-        return $this->processRequest(function () use ($tag_id) {
-            $tag = $this->repository->getById(intval($tag_id));
+  public function getTag($tag_id) {
+    return $this->processRequest(function () use ($tag_id) {
+      $tag = $this->repository->getById(intval($tag_id));
 
-            if(is_null($tag)) return $this->error404();
+      if (is_null($tag)) {
+        return $this->error404();
+      }
 
-            return $this->ok(SerializerRegistry::getInstance()
-                ->getSerializer($tag)
-                ->serialize(
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                ));
-        });
-    }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($tag)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-    public function addTag(){
-        return $this->processRequest(function () {
-            if(!Request::isJson()) return $this->error400();
-            $data = Request::json();
+  public function addTag() {
+    return $this->processRequest(function () {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $data = Request::json();
 
-            $rules = [
-                'tag' => 'required|string|max:100',
-            ];
+      $rules = [
+        "tag" => "required|string|max:100",
+      ];
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data->all(), $rules);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+        return $this->error412($messages);
+      }
 
-            $tag = $this->tag_service->addTag($data->all());
+      $tag = $this->tag_service->addTag($data->all());
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($tag)->serialize
-            (
-                Request::input('expand','')
-            ));
-        });
-    }
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($tag)
+          ->serialize(Request::input("expand", "")),
+      );
+    });
+  }
 
-    public function updateTag($tag_id){
-        return $this->processRequest(function () use ($tag_id) {
-            if(!Request::isJson()) return $this->error400();
-            $data = Request::json();
+  public function updateTag($tag_id) {
+    return $this->processRequest(function () use ($tag_id) {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $data = Request::json();
 
-            $rules = [
-                'tag' => 'required|string|max:100',
-            ];
+      $rules = [
+        "tag" => "required|string|max:100",
+      ];
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($data->all(), $rules);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+        return $this->error412($messages);
+      }
 
-            $tag = $this->tag_service->updateTag(intval($tag_id), $data->all());
+      $tag = $this->tag_service->updateTag(intval($tag_id), $data->all());
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($tag)
-                ->serialize(
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                ));
-        });
-    }
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($tag)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-    public function deleteTag($tag_id){
-        return $this->processRequest(function () use ($tag_id) {
+  public function deleteTag($tag_id) {
+    return $this->processRequest(function () use ($tag_id) {
+      $this->tag_service->deleteTag(intval($tag_id));
 
-            $this->tag_service->deleteTag(intval($tag_id));
-
-            return $this->deleted();
-        });
-    }
+      return $this->deleted();
+    });
+  }
 }

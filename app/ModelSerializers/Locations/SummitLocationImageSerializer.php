@@ -19,23 +19,22 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitLocationImageSerializer
  * @package ModelSerializers\Locations
  */
-class SummitLocationImageSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'         => 'name:json_text',
-        'Description'  => 'description:json_text',
-        'ClassName'    => 'class_name:json_text',
-        'LocationId'   => 'location_id:json_int',
-        'Order'        => 'order:json_int',
-        'ImageUrl'     => 'image_url:json_url'
-    ];
+class SummitLocationImageSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_text",
+    "Description" => "description:json_text",
+    "ClassName" => "class_name:json_text",
+    "LocationId" => "location_id:json_int",
+    "Order" => "order:json_int",
+    "ImageUrl" => "image_url:json_url",
+  ];
 
-    protected static $expand_mappings = [
-        'location' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'location_id',
-            'getter' => 'getLocation',
-            'has' => 'hasLocation'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "location" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "location_id",
+      "getter" => "getLocation",
+      "has" => "hasLocation",
+    ],
+  ];
 }

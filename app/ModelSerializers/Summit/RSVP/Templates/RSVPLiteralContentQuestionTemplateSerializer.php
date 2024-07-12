@@ -16,10 +16,8 @@
  * Class RSVPLiteralContentQuestionTemplateSerializer
  * @package App\ModelSerializers\Summit\RSVP\Templates
  */
-class RSVPLiteralContentQuestionTemplateSerializer extends RSVPQuestionTemplateSerializer
-{
-    protected static $array_mappings = [
-        'Content'=> 'content:json_string',
-    ];
-
+class RSVPLiteralContentQuestionTemplateSerializer extends RSVPQuestionTemplateSerializer {
+  protected static $array_mappings = [
+    "Content" => "content:json_string",
+  ];
 }

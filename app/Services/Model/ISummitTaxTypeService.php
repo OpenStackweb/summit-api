@@ -20,53 +20,60 @@ use models\summit\SummitTicketType;
  * Interface ISummitTaxTypeService
  * @package App\Services\Model
  */
-interface ISummitTaxTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitTaxType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTaxType(Summit $summit, array $data):SummitTaxType;
+interface ISummitTaxTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitTaxType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTaxType(Summit $summit, array $data): SummitTaxType;
 
-    /**
-     * @param Summit $summit
-     * @param int $tax_type_id
-     * @param array $data
-     * @return SummitTicketType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTaxType(Summit $summit, int $tax_type_id, array $data):SummitTaxType;
+  /**
+   * @param Summit $summit
+   * @param int $tax_type_id
+   * @param array $data
+   * @return SummitTicketType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTaxType(Summit $summit, int $tax_type_id, array $data): SummitTaxType;
 
-    /**
-     * @param Summit $summit
-     * @param int $tax_type_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteTaxType(Summit $summit, int $tax_type_id);
+  /**
+   * @param Summit $summit
+   * @param int $tax_type_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteTaxType(Summit $summit, int $tax_type_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $tax_type_id
-     * @param int $ticket_type_id
-     * @return SummitTaxType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTaxTypeToTicketType(Summit $summit, int $tax_type_id, int $ticket_type_id):SummitTaxType;
+  /**
+   * @param Summit $summit
+   * @param int $tax_type_id
+   * @param int $ticket_type_id
+   * @return SummitTaxType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTaxTypeToTicketType(
+    Summit $summit,
+    int $tax_type_id,
+    int $ticket_type_id,
+  ): SummitTaxType;
 
-    /**
-     * @param Summit $summit
-     * @param int $tax_type_id
-     * @param int $ticket_type_id
-     * @return SummitTaxType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removeTaxTypeFromTicketType(Summit $summit, int $tax_type_id, int $ticket_type_id):SummitTaxType;
+  /**
+   * @param Summit $summit
+   * @param int $tax_type_id
+   * @param int $ticket_type_id
+   * @return SummitTaxType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function removeTaxTypeFromTicketType(
+    Summit $summit,
+    int $tax_type_id,
+    int $ticket_type_id,
+  ): SummitTaxType;
 }

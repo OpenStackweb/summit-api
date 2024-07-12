@@ -14,68 +14,70 @@
 
 use Illuminate\Support\Facades\Log;
 
-
 /**
  * Class SpeakersAnnouncementEmailConfigDTO
  * @package App\Services\Utils\Email
  */
-final class SpeakersAnnouncementEmailConfigDTO
-{
-    /**
-     * @var bool
-     */
-    private $should_resend;
+final class SpeakersAnnouncementEmailConfigDTO {
+  /**
+   * @var bool
+   */
+  private $should_resend;
 
-    /**
-     * @var bool
-     */
-    private $should_send_copy_2_submitter;
+  /**
+   * @var bool
+   */
+  private $should_send_copy_2_submitter;
 
-    public function __construct()
-    {
-        Log::debug("SpeakersAnnouncementEmailConfigDTO::__construct");
-        $this->should_resend = true;
-        $this->should_send_copy_2_submitter = false;
-    }
+  public function __construct() {
+    Log::debug("SpeakersAnnouncementEmailConfigDTO::__construct");
+    $this->should_resend = true;
+    $this->should_send_copy_2_submitter = false;
+  }
 
-    public function reset():void{
-        Log::debug("SpeakersAnnouncementEmailConfigDTO::reset");
-        $this->should_resend = true;
-        $this->should_send_copy_2_submitter = false;
-    }
+  public function reset(): void {
+    Log::debug("SpeakersAnnouncementEmailConfigDTO::reset");
+    $this->should_resend = true;
+    $this->should_send_copy_2_submitter = false;
+  }
 
-    /**
-     * @return bool
-     */
-    public function shouldResend(): bool
-    {
-        return $this->should_resend;
-    }
+  /**
+   * @return bool
+   */
+  public function shouldResend(): bool {
+    return $this->should_resend;
+  }
 
-    /**
-     * @param bool $should_resend
-     */
-    public function setShouldResend(bool $should_resend): void
-    {
-        Log::debug(sprintf( "SpeakersAnnouncementEmailConfigDTO::setShouldResend should_resend %b", $should_resend));
-        $this->should_resend = $should_resend;
-    }
+  /**
+   * @param bool $should_resend
+   */
+  public function setShouldResend(bool $should_resend): void {
+    Log::debug(
+      sprintf(
+        "SpeakersAnnouncementEmailConfigDTO::setShouldResend should_resend %b",
+        $should_resend,
+      ),
+    );
+    $this->should_resend = $should_resend;
+  }
 
-    /**
-     * @return bool
-     */
-    public function shouldSendCopy2Submitter(): bool
-    {
-        return $this->should_send_copy_2_submitter;
-    }
+  /**
+   * @return bool
+   */
+  public function shouldSendCopy2Submitter(): bool {
+    return $this->should_send_copy_2_submitter;
+  }
 
-    /**
-     * @param bool $should_send_copy_2_submitter
-     */
-    public function setShouldSendCopy2Submitter(bool $should_send_copy_2_submitter): void
-    {
-        Log::debug(sprintf("SpeakersAnnouncementEmailConfigDTO::setShouldResend should_send_copy_2_submitter %b", $should_send_copy_2_submitter));
-        $this->should_send_copy_2_submitter = $should_send_copy_2_submitter;
-    }
-
+  /**
+   * @param bool $should_send_copy_2_submitter
+   */
+  public function setShouldSendCopy2Submitter(bool $should_send_copy_2_submitter): void {
+    Log::debug(
+      sprintf(
+        "SpeakersAnnouncementEmailConfigDTO::setShouldResend should_send_copy_2_submitter %b",
+        $should_send_copy_2_submitter,
+      ),
+    );
+    $this->should_send_copy_2_submitter = $should_send_copy_2_submitter;
+  }
 }

@@ -12,13 +12,11 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class Groups
  * @package App\Services\Apis\Samsung
  */
-final class Groups
-{
-    const Attendee = 'Attendee';
-    const BoothStaff = 'Booth Staff';
+final class Groups {
+  const Attendee = "Attendee";
+  const BoothStaff = "Booth Staff";
 }

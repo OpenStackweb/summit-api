@@ -16,8 +16,7 @@
  * Class PushNotificationMessagePriority
  * @package models\main
  */
-final class PushNotificationMessagePriority
-{
-    const Normal = 'NORMAL';
-    const High   = 'HIGH';
+final class PushNotificationMessagePriority {
+  const Normal = "NORMAL";
+  const High = "HIGH";
 }

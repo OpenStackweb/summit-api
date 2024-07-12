@@ -16,13 +16,16 @@
  * Interface ISummitEventLevel
  * @package models\summit
  */
-interface ISummitEventLevel
-{
+interface ISummitEventLevel {
+  const BeginnerLevel = "Beginner";
+  const IntermediateLevel = "Intermediate";
+  const AdvancedLevel = "Advanced";
+  const NALevel = "N/A";
 
-    const BeginnerLevel     = 'Beginner';
-    const IntermediateLevel = 'Intermediate';
-    const AdvancedLevel     = 'Advanced';
-    const NALevel           = 'N/A';
-
-    const ValidLevels       = [self::BeginnerLevel, self::IntermediateLevel, self::AdvancedLevel, self::NALevel];
+  const ValidLevels = [
+    self::BeginnerLevel,
+    self::IntermediateLevel,
+    self::AdvancedLevel,
+    self::NALevel,
+  ];
 }

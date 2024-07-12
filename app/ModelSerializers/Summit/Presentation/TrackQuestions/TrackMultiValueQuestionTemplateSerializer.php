@@ -17,34 +17,38 @@ use ModelSerializers\SerializerRegistry;
  * Class TrackMultiValueQuestionTemplateSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-class TrackMultiValueQuestionTemplateSerializer extends TrackQuestionTemplateSerializer
-{
-    protected static $array_mappings = [
-        'EmptyString'   => 'empty_string:json_string',
-        'DefaultValueId' => 'default_value_id:json_int',
-    ];
+class TrackMultiValueQuestionTemplateSerializer extends TrackQuestionTemplateSerializer {
+  protected static $array_mappings = [
+    "EmptyString" => "empty_string:json_string",
+    "DefaultValueId" => "default_value_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $question_template = $this->object;
-        if(!$question_template instanceof TrackMultiValueQuestionTemplate) return $values;
-
-        $list = [];
-
-        foreach($question_template->getValues() as $v)
-        {
-            $list[] = SerializerRegistry::getInstance()->getSerializer($v)->serialize();
-        }
-
-        $values['values'] = $list;
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $question_template = $this->object;
+    if (!$question_template instanceof TrackMultiValueQuestionTemplate) {
+      return $values;
     }
+
+    $list = [];
+
+    foreach ($question_template->getValues() as $v) {
+      $list[] = SerializerRegistry::getInstance()->getSerializer($v)->serialize();
+    }
+
+    $values["values"] = $list;
+    return $values;
+  }
 }

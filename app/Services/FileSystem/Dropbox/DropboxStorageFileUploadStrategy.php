@@ -16,12 +16,10 @@ use App\Services\FileSystem\AbstractFileUploadStrategy;
  * Class DropboxStorageFileUploadStrategy
  * @package App\Services\FileSystem\Dropbox
  */
-final class DropboxStorageFileUploadStrategy extends AbstractFileUploadStrategy
-{
-    const Driver = 'dropbox';
+final class DropboxStorageFileUploadStrategy extends AbstractFileUploadStrategy {
+  const Driver = "dropbox";
 
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

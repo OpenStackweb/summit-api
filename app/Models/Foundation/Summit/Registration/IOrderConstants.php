@@ -16,27 +16,23 @@
  * Interface IOrderConstants
  * @package models\summit
  */
-interface IOrderConstants
-{
-    const ReservedStatus        = 'Reserved';
-    const CancelledStatus       = 'Cancelled';
-    const ConfirmedStatus       = 'Confirmed';
-    const PaidStatus            = 'Paid';
-    const ErrorStatus           = 'Error';
+interface IOrderConstants {
+  const ReservedStatus = "Reserved";
+  const CancelledStatus = "Cancelled";
+  const ConfirmedStatus = "Confirmed";
+  const PaidStatus = "Paid";
+  const ErrorStatus = "Error";
 
-    const OnlinePaymentMethod   = 'Online';
-    const OfflinePaymentMethod  = 'Offline';
+  const OnlinePaymentMethod = "Online";
+  const OfflinePaymentMethod = "Offline";
 
-    const ValidPaymentMethods   = [
-        self::OnlinePaymentMethod,
-        self::OfflinePaymentMethod
-    ];
+  const ValidPaymentMethods = [self::OnlinePaymentMethod, self::OfflinePaymentMethod];
 
-    const ValidStatus = [
-        self::ReservedStatus,
-        self::CancelledStatus,
-        self::ConfirmedStatus,
-        self::PaidStatus,
-        self::ErrorStatus
-    ];
+  const ValidStatus = [
+    self::ReservedStatus,
+    self::CancelledStatus,
+    self::ConfirmedStatus,
+    self::PaidStatus,
+    self::ErrorStatus,
+  ];
 }

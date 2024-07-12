@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -26,63 +26,59 @@ use models\utils\SilverstripeBaseModel;
  * Class OpenStackImplementationApiCoverage
  * @package App\Models\Foundation\Marketplace
  */
-class OpenStackImplementationApiCoverage
-    extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="CoveragePercent", type="integer")
-     * @var int
-     */
-    protected $percent;
+class OpenStackImplementationApiCoverage extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="CoveragePercent", type="integer")
+   * @var int
+   */
+  protected $percent;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ReleaseSupportedApiVersionID", referencedColumnName="ID")
-     * @var OpenStackReleaseSupportedApiVersion
-     */
-    protected $release_supported_api_version;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="ReleaseSupportedApiVersionID", referencedColumnName="ID")
+   * @var OpenStackReleaseSupportedApiVersion
+   */
+  protected $release_supported_api_version;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Marketplace\OpenStackImplementation", fetch="EXTRA_LAZY", inversedBy="capabilities")
-     * @ORM\JoinColumn(name="ImplementationID", referencedColumnName="ID")
-     * @var OpenStackImplementation
-     */
-    protected $implementation;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Marketplace\OpenStackImplementation", fetch="EXTRA_LAZY", inversedBy="capabilities")
+   * @ORM\JoinColumn(name="ImplementationID", referencedColumnName="ID")
+   * @var OpenStackImplementation
+   */
+  protected $implementation;
 
-    /**
-     * @return int
-     */
-    public function getPercent()
-    {
-        return $this->percent;
+  /**
+   * @return int
+   */
+  public function getPercent() {
+    return $this->percent;
+  }
+
+  /**
+   * @return OpenStackReleaseSupportedApiVersion
+   */
+  public function getReleaseSupportedApiVersion() {
+    return $this->release_supported_api_version;
+  }
+
+  /**
+   * @return OpenStackImplementation
+   */
+  public function getImplementation() {
+    return $this->implementation;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasReleaseSupportedApiVersion() {
+    try {
+      if (is_null($this->release_supported_api_version)) {
+        return false;
+      }
+      return $this->release_supported_api_version->getId() > 0;
+    } catch (\Exception $ex) {
+      return false;
     }
-
-    /**
-     * @return OpenStackReleaseSupportedApiVersion
-     */
-    public function getReleaseSupportedApiVersion()
-    {
-        return $this->release_supported_api_version;
-    }
-
-    /**
-     * @return OpenStackImplementation
-     */
-    public function getImplementation()
-    {
-        return $this->implementation;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasReleaseSupportedApiVersion(){
-        try{
-            if(is_null($this->release_supported_api_version)) return false;
-            return $this->release_supported_api_version->getId() > 0;
-        }
-        catch (\Exception $ex){
-            return false;
-        }
-    }
+  }
 }

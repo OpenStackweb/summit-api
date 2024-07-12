@@ -18,81 +18,82 @@ use models\summit\SummitEventType;
  * Class SummitEventTypeSerializer
  * @package ModelSerializers
  */
-class SummitEventTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Type'                             => 'name:json_string',
-        'ClassName'                        => 'class_name:json_string',
-        'Color'                            => 'color:json_color',
-        'BlackoutTimes'                    => 'black_out_times:json_string',
-        'UseSponsors'                      => 'use_sponsors:json_boolean',
-        'AreSponsorsMandatory'             => 'are_sponsors_mandatory:json_boolean',
-        'AllowsAttachment'                 => 'allows_attachment:json_boolean',
-        'AllowsLevel'                      => 'allows_level:json_boolean',
-        'AllowsPublishingDates'            => 'allows_publishing_dates:json_boolean',
-        'AllowsLocationTimeframeCollision' => 'allows_location_timeframe_collision:json_boolean',
-        'AllowsLocation'                   => 'allows_location:json_boolean',
-        'Default'                          => 'is_default:json_boolean',
-        'SummitId'                         => 'summit_id:json_int',
-        'ShowAlwaysOnSchedule'             => 'show_always_on_schedule:json_boolean',
-    ];
+class SummitEventTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Type" => "name:json_string",
+    "ClassName" => "class_name:json_string",
+    "Color" => "color:json_color",
+    "BlackoutTimes" => "black_out_times:json_string",
+    "UseSponsors" => "use_sponsors:json_boolean",
+    "AreSponsorsMandatory" => "are_sponsors_mandatory:json_boolean",
+    "AllowsAttachment" => "allows_attachment:json_boolean",
+    "AllowsLevel" => "allows_level:json_boolean",
+    "AllowsPublishingDates" => "allows_publishing_dates:json_boolean",
+    "AllowsLocationTimeframeCollision" => "allows_location_timeframe_collision:json_boolean",
+    "AllowsLocation" => "allows_location:json_boolean",
+    "Default" => "is_default:json_boolean",
+    "SummitId" => "summit_id:json_int",
+    "ShowAlwaysOnSchedule" => "show_always_on_schedule:json_boolean",
+  ];
 
-    protected static $allowed_relations = [
-        'summit_documents',
-        'allowed_ticket_types',
-        'summit',
-    ];
+  protected static $allowed_relations = ["summit_documents", "allowed_ticket_types", "summit"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $event_type = $this->object;
-        if (!$event_type instanceof SummitEventType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $event_type = $this->object;
+    if (!$event_type instanceof SummitEventType) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('summit_documents', $relations) && !isset($values['summit_documents'])) {
-            $summit_documents = [];
-            if ($event_type->hasSummitDocuments()) {
-                foreach ($event_type->getSummitDocuments() as $document) {
-                    $summit_documents[] = $document->getId();
-                }
-            }
-            $values['summit_documents'] = $summit_documents;
+    if (in_array("summit_documents", $relations) && !isset($values["summit_documents"])) {
+      $summit_documents = [];
+      if ($event_type->hasSummitDocuments()) {
+        foreach ($event_type->getSummitDocuments() as $document) {
+          $summit_documents[] = $document->getId();
         }
-
-        if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])) {
-            $allowed_ticket_types = [];
-            foreach ($event_type->getAllowedTicketTypes() as $ticket_type) {
-                $allowed_ticket_types[] = $ticket_type->getId();
-            }
-            $values['allowed_ticket_types'] = $allowed_ticket_types;
-        }
-
-        return $values;
+      }
+      $values["summit_documents"] = $summit_documents;
     }
 
-    protected static $expand_mappings = [
-        'summit' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'summit_id  ',
-            'getter' => 'getSummit',
-            'has' => 'hasSummit'
-        ],
-        'summit_documents' => [
-            'serializer_type' => SerializerRegistry::SerializerType_Private,
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getSummitDocuments',
-        ],
-        'allowed_ticket_types' => [
-            'serializer_type' => SerializerRegistry::SerializerType_Private,
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getAllowedTicketTypes',
-        ],
-    ];
+    if (in_array("allowed_ticket_types", $relations) && !isset($values["allowed_ticket_types"])) {
+      $allowed_ticket_types = [];
+      foreach ($event_type->getAllowedTicketTypes() as $ticket_type) {
+        $allowed_ticket_types[] = $ticket_type->getId();
+      }
+      $values["allowed_ticket_types"] = $allowed_ticket_types;
+    }
+
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "summit" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "summit_id  ",
+      "getter" => "getSummit",
+      "has" => "hasSummit",
+    ],
+    "summit_documents" => [
+      "serializer_type" => SerializerRegistry::SerializerType_Private,
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getSummitDocuments",
+    ],
+    "allowed_ticket_types" => [
+      "serializer_type" => SerializerRegistry::SerializerType_Private,
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getAllowedTicketTypes",
+    ],
+  ];
 }

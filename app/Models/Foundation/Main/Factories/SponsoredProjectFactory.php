@@ -17,39 +17,44 @@ use models\main\SponsoredProject;
  * Class SponsoredProjectFactory
  * @package App\Models\Foundation\Main\Factories
  */
-final class SponsoredProjectFactory
-{
-    /**
-     * @param array $payload
-     * @return SponsoredProject
-     */
-    public static function build(array $payload):SponsoredProject{
+final class SponsoredProjectFactory {
+  /**
+   * @param array $payload
+   * @return SponsoredProject
+   */
+  public static function build(array $payload): SponsoredProject {
+    return self::populate(new SponsoredProject(), $payload);
+  }
 
-        return self::populate(new SponsoredProject,$payload);
+  /**
+   * @param SponsoredProject $sponsoredProject
+   * @param array $payload
+   * @return SponsoredProject
+   */
+  public static function populate(
+    SponsoredProject $sponsoredProject,
+    array $payload,
+  ): SponsoredProject {
+    if (isset($payload["name"])) {
+      $sponsoredProject->setName(trim($payload["name"]));
     }
 
-    /**
-     * @param SponsoredProject $sponsoredProject
-     * @param array $payload
-     * @return SponsoredProject
-     */
-    public static function populate(SponsoredProject $sponsoredProject, array $payload):SponsoredProject{
-
-        if(isset($payload['name']))
-            $sponsoredProject->setName(trim($payload['name']));
-
-        if(isset($payload['description']))
-            $sponsoredProject->setDescription(trim($payload['description']));
-
-        if(isset($payload['is_active']))
-            $sponsoredProject->setIsActive(boolval($payload['is_active']));
-
-        if(isset($payload['should_show_on_nav_bar']))
-            $sponsoredProject->setShouldShowOnNavBar(boolval($payload['should_show_on_nav_bar']));
-
-        if(isset($payload['site_url']))
-            $sponsoredProject->setSiteUrl(trim($payload['site_url']));
-
-        return  $sponsoredProject;
+    if (isset($payload["description"])) {
+      $sponsoredProject->setDescription(trim($payload["description"]));
     }
+
+    if (isset($payload["is_active"])) {
+      $sponsoredProject->setIsActive(boolval($payload["is_active"]));
+    }
+
+    if (isset($payload["should_show_on_nav_bar"])) {
+      $sponsoredProject->setShouldShowOnNavBar(boolval($payload["should_show_on_nav_bar"]));
+    }
+
+    if (isset($payload["site_url"])) {
+      $sponsoredProject->setSiteUrl(trim($payload["site_url"]));
+    }
+
+    return $sponsoredProject;
+  }
 }

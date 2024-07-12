@@ -26,63 +26,59 @@ use Illuminate\Support\Facades\Config;
  * Class SummitBadgesQREncryptor
  * @package App\Console\Commands
  */
-final class SummitBadgesQREncryptor extends Command
-{
+final class SummitBadgesQREncryptor extends Command {
+  /**
+   * @var ISummitService
+   */
+  private $service;
 
-    /**
-     * @var ISummitService
-     */
-    private $service;
+  /**
+   * SummitBadgesQREncryptor constructor.
+   * @param ISummitService $service
+   */
+  public function __construct(ISummitService $service) {
+    parent::__construct();
+    $this->service = $service;
+  }
 
-    /**
-     * SummitBadgesQREncryptor constructor.
-     * @param ISummitService $service
-     */
-    public function __construct(ISummitService $service)
-    {
-        parent::__construct();
-        $this->service = $service;
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:badges-qr-encryptor";
+
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:badges-qr-encryptor {summit_id}";
+
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Encrypt All Summit badge QR codes";
+
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    $summit_id = $this->argument("summit_id");
+
+    if (empty($summit_id)) {
+      throw new \InvalidArgumentException("summit_id is required");
     }
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:badges-qr-encryptor';
-
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:badges-qr-encryptor {summit_id}';
-
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Encrypt All Summit badge QR codes';
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        $summit_id = $this->argument('summit_id');
-
-        if (empty($summit_id))
-            throw new \InvalidArgumentException("summit_id is required");
-
-        $this->info("starting to regenerate badge QR codes for summit id {$summit_id}");
-        $start = time();
-        $this->service->regenerateBadgeQRCodes(intval($summit_id));
-        $end = time();
-        $delta = $end - $start;
-        $this->info(sprintf("execution call %s seconds", $delta));
-    }
+    $this->info("starting to regenerate badge QR codes for summit id {$summit_id}");
+    $start = time();
+    $this->service->regenerateBadgeQRCodes(intval($summit_id));
+    $end = time();
+    $delta = $end - $start;
+    $this->info(sprintf("execution call %s seconds", $delta));
+  }
 }

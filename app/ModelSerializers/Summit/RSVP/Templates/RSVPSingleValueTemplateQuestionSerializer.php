@@ -16,9 +16,8 @@
  * Class RSVPSingleValueTemplateQuestionSerializer
  * @package App\ModelSerializers\Summit\RSVP\Templates
  */
-class RSVPSingleValueTemplateQuestionSerializer extends RSVPQuestionTemplateSerializer
-{
-    protected static $array_mappings = [
-        'InitialValue' => 'initial_value:json_string',
-    ];
+class RSVPSingleValueTemplateQuestionSerializer extends RSVPQuestionTemplateSerializer {
+  protected static $array_mappings = [
+    "InitialValue" => "initial_value:json_string",
+  ];
 }

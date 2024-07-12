@@ -18,33 +18,29 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SponsorAdValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorAdValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class SponsorAdValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "link" => "required|url|max:255",
+      "text" => "required|string|max:255",
+      "alt" => "sometimes|string|max:255",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'link' => 'required|url|max:255',
-            'text' => 'required|string|max:255',
-            'alt' => 'sometimes|string|max:255',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'link' => 'sometimes|url|max:255',
-            'text' => 'sometimes|string|max:255',
-            'alt' => 'sometimes|string|max:255',
-            'order' => 'sometimes|integer|min:1',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "link" => "sometimes|url|max:255",
+      "text" => "sometimes|string|max:255",
+      "alt" => "sometimes|string|max:255",
+      "order" => "sometimes|integer|min:1",
+    ];
+  }
 }

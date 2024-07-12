@@ -16,20 +16,17 @@
  * Class UnCheckUserRequest
  * @package App\Services\Apis\Samsung
  */
-final class UnCheckUserRequest extends AbstractPayload
-{
-    /**
-     * @param string $userId
-     * @param array $params
-     */
-    public function __construct(string $userId, array $params = []){
+final class UnCheckUserRequest extends AbstractPayload {
+  /**
+   * @param string $userId
+   * @param array $params
+   */
+  public function __construct(string $userId, array $params = []) {
+    parent::__construct($params);
 
-        parent::__construct($params);
-
-        $this->payload = array_merge($this->payload , [
-            PayloadParamNames::Type => RequestTypes::UserUncheck,
-            PayloadParamNames::UserId => trim($userId),
-        ]);
-    }
-
+    $this->payload = array_merge($this->payload, [
+      PayloadParamNames::Type => RequestTypes::UserUncheck,
+      PayloadParamNames::UserId => trim($userId),
+    ]);
+  }
 }

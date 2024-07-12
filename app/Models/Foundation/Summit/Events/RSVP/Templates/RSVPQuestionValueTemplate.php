@@ -13,117 +13,107 @@
  **/
 use App\Models\Foundation\Main\IOrderable;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPQuestionValueTemplate")
  * @ORM\Entity
  * Class RSVPQuestionValueTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPQuestionValueTemplate extends SilverstripeBaseModel implements IOrderable
-{
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    private $value;
+class RSVPQuestionValueTemplate extends SilverstripeBaseModel implements IOrderable {
+  /**
+   * @ORM\Column(name="Value", type="string")
+   * @var string
+   */
+  private $value;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    private $label;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  private $label;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="RSVPMultiValueQuestionTemplate", inversedBy="values")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
-     * @var RSVPMultiValueQuestionTemplate
-     */
-    private $owner;
+  /**
+   * @ORM\ManyToOne(targetEntity="RSVPMultiValueQuestionTemplate", inversedBy="values")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
+   * @var RSVPMultiValueQuestionTemplate
+   */
+  private $owner;
 
-    /**
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->value;
+  /**
+   * @return string
+   */
+  public function getValue() {
+    return $this->value;
+  }
+
+  /**
+   * @param string $value
+   */
+  public function setValue($value) {
+    $this->value = $value;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLabel() {
+    return $this->label;
+  }
+
+  /**
+   * @param string $label
+   */
+  public function setLabel($label) {
+    $this->label = $label;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
+
+  /**
+   * @param int $order
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
+
+  /**
+   * @return RSVPMultiValueQuestionTemplate
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
+
+  /**
+   * @param RSVPMultiValueQuestionTemplate $owner
+   */
+  public function setOwner(RSVPMultiValueQuestionTemplate $owner) {
+    $this->owner = $owner;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return is_null($this->owner) ? 0 : $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param string $value
-     */
-    public function setValue($value)
-    {
-        $this->value = $value;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLabel()
-    {
-        return $this->label;
-    }
-
-    /**
-     * @param string $label
-     */
-    public function setLabel($label)
-    {
-        $this->label = $label;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
-
-    /**
-     * @param int $order
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
-
-    /**
-     * @return RSVPMultiValueQuestionTemplate
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
-
-    /**
-     * @param RSVPMultiValueQuestionTemplate $owner
-     */
-    public function setOwner(RSVPMultiValueQuestionTemplate $owner)
-    {
-        $this->owner = $owner;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try{
-            return is_null($this->owner) ? 0 : $this->owner->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
-
-    public function clearOwner(){
-        $this->owner = null;
-    }
+  public function clearOwner() {
+    $this->owner = null;
+  }
 }

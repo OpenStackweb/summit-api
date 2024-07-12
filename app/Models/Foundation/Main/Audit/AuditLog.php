@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
@@ -28,55 +28,49 @@ use models\utils\SilverstripeBaseModel;
  * Class AuditLog
  * @package models\main
  */
-abstract class AuditLog extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+abstract class AuditLog extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getUserId' => 'user',
-    ];
+  protected $getIdMappings = [
+    "getUserId" => "user",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasUser' => 'user',
-    ];
+  protected $hasPropertyMappings = [
+    "hasUser" => "user",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="UserID", referencedColumnName="ID")
-     * @var Member
-     */
-    protected $user;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="UserID", referencedColumnName="ID")
+   * @var Member
+   */
+  protected $user;
 
-    /**
-     * @ORM\Column(name="Action", type="string")
-     * @var string
-     */
-    private $action;
+  /**
+   * @ORM\Column(name="Action", type="string")
+   * @var string
+   */
+  private $action;
 
-    public function getUser(): ?Member
-    {
-        return $this->user;
-    }
+  public function getUser(): ?Member {
+    return $this->user;
+  }
 
-    public function setUser(Member $user)
-    {
-        $this->user = $user;
-    }
+  public function setUser(Member $user) {
+    $this->user = $user;
+  }
 
-    public function getAction(): string
-    {
-        return $this->action;
-    }
+  public function getAction(): string {
+    return $this->action;
+  }
 
-    public function setAction(string $action)
-    {
-        $this->action = $action;
-    }
+  public function setAction(string $action) {
+    $this->action = $action;
+  }
 
-    public function __construct(?Member $user, string $action)
-    {
-        parent::__construct();
-        $this->user = $user;
-        $this->action = $action;
-    }
+  public function __construct(?Member $user, string $action) {
+    parent::__construct();
+    $this->user = $user;
+    $this->action = $action;
+  }
 }

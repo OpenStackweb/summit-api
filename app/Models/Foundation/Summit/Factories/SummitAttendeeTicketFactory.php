@@ -18,27 +18,27 @@ use models\summit\SummitTicketType;
  * Class SummitAttendeeTicketFactory
  * @package models\summit\factories
  */
-final class SummitAttendeeTicketFactory
-{
+final class SummitAttendeeTicketFactory {
+  /**
+   * @param SummitAttendee $attendee
+   * @param SummitTicketType $type
+   * @param array $data
+   * @return SummitAttendeeTicket
+   */
+  public static function build(SummitAttendee $attendee, SummitTicketType $type, array $data) {
+    $ticket = new SummitAttendeeTicket();
 
-    /**
-     * @param SummitAttendee $attendee
-     * @param SummitTicketType $type
-     * @param array $data
-     * @return SummitAttendeeTicket
-     */
-    public static function build(SummitAttendee $attendee, SummitTicketType $type, array $data){
-        $ticket = new SummitAttendeeTicket();
+    $attendee->addTicket($ticket);
 
-        $attendee->addTicket($ticket);
-
-        if(isset($data['external_order_id']))
-            $ticket->setExternalOrderId($data['external_order_id']);
-        if(isset($data['external_attendee_id']))
-            $ticket->setExternalAttendeeId($data['external_attendee_id']);
-
-        $ticket->setTicketType($type);
-
-        return $ticket;
+    if (isset($data["external_order_id"])) {
+      $ticket->setExternalOrderId($data["external_order_id"]);
     }
+    if (isset($data["external_attendee_id"])) {
+      $ticket->setExternalAttendeeId($data["external_attendee_id"]);
+    }
+
+    $ticket->setTicketType($type);
+
+    return $ticket;
+  }
 }

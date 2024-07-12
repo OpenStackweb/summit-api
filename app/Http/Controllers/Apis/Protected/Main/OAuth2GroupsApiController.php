@@ -20,55 +20,45 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2GroupsApiController
  * @package App\Http\Controllers
  */
-final class OAuth2GroupsApiController extends OAuth2ProtectedController
-{
+final class OAuth2GroupsApiController extends OAuth2ProtectedController {
+  use ParametrizedGetAll;
 
-    use ParametrizedGetAll;
+  /**
+   * OAuth2MembersApiController constructor.
+   * @param IGroupRepository $group_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IGroupRepository $group_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $group_repository;
+  }
 
-    /**
-     * OAuth2MembersApiController constructor.
-     * @param IGroupRepository $group_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IGroupRepository       $group_repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $group_repository;
-    }
-
-    public function getAll()
-    {
-        return $this->_getAll(
-            function () {
-                return [
-                    'code' => ['=@', '==', '@@'],
-                    'title' => ['=@', '==', '@@'],
-                ];
-            },
-            function () {
-                return [
-                    'code' => 'sometimes|string',
-                    'title' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'code',
-                    'title',
-                    'id',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
-    }
-
+  public function getAll() {
+    return $this->_getAll(
+      function () {
+        return [
+          "code" => ["=@", "==", "@@"],
+          "title" => ["=@", "==", "@@"],
+        ];
+      },
+      function () {
+        return [
+          "code" => "sometimes|string",
+          "title" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["code", "title", "id"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_Public;
+      },
+    );
+  }
 }

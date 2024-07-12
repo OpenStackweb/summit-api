@@ -18,12 +18,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitProposedScheduleAllowedDaySerializer
  * @package App\ModelSerializers\Summit\ProposedSchedule
  */
-final class SummitProposedScheduleAllowedDaySerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'AllowedLocationId' => 'allowed_location_id:json_int',
-        'Day'               => 'day:datetime_epoch',
-        'OpeningHour'       => 'opening_hour:json_int',
-        'ClosingHour'       => 'closing_hour:json_int',
-    ];
+final class SummitProposedScheduleAllowedDaySerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "AllowedLocationId" => "allowed_location_id:json_int",
+    "Day" => "day:datetime_epoch",
+    "OpeningHour" => "opening_hour:json_int",
+    "ClosingHour" => "closing_hour:json_int",
+  ];
 }

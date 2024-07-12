@@ -20,25 +20,19 @@ use Doctrine\ORM\Query\SqlWalker;
  * Class ReviewStatus
  * @package App\Utils\CustomDBFunctions
  */
-class ReviewStatus extends FunctionNode
-{
-    public $activityId;
-    public function getSql(SqlWalker $sqlWalker)
-    {
-        return sprintf(
-            'REVIEW_STATUS(%s)',
-            $sqlWalker->walkArithmeticExpression($this->activityId),
-        );
-    }
+class ReviewStatus extends FunctionNode {
+  public $activityId;
+  public function getSql(SqlWalker $sqlWalker) {
+    return sprintf("REVIEW_STATUS(%s)", $sqlWalker->walkArithmeticExpression($this->activityId));
+  }
 
-    /**
-     * @inheritdoc
-     */
-    public function parse(Parser $parser)
-    {
-        $parser->match(Lexer::T_IDENTIFIER);
-        $parser->match(Lexer::T_OPEN_PARENTHESIS);
-        $this->activityId = $parser->ArithmeticExpression();
-        $parser->match(Lexer::T_CLOSE_PARENTHESIS);
-    }
+  /**
+   * @inheritdoc
+   */
+  public function parse(Parser $parser) {
+    $parser->match(Lexer::T_IDENTIFIER);
+    $parser->match(Lexer::T_OPEN_PARENTHESIS);
+    $this->activityId = $parser->ArithmeticExpression();
+    $parser->match(Lexer::T_CLOSE_PARENTHESIS);
+  }
 }

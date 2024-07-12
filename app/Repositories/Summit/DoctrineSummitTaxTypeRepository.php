@@ -20,60 +20,52 @@ use utils\DoctrineLeftJoinFilterMapping;
  * Class DoctrineSummitTaxTypeRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitTaxTypeRepository
-  extends SilverStripeDoctrineRepository
-    implements ISummitTaxTypeRepository
-{
+final class DoctrineSummitTaxTypeRepository extends SilverStripeDoctrineRepository implements
+  ISummitTaxTypeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitTaxType::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitTaxType::class;
-    }
+  /**
+   * @param string $name
+   * @return SummitTaxType|null
+   */
+  public function getByName(string $name): ?SummitTaxType {
+    return $this->findOneBy([
+      "name" => trim($name),
+    ]);
+  }
 
-    /**
-     * @param string $name
-     * @return SummitTaxType|null
-     */
-    public function getByName(string $name): ?SummitTaxType
-    {
-        return $this->findOneBy([
-            'name' => trim($name)
-        ]);
-    }
+  /**
+   * @param string $tax_id
+   * @return SummitTaxType|null
+   */
+  public function getByTaxID(string $tax_id): ?SummitTaxType {
+    return $this->findOneBy([
+      "tax_id" => trim($tax_id),
+    ]);
+  }
 
-    /**
-     * @param string $tax_id
-     * @return SummitTaxType|null
-     */
-    public function getByTaxID(string $tax_id): ?SummitTaxType
-    {
-        return $this->findOneBy([
-            'tax_id' => trim($tax_id)
-        ]);
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'        => 'e.name:json_string',
-            'summit_id'   => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 }

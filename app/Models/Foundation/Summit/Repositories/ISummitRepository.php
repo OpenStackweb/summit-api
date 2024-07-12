@@ -21,88 +21,92 @@ use utils\PagingResponse;
  * Interface ISummitRepository
  * @package models\summit
  */
-interface ISummitRepository extends IBaseRepository
-{
-    /**
-     * @return Summit
-     */
-    public function getCurrent();
+interface ISummitRepository extends IBaseRepository {
+  /**
+   * @return Summit
+   */
+  public function getCurrent();
 
-    /**
-     * @return Summit
-     */
-    public function getCurrentAndAvailable();
+  /**
+   * @return Summit
+   */
+  public function getCurrentAndAvailable();
 
-    /**
-     * @return Summit
-     */
-    public function getActive();
+  /**
+   * @return Summit
+   */
+  public function getActive();
 
-    /**
-     * @return Summit[]
-     */
-    public function getAvailables();
+  /**
+   * @return Summit[]
+   */
+  public function getAvailables();
 
-    /**
-     * @return Summit[]
-     */
-    public function getAllOrderedByBeginDate();
+  /**
+   * @return Summit[]
+   */
+  public function getAllOrderedByBeginDate();
 
-    /**
-     * @param string $name
-     * @return Summit
-     */
-    public function getByName($name);
+  /**
+   * @param string $name
+   * @return Summit
+   */
+  public function getByName($name);
 
-    /**
-     * @return Summit[]
-     */
-    public function getCurrentAndFutureSummits();
+  /**
+   * @return Summit[]
+   */
+  public function getCurrentAndFutureSummits();
 
-    /**
-     * @param string $slug
-     * @return Summit|null
-     */
-    public function getBySlug(string $slug):?Summit;
+  /**
+   * @param string $slug
+   * @return Summit|null
+   */
+  public function getBySlug(string $slug): ?Summit;
 
-    /**
-     * @param string $registration_slug_prefix
-     * @return Summit|null
-     */
-    public function getByRegistrationSlugPrefix(string $registration_slug_prefix):?Summit;
+  /**
+   * @param string $registration_slug_prefix
+   * @return Summit|null
+   */
+  public function getByRegistrationSlugPrefix(string $registration_slug_prefix): ?Summit;
 
-    /**
-     * @param string $slug
-     * @return Summit|null
-     */
-    public function getByQREncryptionKey(string $qr_enc_key): ?Summit;
+  /**
+   * @param string $slug
+   * @return Summit|null
+   */
+  public function getByQREncryptionKey(string $qr_enc_key): ?Summit;
 
-    /**
-     * @return Summit[]
-     */
-    public function getWithExternalFeed():array;
+  /**
+   * @return Summit[]
+   */
+  public function getWithExternalFeed(): array;
 
-    /**
-     * @return Summit[]
-     */
-    public function getOnGoing(): array;
+  /**
+   * @return Summit[]
+   */
+  public function getOnGoing(): array;
 
-    /**
-     * @return array
-     */
-    public function getNotEnded():array;
+  /**
+   * @return array
+   */
+  public function getNotEnded(): array;
 
-    /**
-     * @return array
-     */
-    public function getAllWithExternalRegistrationFeed():array;
+  /**
+   * @return array
+   */
+  public function getAllWithExternalRegistrationFeed(): array;
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getRegistrationCompanies(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getRegistrationCompanies(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 }

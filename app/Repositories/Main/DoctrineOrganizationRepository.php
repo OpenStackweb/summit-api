@@ -18,56 +18,50 @@ use models\main\Organization;
  * Class DoctrineOrganizationRepository
  * @package repositories\main
  */
-final class DoctrineOrganizationRepository
-    extends SilverStripeDoctrineRepository
-    implements IOrganizationRepository
-{
+final class DoctrineOrganizationRepository extends SilverStripeDoctrineRepository implements
+  IOrganizationRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Organization::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return Organization::class;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'e.name:json_string'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
+  /**
+   * @param string $name
+   * @return Organization|null
+   */
+  public function getByName($name) {
+    try {
+      return $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select("o")
+        ->from(\models\main\Organization::class, "o")
+        ->where("UPPER(TRIM(o.name)) = UPPER(TRIM(:name))")
+        ->setParameter("name", $name)
+        ->getQuery()
+        ->getOneOrNullResult();
+    } catch (\Exception $ex) {
+      return null;
     }
-
-    /**
-     * @param string $name
-     * @return Organization|null
-     */
-    public function getByName($name)
-    {
-        try {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("o")
-                ->from(\models\main\Organization::class, "o")
-                ->where('UPPER(TRIM(o.name)) = UPPER(TRIM(:name))')
-                ->setParameter('name', $name)
-                ->getQuery()->getOneOrNullResult();
-        }
-        catch(\Exception $ex){
-            return null;
-        }
-    }
+  }
 }

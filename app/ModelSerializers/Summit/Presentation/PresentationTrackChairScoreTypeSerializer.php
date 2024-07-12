@@ -20,21 +20,20 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class PresentationTrackChairScoreTypeSerializer
  * @package ModelSerializers
  */
-final class PresentationTrackChairScoreTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Score'         => 'score:json_int',
-        'Name'          => 'name:json_string',
-        'Description'   => 'description:json_string',
-        'TypeId'        => 'type_id:json_int',
-    ];
+final class PresentationTrackChairScoreTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Score" => "score:json_int",
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "TypeId" => "type_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'type' => [
-            'type'                  => One2ManyExpandSerializer::class,
-            'original_attribute'    => 'type_id',
-            'getter'                => 'getType',
-            'has'                   => 'hasType'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "type" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "type_id",
+      "getter" => "getType",
+      "has" => "hasType",
+    ],
+  ];
 }

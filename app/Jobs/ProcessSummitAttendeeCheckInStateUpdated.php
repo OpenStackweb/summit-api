@@ -25,36 +25,37 @@ use Illuminate\Support\Facades\Log;
  * Class ProcessSummitAttendeeCheckInStateUpdated
  * @package App\Jobs
  */
-class ProcessSummitAttendeeCheckInStateUpdated implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class ProcessSummitAttendeeCheckInStateUpdated implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 5;
+  public $tries = 5;
 
-    /**
-     * @var
-     */
-    private $attendee_id;
+  /**
+   * @var
+   */
+  private $attendee_id;
 
-    public function __construct(int $attendee_id)
-    {
-        Log::debug(sprintf( "ProcessSummitAttendeeCheckInStateUpdated::__construct attendee %s", $attendee_id));
-        $this->attendee_id = $attendee_id;
+  public function __construct(int $attendee_id) {
+    Log::debug(
+      sprintf("ProcessSummitAttendeeCheckInStateUpdated::__construct attendee %s", $attendee_id),
+    );
+    $this->attendee_id = $attendee_id;
+  }
+
+  public function handle(IAttendeeService $service) {
+    try {
+      Log::debug(
+        sprintf("ProcessSummitAttendeeCheckInStateUpdated::handle attendee %s", $this->attendee_id),
+      );
+      $service->processAttendeeCheckStatusUpdate($this->attendee_id);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+  }
 
-    public function handle(IAttendeeService $service){
-
-        try{
-            Log::debug(sprintf("ProcessSummitAttendeeCheckInStateUpdated::handle attendee %s", $this->attendee_id));
-            $service->processAttendeeCheckStatusUpdate($this->attendee_id);
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error(sprintf( "ProcessSummitAttendeeCheckInStateUpdated::failed %s", $exception->getMessage()));
-    }
+  public function failed(\Throwable $exception) {
+    Log::error(
+      sprintf("ProcessSummitAttendeeCheckInStateUpdated::failed %s", $exception->getMessage()),
+    );
+  }
 }

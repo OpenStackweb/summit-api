@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitExternalLocation")
@@ -19,58 +19,54 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitExternalLocation
  * @package models\summit
  */
-class SummitExternalLocation extends SummitGeoLocatedLocation
-{
-    const Bar    = 'Bar';
-    const Lounge = 'Lounge';
-    const Other  = 'Other';
+class SummitExternalLocation extends SummitGeoLocatedLocation {
+  const Bar = "Bar";
+  const Lounge = "Lounge";
+  const Other = "Other";
 
-    const ClassName = 'SummitExternalLocation';
+  const ClassName = "SummitExternalLocation";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return int
-     */
-    public function getCapacity()
-    {
-        return $this->capacity;
-    }
+  /**
+   * @return int
+   */
+  public function getCapacity() {
+    return $this->capacity;
+  }
 
-    /**
-     * @param int $capacity
-     */
-    public function setCapacity($capacity)
-    {
-        $this->capacity = $capacity;
-    }
+  /**
+   * @param int $capacity
+   */
+  public function setCapacity($capacity) {
+    $this->capacity = $capacity;
+  }
 
-    /**
-     * @ORM\Column(name="Capacity", type="integer")
-     */
-    protected $capacity;
+  /**
+   * @ORM\Column(name="Capacity", type="integer")
+   */
+  protected $capacity;
 
-    public static $metadata = [
-        'class_name'   => self::ClassName,
-        'capacity'     => 'integer',
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "capacity" => "integer",
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitGeoLocatedLocation::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitGeoLocatedLocation::getMetadata(), self::$metadata);
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->type     = self::TypeExternal;
-        $this->capacity = 0;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->type = self::TypeExternal;
+    $this->capacity = 0;
+  }
 }

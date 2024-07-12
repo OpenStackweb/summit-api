@@ -19,34 +19,31 @@ use models\summit\SummitAttendee;
  * Class AbstractEmailAction
  * @package App\Services\Model\Strategies\EmailActions
  */
-abstract class AbstractEmailAction
-{
-    /**
-     * @var String
-     */
-    protected $flow_event;
+abstract class AbstractEmailAction {
+  /**
+   * @var String
+   */
+  protected $flow_event;
 
-    /**
-     * AbstractEmailAction constructor.
-     * @param String $flow_event
-     */
-    public function __construct(String $flow_event)
-    {
-        $this->flow_event = $flow_event;
-    }
+  /**
+   * AbstractEmailAction constructor.
+   * @param String $flow_event
+   */
+  public function __construct(string $flow_event) {
+    $this->flow_event = $flow_event;
+  }
 
-    /**
-     * @param SummitAttendee $attendee
-     * @param string|null $test_email_recipient
-     * @param callable|null $onSuccess
-     * @param callable|null $onError
-     * @return mixed
-     */
-    public abstract function process
-    (
-        SummitAttendee $attendee,
-        ?string $test_email_recipient = null,
-        callable $onSuccess = null,
-        callable $onError = null
-    );
+  /**
+   * @param SummitAttendee $attendee
+   * @param string|null $test_email_recipient
+   * @param callable|null $onSuccess
+   * @param callable|null $onError
+   * @return mixed
+   */
+  abstract public function process(
+    SummitAttendee $attendee,
+    ?string $test_email_recipient = null,
+    callable $onSuccess = null,
+    callable $onError = null,
+  );
 }

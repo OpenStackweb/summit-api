@@ -23,108 +23,104 @@ use models\utils\One2ManyPropertyTrait;
  * Class AllowedPresentationActionType
  * @package models\summit
  */
-class AllowedPresentationActionType extends BaseEntity implements IOrderable
-{
-    use One2ManyPropertyTrait;
-    /**
-     * @ORM\Column(name="CustomOrder", type="integer")
-     * @var int
-     */
-    private $order;
+class AllowedPresentationActionType extends BaseEntity implements IOrderable {
+  use One2ManyPropertyTrait;
+  /**
+   * @ORM\Column(name="CustomOrder", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\Column(name="PresentationActionTypeID", type="integer")
-     * @var int
-     */
-    private $type_id;
+  /**
+   * @ORM\Column(name="PresentationActionTypeID", type="integer")
+   * @var int
+   */
+  private $type_id;
 
-    /**
-     * @ORM\Column(name="SelectionPlanID", type="integer")
-     * @var int
-     */
-    private $selection_plan_id;
+  /**
+   * @ORM\Column(name="SelectionPlanID", type="integer")
+   * @var int
+   */
+  private $selection_plan_id;
 
-    protected $getIdMappings = [
-        'getTypeId' => 'type',
-        'getSelectionPlanId' => 'selection_plan',
-    ];
+  protected $getIdMappings = [
+    "getTypeId" => "type",
+    "getSelectionPlanId" => "selection_plan",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasType' => 'type',
-        'hasSelectionPlan' => 'selection_plan',
-    ];
+  protected $hasPropertyMappings = [
+    "hasType" => "type",
+    "hasSelectionPlan" => "selection_plan",
+  ];
 
-    /**
-     * @param PresentationActionType $type
-     * @param SelectionPlan $selection_plan
-     * @param int $order
-     */
-    public function __construct(PresentationActionType $type, SelectionPlan $selection_plan, int $order)
-    {
-        $this->type = $type;
-        $this->selection_plan = $selection_plan;
-        $this->order = $order;
-    }
+  /**
+   * @param PresentationActionType $type
+   * @param SelectionPlan $selection_plan
+   * @param int $order
+   */
+  public function __construct(
+    PresentationActionType $type,
+    SelectionPlan $selection_plan,
+    int $order,
+  ) {
+    $this->type = $type;
+    $this->selection_plan = $selection_plan;
+    $this->order = $order;
+  }
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationActionType", inversedBy="assigned_selection_plans", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationActionTypeID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var PresentationActionType
-     */
-    private $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\PresentationActionType", inversedBy="assigned_selection_plans", cascade={"persist"}, fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="PresentationActionTypeID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var PresentationActionType
+   */
+  private $type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_presentation_action_types", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var SelectionPlan
-     */
-    private $selection_plan;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_presentation_action_types", cascade={"persist"}, fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var SelectionPlan
+   */
+  private $selection_plan;
 
-    /**
-     * @return int
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder(): int {
+    return $this->order;
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order): void
-    {
-        $this->order = $order;
-    }
+  /**
+   * @param int $order
+   */
+  public function setOrder($order): void {
+    $this->order = $order;
+  }
 
-    /**
-     * @return PresentationActionType
-     */
-    public function getType(): PresentationActionType
-    {
-        return $this->type;
-    }
+  /**
+   * @return PresentationActionType
+   */
+  public function getType(): PresentationActionType {
+    return $this->type;
+  }
 
-    /**
-     * @param PresentationActionType $type
-     */
-    public function setType(PresentationActionType $type): void
-    {
-        $this->type = $type;
-    }
+  /**
+   * @param PresentationActionType $type
+   */
+  public function setType(PresentationActionType $type): void {
+    $this->type = $type;
+  }
 
-    /**
-     * @return SelectionPlan
-     */
-    public function getSelectionPlan(): SelectionPlan
-    {
-        return $this->selection_plan;
-    }
+  /**
+   * @return SelectionPlan
+   */
+  public function getSelectionPlan(): SelectionPlan {
+    return $this->selection_plan;
+  }
 
-    /**
-     * @param SelectionPlan $selection_plan
-     */
-    public function setSelectionPlan(SelectionPlan $selection_plan): void
-    {
-        $this->selection_plan = $selection_plan;
-    }
+  /**
+   * @param SelectionPlan $selection_plan
+   */
+  public function setSelectionPlan(SelectionPlan $selection_plan): void {
+    $this->selection_plan = $selection_plan;
+  }
 }

@@ -12,12 +12,9 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class TrainingServiceSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class TrainingServiceSerializer extends CompanyServiceSerializer
-{
-
+final class TrainingServiceSerializer extends CompanyServiceSerializer {
 }

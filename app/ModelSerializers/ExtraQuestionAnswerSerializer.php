@@ -17,52 +17,52 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class ExtraQuestionAnswerSerializer
  * @package ModelSerializers
  */
-class ExtraQuestionAnswerSerializer extends SilverStripeSerializer
-{
+class ExtraQuestionAnswerSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Value" => "value:json_string",
+    "QuestionId" => "question_id:json_int",
+  ];
 
-    protected static $array_mappings = [
-        'Value'      => 'value:json_string',
-        'QuestionId' => 'question_id:json_int',
-    ];
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $answer = $this->object;
-        if (!$answer instanceof ExtraQuestionAnswer) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'question':
-                        {
-
-                            if ($answer->hasQuestion()) {
-                                unset($values['question_id']);
-                                $values['question'] = SerializerRegistry::getInstance()->getSerializer($answer->getQuestion())
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                        }
-                        break;
-
-
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $answer = $this->object;
+    if (!$answer instanceof ExtraQuestionAnswer) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "question":
+            if ($answer->hasQuestion()) {
+              unset($values["question_id"]);
+              $values["question"] = SerializerRegistry::getInstance()
+                ->getSerializer($answer->getQuestion())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

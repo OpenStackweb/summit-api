@@ -18,26 +18,26 @@ use models\summit\SummitRoomReservation;
  * Class BookableRoomReservationRefundRequestedAdminEmail
  * @package App\Jobs\Emails\BookableRooms
  */
-class BookableRoomReservationRefundRequestedAdminEmail extends AbstractBookableRoomReservationEmail
-{
-    /**
-     * @param SummitRoomReservation $reservation
-     * @return string
-     */
-    protected function getTo(SummitRoomReservation $reservation):string {
-        $to = Config::get("bookable_rooms.admin_email");
-        if(is_null($to))
-            throw new \InvalidArgumentException("bookable_rooms.admin_email is not set");
-        return $to;
+class BookableRoomReservationRefundRequestedAdminEmail extends
+  AbstractBookableRoomReservationEmail {
+  /**
+   * @param SummitRoomReservation $reservation
+   * @return string
+   */
+  protected function getTo(SummitRoomReservation $reservation): string {
+    $to = Config::get("bookable_rooms.admin_email");
+    if (is_null($to)) {
+      throw new \InvalidArgumentException("bookable_rooms.admin_email is not set");
     }
+    return $to;
+  }
 
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_ADMIN';
-    const EVENT_NAME = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_ADMIN';
-    const DEFAULT_TEMPLATE = 'BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_ADMIN';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_ADMIN";
+  const EVENT_NAME = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_ADMIN";
+  const DEFAULT_TEMPLATE = "BOOKABLE_ROOMS_RESERVATION_REFUND_REQUESTED_ADMIN";
 }

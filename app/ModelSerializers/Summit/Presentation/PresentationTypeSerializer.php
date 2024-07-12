@@ -17,76 +17,79 @@ use models\summit\PresentationType;
  * Class PresentationEventTypeSerializer
  * @package ModelSerializers
  */
-final class PresentationTypeSerializer extends SummitEventTypeSerializer
-{
-    protected static $array_mappings = [
-        'MaxSpeakers'              => 'max_speakers:json_int',
-        'MinSpeakers'              => 'min_speakers:json_int',
-        'MaxModerators'            => 'max_moderators:json_int',
-        'MinModerators'            => 'min_moderators:json_int',
-        'MaxDuration'              => 'max_duration:json_int',
-        'MinDuration'              => 'min_duration:json_int',
-        'UseSpeakers'              => 'use_speakers:json_boolean',
-        'AreSpeakersMandatory'     => 'are_speakers_mandatory:json_boolean',
-        'UseModerator'             => 'use_moderator:json_boolean',
-        'ModeratorMandatory'       => 'is_moderator_mandatory:json_boolean',
-        'ModeratorLabel'           => 'moderator_label:json_string',
-        'ShouldBeAvailableOnCfp'   => 'should_be_available_on_cfp:json_boolean',
-        'AllowCustomOrdering'      => 'allow_custom_ordering:json_boolean',
-        'AllowAttendeeVote'        => 'allow_attendee_vote:json_boolean',
-        'AllowsSpeakerEventCollision' => 'allows_speaker_event_collision:json_boolean',
-    ];
+final class PresentationTypeSerializer extends SummitEventTypeSerializer {
+  protected static $array_mappings = [
+    "MaxSpeakers" => "max_speakers:json_int",
+    "MinSpeakers" => "min_speakers:json_int",
+    "MaxModerators" => "max_moderators:json_int",
+    "MinModerators" => "min_moderators:json_int",
+    "MaxDuration" => "max_duration:json_int",
+    "MinDuration" => "min_duration:json_int",
+    "UseSpeakers" => "use_speakers:json_boolean",
+    "AreSpeakersMandatory" => "are_speakers_mandatory:json_boolean",
+    "UseModerator" => "use_moderator:json_boolean",
+    "ModeratorMandatory" => "is_moderator_mandatory:json_boolean",
+    "ModeratorLabel" => "moderator_label:json_string",
+    "ShouldBeAvailableOnCfp" => "should_be_available_on_cfp:json_boolean",
+    "AllowCustomOrdering" => "allow_custom_ordering:json_boolean",
+    "AllowAttendeeVote" => "allow_attendee_vote:json_boolean",
+    "AllowsSpeakerEventCollision" => "allows_speaker_event_collision:json_boolean",
+  ];
 
-    protected static $allowed_relations = [
-        'allowed_media_upload_types',
-    ];
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $type = $this->object;
-        if (!$type instanceof PresentationType) return [];
+  protected static $allowed_relations = ["allowed_media_upload_types"];
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $type = $this->object;
+    if (!$type instanceof PresentationType) {
+      return [];
+    }
 
-        if(in_array('allowed_media_upload_types', $relations)) {
+    if (in_array("allowed_media_upload_types", $relations)) {
+      $allowed_media_upload_types = [];
+
+      foreach ($type->getAllowedMediaUploadTypes() as $media_type) {
+        $allowed_media_upload_types[] = $media_type->getId();
+      }
+
+      $values["allowed_media_upload_types"] = $allowed_media_upload_types;
+    }
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "allowed_media_upload_types":
+            unset($values["allowed_media_upload_types"]);
             $allowed_media_upload_types = [];
 
             foreach ($type->getAllowedMediaUploadTypes() as $media_type) {
-                $allowed_media_upload_types[] = $media_type->getId();
+              $allowed_media_upload_types[] = SerializerRegistry::getInstance()
+                ->getSerializer($media_type)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
 
-            $values['allowed_media_upload_types'] = $allowed_media_upload_types;
+            $values["allowed_media_upload_types"] = $allowed_media_upload_types;
+            break;
         }
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'allowed_media_upload_types': {
-                        unset($values['allowed_media_upload_types']);
-                        $allowed_media_upload_types = [];
-
-                        foreach ($type->getAllowedMediaUploadTypes() as $media_type){
-                            $allowed_media_upload_types[] = SerializerRegistry::getInstance()->getSerializer($media_type)->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-
-                        $values['allowed_media_upload_types'] = $allowed_media_upload_types;
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+      }
     }
+    return $values;
+  }
 }

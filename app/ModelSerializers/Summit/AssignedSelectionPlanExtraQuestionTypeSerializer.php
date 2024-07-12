@@ -21,38 +21,37 @@ use ModelSerializers\SerializerRegistry;
  * Class AssignedSelectionPlanExtraQuestionTypeSerializer
  * @package App\ModelSerializers\Summit
  */
-final class AssignedSelectionPlanExtraQuestionTypeSerializer
-    extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Order' => 'order:json_int',
-        'Editable'=> 'is_editable:json_boolean',
-        'SelectionPlanId' => 'selection_plan_id:json_int',
-    ];
+final class AssignedSelectionPlanExtraQuestionTypeSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Order" => "order:json_int",
+    "Editable" => "is_editable:json_boolean",
+    "SelectionPlanId" => "selection_plan_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $assigment = $this->object;
-        if (!$assigment instanceof AssignedSelectionPlanExtraQuestionType) return [];
-        Log::debug(sprintf("AssignedSelectionPlanExtraQuestionTypeSerializer expand %s", $expand));
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $question_type = SerializerRegistry::getInstance()->getSerializer($assigment->getQuestionType())
-            ->serialize
-            (
-                $expand,
-                $fields,
-                $relations,
-                $params
-            );
-
-        return array_merge($values, $question_type);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $assigment = $this->object;
+    if (!$assigment instanceof AssignedSelectionPlanExtraQuestionType) {
+      return [];
     }
+    Log::debug(sprintf("AssignedSelectionPlanExtraQuestionTypeSerializer expand %s", $expand));
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $question_type = SerializerRegistry::getInstance()
+      ->getSerializer($assigment->getQuestionType())
+      ->serialize($expand, $fields, $relations, $params);
+
+    return array_merge($values, $question_type);
+  }
 }

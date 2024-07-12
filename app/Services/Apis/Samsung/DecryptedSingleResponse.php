@@ -17,42 +17,42 @@ use App\Utils\AES256GCM;
  * Class DecryptedResponse
  * @package App\Services\Apis\Samsung
  */
-final class DecryptedSingleResponse extends AbstractPayload
-{
-    /**
-     * @param string $key
-     * @param string $content
-     * @param array $params
-     * @throws EmptyResponse
-     * @throws InvalidResponse
-     */
-    public function __construct(string $key, string $content, array $params){
-
-        parent::__construct($params);
-        $response = json_decode($content, true);
-        if(is_array($response) && !count($response))
-            throw new EmptyResponse("response not found");
-
-        if(!isset($response['data']))
-            throw new InvalidResponse(sprintf("missing data field on response %s", $content));
-
-        $dec = AES256GCM::decrypt($key, $response['data']);
-        if($dec->hasError())
-            throw new InvalidResponse($dec->getErrorMessage());
-
-        $list = json_decode($dec->getData(), true);
-        if(!is_array($list))
-            throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
-        $this->payload = count($list) == 1 ? $list[0] : $list;
-
-        if(count($this->payload) == 0)
-            throw new EmptyResponse("response not found");
+final class DecryptedSingleResponse extends AbstractPayload {
+  /**
+   * @param string $key
+   * @param string $content
+   * @param array $params
+   * @throws EmptyResponse
+   * @throws InvalidResponse
+   */
+  public function __construct(string $key, string $content, array $params) {
+    parent::__construct($params);
+    $response = json_decode($content, true);
+    if (is_array($response) && !count($response)) {
+      throw new EmptyResponse("response not found");
     }
 
-
-    public function getPayload(): array
-    {
-        return SamsungRecordSerializer::serialize($this->payload, $this->params);
+    if (!isset($response["data"])) {
+      throw new InvalidResponse(sprintf("missing data field on response %s", $content));
     }
 
+    $dec = AES256GCM::decrypt($key, $response["data"]);
+    if ($dec->hasError()) {
+      throw new InvalidResponse($dec->getErrorMessage());
+    }
+
+    $list = json_decode($dec->getData(), true);
+    if (!is_array($list)) {
+      throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
+    }
+    $this->payload = count($list) == 1 ? $list[0] : $list;
+
+    if (count($this->payload) == 0) {
+      throw new EmptyResponse("response not found");
+    }
+  }
+
+  public function getPayload(): array {
+    return SamsungRecordSerializer::serialize($this->payload, $this->params);
+  }
 }

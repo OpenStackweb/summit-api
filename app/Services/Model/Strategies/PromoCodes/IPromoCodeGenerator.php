@@ -18,11 +18,10 @@ use models\summit\Summit;
  * Interface IPromoCodeGenerator
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IPromoCodeGenerator
-{
-    /**
-     * @param Summit $summit
-     * @return string
-     */
-    public function generate(Summit $summit): string;
+interface IPromoCodeGenerator {
+  /**
+   * @param Summit $summit
+   * @return string
+   */
+  public function generate(Summit $summit): string;
 }

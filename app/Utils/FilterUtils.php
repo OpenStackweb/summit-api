@@ -14,34 +14,37 @@
 
 use utils\Filter;
 
-
 /**
  * Class FilterUtils
  * @package App\Utils
  */
-final class FilterUtils
-{
-    /**
-     * @param Filter $filter
-     * @param string|null $date_from_name
-     * @param string|null $date_to_name
-     * @return array
-     * @throws \Exception
-     */
-    public static function parseDateRangeUTC(
-        Filter $filter, ?string $date_from_name = 'start_date', ?string $date_to_name = 'end_date'):array
-    {
-        $start_date = null;
-        $end_date = null;
+final class FilterUtils {
+  /**
+   * @param Filter $filter
+   * @param string|null $date_from_name
+   * @param string|null $date_to_name
+   * @return array
+   * @throws \Exception
+   */
+  public static function parseDateRangeUTC(
+    Filter $filter,
+    ?string $date_from_name = "start_date",
+    ?string $date_to_name = "end_date",
+  ): array {
+    $start_date = null;
+    $end_date = null;
 
-        if($filter->hasFilter($date_from_name)){
-            $start_date = Filter::convertToDateTime($filter->getUniqueFilter($date_from_name)->getValue(), 'UTC');
-            $start_date = new \DateTime($start_date, new \DateTimeZone('UTC'));
-            $end_date =  $filter->hasFilter($date_to_name) ?
-                Filter::convertToDateTime($filter->getUniqueFilter($date_to_name)->getValue(), 'UTC'):
-                null;
-            $end_date = !is_null($end_date) ? new \DateTime($end_date, new \DateTimeZone('UTC')) : null;
-        }
-        return [$start_date, $end_date];
+    if ($filter->hasFilter($date_from_name)) {
+      $start_date = Filter::convertToDateTime(
+        $filter->getUniqueFilter($date_from_name)->getValue(),
+        "UTC",
+      );
+      $start_date = new \DateTime($start_date, new \DateTimeZone("UTC"));
+      $end_date = $filter->hasFilter($date_to_name)
+        ? Filter::convertToDateTime($filter->getUniqueFilter($date_to_name)->getValue(), "UTC")
+        : null;
+      $end_date = !is_null($end_date) ? new \DateTime($end_date, new \DateTimeZone("UTC")) : null;
     }
+    return [$start_date, $end_date];
+  }
 }

@@ -27,35 +27,40 @@ use models\summit\SummitRegistrationPromoCode;
  * Class PromoCodesValidClasses
  * @package App\Models\Foundation\Summit\PromoCodes
  */
-final class PromoCodesConstants
-{
-    public static $valid_class_names = [
-        SummitRegistrationPromoCode::ClassName,
-        SummitRegistrationDiscountCode::ClassName,
-        SpeakerSummitRegistrationPromoCode::ClassName,
-        SponsorSummitRegistrationPromoCode::ClassName,
-        MemberSummitRegistrationPromoCode::ClassName,
-        MemberSummitRegistrationDiscountCode::ClassName,
-        SpeakerSummitRegistrationDiscountCode::ClassName,
-        SponsorSummitRegistrationDiscountCode::ClassName,
-        SpeakersSummitRegistrationPromoCode::ClassName,
-        SpeakersRegistrationDiscountCode::ClassName,
-        PrePaidSummitRegistrationPromoCode::ClassName,
-        PrePaidSummitRegistrationDiscountCode::ClassName
-    ];
+final class PromoCodesConstants {
+  public static $valid_class_names = [
+    SummitRegistrationPromoCode::ClassName,
+    SummitRegistrationDiscountCode::ClassName,
+    SpeakerSummitRegistrationPromoCode::ClassName,
+    SponsorSummitRegistrationPromoCode::ClassName,
+    MemberSummitRegistrationPromoCode::ClassName,
+    MemberSummitRegistrationDiscountCode::ClassName,
+    SpeakerSummitRegistrationDiscountCode::ClassName,
+    SponsorSummitRegistrationDiscountCode::ClassName,
+    SpeakersSummitRegistrationPromoCode::ClassName,
+    SpeakersRegistrationDiscountCode::ClassName,
+    PrePaidSummitRegistrationPromoCode::ClassName,
+    PrePaidSummitRegistrationDiscountCode::ClassName,
+  ];
 
-    const SpeakerSummitRegistrationPromoCodeTypeAccepted  = 'ACCEPTED';
-    const SpeakerSummitRegistrationPromoCodeTypeAlternate = 'ALTERNATE';
+  const SpeakerSummitRegistrationPromoCodeTypeAccepted = "ACCEPTED";
+  const SpeakerSummitRegistrationPromoCodeTypeAlternate = "ALTERNATE";
 
-    const MemberSummitRegistrationPromoCodeTypes =  ["VIP","ATC","MEDIA ANALYST"];
+  const MemberSummitRegistrationPromoCodeTypes = ["VIP", "ATC", "MEDIA ANALYST"];
 
-    const SponsorSummitRegistrationPromoCodeTypes =  ["SPONSOR"];
+  const SponsorSummitRegistrationPromoCodeTypes = ["SPONSOR"];
 
-    const SpeakerSummitRegistrationPromoCodeTypes = [self::SpeakerSummitRegistrationPromoCodeTypeAccepted, self::SpeakerSummitRegistrationPromoCodeTypeAlternate];
-    /**
-     * @return array
-     */
-    public static function getValidTypes(){
-        return array_merge(self::MemberSummitRegistrationPromoCodeTypes, self::SpeakerSummitRegistrationPromoCodeTypes);
-    }
+  const SpeakerSummitRegistrationPromoCodeTypes = [
+    self::SpeakerSummitRegistrationPromoCodeTypeAccepted,
+    self::SpeakerSummitRegistrationPromoCodeTypeAlternate,
+  ];
+  /**
+   * @return array
+   */
+  public static function getValidTypes() {
+    return array_merge(
+      self::MemberSummitRegistrationPromoCodeTypes,
+      self::SpeakerSummitRegistrationPromoCodeTypes,
+    );
+  }
 }

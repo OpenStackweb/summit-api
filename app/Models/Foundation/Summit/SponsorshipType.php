@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -21,103 +21,93 @@ use models\utils\SilverstripeBaseModel;
  * Class SponsorshipType
  * @package models\summit
  */
-class SponsorshipType extends SilverstripeBaseModel implements IOrderable
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class SponsorshipType extends SilverstripeBaseModel implements IOrderable {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    private $label;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  private $label;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\Column(name="Size", type="string")
-     * @var string
-     */
-    private $size;
+  /**
+   * @ORM\Column(name="Size", type="string")
+   * @var string
+   */
+  private $size;
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getLabel(): ?string {
+    return $this->label;
+  }
+
+  /**
+   * @param string $label
+   */
+  public function setLabel(string $label): void {
+    $this->label = $label;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOrder(): int {
+    return $this->order;
+  }
+
+  /**
+   * @param int $order
+   */
+  public function setOrder($order): void {
+    $this->order = $order;
+  }
+
+  /**
+   * @return string
+   */
+  public function getSize(): string {
+    return $this->size;
+  }
+
+  /**
+   * @param string $size
+   * @throws ValidationException
+   */
+  public function setSize(string $size): void {
+    if (!in_array($size, ISponsorshipTypeConstants::AllowedSizes)) {
+      throw new ValidationException("invalid size");
     }
+    $this->size = $size;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getLabel(): ?string
-    {
-        return $this->label;
-    }
-
-    /**
-     * @param string $label
-     */
-    public function setLabel(string $label): void
-    {
-        $this->label = $label;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
-    }
-
-    /**
-     * @param int $order
-     */
-    public function setOrder($order): void
-    {
-        $this->order = $order;
-    }
-
-    /**
-     * @return string
-     */
-    public function getSize(): string
-    {
-        return $this->size;
-    }
-
-    /**
-     * @param string $size
-     * @throws ValidationException
-     */
-    public function setSize(string $size): void
-    {
-        if(!in_array($size, ISponsorshipTypeConstants::AllowedSizes))
-            throw new ValidationException("invalid size");
-        $this->size = $size;
-    }
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->order = 1;
-    }
-
+  public function __construct() {
+    parent::__construct();
+    $this->order = 1;
+  }
 }

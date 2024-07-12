@@ -16,11 +16,10 @@
  * Interface IPromoCodeValidationStrategyFactory
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IPromoCodeValidationStrategyFactory
-{
-    /**
-     * @param string $ticket_type_subtype
-     * @return IPromoCodeValidationStrategy
-     */
-    public function createStrategy(string $ticket_type_subtype): IPromoCodeValidationStrategy;
+interface IPromoCodeValidationStrategyFactory {
+  /**
+   * @param string $ticket_type_subtype
+   * @return IPromoCodeValidationStrategy
+   */
+  public function createStrategy(string $ticket_type_subtype): IPromoCodeValidationStrategy;
 }

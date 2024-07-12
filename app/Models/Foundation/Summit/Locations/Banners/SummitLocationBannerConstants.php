@@ -16,9 +16,14 @@
  * Class SummitLocationBannerConstants
  * @package App\Models\Foundation\Summit\Locations\Banners
  */
-final class SummitLocationBannerConstants
-{
-    public static $valid_class_names = [SummitLocationBanner::ClassName, ScheduledSummitLocationBanner::ClassName];
+final class SummitLocationBannerConstants {
+  public static $valid_class_names = [
+    SummitLocationBanner::ClassName,
+    ScheduledSummitLocationBanner::ClassName,
+  ];
 
-    public static $valid_types = [SummitLocationBanner::TypePrimary, SummitLocationBanner::TypeSecondary];
+  public static $valid_types = [
+    SummitLocationBanner::TypePrimary,
+    SummitLocationBanner::TypeSecondary,
+  ];
 }

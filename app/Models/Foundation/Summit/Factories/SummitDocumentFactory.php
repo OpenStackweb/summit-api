@@ -17,39 +17,47 @@ use models\summit\SummitDocument;
  * Class SummitDocumentFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitDocumentFactory
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitDocument
-     */
-    public static function build(Summit $summit, array $payload){
-        return self::populate($summit, new SummitDocument(), $payload);
+final class SummitDocumentFactory {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitDocument
+   */
+  public static function build(Summit $summit, array $payload) {
+    return self::populate($summit, new SummitDocument(), $payload);
+  }
+
+  /**
+   * @param Summit $summit
+   * @param SummitDocument $document
+   * @param array $payload
+   * @return SummitDocument
+   */
+  public static function populate(
+    Summit $summit,
+    SummitDocument $document,
+    array $payload,
+  ): SummitDocument {
+    if (isset($payload["name"])) {
+      $document->setName(trim($payload["name"]));
     }
 
-    /**
-     * @param Summit $summit
-     * @param SummitDocument $document
-     * @param array $payload
-     * @return SummitDocument
-     */
-    public static function populate(Summit $summit, SummitDocument $document, array $payload):SummitDocument {
-        if(isset($payload['name']))
-            $document->setName(trim($payload['name']));
-
-        if(isset($payload['label']))
-            $document->setLabel(trim($payload['label']));
-
-        if(isset($payload['show_always']))
-            $document->setShowAlways(boolval($payload['show_always']));
-
-        if(isset($payload['description']))
-            $document->setDescription(trim($payload['description']));
-
-        if(isset($payload['web_link']))
-            $document->setWebLink(trim($payload['web_link']));
-
-        return $document;
+    if (isset($payload["label"])) {
+      $document->setLabel(trim($payload["label"]));
     }
+
+    if (isset($payload["show_always"])) {
+      $document->setShowAlways(boolval($payload["show_always"]));
+    }
+
+    if (isset($payload["description"])) {
+      $document->setDescription(trim($payload["description"]));
+    }
+
+    if (isset($payload["web_link"])) {
+      $document->setWebLink(trim($payload["web_link"]));
+    }
+
+    return $document;
+  }
 }

@@ -22,36 +22,33 @@ use models\summit\SummitAttendee;
  * Class CheckMeAttendeeStrategy
  * @package App\Http\Controllers
  */
-class CheckMeAttendeeStrategy implements ICheckAttendeeStrategy
-{
-    /**
-     * @var IResourceServerContext
-     */
-    protected $resource_server_context;
+class CheckMeAttendeeStrategy implements ICheckAttendeeStrategy {
+  /**
+   * @var IResourceServerContext
+   */
+  protected $resource_server_context;
 
-    /**
-     * CheckMeAttendeeStrategy constructor.
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct(IResourceServerContext $resource_server_context)
-    {
-        $this->resource_server_context = $resource_server_context;
-    }
+  /**
+   * CheckMeAttendeeStrategy constructor.
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(IResourceServerContext $resource_server_context) {
+    $this->resource_server_context = $resource_server_context;
+  }
 
-    /**
-     * @param $attendee_id
-     * @param Summit $summit
-     * @return null|SummitAttendee
-     */
-    public function check($attendee_id, Summit $summit)
-    {
-        if (strtolower($attendee_id) === 'me') {
-            $current_member  = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) {
-                return null;
-            }
-            return $summit->getAttendeeByMemberId($current_member->getId());
-        }
+  /**
+   * @param $attendee_id
+   * @param Summit $summit
+   * @return null|SummitAttendee
+   */
+  public function check($attendee_id, Summit $summit) {
+    if (strtolower($attendee_id) === "me") {
+      $current_member = $this->resource_server_context->getCurrentUser();
+      if (is_null($current_member)) {
         return null;
+      }
+      return $summit->getAttendeeByMemberId($current_member->getId());
     }
+    return null;
+  }
 }

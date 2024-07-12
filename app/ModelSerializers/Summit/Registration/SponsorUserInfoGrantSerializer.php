@@ -16,15 +16,14 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SponsorUserInfoGrantSerializer
  * @package App\ModelSerializers\Summit
  */
-class SponsorUserInfoGrantSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'CreatedDate'   => 'scan_date:datetime_epoch',
-        'SponsorId'     => 'sponsor_id:json_int',
-        'AllowedUserId' => 'allowed_user_id:json_int',
-        'AttendeeFirstName' => 'attendee_first_name:json_string',
-        'AttendeeLastName' => 'attendee_last_name:json_string',
-        'AttendeeEmail' => 'attendee_email:json_string',
-        'AttendeeCompany' => 'attendee_company:json_string',
-    ];
+class SponsorUserInfoGrantSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "CreatedDate" => "scan_date:datetime_epoch",
+    "SponsorId" => "sponsor_id:json_int",
+    "AllowedUserId" => "allowed_user_id:json_int",
+    "AttendeeFirstName" => "attendee_first_name:json_string",
+    "AttendeeLastName" => "attendee_last_name:json_string",
+    "AttendeeEmail" => "attendee_email:json_string",
+    "AttendeeCompany" => "attendee_company:json_string",
+  ];
 }

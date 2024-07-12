@@ -18,77 +18,86 @@ use Illuminate\Support\Facades\Log;
  * Class CSVExporter
  * @package App\Http\Utils
  */
-final class CSVExporter
-{
-    /**
-     * @var CSVExporter
-     */
-    private static $instance;
+final class CSVExporter {
+  /**
+   * @var CSVExporter
+   */
+  private static $instance;
 
-    private function __construct()
-    {
+  private function __construct() {
+  }
+
+  private function __clone() {
+  }
+
+  /**
+   * @return CSVExporter
+   */
+  public static function getInstance() {
+    if (!is_object(self::$instance)) {
+      self::$instance = new CSVExporter();
     }
+    return self::$instance;
+  }
 
-    private function __clone()
-    {
+  /**
+   * @param array $items
+   * @param $field_separator
+   * @param array $formatters
+   * @return string
+   */
+  public function export(
+    array $items,
+    string $field_separator = ",",
+    array $formatters = [],
+  ): string {
+    Log::debug(sprintf("CSVExporter::export items %s", json_encode($items)));
+    $output = "";
+    $header = [];
+    $originalHeader = [];
+
+    // get header ( need to iterate over the entire set bc the rows could have distinct keys and we need all)
+    foreach ($items as $row) {
+      $currentKeys = array_keys($row);
+      $tempHeader = $currentKeys;
+      array_walk($tempHeader, [$this, "cleanData"]);
+      $header = array_unique(array_merge($header, $tempHeader));
+      $originalHeader = array_unique(array_merge($originalHeader, $currentKeys));
     }
+    Log::debug(sprintf("CSVExporter::export header %s", json_encode($header)));
 
-    /**
-     * @return CSVExporter
-     */
-    public static function getInstance()
-    {
-        if (!is_object(self::$instance)) {
-            self::$instance = new CSVExporter();
+    foreach ($items as $row) {
+      array_walk($row, [$this, "cleanData"]);
+      $values = [];
+      foreach ($originalHeader as $key) {
+        $val = $row[$key] ?? "";
+        if (isset($formatters[$key])) {
+          $val = $formatters[$key]->format($val);
         }
-        return self::$instance;
-    }
-
-    /**
-     * @param array $items
-     * @param $field_separator
-     * @param array $formatters
-     * @return string
-     */
-    public function export(array $items, string $field_separator = ",", array $formatters = []):string{
-        Log::debug(sprintf("CSVExporter::export items %s", json_encode($items)));
-        $output         = '';
-        $header         = [];
-        $originalHeader = [];
-
-        // get header ( need to iterate over the entire set bc the rows could have distinct keys and we need all)
-        foreach ($items as $row) {
-            $currentKeys = array_keys($row);
-            $tempHeader = $currentKeys;
-            array_walk($tempHeader, array($this, 'cleanData'));
-            $header = array_unique(array_merge($header, $tempHeader));
-            $originalHeader = array_unique(array_merge($originalHeader, $currentKeys));
+        if (is_array($val)) {
+          $val = "";
         }
-        Log::debug(sprintf("CSVExporter::export header %s", json_encode($header)));
-
-        foreach ($items as $row){
-            array_walk($row, array($this, 'cleanData'));
-            $values = [];
-            foreach ($originalHeader as $key){
-                $val = $row[$key] ?? '';
-                if(isset($formatters[$key]))
-                    $val = $formatters[$key]->format($val);
-                if(is_array($val)) $val = '';
-                $values[] = $val;
-            }
-            $output .= implode($field_separator, $values) . PHP_EOL;
-        }
-
-        return implode($field_separator, $header) . PHP_EOL . $output;
+        $values[] = $val;
+      }
+      $output .= implode($field_separator, $values) . PHP_EOL;
     }
 
-    function cleanData(&$str)
-    {
-        if (is_null($str)) {$str = ''; return;};
-        if (is_array($str)) {return;};
-        $str = preg_replace("/\t/", "\\t", $str);
-        $str = preg_replace("/\r?\n/", "\\n", $str);
-        $str = preg_replace("/,/", "-", $str);
-        if (strstr($str, '"')) $str = '"' . str_replace('"', '""', $str) . '"';
+    return implode($field_separator, $header) . PHP_EOL . $output;
+  }
+
+  function cleanData(&$str) {
+    if (is_null($str)) {
+      $str = "";
+      return;
     }
+    if (is_array($str)) {
+      return;
+    }
+    $str = preg_replace("/\t/", "\\t", $str);
+    $str = preg_replace("/\r?\n/", "\\n", $str);
+    $str = preg_replace("/,/", "-", $str);
+    if (strstr($str, '"')) {
+      $str = '"' . str_replace('"', '""', $str) . '"';
+    }
+  }
 }

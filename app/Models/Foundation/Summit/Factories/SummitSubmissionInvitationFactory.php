@@ -19,29 +19,31 @@ use models\summit\SummitSubmissionInvitation;
  * Class SummitSubmissionInvitationFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitSubmissionInvitationFactory
-{
-    /**
-     * @param array $data
-     * @return SummitSubmissionInvitation
-     */
-    public static function build(array $data): SummitSubmissionInvitation {
-        return self::populate(new SummitSubmissionInvitation(), $data);
-    }
+final class SummitSubmissionInvitationFactory {
+  /**
+   * @param array $data
+   * @return SummitSubmissionInvitation
+   */
+  public static function build(array $data): SummitSubmissionInvitation {
+    return self::populate(new SummitSubmissionInvitation(), $data);
+  }
 
-    /**
-     * @param SummitSubmissionInvitation $invitation
-     * @param array $data
-     * @return SummitSubmissionInvitation
-     */
-    public static function populate(SummitSubmissionInvitation $invitation, array $data):SummitSubmissionInvitation {
-        $invitation->setEmail(trim($data['email']));
-        if(isset($data['first_name'])){
-            $invitation->setFirstName(trim($data['first_name']));
-        }
-        if(isset($data['last_name'])){
-            $invitation->setLastName(trim($data['last_name']));
-        }
-        return $invitation;
+  /**
+   * @param SummitSubmissionInvitation $invitation
+   * @param array $data
+   * @return SummitSubmissionInvitation
+   */
+  public static function populate(
+    SummitSubmissionInvitation $invitation,
+    array $data,
+  ): SummitSubmissionInvitation {
+    $invitation->setEmail(trim($data["email"]));
+    if (isset($data["first_name"])) {
+      $invitation->setFirstName(trim($data["first_name"]));
     }
+    if (isset($data["last_name"])) {
+      $invitation->setLastName(trim($data["last_name"]));
+    }
+    return $invitation;
+  }
 }

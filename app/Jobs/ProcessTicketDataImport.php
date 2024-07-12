@@ -26,56 +26,55 @@ use models\exceptions\ValidationException;
  * Class ProcessTicketDataImport
  * @package App\Jobs
  */
-class ProcessTicketDataImport implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class ProcessTicketDataImport implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 1;
+  public $tries = 1;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    /**
-     * @var int
-     */
-    private $summit_id;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @var string
-     */
-    private $filename;
+  /**
+   * @var string
+   */
+  private $filename;
 
-    /**
-     * ProcessTicketDataImport constructor.
-     * @param int $summit_id
-     * @param string $filename
-     */
-    public function __construct(int $summit_id, string $filename)
-    {
-        $this->summit_id = $summit_id;
-        $this->filename = $filename;
+  /**
+   * ProcessTicketDataImport constructor.
+   * @param int $summit_id
+   * @param string $filename
+   */
+  public function __construct(int $summit_id, string $filename) {
+    $this->summit_id = $summit_id;
+    $this->filename = $filename;
+  }
+
+  /**
+   * @param ISummitOrderService $service
+   */
+  public function handle(ISummitOrderService $service) {
+    try {
+      Log::debug(
+        sprintf(
+          "ProcessTicketDataImport::handle summit %s filename %s",
+          $this->summit_id,
+          $this->filename,
+        ),
+      );
+      $service->processTicketData($this->summit_id, $this->filename);
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+  }
 
-    /**
-     * @param ISummitOrderService $service
-     */
-    public function handle
-    (
-        ISummitOrderService $service
-    )
-    {
-        try {
-            Log::debug(sprintf("ProcessTicketDataImport::handle summit %s filename %s", $this->summit_id, $this->filename));
-            $service->processTicketData($this->summit_id, $this->filename);
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error(sprintf( "ProcessTicketDataImport::failed %s", $exception->getMessage()));
-    }
+  public function failed(\Throwable $exception) {
+    Log::error(sprintf("ProcessTicketDataImport::failed %s", $exception->getMessage()));
+  }
 }

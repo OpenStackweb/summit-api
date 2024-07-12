@@ -20,42 +20,41 @@ use Doctrine\ORM\Query\Expr\Join;
  * Class DoctrineChatTeamRepository
  * @package repositories\main
  */
-final class DoctrineChatTeamRepository extends SilverStripeDoctrineRepository implements IChatTeamRepository
-{
+final class DoctrineChatTeamRepository extends SilverStripeDoctrineRepository implements
+  IChatTeamRepository {
+  /**
+   * @param Member $member
+   * @return ChatTeam[]
+   */
+  function getTeamsByMember(Member $member) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("t")
+      ->from(\models\main\ChatTeam::class, "t")
+      ->innerJoin("t.members", "tm")
+      ->innerJoin("tm.member", "m", Join::WITH, "m.id = :member_id")
+      ->setParameter("member_id", $member->getId())
+      ->getQuery()
+      ->getResult();
+  }
 
-    /**
-     * @param Member $member
-     * @return ChatTeam[]
-     */
-    function getTeamsByMember(Member $member)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("t")
-            ->from(\models\main\ChatTeam::class, "t")
-            ->innerJoin('t.members', 'tm')
-            ->innerJoin('tm.member', 'm', Join::WITH, "m.id = :member_id")
-            ->setParameter('member_id', $member->getId())->getQuery()->getResult();
-    }
+  /**
+   * @return int[]
+   */
+  function getAllTeamsIdsWithPendingMessages2Sent() {
+    $result = $this->getEntityManager()
+      ->createQuery(
+        "select distinct t.id from \models\main\ChatTeam t join t.messages m where exists (select m2.id from \models\main\ChatTeamPushNotificationMessage m2 where m2.id = m.id and m2.is_sent = 0 )",
+      )
+      ->getScalarResult();
+    $ids = array_map("current", $result);
+    return $ids;
+  }
 
-    /**
-     * @return int[]
-     */
-    function getAllTeamsIdsWithPendingMessages2Sent()
-    {
-        $result = $this
-            ->getEntityManager()
-            ->createQuery("select distinct t.id from \models\main\ChatTeam t join t.messages m where exists (select m2.id from \models\main\ChatTeamPushNotificationMessage m2 where m2.id = m.id and m2.is_sent = 0 )")
-            ->getScalarResult();
-        $ids = array_map('current', $result);
-        return $ids;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return ChatTeam::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return ChatTeam::class;
+  }
 }

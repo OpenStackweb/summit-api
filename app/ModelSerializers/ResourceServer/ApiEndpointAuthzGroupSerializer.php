@@ -16,10 +16,9 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class ApiEndpointAuthzGroupSerializer
  * @package App\ModelSerializers\ResourceServer
  */
-final class ApiEndpointAuthzGroupSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id'   => 'id:json_int',
-        'Slug' => 'slug:json_string',
-    ];
+final class ApiEndpointAuthzGroupSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Slug" => "slug:json_string",
+  ];
 }

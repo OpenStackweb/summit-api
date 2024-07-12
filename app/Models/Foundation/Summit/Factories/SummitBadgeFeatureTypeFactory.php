@@ -18,32 +18,33 @@ use models\summit\SummitBadgeFeatureType;
  * Class SummitBadgeFeatureTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitBadgeFeatureTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SummitBadgeFeatureType
-     */
-    public static function build(array $data):SummitBadgeFeatureType{
-        return self::populate(new SummitBadgeFeatureType, $data);
+final class SummitBadgeFeatureTypeFactory {
+  /**
+   * @param array $data
+   * @return SummitBadgeFeatureType
+   */
+  public static function build(array $data): SummitBadgeFeatureType {
+    return self::populate(new SummitBadgeFeatureType(), $data);
+  }
+
+  /**
+   * @param SummitBadgeFeatureType $feature
+   * @param array $data
+   * @return SummitBadgeFeatureType
+   */
+  public static function populate(SummitBadgeFeatureType $feature, array $data) {
+    if (isset($data["name"])) {
+      $feature->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitBadgeFeatureType $feature
-     * @param array $data
-     * @return SummitBadgeFeatureType
-     */
-    public static function populate(SummitBadgeFeatureType $feature, array $data){
-
-        if(isset($data['name']))
-            $feature->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $feature->setDescription(trim($data['description']));
-
-        if(isset($data['template_content']))
-            $feature->setTemplateContent(trim($data['template_content']));
-
-        return $feature;
+    if (isset($data["description"])) {
+      $feature->setDescription(trim($data["description"]));
     }
+
+    if (isset($data["template_content"])) {
+      $feature->setTemplateContent(trim($data["template_content"]));
+    }
+
+    return $feature;
+  }
 }

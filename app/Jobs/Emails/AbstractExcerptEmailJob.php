@@ -20,49 +20,44 @@ use models\summit\Summit;
  * Class AbstractExcerptEmailJob
  * @package App\Jobs\Emails
  */
-abstract class AbstractExcerptEmailJob extends AbstractEmailJob
-{
-    /**
-     * SummitAttendeeExcerptEmail constructor.
-     * @param Summit $summit
-     * @param string $outcome_email_recipient
-     * @param array $report
-     */
-    public function __construct
-    (
-        Summit $summit,
-        string $outcome_email_recipient,
-        array $report
-    ){
-        $payload = [];
-        $report_lines = [];
+abstract class AbstractExcerptEmailJob extends AbstractEmailJob {
+  /**
+   * SummitAttendeeExcerptEmail constructor.
+   * @param Summit $summit
+   * @param string $outcome_email_recipient
+   * @param array $report
+   */
+  public function __construct(Summit $summit, string $outcome_email_recipient, array $report) {
+    $payload = [];
+    $report_lines = [];
 
-        foreach ($report as $reportItem) {
-            $type = $reportItem['type'] ?? null;
-            if($type == IEmailExcerptService::EmailLineType)
-                $report_lines[] = "Email type {$reportItem['email_type']} sent to {$reportItem['subject_email']}.";
-            else if($type == IEmailExcerptService::ErrorType)
-                $report_lines[] = "ERROR {$reportItem['message']}.";
-            else if($type == IEmailExcerptService::InfoType)
-                $report_lines[] = "INFO {$reportItem['message']}.";
-        }
-
-        $payload[IMailTemplatesConstants::report] = $report_lines;
-
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-
-        parent::__construct($payload, $template_identifier, $outcome_email_recipient);
-
-        Log::debug(sprintf("AbstractExcerptEmailJob::__construct payload %s", json_encode($payload)));
+    foreach ($report as $reportItem) {
+      $type = $reportItem["type"] ?? null;
+      if ($type == IEmailExcerptService::EmailLineType) {
+        $report_lines[] = "Email type {$reportItem["email_type"]} sent to {$reportItem["subject_email"]}.";
+      } elseif ($type == IEmailExcerptService::ErrorType) {
+        $report_lines[] = "ERROR {$reportItem["message"]}.";
+      } elseif ($type == IEmailExcerptService::InfoType) {
+        $report_lines[] = "INFO {$reportItem["message"]}.";
+      }
     }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::report]['type'] = 'string';
+    $payload[IMailTemplatesConstants::report] = $report_lines;
 
-        return $payload;
-    }
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+    parent::__construct($payload, $template_identifier, $outcome_email_recipient);
+
+    Log::debug(sprintf("AbstractExcerptEmailJob::__construct payload %s", json_encode($payload)));
+  }
+
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = [];
+    $payload[IMailTemplatesConstants::report]["type"] = "string";
+
+    return $payload;
+  }
 }

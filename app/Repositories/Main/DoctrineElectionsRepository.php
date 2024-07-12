@@ -27,166 +27,170 @@ use utils\PagingResponse;
  * Class DoctrineElectionsRepository
  * @package repositories\main
  */
-final class DoctrineElectionsRepository
-    extends SilverStripeDoctrineRepository implements IElectionsRepository
-{
+final class DoctrineElectionsRepository extends SilverStripeDoctrineRepository implements
+  IElectionsRepository {
+  protected function getBaseEntity() {
+    return Election::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return Election::class;
+  protected function getFilterMappings() {
+    return [
+      "name" => Filter::buildStringField("e.name"),
+      "opens" => Filter::buildDateTimeEpochField("e.opens"),
+      "closes" => Filter::buildDateTimeEpochField("e.closes"),
+    ];
+  }
+
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "name" => "e.name",
+      "id" => "e.id",
+      "opens" => "e.opens",
+      "closes" => "e.closes",
+    ];
+  }
+
+  public function getCurrent(): ?Election {
+    $e = $this->getOpen();
+
+    if (is_null($e)) {
+      $e = $this->getActive();
     }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => Filter::buildStringField('e.name'),
-            'opens' =>  Filter::buildDateTimeEpochField('e.opens'),
-            'closes' =>  Filter::buildDateTimeEpochField('e.closes'),
-        ];
+    if (is_null($e)) {
+      $e = $this->getLatest();
     }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'name' => 'e.name',
-            'id' => 'e.id',
-            'opens' => 'e.opens',
-            'closes' => 'e.closes',
-        ];
-    }
+    return $e;
+  }
 
-    public function getCurrent(): ?Election
-    {
-       $e = $this->getOpen();
+  public function getOpen(): ?Election {
+    $now = new \DateTime("now", new \DateTimeZone("UTC"));
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->where("e.nomination_opens <= :now and e.nomination_closes >= :now")
+      ->setParameter("now", $now)
+      ->orderBy("e.nomination_opens", "desc")
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 
-       if(is_null($e))
-           $e = $this->getActive();
+  public function getActive(): ?Election {
+    $now = new \DateTime("now", new \DateTimeZone("UTC"));
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->where("e.opens <= :now and e.closes >= :now")
+      ->setParameter("now", $now)
+      ->orderBy("e.opens", "desc")
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 
-        if(is_null($e))
-            $e = $this->getLatest();
+  public function getLatest(): ?Election {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->orderBy("e.opens", "desc")
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 
-        return $e;
-    }
+  private static function getMemberFilterMappings(): array {
+    return [
+      "first_name" => "m.first_name:json_string",
+      "last_name" => "m.last_name:json_string",
+      "github_user" => "m.github_user:json_string",
+      "full_name" => new DoctrineFilterMapping(
+        "concat(m.first_name, ' ', m.last_name) :operator :value",
+      ),
+      "email" => ["m.email:json_string", "m.second_email:json_string", "m.third_email:json_string"],
+    ];
+  }
 
-    public function getOpen():?Election{
-        $now = new \DateTime("now", new \DateTimeZone("UTC"));
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("e.nomination_opens <= :now and e.nomination_closes >= :now")
-            ->setParameter("now", $now)
-            ->orderBy("e.nomination_opens", "desc")
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+  private static function getMemberOrderMappings(): array {
+    return [
+      "id" => "m.id",
+      "first_name" => "m.first_name",
+      "last_name" => "m.last_name",
+    ];
+  }
 
-    public function getActive():?Election{
-        $now = new \DateTime("now", new \DateTimeZone("UTC"));
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("e.opens <= :now and e.closes >= :now")
-            ->setParameter("now", $now)
-            ->orderBy("e.opens", "desc")
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+  /**
+   * @param Election $election
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAcceptedCandidates(
+    Election $election,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("c")
+      ->from(Candidate::class, "c")
+      ->join("c.member", "m")
+      ->join("c.election", "e")
+      ->where("e.id = :election_id")
+      ->andWhere("c.has_accepted_nomination = :has_accepted_nomination")
+      ->setParameter("election_id", $election->getId())
+      ->setParameter("has_accepted_nomination", true);
 
-    public function getLatest():?Election{
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->orderBy("e.opens", "desc")
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+    return $this->getAllAbstractByPage(
+      $query,
+      $paging_info,
+      $filter,
+      $order,
+      self::getMemberFilterMappings(),
+      self::getMemberOrderMappings(),
+    );
+  }
 
-    private static function getMemberFilterMappings():array{
-        return [
-            'first_name'        => 'm.first_name:json_string',
-            'last_name'         => 'm.last_name:json_string',
-            'github_user'       => 'm.github_user:json_string',
-            'full_name'         => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
-            'email'             => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string'],
-        ];
-    }
+  /**
+   * @param Election $election
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getGoldCandidates(
+    Election $election,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("c")
+      ->from(Candidate::class, "c")
+      ->join("c.member", "m")
+      ->join("c.election", "e")
+      ->where("e.id = :election_id")
+      ->andWhere("c.is_gold_member = :is_gold_member")
+      ->setParameter("election_id", $election->getId())
+      ->setParameter("is_gold_member", true);
 
-    private static function getMemberOrderMappings():array{
-        return [
-            'id'          => 'm.id',
-            'first_name'  => 'm.first_name',
-            'last_name'   => 'm.last_name',
-        ];
-    }
-
-    /**
-     * @param Election $election
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAcceptedCandidates(Election $election, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
-    {
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("c")
-            ->from(Candidate::class, "c")
-            ->join("c.member", "m")
-            ->join("c.election", "e")
-            ->where('e.id = :election_id')
-            ->andWhere('c.has_accepted_nomination = :has_accepted_nomination')
-            ->setParameter("election_id", $election->getId())
-            ->setParameter("has_accepted_nomination", true);
-
-        return $this->getAllAbstractByPage
-        (
-            $query,
-            $paging_info,
-            $filter,
-            $order,
-            self::getMemberFilterMappings(),
-            self::getMemberOrderMappings()
-        );
-    }
-
-    /**
-     * @param Election $election
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getGoldCandidates(Election $election, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
-    {
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("c")
-            ->from(Candidate::class, "c")
-            ->join("c.member", "m")
-            ->join("c.election", "e")
-            ->where('e.id = :election_id')
-            ->andWhere('c.is_gold_member = :is_gold_member')
-            ->setParameter("election_id", $election->getId())
-            ->setParameter("is_gold_member", true);
-
-        return $this->getAllAbstractByPage
-        (
-            $query,
-            $paging_info,
-            $filter,
-            $order,
-            self::getMemberFilterMappings(),
-            self::getMemberOrderMappings()
-        );
-    }
+    return $this->getAllAbstractByPage(
+      $query,
+      $paging_info,
+      $filter,
+      $order,
+      self::getMemberFilterMappings(),
+      self::getMemberOrderMappings(),
+    );
+  }
 }

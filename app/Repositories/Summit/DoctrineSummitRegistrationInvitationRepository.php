@@ -29,126 +29,115 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 class DoctrineSummitRegistrationInvitationRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitRegistrationInvitationRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitRegistrationInvitationRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitRegistrationInvitation::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitRegistrationInvitation::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->join("e.summit", "s");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->join('e.summit', 's');
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "id" => new DoctrineInFilterMapping("e.id"),
+      "not_id" => new DoctrineNotInFilterMapping("e.id"),
+      "email" => "e.email:json_string",
+      "first_name" => Filter::buildLowerCaseStringField("e.first_name"),
+      "last_name" => Filter::buildLowerCaseStringField("e.last_name"),
+      "full_name" => Filter::buildConcatStringFields(["e.first_name", "e.last_name"]),
+      "is_accepted" => new DoctrineSwitchFilterMapping([
+        "true" => new DoctrineCaseFilterMapping(
+          "true",
+          sprintf("e.status = '%s'", SummitRegistrationInvitation::Status_Accepted),
+        ),
+        "false" => new DoctrineCaseFilterMapping(
+          "false",
+          sprintf("e.status <> '%s'", SummitRegistrationInvitation::Status_Accepted),
+        ),
+      ]),
+      "is_sent" => new DoctrineSwitchFilterMapping([
+        "true" => new DoctrineCaseFilterMapping("true", "e.hash is not null"),
+        "false" => new DoctrineCaseFilterMapping("false", "e.hash is null"),
+      ]),
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+      "ticket_types_id" => new DoctrineLeftJoinFilterMapping(
+        "e.ticket_types",
+        "tt",
+        "tt.id :operator :value",
+      ),
+      "tags" => new DoctrineLeftJoinFilterMapping("e.tags", "t", "t.tag :operator :value"),
+      "tags_id" => new DoctrineLeftJoinFilterMapping("e.tags", "t", "t.id :operator :value"),
+      "status" => "e.status :operator :value",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'id' => new DoctrineInFilterMapping('e.id'),
-            'not_id' => new DoctrineNotInFilterMapping('e.id'),
-            'email' => 'e.email:json_string',
-            'first_name' => Filter::buildLowerCaseStringField('e.first_name'),
-            'last_name' => Filter::buildLowerCaseStringField('e.last_name'),
-            'full_name' => Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
-            'is_accepted' => new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        sprintf("e.status = '%s'", SummitRegistrationInvitation::Status_Accepted)
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        sprintf("e.status <> '%s'", SummitRegistrationInvitation::Status_Accepted)
-                    ),
-                ]
-            ),
-            'is_sent' => new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        "e.hash is not null"
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "e.hash is null"
-                    ),
-                ]
-            ),
-            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
-            'ticket_types_id' => new DoctrineLeftJoinFilterMapping("e.ticket_types", "tt" ,"tt.id :operator :value"),
-            'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
-            'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
-            'status' => "e.status :operator :value",
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "email" => "e.email",
+      "first_name" => "e.first_name",
+      "last_name" => "e.last_name",
+      "full_name" => Filter::buildConcatStringFields(["e.first_name", "e.last_name"]),
+      "status" => "e.status",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'email' => 'e.email',
-            'first_name' => 'e.first_name',
-            'last_name' => 'e.last_name',
-            'full_name'=> Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
-            'status' => 'e.status',
-        ];
-    }
+  /**
+   * @param string $hash
+   * @return SummitRegistrationInvitation|null
+   */
+  public function getByHashExclusiveLock(string $hash): ?SummitRegistrationInvitation {
+    return $this->findOneBy(["hash" => trim($hash)]);
+  }
 
-    /**
-     * @param string $hash
-     * @return SummitRegistrationInvitation|null
-     */
-    public function getByHashExclusiveLock(string $hash): ?SummitRegistrationInvitation
-    {
-        return $this->findOneBy(['hash'=> trim($hash)]);
-    }
+  /**
+   * @inheritDoc
+   */
+  public function getAllIdsNonAcceptedPerSummit(Summit $summit): array {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e.id")
+      ->from($this->getBaseEntity(), "e")
+      ->join("e.summit", "s")
+      ->where("e.accepted_date is null")
+      ->andWhere("s.id = :summit_id")
+      ->setParameter("summit_id", $summit->getId());
+    return $query->getQuery()->getResult();
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function getAllIdsNonAcceptedPerSummit(Summit $summit): array
-    {
-        $query = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e.id")
-            ->from($this->getBaseEntity(), "e")
-            ->join("e.summit","s")
-            ->where('e.accepted_date is null')
-            ->andWhere('s.id = :summit_id')->setParameter("summit_id", $summit->getId());
-        return $query->getQuery()->getResult();
-    }
+  /**
+   * @param string $hash
+   * @param Summit $summit
+   * @return SummitRegistrationInvitation|null
+   * @throws \Doctrine\ORM\NonUniqueResultException
+   */
+  public function getByHashAndSummit(string $hash, Summit $summit): ?SummitRegistrationInvitation {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->join("e.summit", "s")
+      ->where("e.hash = :hash")
+      ->andWhere("s.id = :summit_id")
+      ->setParameter("summit_id", $summit->getId())
+      ->setParameter("hash", trim($hash));
 
-    /**
-     * @param string $hash
-     * @param Summit $summit
-     * @return SummitRegistrationInvitation|null
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function getByHashAndSummit(string $hash, Summit $summit): ?SummitRegistrationInvitation
-    {
-        $query = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->join("e.summit","s")
-            ->where('e.hash = :hash')
-            ->andWhere('s.id = :summit_id')
-            ->setParameter("summit_id", $summit->getId())
-            ->setParameter('hash', trim($hash));
-
-        return $query->getQuery()->getOneOrNullResult();
-    }
+    return $query->getQuery()->getOneOrNullResult();
+  }
 }

@@ -12,76 +12,68 @@
  * limitations under the License.
  **/
 
-
 /**
  * interface ExtraQuestionTypeConstants
  * @package App\Models\Foundation\ExtraQuestions
  */
-interface ExtraQuestionTypeConstants
-{
-    const TextAreaQuestionType        = 'TextArea';
-    const TextQuestionType            = 'Text';
-    const CheckBoxQuestionType        = 'CheckBox';
-    const RadioButtonQuestionType     = 'RadioButton';
-    const ComboBoxQuestionType        = 'ComboBox';
+interface ExtraQuestionTypeConstants {
+  const TextAreaQuestionType = "TextArea";
+  const TextQuestionType = "Text";
+  const CheckBoxQuestionType = "CheckBox";
+  const RadioButtonQuestionType = "RadioButton";
+  const ComboBoxQuestionType = "ComboBox";
 
-    const CountryComboBoxQuestionType = 'CountryComboBox';
-    const CheckBoxListQuestionType    = 'CheckBoxList';
-    const RadioButtonListQuestionType = 'RadioButtonList';
+  const CountryComboBoxQuestionType = "CountryComboBox";
+  const CheckBoxListQuestionType = "CheckBoxList";
+  const RadioButtonListQuestionType = "RadioButtonList";
 
-    const ValidQuestionTypes = [
-        self::TextAreaQuestionType,
-        self::TextQuestionType,
-        self::CheckBoxQuestionType,
-        self::ComboBoxQuestionType,
-        self::CheckBoxListQuestionType,
-        self::RadioButtonListQuestionType,
-        self::CountryComboBoxQuestionType,
-    ];
+  const ValidQuestionTypes = [
+    self::TextAreaQuestionType,
+    self::TextQuestionType,
+    self::CheckBoxQuestionType,
+    self::ComboBoxQuestionType,
+    self::CheckBoxListQuestionType,
+    self::RadioButtonListQuestionType,
+    self::CountryComboBoxQuestionType,
+  ];
 
-    const AllowedMultiValueQuestionType = [
-        self::ComboBoxQuestionType,
-        self::CheckBoxListQuestionType,
-        self::RadioButtonListQuestionType,
-        self::CountryComboBoxQuestionType,
-    ];
+  const AllowedMultiValueQuestionType = [
+    self::ComboBoxQuestionType,
+    self::CheckBoxListQuestionType,
+    self::RadioButtonListQuestionType,
+    self::CountryComboBoxQuestionType,
+  ];
 
-    const AllowedPlaceHolderQuestionType = [
-        self::TextAreaQuestionType,
-        self::TextQuestionType,
-    ];
+  const AllowedPlaceHolderQuestionType = [self::TextAreaQuestionType, self::TextQuestionType];
 
-    const QuestionClassMain = 'MainQuestion';
-    const QuestionClassSubQuestion = 'SubQuestion';
+  const QuestionClassMain = "MainQuestion";
+  const QuestionClassSubQuestion = "SubQuestion";
 
-    const AllowedQuestionClass = [
-        self::QuestionClassMain,
-        self::QuestionClassSubQuestion,
-    ];
+  const AllowedQuestionClass = [self::QuestionClassMain, self::QuestionClassSubQuestion];
 
-    const SubQuestionRuleVisibility_Visible = 'Visible';
-    const SubQuestionRuleVisibility_NotVisible = 'NotVisible';
+  const SubQuestionRuleVisibility_Visible = "Visible";
+  const SubQuestionRuleVisibility_NotVisible = "NotVisible";
 
-    const AllowedSubQuestionRuleVisibility = [
-        self::SubQuestionRuleVisibility_Visible,
-        self::SubQuestionRuleVisibility_NotVisible
-    ];
+  const AllowedSubQuestionRuleVisibility = [
+    self::SubQuestionRuleVisibility_Visible,
+    self::SubQuestionRuleVisibility_NotVisible,
+  ];
 
-    const SubQuestionRuleVisibilityCondition_Equal = 'Equal';
-    const SubQuestionRuleVisibilityCondition_NotEqual = 'NotEqual';
+  const SubQuestionRuleVisibilityCondition_Equal = "Equal";
+  const SubQuestionRuleVisibilityCondition_NotEqual = "NotEqual";
 
-    const AllowedSubQuestionRuleVisibilityCondition = [
-        self::SubQuestionRuleVisibilityCondition_Equal,
-        self::SubQuestionRuleVisibilityCondition_NotEqual,
-    ];
+  const AllowedSubQuestionRuleVisibilityCondition = [
+    self::SubQuestionRuleVisibilityCondition_Equal,
+    self::SubQuestionRuleVisibilityCondition_NotEqual,
+  ];
 
-    const SubQuestionRuleAnswerValuesOperator_And= 'And';
-    const SubQuestionRuleAnswerValuesOperator_Or= 'Or';
+  const SubQuestionRuleAnswerValuesOperator_And = "And";
+  const SubQuestionRuleAnswerValuesOperator_Or = "Or";
 
-    const AllowedSubQuestionRuleAnswerValuesOperator = [
-        self::SubQuestionRuleAnswerValuesOperator_And,
-        self::SubQuestionRuleAnswerValuesOperator_Or,
-    ];
+  const AllowedSubQuestionRuleAnswerValuesOperator = [
+    self::SubQuestionRuleAnswerValuesOperator_And,
+    self::SubQuestionRuleAnswerValuesOperator_Or,
+  ];
 
-    const AnswerCharDelimiter = ',';
+  const AnswerCharDelimiter = ",";
 }

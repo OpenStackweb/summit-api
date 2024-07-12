@@ -20,27 +20,26 @@ use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
  * Class FileDownloadStrategyFactory
  * @package App\Services\Filesystem
  */
-final class FileDownloadStrategyFactory
-{
-    /**
-     * @param string $storageType
-     * @return IFileDownloadStrategy|null
-     */
-    public static function build(string $storageType):? IFileDownloadStrategy {
-        switch ($storageType){
-            case IStorageTypesConstants::Local;
-                return new LocalStorageFileDownloadStrategy();
-                break;
-            case IStorageTypesConstants::DropBox;
-                return new DropboxStorageFileDownloadStrategy();
-                break;
-            case IStorageTypesConstants::Swift;
-                return new SwiftStorageFileDownloadStrategy();
-                break;
-            case IStorageTypesConstants::S3;
-                return new S3StorageFileDownloadStrategy();
-                break;
-        }
-        return null;
+final class FileDownloadStrategyFactory {
+  /**
+   * @param string $storageType
+   * @return IFileDownloadStrategy|null
+   */
+  public static function build(string $storageType): ?IFileDownloadStrategy {
+    switch ($storageType) {
+      case IStorageTypesConstants::Local:
+        return new LocalStorageFileDownloadStrategy();
+        break;
+      case IStorageTypesConstants::DropBox:
+        return new DropboxStorageFileDownloadStrategy();
+        break;
+      case IStorageTypesConstants::Swift:
+        return new SwiftStorageFileDownloadStrategy();
+        break;
+      case IStorageTypesConstants::S3:
+        return new S3StorageFileDownloadStrategy();
+        break;
     }
+    return null;
+  }
 }

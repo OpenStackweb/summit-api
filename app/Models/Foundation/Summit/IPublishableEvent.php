@@ -25,83 +25,86 @@ use models\utils\IEntity;
  * Interface
  * @package App\Models\Foundation\Summit
  */
-interface IPublishableEvent extends IEntity
-{
-    /**
-     * @return SummitEventType|null
-     */
-    public function getType(): ?SummitEventType;
+interface IPublishableEvent extends IEntity {
+  /**
+   * @return SummitEventType|null
+   */
+  public function getType(): ?SummitEventType;
 
-    public function hasType(): bool;
+  public function hasType(): bool;
 
-    public function getStartDate():?DateTime;
+  public function getStartDate(): ?DateTime;
 
-    public function getEndDate():?DateTime;
+  public function getEndDate(): ?DateTime;
 
-    /**
-     * @return string
-     */
-    public function getEndDateNice(): string;
+  /**
+   * @return string
+   */
+  public function getEndDateNice(): string;
 
-    /**
-     * @return DateTime|null
-     */
-    public function getLocalEndDate():?DateTime;
+  /**
+   * @return DateTime|null
+   */
+  public function getLocalEndDate(): ?DateTime;
 
-    /**
-     * @return DateTime|null
-     */
-    public function getLocalStartDate():?DateTime;
+  /**
+   * @return DateTime|null
+   */
+  public function getLocalStartDate(): ?DateTime;
 
-    public function getStartDateNice(): string;
+  public function getStartDateNice(): string;
 
-    /**
-     * @return Summit|null
-     */
-    public function getSummit(): ?Summit;
+  /**
+   * @return Summit|null
+   */
+  public function getSummit(): ?Summit;
 
-    /**
-     * @param DateTime $value
-     */
-    public function setStartDate(DateTime $value);
+  /**
+   * @param DateTime $value
+   */
+  public function setStartDate(DateTime $value);
 
-    /**
-     * @param DateTime $value
-     */
-    public function setEndDate(DateTime $value);
+  /**
+   * @param DateTime $value
+   */
+  public function setEndDate(DateTime $value);
 
-    /**
-     * @param int $duration_in_seconds
-     * @param bool $skipDatesSetting
-     * @param Member|null $member
-     * @throws ValidationException
-     * @throws \Exception
-     */
-    public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false, ?Member $member = null): void;
+  /**
+   * @param int $duration_in_seconds
+   * @param bool $skipDatesSetting
+   * @param Member|null $member
+   * @throws ValidationException
+   * @throws \Exception
+   */
+  public function setDuration(
+    int $duration_in_seconds,
+    bool $skipDatesSetting = false,
+    ?Member $member = null,
+  ): void;
 
-    /**
-     * @return SummitAbstractLocation
-     */
-    public function getLocation(): ?SummitAbstractLocation;
+  /**
+   * @return SummitAbstractLocation
+   */
+  public function getLocation(): ?SummitAbstractLocation;
 
-    /**
-     * @param SummitAbstractLocation $location
-     */
-    public function setLocation(SummitAbstractLocation $location);
+  /**
+   * @param SummitAbstractLocation $location
+   */
+  public function setLocation(SummitAbstractLocation $location);
 
-    public function clearLocation();
+  public function clearLocation();
 
-    public function getTitle(): string;
+  public function getTitle(): string;
 
-    public function getLocationName(): string;
+  public function getLocationName(): string;
 
-    public function getCategory():?PresentationCategory;
+  public function getCategory(): ?PresentationCategory;
 
-    public function getTrackTransitionTime():?int;
+  public function getTrackTransitionTime(): ?int;
 
-    public function getSummitEventId():int;
+  public function getSummitEventId(): int;
 
-    public function getSource(): string;
+  public function getSource(): string;
 
-    public function clearPublishingDates():void;
+  public function clearPublishingDates(): void;
 }

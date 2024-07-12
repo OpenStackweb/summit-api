@@ -17,10 +17,9 @@ use models\summit\SummitTicketType;
  * Interface IPromoCodeAllowedTicketTypesStrategy
  * @package App\Models\Foundation\Summit\Registration\PromoCodes\Strategies
  */
-interface IPromoCodeAllowedTicketTypesStrategy
-{
-    /**
-     * @return SummitTicketType[]
-     */
-    public function getTicketTypes(): array;
+interface IPromoCodeAllowedTicketTypesStrategy {
+  /**
+   * @return SummitTicketType[]
+   */
+  public function getTicketTypes(): array;
 }

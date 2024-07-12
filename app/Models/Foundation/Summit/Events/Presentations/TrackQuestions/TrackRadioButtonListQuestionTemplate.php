@@ -12,32 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrackRadioButtonListQuestionTemplate")
  * Class TrackRadioButtonListQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackRadioButtonListQuestionTemplate extends TrackMultiValueQuestionTemplate
-{
-    const ClassName = 'TrackRadioButtonListQuestionTemplate';
+class TrackRadioButtonListQuestionTemplate extends TrackMultiValueQuestionTemplate {
+  const ClassName = "TrackRadioButtonListQuestionTemplate";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public static $metadata = [
-        'class_name'  => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(TrackMultiValueQuestionTemplate::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(TrackMultiValueQuestionTemplate::getMetadata(), self::$metadata);
+  }
 }

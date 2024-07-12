@@ -19,53 +19,57 @@ use ModelSerializers\SilverStripeSerializer;
  * Class ChatTeamMemberSerializer
  * @package ModelSerializers\ChatTeams
  */
-final class ChatTeamMemberSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'TeamId'     => 'team_id:json_int',
-        'MemberId'   => 'member_id:json_int',
-        'Permission' => 'permission:json_string',
-    );
+final class ChatTeamMemberSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "TeamId" => "team_id:json_int",
+    "MemberId" => "member_id:json_int",
+    "Permission" => "permission:json_string",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $team_member = $this->object;
-        if(! $team_member instanceof ChatTeamMember) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $team_member = $this->object;
+    if (!$team_member instanceof ChatTeamMember) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (!empty($expand)) {
-            $expand_to = explode(',', $expand);
-            foreach ($expand_to as $relation) {
-                switch (trim($relation)) {
-                    case 'member':{
-                        if(isset($values['member_id']))
-                        {
-                            unset($values['member_id']);
-                            $values['member'] =  SerializerRegistry::getInstance()->getSerializer($team_member->getMember())->serialize($expand);
-                        }
-                    }
-                    break;
-                    case 'team': {
-                        if (isset($values['team_id'])) {
-                            unset($values['team_id']);
-
-                            $values['team'] = SerializerRegistry::getInstance()->getSerializer($team_member->getTeam())->serialize(self::filterExpandByPrefix($expand, 'team.'));
-                        }
-                    }
-                    break;
-                }
+    if (!empty($expand)) {
+      $expand_to = explode(",", $expand);
+      foreach ($expand_to as $relation) {
+        switch (trim($relation)) {
+          case "member":
+            if (isset($values["member_id"])) {
+              unset($values["member_id"]);
+              $values["member"] = SerializerRegistry::getInstance()
+                ->getSerializer($team_member->getMember())
+                ->serialize($expand);
             }
-        }
+            break;
+          case "team":
+            if (isset($values["team_id"])) {
+              unset($values["team_id"]);
 
-        return $values;
+              $values["team"] = SerializerRegistry::getInstance()
+                ->getSerializer($team_member->getTeam())
+                ->serialize(self::filterExpandByPrefix($expand, "team."));
+            }
+            break;
+        }
+      }
     }
 
+    return $values;
+  }
 }

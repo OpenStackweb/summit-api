@@ -1,6 +1,5 @@
 <?php namespace repositories\main;
 
-
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,16 +20,12 @@ use models\main\IAssetsSyncRequestRepository;
  * Class DoctrineAssetsSyncRequestRepository
  * @package repositories\main
  */
-class DoctrineAssetsSyncRequestRepository
-    extends SilverStripeDoctrineRepository
-    implements IAssetsSyncRequestRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return AssetsSyncRequest::class;
-    }
+class DoctrineAssetsSyncRequestRepository extends SilverStripeDoctrineRepository implements
+  IAssetsSyncRequestRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return AssetsSyncRequest::class;
+  }
 }

@@ -21,45 +21,50 @@ use ModelSerializers\SerializerRegistry;
  * Trait GetSummitChildElementById
  * @package App\Http\Controllers
  */
-trait GetSummitChildElementById
-{
-    use BaseSummitAPI;
+trait GetSummitChildElementById {
+  use BaseSummitAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    /**
-     * @param Summit $summit
-     * @param $child_id
-     * @return IEntity|null
-     */
-    abstract protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity;
+  /**
+   * @param Summit $summit
+   * @param $child_id
+   * @return IEntity|null
+   */
+  abstract protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity;
 
-    /**
-     * @return string
-     */
-    public function getChildSerializer()
-    {
-        return SerializerRegistry::SerializerType_Public;
-    }
+  /**
+   * @return string
+   */
+  public function getChildSerializer() {
+    return SerializerRegistry::SerializerType_Public;
+  }
 
-    /**
-     * @param $summit_id
-     * @param $child_id
-     * @return mixed
-     */
-    public function get($summit_id, $child_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $child_id) {
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+  /**
+   * @param $summit_id
+   * @param $child_id
+   * @return mixed
+   */
+  public function get($summit_id, $child_id) {
+    return $this->processRequest(function () use ($summit_id, $child_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->getSummitRepository(),
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $child = $this->getChildFromSummit($summit, $child_id);
-            if (is_null($child))
-                return $this->error404();
+      $child = $this->getChildFromSummit($summit, $child_id);
+      if (is_null($child)) {
+        return $this->error404();
+      }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($child, $this->getChildSerializer())->serialize(Request::input('expand', '')));
-        });
-    }
-
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($child, $this->getChildSerializer())
+          ->serialize(Request::input("expand", "")),
+      );
+    });
+  }
 }

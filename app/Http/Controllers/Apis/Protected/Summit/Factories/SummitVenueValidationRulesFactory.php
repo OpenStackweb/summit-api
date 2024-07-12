@@ -16,16 +16,15 @@
  * Class SummitVenueValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitVenueValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-        $rules        = SummitGeoLocatedLocationValidationRulesFactory::build($data, $update);
-        $venues_rules = ['is_main' => 'sometimes|boolean'];
-        return array_merge($venues_rules, $rules);
-    }
+final class SummitVenueValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = SummitGeoLocatedLocationValidationRulesFactory::build($data, $update);
+    $venues_rules = ["is_main" => "sometimes|boolean"];
+    return array_merge($venues_rules, $rules);
+  }
 }

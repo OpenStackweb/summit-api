@@ -31,233 +31,280 @@ use models\summit\SummitTrackChair;
  * Class TrackChairService
  * @package App\Services\Model\Imp
  */
-final class TrackChairService
-    extends AbstractService
-    implements ITrackChairService
-{
+final class TrackChairService extends AbstractService implements ITrackChairService {
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * @var IGroupRepository
+   */
+  private $group_repository;
 
-    /**
-     * @var IGroupRepository
-     */
-    private $group_repository;
+  /**
+   * @var IResourceServerContext
+   */
+  private $resource_server_ctx;
 
-    /**
-     * @var IResourceServerContext
-     */
-    private $resource_server_ctx;
+  /**
+   * TrackChairService constructor.
+   * @param IMemberRepository $member_repository
+   * @param IGroupRepository $group_repository
+   * @param IResourceServerContext $resource_server_ctx
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    IMemberRepository $member_repository,
+    IGroupRepository $group_repository,
+    IResourceServerContext $resource_server_ctx,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->member_repository = $member_repository;
+    $this->group_repository = $group_repository;
+    $this->resource_server_ctx = $resource_server_ctx;
+  }
 
-    /**
-     * TrackChairService constructor.
-     * @param IMemberRepository $member_repository
-     * @param IGroupRepository $group_repository
-     * @param IResourceServerContext $resource_server_ctx
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        IMemberRepository $member_repository,
-        IGroupRepository $group_repository,
-        IResourceServerContext $resource_server_ctx,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->member_repository = $member_repository;
-        $this->group_repository = $group_repository;
-        $this->resource_server_ctx = $resource_server_ctx;
-    }
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitTrackChair
+   * @throws \Exception
+   */
+  public function addTrackChair(Summit $summit, array $payload): SummitTrackChair {
+    return $this->tx_service->transaction(function () use ($summit, $payload) {
+      $current_member = $this->resource_server_ctx->getCurrentUser();
+      if (is_null($current_member)) {
+        throw new AuthzException("User not Found");
+      }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitTrackChair
-     * @throws \Exception
-     */
-    public function addTrackChair(Summit $summit, array $payload): SummitTrackChair
-    {
-        return $this->tx_service->transaction(function () use ($summit, $payload) {
+      $isAuth = $summit->isTrackChairAdmin($current_member);
 
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            if (is_null($current_member))
-                throw new AuthzException("User not Found");
+      if (!$isAuth) {
+        throw new AuthzException(
+          sprintf("User %s is not authorized to perform this action.", $current_member->getId()),
+        );
+      }
 
-            $isAuth = $summit->isTrackChairAdmin($current_member);
+      $member = $this->member_repository->getById(intval($payload["member_id"]));
+      if (is_null($member) || !$member instanceof Member) {
+        throw new EntityNotFoundException(sprintf("Member %s not found.", $payload["member_id"]));
+      }
 
-            if (!$isAuth)
-                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+      $former_track_chair = $summit->getTrackChairByMember($member);
 
-            $member = $this->member_repository->getById(intval($payload['member_id']));
-            if (is_null($member) || !$member instanceof Member)
-                throw new EntityNotFoundException(sprintf("Member %s not found.", $payload['member_id']));
+      if (!is_null($former_track_chair)) {
+        throw new ValidationException(
+          sprintf(
+            "Member %s already is a track chair on summit %s",
+            $payload["member_id"],
+            $summit->getId(),
+          ),
+        );
+      }
 
-            $former_track_chair = $summit->getTrackChairByMember($member);
+      $group = $this->group_repository->getBySlug(IGroup::TrackChairs);
+      if (is_null($group)) {
+        throw new EntityNotFoundException(sprintf("Group %s not found.", IGroup::TrackChairs));
+      }
 
-            if (!is_null($former_track_chair)) {
-                throw new ValidationException(sprintf("Member %s already is a track chair on summit %s", $payload['member_id'], $summit->getId()));
-            }
+      $member->add2Group($group);
 
-            $group = $this->group_repository->getBySlug(IGroup::TrackChairs);
-            if (is_null($group)) {
-                throw new EntityNotFoundException(sprintf("Group %s not found.", IGroup::TrackChairs));
-            }
+      $categories = [];
 
-            $member->add2Group($group);
+      foreach ($payload["categories"] as $track_id) {
+        $track = $summit->getPresentationCategory(intval($track_id));
+        if (
+          is_null($track) ||
+          !$track instanceof PresentationCategory ||
+          !$track->isChairVisible()
+        ) {
+          throw new EntityNotFoundException(
+            sprintf("Presentation Category %s not found.", $track_id),
+          );
+        }
+        $categories[] = $track;
+      }
 
-            $categories = [];
+      $track_chair = $summit->addTrackChair($member, $categories);
 
-            foreach ($payload['categories'] as $track_id) {
-                $track = $summit->getPresentationCategory(intval($track_id));
-                if (is_null($track) || !$track instanceof PresentationCategory || !$track->isChairVisible())
-                    throw new EntityNotFoundException(sprintf("Presentation Category %s not found.", $track_id));
-                $categories[] = $track;
-            }
+      return $track_chair;
+    });
+  }
 
-            $track_chair =  $summit->addTrackChair($member, $categories);
+  /**
+   * @param Summit $summit
+   * @param int $track_chair_id
+   * @param array $payload
+   * @return SummitTrackChair
+   * @throws \Exception
+   */
+  public function updateTrackChair(
+    Summit $summit,
+    int $track_chair_id,
+    array $payload,
+  ): SummitTrackChair {
+    return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $payload) {
+      $current_member = $this->resource_server_ctx->getCurrentUser();
+      if (is_null($current_member)) {
+        throw new AuthzException("User not Found");
+      }
 
-            return $track_chair;
+      $isAuth = $summit->isTrackChairAdmin($current_member);
 
-        });
-    }
+      if (!$isAuth) {
+        throw new AuthzException(
+          sprintf("User %s is not authorized to perform this action.", $current_member->getId()),
+        );
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $track_chair_id
-     * @param array $payload
-     * @return SummitTrackChair
-     * @throws \Exception
-     */
-    public function updateTrackChair(Summit $summit, int $track_chair_id, array $payload): SummitTrackChair
-    {
-        return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $payload) {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            if (is_null($current_member))
-                throw new AuthzException("User not Found");
+      $track_chair = $summit->getTrackChair($track_chair_id);
 
-            $isAuth = $summit->isTrackChairAdmin($current_member);
+      if (is_null($track_chair)) {
+        throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+      }
 
-            if (!$isAuth)
-                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+      $categories_2_remove = [];
 
-            $track_chair = $summit->getTrackChair($track_chair_id);
+      foreach ($track_chair->getCategories() as $category) {
+        if (!in_array($category->getId(), $payload["categories"])) {
+          $categories_2_remove[] = $category;
+        }
+      }
 
-            if(is_null($track_chair))
-                throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+      foreach ($payload["categories"] as $track_id) {
+        $category = $summit->getPresentationCategory(intval($track_id));
+        if (
+          is_null($category) ||
+          !$category instanceof PresentationCategory ||
+          !$category->isChairVisible()
+        ) {
+          throw new EntityNotFoundException(
+            sprintf("Presentation Category %s not found.", $track_id),
+          );
+        }
 
-            $categories_2_remove = [];
+        $track_chair->addCategory($category);
+      }
 
-            foreach ($track_chair->getCategories() as $category) {
-                if (!in_array($category->getId(), $payload['categories']))
-                    $categories_2_remove[] = $category;
-            }
+      foreach ($categories_2_remove as $category) {
+        $track_chair->removeCategory($category);
+      }
 
-            foreach ($payload['categories'] as $track_id) {
-                $category = $summit->getPresentationCategory(intval($track_id));
-                if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible())
-                    throw new EntityNotFoundException(sprintf("Presentation Category %s not found.", $track_id));
+      return $track_chair;
+    });
+  }
 
-                $track_chair->addCategory($category);
-            }
+  /**
+   * @param Summit $summit
+   * @param int $track_chair_id
+   * @throws \Exception
+   */
+  public function deleteTrackChair(Summit $summit, int $track_chair_id): void {
+    $this->tx_service->transaction(function () use ($summit, $track_chair_id) {
+      $current_member = $this->resource_server_ctx->getCurrentUser();
+      if (is_null($current_member)) {
+        throw new AuthzException("User not Found");
+      }
 
-            foreach ($categories_2_remove as $category){
-                $track_chair->removeCategory($category);
-            }
+      $isAuth = $summit->isTrackChairAdmin($current_member);
 
-            return $track_chair;
-        });
-    }
+      if (!$isAuth) {
+        throw new AuthzException(
+          sprintf("User %s is not authorized to perform this action.", $current_member->getId()),
+        );
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $track_chair_id
-     * @throws \Exception
-     */
-    public function deleteTrackChair(Summit $summit, int $track_chair_id): void
-    {
-        $this->tx_service->transaction(function () use ($summit, $track_chair_id) {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            if (is_null($current_member))
-                throw new AuthzException("User not Found");
+      $track_chair = $summit->getTrackChair($track_chair_id);
 
-            $isAuth = $summit->isTrackChairAdmin($current_member);
+      if (is_null($track_chair)) {
+        throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+      }
 
-            if (!$isAuth)
-                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+      foreach ($track_chair->getCategories() as $category) {
+        $track_chair->removeCategory($category);
+      }
 
-            $track_chair = $summit->getTrackChair($track_chair_id);
+      $summit->removeTrackChair($track_chair);
+    });
+  }
 
-            if(is_null($track_chair))
-                throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+  /**
+   * @inheritDoc
+   */
+  public function addTrack2TrackChair(
+    Summit $summit,
+    int $track_chair_id,
+    int $track_id,
+  ): SummitTrackChair {
+    return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $track_id) {
+      $current_member = $this->resource_server_ctx->getCurrentUser();
+      if (is_null($current_member)) {
+        throw new AuthzException("User not Found");
+      }
 
-            foreach($track_chair->getCategories() as $category){
-                $track_chair->removeCategory($category);
-            }
+      $isAuth = $summit->isTrackChairAdmin($current_member);
 
-            $summit->removeTrackChair($track_chair);
-        });
-    }
+      if (!$isAuth) {
+        throw new AuthzException(
+          sprintf("User %s is not authorized to perform this action.", $current_member->getId()),
+        );
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function addTrack2TrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair
-    {
-        return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $track_id) {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            if (is_null($current_member))
-                throw new AuthzException("User not Found");
+      $track_chair = $summit->getTrackChair($track_chair_id);
 
-            $isAuth = $summit->isTrackChairAdmin($current_member);
+      if (is_null($track_chair)) {
+        throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+      }
 
-            if (!$isAuth)
-                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+      $track = $summit->getPresentationCategory($track_id);
+      if (is_null($track)) {
+        throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
+      }
 
-            $track_chair = $summit->getTrackChair($track_chair_id);
+      $track_chair->addCategory($track);
 
-            if(is_null($track_chair))
-                throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+      return $track_chair;
+    });
+  }
 
-            $track = $summit->getPresentationCategory($track_id);
-            if(is_null($track))
-                throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
+  /**
+   * @inheritDoc
+   */
+  public function removeFromTrackChair(
+    Summit $summit,
+    int $track_chair_id,
+    int $track_id,
+  ): SummitTrackChair {
+    return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $track_id) {
+      $current_member = $this->resource_server_ctx->getCurrentUser();
+      if (is_null($current_member)) {
+        throw new AuthzException("User not Found");
+      }
 
-            $track_chair->addCategory($track);
+      $isAuth = $summit->isTrackChairAdmin($current_member);
 
-            return $track_chair;
-        });
-    }
+      if (!$isAuth) {
+        throw new AuthzException(
+          sprintf("User %s is not authorized to perform this action.", $current_member->getId()),
+        );
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function removeFromTrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair
-    {
-        return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $track_id) {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            if (is_null($current_member))
-                throw new AuthzException("User not Found");
+      $track_chair = $summit->getTrackChair($track_chair_id);
 
-            $isAuth = $summit->isTrackChairAdmin($current_member);
+      if (is_null($track_chair)) {
+        throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+      }
 
-            if (!$isAuth)
-                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+      $track = $track_chair->getCategory($track_id);
+      if (is_null($track)) {
+        throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
+      }
 
-            $track_chair = $summit->getTrackChair($track_chair_id);
+      $track_chair->removeCategory($track);
 
-            if(is_null($track_chair))
-                throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
-
-            $track = $track_chair->getCategory($track_id);
-            if(is_null($track))
-                throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
-
-            $track_chair->removeCategory($track);
-
-            return $track_chair;
-        });
-    }
+      return $track_chair;
+    });
+  }
 }

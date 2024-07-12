@@ -11,76 +11,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SummitTicketTypePrePaid extends SummitTicketTypeWithPromo
-{
-    const PREPAID_NAME_SUFFIX = '[PREPAID]';
+final class SummitTicketTypePrePaid extends SummitTicketTypeWithPromo {
+  const PREPAID_NAME_SUFFIX = "[PREPAID]";
 
-    public function __construct(SummitTicketType $type, SummitRegistrationPromoCode $promo_code)
-    {
-        parent::__construct($type, $promo_code);
-    }
+  public function __construct(SummitTicketType $type, SummitRegistrationPromoCode $promo_code) {
+    parent::__construct($type, $promo_code);
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return parent::getName() . ' ' . self::PREPAID_NAME_SUFFIX;
-    }
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return parent::getName() . " " . self::PREPAID_NAME_SUFFIX;
+  }
 
-    /**
-     * @return float
-     */
-    public function getCost(): float
-    {
-        return 0; //already paid
-    }
+  /**
+   * @return float
+   */
+  public function getCost(): float {
+    return 0; //already paid
+  }
 
-    /**
-     * @return bool
-     */
-    public function isSoldOut(): bool
-    {
-        return false;
-    }
+  /**
+   * @return bool
+   */
+  public function isSoldOut(): bool {
+    return false;
+  }
 
-    /**
-     * @return int
-     */
-    public function getCostInCents(): int
-    {
-        return 0; //already paid
-    }
+  /**
+   * @return int
+   */
+  public function getCostInCents(): int {
+    return 0; //already paid
+  }
 
-    /**
-     * @return float
-     */
-    public function getFinalAmount(): float
-    {
-        return 0; //already paid
-    }
+  /**
+   * @return float
+   */
+  public function getFinalAmount(): float {
+    return 0; //already paid
+  }
 
-    /**
-     * @return int
-     */
-    public function getQuantity2Sell(): int
-    {
-        return 1;
-    }
+  /**
+   * @return int
+   */
+  public function getQuantity2Sell(): int {
+    return 1;
+  }
 
-    /**
-     * @return int
-     */
-    public function getMaxQuantityPerOrder(): int
-    {
-        return 1;
-    }
+  /**
+   * @return int
+   */
+  public function getMaxQuantityPerOrder(): int {
+    return 1;
+  }
 
-    /**
-     * @return string
-     */
-    public function getSubType(): string
-    {
-        return SummitTicketType::Subtype_PrePaid;
-    }
+  /**
+   * @return string
+   */
+  public function getSubType(): string {
+    return SummitTicketType::Subtype_PrePaid;
+  }
 }

@@ -16,32 +16,40 @@ use models\summit\SummitOrderExtraQuestionTypeConstants;
  * Class SummitOrderExtraQuestionTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-class SummitOrderExtraQuestionTypeValidationRulesFactory
-extends ExtraQuestionTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+class SummitOrderExtraQuestionTypeValidationRulesFactory extends
+  ExtraQuestionTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = parent::build($data, $update);
 
-        $rules = parent::build($data, $update);
-
-        if($update){
-            return array_merge([
-                'usage'       => 'sometimes|string|in:'.implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
-                'printable'   => 'sometimes|boolean',
-                'has_badge_feature_types' => 'sometimes|string|in:true,false',
-                'has_ticket_types'        => 'sometimes|string|in:true,false',
-            ], $rules);
-        }
-
-        return array_merge([
-            'usage'       => 'required|string|in:'.implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
-            'printable'   => 'sometimes|boolean',
-            'has_badge_feature_types' => 'sometimes|string|in:true,false',
-            'has_ticket_types'        => 'sometimes|string|in:true,false',
-        ], $rules);
+    if ($update) {
+      return array_merge(
+        [
+          "usage" =>
+            "sometimes|string|in:" .
+            implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
+          "printable" => "sometimes|boolean",
+          "has_badge_feature_types" => "sometimes|string|in:true,false",
+          "has_ticket_types" => "sometimes|string|in:true,false",
+        ],
+        $rules,
+      );
     }
+
+    return array_merge(
+      [
+        "usage" =>
+          "required|string|in:" .
+          implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
+        "printable" => "sometimes|boolean",
+        "has_badge_feature_types" => "sometimes|string|in:true,false",
+        "has_ticket_types" => "sometimes|string|in:true,false",
+      ],
+      $rules,
+    );
+  }
 }

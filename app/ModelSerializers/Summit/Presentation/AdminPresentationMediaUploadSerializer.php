@@ -20,40 +20,43 @@ use models\summit\PresentationMediaUpload;
  * Class AdminPresentationMediaUploadSerializer
  * @package ModelSerializers
  */
-final class AdminPresentationMediaUploadSerializer extends PresentationMediaUploadSerializer
-{
-    protected static $allowed_fields = [
-        'private_url',
-    ];
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $mediaUpload  = $this->object;
-        if(!$mediaUpload instanceof PresentationMediaUpload) return [];
-
-        $mediaUploadType = $mediaUpload->getMediaUploadType();
-        if(!is_null($mediaUploadType)) {
-            try{
-                if(in_array('private_url', $fields)) {
-                    $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-                    if (!is_null($strategy)) {
-                        $values['private_url'] = $strategy->getUrl($mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType));
-                    }
-                }
-            }
-            catch (\Exception $ex){
-                Log::warning($ex);
-            }
-        }
-
-        return $values;
+final class AdminPresentationMediaUploadSerializer extends PresentationMediaUploadSerializer {
+  protected static $allowed_fields = ["private_url"];
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $mediaUpload = $this->object;
+    if (!$mediaUpload instanceof PresentationMediaUpload) {
+      return [];
     }
+
+    $mediaUploadType = $mediaUpload->getMediaUploadType();
+    if (!is_null($mediaUploadType)) {
+      try {
+        if (in_array("private_url", $fields)) {
+          $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+          if (!is_null($strategy)) {
+            $values["private_url"] = $strategy->getUrl(
+              $mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType),
+            );
+          }
+        }
+      } catch (\Exception $ex) {
+        Log::warning($ex);
+      }
+    }
+
+    return $values;
+  }
 }

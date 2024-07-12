@@ -17,37 +17,39 @@ use models\summit\Summit;
  * Class TrackTagGroupFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class TrackTagGroupFactory
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return TrackTagGroup|null
-     */
-    public static function build(Summit $summit, array $data){
-        $track_tag_group = new TrackTagGroup();
-        if(is_null($track_tag_group)) return null;
-        return self::populate($track_tag_group, $summit, $data);
+final class TrackTagGroupFactory {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return TrackTagGroup|null
+   */
+  public static function build(Summit $summit, array $data) {
+    $track_tag_group = new TrackTagGroup();
+    if (is_null($track_tag_group)) {
+      return null;
+    }
+    return self::populate($track_tag_group, $summit, $data);
+  }
+
+  /**
+   * @param TrackTagGroup $track_tag_group
+   * @param Summit $summit
+   * @param array $data
+   * @return TrackTagGroup
+   */
+  public static function populate(TrackTagGroup $track_tag_group, Summit $summit, array $data) {
+    if (isset($data["name"])) {
+      $track_tag_group->setName(trim($data["name"]));
     }
 
-    /**
-     * @param TrackTagGroup $track_tag_group
-     * @param Summit $summit
-     * @param array $data
-     * @return TrackTagGroup
-     */
-    public static function populate(TrackTagGroup $track_tag_group, Summit $summit, array $data){
-
-        if(isset($data['name']))
-            $track_tag_group->setName(trim($data['name']));
-
-        if(isset($data['label']))
-            $track_tag_group->setLabel(trim($data['label']));
-
-        if(isset($data['is_mandatory'])){
-            $track_tag_group->setIsMandatory(boolval($data['is_mandatory']));
-        }
-
-        return $track_tag_group;
+    if (isset($data["label"])) {
+      $track_tag_group->setLabel(trim($data["label"]));
     }
+
+    if (isset($data["is_mandatory"])) {
+      $track_tag_group->setIsMandatory(boolval($data["is_mandatory"]));
+    }
+
+    return $track_tag_group;
+  }
 }

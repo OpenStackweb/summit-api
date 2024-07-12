@@ -16,44 +16,49 @@ use models\summit\Presentation;
  * Class AdminVoteablePresentationCSVSerializer
  * @package ModelSerializers
  */
-final class AdminVoteablePresentationCSVSerializer extends AdminVoteablePresentationSerializer
-{
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize
-    (
-        $expand = null, array $fields = [], array $relations = [], array $params = []
-    )
-    {
-        $presentation = $this->object;
-        if (!$presentation instanceof Presentation) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
-        $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'voters':
-                        {
-                            $voters = [];
-                            foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
-                                $voters[] = sprintf("%s %s %s", $voter->getFirstName(), $voter->getSurname(), $voter->getEmail());
-                            }
-                            $values['voters'] = implode('|', $voters);
-                        }
-                        break;
-                }
-            }
-        }
-        return $values;
+final class AdminVoteablePresentationCSVSerializer extends AdminVoteablePresentationSerializer {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $presentation = $this->object;
+    if (!$presentation instanceof Presentation) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $beginVotingDate = $params["begin_attendee_voting_period_date"] ?? null;
+    $endVotingDate = $params["end_attendee_voting_period_date"] ?? null;
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "voters":
+            $voters = [];
+            foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
+              $voters[] = sprintf(
+                "%s %s %s",
+                $voter->getFirstName(),
+                $voter->getSurname(),
+                $voter->getEmail(),
+              );
+            }
+            $values["voters"] = implode("|", $voters);
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

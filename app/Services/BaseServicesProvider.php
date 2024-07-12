@@ -58,140 +58,109 @@ use services\utils\RedisCacheService;
  * Class BaseServicesProvider
  * @package services
  */
-final class BaseServicesProvider extends ServiceProvider
-{
-    protected $defer = true;
+final class BaseServicesProvider extends ServiceProvider {
+  protected $defer = true;
 
-    public function boot()
-    {
-    }
+  public function boot() {
+  }
 
-    public function register()
-    {
-        App::singleton(ClientInterface::class, Client::class);
+  public function register() {
+    App::singleton(ClientInterface::class, Client::class);
 
-        App::singleton(ICacheService::class, RedisCacheService::class);
+    App::singleton(ICacheService::class, RedisCacheService::class);
 
-        App::singleton(IPermissionsManager::class, PermissionsManager::class);
+    App::singleton(IPermissionsManager::class, PermissionsManager::class);
 
-        App::singleton(ITransactionService::class, function () {
-            return new DoctrineTransactionService(SilverstripeBaseModel::EntityManager);
-        });
+    App::singleton(ITransactionService::class, function () {
+      return new DoctrineTransactionService(SilverstripeBaseModel::EntityManager);
+    });
 
-        App::singleton(IEncryptionService::class, function () {
-            return new EncryptionService(
-                Config::get("server.ss_encrypt_key", ''),
-                Config::get("server.ss_encrypt_cypher", '')
-            );
-        });
+    App::singleton(IEncryptionService::class, function () {
+      return new EncryptionService(
+        Config::get("server.ss_encrypt_key", ""),
+        Config::get("server.ss_encrypt_cypher", ""),
+      );
+    });
 
-        // setting facade
+    // setting facade
 
-        App::singleton('encryption', function ($app) {
-            return new EncryptionService(
-                Config::get("server.ss_encrypt_key", ''),
-                Config::get("server.ss_encrypt_cypher", '')
-            );
-        });
+    App::singleton("encryption", function ($app) {
+      return new EncryptionService(
+        Config::get("server.ss_encrypt_key", ""),
+        Config::get("server.ss_encrypt_cypher", ""),
+      );
+    });
 
-        App::scoped(EmailExcerpt::class, function ($app) {
-            return new EmailExcerptService(Str::uuid());
-        });
+    App::scoped(EmailExcerpt::class, function ($app) {
+      return new EmailExcerptService(Str::uuid());
+    });
 
-        App::singleton(ISerializerTypeSelector::class, BaseSerializerTypeSelector::class);
+    App::singleton(ISerializerTypeSelector::class, BaseSerializerTypeSelector::class);
 
-        App::singleton(IEventbriteAPI::class, function () {
-            $api = new EventbriteAPI();
-            $api->setCredentials(array('token' => Config::get("server.eventbrite_oauth2_personal_token", null)));
-            return $api;
-        });
+    App::singleton(IEventbriteAPI::class, function () {
+      $api = new EventbriteAPI();
+      $api->setCredentials([
+        "token" => Config::get("server.eventbrite_oauth2_personal_token", null),
+      ]);
+      return $api;
+    });
 
-        App::singleton(IPushNotificationApi::class, function () {
-            $api = new FireBaseGCMApi(Config::get("server.firebase_gcm_server_key", null));
-            return $api;
-        });
+    App::singleton(IPushNotificationApi::class, function () {
+      $api = new FireBaseGCMApi(Config::get("server.firebase_gcm_server_key", null));
+      return $api;
+    });
 
-        App::singleton(IGeoCodingAPI::class, function () {
-            return new GoogleGeoCodingAPI
-            (
-                Config::get("server.google_geocoding_api_key", null)
-            );
-        });
+    App::singleton(IGeoCodingAPI::class, function () {
+      return new GoogleGeoCodingAPI(Config::get("server.google_geocoding_api_key", null));
+    });
 
-        App::singleton(
-            IExternalUserApi::class,
-            ExternalUserApi::class
-        );
+    App::singleton(IExternalUserApi::class, ExternalUserApi::class);
 
-        App::singleton
-        (
-            IFolderService::class,
-            FolderService::class
-        );
+    App::singleton(IFolderService::class, FolderService::class);
 
-        App::singleton(
-            IMailApi::class,
-            MailApi::class
-        );
+    App::singleton(IMailApi::class, MailApi::class);
 
-        App::singleton(
-            ILockManagerService::class,
-            LockManagerService::class
-        );
+    App::singleton(ILockManagerService::class, LockManagerService::class);
 
-        App::singleton(
-            IPasswordlessAPI::class,
-            PasswordlessAPI::class
-        );
+    App::singleton(IPasswordlessAPI::class, PasswordlessAPI::class);
 
-        App::singleton(
-            ISamsungRegistrationAPI::class,
-            function(){
-                return new SamsungRegistrationAPI
-                (
-                    App::make( ClientInterface::class),
-                    Config::get("server.samsung_registration_api_endpoint", null)
-                );
-            }
-        );
+    App::singleton(ISamsungRegistrationAPI::class, function () {
+      return new SamsungRegistrationAPI(
+        App::make(ClientInterface::class),
+        Config::get("server.samsung_registration_api_endpoint", null),
+      );
+    });
 
-        App::singleton(
-            IMUXApi::class,
-            function(){
-                return new MUXApi();
-            }
-        );
+    App::singleton(IMUXApi::class, function () {
+      return new MUXApi();
+    });
 
-        App::singleton(
-            IMarketingAPI::class,
-            MarketingAPI::class
-        );
-    }
+    App::singleton(IMarketingAPI::class, MarketingAPI::class);
+  }
 
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return [
-            ClientInterface::class,
-            ICacheService::class,
-            IPermissionsManager::class,
-            ITransactionService::class,
-            ISerializerTypeSelector::class,
-            IEncryptionService::class,
-            IEventbriteAPI::class,
-            IPushNotificationApi::class,
-            IGeoCodingAPI::class,
-            IExternalUserApi::class,
-            IFolderService::class,
-            ILockManagerService::class,
-            IPasswordlessAPI::class,
-            ISamsungRegistrationAPI::class,
-            IMUXApi::class,
-            IMarketingAPI::class
-        ];
-    }
+  /**
+   * Get the services provided by the provider.
+   *
+   * @return array
+   */
+  public function provides() {
+    return [
+      ClientInterface::class,
+      ICacheService::class,
+      IPermissionsManager::class,
+      ITransactionService::class,
+      ISerializerTypeSelector::class,
+      IEncryptionService::class,
+      IEventbriteAPI::class,
+      IPushNotificationApi::class,
+      IGeoCodingAPI::class,
+      IExternalUserApi::class,
+      IFolderService::class,
+      ILockManagerService::class,
+      IPasswordlessAPI::class,
+      ISamsungRegistrationAPI::class,
+      IMUXApi::class,
+      IMarketingAPI::class,
+    ];
+  }
 }

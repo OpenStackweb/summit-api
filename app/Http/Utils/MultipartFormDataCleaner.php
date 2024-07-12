@@ -16,54 +16,69 @@
  * Class MultipartFormDataCleaner
  * @package App\Http\Utils
  */
-final class MultipartFormDataCleaner
-{
-    /**
-     * @param string $field
-     * @param array $data
-     * @return array
-     */
-    public static function cleanBool(string $field, array $data):array{
-        if(!isset($data[$field])) return $data;
-        $value = $data[$field];
-        if(is_null($value)) return $data;
-        if(trim($value) == '') return $data;
-        if(is_bool($value)) return $data;
-        if(is_int($value) || is_numeric($value)){
-            $value = intval($value);
-            if($value == 1){
-                $data[$field] = true;
-            }
-            if($value == 0){
-                $data[$field] = false;
-            }
-        }
-        if(is_string($value)) {
-            $value = trim(strval($value));
-            if ($value == 'true') {
-                $data[$field] = true;
-            }
-            if ($value == 'false') {
-                $data[$field] = false;
-            }
-        }
-        return $data;
+final class MultipartFormDataCleaner {
+  /**
+   * @param string $field
+   * @param array $data
+   * @return array
+   */
+  public static function cleanBool(string $field, array $data): array {
+    if (!isset($data[$field])) {
+      return $data;
     }
+    $value = $data[$field];
+    if (is_null($value)) {
+      return $data;
+    }
+    if (trim($value) == "") {
+      return $data;
+    }
+    if (is_bool($value)) {
+      return $data;
+    }
+    if (is_int($value) || is_numeric($value)) {
+      $value = intval($value);
+      if ($value == 1) {
+        $data[$field] = true;
+      }
+      if ($value == 0) {
+        $data[$field] = false;
+      }
+    }
+    if (is_string($value)) {
+      $value = trim(strval($value));
+      if ($value == "true") {
+        $data[$field] = true;
+      }
+      if ($value == "false") {
+        $data[$field] = false;
+      }
+    }
+    return $data;
+  }
 
-    /**
-     * @param string $field
-     * @param array $data
-     * @return array
-     */
-    public static function cleanInt(string $field, array $data):array{
-        if(!isset($data[$field])) return $data;
-        $value = $data[$field];
-        if(is_null($value)) return $data;
-        if(empty($value)) return $data;
-        if(is_int($value)) return $data;
-        if(is_string($value)) {
-            $data[$field] = intval(trim(strval($value)));
-        }
-        return $data;
+  /**
+   * @param string $field
+   * @param array $data
+   * @return array
+   */
+  public static function cleanInt(string $field, array $data): array {
+    if (!isset($data[$field])) {
+      return $data;
     }
+    $value = $data[$field];
+    if (is_null($value)) {
+      return $data;
+    }
+    if (empty($value)) {
+      return $data;
+    }
+    if (is_int($value)) {
+      return $data;
+    }
+    if (is_string($value)) {
+      $data[$field] = intval(trim(strval($value)));
+    }
+    return $data;
+  }
 }

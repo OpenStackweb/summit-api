@@ -16,15 +16,13 @@
  * Class SummitOrderCheckoutSerializer
  * @package App\ModelSerializers
  */
-class SummitOrderCheckoutSerializer extends SummitOrderReservationSerializer
-{
-
-    protected static $array_mappings = [
-        'BillingAddress1'               => 'billing_address_1:json_string',
-        'BillingAddress2'               => 'billing_address_2:json_string',
-        'BillingAddressZipCode'         => 'billing_address_zip_code:json_string',
-        'BillingAddressCity'            => 'billing_address_city:json_string',
-        'BillingAddressState'           => 'billing_address_state:json_string',
-        'BillingAddressCountryIsoCode'  => 'billing_address_country_iso_code:json_string',
-    ];
+class SummitOrderCheckoutSerializer extends SummitOrderReservationSerializer {
+  protected static $array_mappings = [
+    "BillingAddress1" => "billing_address_1:json_string",
+    "BillingAddress2" => "billing_address_2:json_string",
+    "BillingAddressZipCode" => "billing_address_zip_code:json_string",
+    "BillingAddressCity" => "billing_address_city:json_string",
+    "BillingAddressState" => "billing_address_state:json_string",
+    "BillingAddressCountryIsoCode" => "billing_address_country_iso_code:json_string",
+  ];
 }

@@ -20,39 +20,43 @@ use models\exceptions\ValidationException;
  * Trait GetAndValidationJsonPayload
  * @package App\Http\Controllers\Apis
  */
-trait GetAndValidateJsonPayload
-{
-    /**
-     * @return array
-     */
-    public function getJsonData():array{
-        if(!Request::isJson()) return [];
-        $data = Request::json();
-        return $data->all();
+trait GetAndValidateJsonPayload {
+  /**
+   * @return array
+   */
+  public function getJsonData(): array {
+    if (!Request::isJson()) {
+      return [];
+    }
+    $data = Request::json();
+    return $data->all();
+  }
+
+  /**
+   * @param array $validation_rules
+   * @param bool $validate_json_payload
+   * @param array $messages
+   * @return array
+   * @throws HTTP400BadRequestException
+   * @throws ValidationException
+   */
+  public function getJsonPayload(
+    array $validation_rules = [],
+    bool $validate_json_payload = false,
+    array $messages = [],
+  ): array {
+    if ($validate_json_payload && !Request::isJson()) {
+      throw new HTTP400BadRequestException("Request has no JSON content.");
     }
 
-    /**
-     * @param array $validation_rules
-     * @param bool $validate_json_payload
-     * @param array $messages
-     * @return array
-     * @throws HTTP400BadRequestException
-     * @throws ValidationException
-     */
-    public function getJsonPayload(array $validation_rules = [], bool $validate_json_payload = false, array $messages = []): array{
+    $payload = $validate_json_payload ? $this->getJsonData() : Request::all();
+    // Creates a Validator instance and validates the data.
+    $validation = Validator::make($payload, $validation_rules, $messages);
 
-        if ($validate_json_payload && !Request::isJson()){
-           throw new HTTP400BadRequestException("Request has no JSON content.");
-        }
-
-        $payload = $validate_json_payload ? $this->getJsonData() : Request::all();
-        // Creates a Validator instance and validates the data.
-        $validation = Validator::make($payload, $validation_rules, $messages);
-
-        if ($validation->fails()) {
-            throw new ValidationException($validation->messages()->toArray());
-        }
-
-        return $payload;
+    if ($validation->fails()) {
+      throw new ValidationException($validation->messages()->toArray());
     }
+
+    return $payload;
+  }
 }

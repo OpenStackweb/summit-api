@@ -18,32 +18,31 @@ use ModelSerializers\SilverStripeSerializer;
  * Class NominationSerializer
  * @package App\ModelSerializers\Elections
  */
-class NominationSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'CandidateId' => 'candidate_id:json_int',
-        'NominatorId' => 'nominator_id:json_int',
-        'ElectionId' => 'election_id:json_int',
-    ];
+class NominationSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "CandidateId" => "candidate_id:json_int",
+    "NominatorId" => "nominator_id:json_int",
+    "ElectionId" => "election_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'election' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'election_id',
-            'getter' => 'getElection',
-            'has' => 'hasElection'
-        ],
-        'candidate' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'candidate_id',
-            'getter' => 'getCandidate',
-            'has' => 'hasCandidate'
-        ],
-        'nominator' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'nominator_id',
-            'getter' => 'getNominator',
-            'has' => 'hasNominator'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "election" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "election_id",
+      "getter" => "getElection",
+      "has" => "hasElection",
+    ],
+    "candidate" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "candidate_id",
+      "getter" => "getCandidate",
+      "has" => "hasCandidate",
+    ],
+    "nominator" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "nominator_id",
+      "getter" => "getNominator",
+      "has" => "hasNominator",
+    ],
+  ];
 }

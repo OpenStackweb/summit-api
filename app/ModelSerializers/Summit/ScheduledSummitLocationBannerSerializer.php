@@ -16,11 +16,9 @@
  * Class ScheduledSummitLocationBannerSerializer
  * @package App\ModelSerializers\Summit
  */
-final class ScheduledSummitLocationBannerSerializer extends SummitLocationBannerSerializer
-{
-    protected static $array_mappings = [
-        'StartDate' => 'start_date:datetime_epoch',
-        'EndDate'   => 'end_date:datetime_epoch',
-    ];
-
+final class ScheduledSummitLocationBannerSerializer extends SummitLocationBannerSerializer {
+  protected static $array_mappings = [
+    "StartDate" => "start_date:datetime_epoch",
+    "EndDate" => "end_date:datetime_epoch",
+  ];
 }

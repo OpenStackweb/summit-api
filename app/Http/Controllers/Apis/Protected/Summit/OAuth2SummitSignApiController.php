@@ -24,95 +24,84 @@ use models\utils\IEntity;
  * Class OAuth2SummitSignApiController
  * @package App\Http\Controller
  */
-final class OAuth2SummitSignApiController extends OAuth2ProtectedController
-{
-    private $summit_repository;
+final class OAuth2SummitSignApiController extends OAuth2ProtectedController {
+  private $summit_repository;
 
-    private $service;
+  private $service;
 
-    /**
-     * @param ISummitSignRepository $repository
-     * @param ISummitRepository $summit_repository
-     * @param ISummitSignService $service
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISummitSignRepository $repository,
-        ISummitRepository $summit_repository,
-        ISummitSignService $service,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->summit_repository = $summit_repository;
-        $this->service = $service;
-        $this->repository = $repository;
-    }
+  /**
+   * @param ISummitSignRepository $repository
+   * @param ISummitRepository $summit_repository
+   * @param ISummitSignService $service
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISummitSignRepository $repository,
+    ISummitRepository $summit_repository,
+    ISummitSignService $service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->summit_repository = $summit_repository;
+    $this->service = $service;
+    $this->repository = $repository;
+  }
 
-    use GetAllBySummit;
+  use GetAllBySummit;
 
-    use GetSummitChildElementById;
+  use GetSummitChildElementById;
 
-    use AddSummitChildElement;
+  use AddSummitChildElement;
 
-    use UpdateSummitChildElement;
+  use UpdateSummitChildElement;
 
-    protected function addChild(Summit $summit, array $payload): IEntity
-    {
-        return $this->service->add($summit, $payload);
-    }
+  protected function addChild(Summit $summit, array $payload): IEntity {
+    return $this->service->add($summit, $payload);
+  }
 
-    function getAddValidationRules(array $payload): array
-    {
-       return [
-           'location_id' => 'required|integer',
-           'template' => 'required|string'
-       ];
-    }
+  function getAddValidationRules(array $payload): array {
+    return [
+      "location_id" => "required|integer",
+      "template" => "required|string",
+    ];
+  }
 
-    protected function getSummitRepository(): ISummitRepository
-    {
-       return $this->summit_repository;
-    }
+  protected function getSummitRepository(): ISummitRepository {
+    return $this->summit_repository;
+  }
 
-    protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
-    {
-        return $summit->getSignById(intval($child_id));
-    }
+  protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity {
+    return $summit->getSignById(intval($child_id));
+  }
 
-    function getUpdateValidationRules(array $payload): array
-    {
-        return [
-            'template' => 'sometimes|string'
-        ];
-    }
+  function getUpdateValidationRules(array $payload): array {
+    return [
+      "template" => "sometimes|string",
+    ];
+  }
 
-    protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
-    {
-        return $this->service->update($summit, $child_id, $payload);
-    }
+  protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity {
+    return $this->service->update($summit, $child_id, $payload);
+  }
 
-    protected function getFilterRules():array{
-        return [
-            'location_id' => ['=='],
-        ];
-    }
+  protected function getFilterRules(): array {
+    return [
+      "location_id" => ["=="],
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterValidatorRules():array{
-        return [
-            'location_id' => 'sometimes|integer',
-        ];
-    }
-    /**
-     * @return array
-     */
-    protected function getOrderRules():array{
-        return [
-            'id'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterValidatorRules(): array {
+    return [
+      "location_id" => "sometimes|integer",
+    ];
+  }
+  /**
+   * @return array
+   */
+  protected function getOrderRules(): array {
+    return ["id"];
+  }
 }

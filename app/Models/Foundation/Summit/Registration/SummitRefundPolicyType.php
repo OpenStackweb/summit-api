@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRefundPolicyTypeRepository")
  * @ORM\AssociationOverrides({
@@ -25,81 +25,71 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitRefundPolicyType
  * @package models\summit
  */
-class SummitRefundPolicyType extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitRefundPolicyType extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="UntilXDaysBeforeEventStarts", type="integer")
-     * @var int
-     */
-    private $until_x_days_before_event_starts;
+  /**
+   * @ORM\Column(name="UntilXDaysBeforeEventStarts", type="integer")
+   * @var int
+   */
+  private $until_x_days_before_event_starts;
 
-    /**
-     * @ORM\Column(name="RefundRate", type="float")
-     * @var float
-     */
-    private $refund_rate;
+  /**
+   * @ORM\Column(name="RefundRate", type="float")
+   * @var float
+   */
+  private $refund_rate;
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
 
-    /**
-     * @return int
-     */
-    public function getUntilXDaysBeforeEventStarts(): int
-    {
-        return $this->until_x_days_before_event_starts;
-    }
+  /**
+   * @return int
+   */
+  public function getUntilXDaysBeforeEventStarts(): int {
+    return $this->until_x_days_before_event_starts;
+  }
 
-    /**
-     * @param int $until_x_days_before_event_starts
-     */
-    public function setUntilXDaysBeforeEventStarts(int $until_x_days_before_event_starts): void
-    {
-        $this->until_x_days_before_event_starts = $until_x_days_before_event_starts;
-    }
+  /**
+   * @param int $until_x_days_before_event_starts
+   */
+  public function setUntilXDaysBeforeEventStarts(int $until_x_days_before_event_starts): void {
+    $this->until_x_days_before_event_starts = $until_x_days_before_event_starts;
+  }
 
-    /**
-     * @return float
-     */
-    public function getRefundRate(): float
-    {
-        return $this->refund_rate;
-    }
+  /**
+   * @return float
+   */
+  public function getRefundRate(): float {
+    return $this->refund_rate;
+  }
 
-    /**
-     * @param float $refund_rate
-     */
-    public function setRefundRate(float $refund_rate): void
-    {
-        $this->refund_rate = $refund_rate;
-    }
+  /**
+   * @param float $refund_rate
+   */
+  public function setRefundRate(float $refund_rate): void {
+    $this->refund_rate = $refund_rate;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->refund_rate = 0.0;
-    }
-
-
+  public function __construct() {
+    parent::__construct();
+    $this->refund_rate = 0.0;
+  }
 }

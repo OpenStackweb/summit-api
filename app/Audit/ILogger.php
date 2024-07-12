@@ -18,18 +18,20 @@ use Doctrine\ORM\EntityManagerInterface;
  * limitations under the License.
  **/
 
-
 /**
  * Interface ILogger
  * @package App\Audit
  */
-interface ILogger
-{
-    /**
-     * @param EntityManagerInterface $entity_manager
-     * @param BaseEntity $entity
-     * @param string $description
-     * @return void
-     */
-    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description);
+interface ILogger {
+  /**
+   * @param EntityManagerInterface $entity_manager
+   * @param BaseEntity $entity
+   * @param string $description
+   * @return void
+   */
+  public function createAuditLogEntry(
+    EntityManagerInterface $entity_manager,
+    BaseEntity $entity,
+    string $description,
+  );
 }

@@ -24,38 +24,31 @@ use Illuminate\Support\Facades\Log;
  * Class MemberAssocSummitOrders
  * @package App\Jobs
  */
-class MemberAssocSummitOrders implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class MemberAssocSummitOrders implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 5;
-    /**
-     * @var int
-     */
-    private $member_id;
+  public $tries = 5;
+  /**
+   * @var int
+   */
+  private $member_id;
 
-    /**
-     * NewMemberAssocSummitOrders constructor.
-     * @param int $member_id
-     */
-    public function __construct(int $member_id)
-    {
-        $this->member_id = $member_id;
+  /**
+   * NewMemberAssocSummitOrders constructor.
+   * @param int $member_id
+   */
+  public function __construct(int $member_id) {
+    $this->member_id = $member_id;
+  }
+
+  /**
+   * @param IMemberService $service
+   */
+  public function handle(IMemberService $service) {
+    try {
+      $service->assocSummitOrders($this->member_id);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * @param IMemberService $service
-     */
-    public function handle
-    (
-        IMemberService $service
-    )
-    {
-        try {
-            $service->assocSummitOrders($this->member_id);
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-        }
-    }
+  }
 }

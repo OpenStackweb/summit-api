@@ -18,54 +18,59 @@ use models\summit\SummitEvent;
  * Class ShareEventEmail
  * @package App\Jobs\Emails\Schedule
  */
-class ShareEventEmail extends AbstractSummitEmailJob
-{
+class ShareEventEmail extends AbstractSummitEmailJob {
+  /**
+   * ShareEventEmail constructor.
+   * @param string $from_email
+   * @param string $to_email
+   * @param string $event_url
+   * @param SummitEvent $event
+   */
+  public function __construct(
+    string $from_email,
+    string $to_email,
+    string $event_url,
+    SummitEvent $event,
+  ) {
+    $summit = $event->getSummit();
+    $payload = [];
+    $payload[IMailTemplatesConstants::from_email] = $from_email;
+    $payload[IMailTemplatesConstants::to_email] = $to_email;
+    $payload[IMailTemplatesConstants::event_title] = $event->getTitle();
+    $payload[IMailTemplatesConstants::event_description] = $event->getAbstract();
+    $payload[IMailTemplatesConstants::event_url] = $event_url;
 
-    /**
-     * ShareEventEmail constructor.
-     * @param string $from_email
-     * @param string $to_email
-     * @param string $event_url
-     * @param SummitEvent $event
-     */
-    public function __construct(string $from_email, string $to_email, string $event_url, SummitEvent $event)
-    {
-        $summit = $event->getSummit();
-        $payload = [];
-        $payload[IMailTemplatesConstants::from_email]        = $from_email;
-        $payload[IMailTemplatesConstants::to_email]          = $to_email;
-        $payload[IMailTemplatesConstants::event_title]       = $event->getTitle();
-        $payload[IMailTemplatesConstants::event_description] = $event->getAbstract();
-        $payload[IMailTemplatesConstants::event_url]         = $event_url;
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    parent::__construct(
+      $summit,
+      $payload,
+      $template_identifier,
+      $payload[IMailTemplatesConstants::to_email],
+    );
+  }
 
-        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::to_email]);
-    }
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::from_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::to_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::event_title]["type"] = "string";
+    $payload[IMailTemplatesConstants::event_description]["type"] = "string";
+    $payload[IMailTemplatesConstants::event_url]["type"] = "string";
 
-        $payload[IMailTemplatesConstants::from_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::to_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
-        $payload[IMailTemplatesConstants::event_description]['type'] = 'string';
-        $payload[IMailTemplatesConstants::event_url]['type'] = 'string';
+    return $payload;
+  }
 
-        return $payload;
-    }
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
-
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SCHEDULE_SHARE_EVENT';
-    const EVENT_NAME = 'SUMMIT_SCHEDULE_SHARE_EVENT';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SCHEDULE_SHARE_EVENT';
-
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SCHEDULE_SHARE_EVENT";
+  const EVENT_NAME = "SUMMIT_SCHEDULE_SHARE_EVENT";
+  const DEFAULT_TEMPLATE = "SUMMIT_SCHEDULE_SHARE_EVENT";
 }

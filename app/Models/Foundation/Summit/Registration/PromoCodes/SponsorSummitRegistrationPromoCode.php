@@ -11,37 +11,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SponsorSummitRegistrationPromoCode")
  * Class SponsorSummitRegistrationPromoCode
  * @package models\summit
  */
-class SponsorSummitRegistrationPromoCode extends SummitRegistrationPromoCode
-{
+class SponsorSummitRegistrationPromoCode extends SummitRegistrationPromoCode {
+  use SponsorPromoCodeTrait;
 
-    use SponsorPromoCodeTrait;
+  const ClassName = "SPONSOR_PROMO_CODE";
 
-    const ClassName = 'SPONSOR_PROMO_CODE';
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "sponsor_id" => "integer",
+    "contact_email" => "string",
+  ];
 
-    public static $metadata = [
-        'class_name'    => self::ClassName,
-        'sponsor_id'    => 'integer',
-        'contact_email' => 'string',
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
+  }
 }

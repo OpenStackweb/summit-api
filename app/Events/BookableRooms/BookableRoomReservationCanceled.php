@@ -16,7 +16,5 @@
  * Class BookableRoomReservationCanceled
  * @package App\Events\BookableRooms
  */
-final class BookableRoomReservationCanceled extends BookableRoomReservationAction
-{
-
+final class BookableRoomReservationCanceled extends BookableRoomReservationAction {
 }

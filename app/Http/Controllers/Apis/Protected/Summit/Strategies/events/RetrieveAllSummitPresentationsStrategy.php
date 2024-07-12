@@ -20,15 +20,15 @@ use utils\FilterParser;
  * Class RetrieveAllSummitPresentationsStrategy
  * @package App\Http\Controllers
  */
-class RetrieveAllSummitPresentationsStrategy extends RetrieveAllSummitEventsBySummitStrategy
-{
-    /**
-     * @return null|Filter
-     */
-    protected function buildFilter()
-    {
-        $filter = parent::buildFilter();
-        $filter->addFilterCondition(FilterParser::buildFilter('class_name','==',Presentation::ClassName));
-        return $filter;
-    }
+class RetrieveAllSummitPresentationsStrategy extends RetrieveAllSummitEventsBySummitStrategy {
+  /**
+   * @return null|Filter
+   */
+  protected function buildFilter() {
+    $filter = parent::buildFilter();
+    $filter->addFilterCondition(
+      FilterParser::buildFilter("class_name", "==", Presentation::ClassName),
+    );
+    return $filter;
+  }
 }

@@ -12,54 +12,49 @@
  * limitations under the License.
  **/
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitAttendeeTicketFormerHash")
  * Class SummitAttendeeTicketFormerHash
  * @package models\summit
  */
-class SummitAttendeeTicketFormerHash extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Hash", type="string")
-     * @var string
-     */
-    private $hash;
+class SummitAttendeeTicketFormerHash extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Hash", type="string")
+   * @var string
+   */
+  private $hash;
 
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeTicket", inversedBy="former_hashes")
+   * @ORM\JoinColumn(name="SummitAttendeeTicketID", referencedColumnName="ID")
+   * @var SummitAttendeeTicket
+   */
+  protected $ticket;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeTicket", inversedBy="former_hashes")
-     * @ORM\JoinColumn(name="SummitAttendeeTicketID", referencedColumnName="ID")
-     * @var SummitAttendeeTicket
-     */
-    protected $ticket;
+  /**
+   * SummitAttendeeTicketFormerHash constructor.
+   * @param string $hash
+   * @param SummitAttendeeTicket $ticket
+   */
+  public function __construct(string $hash, SummitAttendeeTicket $ticket) {
+    parent::__construct();
+    $this->hash = $hash;
+    $this->ticket = $ticket;
+  }
 
-    /**
-     * SummitAttendeeTicketFormerHash constructor.
-     * @param string $hash
-     * @param SummitAttendeeTicket $ticket
-     */
-    public function __construct(string $hash, SummitAttendeeTicket $ticket)
-    {
-        parent::__construct();
-        $this->hash = $hash;
-        $this->ticket = $ticket;
-    }
+  /**
+   * @return string
+   */
+  public function getHash(): string {
+    return $this->hash;
+  }
 
-    /**
-     * @return string
-     */
-    public function getHash(): string
-    {
-        return $this->hash;
-    }
-
-    /**
-     * @return SummitAttendeeTicket
-     */
-    public function getTicket(): SummitAttendeeTicket
-    {
-        return $this->ticket;
-    }
+  /**
+   * @return SummitAttendeeTicket
+   */
+  public function getTicket(): SummitAttendeeTicket {
+    return $this->ticket;
+  }
 }

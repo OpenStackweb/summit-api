@@ -28,186 +28,240 @@ use models\summit\SummitPresentationComment;
  * Interface ISummitSelectionPlanService
  * @package App\Services\Model
  */
-interface ISummitSelectionPlanService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SelectionPlan
-     * @throws ValidationException
-     */
-    public function addSelectionPlan(Summit $summit, array $payload);
+interface ISummitSelectionPlanService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SelectionPlan
+   * @throws ValidationException
+   */
+  public function addSelectionPlan(Summit $summit, array $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param array $payload
-     * @return SelectionPlan
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateSelectionPlan(Summit $summit, $selection_plan_id, array $payload);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param array $payload
+   * @return SelectionPlan
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updateSelectionPlan(Summit $summit, $selection_plan_id, array $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @throws EntityNotFoundException
-     * @return void
-     */
-    public function deleteSelectionPlan(Summit $summit, $selection_plan_id);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @throws EntityNotFoundException
+   * @return void
+   */
+  public function deleteSelectionPlan(Summit $summit, $selection_plan_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_group_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return void
-     */
-    public function addTrackGroupToSelectionPlan(Summit $summit, $selection_plan_id, $track_group_id);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_group_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return void
+   */
+  public function addTrackGroupToSelectionPlan(Summit $summit, $selection_plan_id, $track_group_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_group_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return void
-     */
-    public function deleteTrackGroupToSelectionPlan(Summit $summit, $selection_plan_id, $track_group_id);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_group_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return void
+   */
+  public function deleteTrackGroupToSelectionPlan(
+    Summit $summit,
+    $selection_plan_id,
+    $track_group_id,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param string $status
-     * @return SelectionPlan|null
-     */
-    public function getCurrentSelectionPlanByStatus(Summit $summit, $status);
+  /**
+   * @param Summit $summit
+   * @param string $status
+   * @return SelectionPlan|null
+   */
+  public function getCurrentSelectionPlanByStatus(Summit $summit, $status);
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @return Presentation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function markPresentationAsViewed(Summit $summit, int $selection_plan_id, int $presentation_id):Presentation;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @return Presentation
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function markPresentationAsViewed(
+    Summit $summit,
+    int $selection_plan_id,
+    int $presentation_id,
+  ): Presentation;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @param array $payload
-     * @return SummitPresentationComment
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function addPresentationComment(Summit $summit, int $selection_plan_id, int $presentation_id, array $payload):SummitPresentationComment;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @param array $payload
+   * @return SummitPresentationComment
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function addPresentationComment(
+    Summit $summit,
+    int $selection_plan_id,
+    int $presentation_id,
+    array $payload,
+  ): SummitPresentationComment;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @param int $new_category_id
-     * @return SummitCategoryChange|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function createPresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $new_category_id):?SummitCategoryChange;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @param int $new_category_id
+   * @return SummitCategoryChange|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function createPresentationCategoryChangeRequest(
+    Summit $summit,
+    int $selection_plan_id,
+    int $presentation_id,
+    int $new_category_id,
+  ): ?SummitCategoryChange;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @param int $category_change_request_id
-     * @param array $payload
-     * @return SummitCategoryChange|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload):?SummitCategoryChange;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @param int $category_change_request_id
+   * @param array $payload
+   * @return SummitCategoryChange|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function resolvePresentationCategoryChangeRequest(
+    Summit $summit,
+    int $selection_plan_id,
+    int $presentation_id,
+    int $category_change_request_id,
+    array $payload,
+  ): ?SummitCategoryChange;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $event_type_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return void
-     */
-    public function attachEventTypeToSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $event_type_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return void
+   */
+  public function attachEventTypeToSelectionPlan(
+    Summit $summit,
+    int $selection_plan_id,
+    int $event_type_id,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $event_type_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return void
-     */
-    public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $event_type_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return void
+   */
+  public function detachEventTypeFromSelectionPlan(
+    Summit $summit,
+    int $selection_plan_id,
+    int $event_type_id,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $type_id
-     * @param array $payload
-     * @return PresentationActionType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function upsertAllowedPresentationActionType(
-        Summit $summit, int $selection_plan_id, int $type_id, array $payload): PresentationActionType;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $type_id
+   * @param array $payload
+   * @return PresentationActionType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function upsertAllowedPresentationActionType(
+    Summit $summit,
+    int $selection_plan_id,
+    int $type_id,
+    array $payload,
+  ): PresentationActionType;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $type_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removeAllowedPresentationActionType(Summit $summit, int $selection_plan_id, int $type_id);
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $type_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function removeAllowedPresentationActionType(
+    Summit $summit,
+    int $selection_plan_id,
+    int $type_id,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param string $email
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return SelectionPlanAllowedMember
-     */
-    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email):SelectionPlanAllowedMember;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param string $email
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return SelectionPlanAllowedMember
+   */
+  public function addAllowedMember(
+    Summit $summit,
+    int $selection_plan_id,
+    string $email,
+  ): SelectionPlanAllowedMember;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $allowed_member_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $allowed_member_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $allowed_member_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function removeAllowedMember(
+    Summit $summit,
+    int $selection_plan_id,
+    int $allowed_member_id,
+  ): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param UploadedFile $csv_file
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function importAllowedMembers(Summit $summit, int $selection_plan_id,UploadedFile $csv_file):void;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param UploadedFile $csv_file
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function importAllowedMembers(
+    Summit $summit,
+    int $selection_plan_id,
+    UploadedFile $csv_file,
+  ): void;
 
-    /**
-     * @param int $summit_id
-     * @param int $selection_plan_id
-     * @param string $filename
-     * @throws EntityNotFoundException
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function processAllowedMemberData(int $summit_id, int $selection_plan_id, string $filename):void;
-
+  /**
+   * @param int $summit_id
+   * @param int $selection_plan_id
+   * @param string $filename
+   * @throws EntityNotFoundException
+   * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+   */
+  public function processAllowedMemberData(
+    int $summit_id,
+    int $selection_plan_id,
+    string $filename,
+  ): void;
 }

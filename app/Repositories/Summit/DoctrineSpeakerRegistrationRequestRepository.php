@@ -20,67 +20,60 @@ use models\summit\SpeakerRegistrationRequest;
  * @package App\Repositories\Summit
  */
 final class DoctrineSpeakerRegistrationRequestRepository
-    extends SilverStripeDoctrineRepository
-    implements ISpeakerRegistrationRequestRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISpeakerRegistrationRequestRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SpeakerRegistrationRequest::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SpeakerRegistrationRequest::class;
-    }
+  /**
+   * @param string $hash
+   * @return bool
+   */
+  public function existByHash($hash) {
+    return $this->getByHash($hash) != null;
+  }
 
-    /**
-     * @param string $hash
-     * @return bool
-     */
-    public function existByHash($hash)
-    {
-       return $this->getByHash($hash) != null;
-    }
+  /**
+   * @param string $hash
+   * @return SpeakerRegistrationRequest
+   */
+  public function getByHash($hash) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(SpeakerRegistrationRequest::class, "r")
+      ->where("r.confirmation_hash = :confirmation_hash")
+      ->setParameter("confirmation_hash", trim($hash))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 
-    /**
-     * @param string $hash
-     * @return SpeakerRegistrationRequest
-     */
-    public function getByHash($hash)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(SpeakerRegistrationRequest::class, "r")
-            ->where("r.confirmation_hash = :confirmation_hash")
-            ->setParameter("confirmation_hash", trim($hash))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+  /**
+   * @param string $email
+   * @return bool
+   */
+  public function existByEmail($email) {
+    return $this->getByEmail($email) != null;
+  }
 
-    /**
-     * @param string $email
-     * @return bool
-     */
-    public function existByEmail($email)
-    {
-        return $this->getByEmail($email) != null;
-    }
-
-    /**
-     * @param string $email
-     * @return SpeakerRegistrationRequest
-     */
-    public function getByEmail($email)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(SpeakerRegistrationRequest::class, "r")
-            ->where("r.email = :email")
-            ->setParameter("email", trim($email))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
+  /**
+   * @param string $email
+   * @return SpeakerRegistrationRequest
+   */
+  public function getByEmail($email) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(SpeakerRegistrationRequest::class, "r")
+      ->where("r.email = :email")
+      ->setParameter("email", trim($email))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 }

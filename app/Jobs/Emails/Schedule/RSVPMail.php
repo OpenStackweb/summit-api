@@ -20,58 +20,69 @@ use models\summit\RSVP;
  * Class RSVPMail
  * @package App\Jobs\Emails\Schedule
  */
-abstract class RSVPMail extends AbstractSummitEmailJob
-{
-    /**
-     * RSVPMail constructor.
-     * @param RSVP $rsvp
-     */
-    public function __construct(RSVP $rsvp)
-    {
-        $payload = [];
-        $event = $rsvp->getEvent();
-        $summit = $event->getSummit();
-        $owner = $rsvp->getOwner();
-        $payload[IMailTemplatesConstants::owner_fullname] = $owner->getFullName();
-        $payload[IMailTemplatesConstants::owner_email] = $owner->getEmail();
-        $payload[IMailTemplatesConstants::event_title] = $event->getTitle();
-        $payload[IMailTemplatesConstants::event_date] = $event->getDateNice();
-        $payload[IMailTemplatesConstants::confirmation_number] = $rsvp->getConfirmationNumber();
-        $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url] = $summit->getScheduleDefaultEventDetailUrl();
-        $event_uri = $rsvp->getEventUri();
+abstract class RSVPMail extends AbstractSummitEmailJob {
+  /**
+   * RSVPMail constructor.
+   * @param RSVP $rsvp
+   */
+  public function __construct(RSVP $rsvp) {
+    $payload = [];
+    $event = $rsvp->getEvent();
+    $summit = $event->getSummit();
+    $owner = $rsvp->getOwner();
+    $payload[IMailTemplatesConstants::owner_fullname] = $owner->getFullName();
+    $payload[IMailTemplatesConstants::owner_email] = $owner->getEmail();
+    $payload[IMailTemplatesConstants::event_title] = $event->getTitle();
+    $payload[IMailTemplatesConstants::event_date] = $event->getDateNice();
+    $payload[IMailTemplatesConstants::confirmation_number] = $rsvp->getConfirmationNumber();
+    $payload[
+      IMailTemplatesConstants::summit_schedule_default_event_detail_url
+    ] = $summit->getScheduleDefaultEventDetailUrl();
+    $event_uri = $rsvp->getEventUri();
 
-        $payload[IMailTemplatesConstants::event_uri] = '';
+    $payload[IMailTemplatesConstants::event_uri] = "";
 
-        if (!empty($event_uri)) {
-            // we got a valid origin
-            $payload[IMailTemplatesConstants::event_uri] = $event_uri;
-        }
-        // if we dont have a custom event uri, try to get default one
-        if (empty($payload[IMailTemplatesConstants::event_uri]) && !empty($payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url])) {
-            $payload[IMailTemplatesConstants::event_uri] = str_replace(":event_id", $event->getId(), $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url]);
-        }
-
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-
-        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+    if (!empty($event_uri)) {
+      // we got a valid origin
+      $payload[IMailTemplatesConstants::event_uri] = $event_uri;
+    }
+    // if we dont have a custom event uri, try to get default one
+    if (
+      empty($payload[IMailTemplatesConstants::event_uri]) &&
+      !empty($payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url])
+    ) {
+      $payload[IMailTemplatesConstants::event_uri] = str_replace(
+        ":event_id",
+        $event->getId(),
+        $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url],
+      );
     }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        $payload = parent::getEmailTemplateSchema();
+    parent::__construct(
+      $summit,
+      $payload,
+      $template_identifier,
+      $payload[IMailTemplatesConstants::owner_email],
+    );
+  }
 
-        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
-        $payload[IMailTemplatesConstants::event_date]['type'] = 'string';
-        $payload[IMailTemplatesConstants::confirmation_number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url]['type'] = 'string';
-        $payload[IMailTemplatesConstants::event_uri]['type'] = 'string';
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
 
-        return $payload;
-    }
+    $payload[IMailTemplatesConstants::speaker_full_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_fullname]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::event_title]["type"] = "string";
+    $payload[IMailTemplatesConstants::event_date]["type"] = "string";
+    $payload[IMailTemplatesConstants::confirmation_number]["type"] = "string";
+    $payload[IMailTemplatesConstants::summit_schedule_default_event_detail_url]["type"] = "string";
+    $payload[IMailTemplatesConstants::event_uri]["type"] = "string";
+
+    return $payload;
+  }
 }

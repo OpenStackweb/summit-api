@@ -14,7 +14,7 @@
 
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakersRegistrationDiscountCodeRepository")
  * @ORM\Table(name="SpeakersRegistrationDiscountCode")
@@ -22,34 +22,29 @@ use Doctrine\ORM\Mapping AS ORM;
  * This entity has the purpose of allowing to associate several speakers to a single discount code
  * @package models\summit
  */
-class SpeakersRegistrationDiscountCode
-    extends SummitRegistrationDiscountCode
-{
-    use SpeakersPromoCodeTrait;
+class SpeakersRegistrationDiscountCode extends SummitRegistrationDiscountCode {
+  use SpeakersPromoCodeTrait;
 
-    const ClassName = 'SPEAKERS_DISCOUNT_CODE';
+  const ClassName = "SPEAKERS_DISCOUNT_CODE";
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-        'type'       => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "type" => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata()
-    {
-        return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
+  }
 
-    public function getClassName(): string
-    {
-        return self::ClassName;
-    }
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->owners = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->owners = new ArrayCollection();
+  }
 }

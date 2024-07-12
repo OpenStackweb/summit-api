@@ -11,56 +11,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrackLiteralContentQuestionTemplate")
  * Class TrackLiteralContentQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackLiteralContentQuestionTemplate extends TrackQuestionTemplate
-{
+class TrackLiteralContentQuestionTemplate extends TrackQuestionTemplate {
+  /**
+   * @ORM\Column(name="Content", type="string")
+   * @var string
+   */
+  private $content;
 
-    /**
-     * @ORM\Column(name="Content", type="string")
-     * @var string
-     */
-    private $content;
+  /**
+   * @return string
+   */
+  public function getContent() {
+    return $this->content;
+  }
 
-    /**
-     * @return string
-     */
-    public function getContent()
-    {
-        return $this->content;
-    }
+  /**
+   * @param string $content
+   */
+  public function setContent($content) {
+    $this->content = $content;
+  }
 
-    /**
-     * @param string $content
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
+  const ClassName = "TrackLiteralContentQuestionTemplate";
 
-    const ClassName = 'TrackLiteralContentQuestionTemplate';
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "content" => "string",
+  ];
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-        'content' => 'string',
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(TrackQuestionTemplate::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(TrackQuestionTemplate::getMetadata(), self::$metadata);
+  }
 }

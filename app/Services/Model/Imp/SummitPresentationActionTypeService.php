@@ -26,88 +26,95 @@ use models\summit\Summit;
  * Class SummitPresentationActionTypeService
  * @package App\Services\Model\Imp
  */
-final class SummitPresentationActionTypeService
-    extends AbstractService
-    implements ISummitPresentationActionTypeService
-{
+final class SummitPresentationActionTypeService extends AbstractService implements
+  ISummitPresentationActionTypeService {
+  use OrderableChilds;
+  /**
+   * @var IPresentationActionTypeRepository
+   */
+  private $repository;
 
-    use OrderableChilds;
-    /**
-     * @var IPresentationActionTypeRepository
-     */
-    private $repository;
+  public function __construct(
+    IPresentationActionTypeRepository $repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->repository = $repository;
+  }
 
-    public function __construct
-    (
-        IPresentationActionTypeRepository $repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->repository = $repository;
-    }
+  /**
+   * @inheritDoc
+   */
+  public function add(Summit $summit, array $payload): PresentationActionType {
+    return $this->tx_service->transaction(function () use ($summit, $payload) {
+      $action = PresentationActionTypeFactory::build($payload);
 
-    /**
-     * @inheritDoc
-     */
-    public function add(Summit $summit, array $payload): PresentationActionType
-    {
-        return $this->tx_service->transaction(function() use($summit, $payload){
-            $action = PresentationActionTypeFactory::build($payload);
+      if ($summit->getPresentationActionTypeByLabel($action->getLabel()) != null) {
+        throw new ValidationException(
+          "Summit {$summit->getId()} already contains a Presentation Action Type with label {$action->getLabel()}.",
+        );
+      }
 
-            if ($summit->getPresentationActionTypeByLabel($action->getLabel()) != null) {
-                throw new ValidationException(
-                    "Summit {$summit->getId()} already contains a Presentation Action Type with label {$action->getLabel()}.");
-            }
+      $summit->addPresentationActionType($action);
+      return $action;
+    });
+  }
 
-            $summit->addPresentationActionType($action);
-            return $action;
-        });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function update(
+    Summit $summit,
+    int $action_type_id,
+    array $payload,
+  ): ?PresentationActionType {
+    return $this->tx_service->transaction(function () use ($summit, $action_type_id, $payload) {
+      $action = $summit->getPresentationActionTypeById($action_type_id);
+      if (is_null($action)) {
+        throw new EntityNotFoundException(
+          sprintf("PresentationActionType %s not found.", $action_type_id),
+        );
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function update(Summit $summit, int $action_type_id, array $payload): ?PresentationActionType
-    {
-        return $this->tx_service->transaction(function() use($summit, $action_type_id, $payload){
+      $registered_action_type = null;
+      if (isset($payload["label"])) {
+        $registered_action_type = $summit->getPresentationActionTypeByLabel(
+          trim($payload["label"]),
+        );
+      }
 
-            $action = $summit->getPresentationActionTypeById($action_type_id);
-            if(is_null($action)){
-                throw new EntityNotFoundException(sprintf("PresentationActionType %s not found.", $action_type_id));
-            }
+      if ($registered_action_type != null && $registered_action_type->getId() != $action_type_id) {
+        throw new ValidationException(
+          "Summit {$summit->getId()} already contains a Presentation Action Type with label {$registered_action_type->getLabel()}.",
+        );
+      }
+      return PresentationActionTypeFactory::populate($action, $payload);
+    });
+  }
 
-            $registered_action_type = null;
-            if(isset($payload['label'])) {
-                $registered_action_type = $summit->getPresentationActionTypeByLabel(trim($payload['label']));
-            }
+  /**
+   * @inheritDoc
+   */
+  public function delete(Summit $summit, int $action_type_id): void {
+    $this->tx_service->transaction(function () use ($summit, $action_type_id) {
+      $action = $summit->getPresentationActionTypeById($action_type_id);
+      if (is_null($action)) {
+        throw new EntityNotFoundException(
+          sprintf("PresentationActionType %s not found.", $action_type_id),
+        );
+      }
 
-            if ($registered_action_type != null && $registered_action_type->getId() != $action_type_id) {
-                throw new ValidationException(
-                    "Summit {$summit->getId()} already contains a Presentation Action Type with label {$registered_action_type->getLabel()}.");
-            }
-            return PresentationActionTypeFactory::populate($action, $payload);
-        });
-    }
+      //check if target action type is attached to any selection plan
+      if (!$action->getSelectionPlans()->isEmpty()) {
+        throw new ValidationException(
+          sprintf(
+            "PresentationActionType %s is attached to at least one selection plan.",
+            $action_type_id,
+          ),
+        );
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function delete(Summit $summit, int $action_type_id): void
-    {
-        $this->tx_service->transaction(function() use($summit, $action_type_id){
-            $action = $summit->getPresentationActionTypeById($action_type_id);
-            if(is_null($action)){
-                throw new EntityNotFoundException(sprintf("PresentationActionType %s not found.", $action_type_id));
-            }
-
-            //check if target action type is attached to any selection plan
-            if (!$action->getSelectionPlans()->isEmpty()) {
-                throw new ValidationException(sprintf(
-                    "PresentationActionType %s is attached to at least one selection plan.", $action_type_id));
-            }
-
-            $summit->removePresentationActionType($action);
-        });
-    }
+      $summit->removePresentationActionType($action);
+    });
+  }
 }

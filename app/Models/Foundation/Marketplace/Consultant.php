@@ -13,130 +13,122 @@
  **/
 use App\Models\Foundation\Software\OpenStackComponent;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineConsultantRepository")
  * @ORM\Table(name="Consultant")
  * Class Consultant
  * @package App\Models\Foundation\Marketplace
  */
-class Consultant extends RegionalSupportedCompanyService
-{
-    const ClassName = 'Consultant';
+class Consultant extends RegionalSupportedCompanyService {
+  const ClassName = "Consultant";
 
-    /**
-     * @ORM\OneToMany(targetEntity="Office", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
-     * @var Office[]
-     */
-    private $offices;
+  /**
+   * @ORM\OneToMany(targetEntity="Office", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
+   * @var Office[]
+   */
+  private $offices;
 
-    /**
-     * @ORM\OneToMany(targetEntity="ConsultantClient", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
-     * @var ConsultantClient[]
-     */
-    private $clients;
+  /**
+   * @ORM\OneToMany(targetEntity="ConsultantClient", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
+   * @var ConsultantClient[]
+   */
+  private $clients;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="SpokenLanguage", cascade={"persist"})
-     * @ORM\JoinTable(name="Consultant_SpokenLanguages",
-     *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SpokenLanguageID", referencedColumnName="ID")}
-     *      )
-     * @var SpokenLanguage[]
-     */
-    private $spoken_languages;
+  /**
+   * @ORM\ManyToMany(targetEntity="SpokenLanguage", cascade={"persist"})
+   * @ORM\JoinTable(name="Consultant_SpokenLanguages",
+   *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="SpokenLanguageID", referencedColumnName="ID")}
+   *      )
+   * @var SpokenLanguage[]
+   */
+  private $spoken_languages;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="ConfigurationManagementType", cascade={"persist"})
-     * @ORM\JoinTable(name="Consultant_ConfigurationManagementExpertises",
-     *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="ConfigurationManagementTypeID", referencedColumnName="ID")}
-     *      )
-     * @var ConfigurationManagementType[]
-     */
-    private $configuration_management_expertise;
+  /**
+   * @ORM\ManyToMany(targetEntity="ConfigurationManagementType", cascade={"persist"})
+   * @ORM\JoinTable(name="Consultant_ConfigurationManagementExpertises",
+   *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="ConfigurationManagementTypeID", referencedColumnName="ID")}
+   *      )
+   * @var ConfigurationManagementType[]
+   */
+  private $configuration_management_expertise;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Software\OpenStackComponent", cascade={"persist"})
-     * @ORM\JoinTable(name="Consultant_ExpertiseAreas",
-     *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")}
-     *      )
-     * @var OpenStackComponent[]
-     */
-    private $expertise_areas;
+  /**
+   * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Software\OpenStackComponent", cascade={"persist"})
+   * @ORM\JoinTable(name="Consultant_ExpertiseAreas",
+   *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")}
+   *      )
+   * @var OpenStackComponent[]
+   */
+  private $expertise_areas;
 
-    /**
-     * @ORM\OneToMany(targetEntity="ConsultantServiceOfferedType", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
-     * @var ConsultantServiceOfferedType[]
-     */
-    private $services_offered;
+  /**
+   * @ORM\OneToMany(targetEntity="ConsultantServiceOfferedType", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
+   * @var ConsultantServiceOfferedType[]
+   */
+  private $services_offered;
 
-    /**
-     * Consultant constructor.
-     */
-    public function __construct()
-    {
-        $this->offices                             = new ArrayCollection();
-        $this->clients                             = new ArrayCollection();
-        $this->spoken_languages                    = new ArrayCollection();
-        $this->configuration_management_expertises = new ArrayCollection();
-        $this->expertise_areas                     = new ArrayCollection();
-        $this->services_offered                    = new ArrayCollection();
-    }
+  /**
+   * Consultant constructor.
+   */
+  public function __construct() {
+    $this->offices = new ArrayCollection();
+    $this->clients = new ArrayCollection();
+    $this->spoken_languages = new ArrayCollection();
+    $this->configuration_management_expertises = new ArrayCollection();
+    $this->expertise_areas = new ArrayCollection();
+    $this->services_offered = new ArrayCollection();
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName():string
-    {
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    /**
-     * @return Office[]
-     */
-    public function getOffices()
-    {
-        return $this->offices->toArray();
-    }
+  /**
+   * @return Office[]
+   */
+  public function getOffices() {
+    return $this->offices->toArray();
+  }
 
-    /**
-     * @return ConsultantClient[]
-     */
-    public function getClients(){
-        return $this->clients->toArray();
-    }
+  /**
+   * @return ConsultantClient[]
+   */
+  public function getClients() {
+    return $this->clients->toArray();
+  }
 
-    /**
-     * @return SpokenLanguage[]
-     */
-    public function getSpokenLanguages()
-    {
-        return $this->spoken_languages->toArray();
-    }
+  /**
+   * @return SpokenLanguage[]
+   */
+  public function getSpokenLanguages() {
+    return $this->spoken_languages->toArray();
+  }
 
-    /**
-     * @return ConfigurationManagementType[]
-     */
-    public function getConfigurationManagementExpertise()
-    {
-        return $this->configuration_management_expertise->toArray();
-    }
+  /**
+   * @return ConfigurationManagementType[]
+   */
+  public function getConfigurationManagementExpertise() {
+    return $this->configuration_management_expertise->toArray();
+  }
 
-    /**
-     * @return OpenStackComponent[]
-     */
-    public function getExpertiseAreas()
-    {
-        return $this->expertise_areas->toArray();
-    }
+  /**
+   * @return OpenStackComponent[]
+   */
+  public function getExpertiseAreas() {
+    return $this->expertise_areas->toArray();
+  }
 
-    /**
-     * @return ConsultantServiceOfferedType[]
-     */
-    public function getServicesOffered()
-    {
-        return $this->services_offered->toArray();
-    }
+  /**
+   * @return ConsultantServiceOfferedType[]
+   */
+  public function getServicesOffered() {
+    return $this->services_offered->toArray();
+  }
 }

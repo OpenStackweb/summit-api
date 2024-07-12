@@ -16,15 +16,15 @@ use models\summit\SummitGeoLocatedLocation;
  * Class GeoLocationStrategyFactory
  * @package App\Services\Model\Strategies\GeoLocation
  */
-final class GeoLocationStrategyFactory
-{
-    /**
-     * @param SummitGeoLocatedLocation $location
-     * @return IGeoLocationStrategy
-     */
-    public static function build(SummitGeoLocatedLocation $location){
-        if (!empty($location->getAddress1()))
-            return new GeoLocationAddressInfoStrategy();
-        return new GeoLocationReverseStrategy();
+final class GeoLocationStrategyFactory {
+  /**
+   * @param SummitGeoLocatedLocation $location
+   * @return IGeoLocationStrategy
+   */
+  public static function build(SummitGeoLocatedLocation $location) {
+    if (!empty($location->getAddress1())) {
+      return new GeoLocationAddressInfoStrategy();
     }
+    return new GeoLocationReverseStrategy();
+  }
 }

@@ -18,16 +18,12 @@ use App\Models\Foundation\Marketplace\PublicCloudService;
  * Class DoctrinePublicCloudServiceRepository
  * @package App\Repositories\Marketplace
  */
-final class DoctrinePublicCloudServiceRepository
-    extends DoctrineCompanyServiceRepository
-    implements IPublicCloudServiceRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PublicCloudService::class;
-    }
+final class DoctrinePublicCloudServiceRepository extends DoctrineCompanyServiceRepository implements
+  IPublicCloudServiceRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PublicCloudService::class;
+  }
 }

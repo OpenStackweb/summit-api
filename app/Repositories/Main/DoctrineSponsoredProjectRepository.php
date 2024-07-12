@@ -18,45 +18,38 @@ use models\main\SponsoredProject;
  * Class DoctrineSponsoredProjectRepository
  * @package repositories\main
  */
-final class DoctrineSponsoredProjectRepository
-    extends SilverStripeDoctrineRepository
-    implements ISponsoredProjectRepository
-{
+final class DoctrineSponsoredProjectRepository extends SilverStripeDoctrineRepository implements
+  ISponsoredProjectRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "slug" => "e.slug:json_string",
+      "is_active" => "e.is_active:json_int",
+      "parent_project_id" => "e.parent_project:json_int",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name' => 'e.name:json_string',
-            'slug' => 'e.slug:json_string',
-            'is_active' => 'e.is_active:json_int',
-            'parent_project_id' => 'e.parent_project:json_int',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SponsoredProject::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SponsoredProject::class;
-    }
-
-    public function getByName(string $name): ?SponsoredProject
-    {
-        return $this->findOneBy(['name' => trim($name)]);
-    }
+  public function getByName(string $name): ?SponsoredProject {
+    return $this->findOneBy(["name" => trim($name)]);
+  }
 }

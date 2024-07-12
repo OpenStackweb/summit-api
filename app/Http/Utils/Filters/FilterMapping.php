@@ -16,43 +16,40 @@
  * Class FilterMapping
  * @package utils
  */
-abstract class FilterMapping
-{
-    /**
-     * @var string
-     */
-    protected $table;
-    /**
-     * @var string
-     */
-    protected $where;
+abstract class FilterMapping {
+  /**
+   * @var string
+   */
+  protected $table;
+  /**
+   * @var string
+   */
+  protected $where;
 
-    /**
-     * @var array
-     */
-    protected $bindings;
+  /**
+   * @var array
+   */
+  protected $bindings;
 
-    /**
-     * FilterMapping constructor.
-     * @param string $table
-     * @param string $where
-     */
-    public function __construct($table, $where)
-    {
-        $this->table = $table;
-        $this->where = $where;
-        $this->bindings = [];
-    }
+  /**
+   * FilterMapping constructor.
+   * @param string $table
+   * @param string $where
+   */
+  public function __construct($table, $where) {
+    $this->table = $table;
+    $this->where = $where;
+    $this->bindings = [];
+  }
 
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public abstract function toRawSQL(FilterElement $filter, array $bindings = []):string;
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  abstract public function toRawSQL(FilterElement $filter, array $bindings = []): string;
 
-    public function getBindings(): array
-    {
-        return $this->bindings;
-    }
+  public function getBindings(): array {
+    return $this->bindings;
+  }
 }

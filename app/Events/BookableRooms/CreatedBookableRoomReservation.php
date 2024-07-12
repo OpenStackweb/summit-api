@@ -16,7 +16,5 @@
  * Class CreatedBookableRoomReservation
  * @package App\Events
  */
-final class CreatedBookableRoomReservation extends BookableRoomReservationAction
-{
-
+final class CreatedBookableRoomReservation extends BookableRoomReservationAction {
 }

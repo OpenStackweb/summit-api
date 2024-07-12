@@ -11,12 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SpeakerTravelPreferenceSerializer
-    extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Country'     => 'country_iso_code:json_string',
-        'CountryName' => 'country:json_string',
-        'SpeakerId'   => 'speaker_id:json_int',
-    ];
+final class SpeakerTravelPreferenceSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Country" => "country_iso_code:json_string",
+    "CountryName" => "country:json_string",
+    "SpeakerId" => "speaker_id:json_int",
+  ];
 }

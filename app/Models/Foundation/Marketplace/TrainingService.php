@@ -12,22 +12,20 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrainingService")
  * Class Distribution
  * @package App\Models\Foundation\Marketplace
  */
-class TrainingService extends CompanyService
-{
-    const ClassName = 'TrainingService';
+class TrainingService extends CompanyService {
+  const ClassName = "TrainingService";
 
-    /**
-     * @return string
-     */
-    public function getClassName():string
-    {
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 }

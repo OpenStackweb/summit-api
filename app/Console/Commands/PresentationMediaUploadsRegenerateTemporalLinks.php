@@ -21,62 +21,63 @@ use services\model\ISummitService;
  * Class PresentationMediaUploadsRegenerateTemporalLinks
  * @package App\Console\Commands
  */
-final class PresentationMediaUploadsRegenerateTemporalLinks extends Command
-{
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:presentations-regenerate-media-uploads-temporal-public-urls';
+final class PresentationMediaUploadsRegenerateTemporalLinks extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:presentations-regenerate-media-uploads-temporal-public-urls";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:presentations-regenerate-media-uploads-temporal-public-urls';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:presentations-regenerate-media-uploads-temporal-public-urls";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Regenerates Public Temporal Media uploads Urls';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Regenerates Public Temporal Media uploads Urls";
 
-    /**
-     * @var ISummitService
-     */
-    private $service;
+  /**
+   * @var ISummitService
+   */
+  private $service;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $repository;
+  /**
+   * @var ISummitRepository
+   */
+  private $repository;
 
-    /**
-     * @param ISummitService $service
-     * @param ISummitRepository $repository
-     */
-    public function __construct(ISummitService $service, ISummitRepository $repository)
-    {
-        parent::__construct();
-        $this->service = $service;
-        $this->repository = $repository;
+  /**
+   * @param ISummitService $service
+   * @param ISummitRepository $repository
+   */
+  public function __construct(ISummitService $service, ISummitRepository $repository) {
+    parent::__construct();
+    $this->service = $service;
+    $this->repository = $repository;
+  }
+
+  public function handle() {
+    Log::debug(sprintf("PresentationMediaUploadsRegenerateTemporalLinks::handle start"));
+    foreach ($this->repository->getNotEnded() as $summit) {
+      Log::debug(
+        sprintf(
+          "PresentationMediaUploadsRegenerateTemporalLinks::handle processing summit %s",
+          $summit->getId(),
+        ),
+      );
+      try {
+        $this->service->regenerateTemporalUrlsForMediaUploads($summit->getId());
+      } catch (\Exception $ex) {
+        Log::error($ex);
+      }
     }
-
-    public function handle()
-    {
-        Log::debug(sprintf("PresentationMediaUploadsRegenerateTemporalLinks::handle start"));
-        foreach ($this->repository->getNotEnded() as $summit) {
-            Log::debug(sprintf("PresentationMediaUploadsRegenerateTemporalLinks::handle processing summit %s", $summit->getId()));
-            try {
-                $this->service->regenerateTemporalUrlsForMediaUploads($summit->getId());
-            }
-            catch (\Exception $ex){
-                Log::error($ex);
-            }
-        }
-        Log::debug(sprintf("PresentationMediaUploadsRegenerateTemporalLinks::handle finish"));
-    }
+    Log::debug(sprintf("PresentationMediaUploadsRegenerateTemporalLinks::handle finish"));
+  }
 }

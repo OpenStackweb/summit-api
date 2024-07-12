@@ -18,56 +18,56 @@ use models\summit\SummitTicketType;
  * Class SamsungRecordSerializer
  * @package App\Services\Apis\Samsung
  */
-final class SamsungRecordSerializer
-{
-    /**
-     * @param array $res
-     * @param array $params
-     * @return array
-     */
-    public static function serialize(array $res, array $params = []):array{
+final class SamsungRecordSerializer {
+  /**
+   * @param array $res
+   * @param array $params
+   * @return array
+   */
+  public static function serialize(array $res, array $params = []): array {
+    $answers = [];
 
-        $answers = [];
-
-        // answers mapping
-        foreach (PayloadParamNames::AllowedExtraQuestions as $extraQuestion){
-            if(!isset($res[$extraQuestion])) continue;
-            $answers[] = [
-                'question_id' => $extraQuestion,
-                'answer' => $res[$extraQuestion],
-            ];
-        }
-
-        // map fields
-        return [
-            'id' => $res[PayloadParamNames::UserId],
-            'profile' => [
-                'first_name'=> $res[PayloadParamNames::FirstName],
-                'last_name' => $res[PayloadParamNames::LastName],
-                'email' => $res[PayloadParamNames::Email],
-                'company' => $res[PayloadParamNames::CompanyName] ?? null,
-                'badge_feature' => $res[PayloadParamNames::Group] ?? null,
-            ],
-            'ticket_class' => [
-                'id'=> $params[PayloadParamNames::DefaultTicketId],
-                'name'=> $params[PayloadParamNames::DefaultTicketName],
-                'description'=> $params[PayloadParamNames::DefaultTicketDescription],
-                'quantity_total' => SummitTicketType::QtyInfinite, // infinite
-                'cost' =>[
-                    'major_value' => SummitTicketType::AmountFree, // free
-                    'currency' => SummitTicketType::USD_Currency,
-                ]
-            ],
-            'order' => [
-                'id' => $res[PayloadParamNames::UserId],
-                'first_name'=> $res[PayloadParamNames::FirstName],
-                'last_name' => $res[PayloadParamNames::LastName],
-                'email' => $res[PayloadParamNames::Email],
-                'company' => $res[PayloadParamNames::CompanyName] ?? null,
-            ],
-            'refunded' => false,
-            'cancelled' => false,
-            'answers' => $answers,
-        ];
+    // answers mapping
+    foreach (PayloadParamNames::AllowedExtraQuestions as $extraQuestion) {
+      if (!isset($res[$extraQuestion])) {
+        continue;
+      }
+      $answers[] = [
+        "question_id" => $extraQuestion,
+        "answer" => $res[$extraQuestion],
+      ];
     }
+
+    // map fields
+    return [
+      "id" => $res[PayloadParamNames::UserId],
+      "profile" => [
+        "first_name" => $res[PayloadParamNames::FirstName],
+        "last_name" => $res[PayloadParamNames::LastName],
+        "email" => $res[PayloadParamNames::Email],
+        "company" => $res[PayloadParamNames::CompanyName] ?? null,
+        "badge_feature" => $res[PayloadParamNames::Group] ?? null,
+      ],
+      "ticket_class" => [
+        "id" => $params[PayloadParamNames::DefaultTicketId],
+        "name" => $params[PayloadParamNames::DefaultTicketName],
+        "description" => $params[PayloadParamNames::DefaultTicketDescription],
+        "quantity_total" => SummitTicketType::QtyInfinite, // infinite
+        "cost" => [
+          "major_value" => SummitTicketType::AmountFree, // free
+          "currency" => SummitTicketType::USD_Currency,
+        ],
+      ],
+      "order" => [
+        "id" => $res[PayloadParamNames::UserId],
+        "first_name" => $res[PayloadParamNames::FirstName],
+        "last_name" => $res[PayloadParamNames::LastName],
+        "email" => $res[PayloadParamNames::Email],
+        "company" => $res[PayloadParamNames::CompanyName] ?? null,
+      ],
+      "refunded" => false,
+      "cancelled" => false,
+      "answers" => $answers,
+    ];
+  }
 }

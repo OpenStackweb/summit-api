@@ -16,29 +16,27 @@ use models\summit\SummitEventFeedback;
  * Class SummitEventFeedbackFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitEventFeedbackFactory
-{
-    /**
-     * @param array $data
-     * @return SummitEventFeedback|null
-     */
-    public static function build(array $data){
-        return self::populate(new SummitEventFeedback, $data);
+final class SummitEventFeedbackFactory {
+  /**
+   * @param array $data
+   * @return SummitEventFeedback|null
+   */
+  public static function build(array $data) {
+    return self::populate(new SummitEventFeedback(), $data);
+  }
+
+  /**
+   * @param SummitEventFeedback $feedback
+   * @param array $data
+   * @return SummitEventFeedback
+   */
+  public static function populate(SummitEventFeedback $feedback, array $data) {
+    if (isset($data["rate"])) {
+      $feedback->setRate(intval($data["rate"]));
     }
 
-    /**
-     * @param SummitEventFeedback $feedback
-     * @param array $data
-     * @return SummitEventFeedback
-     */
-    public static function populate(SummitEventFeedback $feedback, array $data){
-
-        if(isset($data['rate']))
-            $feedback->setRate(intval($data['rate']));
-
-        $note = isset($data['note']) ? trim($data['note']) : "";
-        $feedback->setNote($note);
-        return $feedback;
-    }
-
+    $note = isset($data["note"]) ? trim($data["note"]) : "";
+    $feedback->setNote($note);
+    return $feedback;
+  }
 }

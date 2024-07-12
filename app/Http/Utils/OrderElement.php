@@ -18,57 +18,50 @@ namespace utils;
  * Class OrderElement
  * @package utils
  */
-final class OrderElement
-{
-    /**
-     * @var string
-     */
-    private $field;
+final class OrderElement {
+  /**
+   * @var string
+   */
+  private $field;
 
-    /**
-     * @var string
-     */
-    private $direction;
+  /**
+   * @var string
+   */
+  private $direction;
 
-    /**
-     * OrderElement constructor.
-     * @param $field
-     * @param $direction
-     */
-    private function __construct($field, $direction)
-    {
-        $this->field     = $field;
-        $this->direction = $direction;
-    }
+  /**
+   * OrderElement constructor.
+   * @param $field
+   * @param $direction
+   */
+  private function __construct($field, $direction) {
+    $this->field = $field;
+    $this->direction = $direction;
+  }
 
-    public static function buildAscFor($field)
-    {
-        return new OrderElement($field, 'ASC');
-    }
+  public static function buildAscFor($field) {
+    return new OrderElement($field, "ASC");
+  }
 
-    public static function buildDescFor($field)
-    {
-        return new OrderElement($field, 'DESC');
-    }
+  public static function buildDescFor($field) {
+    return new OrderElement($field, "DESC");
+  }
 
-    /**
-     * @return string
-     */
-    public function getField()
-    {
-        return $this->field;
-    }
+  /**
+   * @return string
+   */
+  public function getField() {
+    return $this->field;
+  }
 
-    public function isAsc()
-    {
-        return $this->direction === 'ASC';
-    }
+  public function isAsc() {
+    return $this->direction === "ASC";
+  }
 
-    /**
-     * @return string
-     */
-    public function getDirection()
-    {
-        return $this->direction;
-    }
+  /**
+   * @return string
+   */
+  public function getDirection() {
+    return $this->direction;
+  }
 }

@@ -17,7 +17,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitCategoryChangeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitCategoryChangeRepository extends IBaseRepository
-{
-
+interface ISummitCategoryChangeRepository extends IBaseRepository {
 }

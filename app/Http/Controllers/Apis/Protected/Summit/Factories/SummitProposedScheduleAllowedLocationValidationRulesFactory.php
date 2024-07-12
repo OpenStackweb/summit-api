@@ -12,26 +12,21 @@
  * limitations under the License.
  **/
 
-
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 
 /**
  * Class SummitProposedScheduleAllowedLocationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitProposedScheduleAllowedLocationValidationRulesFactory
-    extends AbstractValidationRulesFactory
-{
+final class SummitProposedScheduleAllowedLocationValidationRulesFactory extends
+  AbstractValidationRulesFactory {
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "location_id" => "required|integer",
+    ];
+  }
 
-    public static function buildForAdd(array $payload = []): array
-    {
-       return [
-           'location_id' => 'required|integer',
-       ];
-    }
-
-    public static function buildForUpdate(array $payload = []): array
-    {
-       return [];
-    }
+  public static function buildForUpdate(array $payload = []): array {
+    return [];
+  }
 }

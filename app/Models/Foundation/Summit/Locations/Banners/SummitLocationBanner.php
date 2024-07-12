@@ -13,7 +13,7 @@
  **/
 use models\summit\SummitAbstractLocation;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitLocationBannerRepository")
  * @ORM\Table(name="SummitLocationBanner")
@@ -24,152 +24,138 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitLocationBanner
  * @package App\Models\Foundation\Summit\Locations\Banners
  */
-class SummitLocationBanner extends SilverstripeBaseModel
-{
-    const TypePrimary   = 'Primary';
-    const TypeSecondary = 'Secondary';
-    const ClassName     = 'SummitLocationBanner';
+class SummitLocationBanner extends SilverstripeBaseModel {
+  const TypePrimary = "Primary";
+  const TypeSecondary = "Secondary";
+  const ClassName = "SummitLocationBanner";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return SummitLocationBanner::ClassName;
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return SummitLocationBanner::ClassName;
+  }
+
+  /**
+   * @ORM\Column(name="Title", type="string")
+   * @var string
+   */
+  protected $title;
+
+  /**
+   * @ORM\Column(name="Content", type="string")
+   * @var string
+   */
+  protected $content;
+
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  protected $type;
+
+  /**
+   * @ORM\Column(name="Enabled", type="boolean")
+   * @var bool
+   */
+  protected $enabled;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY", inversedBy="banners")
+   * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var SummitAbstractLocation
+   */
+  protected $location;
+
+  /**
+   * @return string
+   */
+  public function getTitle() {
+    return $this->title;
+  }
+
+  /**
+   * @param string $title
+   */
+  public function setTitle($title) {
+    $this->title = $title;
+  }
+
+  /**
+   * @return string
+   */
+  public function getContent() {
+    return $this->content;
+  }
+
+  /**
+   * @param string $content
+   */
+  public function setContent($content) {
+    $this->content = $content;
+  }
+
+  /**
+   * @return string
+   */
+  public function getType() {
+    return $this->type;
+  }
+
+  /**
+   * @param string $type
+   */
+  public function setType($type) {
+    $this->type = $type;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isEnabled() {
+    return $this->enabled;
+  }
+
+  /**
+   * @param bool $enabled
+   */
+  public function setEnabled($enabled) {
+    $this->enabled = $enabled;
+  }
+
+  /**
+   * @return SummitAbstractLocation
+   */
+  public function getLocation() {
+    return $this->location;
+  }
+
+  /**
+   * @param SummitAbstractLocation $location
+   */
+  public function setLocation(SummitAbstractLocation $location) {
+    $this->location = $location;
+  }
+
+  public function clearLocation() {
+    $this->location = null;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasLocation() {
+    return $this->getLocationId() > 0;
+  }
+
+  /**
+   * @return int
+   */
+  public function getLocationId() {
+    try {
+      return !is_null($this->location) ? $this->location->getId() : 0;
+    } catch (\Exception $ex) {
+      return 0;
     }
-
-    /**
-     * @ORM\Column(name="Title", type="string")
-     * @var string
-     */
-    protected $title;
-
-    /**
-     * @ORM\Column(name="Content", type="string")
-     * @var string
-     */
-    protected $content;
-
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * @ORM\Column(name="Enabled", type="boolean")
-     * @var bool
-     */
-    protected $enabled;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY", inversedBy="banners")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var SummitAbstractLocation
-     */
-    protected $location;
-
-    /**
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->title;
-    }
-
-    /**
-     * @param string $title
-     */
-    public function setTitle($title)
-    {
-        $this->title = $title;
-    }
-
-    /**
-     * @return string
-     */
-    public function getContent()
-    {
-        return $this->content;
-    }
-
-    /**
-     * @param string $content
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
-
-    /**
-     * @return string
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string $type
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isEnabled()
-    {
-        return $this->enabled;
-    }
-
-    /**
-     * @param bool $enabled
-     */
-    public function setEnabled($enabled)
-    {
-        $this->enabled = $enabled;
-    }
-
-    /**
-     * @return SummitAbstractLocation
-     */
-    public function getLocation()
-    {
-        return $this->location;
-    }
-
-    /**
-     * @param SummitAbstractLocation $location
-     */
-    public function setLocation(SummitAbstractLocation $location)
-    {
-        $this->location = $location;
-    }
-
-    public function clearLocation(){
-        $this->location = null;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasLocation(){
-        return $this->getLocationId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getLocationId()
-    {
-        try {
-            return !is_null($this->location)? $this->location->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
+  }
 }

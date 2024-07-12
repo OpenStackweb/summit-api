@@ -22,81 +22,82 @@ use Exception;
  * Class RegistrationSummitOrderRevocationCommand
  * @package App\Console\Commands
  */
-class RegistrationSummitOrderRevocationCommand extends Command
-{
+class RegistrationSummitOrderRevocationCommand extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:order-reservation-revocation";
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:order-reservation-revocation';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:order-reservation-revocation";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:order-reservation-revocation';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Revokes all reserved orders after N minutes without action";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Revokes all reserved orders after N minutes without action';
+  /**
+   * @var ISummitOrderService
+   */
+  private $order_service;
 
-    /**
-     * @var ISummitOrderService
-     */
-    private $order_service;
+  /**
+   * RegistrationSummitOrderRevocationCommand constructor.
+   * @param ISummitOrderService $order_service
+   */
+  public function __construct(ISummitOrderService $order_service) {
+    parent::__construct();
+    $this->order_service = $order_service;
+  }
 
-    /**
-     * RegistrationSummitOrderRevocationCommand constructor.
-     * @param ISummitOrderService $order_service
-     */
-    public function __construct(ISummitOrderService $order_service)
-    {
-        parent::__construct();
-        $this->order_service = $order_service;
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    $enabled = Config::get("registration.enable_orders_reservation_revocation", true);
+    if (!$enabled) {
+      $this->info("task is not enabled!");
+      return false;
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
+    try {
+      $this->info("processing summit orders reservations");
+      $start = time();
+      $lifetime = intval(Config::get("registration.reservation_lifetime", 30));
+      Log::info(
+        sprintf("RegistrationSummitOrderRevocationCommand: using lifetime of %s ", $lifetime),
+      );
 
-        $enabled = Config::get("registration.enable_orders_reservation_revocation", true);
-        if (!$enabled) {
-            $this->info("task is not enabled!");
-            return false;
-        }
+      Log::info(
+        "RegistrationSummitOrderRevocationCommand: invoking revokeReservedOrdersOlderThanNMinutes",
+      );
+      $this->order_service->revokeReservedOrdersOlderThanNMinutes($lifetime);
 
-        try {
-            $this->info("processing summit orders reservations");
-            $start = time();
-            $lifetime = intval(Config::get("registration.reservation_lifetime", 30));
-            Log::info(sprintf("RegistrationSummitOrderRevocationCommand: using lifetime of %s ", $lifetime));
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
 
-            Log::info("RegistrationSummitOrderRevocationCommand: invoking revokeReservedOrdersOlderThanNMinutes");
-            $this->order_service->revokeReservedOrdersOlderThanNMinutes($lifetime);
+      $start = time();
+      Log::info(
+        "RegistrationSummitOrderRevocationCommand: invoking confirmOrdersOlderThanNMinutes",
+      );
+      $this->order_service->confirmOrdersOlderThanNMinutes($lifetime);
 
-            $end = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-
-            $start = time();
-            Log::info("RegistrationSummitOrderRevocationCommand: invoking confirmOrdersOlderThanNMinutes");
-            $this->order_service->confirmOrdersOlderThanNMinutes($lifetime);
-
-            $end = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        } catch (Exception $ex) {
-            Log::error($ex);
-        }
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
+  }
 }

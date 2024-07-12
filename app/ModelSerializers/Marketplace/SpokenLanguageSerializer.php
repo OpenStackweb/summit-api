@@ -17,12 +17,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SpokenLanguageSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class SpokenLanguageSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Name'      => 'name:json_string',
-    ];
+final class SpokenLanguageSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+  ];
 }

@@ -16,77 +16,71 @@
  * Class ConfirmationExternalOrderRequest
  * @package models\summit
  */
-final class ConfirmationExternalOrderRequest
-{
-    /**
-     * @var Summit
-     */
-    private $summit;
+final class ConfirmationExternalOrderRequest {
+  /**
+   * @var Summit
+   */
+  private $summit;
 
-    /**
-     * @return Summit
-     */
-    public function getSummit()
-    {
-        return $this->summit;
-    }
+  /**
+   * @return Summit
+   */
+  public function getSummit() {
+    return $this->summit;
+  }
 
-    /**
-     * @return int
-     */
-    public function getMemberId()
-    {
-        return $this->member_id;
-    }
+  /**
+   * @return int
+   */
+  public function getMemberId() {
+    return $this->member_id;
+  }
 
-    /**
-     * @return string
-     */
-    public function getExternalOrderId()
-    {
-        return $this->external_order_id;
-    }
+  /**
+   * @return string
+   */
+  public function getExternalOrderId() {
+    return $this->external_order_id;
+  }
 
-    /**
-     * @return string
-     */
-    public function getExternalAttendeeId()
-    {
-        return $this->external_attendee_id;
-    }
+  /**
+   * @return string
+   */
+  public function getExternalAttendeeId() {
+    return $this->external_attendee_id;
+  }
 
-    /**
-     * @var int
-     */
-    private $member_id;
+  /**
+   * @var int
+   */
+  private $member_id;
 
-    /**
-     * @var string
-     */
-    private $external_order_id;
+  /**
+   * @var string
+   */
+  private $external_order_id;
 
-    /**
-     * @var string
-     */
-    private $external_attendee_id;
+  /**
+   * @var string
+   */
+  private $external_attendee_id;
 
-    /**
-     * ConfirmationExternalOrderRequest constructor.
-     * @param Summit $summit
-     * @param int $member_id
-     * @param string $external_order_id
-     * @param string $external_attendee_id
-     */
-    public function __construct(
-        Summit $summit,
-        $member_id,
-        $external_order_id,
-        $external_attendee_id
-    )
-    {
-        $this->summit               = $summit;
-        $this->member_id            = $member_id;
-        $this->external_order_id    = $external_order_id;
-        $this->external_attendee_id = $external_attendee_id;
-    }
+  /**
+   * ConfirmationExternalOrderRequest constructor.
+   * @param Summit $summit
+   * @param int $member_id
+   * @param string $external_order_id
+   * @param string $external_attendee_id
+   */
+  public function __construct(
+    Summit $summit,
+    $member_id,
+    $external_order_id,
+    $external_attendee_id,
+  ) {
+    $this->summit = $summit;
+    $this->member_id = $member_id;
+    $this->external_order_id = $external_order_id;
+    $this->external_attendee_id = $external_attendee_id;
+  }
 }

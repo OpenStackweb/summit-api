@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -20,64 +20,58 @@ use models\utils\SilverstripeBaseModel;
  * Class PresentationVote
  * @package models\summit;
  */
-class PresentationVote extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Vote", type="integer")
-     * @var int
-     */
-    private $vote;
+class PresentationVote extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Vote", type="integer")
+   * @var int
+   */
+  private $vote;
 
-    /**
-     * @ORM\Column(name="Content", type="string")
-     * @var string
-     */
-    private $content;
+  /**
+   * @ORM\Column(name="Content", type="string")
+   * @var string
+   */
+  private $content;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var Member
-     */
-    private $voter;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var Member
+   */
+  private $voter;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="votes")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var Presentation
-     */
-    private $presentation;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="votes")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var Presentation
+   */
+  private $presentation;
 
-    /**
-     * @return int
-     */
-    public function getVote(): int
-    {
-        return $this->vote;
-    }
+  /**
+   * @return int
+   */
+  public function getVote(): int {
+    return $this->vote;
+  }
 
-    /**
-     * @return string
-     */
-    public function getContent(): string
-    {
-        return $this->content;
-    }
+  /**
+   * @return string
+   */
+  public function getContent(): string {
+    return $this->content;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getVoter(): Member
-    {
-        return $this->voter;
-    }
+  /**
+   * @return Member
+   */
+  public function getVoter(): Member {
+    return $this->voter;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation(): Presentation
-    {
-        return $this->presentation;
-    }
-
+  /**
+   * @return Presentation
+   */
+  public function getPresentation(): Presentation {
+    return $this->presentation;
+  }
 }

@@ -15,7 +15,7 @@
 use App\Models\Utils\Traits\HasImageTrait;
 use models\main\File;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBadgeFeatureTypeRepository")
@@ -29,95 +29,86 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Class SummitBadgeFeatureType
  * @package models\summit
  */
-class SummitBadgeFeatureType extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitBadgeFeatureType extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="TemplateContent", type="string")
-     * @var string
-     */
-    private $template_content;
+  /**
+   * @ORM\Column(name="TemplateContent", type="string")
+   * @var string
+   */
+  private $template_content;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
-     * @var File
-     */
-    private $image;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+   * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
+   * @var File
+   */
+  private $image;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_badge_features_types")
-     * @var SummitOrderExtraQuestionType[]
-     */
-    private $extra_question_types;
+  /**
+   * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_badge_features_types")
+   * @var SummitOrderExtraQuestionType[]
+   */
+  private $extra_question_types;
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription(): ?string {
+    return $this->description;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
-    }
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description): void {
+    $this->description = $description;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTemplateContent(): ?string
-    {
-        return $this->template_content;
-    }
+  /**
+   * @return string
+   */
+  public function getTemplateContent(): ?string {
+    return $this->template_content;
+  }
 
-    /**
-     * @param string $template_content
-     */
-    public function setTemplateContent(string $template_content): void
-    {
-        $this->template_content = $template_content;
-    }
+  /**
+   * @param string $template_content
+   */
+  public function setTemplateContent(string $template_content): void {
+    $this->template_content = $template_content;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->template_content = '';
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->template_content = "";
+  }
 
-    use HasImageTrait;
-
+  use HasImageTrait;
 }

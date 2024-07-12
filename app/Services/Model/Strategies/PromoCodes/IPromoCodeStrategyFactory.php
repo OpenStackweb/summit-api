@@ -18,12 +18,11 @@ use models\summit\Summit;
  * Interface IPromoCodeStrategyFactory
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IPromoCodeStrategyFactory
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return IPromoCodeStrategy|null
-     */
-    public function createStrategy(Summit $summit, array $payload): ?IPromoCodeStrategy;
+interface IPromoCodeStrategyFactory {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return IPromoCodeStrategy|null
+   */
+  public function createStrategy(Summit $summit, array $payload): ?IPromoCodeStrategy;
 }

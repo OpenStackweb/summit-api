@@ -19,58 +19,64 @@ use models\exceptions\ValidationException;
  * Interface ITrackQuestionTemplate
  * @package App\Services\Model
  */
-interface ITrackQuestionTemplateService
-{
-    /**
-     * @param array $payload
-     * @return TrackQuestionTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTrackQuestionTemplate(array $payload);
+interface ITrackQuestionTemplateService {
+  /**
+   * @param array $payload
+   * @return TrackQuestionTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTrackQuestionTemplate(array $payload);
 
-    /**
-     * @param int $track_question_template_id
-     * @param array $payload
-     * @return TrackQuestionTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTrackQuestionTemplate($track_question_template_id, array $payload);
+  /**
+   * @param int $track_question_template_id
+   * @param array $payload
+   * @return TrackQuestionTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTrackQuestionTemplate($track_question_template_id, array $payload);
 
-    /**
-     * @param int $track_question_template_id
-     * @return void
-     * @throws EntityNotFoundException
-     */
-    public function deleteTrackQuestionTemplate($track_question_template_id);
+  /**
+   * @param int $track_question_template_id
+   * @return void
+   * @throws EntityNotFoundException
+   */
+  public function deleteTrackQuestionTemplate($track_question_template_id);
 
-    /**
-     * @param int $track_question_template_id
-     * @param array $data
-     * @return TrackQuestionValueTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTrackQuestionValueTemplate($track_question_template_id, $data);
+  /**
+   * @param int $track_question_template_id
+   * @param array $data
+   * @return TrackQuestionValueTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTrackQuestionValueTemplate($track_question_template_id, $data);
 
-    /**
-     * @param int $track_question_template_id
-     * @param int $track_question_value_template_id
-     * @param array $data
-     * @return TrackQuestionValueTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTrackQuestionValueTemplate($track_question_template_id, $track_question_value_template_id, $data);
+  /**
+   * @param int $track_question_template_id
+   * @param int $track_question_value_template_id
+   * @param array $data
+   * @return TrackQuestionValueTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTrackQuestionValueTemplate(
+    $track_question_template_id,
+    $track_question_value_template_id,
+    $data,
+  );
 
-    /**
-     * @param int $track_question_template_id
-     * @param int $track_question_value_template_id
-     * @param array $data
-     * @return TrackQuestionValueTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteTrackQuestionValueTemplate($track_question_template_id, $track_question_value_template_id);
+  /**
+   * @param int $track_question_template_id
+   * @param int $track_question_value_template_id
+   * @param array $data
+   * @return TrackQuestionValueTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteTrackQuestionValueTemplate(
+    $track_question_template_id,
+    $track_question_value_template_id,
+  );
 }

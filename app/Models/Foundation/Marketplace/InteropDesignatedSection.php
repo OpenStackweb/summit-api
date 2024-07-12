@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,62 +19,56 @@ use models\utils\SilverstripeBaseModel;
  * Class InteropCapability
  * @package App\Models\Foundation\Marketplace
  */
-class InteropDesignatedSection extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class InteropDesignatedSection extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Status", type="string")
-     * @var string
-     */
-    private $status;
+  /**
+   * @ORM\Column(name="Status", type="string")
+   * @var string
+   */
+  private $status;
 
-    /**
-     * @ORM\Column(name="Guidance", type="string")
-     * @var string
-     */
-    private $guidance;
+  /**
+   * @ORM\Column(name="Guidance", type="string")
+   * @var string
+   */
+  private $guidance;
 
+  /**
+   * @ORM\Column(name="Comment", type="string")
+   * @var string
+   */
+  private $comment;
 
-    /**
-     * @ORM\Column(name="Comment", type="string")
-     * @var string
-     */
-    private $comment;
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getStatus() {
+    return $this->status;
+  }
 
-    /**
-     * @return string
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
+  /**
+   * @return string
+   */
+  public function getGuidance() {
+    return $this->guidance;
+  }
 
-    /**
-     * @return string
-     */
-    public function getGuidance()
-    {
-        return $this->guidance;
-    }
-
-    /**
-     * @return string
-     */
-    public function getComment()
-    {
-        return $this->comment;
-    }
+  /**
+   * @return string
+   */
+  public function getComment() {
+    return $this->comment;
+  }
 }

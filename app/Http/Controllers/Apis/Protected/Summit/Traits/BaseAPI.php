@@ -17,16 +17,14 @@ use models\utils\IBaseRepository;
  * Trait BaseAPI
  * @package App\Http\Controllers
  */
-trait BaseAPI
-{
+trait BaseAPI {
+  /**
+   * @return IResourceServerContext
+   */
+  abstract protected function getResourceServerContext(): IResourceServerContext;
 
-    /**
-     * @return IResourceServerContext
-     */
-    abstract protected function getResourceServerContext():IResourceServerContext;
-
-    /**
-     * @return IBaseRepository
-     */
-    abstract protected function getRepository():IBaseRepository;
+  /**
+   * @return IBaseRepository
+   */
+  abstract protected function getRepository(): IBaseRepository;
 }

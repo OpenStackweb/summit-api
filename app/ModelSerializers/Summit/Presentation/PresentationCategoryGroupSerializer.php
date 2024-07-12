@@ -18,49 +18,55 @@ use models\summit\PresentationCategoryGroup;
  * Class PresentationCategoryGroupSerializer
  * @package ModelSerializers
  */
-class PresentationCategoryGroupSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'        => 'name:json_string',
-        'Color'       => 'color:json_color',
-        'Description' => 'description:json_string',
-        'ClassName'   => 'class_name:json_string',
-        'SummitId'    => 'summit_id:json_int',
-        'BeginAttendeeVotingPeriodDate' => 'begin_attendee_voting_period_date:datetime_epoch',
-        'EndAttendeeVotingPeriodDate' => 'end_attendee_voting_period_date:datetime_epoch',
-        'MaxAttendeeVotes' => 'max_attendee_votes:json_int'
-    ];
+class PresentationCategoryGroupSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Color" => "color:json_color",
+    "Description" => "description:json_string",
+    "ClassName" => "class_name:json_string",
+    "SummitId" => "summit_id:json_int",
+    "BeginAttendeeVotingPeriodDate" => "begin_attendee_voting_period_date:datetime_epoch",
+    "EndAttendeeVotingPeriodDate" => "end_attendee_voting_period_date:datetime_epoch",
+    "MaxAttendeeVotes" => "max_attendee_votes:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $track_group = $this->object;
-        if(!$track_group instanceof PresentationCategoryGroup) return $values;
-
-        $categories = [];
-
-        foreach($track_group->getCategories() as $c)
-        {
-            if(!is_null($expand) &&  in_array('tracks', explode(',',$expand))){
-                $categories[] = SerializerRegistry::getInstance()->getSerializer($c)->serialize(
-                    AbstractSerializer::filterExpandByPrefix($expand, 'tracks'),
-                    AbstractSerializer::filterFieldsByPrefix($fields, 'tracks'),
-                    AbstractSerializer::filterFieldsByPrefix($relations, 'tracks'),
-                    $params
-                );
-            }
-            else
-                $categories[] = intval($c->getId());
-        }
-
-        $values['tracks'] = $categories;
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $track_group = $this->object;
+    if (!$track_group instanceof PresentationCategoryGroup) {
+      return $values;
     }
+
+    $categories = [];
+
+    foreach ($track_group->getCategories() as $c) {
+      if (!is_null($expand) && in_array("tracks", explode(",", $expand))) {
+        $categories[] = SerializerRegistry::getInstance()
+          ->getSerializer($c)
+          ->serialize(
+            AbstractSerializer::filterExpandByPrefix($expand, "tracks"),
+            AbstractSerializer::filterFieldsByPrefix($fields, "tracks"),
+            AbstractSerializer::filterFieldsByPrefix($relations, "tracks"),
+            $params,
+          );
+      } else {
+        $categories[] = intval($c->getId());
+      }
+    }
+
+    $values["tracks"] = $categories;
+    return $values;
+  }
 }

@@ -20,73 +20,74 @@ use models\main\IFolderRepository;
  * Class FolderService
  * @package App\Services\Model
  */
-final class FolderService
-    extends AbstractService
-    implements IFolderService
-{
+final class FolderService extends AbstractService implements IFolderService {
+  /**
+   * @var IFolderRepository
+   */
+  private $folder_repository;
 
-    /**
-     * @var IFolderRepository
-     */
-    private $folder_repository;
+  /**
+   * FolderService constructor.
+   * @param IFolderRepository $folder_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    IFolderRepository $folder_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->folder_repository = $folder_repository;
+  }
 
-    /**
-     * FolderService constructor.
-     * @param IFolderRepository $folder_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct(IFolderRepository $folder_repository, ITransactionService $tx_service)
-    {
-        parent::__construct($tx_service);
-        $this->folder_repository = $folder_repository;
-    }
+  /**
+   * @param string $folder_name
+   * @return File
+   */
+  public function findOrMake($folder_name) {
+    return $this->tx_service->transaction(function () use ($folder_name) {
+      Log::debug(sprintf("FolderService::findOrMake folder_name %s", $folder_name));
+      $folder = $this->folder_repository->getFolderByFileName($folder_name);
+      if (!is_null($folder)) {
+        return $folder;
+      }
 
-    /**
-     * @param string $folder_name
-     * @return File
-     */
-    public function findOrMake($folder_name)
-    {
-        return $this->tx_service->transaction(function() use($folder_name){
-           Log::debug(sprintf("FolderService::findOrMake folder_name %s", $folder_name));
-           $folder = $this->folder_repository->getFolderByFileName($folder_name);
-           if(!is_null($folder)) return $folder;
+      // create it
+      $folder_path = preg_replace('/^\/?(.*)\/?$/', '$1', $folder_name);
+      $parts = explode("/", $folder_path);
+      $parent = null;
+      $item = null;
+      $file_name = null;
+      foreach ($parts as $part) {
+        Log::debug(sprintf("FolderService::findOrMake part %s", $part));
+        if (!$part) {
+          continue;
+        } // happens for paths with a trailing slash
+        if (!empty($file_name)) {
+          $file_name .= "/";
+        }
+        $file_name .= $part;
+        Log::debug(sprintf("FolderService::findOrMake file_name %s", $file_name));
+        $item = is_null($parent)
+          ? $this->folder_repository->getFolderByName($part)
+          : $this->folder_repository->getFolderByNameAndParent($part, $parent);
 
-           // create it
-            $folder_path = preg_replace('/^\/?(.*)\/?$/', '$1', $folder_name);
-            $parts       = explode("/", $folder_path);
-            $parent      = null;
-            $item        = null;
-            $file_name   = null;
-            foreach($parts as $part) {
-                Log::debug(sprintf("FolderService::findOrMake part %s", $part));
-                if(!$part) continue; // happens for paths with a trailing slash
-                if(!empty($file_name))
-                    $file_name .= '/';
-                $file_name .= $part;
-                Log::debug(sprintf("FolderService::findOrMake file_name %s", $file_name));
-                $item = is_null($parent) ?
-                    $this->folder_repository->getFolderByName($part) :
-                    $this->folder_repository->getFolderByNameAndParent($part, $parent);
+        if (!$item) {
+          $item = new File();
+          if (!is_null($parent)) {
+            $item->setParent($parent);
+          } else {
+            $file_name = "assets/" . $file_name;
+          }
+          $item->setFolder();
+          $item->setName($part);
+          $item->setTitle($part);
+          $item->setFilename($file_name);
+          $this->folder_repository->add($item, true);
+        }
+        $parent = $item;
+      }
 
-                if(!$item) {
-                    $item = new File();
-                    if(!is_null($parent)){
-                        $item->setParent($parent);
-                    }
-                    else{
-                        $file_name = 'assets/'.$file_name;
-                    }
-                    $item->setFolder();
-                    $item->setName($part);
-                    $item->setTitle($part);
-                    $item->setFilename($file_name);
-                    $this->folder_repository->add($item, true);
-                }
-                $parent = $item;
-            }
-
-            return $item;
-        });
-    }
+      return $item;
+    });
+  }
 }

@@ -16,7 +16,6 @@
  * Class DoctrineNotInFilterMapping
  * @package App\Http\Utils\Filters
  */
-final class DoctrineNotInFilterMapping extends DoctrineInFilterMapping
-{
-    const Operator = 'NOT IN';
+final class DoctrineNotInFilterMapping extends DoctrineInFilterMapping {
+  const Operator = "NOT IN";
 }

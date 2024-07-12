@@ -16,10 +16,9 @@
  * Class AdminStripePaymentProfileSerializer
  * @package App\ModelSerializers\Summit
  */
-class AdminStripePaymentProfileSerializer extends StripePaymentProfileSerializer
-{
-    protected static $array_mappings = [
-        'LiveSecretKey'        => 'live_secret_key:json_string',
-        'TestSecretKey'        => 'test_secret_key:json_string',
-    ];
+class AdminStripePaymentProfileSerializer extends StripePaymentProfileSerializer {
+  protected static $array_mappings = [
+    "LiveSecretKey" => "live_secret_key:json_string",
+    "TestSecretKey" => "test_secret_key:json_string",
+  ];
 }

@@ -24,71 +24,89 @@ use models\oauth2\IResourceServerContext;
  * Class UserAuthEndpoint
  * @package App\Http\Middleware
  */
-final class UserAuthEndpoint
-{
+final class UserAuthEndpoint {
+  /**
+   * @var IResourceServerContext
+   */
+  private $context;
 
-    /**
-     * @var IResourceServerContext
-     */
-    private $context;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * @var IApiEndpointRepository
+   */
+  private $endpoint_repository;
 
-    /**
-     * @var IApiEndpointRepository
-     */
-    private $endpoint_repository;
+  /**
+   * UserAuthEndpoint constructor.
+   * @param IResourceServerContext $context
+   * @param IMemberRepository $member_repository
+   * @param IApiEndpointRepository $endpoint_repository
+   */
+  public function __construct(
+    IResourceServerContext $context,
+    IMemberRepository $member_repository,
+    IApiEndpointRepository $endpoint_repository,
+  ) {
+    $this->context = $context;
+    $this->member_repository = $member_repository;
+    $this->endpoint_repository = $endpoint_repository;
+  }
 
-    /**
-     * UserAuthEndpoint constructor.
-     * @param IResourceServerContext $context
-     * @param IMemberRepository $member_repository
-     * @param IApiEndpointRepository $endpoint_repository
-     */
-    public function __construct
-    (
-        IResourceServerContext $context,
-        IMemberRepository $member_repository,
-        IApiEndpointRepository $endpoint_repository
-    )
-    {
-        $this->context           = $context;
-        $this->member_repository = $member_repository;
-        $this->endpoint_repository  = $endpoint_repository;
+  /**
+   * @param $request
+   * @param Closure $next
+   * @param $required_groups
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function handle($request, Closure $next) {
+    $current_member = $this->context->getCurrentUser();
+    if (is_null($current_member)) {
+      return $next($request);
+    }
+    $method = $request->getMethod();
+    $route = RequestUtils::getCurrentRoutePath($request);
+    $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
+    if (is_null($endpoint)) {
+      return $next($request);
+    }
+    if (!$endpoint instanceof ApiEndpoint) {
+      return $next($request);
+    }
+    $required_groups = $endpoint->getAuthzGroups();
+
+    foreach ($required_groups as $required_group) {
+      Log::debug(
+        sprintf(
+          "UserAuthEndpoint::handle route %s method %s member %s (%s) required group %s",
+          $route,
+          $method,
+          $current_member->getId(),
+          $current_member->getEmail(),
+          $required_group->getSlug(),
+        ),
+      );
+
+      if ($current_member->isOnGroup($required_group->getSlug())) {
+        Log::debug(
+          sprintf(
+            "UserAuthEndpoint::handle member %s is on group %s request %s",
+            $current_member->getId(),
+            $required_group->getSlug(),
+            $request->path(),
+          ),
+        );
+        return $next($request);
+      }
     }
 
-    /**
-     * @param $request
-     * @param Closure $next
-     * @param $required_groups
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function handle($request, Closure $next)
-    {
-        $current_member = $this->context->getCurrentUser();
-        if (is_null($current_member)) return $next($request);
-        $method = $request->getMethod();
-        $route = RequestUtils::getCurrentRoutePath($request);
-        $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
-        if(is_null($endpoint)) return $next($request);
-        if(!$endpoint instanceof ApiEndpoint) return $next($request);
-        $required_groups = $endpoint->getAuthzGroups();
-
-        foreach ($required_groups as $required_group) {
-            Log::debug(sprintf("UserAuthEndpoint::handle route %s method %s member %s (%s) required group %s",
-                $route, $method, $current_member->getId(), $current_member->getEmail(), $required_group->getSlug()));
-
-            if($current_member->isOnGroup($required_group->getSlug())) {
-                Log::debug(sprintf("UserAuthEndpoint::handle member %s is on group %s request %s", $current_member->getId(), $required_group->getSlug(), $request->path()));
-                return $next($request);
-            }
-        }
-
-        Log::warning(sprintf("UserAuthEndpoint::handle member %s is not authorized", $current_member->getId()));
-        $http_response = Response::json(['error' => 'unauthorized member'], 403);
-        return $http_response;
-    }
+    Log::warning(
+      sprintf("UserAuthEndpoint::handle member %s is not authorized", $current_member->getId()),
+    );
+    $http_response = Response::json(["error" => "unauthorized member"], 403);
+    return $http_response;
+  }
 }

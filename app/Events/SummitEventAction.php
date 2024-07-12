@@ -12,34 +12,32 @@
  * limitations under the License.
  **/
 
-
 use Illuminate\Queue\SerializesModels;
 
 /**
  * Class SummitEventAction
  * @package App\Events
  */
-class SummitEventAction extends Event
-{
+class SummitEventAction extends Event {
+  use SerializesModels;
 
-    use SerializesModels;
+  /**
+   * @var int
+   */
+  protected $event_id;
 
-    /**
-     * @var int
-     */
-    protected $event_id;
+  /**
+   * SummitEventAction constructor.
+   * @param int $event_id
+   */
+  function __construct($event_id) {
+    $this->event_id = $event_id;
+  }
 
-    /**
-     * SummitEventAction constructor.
-     * @param int $event_id
-     */
-    function __construct($event_id)
-    {
-        $this->event_id = $event_id;
-    }
-
-    /**
-     * @return int
-     */
-    public function getEventId(){ return $this->event_id;}
+  /**
+   * @return int
+   */
+  public function getEventId() {
+    return $this->event_id;
+  }
 }

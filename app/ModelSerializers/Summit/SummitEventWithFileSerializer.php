@@ -19,23 +19,25 @@ use models\summit\SummitEventWithFile;
  * Class SummitEventWithFileSerializer
  * @package ModelSerializers
  */
-class SummitEventWithFileSerializer extends SummitEventSerializer
-{
+class SummitEventWithFileSerializer extends SummitEventSerializer {
+  protected static $allowed_fields = ["attachment"];
 
-    protected static $allowed_fields = [
-        'attachment'
-    ];
-
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $event = $this->object;
-        if (!$event instanceof SummitEventWithFile) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if(in_array("attachment",$fields))
-            $values['attachment'] = $event->hasAttachment()? $event->getAttachment()->getUrl() : null;
-
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $event = $this->object;
+    if (!$event instanceof SummitEventWithFile) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (in_array("attachment", $fields)) {
+      $values["attachment"] = $event->hasAttachment() ? $event->getAttachment()->getUrl() : null;
+    }
+
+    return $values;
+  }
 }

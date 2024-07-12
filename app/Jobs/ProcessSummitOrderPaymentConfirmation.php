@@ -22,45 +22,40 @@ use Illuminate\Support\Facades\Log;
  * Class ProcessSummitOrderPaymentConfirmation
  * @package App\Jobs
  */
-class ProcessSummitOrderPaymentConfirmation implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class ProcessSummitOrderPaymentConfirmation implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    public $tries = 5;
+  /**
+   * @var int
+   */
+  public $tries = 5;
 
-    /**
-     * @var int
-     */
-    private $order_id;
+  /**
+   * @var int
+   */
+  private $order_id;
 
-    /**
-     * ProcessSummitOrderPaymentConfirmation constructor.
-     * @param int $order_id
-     */
-    public function __construct(int $order_id)
-    {
-        $this->order_id = $order_id;
+  /**
+   * ProcessSummitOrderPaymentConfirmation constructor.
+   * @param int $order_id
+   */
+  public function __construct(int $order_id) {
+    $this->order_id = $order_id;
+  }
+
+  /**
+   * @param ISummitOrderService $orderService
+   * @throws \Exception
+   */
+  public function handle(ISummitOrderService $orderService) {
+    try {
+      Log::debug(
+        sprintf("ProcessSummitOrderPaymentConfirmation::handle order %s", $this->order_id),
+      );
+      $orderService->processOrderPaymentConfirmation($this->order_id);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      throw $ex;
     }
-
-    /**
-     * @param ISummitOrderService $orderService
-     * @throws \Exception
-     */
-    public function handle
-    (
-        ISummitOrderService $orderService
-    )
-    {
-        try{
-            Log::debug(sprintf("ProcessSummitOrderPaymentConfirmation::handle order %s", $this->order_id));
-            $orderService->processOrderPaymentConfirmation($this->order_id);
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-            throw $ex;
-        }
-    }
+  }
 }

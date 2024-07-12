@@ -19,25 +19,25 @@ use libs\utils\PaginationValidationRules;
  * Trait ParseAndGetPaginationParams
  * @package App\Http\Controllers
  */
-trait ParseAndGetPaginationParams
-{
+trait ParseAndGetPaginationParams {
+  /**
+   * @param callable|null $defaultPageSize
+   * @return array
+   */
+  public static function getPaginationParams(callable $defaultPageSize = null): array {
+    $page = 1;
+    $per_page = is_null($defaultPageSize)
+      ? PaginationValidationRules::PerPageMin
+      : call_user_func($defaultPageSize);
 
-    /**
-     * @param callable|null $defaultPageSize
-     * @return array
-     */
-    public static function getPaginationParams(callable $defaultPageSize = null): array {
-        $page = 1;
-        $per_page = is_null($defaultPageSize) ? PaginationValidationRules::PerPageMin : call_user_func($defaultPageSize);
-
-        if (Request::has(PaginationValidationRules::PageParam)) {
-            $page = intval(Request::get(PaginationValidationRules::PageParam));
-        }
-
-        if (Request::has(PaginationValidationRules::PerPageParam)) {
-            $per_page = intval(Request::get(PaginationValidationRules::PerPageParam));
-        }
-
-        return [$page, $per_page];
+    if (Request::has(PaginationValidationRules::PageParam)) {
+      $page = intval(Request::get(PaginationValidationRules::PageParam));
     }
+
+    if (Request::has(PaginationValidationRules::PerPageParam)) {
+      $per_page = intval(Request::get(PaginationValidationRules::PerPageParam));
+    }
+
+    return [$page, $per_page];
+  }
 }

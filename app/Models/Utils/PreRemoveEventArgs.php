@@ -19,24 +19,20 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
  * Class PreRemoveEventArgs
  * @package models\utils
  */
-final class PreRemoveEventArgs extends LifecycleEventArgs
-{
-    /**
-     * @var array
-     */
-    private $params;
+final class PreRemoveEventArgs extends LifecycleEventArgs {
+  /**
+   * @var array
+   */
+  private $params;
 
-    public function __construct(array $params = [])
-    {
-        $this->params = $params;
-    }
+  public function __construct(array $params = []) {
+    $this->params = $params;
+  }
 
-    /**
-     * @return array
-     */
-    public function getParams()
-    {
-        return $this->params;
-    }
-
+  /**
+   * @return array
+   */
+  public function getParams() {
+    return $this->params;
+  }
 }

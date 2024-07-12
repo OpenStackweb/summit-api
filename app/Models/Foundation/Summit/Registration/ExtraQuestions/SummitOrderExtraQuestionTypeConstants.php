@@ -16,17 +16,14 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
  * Interface SummitOrderExtraQuestionTypeConstants
  * @package models\summit
  */
-interface SummitOrderExtraQuestionTypeConstants
-    extends ExtraQuestionTypeConstants
-{
+interface SummitOrderExtraQuestionTypeConstants extends ExtraQuestionTypeConstants {
+  const OrderQuestionUsage = "Order";
+  const TicketQuestionUsage = "Ticket";
+  const BothQuestionUsage = "Both";
 
-    const OrderQuestionUsage          = 'Order';
-    const TicketQuestionUsage         = 'Ticket';
-    const BothQuestionUsage           = 'Both';
-
-    const ValidQuestionUsages = [
-        self::OrderQuestionUsage,
-        self::TicketQuestionUsage,
-        self::BothQuestionUsage
-    ];
+  const ValidQuestionUsages = [
+    self::OrderQuestionUsage,
+    self::TicketQuestionUsage,
+    self::BothQuestionUsage,
+  ];
 }

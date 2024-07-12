@@ -16,11 +16,10 @@ use models\summit\Summit;
  * Interface IExternalScheduleFeedFactory
  * @package App\Services\Apis\ExternalScheduleFeeds
  */
-interface IExternalScheduleFeedFactory
-{
-    /**
-     * @param Summit $summit
-     * @return IExternalScheduleFeed|null
-     */
-    public function build(Summit $summit): ?IExternalScheduleFeed;
+interface IExternalScheduleFeedFactory {
+  /**
+   * @param Summit $summit
+   * @return IExternalScheduleFeed|null
+   */
+  public function build(Summit $summit): ?IExternalScheduleFeed;
 }

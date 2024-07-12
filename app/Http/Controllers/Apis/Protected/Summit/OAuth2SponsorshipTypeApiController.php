@@ -22,161 +22,149 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2SponsorshipTypeApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
-{
+final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController {
+  use RequestProcessor;
+  /**
+   * @var ISponsorshipTypeService
+   */
+  private $service;
 
-    use RequestProcessor;
-    /**
-     * @var ISponsorshipTypeService
-     */
-    private $service;
+  /**
+   * OAuth2SponsorshipTypeApiController constructor.
+   * @param ISponsorshipTypeRepository $repository
+   * @param ISummitRepository $summit_repository
+   * @param ISponsorshipTypeService $service
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISponsorshipTypeRepository $repository,
+    ISummitRepository $summit_repository,
+    ISponsorshipTypeService $service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+    $this->summit_repository = $summit_repository;
+    $this->service = $service;
+  }
 
-    /**
-     * OAuth2SponsorshipTypeApiController constructor.
-     * @param ISponsorshipTypeRepository $repository
-     * @param ISummitRepository $summit_repository
-     * @param ISponsorshipTypeService $service
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISponsorshipTypeRepository $repository,
-        ISummitRepository $summit_repository,
-        ISponsorshipTypeService $service,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-        $this->summit_repository = $summit_repository;
-        $this->service = $service;
-    }
+  use GetAll;
 
-    use GetAll;
+  /**
+   * @return array
+   */
+  protected function getFilterRules(): array {
+    return [
+      "name" => ["==", "=@"],
+      "label" => ["==", "=@"],
+      "size" => ["==", "=@"],
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterRules(): array
-    {
-        return [
-            'name' => ['==', '=@'],
-            'label' => ['==', '=@'],
-            'size' => ['==', '=@'],
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterValidatorRules(): array {
+    return [
+      "name" => "sometimes|required|string",
+      "label" => "sometimes|required|string",
+      "size" => "sometimes|required|string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterValidatorRules(): array
-    {
-        return [
-            'name' => 'sometimes|required|string',
-            'label' => 'sometimes|required|string',
-            'size' => 'sometimes|required|string',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderRules(): array {
+    return ["id", "name", "order", "label", "size"];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderRules(): array
-    {
-        return [
-            'id',
-            'name',
-            'order',
-            'label',
-            'size',
-        ];
-    }
+  /**
+   * @return ISummitRepository
+   */
+  protected function getSummitRepository(): ISummitRepository {
+    return $this->summit_repository;
+  }
 
-    /**
-     * @return ISummitRepository
-     */
-    protected function getSummitRepository(): ISummitRepository
-    {
-        return $this->summit_repository;
-    }
+  use GetAndValidateJsonPayload;
+  /**
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function add() {
+    return $this->processRequest(function () {
+      $payload = $this->getJsonPayload(SponsorshipTypeValidationRulesFactory::buildForAdd(), true);
 
-    use GetAndValidateJsonPayload;
-    /**
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function add()
-    {
-        return $this->processRequest(function(){
+      $sponsorship_type = $this->service->addSponsorShipType($payload);
 
-            $payload = $this->getJsonPayload(
-                SponsorshipTypeValidationRulesFactory::buildForAdd(),
-                true
-            );
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($sponsorship_type)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-            $sponsorship_type = $this->service->addSponsorShipType($payload);
+  /**
+   * @param $id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function get($id) {
+    return $this->processRequest(function () use ($id) {
+      $sponsorship_type = $this->repository->getById($id);
+      if (is_null($sponsorship_type)) {
+        return $this->error404();
+      }
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($sponsorship_type)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function get($id)
-    {
-        return $this->processRequest(function() use($id){
-            $sponsorship_type = $this->repository->getById($id);
-            if(is_null($sponsorship_type))
-                return $this->error404();
+  /**
+   * @param $id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function update($id) {
+    return $this->processRequest(function () use ($id) {
+      Log::debug(sprintf("OAuth2SponsorshipTypeApiController::update id %s", json_encode($id)));
+      $payload = $this->getJsonPayload(
+        SponsorshipTypeValidationRulesFactory::buildForUpdate(),
+        true,
+      );
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      $sponsorship_type = $this->service->updateSponsorShipType(intval($id), $payload);
 
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function update($id)
-    {
-        return $this->processRequest(function() use($id){
-            Log::debug(sprintf("OAuth2SponsorshipTypeApiController::update id %s", json_encode($id)));
-            $payload = $this->getJsonPayload(
-                SponsorshipTypeValidationRulesFactory::buildForUpdate(),
-                true
-            );
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($sponsorship_type)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 
-            $sponsorship_type = $this->service->updateSponsorShipType(intval($id), $payload);
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
-
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function delete($id)
-    {
-        return $this->processRequest(function() use($id){
-            $this->service->deleteSponsorShipType($id);
-            return $this->deleted();
-        });
-    }
+  /**
+   * @param $id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function delete($id) {
+    return $this->processRequest(function () use ($id) {
+      $this->service->deleteSponsorShipType($id);
+      return $this->deleted();
+    });
+  }
 }

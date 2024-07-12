@@ -25,78 +25,77 @@ use models\main\Member;
  * Interface IChatTeamService
  * @package services\model
  */
-interface IChatTeamService
-{
-    /**
-     * @param array $data
-     * @param Member $owner
-     * @return ChatTeam
-     */
-    function addTeam(array $data, Member $owner);
+interface IChatTeamService {
+  /**
+   * @param array $data
+   * @param Member $owner
+   * @return ChatTeam
+   */
+  function addTeam(array $data, Member $owner);
 
-    /**
-     * @param array $data
-     * @param int $team_id
-     * @return ChatTeam
-     */
-    function updateTeam(array $data, $team_id);
+  /**
+   * @param array $data
+   * @param int $team_id
+   * @return ChatTeam
+   */
+  function updateTeam(array $data, $team_id);
 
-    /**
-     * @param int $team_id
-     * @return void
-     * @throws EntityNotFoundException
-     */
-    function deleteTeam($team_id);
+  /**
+   * @param int $team_id
+   * @return void
+   * @throws EntityNotFoundException
+   */
+  function deleteTeam($team_id);
 
-    /**
-     * @param int $team_id
-     * @param int $invitee_id
-     * @param string $permission
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return ChatTeamInvitation
-     */
-    function addMember2Team($team_id, $invitee_id, $permission = ChatTeamPermission::Read);
+  /**
+   * @param int $team_id
+   * @param int $invitee_id
+   * @param string $permission
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return ChatTeamInvitation
+   */
+  function addMember2Team($team_id, $invitee_id, $permission = ChatTeamPermission::Read);
 
-    /**
-     * @param int $invitation_id
-     * @param int $invitee_id
-     * @return ChatTeamMember
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    function acceptInvitation($invitation_id, $invitee_id);
+  /**
+   * @param int $invitation_id
+   * @param int $invitee_id
+   * @return ChatTeamMember
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  function acceptInvitation($invitation_id, $invitee_id);
 
-    /**
-     * @param int $invitation_id
-     * @param int $invitee_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    function declineInvitation($invitation_id, $invitee_id);
+  /**
+   * @param int $invitation_id
+   * @param int $invitee_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  function declineInvitation($invitation_id, $invitee_id);
 
-    /**
-     * @param int $team_id
-     * @param int $member_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    function removeMemberFromTeam($team_id, $member_id);
+  /**
+   * @param int $team_id
+   * @param int $member_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  function removeMemberFromTeam($team_id, $member_id);
 
-    /**
-     * @param int $team_id
-     * @param array $values
-     * @return ChatTeamPushNotificationMessage
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    function postMessage($team_id, array $values);
+  /**
+   * @param int $team_id
+   * @param array $values
+   * @return ChatTeamPushNotificationMessage
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  function postMessage($team_id, array $values);
 
-    /**
-     * @param int $batch_size
-     * @return int
-     */
-    function sendMessages($batch_size = 1000);
+  /**
+   * @param int $batch_size
+   * @return int
+   */
+  function sendMessages($batch_size = 1000);
 }

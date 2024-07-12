@@ -52,201 +52,251 @@ use App\Listeners\QueryExecutedListener;
  * Class EventServiceProvider
  * @package App\Providers
  */
-final class EventServiceProvider extends ServiceProvider
-{
-    /**
-     * The event listener mappings for the application.
-     *
-     * @var array
-     */
-    protected $listen = [
-        QueryExecuted::class => [
-            QueryExecutedListener::class,
-        ]
-    ];
+final class EventServiceProvider extends ServiceProvider {
+  /**
+   * The event listener mappings for the application.
+   *
+   * @var array
+   */
+  protected $listen = [
+    QueryExecuted::class => [QueryExecutedListener::class],
+  ];
 
-    /**
-     * Register any other events for your application.
-     * @return void
-     */
-    public function boot()
-    {
-        parent::boot();
+  /**
+   * Register any other events for your application.
+   * @return void
+   */
+  public function boot() {
+    parent::boot();
 
-        Event::listen(\App\Events\MyScheduleAdd::class, function ($event) {
+    Event::listen(\App\Events\MyScheduleAdd::class, function ($event) {});
 
-        });
+    Event::listen(\App\Events\MyFavoritesAdd::class, function ($event) {});
 
-        Event::listen(\App\Events\MyFavoritesAdd::class, function ($event) {
-        });
+    Event::listen(\App\Events\MyScheduleRemove::class, function ($event) {});
 
-        Event::listen(\App\Events\MyScheduleRemove::class, function ($event) {
-        });
+    Event::listen(\App\Events\MyFavoritesRemove::class, function ($event) {});
 
-        Event::listen(\App\Events\MyFavoritesRemove::class, function ($event) {
-        });
+    Event::listen(SummitAttendeeCheckInStateUpdated::class, function ($event) {
+      if (!$event instanceof SummitAttendeeCheckInStateUpdated) {
+        return;
+      }
+      Log::debug(
+        sprintf(
+          "EventServiceProvider::SummitAttendeeCheckInStateUpdated attendee %s",
+          $event->getAttendeeId(),
+        ),
+      );
+      ProcessSummitAttendeeCheckInStateUpdated::dispatch($event->getAttendeeId())->afterResponse();
+    });
 
-        Event::listen(SummitAttendeeCheckInStateUpdated::class, function($event){
-            if(!$event instanceof SummitAttendeeCheckInStateUpdated) return;
-            Log::debug(sprintf("EventServiceProvider::SummitAttendeeCheckInStateUpdated attendee %s", $event->getAttendeeId()));
-            ProcessSummitAttendeeCheckInStateUpdated::dispatch($event->getAttendeeId())->afterResponse();
-        });
+    // bookable rooms events
 
-        // bookable rooms events
+    Event::listen(\Illuminate\Mail\Events\MessageSending::class, function ($event) {
+      $devEmail = env("DEV_EMAIL_TO");
+      if (in_array(App::environment(), ["local", "dev", "testing"]) && !empty($devEmail)) {
+        $event->message->setTo(explode(",", $devEmail));
+      }
+      return true;
+    });
 
-        Event::listen(\Illuminate\Mail\Events\MessageSending::class, function ($event) {
-            $devEmail = env('DEV_EMAIL_TO');
-            if (in_array(App::environment(), ['local', 'dev', 'testing']) && !empty($devEmail)) {
-                $event->message->setTo(explode(",", $devEmail));
-            }
-            return true;
-        });
+    Event::listen(\App\Events\BookableRoomReservationRefundAccepted::class, function ($event) {
+      $repository = EntityManager::getRepository(SummitRoomReservation::class);
+      $reservation = $repository->find($event->getReservationId());
+      if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) {
+        return;
+      }
 
-        Event::listen(\App\Events\BookableRoomReservationRefundAccepted::class, function ($event) {
-            $repository = EntityManager::getRepository(SummitRoomReservation::class);
-            $reservation = $repository->find($event->getReservationId());
-            if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
+      BookableRoomReservationRefundAcceptedEmail::dispatch($reservation);
+    });
 
-            BookableRoomReservationRefundAcceptedEmail::dispatch($reservation);
+    Event::listen(\App\Events\CreatedBookableRoomReservation::class, function ($event) {
+      $repository = EntityManager::getRepository(SummitRoomReservation::class);
+      $reservation = $repository->find($event->getReservationId());
+      if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) {
+        return;
+      }
 
-        });
+      BookableRoomReservationCreatedEmail::dispatch($reservation);
+    });
 
-        Event::listen(\App\Events\CreatedBookableRoomReservation::class, function ($event) {
-            $repository = EntityManager::getRepository(SummitRoomReservation::class);
-            $reservation = $repository->find($event->getReservationId());
-            if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
+    Event::listen(\App\Events\PaymentBookableRoomReservationConfirmed::class, function ($event) {
+      $repository = EntityManager::getRepository(SummitRoomReservation::class);
+      $reservation = $repository->find($event->getReservationId());
+      if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) {
+        return;
+      }
 
-            BookableRoomReservationCreatedEmail::dispatch($reservation);
-        });
+      BookableRoomReservationPaymentConfirmedEmail::dispatch($reservation);
+    });
 
-        Event::listen(\App\Events\PaymentBookableRoomReservationConfirmed::class, function ($event) {
-            $repository = EntityManager::getRepository(SummitRoomReservation::class);
-            $reservation = $repository->find($event->getReservationId());
-            if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
+    Event::listen(RequestedBookableRoomReservationRefund::class, function ($event) {
+      $repository = EntityManager::getRepository(SummitRoomReservation::class);
+      $reservation = $repository->find($event->getReservationId());
+      if (!$reservation instanceof SummitRoomReservation) {
+        return;
+      }
 
-            BookableRoomReservationPaymentConfirmedEmail::dispatch($reservation);
-        });
+      BookableRoomReservationRefundRequestedAdminEmail::dispatch($reservation);
+      BookableRoomReservationRefundRequestedOwnerEmail::dispatch($reservation);
+    });
 
-        Event::listen(RequestedBookableRoomReservationRefund::class, function ($event) {
-            $repository = EntityManager::getRepository(SummitRoomReservation::class);
-            $reservation = $repository->find($event->getReservationId());
-            if (!$reservation instanceof SummitRoomReservation) return;
+    Event::listen(\App\Events\BookableRoomReservationCanceled::class, function ($event) {
+      $repository = EntityManager::getRepository(SummitRoomReservation::class);
+      $reservation = $repository->find($event->getReservationId());
+      if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) {
+        return;
+      }
+      BookableRoomReservationCanceledEmail::dispatch($reservation);
+    });
 
-            BookableRoomReservationRefundRequestedAdminEmail::dispatch($reservation);
-            BookableRoomReservationRefundRequestedOwnerEmail::dispatch($reservation);
-        });
+    // registration
 
-        Event::listen(\App\Events\BookableRoomReservationCanceled::class, function ($event) {
-            $repository = EntityManager::getRepository(SummitRoomReservation::class);
-            $reservation = $repository->find($event->getReservationId());
-            if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
-            BookableRoomReservationCanceledEmail::dispatch($reservation);
-        });
+    Event::listen(PaymentSummitRegistrationOrderConfirmed::class, function ($event) {
+      if (!$event instanceof PaymentSummitRegistrationOrderConfirmed) {
+        return;
+      }
+      $order_id = $event->getOrderId();
+      Log::debug(
+        sprintf(
+          "EventServiceProvider::PaymentSummitRegistrationOrderConfirmed: firing ProcessSummitOrderPaymentConfirmation for order id %s",
+          $order_id,
+        ),
+      );
+      ProcessSummitOrderPaymentConfirmation::dispatch($order_id);
+    });
 
-        // registration
+    Event::listen(NewMember::class, function ($event) {
+      if (!$event instanceof NewMember) {
+        return;
+      }
+      Log::debug(
+        sprintf(
+          "EventServiceProvider::NewMember - firing NewMemberAssocSummitOrders member id %s",
+          $event->getMemberId(),
+        ),
+      );
+      MemberAssocSummitOrders::dispatch($event->getMemberId());
+    });
 
-        Event::listen(PaymentSummitRegistrationOrderConfirmed::class, function ($event) {
-            if (!$event instanceof PaymentSummitRegistrationOrderConfirmed) return;
-            $order_id = $event->getOrderId();
-            Log::debug(sprintf("EventServiceProvider::PaymentSummitRegistrationOrderConfirmed: firing ProcessSummitOrderPaymentConfirmation for order id %s", $order_id));
-            ProcessSummitOrderPaymentConfirmation::dispatch($order_id);
-        });
+    Event::listen(MemberDataUpdatedExternally::class, function ($event) {
+      if (!$event instanceof MemberDataUpdatedExternally) {
+        return;
+      }
+      Log::debug(
+        sprintf(
+          "EventServiceProvider::MemberDataUpdatedExternally - firing UpdateAttendeeInfo member id %s",
+          $event->getMemberId(),
+        ),
+      );
+      UpdateAttendeeInfo::dispatch($event->getMemberId());
+    });
 
-        Event::listen(NewMember::class, function ($event) {
-            if (!$event instanceof NewMember) return;
-            Log::debug(sprintf("EventServiceProvider::NewMember - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
-            MemberAssocSummitOrders::dispatch($event->getMemberId());
-        });
+    Event::listen(MemberUpdated::class, function ($event) {
+      if (!$event instanceof MemberUpdated) {
+        return;
+      }
+      Log::debug(
+        sprintf(
+          "EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s",
+          $event->getMemberId(),
+        ),
+      );
 
-        Event::listen(MemberDataUpdatedExternally::class, function ($event) {
-            if (!$event instanceof MemberDataUpdatedExternally) return;
-            Log::debug(sprintf("EventServiceProvider::MemberDataUpdatedExternally - firing UpdateAttendeeInfo member id %s", $event->getMemberId()));
-            UpdateAttendeeInfo::dispatch($event->getMemberId());
-        });
+      UpdateIDPMemberInfo::dispatch(
+        $event->getEmail(),
+        $event->getFirstName(),
+        $event->getLastName(),
+        $event->getCompany(),
+      );
+    });
 
-        Event::listen(MemberUpdated::class, function ($event) {
-            if (!$event instanceof MemberUpdated) return;
-            Log::debug(sprintf("EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
+    Event::listen(RSVPCreated::class, function ($event) {
+      if (!$event instanceof RSVPCreated) {
+        return;
+      }
 
-            UpdateIDPMemberInfo::dispatch
-            (
-                $event->getEmail(),
-                $event->getFirstName(),
-                $event->getLastName(),
-                $event->getCompany()
-            );
-        });
+      $rsvp_id = $event->getRsvpId();
 
-        Event::listen(RSVPCreated::class, function ($event) {
-            if (!$event instanceof RSVPCreated) return;
+      $rsvp_repository = EntityManager::getRepository(RSVP::class);
 
-            $rsvp_id = $event->getRsvpId();
+      $rsvp = $rsvp_repository->find($rsvp_id);
+      if (is_null($rsvp) || !$rsvp instanceof RSVP) {
+        return;
+      }
 
-            $rsvp_repository = EntityManager::getRepository(RSVP::class);
+      if ($rsvp->getSeatType() == RSVP::SeatTypeRegular) {
+        RSVPRegularSeatMail::dispatch($rsvp);
+      }
 
-            $rsvp = $rsvp_repository->find($rsvp_id);
-            if (is_null($rsvp) || !$rsvp instanceof RSVP) return;
+      if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList) {
+        RSVPWaitListSeatMail::dispatch($rsvp);
+      }
+    });
 
-            if ($rsvp->getSeatType() == RSVP::SeatTypeRegular)
-                RSVPRegularSeatMail::dispatch($rsvp);
+    Event::listen(RSVPUpdated::class, function ($event) {
+      if (!$event instanceof RSVPUpdated) {
+        return;
+      }
 
-            if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
-                RSVPWaitListSeatMail::dispatch($rsvp);
-        });
+      $rsvp_id = $event->getRsvpId();
 
-        Event::listen(RSVPUpdated::class, function ($event) {
-            if (!$event instanceof RSVPUpdated) return;
+      $rsvp_repository = EntityManager::getRepository(RSVP::class);
 
-            $rsvp_id = $event->getRsvpId();
+      $rsvp = $rsvp_repository->find($rsvp_id);
+      if (is_null($rsvp) || !$rsvp instanceof RSVP) {
+        return;
+      }
 
-            $rsvp_repository = EntityManager::getRepository(RSVP::class);
+      if ($rsvp->getSeatType() == RSVP::SeatTypeRegular) {
+        RSVPRegularSeatMail::dispatch($rsvp);
+      }
 
-            $rsvp = $rsvp_repository->find($rsvp_id);
-            if (is_null($rsvp) || !$rsvp instanceof RSVP) return;
+      if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList) {
+        RSVPWaitListSeatMail::dispatch($rsvp);
+      }
+    });
 
-            if ($rsvp->getSeatType() == RSVP::SeatTypeRegular)
-                RSVPRegularSeatMail::dispatch($rsvp);
+    Event::listen(TicketUpdated::class, function ($event) {
+      if (!$event instanceof TicketUpdated) {
+        return;
+      }
+      // publish profile changes to the IDP
+      $attendee = $event->getAttendee();
+      UpdateIDPMemberInfo::dispatch(
+        $attendee->getEmail(),
+        $attendee->getFirstName(),
+        $attendee->getSurname(),
+        $attendee->getCompanyName(),
+      );
+    });
 
-            if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
-                RSVPWaitListSeatMail::dispatch($rsvp);
-        });
+    Event::listen(ScheduleEntityLifeCycleEvent::class, function ($event) {
+      if (!$event instanceof ScheduleEntityLifeCycleEvent) {
+        return;
+      }
 
-        Event::listen(TicketUpdated::class, function ($event) {
+      Log::debug(sprintf("ScheduleEntityLifeCycleEvent event %s", $event));
 
-            if (!$event instanceof TicketUpdated) return;
-            // publish profile changes to the IDP
-            $attendee = $event->getAttendee();
-            UpdateIDPMemberInfo::dispatch($attendee->getEmail(),
-                $attendee->getFirstName(),
-                $attendee->getSurname(),
-                $attendee->getCompanyName());
-        });
+      ProcessScheduleEntityLifeCycleEvent::dispatch(
+        $event->entity_operator,
+        $event->summit_id,
+        $event->entity_id,
+        $event->entity_type,
+      );
+    });
 
-        Event::listen(ScheduleEntityLifeCycleEvent::class, function ($event) {
-            if (!$event instanceof ScheduleEntityLifeCycleEvent) return;
+    // check this one here https://github.com/laravel/framework/issues/33238#issuecomment-897063577
+    Event::listen(MigrationsStarted::class, function () {
+      if (config("databases.allow_disabled_pk")) {
+        DB::statement("SET SESSION sql_require_primary_key=0");
+      }
+    });
 
-            Log::debug(sprintf("ScheduleEntityLifeCycleEvent event %s", $event));
-
-            ProcessScheduleEntityLifeCycleEvent::dispatch
-            (
-                $event->entity_operator,
-                $event->summit_id,
-                $event->entity_id,
-                $event->entity_type
-            );
-        });
-
-        // check this one here https://github.com/laravel/framework/issues/33238#issuecomment-897063577
-        Event::listen(MigrationsStarted::class, function (){
-            if (config('databases.allow_disabled_pk')) {
-                DB::statement('SET SESSION sql_require_primary_key=0');
-            }
-        });
-
-        Event::listen(MigrationsEnded::class, function (){
-            if (config('databases.allow_disabled_pk')) {
-                DB::statement('SET SESSION sql_require_primary_key=1');
-            }
-        });
-    }
+    Event::listen(MigrationsEnded::class, function () {
+      if (config("databases.allow_disabled_pk")) {
+        DB::statement("SET SESSION sql_require_primary_key=1");
+      }
+    });
+  }
 }

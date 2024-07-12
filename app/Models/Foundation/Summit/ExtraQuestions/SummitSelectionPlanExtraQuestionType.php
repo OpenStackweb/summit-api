@@ -15,7 +15,7 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\summit\SummitOwned;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitSelectionPlanExtraQuestionTypeRepository")
  * @ORM\Table(name="SummitSelectionPlanExtraQuestionType")
@@ -28,39 +28,38 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitSelectionPlanExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
-class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
-{
-    use SummitOwned;
+class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType {
+  use SummitOwned;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="question_type",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     * @var AssignedSelectionPlanExtraQuestionType[]
-     */
-    private $assigned_selection_plans;
+  /**
+   * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="question_type",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+   * @var AssignedSelectionPlanExtraQuestionType[]
+   */
+  private $assigned_selection_plans;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->assigned_selection_plans = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->assigned_selection_plans = new ArrayCollection();
+  }
 
-    public function getAssignments(){
-        return $this->assigned_selection_plans;
-    }
+  public function getAssignments() {
+    return $this->assigned_selection_plans;
+  }
 
-    public function hasAssignedPlans():bool{
-        return $this->assigned_selection_plans->count() > 0;
-    }
+  public function hasAssignedPlans(): bool {
+    return $this->assigned_selection_plans->count() > 0;
+  }
 
-    /**
-     * @param int $selection_plan_id
-     * @return int|null
-     */
-    public function getOrderByAssignedSelectionPlan(int $selection_plan_id):?int{
-        $value = $this->assigned_selection_plans->filter(function($e) use($selection_plan_id){
-            return $e->getSelectionPlan()->getId() === $selection_plan_id;
-        })->first();
-        return $value === false ? null : $value->getOrder();
-    }
-
+  /**
+   * @param int $selection_plan_id
+   * @return int|null
+   */
+  public function getOrderByAssignedSelectionPlan(int $selection_plan_id): ?int {
+    $value = $this->assigned_selection_plans
+      ->filter(function ($e) use ($selection_plan_id) {
+        return $e->getSelectionPlan()->getId() === $selection_plan_id;
+      })
+      ->first();
+    return $value === false ? null : $value->getOrder();
+  }
 }

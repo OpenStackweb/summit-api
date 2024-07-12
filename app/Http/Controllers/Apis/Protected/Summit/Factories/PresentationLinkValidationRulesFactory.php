@@ -16,20 +16,17 @@
  * Class PresentationLinkValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class PresentationLinkValidationRulesFactory
-{
-    public static function build(array $data, $update = false)
-    {
-
-        $former_rules = PresentationMaterialValidationRulesFactory::build($data, $update);
-        if ($update) {
-            return array_merge($former_rules, [
-                'link' => 'sometimes|required|url',
-            ]);
-        }
-
-        return array_merge($former_rules, [
-            'link' => 'required|url',
-        ]);
+final class PresentationLinkValidationRulesFactory {
+  public static function build(array $data, $update = false) {
+    $former_rules = PresentationMaterialValidationRulesFactory::build($data, $update);
+    if ($update) {
+      return array_merge($former_rules, [
+        "link" => "sometimes|required|url",
+      ]);
     }
+
+    return array_merge($former_rules, [
+      "link" => "required|url",
+    ]);
+  }
 }

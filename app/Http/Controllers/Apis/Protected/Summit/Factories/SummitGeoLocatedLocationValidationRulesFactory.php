@@ -16,47 +16,51 @@
  * Class SummitGeoLocatedLocationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitGeoLocatedLocationValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class SummitGeoLocatedLocationValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = SummitAbstractLocationValidationRulesFactory::build($data, $update);
 
-        $rules = SummitAbstractLocationValidationRulesFactory::build($data, $update);
-
-        if($update) {
-             return array_merge([
-                'address_1'        => 'sometimes|string',
-                'address_2'        => 'sometimes|string',
-                'zip_code'         => 'sometimes|string',
-                'city'             => 'string|required_with:address_1',
-                'state'            => 'string|required_with:address_1',
-                'country'          => 'country_iso_alpha2_code|required_with:address_1',
-                'website_url'      => 'sometimes|url',
-                'lng'              => 'sometimes|geo_longitude|required_with:lat',
-                'lat'              => 'sometimes|geo_latitude|required_with:lng',
-                'display_on_site'  => 'sometimes|boolean',
-                'details_page'     => 'sometimes|boolean',
-                'location_message' => 'sometimes|string',
-            ], $rules);
-        }
-
-        return array_merge([
-                'address_1'        => 'string|required_without:lng,lat',
-                'address_2'        => 'sometimes|string',
-                'zip_code'         => 'sometimes|string',
-                'city'             => 'string|required_without:lng,lat',
-                'state'            => 'string|required_without:lng,lat',
-                'country'          => 'country_iso_alpha2_code|required_without:lng,lat',
-                'lng'              => 'geo_longitude|required_with:lat|required_without:address_1,city,state,country',
-                'lat'              => 'geo_latitude|required_with:lng|required_without:address_1,city,state,country',
-                'website_url'      => 'sometimes|url',
-                'display_on_site'  => 'sometimes|boolean',
-                'details_page'     => 'sometimes|boolean',
-                'location_message' => 'sometimes|string',
-        ], $rules);
+    if ($update) {
+      return array_merge(
+        [
+          "address_1" => "sometimes|string",
+          "address_2" => "sometimes|string",
+          "zip_code" => "sometimes|string",
+          "city" => "string|required_with:address_1",
+          "state" => "string|required_with:address_1",
+          "country" => "country_iso_alpha2_code|required_with:address_1",
+          "website_url" => "sometimes|url",
+          "lng" => "sometimes|geo_longitude|required_with:lat",
+          "lat" => "sometimes|geo_latitude|required_with:lng",
+          "display_on_site" => "sometimes|boolean",
+          "details_page" => "sometimes|boolean",
+          "location_message" => "sometimes|string",
+        ],
+        $rules,
+      );
     }
+
+    return array_merge(
+      [
+        "address_1" => "string|required_without:lng,lat",
+        "address_2" => "sometimes|string",
+        "zip_code" => "sometimes|string",
+        "city" => "string|required_without:lng,lat",
+        "state" => "string|required_without:lng,lat",
+        "country" => "country_iso_alpha2_code|required_without:lng,lat",
+        "lng" => "geo_longitude|required_with:lat|required_without:address_1,city,state,country",
+        "lat" => "geo_latitude|required_with:lng|required_without:address_1,city,state,country",
+        "website_url" => "sometimes|url",
+        "display_on_site" => "sometimes|boolean",
+        "details_page" => "sometimes|boolean",
+        "location_message" => "sometimes|string",
+      ],
+      $rules,
+    );
+  }
 }

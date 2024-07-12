@@ -19,48 +19,54 @@ use models\summit\SummitOrder;
  * Class SummitOrderOwnSerializer
  * @package ModelSerializers
  */
-final class SummitOrderOwnSerializer
-    extends SummitOrderCheckoutSerializer
-{
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $order = $this->object;
-        if (!$order instanceof SummitOrder) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $attendees_status = SummitAttendee::StatusComplete;
-        $tickets_excerpt_by_ticket_type = [];
-        // calculate excerpt
-        foreach($order->getTickets() as $ticket){
-            if(!$ticket->hasOwner() ){
-                if($attendees_status === SummitAttendee::StatusComplete)
-                    $attendees_status = SummitAttendee::StatusIncomplete;
-            }
-            else{
-                // has owner
-                $attendee = $ticket->getOwner();
-                $attendee_current_status = $attendee->updateStatus();
-                  if($attendees_status === SummitAttendee::StatusComplete){
-                      $attendees_status = $attendee_current_status;
-                  }
-            }
-            $ticket_type_name = $ticket->getTicketTypeName();
-            if(!isset($tickets_excerpt_by_ticket_type[$ticket_type_name]))
-                $tickets_excerpt_by_ticket_type[$ticket_type_name] = 0;
-
-            $tickets_excerpt_by_ticket_type[$ticket_type_name] = $tickets_excerpt_by_ticket_type[$ticket_type_name] + 1;
-        }
-
-        $values['attendees_status'] = $attendees_status;
-        $values['tickets_excerpt_by_ticket_type'] = $tickets_excerpt_by_ticket_type;
-
-        return $values;
+final class SummitOrderOwnSerializer extends SummitOrderCheckoutSerializer {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $order = $this->object;
+    if (!$order instanceof SummitOrder) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $attendees_status = SummitAttendee::StatusComplete;
+    $tickets_excerpt_by_ticket_type = [];
+    // calculate excerpt
+    foreach ($order->getTickets() as $ticket) {
+      if (!$ticket->hasOwner()) {
+        if ($attendees_status === SummitAttendee::StatusComplete) {
+          $attendees_status = SummitAttendee::StatusIncomplete;
+        }
+      } else {
+        // has owner
+        $attendee = $ticket->getOwner();
+        $attendee_current_status = $attendee->updateStatus();
+        if ($attendees_status === SummitAttendee::StatusComplete) {
+          $attendees_status = $attendee_current_status;
+        }
+      }
+      $ticket_type_name = $ticket->getTicketTypeName();
+      if (!isset($tickets_excerpt_by_ticket_type[$ticket_type_name])) {
+        $tickets_excerpt_by_ticket_type[$ticket_type_name] = 0;
+      }
+
+      $tickets_excerpt_by_ticket_type[$ticket_type_name] =
+        $tickets_excerpt_by_ticket_type[$ticket_type_name] + 1;
+    }
+
+    $values["attendees_status"] = $attendees_status;
+    $values["tickets_excerpt_by_ticket_type"] = $tickets_excerpt_by_ticket_type;
+
+    return $values;
+  }
 }

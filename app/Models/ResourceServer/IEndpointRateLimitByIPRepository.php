@@ -19,13 +19,12 @@ use models\utils\IBaseRepository;
  * Interface IEndpointRateLimitByIPRepository
  * @package App\Models\ResourceServer
  */
-interface IEndpointRateLimitByIPRepository extends IBaseRepository
-{
-    /**
-     * @param string $ip
-     * @param string $route
-     * @param string $http_method
-     * @return EndPointRateLimitByIP
-     */
-    public function getByIPRouteMethod($ip, $route, $http_method);
+interface IEndpointRateLimitByIPRepository extends IBaseRepository {
+  /**
+   * @param string $ip
+   * @param string $route
+   * @param string $http_method
+   * @return EndPointRateLimitByIP
+   */
+  public function getByIPRouteMethod($ip, $route, $http_method);
 }

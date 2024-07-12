@@ -26,94 +26,84 @@ use utils\PagingResponse;
  * @package App\Repositories\Summit
  */
 final class DoctrineTrackTagGroupAllowedTagsRepository
-    extends SilverStripeDoctrineRepository
-    implements ITrackTagGroupAllowedTagsRepository
-{
-    protected function getFilterMappings()
-    {
-        return [
-            'tag'  => new DoctrineFilterMapping
-            (
-                "(tg.tag :operator :value)"
-            ),
-        ];
+  extends SilverStripeDoctrineRepository
+  implements ITrackTagGroupAllowedTagsRepository {
+  protected function getFilterMappings() {
+    return [
+      "tag" => new DoctrineFilterMapping("(tg.tag :operator :value)"),
+    ];
+  }
+
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "tag" => "tg.tag",
+      "id" => "t.id",
+    ];
+  }
+
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return TrackTagGroupAllowedTag::class;
+  }
+
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("t")
+      ->from(TrackTagGroupAllowedTag::class, "t")
+      ->innerJoin("t.tag", "tg")
+      ->innerJoin("t.track_tag_group", "g")
+      ->innerJoin("g.summit", "s")
+      ->where("s.id = :summit_id");
+
+    $query->setParameter("summit_id", $summit->getId());
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings());
     }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'tag' => 'tg.tag',
-            'id'  => 't.id',
-        ];
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings());
+    } else {
+      //default order
+      $query = $query->addOrderBy("t.id", "ASC");
     }
 
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return TrackTagGroupAllowedTag::class;
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
+
+    foreach ($paginator as $entity) {
+      $data[] = $entity;
     }
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getBySummit
-    (
-        Summit $summit,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    )
-    {
-        $query  =   $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("t")
-            ->from(TrackTagGroupAllowedTag::class, "t")
-            ->innerJoin('t.tag', 'tg')
-            ->innerJoin('t.track_tag_group', 'g')
-            ->innerJoin('g.summit', 's')
-            ->where("s.id = :summit_id");
-
-        $query->setParameter("summit_id", $summit->getId());
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
-        }
-
-        if (!is_null($order)) {
-            $order->apply2Query($query, $this->getOrderMappings());
-        } else {
-            //default order
-            $query = $query->addOrderBy("t.id",'ASC');
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
-
-        foreach($paginator as $entity)
-            $data[] = $entity;
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
-    }
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
 }

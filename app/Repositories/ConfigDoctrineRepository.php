@@ -22,35 +22,31 @@ use utils\Filter;
  * Class ConfigDoctrineRepository
  * @package App\Repositories
  */
-abstract class ConfigDoctrineRepository extends DoctrineRepository
-{
-    /**
-     * Initializes a new <tt>EntityRepository</tt>.
-     *
-     * @param EntityManager         $em    The EntityManager to use.
-     * @param ClassMetadata $class The class descriptor.
-     */
-    public function __construct($em, ClassMetadata $class)
-    {
-        $this->manager_name = ResourceServerEntity::EntityManager;
-        parent::__construct(Registry::getManager($this->manager_name), $class);
-    }
+abstract class ConfigDoctrineRepository extends DoctrineRepository {
+  /**
+   * Initializes a new <tt>EntityRepository</tt>.
+   *
+   * @param EntityManager         $em    The EntityManager to use.
+   * @param ClassMetadata $class The class descriptor.
+   */
+  public function __construct($em, ClassMetadata $class) {
+    $this->manager_name = ResourceServerEntity::EntityManager;
+    parent::__construct(Registry::getManager($this->manager_name), $class);
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query)
-    {
-        return $query;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraFilters(QueryBuilder $query) {
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        return $query;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    return $query;
+  }
 }

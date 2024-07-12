@@ -27,165 +27,178 @@ use models\summit\SummitSchedulePreFilterElementConfig;
  * Class SummitScheduleSettingsService
  * @package App\Services\Model\Imp
  */
-final class SummitScheduleSettingsService
-    extends AbstractService
-    implements ISummitScheduleSettingsService
-{
-    /**
-     * @var ISummitScheduleConfigRepository
-     */
-    private $repository;
+final class SummitScheduleSettingsService extends AbstractService implements
+  ISummitScheduleSettingsService {
+  /**
+   * @var ISummitScheduleConfigRepository
+   */
+  private $repository;
 
-    /**
-     * @param ISummitScheduleConfigRepository $repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        ISummitScheduleConfigRepository $repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->repository = $repository;
-    }
+  /**
+   * @param ISummitScheduleConfigRepository $repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    ISummitScheduleConfigRepository $repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->repository = $repository;
+  }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitScheduleConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload): ?SummitScheduleConfig
-    {
-       return $this->tx_service->transaction(function() use($summit, $payload){
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitScheduleConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): ?SummitScheduleConfig {
+    return $this->tx_service->transaction(function () use ($summit, $payload) {
+      $config = SummitScheduleConfigFactory::build($payload);
+      $summit->addScheduleSetting($config);
 
-           $config = SummitScheduleConfigFactory::build($payload);
-           $summit->addScheduleSetting($config);
+      return $config;
+    });
+  }
 
-           return $config;
-       });
-    }
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @param array $payload
+   * @return SummitScheduleConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(Summit $summit, int $config_id, array $payload): ?SummitScheduleConfig {
+    return $this->tx_service->transaction(function () use ($summit, $config_id, $payload) {
+      $config = $summit->getScheduleSettingById($config_id);
+      if (is_null($config)) {
+        throw new EntityNotFoundException(
+          sprintf(
+            "Schedule config setting %s not found on Summit %s",
+            $config_id,
+            $summit->getId(),
+          ),
+        );
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @param array $payload
-     * @return SummitScheduleConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $config_id, array $payload): ?SummitScheduleConfig
-    {
-        return $this->tx_service->transaction(function() use($summit, $config_id, $payload){
-            $config = $summit->getScheduleSettingById($config_id);
-            if(is_null($config))
-                throw new EntityNotFoundException(sprintf("Schedule config setting %s not found on Summit %s", $config_id, $summit->getId()));
+      SummitScheduleConfigFactory::populate($config, $payload, $this->repository);
 
-            SummitScheduleConfigFactory::populate($config, $payload, $this->repository);
+      return $config;
+    });
+  }
 
-            return $config;
-        });
-    }
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $config_id): void {
+    $this->tx_service->transaction(function () use ($summit, $config_id) {
+      $config = $summit->getScheduleSettingById($config_id);
+      if (is_null($config)) {
+        throw new EntityNotFoundException(
+          sprintf(
+            "Schedule config setting %s not found on Summit %s",
+            $config_id,
+            $summit->getId(),
+          ),
+        );
+      }
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $config_id): void
-    {
-         $this->tx_service->transaction(function() use($summit, $config_id){
-            $config = $summit->getScheduleSettingById($config_id);
-            if(is_null($config))
-                throw new EntityNotFoundException(sprintf("Schedule config setting %s not found on Summit %s", $config_id, $summit->getId()));
+      $summit->removeScheduleSetting($config);
+    });
+  }
 
-            $summit->removeScheduleSetting($config);
-        });
-    }
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @param array $payload
+   * @return SummitScheduleFilterElementConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addFilter(
+    Summit $summit,
+    int $config_id,
+    array $payload,
+  ): ?SummitScheduleFilterElementConfig {
+    // TODO: Implement addFilter() method.
+  }
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @param array $payload
-     * @return SummitScheduleFilterElementConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addFilter(Summit $summit, int $config_id, array $payload): ?SummitScheduleFilterElementConfig
-    {
-        // TODO: Implement addFilter() method.
-    }
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @param int $filter_id
+   * @param array $payload
+   * @return SummitScheduleFilterElementConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateFilter(
+    Summit $summit,
+    int $config_id,
+    int $filter_id,
+    array $payload,
+  ): ?SummitScheduleFilterElementConfig {
+    // TODO: Implement updateFilter() method.
+  }
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @param int $filter_id
-     * @param array $payload
-     * @return SummitScheduleFilterElementConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateFilter(Summit $summit, int $config_id, int $filter_id, array $payload): ?SummitScheduleFilterElementConfig
-    {
-        // TODO: Implement updateFilter() method.
-    }
+  /**
+   * @param Summit $summit
+   * @return array|SummitScheduleConfig[]
+   * @throws \Exception
+   */
+  public function seedDefaults(Summit $summit): array {
+    return $this->tx_service->transaction(function () use ($summit) {
+      $list = [];
 
-    /**
-     * @param Summit $summit
-     * @return array|SummitScheduleConfig[]
-     * @throws \Exception
-     */
-    public function seedDefaults(Summit $summit):array{
-        return $this->tx_service->transaction(function() use($summit){
-            $list = [];
+      $filters = [];
+      $pre_filters = [];
 
-            $filters = [];
-            $pre_filters = [];
+      foreach (SummitScheduleFilterElementConfig::AllowedTypes as $type) {
+        $filters[] = [
+          "type" => $type,
+          "is_enabled" => true,
+        ];
+        $pre_filters[] = [
+          "type" => $type,
+          "values" => [],
+        ];
+      }
 
-            foreach (SummitScheduleFilterElementConfig::AllowedTypes as $type){
-                $filters[] = [
-                    'type' => $type,
-                    'is_enabled' => true,
-                ];
-                $pre_filters[] = [
-                    'type' => $type,
-                    'values' => []
-                ];
-            }
+      $default_configs = [
+        [
+          "key" => "schedule-main",
+          "is_enabled" => true,
+          "is_default" => true,
+          "is_my_schedule" => false,
+          "only_events_with_attendee_access" => false,
+          "hide_past_events_with_show_always_on_schedule" => false,
+          "color_source" => SummitScheduleConfig::ColorSource_EventType,
+          "filters" => $filters,
+          "pre_filters" => $pre_filters,
+        ],
+        [
+          "key" => "my-schedule-main",
+          "is_enabled" => true,
+          "is_default" => true,
+          "is_my_schedule" => true,
+          "only_events_with_attendee_access" => false,
+          "hide_past_events_with_show_always_on_schedule" => false,
+          "color_source" => SummitScheduleConfig::ColorSource_EventType,
+          "filters" => $filters,
+          "pre_filters" => $pre_filters,
+        ],
+      ];
 
-            $default_configs = [
-                [
-                    'key' => 'schedule-main',
-                    'is_enabled' => true,
-                    'is_default' => true,
-                    'is_my_schedule' => false,
-                    'only_events_with_attendee_access' => false,
-                    'hide_past_events_with_show_always_on_schedule' => false,
-                    'color_source' => SummitScheduleConfig::ColorSource_EventType,
-                    'filters' => $filters,
-                    'pre_filters' => $pre_filters,
-                ],
-                [
-                    'key' => 'my-schedule-main',
-                    'is_enabled' => true,
-                    'is_default' => true,
-                    'is_my_schedule' => true,
-                    'only_events_with_attendee_access' => false,
-                    'hide_past_events_with_show_always_on_schedule' => false,
-                    'color_source' => SummitScheduleConfig::ColorSource_EventType,
-                    'filters' => $filters,
-                    'pre_filters' => $pre_filters,
-                ]
-            ];
+      foreach ($default_configs as $default_config) {
+        $list[] = $this->add($summit, $default_config);
+      }
 
-            foreach ($default_configs as $default_config){
-                $list[] = $this->add($summit, $default_config);
-            }
-
-            return $list;
-        });
-    }
+      return $list;
+    });
+  }
 }

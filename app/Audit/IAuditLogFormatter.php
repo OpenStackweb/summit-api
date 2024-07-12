@@ -15,17 +15,15 @@ namespace App\Audit;
  * limitations under the License.
  **/
 
-
 /**
  * Interface IAuditLogFormatter
  * @package App\Audit
  */
-interface IAuditLogFormatter
-{
-    /**
-     * @param $subject
-     * @param $change_set
-     * @return string|null
-     */
-    public function format($subject, $change_set):?string;
+interface IAuditLogFormatter {
+  /**
+   * @param $subject
+   * @param $change_set
+   * @return string|null
+   */
+  public function format($subject, $change_set): ?string;
 }

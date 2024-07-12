@@ -19,33 +19,31 @@ use Closure;
  * Trait RequestCache
  * @package App\ModelSerializers\Traits
  */
-trait RequestCache
-{
-    /**
-     * @param string $scope
-     * @param string $key
-     * @param Closure $callback
-     * @param array $params
-     * @return mixed
-     */
-    function cache(string $scope , string $key, Closure $callback, array $params = []){
+trait RequestCache {
+  /**
+   * @param string $scope
+   * @param string $key
+   * @param Closure $callback
+   * @param array $params
+   * @return mixed
+   */
+  function cache(string $scope, string $key, Closure $callback, array $params = []) {
+    Log::debug(sprintf("RequestCache::cache scope %s key %s.", $scope, $key));
+    $bypass = $params["bypass_cache"] ?? false;
 
-        Log::debug(sprintf("RequestCache::cache scope %s key %s.", $scope, $key));
-        $bypass = $params['bypass_cache'] ?? false;
-
-        if($bypass){
-            Log::debug(sprintf("RequestCache::cache scope %s key %s bypassing cache.", $scope, $key));
-            return $callback();
-        }
-
-        $res = Cache::tags($scope)->get($key);
-        if(!empty($res)){
-            Log::debug(sprintf("RequestCache::cache scope %s key %s cache hit", $scope, $key));
-            return json_decode(gzinflate($res),true);
-        }
-        $res = $callback();
-        Log::debug(sprintf("RequestCache::cache scope %s key %s adding to cache.", $scope, $key));
-        Cache::tags($scope)->add($key, gzdeflate(json_encode($res), 9));
-        return $res;
+    if ($bypass) {
+      Log::debug(sprintf("RequestCache::cache scope %s key %s bypassing cache.", $scope, $key));
+      return $callback();
     }
+
+    $res = Cache::tags($scope)->get($key);
+    if (!empty($res)) {
+      Log::debug(sprintf("RequestCache::cache scope %s key %s cache hit", $scope, $key));
+      return json_decode(gzinflate($res), true);
+    }
+    $res = $callback();
+    Log::debug(sprintf("RequestCache::cache scope %s key %s adding to cache.", $scope, $key));
+    Cache::tags($scope)->add($key, gzdeflate(json_encode($res), 9));
+    return $res;
+  }
 }

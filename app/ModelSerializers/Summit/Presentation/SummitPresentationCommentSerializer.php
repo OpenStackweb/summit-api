@@ -20,49 +20,54 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitPresentationCommentSerializer
  * @package App\ModelSerializers\Summit\Presentation
  */
-final class SummitPresentationCommentSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Body'           => 'body:json_string',
-        'Activity'       => 'is_activity:json_boolean',
-        'Public'         => 'is_public:json_boolean',
-        'CreatorId'      => 'creator_id:json_int',
-        'PresentationId' => 'presentation_id:json_int',
-    ];
+final class SummitPresentationCommentSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Body" => "body:json_string",
+    "Activity" => "is_activity:json_boolean",
+    "Public" => "is_public:json_boolean",
+    "CreatorId" => "creator_id:json_int",
+    "PresentationId" => "presentation_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $comment = $this->object;
 
-        $comment = $this->object;
-
-        if (!$comment instanceof SummitPresentationComment) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'creator':{
-                        if($comment->getCreatorId() > 0) {
-                            unset($values['creator_id']);
-                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($comment->getCreator())->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+    if (!$comment instanceof SummitPresentationComment) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        switch (trim($relation)) {
+          case "creator":
+            if ($comment->getCreatorId() > 0) {
+              unset($values["creator_id"]);
+              $values["creator"] = SerializerRegistry::getInstance()
+                ->getSerializer($comment->getCreator())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

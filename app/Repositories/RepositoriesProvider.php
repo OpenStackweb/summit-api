@@ -185,768 +185,478 @@ use repositories\main\DoctrineLegalDocumentRepository;
  * Class RepositoriesProvider
  * @package repositories
  */
-final class RepositoriesProvider extends ServiceProvider
-{
-    protected $defer = false;
-
-    public function boot()
-    {
-    }
-
-    public function register()
-    {
-
-        App::singleton(
-            IApiRepository::class,
-            function () {
-                return EntityManager::getRepository(\App\Models\ResourceServer\Api::class);
-            });
-
-        App::singleton(
-            'App\Models\ResourceServer\IApiEndpointRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\ResourceServer\ApiEndpoint::class);
-            });
-
-        App::singleton(
-            'App\Models\ResourceServer\IEndpointRateLimitByIPRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\ResourceServer\EndPointRateLimitByIP::class);
-            });
-
-        App::singleton(
-            'models\summit\ISummitRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\Summit::class);
-            });
-
-        App::singleton(
-            'models\summit\IEventFeedbackRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\SummitEventFeedback::class);
-            });
-
-        App::singleton(
-            'models\summit\ISpeakerRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\PresentationSpeaker::class);
-            });
-
-        App::singleton(
-            'models\summit\ISummitEventRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\SummitEvent::class);
-            });
-
-        App::singleton(
-            'models\summit\ISummitEntityEventRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\SummitEntityEvent::class);
-            });
-
-
-        App::singleton(
-            'models\main\IMemberRepository',
-            function () {
-                return EntityManager::getRepository(\models\main\Member::class);
-            });
-
-        App::singleton(
-            'models\summit\ISummitAttendeeRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\SummitAttendee::class);
-            });
-
-        App::singleton(
-            'models\summit\ISummitAttendeeTicketRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\SummitAttendeeTicket::class);
-            });
-
-        App::singleton(
-            'models\summit\ISummitNotificationRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\SummitPushNotification::class);
-            });
-
-        App::singleton(
-            'models\main\ITagRepository',
-            function () {
-                return EntityManager::getRepository(\models\main\Tag::class);
-            });
-
-        App::singleton(
-            'models\main\IChatTeamRepository',
-            function () {
-                return EntityManager::getRepository(\models\main\ChatTeam::class);
-            });
-
-        App::singleton(
-            'models\main\IChatTeamInvitationRepository',
-            function () {
-                return EntityManager::getRepository(\models\main\ChatTeamInvitation::class);
-            });
-
-        App::singleton(
-            'models\main\IChatTeamPushNotificationMessageRepository',
-            function () {
-                return EntityManager::getRepository(\models\main\ChatTeamPushNotificationMessage::class);
-            });
-
-        App::singleton(
-            'models\summit\IRSVPRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\RSVP::class);
-            });
-
-        App::singleton(
-            'models\summit\IAbstractCalendarSyncWorkRequestRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest::class);
-            });
-
-        App::singleton(
-            'models\summit\ICalendarSyncInfoRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\CalendarSync\CalendarSyncInfo::class);
-            });
-
-        App::singleton(
-            'models\summit\IScheduleCalendarSyncInfoRepository',
-            function () {
-                return EntityManager::getRepository(\models\summit\CalendarSync\ScheduleCalendarSyncInfo::class);
-            });
-
-        // Marketplace
-
-        App::singleton(
-            ICompanyServiceRepository::class,
-            function(){
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\CompanyService::class);
-            }
-        );
-
-        App::singleton(
-            'App\Models\Foundation\Marketplace\IApplianceRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Appliance::class);
-            });
-
-        App::singleton(
-            'App\Models\Foundation\Marketplace\IDistributionRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Distribution::class);
-            });
-
-        App::singleton(
-            'App\Models\Foundation\Marketplace\IConsultantRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Consultant::class);
-            });
-
-        App::singleton(
-            'App\Models\Foundation\Marketplace\IPrivateCloudServiceRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\PrivateCloudService::class);
-            });
-
-        App::singleton(
-            'App\Models\Foundation\Marketplace\IPublicCloudServiceRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\PublicCloudService::class);
-            });
-
-        App::singleton(
-            'App\Models\Foundation\Marketplace\IRemoteCloudServiceRepository',
-            function () {
-                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\RemoteCloudService::class);
-            });
-
-        App::singleton(
-            'models\main\IFolderRepository',
-            function () {
-                return EntityManager::getRepository(File::class);
-            });
-
-        App::singleton(
-            'models\main\IAssetsSyncRequestRepository',
-            function () {
-                return EntityManager::getRepository(AssetsSyncRequest::class);
-            });
-
-        App::singleton(
-            'models\main\ICompanyRepository',
-            function () {
-                return EntityManager::getRepository(Company::class);
-            });
-
-        App::singleton(
-            'models\main\IGroupRepository',
-            function () {
-                return EntityManager::getRepository(Group::class);
-            });
-
-        App::singleton(
-            'models\summit\ISpeakerRegistrationRequestRepository',
-            function () {
-                return EntityManager::getRepository(SpeakerRegistrationRequest::class);
-            });
-
-        App::singleton(
-            'models\summit\ISpeakerSummitRegistrationPromoCodeRepository',
-            function () {
-                return EntityManager::getRepository(SpeakerSummitRegistrationPromoCode::class);
-            });
-
-        App::singleton(
-            ISummitTicketTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitTicketType::class);
-            });
-
-        App::singleton(
-            IOrganizationRepository::class,
-            function () {
-                return EntityManager::getRepository(Organization::class);
-            });
-
-        App::singleton(
-            ISummitRegistrationPromoCodeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitRegistrationPromoCode::class);
-            }
-        );
-
-        App::singleton(
-            ISpeakersSummitRegistrationPromoCodeRepository::class,
-            function () {
-                return EntityManager::getRepository(SpeakersSummitRegistrationPromoCode::class);
-            }
-        );
-
-        App::singleton(
-            ISpeakersRegistrationDiscountCodeRepository::class,
-            function () {
-                return EntityManager::getRepository(SpeakersRegistrationDiscountCode::class);
-            }
-        );
-
-        App::singleton(
-            IPresentationSpeakerSummitAssistanceConfirmationRequestRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationSpeakerSummitAssistanceConfirmationRequest::class);
-            }
-        );
-
-        App::singleton(
-            ISummitEventTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitEventType::class);
-            }
-        );
-
-        App::singleton(
-            IDefaultSummitEventTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(DefaultSummitEventType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitTrackRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationCategory::class);
-            }
-        );
-
-        App::singleton(
-            IRSVPTemplateRepository::class,
-            function () {
-                return EntityManager::getRepository(RSVPTemplate::class);
-            }
-        );
-
-        App::singleton(
-            ISummitLocationRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitAbstractLocation::class);
-            }
-        );
-
-        App::singleton(
-            ISummitLocationBannerRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitLocationBanner::class);
-            }
-        );
-
-        App::singleton(
-            IPresentationCategoryGroupRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationCategoryGroup::class);
-            }
-        );
-
-        App::singleton(
-            ISelectionPlanRepository::class,
-            function () {
-                return EntityManager::getRepository(SelectionPlan::class);
-            }
-        );
-
-        App::singleton(
-            ITrackTagGroupAllowedTagsRepository::class,
-            function () {
-                return EntityManager::getRepository(TrackTagGroupAllowedTag::class);
-            }
-        );
-
-        App::singleton(
-            IDefaultTrackTagGroupRepository::class,
-            function () {
-                return EntityManager::getRepository(DefaultTrackTagGroup::class);
-            }
-        );
-
-
-        App::singleton(
-            ITrackQuestionTemplateRepository::class,
-            function () {
-                return EntityManager::getRepository(TrackQuestionTemplate::class);
-            }
-        );
-
-        App::singleton(
-            ILanguageRepository::class,
-            function () {
-                return EntityManager::getRepository(Language::class);
-            }
-        );
-
-        App::singleton(
-            ISpeakerOrganizationalRoleRepository::class,
-            function () {
-                return EntityManager::getRepository(SpeakerOrganizationalRole::class);
-            }
-        );
-
-        App::singleton(
-            ISpeakerActiveInvolvementRepository::class,
-            function () {
-                return EntityManager::getRepository(SpeakerActiveInvolvement::class);
-            }
-        );
-
-        App::singleton(
-            ISpeakerEditPermissionRequestRepository::class,
-            function () {
-                return EntityManager::getRepository(SpeakerEditPermissionRequest::class);
-            }
-        );
-
-        App::singleton(
-            ISummitRoomReservationRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitRoomReservation::class);
-            }
-        );
-
-        App::singleton(
-            ISummitBookableVenueRoomAttributeTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitBookableVenueRoomAttributeType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitBookableVenueRoomAttributeValueRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitBookableVenueRoomAttributeValue::class);
-            }
-        );
-
-        App::singleton(
-            ISummitAccessLevelTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitAccessLevelType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitTaxTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitTaxType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitBadgeFeatureTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitBadgeFeatureType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitBadgeTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitBadgeType::class);
-            }
-        );
-
-        App::singleton(
-            ISponsorRepository::class,
-            function () {
-                return EntityManager::getRepository(Sponsor::class);
-            }
-        );
-
-        App::singleton(
-            ISponsorshipTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SponsorshipType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitRefundPolicyTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitRefundPolicyType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitOrderExtraQuestionTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitOrderExtraQuestionType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitOrderRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitOrder::class);
-            }
-        );
-
-        App::singleton(
-            ISummitAttendeeBadgeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitAttendeeBadge::class);
-            }
-        );
-
-        App::singleton(
-            ISponsorUserInfoGrantRepository::class,
-            function () {
-                return EntityManager::getRepository(SponsorUserInfoGrant::class);
-            }
-        );
-
-        App::singleton(
-            ISummitAttendeeBadgePrintRuleRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitAttendeeBadgePrintRule::class);
-            }
-        );
-
-        App::singleton(
-            IPaymentGatewayProfileRepository::class,
-            function () {
-                return EntityManager::getRepository(PaymentGatewayProfile::class);
-            }
-        );
-
-        App::singleton(
-            ISummitEmailEventFlowRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitEmailEventFlow::class);
-            }
-        );
-
-        App::singleton(
-            ISummitDocumentRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitDocument::class);
-            }
-        );
-
-        App::singleton(
-            ISummitRegistrationInvitationRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitRegistrationInvitation::class);
-            }
-        );
-
-        App::singleton(
-            ISummitAdministratorPermissionGroupRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
-            }
-        );
-
-        App::singleton(
-            ISummitMediaFileTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitMediaFileType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitMediaUploadTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitMediaUploadType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitMetricRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitMetric::class);
-            }
-        );
-
-        App::singleton(
-            ISponsoredProjectRepository::class,
-            function () {
-                return EntityManager::getRepository(SponsoredProject::class);
-            }
-        );
-
-        App::singleton(
-            IProjectSponsorshipTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(ProjectSponsorshipType::class);
-            }
-        );
-
-        App::singleton(
-            ISupportingCompanyRepository::class,
-            function () {
-                return EntityManager::getRepository(SupportingCompany::class);
-            }
-        );
-
-        App::singleton(
-            ILegalDocumentRepository::class,
-            DoctrineLegalDocumentRepository::class
-        );
-
-        App::singleton(
-            ISummitTrackChairRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitTrackChair::class);
-            }
-        );
-
-        App::singleton(
-            ISummitCategoryChangeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitCategoryChange::class);
-            }
-        );
-
-        App::singleton(
-            IPresentationActionTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationActionType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitSelectionPlanExtraQuestionTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitSelectionPlanExtraQuestionType::class);
-            }
-        );
-
-        App::singleton(
-            IElectionsRepository::class,
-            function () {
-                return EntityManager::getRepository(Election::class);
-            }
-        );
-
-        App::singleton(
-            ISummitScheduleConfigRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitScheduleConfig::class);
-            }
-        );
-
-        App::singleton(
-            IPresentationMediaUploadRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationMediaUpload::class);
-            }
-        );
-
-        App::singleton(
-            IOpenStackReleaseRepository::class,
-            function () {
-                return EntityManager::getRepository(OpenStackRelease::class);
-            }
-        );
-
-        App::singleton(
-            IPresentationTrackChairRatingTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationTrackChairRatingType::class);
-            }
-        );
-
-        App::singleton(
-            IPresentationTrackChairScoreTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(PresentationTrackChairScoreType::class);
-            }
-        );
-
-        App::singleton(
-            ISummitBadgeViewTypeRepository::class,
-            function () {
-                return EntityManager::getRepository(SummitBadgeViewType::class);
-            }
-        );
-
-        App::singleton(
-            ISponsorAdRepository::class,
-            function(){
-                return EntityManager::getRepository(SponsorAd::class);
-            });
-
-        App::singleton(
-            ISponsorAdRepository::class,
-            function(){
-                return EntityManager::getRepository(SponsorAd::class);
-            });
-
-        App::singleton(
-            ISponsorMaterialRepository::class,
-            function(){
-                return EntityManager::getRepository(SponsorMaterial::class);
-            });
-
-        App::singleton(
-            ISponsorSocialNetworkRepository::class,
-            function(){
-                return EntityManager::getRepository(SponsorSocialNetwork::class);
-            });
-
-        App::singleton(
-            ISponsorExtraQuestionTypeRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitSponsorExtraQuestionType::class);
-            });
-
-        App::singleton(
-            ISummitSponsorshipTypeRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitSponsorshipType::class);
-            }
-        );
-
-        App::singleton(
-            IAuditLogRepository::class,
-            function () {
-                return EntityManager::getRepository(AuditLog::class);
-            });
-
-        App::singleton(
-            ISummitPresentationCommentRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitPresentationComment::class);
-            }
-        );
-
-        App::singleton(
-            ISummitProposedScheduleRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitProposedSchedule::class);
-            }
-        );
-
-        App::singleton(
-             ISummitProposedScheduleEventRepository::class,
-             function(){
-                 return EntityManager::getRepository(SummitProposedScheduleSummitEvent::class);
-             }
-        );
-
-        App::singleton(
-            ISummitProposedScheduleLockRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitProposedScheduleLock::class);
-            }
-        );
-      
-        App::singleton(
-            ISummitSubmissionInvitationRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitSubmissionInvitation::class);
-            }
-        );
-
-        App::singleton(
-            ISummitPresentationSpeakerAssignmentRepository::class,
-            function(){
-                return EntityManager::getRepository(PresentationSpeakerAssignment::class);
-            }
-        );
-
-        App::singleton(
-            ISummitSignRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitSign::class);
-            }
-        );
-
-        App::singleton(
-            ISummitProposedScheduleAllowedLocationRepository::class,
-            function(){
-                return EntityManager::getRepository(SummitProposedScheduleAllowedLocation::class);
-            }
-        );
-
-        App::singleton(
-            ISummitProposedScheduleAllowedDayRepository::class,
-            function (){
-                return EntityManager::getRepository(SummitProposedScheduleAllowedDay::class);
-            }
-        );
-
-        App::singleton(
-            ISummitRegistrationFeedMetadataRepository::class,
-            function (){
-                return EntityManager::getRepository(SummitRegistrationFeedMetadata::class);
-            }
-        );
-
-        App::singleton(
-            ISummitAttendeeBadgePrintRepository::class,
-            function (){
-                return EntityManager::getRepository(SummitAttendeeBadgePrint::class);
-            }
-        );
-
-        App::singleton(
-            ISummitAttendeeNoteRepository::class,
-            function (){
-                return EntityManager::getRepository(SummitAttendeeNote::class);
-            }
-        );
-
-        App::singleton(
-            ISummitRefundRequestRepository::class,
-            function (){
-                return EntityManager::getRepository(SummitRefundRequest::class);
-            }
-        );
-
-        App::singleton(
-            IUserStoryRepository::class,
-            function (){
-                return EntityManager::getRepository(UserStory::class);
-            }
-        );
-    }
+final class RepositoriesProvider extends ServiceProvider {
+  protected $defer = false;
+
+  public function boot() {
+  }
+
+  public function register() {
+    App::singleton(IApiRepository::class, function () {
+      return EntityManager::getRepository(\App\Models\ResourceServer\Api::class);
+    });
+
+    App::singleton("App\Models\ResourceServer\IApiEndpointRepository", function () {
+      return EntityManager::getRepository(\App\Models\ResourceServer\ApiEndpoint::class);
+    });
+
+    App::singleton("App\Models\ResourceServer\IEndpointRateLimitByIPRepository", function () {
+      return EntityManager::getRepository(\App\Models\ResourceServer\EndPointRateLimitByIP::class);
+    });
+
+    App::singleton("models\summit\ISummitRepository", function () {
+      return EntityManager::getRepository(\models\summit\Summit::class);
+    });
+
+    App::singleton("models\summit\IEventFeedbackRepository", function () {
+      return EntityManager::getRepository(\models\summit\SummitEventFeedback::class);
+    });
+
+    App::singleton("models\summit\ISpeakerRepository", function () {
+      return EntityManager::getRepository(\models\summit\PresentationSpeaker::class);
+    });
+
+    App::singleton("models\summit\ISummitEventRepository", function () {
+      return EntityManager::getRepository(\models\summit\SummitEvent::class);
+    });
+
+    App::singleton("models\summit\ISummitEntityEventRepository", function () {
+      return EntityManager::getRepository(\models\summit\SummitEntityEvent::class);
+    });
+
+    App::singleton("models\main\IMemberRepository", function () {
+      return EntityManager::getRepository(\models\main\Member::class);
+    });
+
+    App::singleton("models\summit\ISummitAttendeeRepository", function () {
+      return EntityManager::getRepository(\models\summit\SummitAttendee::class);
+    });
+
+    App::singleton("models\summit\ISummitAttendeeTicketRepository", function () {
+      return EntityManager::getRepository(\models\summit\SummitAttendeeTicket::class);
+    });
+
+    App::singleton("models\summit\ISummitNotificationRepository", function () {
+      return EntityManager::getRepository(\models\summit\SummitPushNotification::class);
+    });
+
+    App::singleton("models\main\ITagRepository", function () {
+      return EntityManager::getRepository(\models\main\Tag::class);
+    });
+
+    App::singleton("models\main\IChatTeamRepository", function () {
+      return EntityManager::getRepository(\models\main\ChatTeam::class);
+    });
+
+    App::singleton("models\main\IChatTeamInvitationRepository", function () {
+      return EntityManager::getRepository(\models\main\ChatTeamInvitation::class);
+    });
+
+    App::singleton("models\main\IChatTeamPushNotificationMessageRepository", function () {
+      return EntityManager::getRepository(\models\main\ChatTeamPushNotificationMessage::class);
+    });
+
+    App::singleton("models\summit\IRSVPRepository", function () {
+      return EntityManager::getRepository(\models\summit\RSVP::class);
+    });
+
+    App::singleton("models\summit\IAbstractCalendarSyncWorkRequestRepository", function () {
+      return EntityManager::getRepository(
+        \models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest::class,
+      );
+    });
+
+    App::singleton("models\summit\ICalendarSyncInfoRepository", function () {
+      return EntityManager::getRepository(\models\summit\CalendarSync\CalendarSyncInfo::class);
+    });
+
+    App::singleton("models\summit\IScheduleCalendarSyncInfoRepository", function () {
+      return EntityManager::getRepository(
+        \models\summit\CalendarSync\ScheduleCalendarSyncInfo::class,
+      );
+    });
+
+    // Marketplace
+
+    App::singleton(ICompanyServiceRepository::class, function () {
+      return EntityManager::getRepository(\App\Models\Foundation\Marketplace\CompanyService::class);
+    });
+
+    App::singleton("App\Models\Foundation\Marketplace\IApplianceRepository", function () {
+      return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Appliance::class);
+    });
+
+    App::singleton("App\Models\Foundation\Marketplace\IDistributionRepository", function () {
+      return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Distribution::class);
+    });
+
+    App::singleton("App\Models\Foundation\Marketplace\IConsultantRepository", function () {
+      return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Consultant::class);
+    });
+
+    App::singleton("App\Models\Foundation\Marketplace\IPrivateCloudServiceRepository", function () {
+      return EntityManager::getRepository(
+        \App\Models\Foundation\Marketplace\PrivateCloudService::class,
+      );
+    });
+
+    App::singleton("App\Models\Foundation\Marketplace\IPublicCloudServiceRepository", function () {
+      return EntityManager::getRepository(
+        \App\Models\Foundation\Marketplace\PublicCloudService::class,
+      );
+    });
+
+    App::singleton("App\Models\Foundation\Marketplace\IRemoteCloudServiceRepository", function () {
+      return EntityManager::getRepository(
+        \App\Models\Foundation\Marketplace\RemoteCloudService::class,
+      );
+    });
+
+    App::singleton("models\main\IFolderRepository", function () {
+      return EntityManager::getRepository(File::class);
+    });
+
+    App::singleton("models\main\IAssetsSyncRequestRepository", function () {
+      return EntityManager::getRepository(AssetsSyncRequest::class);
+    });
+
+    App::singleton("models\main\ICompanyRepository", function () {
+      return EntityManager::getRepository(Company::class);
+    });
+
+    App::singleton("models\main\IGroupRepository", function () {
+      return EntityManager::getRepository(Group::class);
+    });
+
+    App::singleton("models\summit\ISpeakerRegistrationRequestRepository", function () {
+      return EntityManager::getRepository(SpeakerRegistrationRequest::class);
+    });
+
+    App::singleton("models\summit\ISpeakerSummitRegistrationPromoCodeRepository", function () {
+      return EntityManager::getRepository(SpeakerSummitRegistrationPromoCode::class);
+    });
+
+    App::singleton(ISummitTicketTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitTicketType::class);
+    });
+
+    App::singleton(IOrganizationRepository::class, function () {
+      return EntityManager::getRepository(Organization::class);
+    });
+
+    App::singleton(ISummitRegistrationPromoCodeRepository::class, function () {
+      return EntityManager::getRepository(SummitRegistrationPromoCode::class);
+    });
+
+    App::singleton(ISpeakersSummitRegistrationPromoCodeRepository::class, function () {
+      return EntityManager::getRepository(SpeakersSummitRegistrationPromoCode::class);
+    });
+
+    App::singleton(ISpeakersRegistrationDiscountCodeRepository::class, function () {
+      return EntityManager::getRepository(SpeakersRegistrationDiscountCode::class);
+    });
+
+    App::singleton(
+      IPresentationSpeakerSummitAssistanceConfirmationRequestRepository::class,
+      function () {
+        return EntityManager::getRepository(
+          PresentationSpeakerSummitAssistanceConfirmationRequest::class,
+        );
+      },
+    );
+
+    App::singleton(ISummitEventTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitEventType::class);
+    });
+
+    App::singleton(IDefaultSummitEventTypeRepository::class, function () {
+      return EntityManager::getRepository(DefaultSummitEventType::class);
+    });
+
+    App::singleton(ISummitTrackRepository::class, function () {
+      return EntityManager::getRepository(PresentationCategory::class);
+    });
+
+    App::singleton(IRSVPTemplateRepository::class, function () {
+      return EntityManager::getRepository(RSVPTemplate::class);
+    });
+
+    App::singleton(ISummitLocationRepository::class, function () {
+      return EntityManager::getRepository(SummitAbstractLocation::class);
+    });
+
+    App::singleton(ISummitLocationBannerRepository::class, function () {
+      return EntityManager::getRepository(SummitLocationBanner::class);
+    });
+
+    App::singleton(IPresentationCategoryGroupRepository::class, function () {
+      return EntityManager::getRepository(PresentationCategoryGroup::class);
+    });
+
+    App::singleton(ISelectionPlanRepository::class, function () {
+      return EntityManager::getRepository(SelectionPlan::class);
+    });
+
+    App::singleton(ITrackTagGroupAllowedTagsRepository::class, function () {
+      return EntityManager::getRepository(TrackTagGroupAllowedTag::class);
+    });
+
+    App::singleton(IDefaultTrackTagGroupRepository::class, function () {
+      return EntityManager::getRepository(DefaultTrackTagGroup::class);
+    });
+
+    App::singleton(ITrackQuestionTemplateRepository::class, function () {
+      return EntityManager::getRepository(TrackQuestionTemplate::class);
+    });
+
+    App::singleton(ILanguageRepository::class, function () {
+      return EntityManager::getRepository(Language::class);
+    });
+
+    App::singleton(ISpeakerOrganizationalRoleRepository::class, function () {
+      return EntityManager::getRepository(SpeakerOrganizationalRole::class);
+    });
+
+    App::singleton(ISpeakerActiveInvolvementRepository::class, function () {
+      return EntityManager::getRepository(SpeakerActiveInvolvement::class);
+    });
+
+    App::singleton(ISpeakerEditPermissionRequestRepository::class, function () {
+      return EntityManager::getRepository(SpeakerEditPermissionRequest::class);
+    });
+
+    App::singleton(ISummitRoomReservationRepository::class, function () {
+      return EntityManager::getRepository(SummitRoomReservation::class);
+    });
+
+    App::singleton(ISummitBookableVenueRoomAttributeTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitBookableVenueRoomAttributeType::class);
+    });
+
+    App::singleton(ISummitBookableVenueRoomAttributeValueRepository::class, function () {
+      return EntityManager::getRepository(SummitBookableVenueRoomAttributeValue::class);
+    });
+
+    App::singleton(ISummitAccessLevelTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitAccessLevelType::class);
+    });
+
+    App::singleton(ISummitTaxTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitTaxType::class);
+    });
+
+    App::singleton(ISummitBadgeFeatureTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitBadgeFeatureType::class);
+    });
+
+    App::singleton(ISummitBadgeTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitBadgeType::class);
+    });
+
+    App::singleton(ISponsorRepository::class, function () {
+      return EntityManager::getRepository(Sponsor::class);
+    });
+
+    App::singleton(ISponsorshipTypeRepository::class, function () {
+      return EntityManager::getRepository(SponsorshipType::class);
+    });
+
+    App::singleton(ISummitRefundPolicyTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitRefundPolicyType::class);
+    });
+
+    App::singleton(ISummitOrderExtraQuestionTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitOrderExtraQuestionType::class);
+    });
+
+    App::singleton(ISummitOrderRepository::class, function () {
+      return EntityManager::getRepository(SummitOrder::class);
+    });
+
+    App::singleton(ISummitAttendeeBadgeRepository::class, function () {
+      return EntityManager::getRepository(SummitAttendeeBadge::class);
+    });
+
+    App::singleton(ISponsorUserInfoGrantRepository::class, function () {
+      return EntityManager::getRepository(SponsorUserInfoGrant::class);
+    });
+
+    App::singleton(ISummitAttendeeBadgePrintRuleRepository::class, function () {
+      return EntityManager::getRepository(SummitAttendeeBadgePrintRule::class);
+    });
+
+    App::singleton(IPaymentGatewayProfileRepository::class, function () {
+      return EntityManager::getRepository(PaymentGatewayProfile::class);
+    });
+
+    App::singleton(ISummitEmailEventFlowRepository::class, function () {
+      return EntityManager::getRepository(SummitEmailEventFlow::class);
+    });
+
+    App::singleton(ISummitDocumentRepository::class, function () {
+      return EntityManager::getRepository(SummitDocument::class);
+    });
+
+    App::singleton(ISummitRegistrationInvitationRepository::class, function () {
+      return EntityManager::getRepository(SummitRegistrationInvitation::class);
+    });
+
+    App::singleton(ISummitAdministratorPermissionGroupRepository::class, function () {
+      return EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
+    });
+
+    App::singleton(ISummitMediaFileTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitMediaFileType::class);
+    });
+
+    App::singleton(ISummitMediaUploadTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitMediaUploadType::class);
+    });
+
+    App::singleton(ISummitMetricRepository::class, function () {
+      return EntityManager::getRepository(SummitMetric::class);
+    });
+
+    App::singleton(ISponsoredProjectRepository::class, function () {
+      return EntityManager::getRepository(SponsoredProject::class);
+    });
+
+    App::singleton(IProjectSponsorshipTypeRepository::class, function () {
+      return EntityManager::getRepository(ProjectSponsorshipType::class);
+    });
+
+    App::singleton(ISupportingCompanyRepository::class, function () {
+      return EntityManager::getRepository(SupportingCompany::class);
+    });
+
+    App::singleton(ILegalDocumentRepository::class, DoctrineLegalDocumentRepository::class);
+
+    App::singleton(ISummitTrackChairRepository::class, function () {
+      return EntityManager::getRepository(SummitTrackChair::class);
+    });
+
+    App::singleton(ISummitCategoryChangeRepository::class, function () {
+      return EntityManager::getRepository(SummitCategoryChange::class);
+    });
+
+    App::singleton(IPresentationActionTypeRepository::class, function () {
+      return EntityManager::getRepository(PresentationActionType::class);
+    });
+
+    App::singleton(ISummitSelectionPlanExtraQuestionTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitSelectionPlanExtraQuestionType::class);
+    });
+
+    App::singleton(IElectionsRepository::class, function () {
+      return EntityManager::getRepository(Election::class);
+    });
+
+    App::singleton(ISummitScheduleConfigRepository::class, function () {
+      return EntityManager::getRepository(SummitScheduleConfig::class);
+    });
+
+    App::singleton(IPresentationMediaUploadRepository::class, function () {
+      return EntityManager::getRepository(PresentationMediaUpload::class);
+    });
+
+    App::singleton(IOpenStackReleaseRepository::class, function () {
+      return EntityManager::getRepository(OpenStackRelease::class);
+    });
+
+    App::singleton(IPresentationTrackChairRatingTypeRepository::class, function () {
+      return EntityManager::getRepository(PresentationTrackChairRatingType::class);
+    });
+
+    App::singleton(IPresentationTrackChairScoreTypeRepository::class, function () {
+      return EntityManager::getRepository(PresentationTrackChairScoreType::class);
+    });
+
+    App::singleton(ISummitBadgeViewTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitBadgeViewType::class);
+    });
+
+    App::singleton(ISponsorAdRepository::class, function () {
+      return EntityManager::getRepository(SponsorAd::class);
+    });
+
+    App::singleton(ISponsorAdRepository::class, function () {
+      return EntityManager::getRepository(SponsorAd::class);
+    });
+
+    App::singleton(ISponsorMaterialRepository::class, function () {
+      return EntityManager::getRepository(SponsorMaterial::class);
+    });
+
+    App::singleton(ISponsorSocialNetworkRepository::class, function () {
+      return EntityManager::getRepository(SponsorSocialNetwork::class);
+    });
+
+    App::singleton(ISponsorExtraQuestionTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitSponsorExtraQuestionType::class);
+    });
+
+    App::singleton(ISummitSponsorshipTypeRepository::class, function () {
+      return EntityManager::getRepository(SummitSponsorshipType::class);
+    });
+
+    App::singleton(IAuditLogRepository::class, function () {
+      return EntityManager::getRepository(AuditLog::class);
+    });
+
+    App::singleton(ISummitPresentationCommentRepository::class, function () {
+      return EntityManager::getRepository(SummitPresentationComment::class);
+    });
+
+    App::singleton(ISummitProposedScheduleRepository::class, function () {
+      return EntityManager::getRepository(SummitProposedSchedule::class);
+    });
+
+    App::singleton(ISummitProposedScheduleEventRepository::class, function () {
+      return EntityManager::getRepository(SummitProposedScheduleSummitEvent::class);
+    });
+
+    App::singleton(ISummitProposedScheduleLockRepository::class, function () {
+      return EntityManager::getRepository(SummitProposedScheduleLock::class);
+    });
+
+    App::singleton(ISummitSubmissionInvitationRepository::class, function () {
+      return EntityManager::getRepository(SummitSubmissionInvitation::class);
+    });
+
+    App::singleton(ISummitPresentationSpeakerAssignmentRepository::class, function () {
+      return EntityManager::getRepository(PresentationSpeakerAssignment::class);
+    });
+
+    App::singleton(ISummitSignRepository::class, function () {
+      return EntityManager::getRepository(SummitSign::class);
+    });
+
+    App::singleton(ISummitProposedScheduleAllowedLocationRepository::class, function () {
+      return EntityManager::getRepository(SummitProposedScheduleAllowedLocation::class);
+    });
+
+    App::singleton(ISummitProposedScheduleAllowedDayRepository::class, function () {
+      return EntityManager::getRepository(SummitProposedScheduleAllowedDay::class);
+    });
+
+    App::singleton(ISummitRegistrationFeedMetadataRepository::class, function () {
+      return EntityManager::getRepository(SummitRegistrationFeedMetadata::class);
+    });
+
+    App::singleton(ISummitAttendeeBadgePrintRepository::class, function () {
+      return EntityManager::getRepository(SummitAttendeeBadgePrint::class);
+    });
+
+    App::singleton(ISummitAttendeeNoteRepository::class, function () {
+      return EntityManager::getRepository(SummitAttendeeNote::class);
+    });
+
+    App::singleton(ISummitRefundRequestRepository::class, function () {
+      return EntityManager::getRepository(SummitRefundRequest::class);
+    });
+
+    App::singleton(IUserStoryRepository::class, function () {
+      return EntityManager::getRepository(UserStory::class);
+    });
+  }
 }

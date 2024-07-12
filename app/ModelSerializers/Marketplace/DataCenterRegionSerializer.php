@@ -16,13 +16,12 @@ use ModelSerializers\SilverStripeSerializer;
  * Class DataCenterRegionSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class DataCenterRegionSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Name'     => 'name:json_string',
-        'Endpoint' => 'endpoint:json_string',
-    ];
+final class DataCenterRegionSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Endpoint" => "endpoint:json_string",
+  ];
 }

@@ -17,68 +17,66 @@ use models\summit\SummitOrderExtraQuestionAnswer;
  * Class SummitOrderExtraQuestionAnswerSerializer
  * @package ModelSerializers
  */
-final class SummitOrderExtraQuestionAnswerSerializer extends ExtraQuestionAnswerSerializer
-{
-    protected static $array_mappings = [
-        'OrderId'    => 'order_id:json_int',
-        'AttendeeId' => 'attendee_id:json_int',
-    ];
+final class SummitOrderExtraQuestionAnswerSerializer extends ExtraQuestionAnswerSerializer {
+  protected static $array_mappings = [
+    "OrderId" => "order_id:json_int",
+    "AttendeeId" => "attendee_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $answer = $this->object;
-        if (!$answer instanceof SummitOrderExtraQuestionAnswer) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'order':
-                        {
-
-                            if ($answer->hasOrder()) {
-                                unset($values['order_id']);
-                                $values['order'] = SerializerRegistry::getInstance()->getSerializer($answer->getOrder())
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                        }
-                        break;
-
-                    case 'attendee':
-                        {
-
-                            if ($answer->hasAttendee()) {
-                                unset($values['attendee_id']);
-                                $values['attendee'] = SerializerRegistry::getInstance()->getSerializer($answer->getAttendee())
-                                    ->serialize
-                                    (
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                        }
-                        break;
-
-                }
-            }
-        }
-
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $answer = $this->object;
+    if (!$answer instanceof SummitOrderExtraQuestionAnswer) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "order":
+            if ($answer->hasOrder()) {
+              unset($values["order_id"]);
+              $values["order"] = SerializerRegistry::getInstance()
+                ->getSerializer($answer->getOrder())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+
+          case "attendee":
+            if ($answer->hasAttendee()) {
+              unset($values["attendee_id"]);
+              $values["attendee"] = SerializerRegistry::getInstance()
+                ->getSerializer($answer->getAttendee())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

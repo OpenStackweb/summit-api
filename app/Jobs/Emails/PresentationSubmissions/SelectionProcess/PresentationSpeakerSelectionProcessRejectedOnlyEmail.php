@@ -22,37 +22,44 @@ use utils\Filter;
  * Class PresentationSpeakerSelectionProcessRejectedOnlyEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
  */
-class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationSpeakerSelectionProcessEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends
+  PresentationSpeakerSelectionProcessEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY";
 
-    /**
-     * @param Summit $summit
-     * @param PresentationSpeaker $speaker
-     * @param string|null $test_email_recipient
-     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
-     * @param Filter|null $filter
-     */
-    public function __construct
-    (
-        Summit                              $summit,
-        PresentationSpeaker                 $speaker,
-        ?string                             $test_email_recipient,
-        SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
-        ?Filter                             $filter = null
-    )
-    {
-        parent::__construct($summit, $speaker, $test_email_recipient, $speaker_announcement_email_config, null, $filter);
-        Log::debug(sprintf("PresentationSpeakerSelectionProcessRejectedEmail::__construct payload %s", json_encode($this->payload)));
-    }
-
-
+  /**
+   * @param Summit $summit
+   * @param PresentationSpeaker $speaker
+   * @param string|null $test_email_recipient
+   * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
+   * @param Filter|null $filter
+   */
+  public function __construct(
+    Summit $summit,
+    PresentationSpeaker $speaker,
+    ?string $test_email_recipient,
+    SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config,
+    ?Filter $filter = null,
+  ) {
+    parent::__construct(
+      $summit,
+      $speaker,
+      $test_email_recipient,
+      $speaker_announcement_email_config,
+      null,
+      $filter,
+    );
+    Log::debug(
+      sprintf(
+        "PresentationSpeakerSelectionProcessRejectedEmail::__construct payload %s",
+        json_encode($this->payload),
+      ),
+    );
+  }
 }

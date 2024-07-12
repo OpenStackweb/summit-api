@@ -16,33 +16,31 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SummitSubmissionInvitationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitSubmissionInvitationValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'email' => 'required|email|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'tags' => 'sometimes|string_array',
-        ];
-    }
+final class SummitSubmissionInvitationValidationRulesFactory extends
+  AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "email" => "required|email|max:255",
+      "first_name" => "required|string|max:255",
+      "last_name" => "required|string|max:255",
+      "tags" => "sometimes|string_array",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'email' => 'sometimes|email|max:255',
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'tags' => 'sometimes|string_array',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "email" => "sometimes|email|max:255",
+      "first_name" => "sometimes|string|max:255",
+      "last_name" => "sometimes|string|max:255",
+      "tags" => "sometimes|string_array",
+    ];
+  }
 }

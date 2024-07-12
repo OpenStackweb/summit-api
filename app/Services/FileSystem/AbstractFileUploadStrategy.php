@@ -18,68 +18,75 @@ use Illuminate\Support\Facades\Storage;
  * Class AbstractFileUploadStrategy
  * @package App\Services\FileSystem
  */
-abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
-{
-    /**
-     * @param UploadedFile $file
-     * @param string $path
-     * @param string $filename
-     * @param mixed $options
-     * @return false|string
-     */
-    public function save(UploadedFile $file, string $path, string $filename, $options = [])
-    {
-        Log::debug(sprintf("AbstractFileUploadStrategy::save path %s filename %s options %s", $path, $filename, json_encode($options)));
-        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
-    }
+abstract class AbstractFileUploadStrategy implements IFileUploadStrategy {
+  /**
+   * @param UploadedFile $file
+   * @param string $path
+   * @param string $filename
+   * @param mixed $options
+   * @return false|string
+   */
+  public function save(UploadedFile $file, string $path, string $filename, $options = []) {
+    Log::debug(
+      sprintf(
+        "AbstractFileUploadStrategy::save path %s filename %s options %s",
+        $path,
+        $filename,
+        json_encode($options),
+      ),
+    );
+    return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
+  }
 
-    /**
-     * @param string $file
-     * @param string $path
-     * @param string $filename
-     * @param mixed $options
-     * @return false|string
-     */
-    public function saveFromPath(string $file, string $path, string $filename, $options = []):bool
-    {
-        Log::debug(sprintf("AbstractFileUploadStrategy::saveFromPath path %s filename %s options %s", $path, $filename, json_encode($options)));
-        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
-    }
+  /**
+   * @param string $file
+   * @param string $path
+   * @param string $filename
+   * @param mixed $options
+   * @return false|string
+   */
+  public function saveFromPath(string $file, string $path, string $filename, $options = []): bool {
+    Log::debug(
+      sprintf(
+        "AbstractFileUploadStrategy::saveFromPath path %s filename %s options %s",
+        $path,
+        $filename,
+        json_encode($options),
+      ),
+    );
+    return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
+  }
 
-    /**
-     * @param resource $fp
-     * @param string $path
-     * @param mixed $options
-     * @return bool
-     */
-    public function saveFromStream($fp, string $path, $options = []):bool{
-        return Storage::disk($this->getDriver())->put($path, $fp,  $options );
-    }
+  /**
+   * @param resource $fp
+   * @param string $path
+   * @param mixed $options
+   * @return bool
+   */
+  public function saveFromStream($fp, string $path, $options = []): bool {
+    return Storage::disk($this->getDriver())->put($path, $fp, $options);
+  }
 
-    /**
-     * @param string $path
-     * @param string|null $filename
-     * @return bool|mixed
-     */
-    public function markAsDeleted(string $path, ?string $filename = null)
-    {
-        Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted path %s filename %s", $path, $filename));
-        $from = empty($filename) ? $path : sprintf("%s/%s", $path, $filename);
-        $to = null;
-        if(empty($filename)){
-            $parts = explode("/", $path);
-            $parts[count($parts) - 1] = sprintf("DELETED_%s", $parts[count($parts) - 1] );
-            $to = implode("/", $parts);
-        }
-        else{
-            $to = sprintf("%s/DELETED_%s", $path, $filename);
-        }
-        Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted from %s to %s", $from, $to));
-
-        return Storage::disk($this->getDriver())->move
-        (
-            $from,
-            $to
-        );
+  /**
+   * @param string $path
+   * @param string|null $filename
+   * @return bool|mixed
+   */
+  public function markAsDeleted(string $path, ?string $filename = null) {
+    Log::debug(
+      sprintf("AbstractFileUploadStrategy:: markAsDeleted path %s filename %s", $path, $filename),
+    );
+    $from = empty($filename) ? $path : sprintf("%s/%s", $path, $filename);
+    $to = null;
+    if (empty($filename)) {
+      $parts = explode("/", $path);
+      $parts[count($parts) - 1] = sprintf("DELETED_%s", $parts[count($parts) - 1]);
+      $to = implode("/", $parts);
+    } else {
+      $to = sprintf("%s/DELETED_%s", $path, $filename);
     }
+    Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted from %s to %s", $from, $to));
+
+    return Storage::disk($this->getDriver())->move($from, $to);
+  }
 }

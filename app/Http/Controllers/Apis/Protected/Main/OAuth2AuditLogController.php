@@ -24,74 +24,76 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2AuditLogController
  * @package App\Http\Controllers
  */
-final class OAuth2AuditLogController extends OAuth2ProtectedController
-{
-    use ParametrizedGetAll;
+final class OAuth2AuditLogController extends OAuth2ProtectedController {
+  use ParametrizedGetAll;
 
-    /**
-     * OAuth2AuditLogController constructor.
-     * @param IAuditLogRepository $audit_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IAuditLogRepository $audit_repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $audit_repository;
-    }
+  /**
+   * OAuth2AuditLogController constructor.
+   * @param IAuditLogRepository $audit_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IAuditLogRepository $audit_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $audit_repository;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-
-        return $this->_getAll(
-            function () {
-                return [
-                    'class_name' => ['=='],
-                    'user_id'   => ['=='],
-                    'summit_id' => ['=='],
-                    'event_id'  => ['=='],
-                    'entity_id'  => ['=='],
-                    'user_email' => ['==', '=@','@@'],
-                    'user_full_name'  => ['==', '=@','@@'],
-                    'action'  => ['=@','@@'],
-                    'created' => ['==', '>', '<', '>=', '<=','[]'],
-                ];
-            },
-            function () {
-                return [
-                    'class_name' => 'required|string|in:' . implode(',', [SummitAuditLog::ClassName, SummitEventAuditLog::ClassName, SummitAttendeeBadgeAuditLog::ClassName]),
-                    'user_id'   => 'sometimes|integer',
-                    'summit_id' => 'sometimes|integer',
-                    'event_id'  => 'sometimes|integer',
-                    'entity_id'  => 'sometimes|integer',
-                    'user_email' => 'sometimes|string',
-                    'user_full_name' => 'sometimes|string',
-                    'action' => 'sometimes|string',
-                    'created' => 'sometimes|date_format:U',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'user_id',
-                    'event_id',
-                    'entity_id',
-                    'created',
-                    'user_email',
-                    'user_full_name',
-                ];
-            },
-            function($filter) {
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
-    }
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    return $this->_getAll(
+      function () {
+        return [
+          "class_name" => ["=="],
+          "user_id" => ["=="],
+          "summit_id" => ["=="],
+          "event_id" => ["=="],
+          "entity_id" => ["=="],
+          "user_email" => ["==", "=@", "@@"],
+          "user_full_name" => ["==", "=@", "@@"],
+          "action" => ["=@", "@@"],
+          "created" => ["==", ">", "<", ">=", "<=", "[]"],
+        ];
+      },
+      function () {
+        return [
+          "class_name" =>
+            "required|string|in:" .
+            implode(",", [
+              SummitAuditLog::ClassName,
+              SummitEventAuditLog::ClassName,
+              SummitAttendeeBadgeAuditLog::ClassName,
+            ]),
+          "user_id" => "sometimes|integer",
+          "summit_id" => "sometimes|integer",
+          "event_id" => "sometimes|integer",
+          "entity_id" => "sometimes|integer",
+          "user_email" => "sometimes|string",
+          "user_full_name" => "sometimes|string",
+          "action" => "sometimes|string",
+          "created" => "sometimes|date_format:U",
+        ];
+      },
+      function () {
+        return [
+          "id",
+          "user_id",
+          "event_id",
+          "entity_id",
+          "created",
+          "user_email",
+          "user_full_name",
+        ];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_Public;
+      },
+    );
+  }
 }

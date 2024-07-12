@@ -17,24 +17,23 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Summit;
 
-interface ISummitSignService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitSign|null
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function add(Summit $summit, array $payload):?SummitSign;
+interface ISummitSignService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitSign|null
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function add(Summit $summit, array $payload): ?SummitSign;
 
-    /**
-     * @param Summit $summit
-     * @param int $sign_id
-     * @param array $payload
-     * @return SummitSign|null
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function update(Summit $summit, int $sign_id, array $payload):?SummitSign;
+  /**
+   * @param Summit $summit
+   * @param int $sign_id
+   * @param array $payload
+   * @return SummitSign|null
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function update(Summit $summit, int $sign_id, array $payload): ?SummitSign;
 }

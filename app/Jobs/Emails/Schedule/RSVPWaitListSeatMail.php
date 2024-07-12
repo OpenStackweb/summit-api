@@ -16,15 +16,13 @@
  * Class RSVPWaitListSeatMail
  * @package App\Jobs\Emails\Schedule
  */
-class RSVPWaitListSeatMail extends RSVPMail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class RSVPWaitListSeatMail extends RSVPMail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SCHEDULE_RSVP_WAITLIST_SEAT_CREATION';
-    const EVENT_NAME = 'SUMMIT_SCHEDULE_RSVP_WAITLIST_SEAT_CREATION';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SCHEDULE_RSVP_WAITLIST_SEAT';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SCHEDULE_RSVP_WAITLIST_SEAT_CREATION";
+  const EVENT_NAME = "SUMMIT_SCHEDULE_RSVP_WAITLIST_SEAT_CREATION";
+  const DEFAULT_TEMPLATE = "SUMMIT_SCHEDULE_RSVP_WAITLIST_SEAT";
 }

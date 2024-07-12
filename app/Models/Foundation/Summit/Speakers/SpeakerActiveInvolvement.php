@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerActiveInvolvementRepository")
@@ -19,47 +19,42 @@ use models\utils\SilverstripeBaseModel;
  * Class SpeakerActiveInvolvement
  * @package models\summit
  */
-class SpeakerActiveInvolvement extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Involvement", type="string")
-     */
-    private $involvement;
+class SpeakerActiveInvolvement extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Involvement", type="string")
+   */
+  private $involvement;
 
-    /**
-     * @ORM\Column(name="IsDefault", type="boolean")
-     */
-    private $is_default;
+  /**
+   * @ORM\Column(name="IsDefault", type="boolean")
+   */
+  private $is_default;
 
-    /**
-     * @return mixed
-     */
-    public function getInvolvement()
-    {
-        return $this->involvement;
-    }
+  /**
+   * @return mixed
+   */
+  public function getInvolvement() {
+    return $this->involvement;
+  }
 
-    /**
-     * @param mixed $involvement
-     */
-    public function setInvolvement($involvement)
-    {
-        $this->involvement = $involvement;
-    }
+  /**
+   * @param mixed $involvement
+   */
+  public function setInvolvement($involvement) {
+    $this->involvement = $involvement;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isDefault()
-    {
-        return $this->is_default;
-    }
+  /**
+   * @return bool
+   */
+  public function isDefault() {
+    return $this->is_default;
+  }
 
-    /**
-     * @param bool $is_default
-     */
-    public function setIsDefault($is_default)
-    {
-        $this->is_default = $is_default;
-    }
+  /**
+   * @param bool $is_default
+   */
+  public function setIsDefault($is_default) {
+    $this->is_default = $is_default;
+  }
 }

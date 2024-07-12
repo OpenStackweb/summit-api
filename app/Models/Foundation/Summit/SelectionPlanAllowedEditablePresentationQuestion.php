@@ -20,49 +20,45 @@ use models\utils\SilverstripeBaseModel;
  * Class SelectionPlanAllowedEditablePresentationQuestion
  * @package App\Models\Foundation\Summit
  */
-class SelectionPlanAllowedEditablePresentationQuestion extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var String
-     */
-    private $type;
+class SelectionPlanAllowedEditablePresentationQuestion extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var String
+   */
+  private $type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_editable_presentation_questions", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
-     * @var SelectionPlan
-     */
-    private $selection_plan;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_editable_presentation_questions", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
+   * @var SelectionPlan
+   */
+  private $selection_plan;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param string $type
-     */
-    public function __construct(SelectionPlan $selection_plan, string $type)
-    {
-        parent::__construct();
-        $this->selection_plan = $selection_plan;
-        $this->type = trim($type);
-    }
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param string $type
+   */
+  public function __construct(SelectionPlan $selection_plan, string $type) {
+    parent::__construct();
+    $this->selection_plan = $selection_plan;
+    $this->type = trim($type);
+  }
 
-    /**
-     * @return String
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
+  /**
+   * @return String
+   */
+  public function getType(): string {
+    return $this->type;
+  }
 
-    /**
-     * @return SelectionPlan
-     */
-    public function getSelectionPlan(): SelectionPlan
-    {
-        return $this->selection_plan;
-    }
+  /**
+   * @return SelectionPlan
+   */
+  public function getSelectionPlan(): SelectionPlan {
+    return $this->selection_plan;
+  }
 
-    public function clearSelectionPlan():void{
-        $this->selection_plan = null;
-    }
+  public function clearSelectionPlan(): void {
+    $this->selection_plan = null;
+  }
 }

@@ -16,17 +16,16 @@
  * Class SummitRSVPLiteralContentQuestionTemplateValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRSVPLiteralContentQuestionTemplateValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-        if($update){
-            return ['content' => 'sometimes|string'];
-        }
-        return ['content' => 'required|string'];
+final class SummitRSVPLiteralContentQuestionTemplateValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return ["content" => "sometimes|string"];
     }
+    return ["content" => "required|string"];
+  }
 }

@@ -12,33 +12,30 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class ProjectSponsorshipTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class ProjectSponsorshipTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false)
-    {
-        if ($update) {
-            return [
-                'name' => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'is_active' => 'sometimes|boolean',
-                'order' => 'sometimes|integer|min:1',
-            ];
-        }
-        return [
-            'name' => 'required|string',
-            'description' => 'sometimes|string',
-            'is_active' => 'sometimes|boolean',
-            'order' => 'sometimes|integer|min:1',
-        ];
+final class ProjectSponsorshipTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string",
+        "description" => "sometimes|string",
+        "is_active" => "sometimes|boolean",
+        "order" => "sometimes|integer|min:1",
+      ];
     }
+    return [
+      "name" => "required|string",
+      "description" => "sometimes|string",
+      "is_active" => "sometimes|boolean",
+      "order" => "sometimes|integer|min:1",
+    ];
+  }
 }

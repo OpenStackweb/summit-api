@@ -19,47 +19,40 @@ use models\main\IGroupRepository;
  * Class DoctrineGroupRepository
  * @package repositories\main
  */
-final class DoctrineGroupRepository
-    extends SilverStripeDoctrineRepository
-    implements IGroupRepository
-{
+final class DoctrineGroupRepository extends SilverStripeDoctrineRepository implements
+  IGroupRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "code" => "e.code:json_string",
+      "title" => "e.title:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'code'  => 'e.code:json_string',
-            'title' => 'e.title:json_string',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "code" => "e.code",
+      "title" => "e.title",
+    ];
+  }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Group::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'code'  => 'e.code',
-            'title' => 'e.title',
-        ];
-    }
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return Group::class;
-    }
-
-    /**
-     * @param string $slug
-     * @return Group|null
-     */
-    public function getBySlug(string $slug): ?Group
-    {
-        return $this->findOneBy(['code'=>trim($slug)]);
-    }
+  /**
+   * @param string $slug
+   * @return Group|null
+   */
+  public function getBySlug(string $slug): ?Group {
+    return $this->findOneBy(["code" => trim($slug)]);
+  }
 }

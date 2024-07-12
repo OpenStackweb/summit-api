@@ -20,43 +20,38 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
  * @package App\Repositories\Summit
  */
 final class DoctrineSpeakerOrganizationalRoleRepository
-    extends SilverStripeDoctrineRepository
-    implements ISpeakerOrganizationalRoleRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISpeakerOrganizationalRoleRepository {
+  /**
+   * @return SpeakerOrganizationalRole[]
+   */
+  public function getDefaultOnes() {
+    return $this->findBy(["is_default" => true]);
+  }
 
-    /**
-     * @return SpeakerOrganizationalRole[]
-     */
-    public function getDefaultOnes()
-    {
-        return $this->findBy(["is_default" => true]);
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SpeakerOrganizationalRole::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SpeakerOrganizationalRole::class;
-    }
+  /**
+   * @param string $role
+   * @return SpeakerOrganizationalRole|null
+   */
+  public function getByRole($role) {
+    $query = <<<SQL
+          select * from SpeakerOrganizationalRole where
+          Role = :role
+    SQL;
+    // build rsm here
+    $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+    $rsm->addRootEntityFromClassMetadata(SpeakerOrganizationalRole::class, "r");
+    $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
-    /**
-     * @param string $role
-     * @return SpeakerOrganizationalRole|null
-     */
-    public function getByRole($role)
-    {
-        $query = <<<SQL
-      select * from SpeakerOrganizationalRole where
-      Role = :role
-SQL;
-        // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
-        $rsm->addRootEntityFromClassMetadata(SpeakerOrganizationalRole::class, 'r');
-        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
+    $native_query->setParameter("role", $role);
 
-        $native_query->setParameter("role", $role);
-
-        return $native_query->getOneOrNullResult();
-    }
+    return $native_query->getOneOrNullResult();
+  }
 }

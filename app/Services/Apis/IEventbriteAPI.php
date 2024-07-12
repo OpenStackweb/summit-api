@@ -18,43 +18,55 @@ use models\summit\Summit;
  * Interface IEventbriteAPI
  * @package services\apis
  */
-interface IEventbriteAPI
-{
-    const QuestionChoicesCharSeparator = '|';
-    /**
-     * @param array $auth_info
-     * @return $this
-     */
-    public function setCredentials(array $auth_info);
+interface IEventbriteAPI {
+  const QuestionChoicesCharSeparator = "|";
+  /**
+   * @param array $auth_info
+   * @return $this
+   */
+  public function setCredentials(array $auth_info);
 
-     /**
-     * @param string $order_id
-     * @return mixed
-     */
-    public function getOrder($order_id);
+  /**
+   * @param string $order_id
+   * @return mixed
+   */
+  public function getOrder($order_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $page
-     * @param string $expand
-     * @return mixed
-     */
-    public function getTicketTypes(Summit $summit, int $page = 1, string $expand = 'ticket_classes'):IExternalRegistrationFeedResponse;
+  /**
+   * @param Summit $summit
+   * @param int $page
+   * @param string $expand
+   * @return mixed
+   */
+  public function getTicketTypes(
+    Summit $summit,
+    int $page = 1,
+    string $expand = "ticket_classes",
+  ): IExternalRegistrationFeedResponse;
 
-    /**
-     * @param Summit $summit
-     * @param int $page
-     * @param string $expand
-     * @return mixed
-     */
-    public function getExtraQuestions(Summit $summit,int $page = 1, string $expand = null):IExternalRegistrationFeedResponse;
+  /**
+   * @param Summit $summit
+   * @param int $page
+   * @param string $expand
+   * @return mixed
+   */
+  public function getExtraQuestions(
+    Summit $summit,
+    int $page = 1,
+    string $expand = null,
+  ): IExternalRegistrationFeedResponse;
 
-    /**
-     * @param Summit $summit
-     * @param int $page
-     * @param DateTime|null $changed_since
-     * @param string $expand
-     * @return mixed
-     */
-    public function getAttendees(Summit $summit, int $page = 1, ?DateTime $changed_since = null, string $expand = 'promotional_code');
+  /**
+   * @param Summit $summit
+   * @param int $page
+   * @param DateTime|null $changed_since
+   * @param string $expand
+   * @return mixed
+   */
+  public function getAttendees(
+    Summit $summit,
+    int $page = 1,
+    ?DateTime $changed_since = null,
+    string $expand = "promotional_code",
+  );
 }

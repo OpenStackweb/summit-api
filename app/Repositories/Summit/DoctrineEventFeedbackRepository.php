@@ -30,97 +30,94 @@ use Doctrine\ORM\Query\Expr\Join;
  * Class DoctrineEventFeedbackRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineEventFeedbackRepository
-    extends SilverStripeDoctrineRepository
-    implements IEventFeedbackRepository
-{
+final class DoctrineEventFeedbackRepository extends SilverStripeDoctrineRepository implements
+  IEventFeedbackRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "owner_id" => "o.id",
+      "owner_full_name" => new DoctrineFilterMapping(
+        "concat(o.first_name, ' ', o.last_name) :operator :value",
+      ),
+      "note" => "f.note",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'owner_id' => 'o.id',
-            'owner_full_name' => new DoctrineFilterMapping("concat(o.first_name, ' ', o.last_name) :operator :value"),
-            'note' => 'f.note'
-        ];
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "created" => "f.created",
+      "owner_id" => "o.id",
+      "rate" => "f.rate",
+      "id" => "f.id",
+      "owner_full_name" => <<<SQL
+      LOWER(CONCAT(o.first_name, ' ', o.last_name))
+      SQL
+    ,
+    ];
+  }
+
+  /**
+   * @param SummitEvent $event
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getByEvent(
+    SummitEvent $event,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("f")
+      ->from(\models\summit\SummitEventFeedback::class, "f")
+      ->join("f.event", "e", Join::WITH, " e.id = :event_id")
+      ->join("f.owner", "o")
+      ->setParameter("event_id", $event->getId());
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings());
     }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'created'      => 'f.created',
-            'owner_id'     => 'o.id',
-            'rate'         => 'f.rate',
-            'id'           => 'f.id',
-            "owner_full_name" => <<<SQL
-LOWER(CONCAT(o.first_name, ' ', o.last_name))
-SQL,
-        ];
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings());
+    } else {
+      //default order
+      $query = $query->orderBy("f.created", Criteria::DESC);
     }
 
-    /**
-     * @param SummitEvent $event
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getByEvent(SummitEvent $event, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
-        $query  = $this->getEntityManager()
-                ->createQueryBuilder()
-                ->select("f")
-                ->from(\models\summit\SummitEventFeedback::class, "f")
-                ->join('f.event', 'e', Join::WITH, " e.id = :event_id")
-                ->join('f.owner', 'o')
-                ->setParameter('event_id', $event->getId());
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-        if(!is_null($filter)){
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
 
-            $filter->apply2Query($query, $this->getFilterMappings());
-        }
-
-        if(!is_null($order))
-        {
-            $order->apply2Query($query, $this->getOrderMappings());
-        }
-        else
-        {
-            //default order
-            $query = $query->orderBy('f.created' , Criteria::DESC);
-        }
-
-        $query= $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = array();
-
-        foreach($paginator as $entity)
-            array_push($data, $entity);
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+    foreach ($paginator as $entity) {
+      array_push($data, $entity);
     }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return SummitEventFeedback::class;
-    }
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
+
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitEventFeedback::class;
+  }
 }

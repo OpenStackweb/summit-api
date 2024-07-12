@@ -11,32 +11,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrackCheckBoxQuestionTemplate")
  * Class TrackCheckBoxQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackCheckBoxQuestionTemplate extends TrackSingleValueTemplateQuestion
-{
-    const ClassName = 'TrackCheckBoxQuestionTemplate';
+class TrackCheckBoxQuestionTemplate extends TrackSingleValueTemplateQuestion {
+  const ClassName = "TrackCheckBoxQuestionTemplate";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public static $metadata = [
-        'class_name'  => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(TrackSingleValueTemplateQuestion::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(TrackSingleValueTemplateQuestion::getMetadata(), self::$metadata);
+  }
 }

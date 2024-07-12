@@ -24,52 +24,59 @@ use models\summit\SummitSponsorshipType;
  * Interface ISummitSponsorshipTypeService
  * @package App\Services\Model
  */
-interface ISummitSponsorshipTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitSponsorshipType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload):SummitSponsorshipType;
+interface ISummitSponsorshipTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitSponsorshipType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): SummitSponsorshipType;
 
-    /**
-     * @param Summit $summit
-     * @param int $sponsorship_id
-     * @param array $payload
-     * @return SummitSponsorshipType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $sponsorship_id, array $payload):SummitSponsorshipType;
+  /**
+   * @param Summit $summit
+   * @param int $sponsorship_id
+   * @param array $payload
+   * @return SummitSponsorshipType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(
+    Summit $summit,
+    int $sponsorship_id,
+    array $payload,
+  ): SummitSponsorshipType;
 
-    /**
-     * @param Summit $summit
-     * @param int $sponsorship_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $sponsorship_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $sponsorship_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $sponsorship_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $sponsorship_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @return File
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addBadgeImage(Summit $summit, int $sponsorship_id, UploadedFile $file, $max_file_size = IFileConstants::MaxImageSizeInBytes):File;
+  /**
+   * @param Summit $summit
+   * @param int $sponsorship_id
+   * @param UploadedFile $file
+   * @param int $max_file_size
+   * @return File
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addBadgeImage(
+    Summit $summit,
+    int $sponsorship_id,
+    UploadedFile $file,
+    $max_file_size = IFileConstants::MaxImageSizeInBytes,
+  ): File;
 
-    /**
-     * @param Summit $summit
-     * @param int $sponsorship_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteBadgeImage(Summit $summit, int $sponsorship_id):void;
-
+  /**
+   * @param Summit $summit
+   * @param int $sponsorship_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteBadgeImage(Summit $summit, int $sponsorship_id): void;
 }

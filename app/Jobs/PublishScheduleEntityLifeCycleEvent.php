@@ -23,63 +23,62 @@ use Illuminate\Support\Facades\Log;
  * Class PublishScheduleEntityLifeCycleEvent
  * @package App\Jobs
  */
-class PublishScheduleEntityLifeCycleEvent
-    implements ShouldQueue
-{
-    public $tries = 5;
+class PublishScheduleEntityLifeCycleEvent implements ShouldQueue {
+  public $tries = 5;
 
-    public $timeout = 0;
+  public $timeout = 0;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var string
-     */
-    public $entity_operator;
+  /**
+   * @var string
+   */
+  public $entity_operator;
 
-    /**
-     * @var int
-     */
-    public $summit_id;
+  /**
+   * @var int
+   */
+  public $summit_id;
 
-    /**
-     * @var int
-     */
-    public $entity_id;
+  /**
+   * @var int
+   */
+  public $entity_id;
 
-    /**
-     * @var string
-     */
-    public $entity_type;
+  /**
+   * @var string
+   */
+  public $entity_type;
 
-    /**
-     * @param string $entity_operator
-     * @param int $summit_id
-     * @param int $entity_id
-     * @param string $entity_type
-     */
-    public function __construct(string $entity_operator, int $summit_id, int $entity_id, string $entity_type)
-    {
-        $this->entity_operator = $entity_operator;
-        $this->summit_id = $summit_id;
-        $this->entity_id = $entity_id;
-        $this->entity_type = $entity_type;
+  /**
+   * @param string $entity_operator
+   * @param int $summit_id
+   * @param int $entity_id
+   * @param string $entity_type
+   */
+  public function __construct(
+    string $entity_operator,
+    int $summit_id,
+    int $entity_id,
+    string $entity_type,
+  ) {
+    $this->entity_operator = $entity_operator;
+    $this->summit_id = $summit_id;
+    $this->entity_id = $entity_id;
+    $this->entity_type = $entity_type;
 
-        Log::debug
-        (
-            sprintf
-            (
-                "PublishScheduleEntityLifeCycleEvent::PublishScheduleEntityLifeCycleEvent %s %s %s %s",
-                $entity_operator,
-                $summit_id,
-                $entity_id,
-                $entity_type
-            )
-        );
-    }
+    Log::debug(
+      sprintf(
+        "PublishScheduleEntityLifeCycleEvent::PublishScheduleEntityLifeCycleEvent %s %s %s %s",
+        $entity_operator,
+        $summit_id,
+        $entity_id,
+        $entity_type,
+      ),
+    );
+  }
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }

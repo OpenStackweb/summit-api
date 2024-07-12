@@ -25,34 +25,32 @@ use models\exceptions\EntityNotFoundException;
  * RabbitMQ job
  * @package App\Jobs
  */
-class PublishUserUpdated implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class PublishUserUpdated implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    public $user_id;
-    /**
-     * @var string
-     */
-    public $user_email;
+  /**
+   * @var int
+   */
+  public $user_id;
+  /**
+   * @var string
+   */
+  public $user_email;
 
-    /**
-     * @param IMemberService $service
-     */
-    public function handle(IMemberService $service)
-    {
-        Log::debug(sprintf("PublishUserUpdated::handle user updated %s %s", $this->user_id, $this->user_email));
+  /**
+   * @param IMemberService $service
+   */
+  public function handle(IMemberService $service) {
+    Log::debug(
+      sprintf("PublishUserUpdated::handle user updated %s %s", $this->user_id, $this->user_email),
+    );
 
-        try {
-            $service->registerExternalUserById($this->user_id);
-        }
-        catch (EntityNotFoundException $ex){
-            Log::warning($ex);
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-        }
+    try {
+      $service->registerExternalUserById($this->user_id);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+  }
 }

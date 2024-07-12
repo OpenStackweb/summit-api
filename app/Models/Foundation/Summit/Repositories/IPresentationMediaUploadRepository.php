@@ -12,10 +12,7 @@
  * limitations under the License.
  **/
 
-
 use models\utils\IBaseRepository;
 
-interface IPresentationMediaUploadRepository extends IBaseRepository
-{
-
+interface IPresentationMediaUploadRepository extends IBaseRepository {
 }

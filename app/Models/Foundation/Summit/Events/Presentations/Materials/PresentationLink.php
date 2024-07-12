@@ -11,56 +11,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * Class PresentationLink
  * @ORM\Entity
  * @ORM\Table(name="PresentationLink")
  * @package models\summit
  */
-class PresentationLink extends PresentationMaterial
-{
-    const ClassName = 'PresentationLink';
+class PresentationLink extends PresentationMaterial {
+  const ClassName = "PresentationLink";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLink()
-    {
-        return $this->link;
-    }
+  /**
+   * @return string
+   */
+  public function getLink() {
+    return $this->link;
+  }
 
-    /**
-     * @param string $link
-     */
-    public function setLink($link)
-    {
-        $this->link = $link;
-    }
-    /**
-     * @ORM\Column(name="Link", type="string")
-     * @var string
-     */
-    private $link;
+  /**
+   * @param string $link
+   */
+  public function setLink($link) {
+    $this->link = $link;
+  }
+  /**
+   * @ORM\Column(name="Link", type="string")
+   * @var string
+   */
+  private $link;
 
-    /**
-     * @return PresentationMaterial
-     */
-    public function clone(): PresentationMaterial {
-        $clone = parent::clone();
-        $clone->setLink($this->getLink());
-        return $clone;
-    }
+  /**
+   * @return PresentationMaterial
+   */
+  public function clone(): PresentationMaterial {
+    $clone = parent::clone();
+    $clone->setLink($this->getLink());
+    return $clone;
+  }
 
-    protected function createInstance(): PresentationMaterial
-    {
-        return new PresentationSlide();
-    }
+  protected function createInstance(): PresentationMaterial {
+    return new PresentationSlide();
+  }
 }

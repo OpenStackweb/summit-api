@@ -16,14 +16,13 @@ use models\summit\Summit;
  * Interface IScheduleIngestionService
  * @package App\Services\Model
  */
-interface IScheduleIngestionService
-{
-    public function ingestAllSummits():void;
+interface IScheduleIngestionService {
+  public function ingestAllSummits(): void;
 
-    /**
-     * @param Summit $summit
-     * @return array
-     * @throws \Exception
-     */
-    public function ingestSummit(Summit $summit):array;
+  /**
+   * @param Summit $summit
+   * @return array
+   * @throws \Exception
+   */
+  public function ingestSummit(Summit $summit): array;
 }

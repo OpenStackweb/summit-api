@@ -13,16 +13,14 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IEmailActionsStrategyFactory
  * @package App\Services\Model\Strategies
  */
-interface IEmailActionsStrategyFactory
-{
-    /**
-     * @param String $flow_event
-     * @return AbstractEmailAction|null
-     */
-    public function build(String $flow_event): ?AbstractEmailAction;
+interface IEmailActionsStrategyFactory {
+  /**
+   * @param String $flow_event
+   * @return AbstractEmailAction|null
+   */
+  public function build(string $flow_event): ?AbstractEmailAction;
 }

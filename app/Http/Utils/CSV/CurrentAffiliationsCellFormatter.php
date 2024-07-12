@@ -16,25 +16,29 @@
  * Class CurrentAffiliationsCellFormatter
  * @package App\Http\Utils
  */
-final class CurrentAffiliationsCellFormatter implements ICellFormatter
-{
-
-    /**
-     * @param string $val
-     * @return string
-     */
-    public function format($val)
-    {
-        $res = "";
-        foreach ($val as $affiliation){
-            if(!isset($affiliation['is_current'])) continue;
-            if(boolval($affiliation['is_current']) == false) continue;
-            if(!isset($affiliation['organization'])) continue;
-            $organization = $affiliation['organization'];
-            if(!empty($res))
-                $res .= '|';
-            $res .= $organization['name'];
-        }
-       return $res;
+final class CurrentAffiliationsCellFormatter implements ICellFormatter {
+  /**
+   * @param string $val
+   * @return string
+   */
+  public function format($val) {
+    $res = "";
+    foreach ($val as $affiliation) {
+      if (!isset($affiliation["is_current"])) {
+        continue;
+      }
+      if (boolval($affiliation["is_current"]) == false) {
+        continue;
+      }
+      if (!isset($affiliation["organization"])) {
+        continue;
+      }
+      $organization = $affiliation["organization"];
+      if (!empty($res)) {
+        $res .= "|";
+      }
+      $res .= $organization["name"];
     }
+    return $res;
+  }
 }

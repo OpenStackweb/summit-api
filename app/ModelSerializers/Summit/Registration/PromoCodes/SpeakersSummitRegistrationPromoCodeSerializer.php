@@ -18,45 +18,47 @@ use models\summit\SpeakersSummitRegistrationPromoCode;
  * Class SpeakersSummitRegistrationPromoCodeSerializer
  * @package ModelSerializers
  */
-class SpeakersSummitRegistrationPromoCodeSerializer
-    extends SummitRegistrationPromoCodeSerializer
-{
-    protected static $array_mappings = [
-        'Type' => 'type:json_string',
-    ];
+class SpeakersSummitRegistrationPromoCodeSerializer extends SummitRegistrationPromoCodeSerializer {
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'ticket_types_rules',
-    ];
+  protected static $allowed_relations = ["ticket_types_rules"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code = $this->object;
-        if(!$code instanceof SpeakersSummitRegistrationPromoCode) return [];
-        $values  = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SpeakersSummitRegistrationPromoCode) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('owners', $relations) && !isset($values['owners'])){
-            $owners = [];
-            foreach ($code->getOwners() as $owner){
-                $owners[] = $owner->getId();
-            }
-            $values['owners'] = $owners;
-        }
-
-        return $values;
+    if (in_array("owners", $relations) && !isset($values["owners"])) {
+      $owners = [];
+      foreach ($code->getOwners() as $owner) {
+        $owners[] = $owner->getId();
+      }
+      $values["owners"] = $owners;
     }
 
-    protected static $expand_mappings = [
-        'owners' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getOwners',
-        ]
-    ];
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "owners" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getOwners",
+    ],
+  ];
 }

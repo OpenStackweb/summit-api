@@ -12,12 +12,10 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IRenderersFormats
  * @package App\Http\Renderers
  */
-interface IRenderersFormats
-{
-    const PDFFormat = 'PDF';
+interface IRenderersFormats {
+  const PDFFormat = "PDF";
 }

@@ -17,27 +17,34 @@ use models\summit\SummitAttendeeTicket;
  * Class PublicEditionSummitAttendeeTicketSerializer
  * @package ModelSerializers
  */
-class PublicEditionSummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer
-{   /**
- * @param null $expand
- * @param array $fields
- * @param array $relations
- * @param array $params
- * @return array
- */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $ticket = $this->object;
-        if (!$ticket instanceof SummitAttendeeTicket) return [];
-        $values   = parent::serialize($expand, $fields, $relations, $params);
-
-        $order_extra_questions = [];
-        $summit = $ticket->getOrder()->getSummit();
-        foreach ($summit->getOrderExtraQuestions() as $question) {
-            $order_extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(AbstractSerializer::filterExpandByPrefix($expand,"order_extra_questions"));
-        }
-        $values['order_extra_questions'] = $order_extra_questions;
-
-        return $values;
+class PublicEditionSummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */ {
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $ticket = $this->object;
+    if (!$ticket instanceof SummitAttendeeTicket) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $order_extra_questions = [];
+    $summit = $ticket->getOrder()->getSummit();
+    foreach ($summit->getOrderExtraQuestions() as $question) {
+      $order_extra_questions[] = SerializerRegistry::getInstance()
+        ->getSerializer($question)
+        ->serialize(AbstractSerializer::filterExpandByPrefix($expand, "order_extra_questions"));
+    }
+    $values["order_extra_questions"] = $order_extra_questions;
+
+    return $values;
+  }
 }

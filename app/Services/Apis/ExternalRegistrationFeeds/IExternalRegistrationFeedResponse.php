@@ -16,11 +16,10 @@ use Iterator;
  * Interface IExternalRegistrationFeedResponse
  * @package App\Services\Apis\ExternalRegistrationFeeds
  */
-interface IExternalRegistrationFeedResponse extends Iterator
-{
-    public function hasData():bool;
+interface IExternalRegistrationFeedResponse extends Iterator {
+  public function hasData(): bool;
 
-    public function hasMoreItems():bool;
+  public function hasMoreItems(): bool;
 
-    public function pageCount():int;
+  public function pageCount(): int;
 }

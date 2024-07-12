@@ -19,41 +19,36 @@ use models\utils\IBaseRepository;
  * Class OAuth2ProtectedController
  * OAuth2 Protected Base API
  */
-abstract class OAuth2ProtectedController extends JsonController
-{
+abstract class OAuth2ProtectedController extends JsonController {
+  /**
+   * @var IResourceServerContext
+   */
+  protected $resource_server_context;
 
-    /**
-     * @var IResourceServerContext
-     */
-    protected $resource_server_context;
+  /**
+   * @var IBaseRepository
+   */
+  protected $repository;
 
-    /**
-     * @var IBaseRepository
-     */
-    protected $repository;
+  /**
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(IResourceServerContext $resource_server_context) {
+    parent::__construct();
+    $this->resource_server_context = $resource_server_context;
+  }
 
-    /**
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct(IResourceServerContext $resource_server_context)
-    {
-        parent::__construct();
-        $this->resource_server_context = $resource_server_context;
-    }
+  /**
+   * @return IResourceServerContext
+   */
+  protected function getResourceServerContext(): IResourceServerContext {
+    return $this->resource_server_context;
+  }
 
-    /**
-     * @return IResourceServerContext
-     */
-    protected function getResourceServerContext(): IResourceServerContext
-    {
-        return $this->resource_server_context;
-    }
-
-    /**
-     * @return IBaseRepository
-     */
-    protected function getRepository(): IBaseRepository
-    {
-        return $this->repository;
-    }
+  /**
+   * @return IBaseRepository
+   */
+  protected function getRepository(): IBaseRepository {
+    return $this->repository;
+  }
 }

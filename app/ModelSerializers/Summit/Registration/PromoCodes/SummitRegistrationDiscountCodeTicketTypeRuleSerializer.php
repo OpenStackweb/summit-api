@@ -19,61 +19,64 @@ use models\summit\SummitRegistrationDiscountCodeTicketTypeRule;
  * Class SummitRegistrationDiscountCodeTicketTypeRuleSerializer
  * @package ModelSerializers
  */
-final class SummitRegistrationDiscountCodeTicketTypeRuleSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Rate' => 'rate:json_float',
-        'Amount' => 'amount:json_float',
-        'TicketTypeId' => 'ticket_type_id:json_int',
-        'DiscountCodeId' => 'discount_code_id:json_int',
-    ];
+final class SummitRegistrationDiscountCodeTicketTypeRuleSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Rate" => "rate:json_float",
+    "Amount" => "amount:json_float",
+    "TicketTypeId" => "ticket_type_id:json_int",
+    "DiscountCodeId" => "discount_code_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $rule = $this->object;
-        if (!$rule instanceof SummitRegistrationDiscountCodeTicketTypeRule) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'ticket_type':
-                        {
-                            unset($values['ticket_type_id']);
-                            $values['ticket_type'] = SerializerRegistry::getInstance()->getSerializer($rule->getTicketType())->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        break;
-                    case 'discount_code':
-                        {
-                            unset($values['discount_code_id']);
-                            $values['discount_code'] = SerializerRegistry::getInstance()->getSerializer($rule->getDiscountCode())->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        break;
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $rule = $this->object;
+    if (!$rule instanceof SummitRegistrationDiscountCodeTicketTypeRule) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "ticket_type":
+            unset($values["ticket_type_id"]);
+            $values["ticket_type"] = SerializerRegistry::getInstance()
+              ->getSerializer($rule->getTicketType())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+          case "discount_code":
+            unset($values["discount_code_id"]);
+            $values["discount_code"] = SerializerRegistry::getInstance()
+              ->getSerializer($rule->getDiscountCode())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

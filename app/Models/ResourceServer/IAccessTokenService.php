@@ -20,12 +20,11 @@ use models\oauth2\AccessToken;
  * Interface IAccessTokenService
  * @package App\Models\ResourceServer
  */
-interface IAccessTokenService
-{
-    /**
-     * @param string $token_value
-     * @return AccessToken
-     * @throws OAuth2InvalidIntrospectionResponse
-     */
-    public function get($token_value);
+interface IAccessTokenService {
+  /**
+   * @param string $token_value
+   * @return AccessToken
+   * @throws OAuth2InvalidIntrospectionResponse
+   */
+  public function get($token_value);
 }

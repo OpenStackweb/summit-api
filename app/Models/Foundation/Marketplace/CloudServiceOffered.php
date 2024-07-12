@@ -12,50 +12,46 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="CloudServiceOffered")
  * Class CloudServiceOffered
  * @package App\Models\Foundation\Marketplace
  */
-class CloudServiceOffered extends OpenStackImplementationApiCoverage
-{
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
+class CloudServiceOffered extends OpenStackImplementationApiCoverage {
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  private $type;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Marketplace\PricingSchemaType", cascade={"persist"})
-     * @ORM\JoinTable(name="CloudServiceOffered_PricingSchemas",
-     *      joinColumns={@ORM\JoinColumn(name="CloudServiceOfferedID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PricingSchemaTypeID", referencedColumnName="ID")}
-     *      )
-     * @var PricingSchemaType[]
-     */
-    private $pricing_schemas;
+  /**
+   * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Marketplace\PricingSchemaType", cascade={"persist"})
+   * @ORM\JoinTable(name="CloudServiceOffered_PricingSchemas",
+   *      joinColumns={@ORM\JoinColumn(name="CloudServiceOfferedID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="PricingSchemaTypeID", referencedColumnName="ID")}
+   *      )
+   * @var PricingSchemaType[]
+   */
+  private $pricing_schemas;
 
-    /**
-     * @return string
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @return string
+   */
+  public function getType() {
+    return $this->type;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->pricing_schemas = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->pricing_schemas = new ArrayCollection();
+  }
 
-    /**
-     * @return PricingSchemaType[]
-     */
-    public function getPricingSchemas()
-    {
-        return $this->pricing_schemas->toArray();
-    }
+  /**
+   * @return PricingSchemaType[]
+   */
+  public function getPricingSchemas() {
+    return $this->pricing_schemas->toArray();
+  }
 }

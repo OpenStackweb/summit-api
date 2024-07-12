@@ -17,7 +17,6 @@ use models\utils\IBaseRepository;
  * Interface ISponsoredProjectRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface ISponsoredProjectRepository extends IBaseRepository
-{
-    public function getByName(string $name):?SponsoredProject;
+interface ISponsoredProjectRepository extends IBaseRepository {
+  public function getByName(string $name): ?SponsoredProject;
 }

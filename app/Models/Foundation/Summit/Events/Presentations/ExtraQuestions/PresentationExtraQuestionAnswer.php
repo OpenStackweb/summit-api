@@ -22,48 +22,41 @@ use models\utils\One2ManyPropertyTrait;
  * Class PresentationExtraQuestionAnswer
  * @package App\ModelSerializers\Summit\Presentation\ExtraQuestions
  */
-class PresentationExtraQuestionAnswer
-    extends ExtraQuestionAnswer
-{
+class PresentationExtraQuestionAnswer extends ExtraQuestionAnswer {
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="extra_question_answers")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID")
+   * @var Presentation
+   */
+  private $presentation;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID")
-     * @var Presentation
-     */
-    private $presentation;
+  /**
+   * @return Presentation
+   */
+  public function getPresentation(): Presentation {
+    return $this->presentation;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation(): Presentation
-    {
-        return $this->presentation;
-    }
+  /**
+   * @param Presentation $presentation
+   */
+  public function setPresentation(Presentation $presentation): void {
+    $this->presentation = $presentation;
+  }
 
-    /**
-     * @param Presentation $presentation
-     */
-    public function setPresentation(Presentation $presentation): void
-    {
-        $this->presentation = $presentation;
-    }
+  public function clearPresentation() {
+    $this->presentation = null;
+  }
 
-    public function clearPresentation()
-    {
-        $this->presentation = null;
-    }
+  use One2ManyPropertyTrait;
 
-    use One2ManyPropertyTrait;
+  protected $getIdMappings = [
+    "getPresentationId" => "presentation",
+    "getQuestionId" => "question",
+  ];
 
-    protected $getIdMappings = [
-        'getPresentationId' => 'presentation',
-        'getQuestionId' => 'question',
-    ];
-
-    protected $hasPropertyMappings = [
-        'hasPresentation' => 'presentation',
-        'hasQuestion' => 'question',
-    ];
-
+  protected $hasPropertyMappings = [
+    "hasPresentation" => "presentation",
+    "hasQuestion" => "question",
+  ];
 }

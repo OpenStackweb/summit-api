@@ -16,9 +16,8 @@
  * Class TrackSingleValueTemplateQuestionSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-class TrackSingleValueTemplateQuestionSerializer extends TrackQuestionTemplateSerializer
-{
-    protected static $array_mappings = [
-        'InitialValue'   => 'initial_value:json_string',
-    ];
+class TrackSingleValueTemplateQuestionSerializer extends TrackQuestionTemplateSerializer {
+  protected static $array_mappings = [
+    "InitialValue" => "initial_value:json_string",
+  ];
 }

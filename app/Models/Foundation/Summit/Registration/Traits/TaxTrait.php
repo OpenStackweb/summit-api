@@ -16,49 +16,44 @@
  * Trait TaxTrait
  * @package App\Models\Foundation\Summit\Registration\Traits
  */
-trait TaxTrait
-{
+trait TaxTrait {
+  /**
+   * @return float
+   */
+  public function getRate(): float {
+    return $this->rate;
+  }
 
-    /**
-     * @return float
-     */
-    public function getRate(): float
-    {
-        return $this->rate;
-    }
+  /**
+   * @param float $rate
+   */
+  public function setRate(float $rate): void {
+    $this->rate = $rate;
+  }
 
-    /**
-     * @param float $rate
-     */
-    public function setRate(float $rate): void
-    {
-        $this->rate = $rate;
-    }
+  public function getRoundingStrategy(): int {
+    return PHP_ROUND_HALF_UP;
+  }
 
-    public function getRoundingStrategy():int{
-        return PHP_ROUND_HALF_UP;
-    }
+  public function getRoundingPrecision(): int {
+    return 2;
+  }
 
-    public function getRoundingPrecision():int{
-        return 2;
-    }
+  /**
+   * @param float $amount
+   * @param bool $should_apply_rounding
+   * @return float
+   */
+  public function applyTo(float $amount, bool $should_apply_rounding = true): float {
+    $res = $amount * $this->getRate();
+    return $should_apply_rounding ? $this->round($res) / 100.0 : $res / 100.0;
+  }
 
-    /**
-     * @param float $amount
-     * @param bool $should_apply_rounding
-     * @return float
-     */
-    public function applyTo(float $amount, bool $should_apply_rounding = true):float{
-        $res = $amount * $this->getRate();
-        return $should_apply_rounding ? $this->round($res) / 100.00 :
-            $res / 100.00;
-    }
-
-    /**
-     * @param float $amount
-     * @return float
-     */
-    public function round(float $amount):float{
-        return round($amount, $this->getRoundingPrecision(), $this->getRoundingStrategy());
-    }
+  /**
+   * @param float $amount
+   * @return float
+   */
+  public function round(float $amount): float {
+    return round($amount, $this->getRoundingPrecision(), $this->getRoundingStrategy());
+  }
 }

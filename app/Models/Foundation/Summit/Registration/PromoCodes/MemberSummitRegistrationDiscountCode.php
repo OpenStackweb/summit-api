@@ -14,7 +14,7 @@
 
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\Member;
 /**
  * @ORM\Entity
@@ -22,49 +22,44 @@ use models\main\Member;
  * Class MemberSummitRegistrationDiscountCode
  * @package models\summit
  */
-class MemberSummitRegistrationDiscountCode
-    extends SummitRegistrationDiscountCode
-    implements IOwnablePromoCode
-{
-    use MemberPromoCodeTrait;
+class MemberSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode implements
+  IOwnablePromoCode {
+  use MemberPromoCodeTrait;
 
-    const ClassName = 'MEMBER_DISCOUNT_CODE';
+  const ClassName = "MEMBER_DISCOUNT_CODE";
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-        'first_name' => 'string',
-        'last_name'  => 'string',
-        'email'      => 'string',
-        'type'       => PromoCodesConstants::MemberSummitRegistrationPromoCodeTypes,
-        'owner_id'   => 'integer'
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "first_name" => "string",
+    "last_name" => "string",
+    "email" => "string",
+    "type" => PromoCodesConstants::MemberSummitRegistrationPromoCodeTypes,
+    "owner_id" => "integer",
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public function getOwnerFullname(): string
-    {
-        return  $this->getFullName();
-    }
+  public function getOwnerFullname(): string {
+    return $this->getFullName();
+  }
 
-    public function getOwnerEmail(): string
-    {
-        return $this->getEmail();
-    }
+  public function getOwnerEmail(): string {
+    return $this->getEmail();
+  }
 
-    public function getOwnerType(): string
-    {
-        return "MEMBER";
-    }
+  public function getOwnerType(): string {
+    return "MEMBER";
+  }
 }

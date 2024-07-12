@@ -16,53 +16,64 @@ use models\summit\SummitMediaUploadType;
  * Class SummitMediaUploadTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitMediaUploadTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SummitMediaUploadType
-     */
-    public static function build(array $data):SummitMediaUploadType {
-        return self::populate(new SummitMediaUploadType, $data);
+final class SummitMediaUploadTypeFactory {
+  /**
+   * @param array $data
+   * @return SummitMediaUploadType
+   */
+  public static function build(array $data): SummitMediaUploadType {
+    return self::populate(new SummitMediaUploadType(), $data);
+  }
+
+  /**
+   * @param SummitMediaUploadType $type
+   * @param array $data
+   * @return SummitMediaUploadType
+   */
+  public static function populate(SummitMediaUploadType $type, array $data): SummitMediaUploadType {
+    if (isset($data["name"])) {
+      $type->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitMediaUploadType $type
-     * @param array $data
-     * @return SummitMediaUploadType
-     */
-    public static function populate(SummitMediaUploadType $type, array $data):SummitMediaUploadType {
-
-        if(isset($data['name']))
-            $type->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $type->setDescription(trim($data['description']));
-
-        if(isset($data['max_size'])) // in KB
-            $type->setMaxSize(intval($data['max_size']));
-
-        if(isset($data['private_storage_type']))
-            $type->setPrivateStorageType(trim($data['private_storage_type']));
-
-        if(isset($data['temporary_links_public_storage_ttl']))
-            $type->setTemporaryLinksPublicStorageTtl(intval($data['temporary_links_public_storage_ttl']));
-
-        if(isset($data['use_temporary_links_on_public_storage']))
-            $type->setUseTemporaryLinksOnPublicStorage(boolval($data['use_temporary_links_on_public_storage']));
-
-        if(isset($data['public_storage_type']))
-            $type->setPublicStorageType(trim($data['public_storage_type']));
-
-        if(isset($data['min_uploads_qty']))
-            $type->setMinUploadsQty(intval($data['min_uploads_qty']));
-
-        if(isset($data['max_uploads_qty']))
-            $type->setMaxUploadsQty(intval($data['max_uploads_qty']));
-
-        if(isset($data['is_editable']))
-            $type->setIsEditable(boolval($data['is_editable']));
-
-        return $type;
+    if (isset($data["description"])) {
+      $type->setDescription(trim($data["description"]));
     }
+
+    if (isset($data["max_size"])) {
+      // in KB
+      $type->setMaxSize(intval($data["max_size"]));
+    }
+
+    if (isset($data["private_storage_type"])) {
+      $type->setPrivateStorageType(trim($data["private_storage_type"]));
+    }
+
+    if (isset($data["temporary_links_public_storage_ttl"])) {
+      $type->setTemporaryLinksPublicStorageTtl(intval($data["temporary_links_public_storage_ttl"]));
+    }
+
+    if (isset($data["use_temporary_links_on_public_storage"])) {
+      $type->setUseTemporaryLinksOnPublicStorage(
+        boolval($data["use_temporary_links_on_public_storage"]),
+      );
+    }
+
+    if (isset($data["public_storage_type"])) {
+      $type->setPublicStorageType(trim($data["public_storage_type"]));
+    }
+
+    if (isset($data["min_uploads_qty"])) {
+      $type->setMinUploadsQty(intval($data["min_uploads_qty"]));
+    }
+
+    if (isset($data["max_uploads_qty"])) {
+      $type->setMaxUploadsQty(intval($data["max_uploads_qty"]));
+    }
+
+    if (isset($data["is_editable"])) {
+      $type->setIsEditable(boolval($data["is_editable"]));
+    }
+
+    return $type;
+  }
 }

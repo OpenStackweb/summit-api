@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,84 +19,75 @@ use models\utils\SilverstripeBaseModel;
  * Class OpenStackComponent
  * @package App\Models\Foundation\Software
  */
-class OpenStackComponent extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class OpenStackComponent extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="CodeName", type="string")
-     * @var string
-     */
-    private $code_name;
+  /**
+   * @ORM\Column(name="CodeName", type="string")
+   * @var string
+   */
+  private $code_name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="IsCoreService", type="boolean")
-     * @var boolean
-     */
-    private $is_core_service;
+  /**
+   * @ORM\Column(name="IsCoreService", type="boolean")
+   * @var boolean
+   */
+  private $is_core_service;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_core_service = false;
-        $this->order = 0;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->is_core_service = false;
+    $this->order = 0;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+  /**
+   * @return string|null
+   */
+  public function getName(): ?string {
+    return $this->name;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getCodeName(): ?string
-    {
-        return $this->code_name;
-    }
+  /**
+   * @return string|null
+   */
+  public function getCodeName(): ?string {
+    return $this->code_name;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+  /**
+   * @return string|null
+   */
+  public function getDescription(): ?string {
+    return $this->description;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isIsCoreService(): bool
-    {
-        return $this->is_core_service;
-    }
+  /**
+   * @return bool
+   */
+  public function isIsCoreService(): bool {
+    return $this->is_core_service;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
-    }
-
-
+  /**
+   * @return int
+   */
+  public function getOrder(): int {
+    return $this->order;
+  }
 }

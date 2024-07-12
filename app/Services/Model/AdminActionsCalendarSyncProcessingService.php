@@ -30,137 +30,141 @@ use Illuminate\Support\Facades\Log;
  * Class AdminActionsCalendarSyncProcessingService
  * @package App\Services\Model
  */
-final class AdminActionsCalendarSyncProcessingService
-    implements IAdminActionsCalendarSyncProcessingService
-{
+final class AdminActionsCalendarSyncProcessingService implements
+  IAdminActionsCalendarSyncProcessingService {
+  /**
+   * @var IAbstractCalendarSyncWorkRequestRepository
+   */
+  private $work_request_repository;
 
-    /**
-     * @var IAbstractCalendarSyncWorkRequestRepository
-     */
-    private $work_request_repository;
+  /**
+   * @var ICalendarSyncInfoRepository
+   */
+  private $calendar_sync_repository;
 
-    /**
-     * @var ICalendarSyncInfoRepository
-     */
-    private $calendar_sync_repository;
+  /**
+   * @var IScheduleCalendarSyncInfoRepository
+   */
+  private $schedule_sync_repository;
 
-    /**
-     * @var IScheduleCalendarSyncInfoRepository
-     */
-    private $schedule_sync_repository;
+  /**
+   * @var ITransactionService
+   */
+  private $tx_manager;
 
-    /**
-     * @var ITransactionService
-     */
-    private $tx_manager;
+  /**
+   * @var ICalendarSyncWorkRequestPreProcessor
+   */
+  private $preprocessor_requests;
 
-    /**
-     * @var ICalendarSyncWorkRequestPreProcessor
-     */
-    private $preprocessor_requests;
+  /**
+   * AdminActionsCalendarSyncProcessingService constructor.
+   * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
+   * @param ICalendarSyncInfoRepository $calendar_sync_repository
+   * @param IScheduleCalendarSyncInfoRepository $schedule_sync_repository
+   * @param ICalendarSyncWorkRequestPreProcessor $preprocessor_requests
+   * @param ITransactionService $tx_manager
+   */
+  public function __construct(
+    IAbstractCalendarSyncWorkRequestRepository $work_request_repository,
+    ICalendarSyncInfoRepository $calendar_sync_repository,
+    IScheduleCalendarSyncInfoRepository $schedule_sync_repository,
+    ICalendarSyncWorkRequestPreProcessor $preprocessor_requests,
+    ITransactionService $tx_manager,
+  ) {
+    $this->work_request_repository = $work_request_repository;
+    $this->calendar_sync_repository = $calendar_sync_repository;
+    $this->schedule_sync_repository = $schedule_sync_repository;
+    $this->preprocessor_requests = $preprocessor_requests;
+    $this->tx_manager = $tx_manager;
+  }
 
-    /**
-     * AdminActionsCalendarSyncProcessingService constructor.
-     * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
-     * @param ICalendarSyncInfoRepository $calendar_sync_repository
-     * @param IScheduleCalendarSyncInfoRepository $schedule_sync_repository
-     * @param ICalendarSyncWorkRequestPreProcessor $preprocessor_requests
-     * @param ITransactionService $tx_manager
-     */
-    public function __construct
-    (
-        IAbstractCalendarSyncWorkRequestRepository $work_request_repository,
-        ICalendarSyncInfoRepository $calendar_sync_repository,
-        IScheduleCalendarSyncInfoRepository $schedule_sync_repository,
-        ICalendarSyncWorkRequestPreProcessor $preprocessor_requests,
-        ITransactionService $tx_manager
-    )
-    {
-        $this->work_request_repository  = $work_request_repository;
-        $this->calendar_sync_repository = $calendar_sync_repository;
-        $this->schedule_sync_repository = $schedule_sync_repository;
-        $this->preprocessor_requests    = $preprocessor_requests;
-        $this->tx_manager               = $tx_manager;
-    }
+  /**
+   * @param int $batch_size
+   * @return int
+   */
+  public function processActions($batch_size = PHP_INT_MAX) {
+    return $this->tx_manager->transaction(function () use ($batch_size) {
+      $count = 0;
 
-    /**
-     * @param int $batch_size
-     * @return int
-     */
-    public function processActions($batch_size = PHP_INT_MAX)
-    {
-        return $this->tx_manager->transaction(function() use($batch_size){
-            $count = 0;
+      $res = $this->work_request_repository->getUnprocessedAdminScheduleWorkRequestActionByPage(
+        new PagingInfo(1, $batch_size),
+      );
 
-            $res = $this->work_request_repository->getUnprocessedAdminScheduleWorkRequestActionByPage
-            (
-                new PagingInfo(1, $batch_size)
-            );
+      foreach ($this->preprocessor_requests->preProcessActions($res->getItems()) as $request) {
+        try {
+          if (!$request instanceof AdminScheduleSummitActionSyncWorkRequest) {
+            continue;
+          }
 
-            foreach ($this->preprocessor_requests->preProcessActions($res->getItems()) as $request){
+          if ($request instanceof AdminSummitEventActionSyncWorkRequest) {
+            $page = 1;
+            $summit_event_id = $request->getSummitEventId();
 
-                try {
-                    if (!$request instanceof AdminScheduleSummitActionSyncWorkRequest) continue;
-
-                    if($request instanceof AdminSummitEventActionSyncWorkRequest){
-
-                        $page            = 1;
-                        $summit_event_id = $request->getSummitEventId();
-
-                        do{
-                            $page_response = $this->schedule_sync_repository->getAllBySummitEvent($summit_event_id, new PagingInfo($page, 1000));
-                            $has_more      = count($page_response->getItems()) > 0;
-                            if(!$has_more) continue;
-                            foreach ($page_response->getItems() as $schedule_event){
-                                if(!$schedule_event instanceof ScheduleCalendarSyncInfo) continue;
-                                $work_request = new MemberEventScheduleSummitActionSyncWorkRequest();
-                                $work_request->setType($request->getType());
-                                $work_request->setCalendarSyncInfo($schedule_event->getCalendarSyncInfo());
-                                $work_request->setOwner($schedule_event->getMember());
-                                $work_request->setSummitEventId($summit_event_id);
-                                $this->work_request_repository->add($work_request);
-                            }
-                            $page++;
-
-                        }while($has_more);
-                    }
-
-                    if($request instanceof AdminSummitLocationActionSyncWorkRequest){
-                        $location_id = $request->getLocationId();
-                        $page        = 1;
-
-                        do{
-                            $page_response = $this->schedule_sync_repository->getAllBySummitLocation($location_id, new PagingInfo($page, 1000));
-                            $has_more      = count($page_response->getItems()) > 0;
-                            if(!$has_more) continue;
-                            foreach ($page_response->getItems() as $schedule_event){
-                                if(!$schedule_event instanceof ScheduleCalendarSyncInfo) continue;
-                                $work_request = new MemberEventScheduleSummitActionSyncWorkRequest();
-                                // always is update no matter what
-                                $work_request->setType(AbstractCalendarSyncWorkRequest::TypeUpdate);
-                                $work_request->setCalendarSyncInfo($schedule_event->getCalendarSyncInfo());
-                                $work_request->setOwner($schedule_event->getMember());
-                                $work_request->setSummitEventId($schedule_event->getSummitEvent()->getId());
-                                $this->work_request_repository->add($work_request);
-                            }
-                            $page++;
-
-                        }while($has_more);
-                    }
-
-                    $request->markProcessed();
-                    $count++;
+            do {
+              $page_response = $this->schedule_sync_repository->getAllBySummitEvent(
+                $summit_event_id,
+                new PagingInfo($page, 1000),
+              );
+              $has_more = count($page_response->getItems()) > 0;
+              if (!$has_more) {
+                continue;
+              }
+              foreach ($page_response->getItems() as $schedule_event) {
+                if (!$schedule_event instanceof ScheduleCalendarSyncInfo) {
+                  continue;
                 }
-                catch(DBALException $ex1){
-                    echo 'DBALException !!'.PHP_EOL;
-                    Log::error($ex1);
+                $work_request = new MemberEventScheduleSummitActionSyncWorkRequest();
+                $work_request->setType($request->getType());
+                $work_request->setCalendarSyncInfo($schedule_event->getCalendarSyncInfo());
+                $work_request->setOwner($schedule_event->getMember());
+                $work_request->setSummitEventId($summit_event_id);
+                $this->work_request_repository->add($work_request);
+              }
+              $page++;
+            } while ($has_more);
+          }
+
+          if ($request instanceof AdminSummitLocationActionSyncWorkRequest) {
+            $location_id = $request->getLocationId();
+            $page = 1;
+
+            do {
+              $page_response = $this->schedule_sync_repository->getAllBySummitLocation(
+                $location_id,
+                new PagingInfo($page, 1000),
+              );
+              $has_more = count($page_response->getItems()) > 0;
+              if (!$has_more) {
+                continue;
+              }
+              foreach ($page_response->getItems() as $schedule_event) {
+                if (!$schedule_event instanceof ScheduleCalendarSyncInfo) {
+                  continue;
                 }
-                catch(Exception $ex6){
-                    echo 'Exception !!'.PHP_EOL;
-                    Log::error($ex6);
-                }
-            }
-            return $count;
-        });
-    }
+                $work_request = new MemberEventScheduleSummitActionSyncWorkRequest();
+                // always is update no matter what
+                $work_request->setType(AbstractCalendarSyncWorkRequest::TypeUpdate);
+                $work_request->setCalendarSyncInfo($schedule_event->getCalendarSyncInfo());
+                $work_request->setOwner($schedule_event->getMember());
+                $work_request->setSummitEventId($schedule_event->getSummitEvent()->getId());
+                $this->work_request_repository->add($work_request);
+              }
+              $page++;
+            } while ($has_more);
+          }
+
+          $request->markProcessed();
+          $count++;
+        } catch (DBALException $ex1) {
+          echo "DBALException !!" . PHP_EOL;
+          Log::error($ex1);
+        } catch (Exception $ex6) {
+          echo "Exception !!" . PHP_EOL;
+          Log::error($ex6);
+        }
+      }
+      return $count;
+    });
+  }
 }

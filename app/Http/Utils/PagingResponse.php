@@ -20,119 +20,116 @@ use ModelSerializers\SerializerRegistry;
  * Class PagingResponse
  * @package utils
  */
-final class PagingResponse
-{
-    /**
-     * @var int
-     */
-    private $total;
-    /**
-     * @var int
-     */
-    private $per_page;
-    /**
-     * @var int
-     */
-    private $page;
-    /**
-     * @var int
-     */
-    private $last_page;
-    /**
-     * @var array
-     */
-    private $items;
+final class PagingResponse {
+  /**
+   * @var int
+   */
+  private $total;
+  /**
+   * @var int
+   */
+  private $per_page;
+  /**
+   * @var int
+   */
+  private $page;
+  /**
+   * @var int
+   */
+  private $last_page;
+  /**
+   * @var array
+   */
+  private $items;
 
-    /**
-     * @param int $total
-     * @param int $per_page
-     * @param int $page
-     * @param int $last_page
-     * @param array $items
-     */
-    public function __construct($total, $per_page, $page, $last_page, array $items)
-    {
-        $this->total     = $total;
-        $this->per_page  = $per_page;
-        $this->page      = $page;
-        $this->last_page = $last_page;
-        $this->items     = $items;
+  /**
+   * @param int $total
+   * @param int $per_page
+   * @param int $page
+   * @param int $last_page
+   * @param array $items
+   */
+  public function __construct($total, $per_page, $page, $last_page, array $items) {
+    $this->total = $total;
+    $this->per_page = $per_page;
+    $this->page = $page;
+    $this->last_page = $last_page;
+    $this->items = $items;
+  }
+
+  public function getTotal() {
+    return $this->total;
+  }
+
+  /**
+   * @return int
+   */
+  public function getPerPage() {
+    return $this->per_page;
+  }
+
+  /**
+   * @return int
+   */
+  public function getCurrentPage() {
+    return $this->page;
+  }
+
+  /**
+   * @return int
+   */
+  public function getLastPage() {
+    return $this->last_page;
+  }
+
+  /**
+   * @return array
+   */
+  public function getItems() {
+    return $this->items;
+  }
+
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @param string $serializer_type
+   * @return array
+   */
+  public function toArray(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+    $serializer_type = SerializerRegistry::SerializerType_Public,
+  ) {
+    $items = [];
+    foreach ($this->items as $i) {
+      if ($i instanceof IEntity) {
+        $start = microtime(true);
+        $i = SerializerRegistry::getInstance()
+          ->getSerializer($i, $serializer_type)
+          ->serialize($expand, $fields, $relations, $params);
+        $end = microtime(true);
+        //               Log::debug(sprintf("PagingResponse::toArray serialization delta %s", $end - $start));
+      }
+      $items[] = $i;
     }
 
-    public function getTotal()
-    {
-        return $this->total;
-    }
+    return [
+      "total" => $this->total,
+      "per_page" => $this->per_page,
+      "current_page" => $this->page,
+      "last_page" => $this->last_page,
+      "data" => $items,
+    ];
+  }
 
-    /**
-     * @return int
-     */
-    public function getPerPage()
-    {
-        return $this->per_page;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCurrentPage()
-    {
-        return $this->page;
-    }
-
-    /**
-     * @return int
-     */
-    public function getLastPage()
-    {
-        return $this->last_page;
-    }
-
-    /**
-     * @return array
-     */
-    public function getItems()
-    {
-        return $this->items;
-    }
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @param string $serializer_type
-     * @return array
-     */
-    public function toArray($expand = null, array $fields = [], array $relations = [], array $params = [], $serializer_type = SerializerRegistry::SerializerType_Public )
-    {
-        $items = [];
-        foreach($this->items as $i)
-        {
-            if($i instanceof IEntity)
-            {
-                $start = microtime(true);
-                $i = SerializerRegistry::getInstance()->getSerializer($i, $serializer_type)->serialize($expand, $fields, $relations, $params);
-                $end = microtime(true);
- //               Log::debug(sprintf("PagingResponse::toArray serialization delta %s", $end - $start));
-            }
-            $items[] = $i;
-        }
-
-        return
-        [
-            'total'        =>  $this->total,
-            'per_page'     =>  $this->per_page,
-            'current_page' =>  $this->page,
-            'last_page'    =>  $this->last_page,
-            'data'         =>  $items,
-        ];
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasMoreItems():bool {
-        return $this->page < $this->last_page;
-    }
+  /**
+   * @return bool
+   */
+  public function hasMoreItems(): bool {
+    return $this->page < $this->last_page;
+  }
 }

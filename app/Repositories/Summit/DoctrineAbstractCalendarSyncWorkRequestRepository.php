@@ -32,126 +32,136 @@ use Illuminate\Support\Facades\Log;
  * @package App\Repositories\Summit
  */
 final class DoctrineAbstractCalendarSyncWorkRequestRepository
-    extends SilverStripeDoctrineRepository
-    implements IAbstractCalendarSyncWorkRequestRepository
-{
-
-    /**
-     * @param Member $member
-     * @param SummitEvent $event
-     * @param CalendarSyncInfo $calendar_sync_info
-     * @param string|null $type
-     * @return AbstractCalendarSyncWorkRequest
-     */
-    public function getUnprocessedMemberScheduleWorkRequest($member, $event, $calendar_sync_info, $type = null)
-    {
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(MemberEventScheduleSummitActionSyncWorkRequest::class, "r")
-            ->join('r.summit_event', 'e', Join::WITH, " e.id = :event_id")
-            ->join('r.owner', 'o', Join::WITH, " o.id = :member_id")
-            ->join('r.calendar_sync_info', 'si', Join::WITH, " si.id = :calendar_sync_info_id");
-        if(!empty($type)){
-            $query = $query
-                ->where('r.type = :type')
-                ->setParameter('type', $type)->getQuery();
-        }
-
-        $query
-            ->setParameter('event_id', $event->getId())
-            ->setParameter('member_id', $member->getId())
-            ->setParameter('calendar_sync_info_id', $calendar_sync_info->getId());
-
-        return $query->getSingleResult();
+  extends SilverStripeDoctrineRepository
+  implements IAbstractCalendarSyncWorkRequestRepository {
+  /**
+   * @param Member $member
+   * @param SummitEvent $event
+   * @param CalendarSyncInfo $calendar_sync_info
+   * @param string|null $type
+   * @return AbstractCalendarSyncWorkRequest
+   */
+  public function getUnprocessedMemberScheduleWorkRequest(
+    $member,
+    $event,
+    $calendar_sync_info,
+    $type = null,
+  ) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(MemberEventScheduleSummitActionSyncWorkRequest::class, "r")
+      ->join("r.summit_event", "e", Join::WITH, " e.id = :event_id")
+      ->join("r.owner", "o", Join::WITH, " o.id = :member_id")
+      ->join("r.calendar_sync_info", "si", Join::WITH, " si.id = :calendar_sync_info_id");
+    if (!empty($type)) {
+      $query = $query->where("r.type = :type")->setParameter("type", $type)->getQuery();
     }
 
-    /**
-     * @param string $provider
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getUnprocessedMemberScheduleWorkRequestActionByPage($provider = 'ALL', PagingInfo $paging_info){
+    $query
+      ->setParameter("event_id", $event->getId())
+      ->setParameter("member_id", $member->getId())
+      ->setParameter("calendar_sync_info_id", $calendar_sync_info->getId());
 
-        log::debug(sprintf("DoctrineAbstractCalendarSyncWorkRequestRepository::getUnprocessedMemberScheduleWorkRequestActionByPage: provider %s",$provider));
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(MemberScheduleSummitActionSyncWorkRequest::class, "r")
-            ->where('(r.type = :type_add or r.type = :type_remove or r.type = :type_update) and r.is_processed = 0')
-            ->orderBy('r.id', 'ASC')
-            ->setParameter('type_add',AbstractCalendarSyncWorkRequest::TypeAdd )
-            ->setParameter('type_update',AbstractCalendarSyncWorkRequest::TypeUpdate )
-            ->setParameter('type_remove',AbstractCalendarSyncWorkRequest::TypeRemove);
+    return $query->getSingleResult();
+  }
 
-        if(CalendarSyncInfo::isValidProvider($provider)){
-            log::debug(sprintf("provider %s is valid",$provider));
-            $query = $query
-                ->join('r.calendar_sync_info', 'si', Join::WITH, " si.provider = :provider")
-                ->setParameter('provider', $provider);
-        }
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
+  /**
+   * @param string $provider
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  public function getUnprocessedMemberScheduleWorkRequestActionByPage(
+    $provider = "ALL",
+    PagingInfo $paging_info,
+  ) {
+    log::debug(
+      sprintf(
+        "DoctrineAbstractCalendarSyncWorkRequestRepository::getUnprocessedMemberScheduleWorkRequestActionByPage: provider %s",
+        $provider,
+      ),
+    );
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(MemberScheduleSummitActionSyncWorkRequest::class, "r")
+      ->where(
+        "(r.type = :type_add or r.type = :type_remove or r.type = :type_update) and r.is_processed = 0",
+      )
+      ->orderBy("r.id", "ASC")
+      ->setParameter("type_add", AbstractCalendarSyncWorkRequest::TypeAdd)
+      ->setParameter("type_update", AbstractCalendarSyncWorkRequest::TypeUpdate)
+      ->setParameter("type_remove", AbstractCalendarSyncWorkRequest::TypeRemove);
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
+    if (CalendarSyncInfo::isValidProvider($provider)) {
+      log::debug(sprintf("provider %s is valid", $provider));
+      $query = $query
+        ->join("r.calendar_sync_info", "si", Join::WITH, " si.provider = :provider")
+        ->setParameter("provider", $provider);
+    }
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-        foreach($paginator as $entity)
-            $data[] = $entity;
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
 
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+    foreach ($paginator as $entity) {
+      $data[] = $entity;
     }
 
-    /**
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getUnprocessedAdminScheduleWorkRequestActionByPage(PagingInfo $paging_info){
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("r")
-            ->from(AdminScheduleSummitActionSyncWorkRequest::class, "r")
-            ->where('(r.type = :type_add or r.type = :type_remove or r.type = :type_update) and r.is_processed = 0')
-            ->orderBy('r.id', 'ASC')
-            ->setParameter('type_add',AbstractCalendarSyncWorkRequest::TypeAdd )
-            ->setParameter('type_update',AbstractCalendarSyncWorkRequest::TypeUpdate )
-            ->setParameter('type_remove',AbstractCalendarSyncWorkRequest::TypeRemove);
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
 
-        $query= $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
+  /**
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  public function getUnprocessedAdminScheduleWorkRequestActionByPage(PagingInfo $paging_info) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("r")
+      ->from(AdminScheduleSummitActionSyncWorkRequest::class, "r")
+      ->where(
+        "(r.type = :type_add or r.type = :type_remove or r.type = :type_update) and r.is_processed = 0",
+      )
+      ->orderBy("r.id", "ASC")
+      ->setParameter("type_add", AbstractCalendarSyncWorkRequest::TypeAdd)
+      ->setParameter("type_update", AbstractCalendarSyncWorkRequest::TypeUpdate)
+      ->setParameter("type_remove", AbstractCalendarSyncWorkRequest::TypeRemove);
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-        foreach($paginator as $entity)
-            $data[] = $entity;
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
 
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+    foreach ($paginator as $entity) {
+      $data[] = $entity;
     }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return MemberEventScheduleSummitActionSyncWorkRequest::class;
-    }
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
+
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return MemberEventScheduleSummitActionSyncWorkRequest::class;
+  }
 }

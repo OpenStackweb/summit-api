@@ -19,87 +19,87 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class CompanySerializer
  * @package ModelSerializers
  */
-final class CompanySerializer extends BaseCompanySerializer
-{
-    protected static $array_mappings = [
-        'DisplayOnSite' => 'display_on_site:json_boolean',
-        'Featured' => 'featured:json_boolean',
-        'ContactEmail' => 'contact_email:json_string',
-        'AdminEmail' => 'admin_email:json_string',
-    ];
+final class CompanySerializer extends BaseCompanySerializer {
+  protected static $array_mappings = [
+    "DisplayOnSite" => "display_on_site:json_boolean",
+    "Featured" => "featured:json_boolean",
+    "ContactEmail" => "contact_email:json_string",
+    "AdminEmail" => "admin_email:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'sponsorships',
-        'project_sponsorships',
-    ];
+  protected static $allowed_relations = ["sponsorships", "project_sponsorships"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $company = $this->object;
-        if(!$company instanceof Company) return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $company = $this->object;
+    if (!$company instanceof Company) {
+      return $values;
+    }
 
-        if (in_array('sponsorships', $relations)) {
+    if (in_array("sponsorships", $relations)) {
+      $sponsorships = [];
+      foreach ($company->getSponsorships() as $s) {
+        $sponsorships[] = $s->getId();
+      }
+      $values["sponsorships"] = $sponsorships;
+    }
+
+    if (in_array("sponsorships", $relations)) {
+      $project_sponsorships = [];
+      foreach ($company->getProjectSponsorships() as $ps) {
+        $project_sponsorships[] = $ps->getId();
+      }
+      $values["project_sponsorships"] = $project_sponsorships;
+    }
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "sponsorships":
             $sponsorships = [];
             foreach ($company->getSponsorships() as $s) {
-                $sponsorships[] = $s->getId();
+              $sponsorships[] = SerializerRegistry::getInstance()
+                ->getSerializer($s)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
-            $values['sponsorships'] = $sponsorships;
-        }
-
-        if (in_array('sponsorships', $relations)) {
+            $values["sponsorships"] = $sponsorships;
+            break;
+          case "project_sponsorships":
             $project_sponsorships = [];
             foreach ($company->getProjectSponsorships() as $ps) {
-                $project_sponsorships[] = $ps->getId();
+              $project_sponsorships[] = SerializerRegistry::getInstance()
+                ->getSerializer($ps)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
             }
-            $values['project_sponsorships'] = $project_sponsorships;
+            $values["project_sponsorships"] = $project_sponsorships;
+            break;
         }
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'sponsorships':
-                    {
-                        $sponsorships = [];
-                        foreach ($company->getSponsorships() as $s) {
-                            $sponsorships[] = SerializerRegistry::getInstance()->getSerializer($s)
-                                ->serialize(
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                        }
-                        $values['sponsorships'] = $sponsorships;
-                    }
-                    break;
-                    case 'project_sponsorships':
-                    {
-                        $project_sponsorships = [];
-                        foreach ($company->getProjectSponsorships() as $ps) {
-                            $project_sponsorships[] = SerializerRegistry::getInstance()->getSerializer($ps)
-                                ->serialize(
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                        }
-                        $values['project_sponsorships'] = $project_sponsorships;
-                    }
-                    break;
-                  }
-            }
-        }
-
-        return $values;
+      }
     }
+
+    return $values;
+  }
 }

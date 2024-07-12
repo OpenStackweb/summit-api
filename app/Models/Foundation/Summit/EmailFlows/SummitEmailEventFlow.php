@@ -13,7 +13,7 @@
  **/
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEmailEventFlowRepository")
  * @ORM\AssociationOverrides({
@@ -26,80 +26,75 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitEmailEventFlow
  * @package App\Models\Foundation\Summit\EmailFlows
  */
-class SummitEmailEventFlow extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitEmailEventFlow extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="EmailTemplateIdentifier", type="string")
-     * @var string
-     */
-    private $email_template_identifier;
+  /**
+   * @ORM\Column(name="EmailTemplateIdentifier", type="string")
+   * @var string
+   */
+  private $email_template_identifier;
 
-    /**
-     * @ORM\Column(name="EmailRecipients", type="string")
-     * @var string
-     */
-    private $recipients;
+  /**
+   * @ORM\Column(name="EmailRecipients", type="string")
+   * @var string
+   */
+  private $recipients;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="SummitEmailEventFlowType")
-     * @ORM\JoinColumn(name="SummitEmailEventFlowTypeID", referencedColumnName="ID")
-     * @var SummitEmailEventFlowType
-     */
-    private $event_type;
+  /**
+   * @ORM\ManyToOne(targetEntity="SummitEmailEventFlowType")
+   * @ORM\JoinColumn(name="SummitEmailEventFlowTypeID", referencedColumnName="ID")
+   * @var SummitEmailEventFlowType
+   */
+  private $event_type;
 
-    /**
-     * @return string
-     */
-    public function getEmailTemplateIdentifier(): string
-    {
-        return $this->email_template_identifier;
+  /**
+   * @return string
+   */
+  public function getEmailTemplateIdentifier(): string {
+    return $this->email_template_identifier;
+  }
+
+  public function getFlowName(): string {
+    return $this->event_type->getFlow()->getName();
+  }
+
+  public function getEventTypeName(): string {
+    return $this->event_type->getName();
+  }
+
+  /**
+   * @param string $email_template_identifier
+   */
+  public function setEmailTemplateIdentifier(string $email_template_identifier): void {
+    $this->email_template_identifier = $email_template_identifier;
+  }
+
+  /**
+   * @return SummitEmailEventFlowType
+   */
+  public function getEventType(): SummitEmailEventFlowType {
+    return $this->event_type;
+  }
+
+  /**
+   * @param SummitEmailEventFlowType $event_type
+   */
+  public function setEventType(SummitEmailEventFlowType $event_type): void {
+    $this->event_type = $event_type;
+  }
+
+  public function getEmailRecipients(): array {
+    if (empty($this->recipients)) {
+      return [];
     }
+    return explode(",", $this->recipients);
+  }
 
-    public function getFlowName():string{
-        return $this->event_type->getFlow()->getName();
-    }
-
-    public function getEventTypeName():string{
-        return $this->event_type->getName();
-    }
-
-    /**
-     * @param string $email_template_identifier
-     */
-    public function setEmailTemplateIdentifier(string $email_template_identifier): void
-    {
-        $this->email_template_identifier = $email_template_identifier;
-    }
-
-    /**
-     * @return SummitEmailEventFlowType
-     */
-    public function getEventType(): SummitEmailEventFlowType
-    {
-        return $this->event_type;
-    }
-
-    /**
-     * @param SummitEmailEventFlowType $event_type
-     */
-    public function setEventType(SummitEmailEventFlowType $event_type): void
-    {
-        $this->event_type = $event_type;
-    }
-
-    public function getEmailRecipients(): array
-    {
-        if(empty($this->recipients)) return [];
-        return explode(",", $this->recipients);
-    }
-
-    /**
-     * @param array recipients
-     */
-    public function setEmailRecipients(array $recipients): void
-    {
-        $this->recipients = implode(",", $recipients);
-    }
+  /**
+   * @param array recipients
+   */
+  public function setEmailRecipients(array $recipients): void {
+    $this->recipients = implode(",", $recipients);
+  }
 }

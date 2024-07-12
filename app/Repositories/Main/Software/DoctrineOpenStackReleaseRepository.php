@@ -20,37 +20,33 @@ use Doctrine\ORM\NoResultException;
  * Class DoctrineOpenStackReleaseRepository
  * @package App\Repositories\Main\Software
  */
-final class DoctrineOpenStackReleaseRepository extends SilverStripeDoctrineRepository
-implements IOpenStackReleaseRepository
-{
+final class DoctrineOpenStackReleaseRepository extends SilverStripeDoctrineRepository implements
+  IOpenStackReleaseRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return OpenStackRelease::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return OpenStackRelease::class;
+  /**
+   * @return OpenStackRelease|null
+   * @throws \Doctrine\ORM\NonUniqueResultException
+   */
+  public function getCurrent(): ?OpenStackRelease {
+    try {
+      return $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select("distinct e")
+        ->from($this->getBaseEntity(), "e")
+        ->where("UPPER(TRIM(e.status)) = UPPER(TRIM(:status))")
+        ->setParameter("status", "Current")
+        ->orderBy("e.release_date", "DESC")
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getOneOrNullResult();
+    } catch (NoResultException $e) {
+      return null;
     }
-
-    /**
-     * @return OpenStackRelease|null
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function getCurrent(): ?OpenStackRelease
-    {
-        try {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("distinct e")
-                ->from($this->getBaseEntity(), "e")
-                ->where('UPPER(TRIM(e.status)) = UPPER(TRIM(:status))')
-                ->setParameter('status', 'Current')
-                ->orderBy("e.release_date", "DESC")
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
-        }
-        catch(NoResultException $e){
-            return null;
-        }
-    }
+  }
 }

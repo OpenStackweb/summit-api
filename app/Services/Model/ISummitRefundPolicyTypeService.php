@@ -19,33 +19,36 @@ use models\summit\SummitRefundPolicyType;
  * Interface ISummitRefundPolicyTypeService
  * @package App\Services\Model
  */
-interface ISummitRefundPolicyTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitRefundPolicyType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addPolicy(Summit $summit, array $payload):SummitRefundPolicyType;
+interface ISummitRefundPolicyTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitRefundPolicyType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addPolicy(Summit $summit, array $payload): SummitRefundPolicyType;
 
-    /**
-     * @param Summit $summit
-     * @param int $policy_id
-     * @param array $payload
-     * @return SummitRefundPolicyType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updatePolicy(Summit $summit,int $policy_id, array $payload):SummitRefundPolicyType;
+  /**
+   * @param Summit $summit
+   * @param int $policy_id
+   * @param array $payload
+   * @return SummitRefundPolicyType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updatePolicy(
+    Summit $summit,
+    int $policy_id,
+    array $payload,
+  ): SummitRefundPolicyType;
 
-    /**
-     * @param Summit $summit
-     * @param int $policy_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deletePolicy(Summit $summit,int $policy_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $policy_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deletePolicy(Summit $summit, int $policy_id): void;
 }

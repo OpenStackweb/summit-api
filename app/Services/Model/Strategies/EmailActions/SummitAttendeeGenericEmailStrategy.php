@@ -21,46 +21,40 @@ use models\summit\SummitAttendee;
  * Class SummitAttendeeGenericEmailStrategy
  * @package App\Services\Model\Strategies\EmailActions
  */
-final class SummitAttendeeGenericEmailStrategy extends AbstractEmailAction
-{
-    /**
-     * SummitAttendeeTicketEmailStrategy constructor.
-     * @param String $flow_event
-     */
-    public function __construct(string $flow_event)
-    {
-        parent::__construct($flow_event);
+final class SummitAttendeeGenericEmailStrategy extends AbstractEmailAction {
+  /**
+   * SummitAttendeeTicketEmailStrategy constructor.
+   * @param String $flow_event
+   */
+  public function __construct(string $flow_event) {
+    parent::__construct($flow_event);
+  }
+
+  /**
+   * @param SummitAttendee $attendee
+   * @param string|null $test_email_recipient
+   * @param callable|null $onSuccess
+   * @param callable|null $onError
+   * @return void
+   */
+  public function process(
+    SummitAttendee $attendee,
+    ?string $test_email_recipient = null,
+    callable $onSuccess = null,
+    callable $onError = null,
+  ) {
+    Log::debug(
+      sprintf(
+        "SummitAttendeeGenericEmailStrategy::sending all tickets to attendee %s - flow event %s",
+        $attendee->getEmail(),
+        $this->flow_event,
+      ),
+    );
+
+    GenericSummitAttendeeEmail::dispatch($attendee, $test_email_recipient);
+
+    if (!is_null($onSuccess)) {
+      $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
     }
-
-    /**
-     * @param SummitAttendee $attendee
-     * @param string|null $test_email_recipient
-     * @param callable|null $onSuccess
-     * @param callable|null $onError
-     * @return void
-     */
-    public function process
-    (
-        SummitAttendee $attendee,
-        ?string $test_email_recipient = null,
-        callable $onSuccess = null,
-        callable $onError = null
-    )
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitAttendeeGenericEmailStrategy::sending all tickets to attendee %s - flow event %s",
-                $attendee->getEmail(),
-                $this->flow_event
-            )
-        );
-
-        GenericSummitAttendeeEmail::dispatch($attendee, $test_email_recipient);
-
-        if (!is_null($onSuccess)) {
-            $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
-        }
-    }
+  }
 }

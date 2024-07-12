@@ -18,11 +18,10 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitRegistrationFeedMetadataSerializer
  * @package App\ModelSerializers\Summit\Registration
  */
-final class SummitRegistrationFeedMetadataSerializer  extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Key'      => 'key:json_string',
-        'Value'    => 'value:json_string',
-        'SummitId' => 'summit_id:json_int',
-    ];
+final class SummitRegistrationFeedMetadataSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Key" => "key:json_string",
+    "Value" => "value:json_string",
+    "SummitId" => "summit_id:json_int",
+  ];
 }

@@ -24,88 +24,94 @@ use ReflectionClass;
  * Trait ScheduleEntity
  * @package App\Models\Foundation\Summit
  */
-trait ScheduleEntity
-{
-    use CachedEntity {
-        deleted as protected cachedDeleted;
-        updated as protected cachedUpdated;
-    }
+trait ScheduleEntity {
+  use CachedEntity {
+    deleted as protected cachedDeleted;
+    updated as protected cachedUpdated;
+  }
 
-    /**
-     * @return int
-     */
-    private function _getSummitId(): int
-    {
-        try {
-            $rc = new ReflectionClass($this);
+  /**
+   * @return int
+   */
+  private function _getSummitId(): int {
+    try {
+      $rc = new ReflectionClass($this);
 
-            if (!$rc->hasProperty("summit")){
-                if ($rc->hasMethod("getSummitId"))
-                    return $this->getSummitId();
-                return 0;
-            }
-            if (is_null($this->summit)){
-                if($rc->hasProperty("former_summit_id"))
-                    return $this->former_summit_id;
-                return 0;
-            }
-            return $this->summit->id;
-        }
-        catch(\Exception $ex){
+      if (!$rc->hasProperty("summit")) {
+        if ($rc->hasMethod("getSummitId")) {
+          return $this->getSummitId();
         }
         return 0;
+      }
+      if (is_null($this->summit)) {
+        if ($rc->hasProperty("former_summit_id")) {
+          return $this->former_summit_id;
+        }
+        return 0;
+      }
+      return $this->summit->id;
+    } catch (\Exception $ex) {
     }
+    return 0;
+  }
 
-    /**
-     * @ORM\PreRemove:
-     */
-    public function deleting($args)
-    {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('DELETE',
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
-    }
+  /**
+   * @ORM\PreRemove:
+   */
+  public function deleting($args) {
+    Event::dispatch(
+      new ScheduleEntityLifeCycleEvent(
+        "DELETE",
+        $this->_getSummitId(),
+        $this->id,
+        $this->_getClassName(),
+      ),
+    );
+  }
 
-    /**
-     * @ORM\preRemove:
-     */
-    public function deleted($args)
-    {
-        $this->cachedDeleted($args);
-    }
+  /**
+   * @ORM\preRemove:
+   */
+  public function deleted($args) {
+    $this->cachedDeleted($args);
+  }
 
-    /**
-     * @ORM\PreUpdate:
-     */
-    public function updating(PreUpdateEventArgs $args)
-    {
-        parent::updating($args);
-    }
+  /**
+   * @ORM\PreUpdate:
+   */
+  public function updating(PreUpdateEventArgs $args) {
+    parent::updating($args);
+  }
 
-    /**
-     * @ORM\PostUpdate:
-     */
-    public function updated($args)
-    {
-        Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
-        $this->cachedUpdated($args);
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
-    }
+  /**
+   * @ORM\PostUpdate:
+   */
+  public function updated($args) {
+    Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
+    $this->cachedUpdated($args);
+    Event::dispatch(
+      new ScheduleEntityLifeCycleEvent(
+        "UPDATE",
+        $this->_getSummitId(),
+        $this->id,
+        $this->_getClassName(),
+      ),
+    );
+  }
 
-    // events
+  // events
 
-    /**
-     * @ORM\PostPersist
-     */
-    public function inserted($args)
-    {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('INSERT',
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
-    }
+  /**
+   * @ORM\PostPersist
+   */
+  public function inserted($args) {
+    Event::dispatch(
+      new ScheduleEntityLifeCycleEvent(
+        "INSERT",
+        $this->_getSummitId(),
+        $this->id,
+        $this->_getClassName(),
+      ),
+    );
+  }
 }

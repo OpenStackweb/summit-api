@@ -17,18 +17,17 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SponsorBadgeScanExtraQuestionAnswerSerializer
  * @package ModelSerializers
  */
-class SponsorBadgeScanExtraQuestionAnswerSerializer extends ExtraQuestionAnswerSerializer
-{
-    protected static $array_mappings = [
-        'BadgeScanId' => 'badge_scan_id:json_int',
-    ];
+class SponsorBadgeScanExtraQuestionAnswerSerializer extends ExtraQuestionAnswerSerializer {
+  protected static $array_mappings = [
+    "BadgeScanId" => "badge_scan_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'badge_scan' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'badge_scan_id',
-            'getter' => 'getBadgeScan',
-            'has' => 'hasBadgeScan'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "badge_scan" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "badge_scan_id",
+      "getter" => "getBadgeScan",
+      "has" => "hasBadgeScan",
+    ],
+  ];
 }

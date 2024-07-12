@@ -16,7 +16,5 @@
  * Class RSVPAdd
  * @package App\Events
  */
-class RSVPCreated extends RSVPAction
-{
-
+class RSVPCreated extends RSVPAction {
 }

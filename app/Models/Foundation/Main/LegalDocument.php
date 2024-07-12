@@ -12,73 +12,66 @@
  * limitations under the License.
  **/
 
-class LegalDocument
-{
-    /**
-     * @var int
-     */
-    private $id;
+class LegalDocument {
+  /**
+   * @var int
+   */
+  private $id;
 
-    /**
-     * @var string
-     */
-    private $title;
+  /**
+   * @var string
+   */
+  private $title;
 
-    /**
-     * @var string
-     */
-    private $slug;
+  /**
+   * @var string
+   */
+  private $slug;
 
-    /**
-     * @var string
-     */
-    private $content;
+  /**
+   * @var string
+   */
+  private $content;
 
-    /**
-     * LegalDocument constructor.
-     * @param int $id
-     * @param string $title
-     * @param string $slug
-     * @param string $content
-     */
-    public function __construct(int $id, string $title, string $slug, string $content)
-    {
-        $this->id = $id;
-        $this->title = $title;
-        $this->slug = $slug;
-        $this->content = $content;
-    }
+  /**
+   * LegalDocument constructor.
+   * @param int $id
+   * @param string $title
+   * @param string $slug
+   * @param string $content
+   */
+  public function __construct(int $id, string $title, string $slug, string $content) {
+    $this->id = $id;
+    $this->title = $title;
+    $this->slug = $slug;
+    $this->content = $content;
+  }
 
-    /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
+  /**
+   * @return int
+   */
+  public function getId(): int {
+    return $this->id;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
+  /**
+   * @return string
+   */
+  public function getTitle(): string {
+    return $this->title;
+  }
 
-    /**
-     * @return string
-     */
-    public function getSlug(): string
-    {
-        return $this->slug;
-    }
+  /**
+   * @return string
+   */
+  public function getSlug(): string {
+    return $this->slug;
+  }
 
-    /**
-     * @return string
-     */
-    public function getContent(): string
-    {
-        return $this->content;
-    }
-
+  /**
+   * @return string
+   */
+  public function getContent(): string {
+    return $this->content;
+  }
 }

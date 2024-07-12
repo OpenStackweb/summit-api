@@ -22,39 +22,40 @@ use ModelSerializers\SerializerRegistry;
  * Class ReleasesApiController
  * @package App\Http\Controllers
  */
-final class ReleasesApiController extends OAuth2ProtectedController
-{
-    /**
-     * @param IOpenStackReleaseRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IOpenStackReleaseRepository  $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-    }
+final class ReleasesApiController extends OAuth2ProtectedController {
+  /**
+   * @param IOpenStackReleaseRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IOpenStackReleaseRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+  }
 
-
-    /**
-     * @return \Illuminate\Http\JsonResponse|mixed|void
-     */
-    public function getCurrent(){
-        try{
-            $current = $this->repository->getCurrent();
-            if (is_null($current)) return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($current)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * @return \Illuminate\Http\JsonResponse|mixed|void
+   */
+  public function getCurrent() {
+    try {
+      $current = $this->repository->getCurrent();
+      if (is_null($current)) {
+        return $this->error404();
+      }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($current)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

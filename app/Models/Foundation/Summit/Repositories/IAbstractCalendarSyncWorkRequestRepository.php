@@ -23,27 +23,34 @@ use utils\PagingResponse;
  * Interface IAbstractCalendarSyncWorkRequestRepository
  * @package models\summit
  */
-interface IAbstractCalendarSyncWorkRequestRepository extends IBaseRepository
-{
-    /**
-     * @param Member $member
-     * @param SummitEvent $event
-     * @param CalendarSyncInfo $calendar_sync_info
-     * @param null|string $type
-     * @return AbstractCalendarSyncWorkRequest
-     */
-    public function getUnprocessedMemberScheduleWorkRequest($member, $event, $calendar_sync_info, $type = null);
+interface IAbstractCalendarSyncWorkRequestRepository extends IBaseRepository {
+  /**
+   * @param Member $member
+   * @param SummitEvent $event
+   * @param CalendarSyncInfo $calendar_sync_info
+   * @param null|string $type
+   * @return AbstractCalendarSyncWorkRequest
+   */
+  public function getUnprocessedMemberScheduleWorkRequest(
+    $member,
+    $event,
+    $calendar_sync_info,
+    $type = null,
+  );
 
-    /**
-     * @param string $provider
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getUnprocessedMemberScheduleWorkRequestActionByPage($provider = 'ALL', PagingInfo $paging_info);
+  /**
+   * @param string $provider
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  public function getUnprocessedMemberScheduleWorkRequestActionByPage(
+    $provider = "ALL",
+    PagingInfo $paging_info,
+  );
 
-    /**
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getUnprocessedAdminScheduleWorkRequestActionByPage(PagingInfo $paging_info);
+  /**
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  public function getUnprocessedAdminScheduleWorkRequestActionByPage(PagingInfo $paging_info);
 }

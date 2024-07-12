@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISupportingCompanyRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface ISupportingCompanyRepository extends IBaseRepository
-{
-
+interface ISupportingCompanyRepository extends IBaseRepository {
 }

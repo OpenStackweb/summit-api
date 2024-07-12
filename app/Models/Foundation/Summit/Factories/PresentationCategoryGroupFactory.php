@@ -19,129 +19,142 @@ use models\summit\Summit;
  * Class PresentationCategoryGroupFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationCategoryGroupFactory
-{
+final class PresentationCategoryGroupFactory {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return null
+   * @throws ValidationException
+   */
+  public static function build(Summit $summit, array $data) {
+    if (!isset($data["class_name"])) {
+      throw new ValidationException("missing class_name param");
+    }
+    $track_group = null;
+    switch ($data["class_name"]) {
+      case PresentationCategoryGroup::ClassName:
+        $track_group = self::populatePresentationCategoryGroup(
+          $summit,
+          new PresentationCategoryGroup(),
+          $data,
+        );
+        break;
+      case PrivatePresentationCategoryGroup::ClassName:
+        $track_group = self::populatePrivatePresentationCategoryGroup(
+          $summit,
+          new PrivatePresentationCategoryGroup(),
+          $data,
+        );
+    }
+    return $track_group;
+  }
 
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return null
-     * @throws ValidationException
-     */
-    public static function build(Summit $summit, array $data){
-        if(!isset($data['class_name']))
-            throw new ValidationException("missing class_name param");
-        $track_group = null;
-        switch($data['class_name']){
-            case PresentationCategoryGroup::ClassName :{
-                $track_group = self::populatePresentationCategoryGroup($summit, new PresentationCategoryGroup, $data);
-            }
-            break;
-            case PrivatePresentationCategoryGroup::ClassName :{
-                $track_group = self::populatePrivatePresentationCategoryGroup($summit, new PrivatePresentationCategoryGroup, $data);
-            }
-        }
-        return $track_group;
+  /**
+   * @param Summit $summit
+   * @param PresentationCategoryGroup $track_group
+   * @param array $data
+   * @return PresentationCategoryGroup
+   */
+  private static function populatePresentationCategoryGroup(
+    Summit $summit,
+    PresentationCategoryGroup $track_group,
+    array $data,
+  ) {
+    if (isset($data["name"])) {
+      $track_group->setName(trim($data["name"]));
     }
 
-
-    /**
-     * @param Summit $summit
-     * @param PresentationCategoryGroup $track_group
-     * @param array $data
-     * @return PresentationCategoryGroup
-     */
-    private static function populatePresentationCategoryGroup
-    (
-        Summit $summit,
-        PresentationCategoryGroup $track_group,
-        array $data
-    )
-    {
-        if(isset($data['name']))
-            $track_group->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $track_group->setDescription(trim($data['description']));
-
-        if(isset($data['color']))
-            $track_group->setColor(trim($data['color']));
-
-        if(isset($data['begin_attendee_voting_period_date']) && !empty($data['begin_attendee_voting_period_date'])) {
-            $start_datetime = intval($data['begin_attendee_voting_period_date']);
-            $start_datetime = new \DateTime("@$start_datetime");
-            $start_datetime->setTimezone($summit->getTimeZone());
-            $track_group->setBeginAttendeeVotingPeriodDate($start_datetime);
-        }
-        else{
-            $track_group->clearAttendeeVotingPeriod();
-        }
-
-        if(isset($data['end_attendee_voting_period_date']) && !empty($data['end_attendee_voting_period_date'])) {
-            $end_datetime = intval($data['end_attendee_voting_period_date']);
-            $end_datetime = new \DateTime("@$end_datetime");
-            $end_datetime->setTimezone($summit->getTimeZone());
-            $track_group->setEndAttendeeVotingPeriodDate($end_datetime);
-        }
-        else{
-            $track_group->clearAttendeeVotingPeriod();
-        }
-
-        if(isset($data['max_attendee_votes']))
-            $track_group->setMaxAttendeeVotes(intval($data['max_attendee_votes']));
-
-        return $track_group;
+    if (isset($data["description"])) {
+      $track_group->setDescription(trim($data["description"]));
     }
 
-    /**
-     * @param Summit $summit
-     * @param PrivatePresentationCategoryGroup $track_group
-     * @param array $data
-     * @return PresentationCategoryGroup
-     */
-    private static function populatePrivatePresentationCategoryGroup
-    (
-        Summit $summit,
-        PrivatePresentationCategoryGroup $track_group,
-        array $data
-    )
-    {
-
-        $track_group->setSummit($summit);
-
-        if(isset($data['submission_begin_date'])) {
-            $start_datetime = intval($data['submission_begin_date']);
-            $start_datetime = new \DateTime("@$start_datetime");
-            $start_datetime->setTimezone($summit->getTimeZone());
-            $track_group->setSubmissionBeginDate($start_datetime);
-        }
-
-        if(isset($data['submission_end_date'])) {
-            $end_datetime = intval($data['submission_end_date']);
-            $end_datetime = new \DateTime("@$end_datetime");
-            $end_datetime->setTimezone($summit->getTimeZone());
-            $track_group->setSubmissionEndDate($end_datetime);
-        }
-
-        if(isset($data['max_submission_allowed_per_user']))
-            $track_group->setMaxSubmissionAllowedPerUser(intval($data['max_submission_allowed_per_user']));
-
-        return self::populatePresentationCategoryGroup($summit, $track_group, $data);
+    if (isset($data["color"])) {
+      $track_group->setColor(trim($data["color"]));
     }
 
-    /**
-     * @param Summit $summit
-     * @param PresentationCategoryGroup $track_group
-     * @param array $data
-     * @return PresentationCategoryGroup
-     */
-    public static function populate(Summit $summit, PresentationCategoryGroup $track_group, array $data){
-        if($track_group instanceof PrivatePresentationCategoryGroup){
-            return self::populatePrivatePresentationCategoryGroup($summit, $track_group, $data);
-        }
-        else if($track_group instanceof PresentationCategoryGroup){
-            return self::populatePresentationCategoryGroup($summit, $track_group, $data);
-        }
-        return $track_group;
+    if (
+      isset($data["begin_attendee_voting_period_date"]) &&
+      !empty($data["begin_attendee_voting_period_date"])
+    ) {
+      $start_datetime = intval($data["begin_attendee_voting_period_date"]);
+      $start_datetime = new \DateTime("@$start_datetime");
+      $start_datetime->setTimezone($summit->getTimeZone());
+      $track_group->setBeginAttendeeVotingPeriodDate($start_datetime);
+    } else {
+      $track_group->clearAttendeeVotingPeriod();
     }
+
+    if (
+      isset($data["end_attendee_voting_period_date"]) &&
+      !empty($data["end_attendee_voting_period_date"])
+    ) {
+      $end_datetime = intval($data["end_attendee_voting_period_date"]);
+      $end_datetime = new \DateTime("@$end_datetime");
+      $end_datetime->setTimezone($summit->getTimeZone());
+      $track_group->setEndAttendeeVotingPeriodDate($end_datetime);
+    } else {
+      $track_group->clearAttendeeVotingPeriod();
+    }
+
+    if (isset($data["max_attendee_votes"])) {
+      $track_group->setMaxAttendeeVotes(intval($data["max_attendee_votes"]));
+    }
+
+    return $track_group;
+  }
+
+  /**
+   * @param Summit $summit
+   * @param PrivatePresentationCategoryGroup $track_group
+   * @param array $data
+   * @return PresentationCategoryGroup
+   */
+  private static function populatePrivatePresentationCategoryGroup(
+    Summit $summit,
+    PrivatePresentationCategoryGroup $track_group,
+    array $data,
+  ) {
+    $track_group->setSummit($summit);
+
+    if (isset($data["submission_begin_date"])) {
+      $start_datetime = intval($data["submission_begin_date"]);
+      $start_datetime = new \DateTime("@$start_datetime");
+      $start_datetime->setTimezone($summit->getTimeZone());
+      $track_group->setSubmissionBeginDate($start_datetime);
+    }
+
+    if (isset($data["submission_end_date"])) {
+      $end_datetime = intval($data["submission_end_date"]);
+      $end_datetime = new \DateTime("@$end_datetime");
+      $end_datetime->setTimezone($summit->getTimeZone());
+      $track_group->setSubmissionEndDate($end_datetime);
+    }
+
+    if (isset($data["max_submission_allowed_per_user"])) {
+      $track_group->setMaxSubmissionAllowedPerUser(
+        intval($data["max_submission_allowed_per_user"]),
+      );
+    }
+
+    return self::populatePresentationCategoryGroup($summit, $track_group, $data);
+  }
+
+  /**
+   * @param Summit $summit
+   * @param PresentationCategoryGroup $track_group
+   * @param array $data
+   * @return PresentationCategoryGroup
+   */
+  public static function populate(
+    Summit $summit,
+    PresentationCategoryGroup $track_group,
+    array $data,
+  ) {
+    if ($track_group instanceof PrivatePresentationCategoryGroup) {
+      return self::populatePrivatePresentationCategoryGroup($summit, $track_group, $data);
+    } elseif ($track_group instanceof PresentationCategoryGroup) {
+      return self::populatePresentationCategoryGroup($summit, $track_group, $data);
+    }
+    return $track_group;
+  }
 }

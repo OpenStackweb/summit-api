@@ -21,51 +21,44 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitPresentationCommentRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitPresentationCommentRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitPresentationCommentRepository {
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.presentation", "p")->innerJoin("e.creator", "c");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query
-            ->innerJoin('e.presentation', 'p')
-            ->innerJoin('e.creator', 'c');
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "presentation_id" => "p.id",
+      "creator_id" => "c.id",
+      "is_activity" => "e.is_activity",
+      "is_public" => "e.is_public",
+      "body" => "e.body",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'presentation_id' => 'p.id',
-            'creator_id' => 'c.id',
-            'is_activity' => 'e.is_activity',
-            'is_public' => 'e.is_public',
-            'body' => 'e.body',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "creator_id" => "c.id",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id' => 'e.id',
-            'creator_id' => 'c.id',
-        ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitPresentationComment::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitPresentationComment::class;
+  }
 }

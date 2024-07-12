@@ -16,26 +16,22 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class ProposedScheduleLockValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class ProposedScheduleLockValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class ProposedScheduleLockValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "message" => "sometimes|string|max:1024",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'message'  => 'sometimes|string|max:1024',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return self::buildForAdd();
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return self::buildForAdd();
+  }
 }

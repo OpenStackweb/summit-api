@@ -18,17 +18,16 @@ use models\utils\IBaseRepository;
  * Interface ISummitTaxTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitTaxTypeRepository extends IBaseRepository
-{
-    /**
-     * @param string $name
-     * @return SummitTaxType|null
-     */
-    public function getByName(string $name):?SummitTaxType;
+interface ISummitTaxTypeRepository extends IBaseRepository {
+  /**
+   * @param string $name
+   * @return SummitTaxType|null
+   */
+  public function getByName(string $name): ?SummitTaxType;
 
-    /**
-     * @param string $tax_id
-     * @return SummitTaxType|null
-     */
-    public function getByTaxID(string $tax_id):?SummitTaxType;
+  /**
+   * @param string $tax_id
+   * @return SummitTaxType|null
+   */
+  public function getByTaxID(string $tax_id): ?SummitTaxType;
 }

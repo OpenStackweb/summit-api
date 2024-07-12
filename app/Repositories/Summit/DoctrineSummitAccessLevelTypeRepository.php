@@ -20,48 +20,41 @@ use utils\DoctrineLeftJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitAccessLevelTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitAccessLevelTypeRepository
+  extends SilverStripeDoctrineRepository
+  implements ISummitAccessLevelTypeRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "is_default" => "e.is_default|json_boolean",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-{
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'        => 'e.name:json_string',
-            'is_default'  => 'e.is_default|json_boolean',
-            'summit_id'   => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitAccessLevelType::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitAccessLevelType::class;
-    }
-
-    /**
-     * @param string $name
-     * @return SummitAccessLevelType|null
-     */
-    public function getByName(string $name): ?SummitAccessLevelType
-    {
-        return $this->findOneBy(['name'=>trim($name)]);
-    }
+  /**
+   * @param string $name
+   * @return SummitAccessLevelType|null
+   */
+  public function getByName(string $name): ?SummitAccessLevelType {
+    return $this->findOneBy(["name" => trim($name)]);
+  }
 }

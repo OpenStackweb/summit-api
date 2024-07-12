@@ -16,26 +16,24 @@
  * Class SummitBadgeFeatureTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitBadgeFeatureTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'name' => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'template_content' => 'nullable|string',
-            ];
-        }
-        return [
-            'name' => 'required|string',
-            'description' => 'sometimes|string',
-            'template_content' => 'nullable|string',
-        ];
+final class SummitBadgeFeatureTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string",
+        "description" => "sometimes|string",
+        "template_content" => "nullable|string",
+      ];
     }
+    return [
+      "name" => "required|string",
+      "description" => "sometimes|string",
+      "template_content" => "nullable|string",
+    ];
+  }
 }

@@ -20,15 +20,14 @@ use utils\FilterParser;
  * Class RetrieveAllSummitVoteablePresentationsStrategy
  * @package App\Http\Controllers
  */
-class RetrieveAllSummitVoteablePresentationsStrategy extends RetrieveAllSummitPresentationsStrategy
-{
-    /**
-     * @return null|Filter
-     */
-    protected function buildFilter()
-    {
-        $filter = parent::buildFilter();
-        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_attendee_vote','==',1));
-        return $filter;
-    }
+class RetrieveAllSummitVoteablePresentationsStrategy extends
+  RetrieveAllSummitPresentationsStrategy {
+  /**
+   * @return null|Filter
+   */
+  protected function buildFilter() {
+    $filter = parent::buildFilter();
+    $filter->addFilterCondition(FilterParser::buildFilter("type_allows_attendee_vote", "==", 1));
+    return $filter;
+  }
 }

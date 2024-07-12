@@ -24,113 +24,103 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitProposedScheduleLock
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
-class SummitProposedScheduleLock extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SummitProposedScheduleLock extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getTrackId' => 'track',
-        'getCreatedById' => 'created_by'
-    ];
+  protected $getIdMappings = [
+    "getTrackId" => "track",
+    "getCreatedById" => "created_by",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasTrack' => 'track',
-        'hasCreatedBy' => 'created_by'
-    ];
+  protected $hasPropertyMappings = [
+    "hasTrack" => "track",
+    "hasCreatedBy" => "created_by",
+  ];
 
-    /**
-     * @ORM\Column(name="Reason", type="string")
-     * @var string
-     */
-    private $reason;
+  /**
+   * @ORM\Column(name="Reason", type="string")
+   * @var string
+   */
+  private $reason;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TrackID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var PresentationCategory
-     */
-    protected $track;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="TrackID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var PresentationCategory
+   */
+  protected $track;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitTrackChair", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var SummitTrackChair
-     */
-    protected $created_by;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitTrackChair", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var SummitTrackChair
+   */
+  protected $created_by;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="locks")
-     * @ORM\JoinColumn(name="SummitProposedScheduleID", referencedColumnName="ID")
-     * @var SummitProposedSchedule
-     */
-    protected $summit_proposed_schedule;
+  /**
+   * @ORM\ManyToOne(targetEntity="SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="locks")
+   * @ORM\JoinColumn(name="SummitProposedScheduleID", referencedColumnName="ID")
+   * @var SummitProposedSchedule
+   */
+  protected $summit_proposed_schedule;
 
-    /**
-     * @return string
-     */
-    public function getReason(): string
-    {
-        return $this->reason;
-    }
+  /**
+   * @return string
+   */
+  public function getReason(): string {
+    return $this->reason;
+  }
 
-    /**
-     * @param string $reason
-     */
-    public function setReason(string $reason): void
-    {
-        $this->reason = $reason;
-    }
+  /**
+   * @param string $reason
+   */
+  public function setReason(string $reason): void {
+    $this->reason = $reason;
+  }
 
-    /**
-     * @return PresentationCategory
-     */
-    public function getTrack(): PresentationCategory
-    {
-        return $this->track;
-    }
+  /**
+   * @return PresentationCategory
+   */
+  public function getTrack(): PresentationCategory {
+    return $this->track;
+  }
 
-    /**
-     * @param PresentationCategory $track
-     */
-    public function setTrack(PresentationCategory $track): void
-    {
-        $this->track = $track;
-    }
+  /**
+   * @param PresentationCategory $track
+   */
+  public function setTrack(PresentationCategory $track): void {
+    $this->track = $track;
+  }
 
-    /**
-     * @return SummitTrackChair
-     */
-    public function getCreatedBy(): SummitTrackChair
-    {
-        return $this->created_by;
-    }
+  /**
+   * @return SummitTrackChair
+   */
+  public function getCreatedBy(): SummitTrackChair {
+    return $this->created_by;
+  }
 
-    /**
-     * @param SummitTrackChair $created_by
-     */
-    public function setCreatedBy(SummitTrackChair $created_by): void
-    {
-        $this->created_by = $created_by;
-    }
+  /**
+   * @param SummitTrackChair $created_by
+   */
+  public function setCreatedBy(SummitTrackChair $created_by): void {
+    $this->created_by = $created_by;
+  }
 
-    /**
-     * @return SummitProposedSchedule
-     */
-    public function getProposedSchedule(): SummitProposedSchedule
-    {
-        return $this->summit_proposed_schedule;
-    }
+  /**
+   * @return SummitProposedSchedule
+   */
+  public function getProposedSchedule(): SummitProposedSchedule {
+    return $this->summit_proposed_schedule;
+  }
 
-    /**
-     * @param SummitProposedSchedule $summit_proposed_schedule
-     */
-    public function setProposedSchedule(SummitProposedSchedule $summit_proposed_schedule): void
-    {
-        $this->summit_proposed_schedule = $summit_proposed_schedule;
-    }
+  /**
+   * @param SummitProposedSchedule $summit_proposed_schedule
+   */
+  public function setProposedSchedule(SummitProposedSchedule $summit_proposed_schedule): void {
+    $this->summit_proposed_schedule = $summit_proposed_schedule;
+  }
 
-    public function clearProposedSchedule(): void
-    {
-        $this->summit_proposed_schedule = null;
-    }
+  public function clearProposedSchedule(): void {
+    $this->summit_proposed_schedule = null;
+  }
 }

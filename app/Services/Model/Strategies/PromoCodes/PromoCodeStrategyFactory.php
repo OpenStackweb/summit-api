@@ -22,61 +22,65 @@ use services\model\ISummitPromoCodeService;
  * Class PromoCodeStrategyFactory
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class PromoCodeStrategyFactory implements IPromoCodeStrategyFactory
-{
-    /**
-     * @var ISummitRegistrationPromoCodeRepository
-     */
-    private $repository;
+final class PromoCodeStrategyFactory implements IPromoCodeStrategyFactory {
+  /**
+   * @var ISummitRegistrationPromoCodeRepository
+   */
+  private $repository;
 
-    /**
-     * @var ITransactionService
-     */
-    protected $tx_service;
+  /**
+   * @var ITransactionService
+   */
+  protected $tx_service;
 
-    /**
-     * @var ISummitPromoCodeService
-     */
-    private $service;
+  /**
+   * @var ISummitPromoCodeService
+   */
+  private $service;
 
-    /**
-     * @var IPromoCodeGenerator
-     */
-    protected $code_generator;
+  /**
+   * @var IPromoCodeGenerator
+   */
+  protected $code_generator;
 
-    /**
-     * PromoCodeStrategyFactory constructor.
-     * @param ISummitRegistrationPromoCodeRepository $repository
-     * @param ITransactionService $tx_service
-     * @param IPromoCodeGenerator $code_generator
-     */
-    public function __construct(ISummitRegistrationPromoCodeRepository $repository,
-                                ISummitPromoCodeService $service,
-                                ITransactionService $tx_service,
-                                IPromoCodeGenerator $code_generator)
-    {
-        $this->repository = $repository;
-        $this->service = $service;
-        $this->tx_service = $tx_service;
-        $this->code_generator = $code_generator;
+  /**
+   * PromoCodeStrategyFactory constructor.
+   * @param ISummitRegistrationPromoCodeRepository $repository
+   * @param ITransactionService $tx_service
+   * @param IPromoCodeGenerator $code_generator
+   */
+  public function __construct(
+    ISummitRegistrationPromoCodeRepository $repository,
+    ISummitPromoCodeService $service,
+    ITransactionService $tx_service,
+    IPromoCodeGenerator $code_generator,
+  ) {
+    $this->repository = $repository;
+    $this->service = $service;
+    $this->tx_service = $tx_service;
+    $this->code_generator = $code_generator;
+  }
+
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return IPromoCodeStrategy|null
+   */
+  public function createStrategy(Summit $summit, array $payload): ?IPromoCodeStrategy {
+    if (isset($payload["promo_code"])) {
+      return new ExistingMultiSpeakerPromoCodeStrategy($summit, $this->tx_service, $payload);
     }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return IPromoCodeStrategy|null
-     */
-    public function createStrategy(Summit $summit, array $payload): ?IPromoCodeStrategy
-    {
-        if (isset($payload["promo_code"]))
-            return new ExistingMultiSpeakerPromoCodeStrategy($summit, $this->tx_service, $payload);
-
-        if(isset($payload['promo_code_spec']))
-            return new AutomaticMultiSpeakerPromoCodeStrategy
-            (
-                $summit, $this->service, $this->repository, $this->code_generator, $payload
-            );
-
-        return null;
+    if (isset($payload["promo_code_spec"])) {
+      return new AutomaticMultiSpeakerPromoCodeStrategy(
+        $summit,
+        $this->service,
+        $this->repository,
+        $this->code_generator,
+        $payload,
+      );
     }
+
+    return null;
+  }
 }

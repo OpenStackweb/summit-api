@@ -17,7 +17,6 @@ use models\utils\IBaseRepository;
  * Interface ISummitMediaFileTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitMediaFileTypeRepository extends IBaseRepository
-{
-    public function getByName(string $name):?SummitMediaFileType;
+interface ISummitMediaFileTypeRepository extends IBaseRepository {
+  public function getByName(string $name): ?SummitMediaFileType;
 }

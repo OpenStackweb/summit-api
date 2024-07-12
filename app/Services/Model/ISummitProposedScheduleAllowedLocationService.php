@@ -22,71 +22,92 @@ use models\summit\PresentationCategory;
  * Interface ISummitProposedScheduleAllowedLocationService
  * @package App\Services\Model
  */
-interface ISummitProposedScheduleAllowedLocationService
-{
-    /**
-     * @param PresentationCategory $track
-     * @param array $payload
-     * @return SummitProposedScheduleAllowedLocation|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addProposedLocationToTrack(PresentationCategory $track, array $payload):?SummitProposedScheduleAllowedLocation;
+interface ISummitProposedScheduleAllowedLocationService {
+  /**
+   * @param PresentationCategory $track
+   * @param array $payload
+   * @return SummitProposedScheduleAllowedLocation|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addProposedLocationToTrack(
+    PresentationCategory $track,
+    array $payload,
+  ): ?SummitProposedScheduleAllowedLocation;
 
-    /**
-     * @param PresentationCategory $track
-     * @param int $allowed_location_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteProposedLocationFromTrack(PresentationCategory $track, int $allowed_location_id):void;
+  /**
+   * @param PresentationCategory $track
+   * @param int $allowed_location_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteProposedLocationFromTrack(
+    PresentationCategory $track,
+    int $allowed_location_id,
+  ): void;
 
-    /**
-     * @param PresentationCategory $track
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteAllProposedLocationFromTrack(PresentationCategory $track):void;
+  /**
+   * @param PresentationCategory $track
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteAllProposedLocationFromTrack(PresentationCategory $track): void;
 
-    /**
-     * @param PresentationCategory $track
-     * @param int $allowed_location_id
-     * @param array $payload
-     * @return SummitProposedScheduleAllowedDay|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id, array $payload):?SummitProposedScheduleAllowedDay;
+  /**
+   * @param PresentationCategory $track
+   * @param int $allowed_location_id
+   * @param array $payload
+   * @return SummitProposedScheduleAllowedDay|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addAllowedDayToProposedLocation(
+    PresentationCategory $track,
+    int $allowed_location_id,
+    array $payload,
+  ): ?SummitProposedScheduleAllowedDay;
 
-    /**
-     * @param PresentationCategory $track
-     * @param int $allowed_location_id
-     * @param int $allowed_day_id
-     * @param array $payload
-     * @return SummitProposedScheduleAllowedDay|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id, int $allowed_day_id, array $payload):?SummitProposedScheduleAllowedDay;
+  /**
+   * @param PresentationCategory $track
+   * @param int $allowed_location_id
+   * @param int $allowed_day_id
+   * @param array $payload
+   * @return SummitProposedScheduleAllowedDay|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateAllowedDayToProposedLocation(
+    PresentationCategory $track,
+    int $allowed_location_id,
+    int $allowed_day_id,
+    array $payload,
+  ): ?SummitProposedScheduleAllowedDay;
 
-    /**
-     * @param PresentationCategory $track
-     * @param int $allowed_location_id
-     * @param int $allowed_day_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id, int $allowed_day_id):void;
+  /**
+   * @param PresentationCategory $track
+   * @param int $allowed_location_id
+   * @param int $allowed_day_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteAllowedDayToProposedLocation(
+    PresentationCategory $track,
+    int $allowed_location_id,
+    int $allowed_day_id,
+  ): void;
 
-    /**
-     * @param PresentationCategory $track
-     * @param int $allowed_location_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteAllAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id): void;
+  /**
+   * @param PresentationCategory $track
+   * @param int $allowed_location_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteAllAllowedDayToProposedLocation(
+    PresentationCategory $track,
+    int $allowed_location_id,
+  ): void;
 }

@@ -19,16 +19,20 @@ use models\summit\SummitAttendeeBadgePrint;
  * Class SummitAttendeeBadgePrintCSVSerializer
  * @package ModelSerializers
  */
-final class SummitAttendeeBadgePrintCSVSerializer extends SummitAttendeeBadgePrintSerializer
-{
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $print = $this->object;
-        if(!$print instanceof SummitAttendeeBadgePrint) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $values['requestor_name'] = $print->getRequestor()->getFullName();
-        $values['requestor_email'] = $print->getRequestor()->getEmail();
-        return $values;
+final class SummitAttendeeBadgePrintCSVSerializer extends SummitAttendeeBadgePrintSerializer {
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $print = $this->object;
+    if (!$print instanceof SummitAttendeeBadgePrint) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $values["requestor_name"] = $print->getRequestor()->getFullName();
+    $values["requestor_email"] = $print->getRequestor()->getEmail();
+    return $values;
+  }
 }

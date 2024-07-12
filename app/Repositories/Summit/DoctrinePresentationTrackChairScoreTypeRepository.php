@@ -23,47 +23,41 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrinePresentationTrackChairScoreTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements IPresentationTrackChairScoreTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements IPresentationTrackChairScoreTypeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PresentationTrackChairScoreType::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PresentationTrackChairScoreType::class;
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    if ($filter->hasFilter("type_id")) {
+      $query->join("e.type", "t");
     }
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        if($filter->hasFilter('type_id'))
-            $query->join('e.type', 't');
-        return $query;
-    }
+  protected function getFilterMappings() {
+    return [
+      "type_id" => "t.id",
+      "name" => "e.name",
+    ];
+  }
 
-
-    protected function getFilterMappings()
-    {
-        return [
-            'type_id' => 't.id',
-            'name' => "e.name",
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'score' => 'e.score',
-            'name' => 'e.name',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "score" => "e.score",
+      "name" => "e.name",
+    ];
+  }
 }

@@ -17,7 +17,5 @@ use Exception;
  * Class HTTP403ForbiddenException
  * @package App\Http\Exceptions
  */
-final class HTTP403ForbiddenException extends Exception
-{
-
+final class HTTP403ForbiddenException extends Exception {
 }

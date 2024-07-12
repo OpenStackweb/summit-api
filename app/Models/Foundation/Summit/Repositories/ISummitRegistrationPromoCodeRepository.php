@@ -21,48 +21,48 @@ use utils\PagingResponse;
  * Interface ISummitRegistrationPromoCodeRepository
  * @package models\summit
  */
-interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepository
-{
-    /**
-     * @param Summit $summit
-     * @return array
-     */
-    public function getMetadata(Summit $summit);
+interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepository {
+  /**
+   * @param Summit $summit
+   * @return array
+   */
+  public function getMetadata(Summit $summit);
 
-    /**
-     * @param string $code
-     * @return SummitRegistrationPromoCode|null
-     */
-    public function getByCode(string $code):?SummitRegistrationPromoCode;
+  /**
+   * @param string $code
+   * @return SummitRegistrationPromoCode|null
+   */
+  public function getByCode(string $code): ?SummitRegistrationPromoCode;
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     * @throws \Doctrine\DBAL\Exception
-     */
-    public function getIdsBySummit
-    (
-        Summit $summit,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order   = null
-    ): PagingResponse;
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   * @throws \Doctrine\DBAL\Exception
+   */
+  public function getIdsBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 
-    /**
-     * @param Summit $summit
-     * @param array $codes
-     * @return mixed
-     */
-    public function getByValuesExclusiveLock(Summit $summit, array $codes);
+  /**
+   * @param Summit $summit
+   * @param array $codes
+   * @return mixed
+   */
+  public function getByValuesExclusiveLock(Summit $summit, array $codes);
 
-    /**
-     * @param Summit $summit
-     * @param string $code
-     * @return SummitRegistrationPromoCode|null
-     */
-    public function getByValueExclusiveLock(Summit $summit, string $code):?SummitRegistrationPromoCode;
-
+  /**
+   * @param Summit $summit
+   * @param string $code
+   * @return SummitRegistrationPromoCode|null
+   */
+  public function getByValueExclusiveLock(
+    Summit $summit,
+    string $code,
+  ): ?SummitRegistrationPromoCode;
 }

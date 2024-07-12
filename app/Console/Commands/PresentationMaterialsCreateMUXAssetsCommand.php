@@ -19,54 +19,67 @@ use Illuminate\Support\Facades\Log;
  * Class PresentationMaterialsCreateMUXAssetsCommand
  * @package App\Console\Commands
  */
-final class PresentationMaterialsCreateMUXAssetsCommand extends Command
-{
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:presentation-materials-mux-assets';
+final class PresentationMaterialsCreateMUXAssetsCommand extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:presentation-materials-mux-assets";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:presentation-materials-mux-assets {summit_id} {mounting_folder?} {event_id?}';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:presentation-materials-mux-assets {summit_id} {mounting_folder?} {event_id?}";
 
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Process Presentation Videos and ingest on MUX";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Process Presentation Videos and ingest on MUX';
+  /**
+   * @param IPresentationVideoMediaUploadProcessor $service
+   */
+  public function handle(IPresentationVideoMediaUploadProcessor $service) {
+    $summit_id = $this->argument("summit_id");
 
-    /**
-     * @param IPresentationVideoMediaUploadProcessor $service
-     */
-    public function handle(IPresentationVideoMediaUploadProcessor $service)
-    {
-        $summit_id = $this->argument('summit_id');
+    $event_id = $this->argument("event_id");
 
-        $event_id = $this->argument('event_id');
-
-        if(empty($summit_id))
-            throw new \InvalidArgumentException("summit_id is required");
-
-        $mountingFolder = $this->argument('mounting_folder');
-        if(empty($mountingFolder))
-            $mountingFolder = Config::get('mediaupload.mounting_folder');
-
-        Log::debug(sprintf("starting to process published presentations for summit id %s mountingFolder %s event id %s", $summit_id, $mountingFolder, $event_id));
-        $this->info(sprintf("starting to process published presentations for summit id %s mountingFolder %s event id %s", $summit_id, $mountingFolder, $event_id));
-
-        if(empty($event_id)) {
-            $service->processPublishedPresentationFor(intval($summit_id), $mountingFolder);
-            return;
-        }
-
-        $service->processEvent(intval($event_id), $mountingFolder);
+    if (empty($summit_id)) {
+      throw new \InvalidArgumentException("summit_id is required");
     }
+
+    $mountingFolder = $this->argument("mounting_folder");
+    if (empty($mountingFolder)) {
+      $mountingFolder = Config::get("mediaupload.mounting_folder");
+    }
+
+    Log::debug(
+      sprintf(
+        "starting to process published presentations for summit id %s mountingFolder %s event id %s",
+        $summit_id,
+        $mountingFolder,
+        $event_id,
+      ),
+    );
+    $this->info(
+      sprintf(
+        "starting to process published presentations for summit id %s mountingFolder %s event id %s",
+        $summit_id,
+        $mountingFolder,
+        $event_id,
+      ),
+    );
+
+    if (empty($event_id)) {
+      $service->processPublishedPresentationFor(intval($summit_id), $mountingFolder);
+      return;
+    }
+
+    $service->processEvent(intval($event_id), $mountingFolder);
+  }
 }

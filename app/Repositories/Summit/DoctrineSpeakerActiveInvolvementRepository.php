@@ -19,23 +19,19 @@ use models\summit\SpeakerActiveInvolvement;
  * @package App\Repositories\Summit
  */
 final class DoctrineSpeakerActiveInvolvementRepository
-    extends SilverStripeDoctrineRepository
-    implements ISpeakerActiveInvolvementRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISpeakerActiveInvolvementRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SpeakerActiveInvolvement::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SpeakerActiveInvolvement::class;
-    }
-
-    /**
-     * @return SpeakerActiveInvolvement[]
-     */
-    public function getDefaultOnes()
-    {
-        return $this->findBy(["is_default" => true]);
-    }
+  /**
+   * @return SpeakerActiveInvolvement[]
+   */
+  public function getDefaultOnes() {
+    return $this->findBy(["is_default" => true]);
+  }
 }

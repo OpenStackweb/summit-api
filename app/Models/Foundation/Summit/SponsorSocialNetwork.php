@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
@@ -21,114 +21,104 @@ use models\utils\SilverstripeBaseModel;
  * Class SponsorSocialNetwork
  * @package models\summit
  */
-class SponsorSocialNetwork extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SponsorSocialNetwork extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getSponsorId' => 'sponsor',
-    ];
+  protected $getIdMappings = [
+    "getSponsorId" => "sponsor",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSponsor' => 'sponsor',
-    ];
+  protected $hasPropertyMappings = [
+    "hasSponsor" => "sponsor",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="social_networks", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Sponsor
-     */
-    private $sponsor;
+  /**
+   * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="social_networks", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Sponsor
+   */
+  private $sponsor;
 
-    /**
-     * @ORM\Column(name="Link", type="string")
-     * @var string
-     */
-    private $link;
+  /**
+   * @ORM\Column(name="Link", type="string")
+   * @var string
+   */
+  private $link;
 
-    /**
-     * @ORM\Column(name="IconCSSClass", type="string")
-     * @var string
-     */
-    private $icon_css_class;
+  /**
+   * @ORM\Column(name="IconCSSClass", type="string")
+   * @var string
+   */
+  private $icon_css_class;
 
-    /**
-     * @ORM\Column(name="IsEnable", type="boolean")
-     * @var boolean
-     */
-    private $is_enabled;
+  /**
+   * @ORM\Column(name="IsEnable", type="boolean")
+   * @var boolean
+   */
+  private $is_enabled;
 
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor(): ?Sponsor
-    {
-        return $this->sponsor;
-    }
+  /**
+   * @return Sponsor
+   */
+  public function getSponsor(): ?Sponsor {
+    return $this->sponsor;
+  }
 
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
-    }
+  /**
+   * @param Sponsor $sponsor
+   */
+  public function setSponsor(Sponsor $sponsor): void {
+    $this->sponsor = $sponsor;
+  }
 
-    public function clearSponsor():void{
-        $this->sponsor = null;
-    }
+  public function clearSponsor(): void {
+    $this->sponsor = null;
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getLink(): ?string
-    {
-        return $this->link;
-    }
+  /**
+   * @return string|null
+   */
+  public function getLink(): ?string {
+    return $this->link;
+  }
 
-    /**
-     * @param string $link
-     */
-    public function setLink(string $link): void
-    {
-        $this->link = $link;
-    }
+  /**
+   * @param string $link
+   */
+  public function setLink(string $link): void {
+    $this->link = $link;
+  }
 
-    /**
-     * @return string
-     */
-    public function getIconCssClass(): string
-    {
-        return $this->icon_css_class;
-    }
+  /**
+   * @return string
+   */
+  public function getIconCssClass(): string {
+    return $this->icon_css_class;
+  }
 
-    /**
-     * @param string $icon_css_class
-     */
-    public function setIconCssClass(string $icon_css_class): void
-    {
-        $this->icon_css_class = $icon_css_class;
-    }
+  /**
+   * @param string $icon_css_class
+   */
+  public function setIconCssClass(string $icon_css_class): void {
+    $this->icon_css_class = $icon_css_class;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isEnabled(): bool
-    {
-        return $this->is_enabled;
-    }
+  /**
+   * @return bool
+   */
+  public function isEnabled(): bool {
+    return $this->is_enabled;
+  }
 
-    /**
-     * @param bool $is_enabled
-     */
-    public function setIsEnabled(bool $is_enabled): void
-    {
-        $this->is_enabled = $is_enabled;
-    }
+  /**
+   * @param bool $is_enabled
+   */
+  public function setIsEnabled(bool $is_enabled): void {
+    $this->is_enabled = $is_enabled;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_enabled = true;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->is_enabled = true;
+  }
 }

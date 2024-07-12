@@ -12,35 +12,36 @@
  * limitations under the License.
  **/
 
-
 use models\summit\SponsorMaterial;
 
 /**
  * Class SponsorMaterialFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SponsorMaterialFactory
-{
-    /**
-     * @param array $data
-     * @return SponsorMaterial
-     */
-    public static function build(array $data):SponsorMaterial{
-        return self::populate(new SponsorMaterial(), $data);
-    }
+final class SponsorMaterialFactory {
+  /**
+   * @param array $data
+   * @return SponsorMaterial
+   */
+  public static function build(array $data): SponsorMaterial {
+    return self::populate(new SponsorMaterial(), $data);
+  }
 
-    /**
-     * @param SponsorMaterial $material
-     * @param array $data
-     * @return SponsorMaterial
-     */
-    public static function populate(SponsorMaterial $material, array $data):SponsorMaterial{
-        if(isset($data['type']))
-            $material->setType(trim($data['type']));
-        if(isset($data['name']))
-            $material->setName(trim($data['name']));
-        if(isset($data['link']))
-            $material->setLink(trim($data['link']));
-        return $material;
+  /**
+   * @param SponsorMaterial $material
+   * @param array $data
+   * @return SponsorMaterial
+   */
+  public static function populate(SponsorMaterial $material, array $data): SponsorMaterial {
+    if (isset($data["type"])) {
+      $material->setType(trim($data["type"]));
     }
+    if (isset($data["name"])) {
+      $material->setName(trim($data["name"]));
+    }
+    if (isset($data["link"])) {
+      $material->setLink(trim($data["link"]));
+    }
+    return $material;
+  }
 }

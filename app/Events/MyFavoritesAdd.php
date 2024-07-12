@@ -14,37 +14,38 @@
 use models\main\Member;
 use models\summit\Summit;
 
-
 /**
  * Class MyFavoritesAdd
  * @package App\Events
  */
-class MyFavoritesAdd extends SummitEventAction
-{
-    /**
-     * @var Member
-     */
-    protected $member;
+class MyFavoritesAdd extends SummitEventAction {
+  /**
+   * @var Member
+   */
+  protected $member;
 
-    /**
-     * @var Summit
-     */
-    protected $summit;
+  /**
+   * @var Summit
+   */
+  protected $summit;
 
-    /**
-     * MyFavoritesAdd constructor.
-     * @param Member $member
-     * @param Summit $summit
-     * @param int $event_id
-     */
-    public function __construct($member, $summit, $event_id){
+  /**
+   * MyFavoritesAdd constructor.
+   * @param Member $member
+   * @param Summit $summit
+   * @param int $event_id
+   */
+  public function __construct($member, $summit, $event_id) {
+    $this->member = $member;
+    $this->summit = $summit;
+    parent::__construct($event_id);
+  }
 
-        $this->member = $member;
-        $this->summit = $summit;
-        parent::__construct($event_id);
-    }
+  public function getMember() {
+    return $this->member;
+  }
 
-    public function getMember(){ return $this->member; }
-
-    public function getSummit(){ return $this->summit;}
+  public function getSummit() {
+    return $this->summit;
+  }
 }

@@ -16,37 +16,66 @@ use models\summit\Summit;
  * limitations under the License.
  **/
 
-final class SpeakerSelectionAnnouncementEmailTypeFactory
-{
+final class SpeakerSelectionAnnouncementEmailTypeFactory {
+  public static function build(
+    Summit $summit,
+    PresentationSpeaker $speaker,
+    $role = PresentationSpeaker::RoleSpeaker,
+  ) {
+    $has_published =
+      $speaker->hasPublishedRegularPresentations(
+        $summit,
+        $role,
+        true,
+        $summit->getExcludedCategoriesForAcceptedPresentations(),
+      ) ||
+      $speaker->hasPublishedLightningPresentations(
+        $summit,
+        $role,
+        true,
+        $summit->getExcludedCategoriesForAcceptedPresentations(),
+      );
+    $has_rejected = $speaker->hasRejectedPresentations(
+      $summit,
+      $role,
+      true,
+      $summit->getExcludedCategoriesForRejectedPresentations(),
+    );
+    $has_alternate = $speaker->hasAlternatePresentations(
+      $summit,
+      $role,
+      true,
+      $summit->getExcludedCategoriesForAcceptedPresentations(),
+    );
 
-    public static function build(Summit $summit, PresentationSpeaker $speaker, $role = PresentationSpeaker::RoleSpeaker)
-    {
-        $has_published = $speaker->hasPublishedRegularPresentations($summit, $role, true, $summit->getExcludedCategoriesForAcceptedPresentations()) ||
-                         $speaker->hasPublishedLightningPresentations($summit, $role, true, $summit->getExcludedCategoriesForAcceptedPresentations());
-        $has_rejected  = $speaker->hasRejectedPresentations($summit, $role, true, $summit->getExcludedCategoriesForRejectedPresentations());
-        $has_alternate = $speaker->hasAlternatePresentations($summit, $role, true, $summit->getExcludedCategoriesForAcceptedPresentations());
-
-        if($has_published && !$has_rejected && !$has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeAccepted;
-
-        if(!$has_published && !$has_rejected && $has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeAlternate;
-
-        if(!$has_published && $has_rejected && !$has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeRejected;
-
-        if($has_published && !$has_rejected && $has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
-
-        if($has_published && $has_rejected && !$has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
-
-        if(!$has_published && $has_rejected && $has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
-
-        if($has_published && $has_rejected && $has_alternate)
-            return SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
-
-        return SpeakerAnnouncementSummitEmail::TypeNone;
+    if ($has_published && !$has_rejected && !$has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeAccepted;
     }
+
+    if (!$has_published && !$has_rejected && $has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeAlternate;
+    }
+
+    if (!$has_published && $has_rejected && !$has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeRejected;
+    }
+
+    if ($has_published && !$has_rejected && $has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
+    }
+
+    if ($has_published && $has_rejected && !$has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
+    }
+
+    if (!$has_published && $has_rejected && $has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
+    }
+
+    if ($has_published && $has_rejected && $has_alternate) {
+      return SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
+    }
+
+    return SpeakerAnnouncementSummitEmail::TypeNone;
+  }
 }

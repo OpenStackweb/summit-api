@@ -17,98 +17,101 @@ use models\exceptions\ValidationException;
  * Class PaymentGatewayProfileFactory
  * @package models\summit
  */
-final class PaymentGatewayProfileFactory
-{
-    /**
-     * @param string $provider
-     * @param array $params
-     * @return PaymentGatewayProfile|null
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function build(string $provider, array $params): ?PaymentGatewayProfile
-    {
-        $profile = null;
-        if ($provider == IPaymentConstants::ProviderStripe) {
-            $profile = static::populate(new StripePaymentProfile, $params);
-        }
-
-        if ($provider == IPaymentConstants::ProviderLawPay) {
-            $profile = static::populate(new LawPayPaymentProfile, $params);
-        }
-
-        if(is_null($profile))
-            throw new ValidationException("Profile type does not exists.");
-
-        return $profile;
+final class PaymentGatewayProfileFactory {
+  /**
+   * @param string $provider
+   * @param array $params
+   * @return PaymentGatewayProfile|null
+   * @throws \models\exceptions\ValidationException
+   */
+  public static function build(string $provider, array $params): ?PaymentGatewayProfile {
+    $profile = null;
+    if ($provider == IPaymentConstants::ProviderStripe) {
+      $profile = static::populate(new StripePaymentProfile(), $params);
     }
 
-    /**
-     * @param PaymentGatewayProfile $profile
-     * @param array $params
-     * @return PaymentGatewayProfile
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function populate(PaymentGatewayProfile $profile, array $params): PaymentGatewayProfile
-    {
-        $test_publishable_key = $params['test_publishable_key'] ?? null;
-        $test_secret_key      = $params['test_secret_key'] ?? null;
+    if ($provider == IPaymentConstants::ProviderLawPay) {
+      $profile = static::populate(new LawPayPaymentProfile(), $params);
+    }
 
-        if(isset($params['summit']))
-        {
-            $profile->setSummit($params['summit']);
-        }
+    if (is_null($profile)) {
+      throw new ValidationException("Profile type does not exists.");
+    }
 
-        $profile->setTestKeys([
-            'publishable_key' => $test_publishable_key,
-            'secret_key'      => $test_secret_key
+    return $profile;
+  }
+
+  /**
+   * @param PaymentGatewayProfile $profile
+   * @param array $params
+   * @return PaymentGatewayProfile
+   * @throws \models\exceptions\ValidationException
+   */
+  public static function populate(
+    PaymentGatewayProfile $profile,
+    array $params,
+  ): PaymentGatewayProfile {
+    $test_publishable_key = $params["test_publishable_key"] ?? null;
+    $test_secret_key = $params["test_secret_key"] ?? null;
+
+    if (isset($params["summit"])) {
+      $profile->setSummit($params["summit"]);
+    }
+
+    $profile->setTestKeys([
+      "publishable_key" => $test_publishable_key,
+      "secret_key" => $test_secret_key,
+    ]);
+
+    $live_publishable_key = $params["live_publishable_key"] ?? null;
+    $live_secret_key = $params["live_secret_key"] ?? null;
+    $profile->setLiveKeys([
+      "publishable_key" => $live_publishable_key,
+      "secret_key" => $live_secret_key,
+    ]);
+
+    if (isset($params["test_mode_enabled"])) {
+      boolval($params["test_mode_enabled"]) == true
+        ? $profile->setTestMode()
+        : $profile->setLiveMode();
+    }
+
+    if ($profile instanceof LawPayPaymentProfile) {
+      if (isset($params["merchant_account_id"])) {
+        $profile->setMerchantAccountId(trim($params["merchant_account_id"]));
+      }
+    }
+
+    if ($profile instanceof StripePaymentProfile) {
+      if (isset($params["send_email_receipt"])) {
+        $profile->setSendEmailReceipt(boolval($params["send_email_receipt"]));
+      }
+
+      if (isset($params["set_webhooks"]) && boolval($params["set_webhooks"])) {
+        $profile->setLiveWebHookData([
+          "id" => "DEFAULT_LIVE_WEBHOOK",
+          "secret_key" => $params["live_web_hook_secret"] ?? null,
         ]);
-
-        $live_publishable_key = $params['live_publishable_key'] ?? null;
-        $live_secret_key      = $params['live_secret_key'] ?? null;
-        $profile->setLiveKeys(
-            [
-                'publishable_key' => $live_publishable_key,
-                'secret_key' => $live_secret_key,
-            ]
-        );
-
-        if (isset($params['test_mode_enabled']))
-            boolval($params['test_mode_enabled']) == true ? $profile->setTestMode() : $profile->setLiveMode();
-
-        if( $profile instanceof LawPayPaymentProfile){
-            if(isset($params['merchant_account_id']))
-                $profile->setMerchantAccountId(trim($params['merchant_account_id']));
-        }
-
-        if ($profile instanceof StripePaymentProfile) {
-
-            if (isset($params['send_email_receipt']))
-                $profile->setSendEmailReceipt(boolval($params['send_email_receipt']));
-
-            if(isset($params['set_webhooks']) && boolval($params['set_webhooks'])){
-                $profile->setLiveWebHookData([
-                    'id' => 'DEFAULT_LIVE_WEBHOOK',
-                    'secret_key' => $params['live_web_hook_secret'] ?? null
-                ]);
-                $profile->setTestWebHookData(
-                    [
-                        'id' => 'DEFAULT_TEST_WEBHOOK',
-                        'secret_key' =>  $params['test_web_hook_secret'] ?? null
-                ]);
-            }
-        }
-
-        // common properties
-        if (isset($params['application_type']))
-            $profile->setApplicationType($params['application_type']);
-
-        if (isset($params['active'])) {
-            if(boolval($params['active']) == true)
-                $profile->activate();
-            else
-                $profile->disable();
-        }
-
-        return $profile;
+        $profile->setTestWebHookData([
+          "id" => "DEFAULT_TEST_WEBHOOK",
+          "secret_key" => $params["test_web_hook_secret"] ?? null,
+        ]);
+      }
     }
+
+    // common properties
+    if (isset($params["application_type"])) {
+      $profile->setApplicationType($params["application_type"]);
+    }
+
+    if (isset($params["active"])) {
+      if (boolval($params["active"]) == true) {
+        $profile->activate();
+      } else {
+        $profile->disable();
+      }
+    }
+
+    return $profile;
+  }
 }

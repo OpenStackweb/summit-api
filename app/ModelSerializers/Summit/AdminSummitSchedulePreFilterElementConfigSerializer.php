@@ -23,85 +23,91 @@ use models\summit\SummitSchedulePreFilterElementConfig;
  * Class SummitSchedulePreFilterElementConfigSerializer
  * @package ModelSerializers
  */
-final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Type' => 'type:json_string',
-        'ConfigId' => 'config_id:json_int'
-    ];
+final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+    "ConfigId" => "config_id:json_int",
+  ];
 
-    protected static $allowed_relations = [
-        'values',
-    ];
+  protected static $allowed_relations = ["values"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relation
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $filter = $this->object;
-        if (!$filter instanceof SummitSchedulePreFilterElementConfig) return [];
-
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('values', $relations) && !isset($values['values'])){
-            $values['values'] = $filter->getValues();
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'values':
-                        {
-                            $res = [];
-                            if($filter->getType() === SummitScheduleFilterElementConfig::Type_Company){
-                                $company_repository = App::make(ICompanyRepository::class);
-                                foreach ($filter->getValues() as $id){
-                                    $company = $company_repository->getById(intval($id));
-                                    if(is_null($company)) continue;
-                                    $res[] = [
-                                        'id' => $company->getId(),
-                                        'name' => $company->getName()
-                                    ];
-                                }
-                            }
-                            if($filter->getType() === SummitScheduleFilterElementConfig::Type_Speakers){
-                                $speakers_repository = App::make(ISpeakerRepository::class);
-                                foreach ($filter->getValues() as $id){
-                                    $speaker = $speakers_repository->getById(intval($id));
-                                    if(is_null($speaker)) continue;
-                                    $res[] = [
-                                        'id' => $speaker->getId(),
-                                        'first_name' => $speaker->getFirstName(),
-                                        'last_name' => $speaker->getLastName(),
-                                        'email' => $speaker->getEmail(),
-                                    ];
-                                }
-                            }
-                            if($filter->getType() === SummitScheduleFilterElementConfig::Type_Tags){
-                                $tag_repository = App::make(ITagRepository::class);
-                                foreach ($filter->getValues() as $id){
-                                    $tag = $tag_repository->getByTag(trim($id));
-                                    if(is_null($tag)) continue;
-                                    $res[] = [
-                                        'id' => $tag->getId(),
-                                        'tag' => $tag->getTag(),
-                                    ];
-                                }
-                            }
-                            $values['values'] = count($res) ? $res : $values['values'];
-                        }
-                        break;
-
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relation
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $filter = $this->object;
+    if (!$filter instanceof SummitSchedulePreFilterElementConfig) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("values", $relations) && !isset($values["values"])) {
+      $values["values"] = $filter->getValues();
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "values":
+            $res = [];
+            if ($filter->getType() === SummitScheduleFilterElementConfig::Type_Company) {
+              $company_repository = App::make(ICompanyRepository::class);
+              foreach ($filter->getValues() as $id) {
+                $company = $company_repository->getById(intval($id));
+                if (is_null($company)) {
+                  continue;
+                }
+                $res[] = [
+                  "id" => $company->getId(),
+                  "name" => $company->getName(),
+                ];
+              }
+            }
+            if ($filter->getType() === SummitScheduleFilterElementConfig::Type_Speakers) {
+              $speakers_repository = App::make(ISpeakerRepository::class);
+              foreach ($filter->getValues() as $id) {
+                $speaker = $speakers_repository->getById(intval($id));
+                if (is_null($speaker)) {
+                  continue;
+                }
+                $res[] = [
+                  "id" => $speaker->getId(),
+                  "first_name" => $speaker->getFirstName(),
+                  "last_name" => $speaker->getLastName(),
+                  "email" => $speaker->getEmail(),
+                ];
+              }
+            }
+            if ($filter->getType() === SummitScheduleFilterElementConfig::Type_Tags) {
+              $tag_repository = App::make(ITagRepository::class);
+              foreach ($filter->getValues() as $id) {
+                $tag = $tag_repository->getByTag(trim($id));
+                if (is_null($tag)) {
+                  continue;
+                }
+                $res[] = [
+                  "id" => $tag->getId(),
+                  "tag" => $tag->getTag(),
+                ];
+              }
+            }
+            $values["values"] = count($res) ? $res : $values["values"];
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

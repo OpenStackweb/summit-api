@@ -16,22 +16,21 @@ use models\utils\IBaseRepository;
  * Interface IExtraQuestionTypeRepository
  * @package App\Models\Foundation\ExtraQuestions
  */
-interface IExtraQuestionTypeRepository extends IBaseRepository
-{
-    /**
-     * @return array
-     */
-    public function getQuestionsMetadata();
+interface IExtraQuestionTypeRepository extends IBaseRepository {
+  /**
+   * @return array
+   */
+  public function getQuestionsMetadata();
 
-    /**
-     * @param ExtraQuestionType $questionType
-     * @return bool
-     */
-    public function hasAnswers(ExtraQuestionType $questionType):bool;
+  /**
+   * @param ExtraQuestionType $questionType
+   * @return bool
+   */
+  public function hasAnswers(ExtraQuestionType $questionType): bool;
 
-    /**
-     * @param ExtraQuestionType $questionType
-     * @return void
-     */
-    public function deleteAnswersFrom(ExtraQuestionType $questionType):void;
+  /**
+   * @param ExtraQuestionType $questionType
+   * @return void
+   */
+  public function deleteAnswersFrom(ExtraQuestionType $questionType): void;
 }

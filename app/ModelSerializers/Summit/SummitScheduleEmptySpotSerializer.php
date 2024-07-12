@@ -17,12 +17,11 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class SummitScheduleEmptySpotSerializer
  * @package ModelSerializers
  */
-final class SummitScheduleEmptySpotSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'LocationId'    => 'location_id:json_int',
-        'StartDateTime' => 'start_date:datetime_epoch',
-        'EndDateTime'   => 'end_date:datetime_epoch',
-        'TotalMinutes'  => 'total_minutes:json_int',
-    ];
+final class SummitScheduleEmptySpotSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "LocationId" => "location_id:json_int",
+    "StartDateTime" => "start_date:datetime_epoch",
+    "EndDateTime" => "end_date:datetime_epoch",
+    "TotalMinutes" => "total_minutes:json_int",
+  ];
 }

@@ -17,7 +17,5 @@ use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
  * Interface ISponsorExtraQuestionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISponsorExtraQuestionTypeRepository extends IExtraQuestionTypeRepository
-{
-
+interface ISponsorExtraQuestionTypeRepository extends IExtraQuestionTypeRepository {
 }

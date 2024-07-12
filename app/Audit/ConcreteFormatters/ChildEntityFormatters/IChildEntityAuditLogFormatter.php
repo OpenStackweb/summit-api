@@ -15,22 +15,24 @@ namespace App\Audit\ConcreteFormatters\ChildEntityFormatters;
  * limitations under the License.
  **/
 
-
 /**
  * Interface IChildEntityAuditLogFormatter
  * @package App\Audit\ConcreteFormatters\ChildEntityFormatters
  */
-interface IChildEntityAuditLogFormatter
-{
-    public const CHILD_ENTITY_CREATION = 'child_entity_creation';
-    public const CHILD_ENTITY_UPDATE = 'child_entity_update';
-    public const CHILD_ENTITY_DELETION = 'child_entity_deletion';
+interface IChildEntityAuditLogFormatter {
+  public const CHILD_ENTITY_CREATION = "child_entity_creation";
+  public const CHILD_ENTITY_UPDATE = "child_entity_update";
+  public const CHILD_ENTITY_DELETION = "child_entity_deletion";
 
-    /**
-     * @param $subject
-     * @param string $child_entity_action_type
-     * @param string|null $additional_info
-     * @return string|null
-     */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""):?string;
+  /**
+   * @param $subject
+   * @param string $child_entity_action_type
+   * @param string|null $additional_info
+   * @return string|null
+   */
+  public function format(
+    $subject,
+    string $child_entity_action_type,
+    ?string $additional_info = "",
+  ): ?string;
 }

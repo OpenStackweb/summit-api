@@ -11,11 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SpeakerActiveInvolvementSerializer
-    extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Involvement' => 'involvement:json_string',
-        'IsDefault'   => 'is_default:json_boolean',
-    ];
+final class SpeakerActiveInvolvementSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Involvement" => "involvement:json_string",
+    "IsDefault" => "is_default:json_boolean",
+  ];
 }

@@ -17,9 +17,8 @@ use ModelSerializers\SilverStripeSerializer;
  * Class ContinentSerializer
  * @package App\ModelSerializers
  */
-final class ContinentSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string'
-    ];
+final class ContinentSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+  ];
 }

@@ -18,96 +18,93 @@ use models\utils\IEntity;
  * Interface IApiEndpoint
  * @package App\Models\ResourceServer
  */
-interface IApiEndpoint extends IEntity
-{
+interface IApiEndpoint extends IEntity {
+  /**
+   * @return string
+   */
+  public function getRoute();
 
-    /**
-     * @return string
-     */
-    public function getRoute();
+  /**
+   * @return string
+   */
+  public function getHttpMethod();
 
-    /**
-     * @return string
-     */
-    public function getHttpMethod();
+  /**
+   * @return string
+   */
+  public function getName();
 
-    /**
-     * @return string
-     */
-    public function getName();
+  /**
+   * @param string $route
+   * @return void
+   */
+  public function setRoute($route);
 
-    /**
-     * @param string $route
-     * @return void
-     */
-    public function setRoute($route);
+  /**
+   * @param string $http_method
+   * @return void
+   */
+  public function setHttpMethod($http_method);
 
-    /**
-     * @param string $http_method
-     * @return void
-     */
-    public function setHttpMethod($http_method);
+  /**
+   * @param string $name
+   * @return void
+   */
+  public function setName($name);
 
-    /**
-     * @param string $name
-     * @return void
-     */
-    public function setName($name);
+  /**
+   * @return string
+   */
+  public function getFriendlyScopes();
 
-    /**
-     * @return string
-     */
-    public function getFriendlyScopes();
+  /**
+   * @return string[]
+   */
+  public function getScopesNames(): array;
 
-    /**
-     * @return string[]
-     */
-    public function getScopesNames(): array;
+  /**
+   * @return bool
+   */
+  public function isActive();
 
-    /**
-     * @return bool
-     */
-    public function isActive();
+  /**
+   * @param bool $active
+   * @return void
+   */
+  public function setActive($active);
 
-    /**
-     * @param bool $active
-     * @return void
-     */
-    public function setActive($active);
+  /**
+   * @return bool
+   */
+  public function isAllowCors();
 
-    /**
-     * @return bool
-     */
-    public function isAllowCors();
+  /**
+   * @return bool
+   */
+  public function isAllowCredentials();
 
-    /**
-     * @return bool
-     */
-    public function isAllowCredentials();
+  /**
+   * @return IApi
+   */
+  public function getApi();
 
-    /**
-     * @return IApi
-     */
-    public function getApi();
+  /**
+   * @return IApiScope[]
+   */
+  public function getScopes();
 
-    /**
-     * @return IApiScope[]
-     */
-    public function getScopes();
+  /**
+   * @param IApiScope $scope
+   */
+  public function addScope(IApiScope $scope);
 
-    /**
-     * @param IApiScope $scope
-     */
-    public function addScope(IApiScope $scope);
+  /**
+   * @return int
+   */
+  public function getRateLimit();
 
-    /**
-     * @return int
-     */
-    public function getRateLimit();
-
-    /**
-     * @return int
-     */
-    public function getRateLimitDecay();
-
+  /**
+   * @return int
+   */
+  public function getRateLimitDecay();
 }

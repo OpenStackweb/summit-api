@@ -12,18 +12,12 @@
  * limitations under the License.
  **/
 
-interface IPasswordlessAPI
-{
-    /**
-     * @param string $email
-     * @param string $client_id
-     * @param string $scope
-     * @return mixed
-     */
-    public function generateInlineOTP
-    (
-        string $email,
-        string $client_id,
-        string $scope
-    );
+interface IPasswordlessAPI {
+  /**
+   * @param string $email
+   * @param string $client_id
+   * @param string $scope
+   * @return mixed
+   */
+  public function generateInlineOTP(string $email, string $client_id, string $scope);
 }

@@ -19,31 +19,32 @@ use models\summit\SummitTicketType;
  * Interface PromoCodeValidationStrategyFactory
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class PromoCodeValidationStrategyFactory
-{
-    /**
-     * @param SummitTicketType $ticket_type
-     * @param string $ticket_type_subtype
-     * @param int $qty
-     * @param Member $owner
-     * @return IPromoCodeValidationStrategy
-     */
-    public static function createStrategy(SummitTicketType $ticket_type, string $ticket_type_subtype, int $qty, Member $owner): IPromoCodeValidationStrategy
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "PromoCodeValidationStrategyFactory::createStrategy ticket type %s subtype %s qty %s owner %s",
-                $ticket_type->getId(),
-                $ticket_type_subtype,
-                $qty,
-                $owner->getId()
-            )
-        );
+final class PromoCodeValidationStrategyFactory {
+  /**
+   * @param SummitTicketType $ticket_type
+   * @param string $ticket_type_subtype
+   * @param int $qty
+   * @param Member $owner
+   * @return IPromoCodeValidationStrategy
+   */
+  public static function createStrategy(
+    SummitTicketType $ticket_type,
+    string $ticket_type_subtype,
+    int $qty,
+    Member $owner,
+  ): IPromoCodeValidationStrategy {
+    Log::debug(
+      sprintf(
+        "PromoCodeValidationStrategyFactory::createStrategy ticket type %s subtype %s qty %s owner %s",
+        $ticket_type->getId(),
+        $ticket_type_subtype,
+        $qty,
+        $owner->getId(),
+      ),
+    );
 
-        return $ticket_type_subtype === SummitTicketType::Subtype_Regular ?
-            new RegularTicketTypePromoCodeValidationStrategy($ticket_type, $owner, $qty) :
-            new PrePaidTicketTypePromoCodeValidationStrategy();
-    }
+    return $ticket_type_subtype === SummitTicketType::Subtype_Regular
+      ? new RegularTicketTypePromoCodeValidationStrategy($ticket_type, $owner, $qty)
+      : new PrePaidTicketTypePromoCodeValidationStrategy();
+  }
 }

@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Main\DoctrineLanguageRepository")
@@ -20,33 +20,30 @@ use models\utils\SilverstripeBaseModel;
  * Class Language
  * @package App\Models\Foundation\Main
  */
-class Language extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class Language extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="IsoCode_639_1", type="string")
-     * @var string
-     */
-    private $iso_code;
+  /**
+   * @ORM\Column(name="IsoCode_639_1", type="string")
+   * @var string
+   */
+  private $iso_code;
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getIsoCode()
-    {
-        return $this->iso_code;
-    }
+  /**
+   * @return string
+   */
+  public function getIsoCode() {
+    return $this->iso_code;
+  }
 }

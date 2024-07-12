@@ -11,44 +11,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPMemberEmailQuestionTemplate")
  * @ORM\Entity
  * Class RSVPMemberEmailQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPMemberEmailQuestionTemplate extends RSVPTextBoxQuestionTemplate
-{
-    const ClassName = 'RSVPMemberEmailQuestionTemplate';
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+class RSVPMemberEmailQuestionTemplate extends RSVPTextBoxQuestionTemplate {
+  const ClassName = "RSVPMemberEmailQuestionTemplate";
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public static $metadata = [
-        'class_name'       => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(RSVPTextBoxQuestionTemplate::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(RSVPTextBoxQuestionTemplate::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @param array|string $value
-     * @return bool
-     */
-    public function isValidValue($value): bool
-    {
-        if(!is_string($value)) return false;
-        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-           return false;
-        }
-        return true;
+  /**
+   * @param array|string $value
+   * @return bool
+   */
+  public function isValidValue($value): bool {
+    if (!is_string($value)) {
+      return false;
     }
+    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+      return false;
+    }
+    return true;
+  }
 }

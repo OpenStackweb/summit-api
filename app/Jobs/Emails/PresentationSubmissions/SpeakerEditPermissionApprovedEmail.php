@@ -21,44 +21,49 @@ use Illuminate\Support\Facades\Config;
  * Class SpeakerEditPermissionApprovedEmail
  * @package App\Jobs\Emails\PresentationSubmissions
  */
-class SpeakerEditPermissionApprovedEmail extends AbstractEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class SpeakerEditPermissionApprovedEmail extends AbstractEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_SPEAKER_EDIT_PERMISSION_APPROVED';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_SPEAKER_EDIT_PERMISSION_APPROVED';
-    const DEFAULT_TEMPLATE ='SUMMIT_SUBMISSIONS_SPEAKER_EDIT_PERMISSION_APPROVED';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_SPEAKER_EDIT_PERMISSION_APPROVED";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_SPEAKER_EDIT_PERMISSION_APPROVED";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_SPEAKER_EDIT_PERMISSION_APPROVED";
 
-    /**
-     * SpeakerEditPermissionRequested constructor.
-     * @param SpeakerEditPermissionRequest $request
-     */
-    public function __construct(SpeakerEditPermissionRequest $request)
-    {
-        $payload = [];
-        $payload[IMailTemplatesConstants::requested_by_full_name] = $request->getRequestedBy()->getFullName();
-        $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
-        $payload[IMailTemplatesConstants::speaker_management_link] = EmailUtils::getSpeakerManagementLink();
-        $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");
-        $payload[IMailTemplatesConstants::requested_by_email] = $request->getRequestedBy()->getEmail();
-        parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload[IMailTemplatesConstants::requested_by_email]);
-    }
+  /**
+   * SpeakerEditPermissionRequested constructor.
+   * @param SpeakerEditPermissionRequest $request
+   */
+  public function __construct(SpeakerEditPermissionRequest $request) {
+    $payload = [];
+    $payload[IMailTemplatesConstants::requested_by_full_name] = $request
+      ->getRequestedBy()
+      ->getFullName();
+    $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
+    $payload[
+      IMailTemplatesConstants::speaker_management_link
+    ] = EmailUtils::getSpeakerManagementLink();
+    $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");
+    $payload[IMailTemplatesConstants::requested_by_email] = $request->getRequestedBy()->getEmail();
+    parent::__construct(
+      $payload,
+      self::DEFAULT_TEMPLATE,
+      $payload[IMailTemplatesConstants::requested_by_email],
+    );
+  }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = [];
-        $payload[IMailTemplatesConstants::requested_by_full_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::speaker_full_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::speaker_management_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::tenant_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::requested_by_email]['type'] = 'string';
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = [];
+    $payload[IMailTemplatesConstants::requested_by_full_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::speaker_full_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::speaker_management_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::tenant_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::requested_by_email]["type"] = "string";
 
-        return $payload;
-    }
+    return $payload;
+  }
 }

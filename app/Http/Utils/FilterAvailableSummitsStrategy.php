@@ -18,17 +18,15 @@ use models\oauth2\IResourceServerContext;
  * Class FilterAvailableSummitsStrategy
  * @package App\Http\Utils
  */
-final class FilterAvailableSummitsStrategy
-{
-
-    /**
-     * @param IResourceServerContext $resource_server_ctx
-     * @return bool
-     */
-    static public function shouldReturnAllSummits(IResourceServerContext $resource_server_ctx){
-        $scopes         = $resource_server_ctx->getCurrentScope();
-        $current_realm  = Config::get('app.scope_base_realm');
-        $needed_scope   = sprintf(SummitScopes::ReadAllSummitData, $current_realm);
-        return in_array($needed_scope, $scopes);
-    }
+final class FilterAvailableSummitsStrategy {
+  /**
+   * @param IResourceServerContext $resource_server_ctx
+   * @return bool
+   */
+  public static function shouldReturnAllSummits(IResourceServerContext $resource_server_ctx) {
+    $scopes = $resource_server_ctx->getCurrentScope();
+    $current_realm = Config::get("app.scope_base_realm");
+    $needed_scope = sprintf(SummitScopes::ReadAllSummitData, $current_realm);
+    return in_array($needed_scope, $scopes);
+  }
 }

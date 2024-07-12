@@ -16,9 +16,8 @@
  * Class ChatTeamPermission
  * @package models\main
  */
-final class ChatTeamPermission
-{
-    const Read  = 'READ';
-    const Write = 'WRITE';
-    const Admin = 'ADMIN';
+final class ChatTeamPermission {
+  const Read = "READ";
+  const Write = "WRITE";
+  const Admin = "ADMIN";
 }

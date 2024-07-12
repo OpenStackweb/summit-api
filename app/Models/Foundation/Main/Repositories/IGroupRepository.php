@@ -17,11 +17,10 @@ use models\utils\IBaseRepository;
  * Interface IGroupRepository
  * @package models\main
  */
-interface IGroupRepository extends IBaseRepository
-{
-    /**
-     * @param string $slug
-     * @return Group|null
-     */
-    public function getBySlug(string $slug):?Group;
+interface IGroupRepository extends IBaseRepository {
+  /**
+   * @param string $slug
+   * @return Group|null
+   */
+  public function getBySlug(string $slug): ?Group;
 }

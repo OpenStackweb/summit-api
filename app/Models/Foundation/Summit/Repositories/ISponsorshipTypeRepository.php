@@ -17,22 +17,21 @@ use models\utils\IBaseRepository;
  * Interface ISponsorshipTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISponsorshipTypeRepository extends IBaseRepository
-{
-    /**
-     * @param string $name
-     * @return SponsorshipType|null
-     */
-    public function getByName(string $name):?SponsorshipType;
+interface ISponsorshipTypeRepository extends IBaseRepository {
+  /**
+   * @param string $name
+   * @return SponsorshipType|null
+   */
+  public function getByName(string $name): ?SponsorshipType;
 
-    /**
-     * @param string $label
-     * @return SponsorshipType|null
-     */
-    public function getByLabel(string $label):?SponsorshipType;
+  /**
+   * @param string $label
+   * @return SponsorshipType|null
+   */
+  public function getByLabel(string $label): ?SponsorshipType;
 
-    /**
-     * @return int
-     */
-    public function getMaxOrder():int;
+  /**
+   * @return int
+   */
+  public function getMaxOrder(): int;
 }

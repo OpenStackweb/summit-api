@@ -31,101 +31,108 @@ use models\summit\Summit;
  * Class IngestSummitExternalRegistrationData
  * @package App\Jobs
  */
-class IngestSummitExternalRegistrationData implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class IngestSummitExternalRegistrationData implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 1;
+  public $tries = 1;
 
-    public $timeout = 0;
-    /**
-     * @var int
-     */
-    private $summit_id;
+  public $timeout = 0;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @var string
-     */
-    private $email_to;
+  /**
+   * @var string
+   */
+  private $email_to;
 
-    /**
-     * IngestSummitExternalRegistrationData constructor.
-     * @param int $summit_id
-     * @param null|string $email_to
-     */
-    public function __construct(int $summit_id, ?string $email_to = null)
-    {
-        $this->summit_id  = $summit_id;
-        $this->email_to   = $email_to;
-    }
+  /**
+   * IngestSummitExternalRegistrationData constructor.
+   * @param int $summit_id
+   * @param null|string $email_to
+   */
+  public function __construct(int $summit_id, ?string $email_to = null) {
+    $this->summit_id = $summit_id;
+    $this->email_to = $email_to;
+  }
 
-    /**
-     * @param ISummitRepository $summit_repository
-     * @param ISummitTicketTypeService $ticketTypeService
-     * @param ISummitOrderExtraQuestionTypeService $extraQuestionTypeService
-     * @param IRegistrationIngestionService $service
-     * @param ITransactionService $tx_service
-     */
-    public function handle
-    (
-        ISummitRepository $summit_repository,
-        ISummitTicketTypeService $ticketTypeService,
-        ISummitOrderExtraQuestionTypeService $extraQuestionTypeService,
-        IRegistrationIngestionService $service,
-        ITransactionService $tx_service
-    )
-    {
-        try {
-            Log::debug("IngestSummitExternalRegistrationData::handle");
+  /**
+   * @param ISummitRepository $summit_repository
+   * @param ISummitTicketTypeService $ticketTypeService
+   * @param ISummitOrderExtraQuestionTypeService $extraQuestionTypeService
+   * @param IRegistrationIngestionService $service
+   * @param ITransactionService $tx_service
+   */
+  public function handle(
+    ISummitRepository $summit_repository,
+    ISummitTicketTypeService $ticketTypeService,
+    ISummitOrderExtraQuestionTypeService $extraQuestionTypeService,
+    IRegistrationIngestionService $service,
+    ITransactionService $tx_service,
+  ) {
+    try {
+      Log::debug("IngestSummitExternalRegistrationData::handle");
 
-            $summit = $tx_service->transaction(function () use ($summit_repository, $service) {
-
-                $summit = $summit_repository->getById($this->summit_id);
-                if (is_null($summit) || !$summit instanceof Summit) return null;
-                return $summit;
-            });
-
-            if(is_null($summit)){
-                Log::debug("IngestSummitExternalRegistrationData::handle summit is null");
-                return;
-            }
-
-            if($summit->getExternalRegistrationFeedType() == ISummitExternalRegistrationFeedType::Eventbrite){
-                // first re seed ticket types
-                $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
-                // then re seed extra questions
-                $extraQuestionTypeService->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
-            }
-
-            // and finally ingest all data
-            $service->ingestSummit($summit);
-
-            if(!empty($this->email_to)) {
-                Log::debug(sprintf("IngestSummitExternalRegistrationData::handle - sending result email to %s", $this->email_to));
-                SuccessfulIIngestionEmail::dispatch($this->email_to, $summit);
-            }
-
+      $summit = $tx_service->transaction(function () use ($summit_repository, $service) {
+        $summit = $summit_repository->getById($this->summit_id);
+        if (is_null($summit) || !$summit instanceof Summit) {
+          return null;
         }
-        catch (ValidationException $ex){
-            Log::warning($ex);
-            if(!empty($this->email_to)) {
-                $summit = $summit_repository->getById($this->summit_id);
-                if (is_null($summit) || !$summit instanceof Summit) return;
-                UnsuccessfulIIngestionEmail::dispatch($ex->getMessage(), $this->email_to, $summit);
-            }
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-            if(!empty($this->email_to)) {
-                $summit = $summit_repository->getById($this->summit_id);
-                if (is_null($summit) || !$summit instanceof Summit) return;
-                UnsuccessfulIIngestionEmail::dispatch($ex->getMessage(), $this->email_to, $summit);
-            }
-        }
-    }
+        return $summit;
+      });
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error(sprintf( "IngestSummitExternalRegistrationData::failed %s", $exception->getMessage()));
+      if (is_null($summit)) {
+        Log::debug("IngestSummitExternalRegistrationData::handle summit is null");
+        return;
+      }
+
+      if (
+        $summit->getExternalRegistrationFeedType() ==
+        ISummitExternalRegistrationFeedType::Eventbrite
+      ) {
+        // first re seed ticket types
+        $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
+        // then re seed extra questions
+        $extraQuestionTypeService->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
+      }
+
+      // and finally ingest all data
+      $service->ingestSummit($summit);
+
+      if (!empty($this->email_to)) {
+        Log::debug(
+          sprintf(
+            "IngestSummitExternalRegistrationData::handle - sending result email to %s",
+            $this->email_to,
+          ),
+        );
+        SuccessfulIIngestionEmail::dispatch($this->email_to, $summit);
+      }
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      if (!empty($this->email_to)) {
+        $summit = $summit_repository->getById($this->summit_id);
+        if (is_null($summit) || !$summit instanceof Summit) {
+          return;
+        }
+        UnsuccessfulIIngestionEmail::dispatch($ex->getMessage(), $this->email_to, $summit);
+      }
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      if (!empty($this->email_to)) {
+        $summit = $summit_repository->getById($this->summit_id);
+        if (is_null($summit) || !$summit instanceof Summit) {
+          return;
+        }
+        UnsuccessfulIIngestionEmail::dispatch($ex->getMessage(), $this->email_to, $summit);
+      }
     }
+  }
+
+  public function failed(\Throwable $exception) {
+    Log::error(
+      sprintf("IngestSummitExternalRegistrationData::failed %s", $exception->getMessage()),
+    );
+  }
 }

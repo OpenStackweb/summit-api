@@ -18,95 +18,88 @@ use models\summit\PresentationAction;
  * Class PresentationActionSerializer
  * @package ModelSerializers
  */
-final class PresentationActionSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Completed' => 'is_completed:json_boolean',
-        'PresentationId' => 'presentation_id:json_int',
-        'TypeId' => 'type_id:json_int',
-        'CreatedById' => 'created_by_id:json_int',
-        'UpdatedById' => 'updated_by_id:json_int',
-    ];
+final class PresentationActionSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Completed" => "is_completed:json_boolean",
+    "PresentationId" => "presentation_id:json_int",
+    "TypeId" => "type_id:json_int",
+    "CreatedById" => "created_by_id:json_int",
+    "UpdatedById" => "updated_by_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $action = $this->object;
-        if (!$action instanceof PresentationAction) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'presentation':
-                        {
-                            unset($values['presentation_id']);
-                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $action->getPresentation()
-                            )->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        break;
-                    case 'type':
-                        {
-                            unset($values['type_id']);
-                            $values['type'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $action->getType()
-                            )->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                        break;
-                    case 'created_by':
-                        {
-                            if($action->hasCreatedBy()) {
-                                unset($values['created_by_id']);
-                                $values['created_by'] = SerializerRegistry::getInstance()->getSerializer
-                                (
-                                    $action->getCreatedBy()
-                                )->serialize(
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                        }
-                        break;
-                    case 'updated_by':
-                        {
-                            if($action->hasUpdatedBy()) {
-                                unset($values['updated_by_id']);
-                                $values['updated_by'] = SerializerRegistry::getInstance()->getSerializer
-                                (
-                                    $action->getUpdatedBy()
-                                )->serialize(
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $action = $this->object;
+    if (!$action instanceof PresentationAction) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "presentation":
+            unset($values["presentation_id"]);
+            $values["presentation"] = SerializerRegistry::getInstance()
+              ->getSerializer($action->getPresentation())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+          case "type":
+            unset($values["type_id"]);
+            $values["type"] = SerializerRegistry::getInstance()
+              ->getSerializer($action->getType())
+              ->serialize(
+                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                $params,
+              );
+            break;
+          case "created_by":
+            if ($action->hasCreatedBy()) {
+              unset($values["created_by_id"]);
+              $values["created_by"] = SerializerRegistry::getInstance()
+                ->getSerializer($action->getCreatedBy())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+          case "updated_by":
+            if ($action->hasUpdatedBy()) {
+              unset($values["updated_by_id"]);
+              $values["updated_by"] = SerializerRegistry::getInstance()
+                ->getSerializer($action->getUpdatedBy())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

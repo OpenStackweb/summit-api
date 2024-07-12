@@ -12,15 +12,13 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface ISummitOrderSerializerTypes
  * @package App\ModelSerializers
  */
-interface ISummitOrderSerializerTypes
-{
-    const ReservationType = 'RESERVATION';
-    const CheckOutType    = 'CHECKOUT';
-    const AdminType       = 'ADMIN';
-    const OwnType         = 'OWN';
+interface ISummitOrderSerializerTypes {
+  const ReservationType = "RESERVATION";
+  const CheckOutType = "CHECKOUT";
+  const AdminType = "ADMIN";
+  const OwnType = "OWN";
 }

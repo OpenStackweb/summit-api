@@ -26,57 +26,62 @@ use models\exceptions\ValidationException;
  * Class ProcessSelectionPlanAllowedMemberData
  * @package App\Jobs
  */
-class ProcessSelectionPlanAllowedMemberData implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class ProcessSelectionPlanAllowedMemberData implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 2;
+  public $tries = 2;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    /**
-     * @var int
-     */
-    private $summit_id;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @var int
-     */
-    private $selection_plan_id;
+  /**
+   * @var int
+   */
+  private $selection_plan_id;
 
-    /**
-     * @var string
-     */
-    private $filename;
+  /**
+   * @var string
+   */
+  private $filename;
 
-    /**
-     * @param int $summit_id
-     * @param int $selection_plan_id
-     * @param string $filename
-     */
-    public function __construct(int $summit_id, int $selection_plan_id, string $filename)
-    {
-        $this->summit_id = $summit_id;
-        $this->selection_plan_id = $selection_plan_id;
-        $this->filename = $filename;
+  /**
+   * @param int $summit_id
+   * @param int $selection_plan_id
+   * @param string $filename
+   */
+  public function __construct(int $summit_id, int $selection_plan_id, string $filename) {
+    $this->summit_id = $summit_id;
+    $this->selection_plan_id = $selection_plan_id;
+    $this->filename = $filename;
+  }
+
+  /**
+   * @param ISummitSelectionPlanService $service
+   */
+  public function handle(ISummitSelectionPlanService $service) {
+    try {
+      Log::debug(
+        sprintf(
+          "ProcessSelectionPlanAllowedMemberData::handle summit %s selection plan %s filename %s",
+          $this->summit_id,
+          $this->selection_plan_id,
+          $this->filename,
+        ),
+      );
+      $service->processAllowedMemberData(
+        $this->summit_id,
+        $this->selection_plan_id,
+        $this->filename,
+      );
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * @param ISummitSelectionPlanService $service
-     */
-    public function handle
-    (
-        ISummitSelectionPlanService $service
-    )
-    {
-        try {
-            Log::debug(sprintf("ProcessSelectionPlanAllowedMemberData::handle summit %s selection plan %s filename %s", $this->summit_id, $this->selection_plan_id, $this->filename));
-            $service->processAllowedMemberData($this->summit_id, $this->selection_plan_id, $this->filename);
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-        }
-    }
+  }
 }

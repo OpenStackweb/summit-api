@@ -20,47 +20,44 @@ use models\summit\Summit;
  * Class UnsuccessfulIIngestionEmail
  * @package App\Jobs\Emails\Registration\ExternalIngestion
  */
-class UnsuccessfulIIngestionEmail extends AbstractSummitEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class UnsuccessfulIIngestionEmail extends AbstractSummitEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_UNSUCCESSFUL_EXTERNAL_INGESTION';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_UNSUCCESSFUL_EXTERNAL_INGESTION';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_EXTERNAL_INGESTION_UNSUCCESSFUL';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_UNSUCCESSFUL_EXTERNAL_INGESTION";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_UNSUCCESSFUL_EXTERNAL_INGESTION";
+  const DEFAULT_TEMPLATE = "REGISTRATION_EXTERNAL_INGESTION_UNSUCCESSFUL";
 
-    /**
-     * UnsuccessfulIIngestionEmail constructor.
-     * @param string $error_message
-     * @param string $email_to
-     * @param Summit $summit
-     */
-    public function __construct(string $error_message, string $email_to, Summit $summit)
-    {
-        $payload = [];
-        $payload[IMailTemplatesConstants::error_message] = $error_message;
-        $payload[IMailTemplatesConstants::email_to] = $email_to;
-        $payload[IMailTemplatesConstants::feed_type] = $summit->getExternalRegistrationFeedType();
-        $payload[IMailTemplatesConstants::external_id] = $summit->getExternalSummitId();
+  /**
+   * UnsuccessfulIIngestionEmail constructor.
+   * @param string $error_message
+   * @param string $email_to
+   * @param Summit $summit
+   */
+  public function __construct(string $error_message, string $email_to, Summit $summit) {
+    $payload = [];
+    $payload[IMailTemplatesConstants::error_message] = $error_message;
+    $payload[IMailTemplatesConstants::email_to] = $email_to;
+    $payload[IMailTemplatesConstants::feed_type] = $summit->getExternalRegistrationFeedType();
+    $payload[IMailTemplatesConstants::external_id] = $summit->getExternalSummitId();
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($summit, $payload, $template_identifier, $email_to);
-    }
+    parent::__construct($summit, $payload, $template_identifier, $email_to);
+  }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = parent::getEmailTemplateSchema();
-        $payload[IMailTemplatesConstants::error_message]['type'] = 'string';
-        $payload[IMailTemplatesConstants::email_to]['type'] = 'string';
-        $payload[IMailTemplatesConstants::feed_type]['type'] = 'string';
-        $payload[IMailTemplatesConstants::external_id]['type'] = 'string';
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::error_message]["type"] = "string";
+    $payload[IMailTemplatesConstants::email_to]["type"] = "string";
+    $payload[IMailTemplatesConstants::feed_type]["type"] = "string";
+    $payload[IMailTemplatesConstants::external_id]["type"] = "string";
 
-        return $payload;
-    }
+    return $payload;
+  }
 }

@@ -12,15 +12,13 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface
  * @package App\Models\Foundation\Summit
  */
-interface ISummitModality
-{
-    const InPerson = 'InPerson';
-    const Hybrid = 'Hybrid';
-    const Virtual = 'Virtual';
-    const None = 'None';
+interface ISummitModality {
+  const InPerson = "InPerson";
+  const Hybrid = "Hybrid";
+  const Virtual = "Virtual";
+  const None = "None";
 }

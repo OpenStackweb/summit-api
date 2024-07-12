@@ -12,12 +12,9 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IExternalRegistrationFeedRecord
  * @package App\Services\Apis\ExternalRegistrationFeeds
  */
-interface IExternalRegistrationFeedRecord
-{
-
+interface IExternalRegistrationFeedRecord {
 }

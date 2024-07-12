@@ -20,20 +20,19 @@ use utils\Filter;
  * Interface ISubmitterService
  * @package services\model
  */
-interface ISubmitterService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @param mixed $filter
-     */
-    public function triggerSendEmails(Summit $summit, array $payload, $filter = null):void;
+interface ISubmitterService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @param mixed $filter
+   */
+  public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void;
 
-    /**
-     * @param int $summit_id
-     * @param array $payload
-     * @param Filter|null $filter
-     * @throws ValidationException
-     */
-    public function sendEmails(int $summit_id, array $payload, Filter $filter = null):void;
+  /**
+   * @param int $summit_id
+   * @param array $payload
+   * @param Filter|null $filter
+   * @throws ValidationException
+   */
+  public function sendEmails(int $summit_id, array $payload, Filter $filter = null): void;
 }

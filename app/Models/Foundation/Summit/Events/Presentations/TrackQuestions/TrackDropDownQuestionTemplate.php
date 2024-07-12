@@ -11,87 +11,79 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrackDropDownQuestionTemplate")
  * Class TrackDropDownQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackDropDownQuestionTemplate extends TrackMultiValueQuestionTemplate
-{
-    /**
-     * @ORM\Column(name="IsMultiSelect", type="boolean")
-     * @var bool
-     */
-    private $is_multi_select;
+class TrackDropDownQuestionTemplate extends TrackMultiValueQuestionTemplate {
+  /**
+   * @ORM\Column(name="IsMultiSelect", type="boolean")
+   * @var bool
+   */
+  private $is_multi_select;
 
-    /**
-     * @ORM\Column(name="IsCountrySelector", type="boolean")
-     * @var bool
-     */
-    private $is_country_selector;
+  /**
+   * @ORM\Column(name="IsCountrySelector", type="boolean")
+   * @var bool
+   */
+  private $is_country_selector;
 
+  public function __construct() {
+    parent::__construct();
+    $this->is_multi_select = false;
+    $this->is_country_selector = false;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_multi_select = false;
-        $this->is_country_selector = false;
-    }
+  /**
+   * @return bool
+   */
+  public function isMultiSelect() {
+    return $this->is_multi_select;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isMultiSelect()
-    {
-        return $this->is_multi_select;
-    }
+  /**
+   * @param bool $is_multi_select
+   */
+  public function setIsMultiSelect($is_multi_select) {
+    $this->is_multi_select = $is_multi_select;
+  }
 
-    /**
-     * @param bool $is_multi_select
-     */
-    public function setIsMultiSelect($is_multi_select)
-    {
-        $this->is_multi_select = $is_multi_select;
-    }
+  /**
+   * @return bool
+   */
+  public function isCountrySelector() {
+    return $this->is_country_selector;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isCountrySelector()
-    {
-        return $this->is_country_selector;
-    }
+  /**
+   * @param bool $is_country_selector
+   */
+  public function setIsCountrySelector($is_country_selector) {
+    $this->is_country_selector = $is_country_selector;
+  }
 
-    /**
-     * @param bool $is_country_selector
-     */
-    public function setIsCountrySelector($is_country_selector)
-    {
-        $this->is_country_selector = $is_country_selector;
-    }
+  const ClassName = "TrackDropDownQuestionTemplate";
 
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    const ClassName = 'TrackDropDownQuestionTemplate';
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "is_multi_select" => "boolean",
+    "is_country_selector" => "boolean",
+  ];
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
-
-    public static $metadata = [
-        'class_name'  => self::ClassName,
-        'is_multi_select' => 'boolean',
-        'is_country_selector' => 'boolean',
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(TrackMultiValueQuestionTemplate::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(TrackMultiValueQuestionTemplate::getMetadata(), self::$metadata);
+  }
 }

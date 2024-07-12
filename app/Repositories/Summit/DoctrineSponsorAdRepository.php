@@ -20,34 +20,28 @@ use utils\DoctrineLeftJoinFilterMapping;
  * Class DoctrineSponsorAdRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSponsorAdRepository
-    extends SilverStripeDoctrineRepository
-    implements ISponsorAdRepository
-{
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'order' => 'e.order',
-        ];
-    }
+final class DoctrineSponsorAdRepository extends SilverStripeDoctrineRepository implements
+  ISponsorAdRepository {
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "order" => "e.order",
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'sponsor_id' =>
-                new DoctrineLeftJoinFilterMapping("e.sponsor", "s" ,"s.id :operator :value"),
-        ];
-    }
+  protected function getFilterMappings() {
+    return [
+      "sponsor_id" => new DoctrineLeftJoinFilterMapping("e.sponsor", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SponsorAd::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SponsorAd::class;
+  }
 }

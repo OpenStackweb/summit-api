@@ -19,23 +19,30 @@ use models\main\Member;
  * Interface IElectionService
  * @package App\Services\Model
  */
-interface IElectionService
-{
-    /**
-     * @param Member $candidate
-     * @param Election $election
-     * @param array $payload
-     * @return Member
-     * @throws ValidationException
-     */
-    public function updateCandidateProfile(Member $candidate, Election $election, array $payload):Member;
+interface IElectionService {
+  /**
+   * @param Member $candidate
+   * @param Election $election
+   * @param array $payload
+   * @return Member
+   * @throws ValidationException
+   */
+  public function updateCandidateProfile(
+    Member $candidate,
+    Election $election,
+    array $payload,
+  ): Member;
 
-    /**
-     * @param Member $nominator
-     * @param int $candidate_id
-     * @param Election $election
-     * @return Nomination
-     * @throws ValidationException
-     */
-    public function nominateCandidate(Member $nominator, int $candidate_id, Election $election):Nomination;
+  /**
+   * @param Member $nominator
+   * @param int $candidate_id
+   * @param Election $election
+   * @return Nomination
+   * @throws ValidationException
+   */
+  public function nominateCandidate(
+    Member $nominator,
+    int $candidate_id,
+    Election $election,
+  ): Nomination;
 }

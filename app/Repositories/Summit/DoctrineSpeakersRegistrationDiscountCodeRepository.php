@@ -26,85 +26,86 @@ use utils\PagingInfo;
  * @package App\Repositories\Summit
  */
 class DoctrineSpeakersRegistrationDiscountCodeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISpeakersRegistrationDiscountCodeRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SpeakersRegistrationDiscountCode::class;
-    }
+  extends SilverStripeDoctrineRepository
+  implements ISpeakersRegistrationDiscountCodeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SpeakersRegistrationDiscountCode::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings(): array
-    {
-        return [
-            'first_name' => new DoctrineFilterMapping(
-                "( LOWER(m.first_name) :operator LOWER(:value) )".
-                "OR ( LOWER(s.first_name) :operator LOWER(:value) )"
-            ),
-            'last_name' => new DoctrineFilterMapping(
-                "( LOWER(m.last_name) :operator LOWER(:value) )".
-                " OR ( LOWER(s.last_name) :operator LOWER(:value) )"
-            ),
-            'email' => [
-                Filter::buildEmailField('m.email'),
-                Filter::buildEmailField('m.second_email'),
-                Filter::buildEmailField('m.third_email'),
-                Filter::buildEmailField('rr.email'),
-            ],
-            'full_name' => new DoctrineFilterMapping
-            (
-                "( CONCAT(LOWER(m.first_name), ' ', LOWER(m.last_name)) :operator LOWER(:value) )".
-                " OR ( CONCAT(LOWER(s.first_name), ' ', LOWER(s.last_name)) :operator LOWER(:value) )"
-            ),
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings(): array {
+    return [
+      "first_name" => new DoctrineFilterMapping(
+        "( LOWER(m.first_name) :operator LOWER(:value) )" .
+          "OR ( LOWER(s.first_name) :operator LOWER(:value) )",
+      ),
+      "last_name" => new DoctrineFilterMapping(
+        "( LOWER(m.last_name) :operator LOWER(:value) )" .
+          " OR ( LOWER(s.last_name) :operator LOWER(:value) )",
+      ),
+      "email" => [
+        Filter::buildEmailField("m.email"),
+        Filter::buildEmailField("m.second_email"),
+        Filter::buildEmailField("m.third_email"),
+        Filter::buildEmailField("rr.email"),
+      ],
+      "full_name" => new DoctrineFilterMapping(
+        "( CONCAT(LOWER(m.first_name), ' ', LOWER(m.last_name)) :operator LOWER(:value) )" .
+          " OR ( CONCAT(LOWER(s.first_name), ' ', LOWER(s.last_name)) :operator LOWER(:value) )",
+      ),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'         => 'o.id',
-            'email'      => 'm.email',
-            'email_sent' => 'o.sent',
-            'redeemed'   => 'o.redeemed',
-            "full_name" => <<<SQL
-COALESCE(LOWER(CONCAT(s.first_name, ' ', s.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
-SQL,
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "o.id",
+      "email" => "m.email",
+      "email_sent" => "o.sent",
+      "redeemed" => "o.redeemed",
+      "full_name" => <<<SQL
+      COALESCE(LOWER(CONCAT(s.first_name, ' ', s.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
+      SQL
+    ,
+    ];
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function getDiscountCodeSpeakers(
-        SpeakersRegistrationDiscountCode $discount_code, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
-        return $this->getParametrizedAllByPage(function () use ($discount_code) {
-            return $this->getEntityManager()
-                ->createQueryBuilder()
-                ->select("o")
-                ->from(AssignedPromoCodeSpeaker::class, 'o')
-                ->join('o.registration_promo_code', 'd')
-                ->join('o.speaker', 's')
-                ->leftJoin("s.registration_request", "rr")
-                ->leftJoin('s.member', 'm')
-                ->where("d.id = :discount_code")
-                ->setParameter("discount_code", $discount_code);
-        },
-            $paging_info,
-            $filter,
-            $order,
-            function ($query) {
-                //default order
-                return $query->addOrderBy("s.id", 'ASC');
-            });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function getDiscountCodeSpeakers(
+    SpeakersRegistrationDiscountCode $discount_code,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    return $this->getParametrizedAllByPage(
+      function () use ($discount_code) {
+        return $this->getEntityManager()
+          ->createQueryBuilder()
+          ->select("o")
+          ->from(AssignedPromoCodeSpeaker::class, "o")
+          ->join("o.registration_promo_code", "d")
+          ->join("o.speaker", "s")
+          ->leftJoin("s.registration_request", "rr")
+          ->leftJoin("s.member", "m")
+          ->where("d.id = :discount_code")
+          ->setParameter("discount_code", $discount_code);
+      },
+      $paging_info,
+      $filter,
+      $order,
+      function ($query) {
+        //default order
+        return $query->addOrderBy("s.id", "ASC");
+      },
+    );
+  }
 }

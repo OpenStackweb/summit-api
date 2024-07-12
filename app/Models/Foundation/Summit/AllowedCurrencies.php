@@ -12,14 +12,12 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface AllowedCurrencies
  * @package App\Models\Foundation\Summit
  */
-interface AllowedCurrencies
-{
-    const USD = 'USD';
-    const EUR = 'EUR';
-    const GBP = 'GBP';
+interface AllowedCurrencies {
+  const USD = "USD";
+  const EUR = "EUR";
+  const GBP = "GBP";
 }

@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitProposedScheduleAllowedLocationRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitProposedScheduleAllowedLocationRepository extends IBaseRepository
-{
-
+interface ISummitProposedScheduleAllowedLocationRepository extends IBaseRepository {
 }

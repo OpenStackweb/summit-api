@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -22,139 +22,127 @@ use models\utils\SilverstripeBaseModel;
  * Class PresentationTrackChairScoreType
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs
  */
-class PresentationTrackChairScoreType
-    extends SilverstripeBaseModel
-    implements IOrderable
-{
-    use One2ManyPropertyTrait;
+class PresentationTrackChairScoreType extends SilverstripeBaseModel implements IOrderable {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getTypeId' => 'type',
-    ];
+  protected $getIdMappings = [
+    "getTypeId" => "type",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasType' => 'type',
-    ];
+  protected $hasPropertyMappings = [
+    "hasType" => "type",
+  ];
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="`Score`", type="integer")
-     * @var int
-     */
-    private $score;
+  /**
+   * @ORM\Column(name="`Score`", type="integer")
+   * @var int
+   */
+  private $score;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", inversedBy="score_types", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
-     * @var PresentationTrackChairRatingType
-     */
-    private $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", inversedBy="score_types", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
+   * @var PresentationTrackChairRatingType
+   */
+  private $type;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->score = 1;
+  public function __construct() {
+    parent::__construct();
+    $this->score = 1;
+  }
+
+  /**
+   * @param int $order
+   * @return void
+   */
+  public function setOrder($order) {
+    $this->setScore($order);
+  }
+
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->getScore();
+  }
+
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   * @throws ValidationException
+   */
+  public function setName(string $name): void {
+    if (empty($name)) {
+      throw new ValidationException("name cannot be empty.");
     }
+    $this->name = $name;
+  }
 
-    /**
-     * @param int $order
-     * @return void
-     */
-    public function setOrder($order)
-    {
-        $this->setScore($order);
-    }
+  /**
+   * @return string
+   */
+  public function getDescription(): string {
+    return $this->description;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->getScore();
-    }
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description): void {
+    $this->description = $description;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  /**
+   * @return int
+   */
+  public function getScore(): int {
+    return $this->score;
+  }
 
-    /**
-     * @param string $name
-     * @throws ValidationException
-     */
-    public function setName(string $name): void
-    {
-        if(empty($name))
-            throw new ValidationException("name cannot be empty.");
-        $this->name = $name;
+  /**
+   * @param int $score
+   * @throws ValidationException
+   */
+  public function setScore(int $score): void {
+    if ($score <= 0) {
+      throw new ValidationException("Score should be greater than zero.");
     }
+    $this->score = $score;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return $this->description;
-    }
+  /**
+   * @return PresentationTrackChairRatingType
+   */
+  public function getType(): PresentationTrackChairRatingType {
+    return $this->type;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
-    }
+  /**
+   * @param PresentationTrackChairRatingType $type
+   */
+  public function setType(PresentationTrackChairRatingType $type): void {
+    $this->type = $type;
+  }
 
-    /**
-     * @return int
-     */
-    public function getScore(): int
-    {
-        return $this->score;
-    }
-
-    /**
-     * @param int $score
-     * @throws ValidationException
-     */
-    public function setScore(int $score): void
-    {
-        if($score <= 0)
-            throw new ValidationException("Score should be greater than zero.");
-        $this->score = $score;
-    }
-
-    /**
-     * @return PresentationTrackChairRatingType
-     */
-    public function getType(): PresentationTrackChairRatingType
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param PresentationTrackChairRatingType $type
-     */
-    public function setType(PresentationTrackChairRatingType $type): void
-    {
-        $this->type = $type;
-    }
-
-    public function clearType():void{
-        $this->type = null;
-    }
+  public function clearType(): void {
+    $this->type = null;
+  }
 }

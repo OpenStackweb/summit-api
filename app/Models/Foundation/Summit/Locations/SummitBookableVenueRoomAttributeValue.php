@@ -13,7 +13,7 @@
  **/
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -22,63 +22,56 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitBookableVenueRoomAttributeValue
  * @package models\summit
  */
-class SummitBookableVenueRoomAttributeValue extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    private $value;
+class SummitBookableVenueRoomAttributeValue extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Value", type="string")
+   * @var string
+   */
+  private $value;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBookableVenueRoomAttributeType", inversedBy="values")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
-     * @var SummitBookableVenueRoomAttributeType
-     */
-    private $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitBookableVenueRoomAttributeType", inversedBy="values")
+   * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
+   * @var SummitBookableVenueRoomAttributeType
+   */
+  private $type;
 
-    /**
-     * @return string
-     */
-    public function getValue(): string
-    {
-        return $this->value;
+  /**
+   * @return string
+   */
+  public function getValue(): string {
+    return $this->value;
+  }
+
+  /**
+   * @param string $value
+   */
+  public function setValue(string $value): void {
+    $this->value = $value;
+  }
+
+  /**
+   * @return SummitBookableVenueRoomAttributeType
+   */
+  public function getType(): SummitBookableVenueRoomAttributeType {
+    return $this->type;
+  }
+
+  /**
+   * @param SummitBookableVenueRoomAttributeType $type
+   */
+  public function setType(SummitBookableVenueRoomAttributeType $type): void {
+    $this->type = $type;
+  }
+
+  /**
+   * @return int
+   */
+  public function getTypeId(): int {
+    try {
+      return is_null($this->type) ? 0 : $this->type->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
-
-    /**
-     * @param string $value
-     */
-    public function setValue(string $value): void
-    {
-        $this->value = $value;
-    }
-
-    /**
-     * @return SummitBookableVenueRoomAttributeType
-     */
-    public function getType(): SummitBookableVenueRoomAttributeType
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param SummitBookableVenueRoomAttributeType $type
-     */
-    public function setType(SummitBookableVenueRoomAttributeType $type): void
-    {
-        $this->type = $type;
-    }
-
-    /**
-     * @return int
-     */
-    public function getTypeId():int{
-        try {
-            return is_null($this->type) ? 0 : $this->type->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
+  }
 }

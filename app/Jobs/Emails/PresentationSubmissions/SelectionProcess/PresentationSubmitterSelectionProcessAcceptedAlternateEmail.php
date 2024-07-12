@@ -21,34 +21,36 @@ use utils\Filter;
  * Class PresentationSubmitterSelectionProcessAcceptedAlternateEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
  */
-class PresentationSubmitterSelectionProcessAcceptedAlternateEmail extends PresentationSubmitterSelectionProcessEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class PresentationSubmitterSelectionProcessAcceptedAlternateEmail extends
+  PresentationSubmitterSelectionProcessEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE";
 
-    /**
-     * @param Summit $summit
-     * @param Member $submitter
-     * @param string|null $test_email_recipient
-     * @param Filter|null $filter
-     */
-    public function __construct
-    (
-        Summit  $summit,
-        Member  $submitter,
-        ?string $test_email_recipient,
-        ?Filter $filter = null
-    )
-    {
-        parent::__construct($summit, $submitter, $test_email_recipient, $filter);
+  /**
+   * @param Summit $summit
+   * @param Member $submitter
+   * @param string|null $test_email_recipient
+   * @param Filter|null $filter
+   */
+  public function __construct(
+    Summit $summit,
+    Member $submitter,
+    ?string $test_email_recipient,
+    ?Filter $filter = null,
+  ) {
+    parent::__construct($summit, $submitter, $test_email_recipient, $filter);
 
-        Log::debug(sprintf("PresentationSubmitterSelectionProcessAcceptedAlternateEmail::__construct payload %s", json_encode($this->payload)));
-    }
+    Log::debug(
+      sprintf(
+        "PresentationSubmitterSelectionProcessAcceptedAlternateEmail::__construct payload %s",
+        json_encode($this->payload),
+      ),
+    );
+  }
 }

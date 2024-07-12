@@ -16,7 +16,5 @@
  * Interface ITrackTagGroupAllowedTagsRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ITrackTagGroupAllowedTagsRepository extends ISummitOwnedEntityRepository
-{
-
+interface ITrackTagGroupAllowedTagsRepository extends ISummitOwnedEntityRepository {
 }

@@ -16,17 +16,16 @@ use Illuminate\Support\Facades\Config;
  * Trait GetDefaultValueFromConfig
  * @package App\Models\Utils
  */
-trait GetDefaultValueFromConfig
-{
-    /**
-     * @param mixed|null $val
-     * @param string $config_key
-     * @return mixed|string
-     */
-    private static function _get($val, string $config_key){
-        if(is_null($val) || empty($val)){
-            $val = Config::get($config_key, null);
-        }
-        return $val;
+trait GetDefaultValueFromConfig {
+  /**
+   * @param mixed|null $val
+   * @param string $config_key
+   * @return mixed|string
+   */
+  private static function _get($val, string $config_key) {
+    if (is_null($val) || empty($val)) {
+      $val = Config::get($config_key, null);
     }
+    return $val;
+  }
 }

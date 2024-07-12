@@ -1,4 +1,4 @@
-<?php namespace App\Services\Model\Strategies;;
+<?php namespace App\Services\Model\Strategies;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,10 @@ use models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest;
  * Interface ICalendarSyncWorkRequestPreProcessorStrategy
  * @package App\Services\Model\Strategies
  */
-interface ICalendarSyncWorkRequestPreProcessorStrategy
-{
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return AbstractCalendarSyncWorkRequest|null
-     */
-    public function process(AbstractCalendarSyncWorkRequest $request);
+interface ICalendarSyncWorkRequestPreProcessorStrategy {
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return AbstractCalendarSyncWorkRequest|null
+   */
+  public function process(AbstractCalendarSyncWorkRequest $request);
 }

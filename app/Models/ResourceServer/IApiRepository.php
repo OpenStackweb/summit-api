@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IApiRepository
  * @package App\Models\ResourceServer
  */
-interface IApiRepository extends IBaseRepository
-{
-
+interface IApiRepository extends IBaseRepository {
 }

@@ -19,11 +19,10 @@ use models\utils\IBaseRepository;
  * Interface ISummitEventPublishRepository
  * @package models\summit
  */
-interface ISummitEventPublishRepository extends IBaseRepository
-{
-    /**
-     * @param IPublishableEvent $event
-     * @return IPublishableEvent[]
-     */
-    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array;
+interface ISummitEventPublishRepository extends IBaseRepository {
+  /**
+   * @param IPublishableEvent $event
+   * @return IPublishableEvent[]
+   */
+  public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array;
 }

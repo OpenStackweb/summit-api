@@ -18,7 +18,8 @@ use models\oauth2\IResourceServerContext;
  * Class ResourceServerContext
  * @package App\Facades
  */
-class ResourceServerContext extends Facade
-{
-    protected static function getFacadeAccessor() { return 'resource_server_context'; }
+class ResourceServerContext extends Facade {
+  protected static function getFacadeAccessor() {
+    return "resource_server_context";
+  }
 }

@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IConsultantRepository
  * @package App\Models\Foundation\Marketplace
  */
-interface IConsultantRepository extends IBaseRepository
-{
-
+interface IConsultantRepository extends IBaseRepository {
 }

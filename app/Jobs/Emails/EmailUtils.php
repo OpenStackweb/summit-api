@@ -12,23 +12,31 @@
  * limitations under the License.
  **/
 
-
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Config;
 use models\summit\Summit;
 
-final class EmailUtils
-{
-    /**
-     * @param Summit $summit
-     * @param SelectionPlan|null $selectionPlan
-     * @return string
-     */
-    public static function getSpeakerManagementLink(Summit $summit = null,?SelectionPlan $selectionPlan = null ):string{
-        $speaker_management_base_url = Config::get('cfp.base_url');
-        if(is_null($summit)) return $speaker_management_base_url;
-        return is_null($selectionPlan)?
-            sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug()):
-            sprintf("%s/app/%s/all-plans/%s", $speaker_management_base_url, $summit->getRawSlug(), $selectionPlan->getId());
+final class EmailUtils {
+  /**
+   * @param Summit $summit
+   * @param SelectionPlan|null $selectionPlan
+   * @return string
+   */
+  public static function getSpeakerManagementLink(
+    Summit $summit = null,
+    ?SelectionPlan $selectionPlan = null,
+  ): string {
+    $speaker_management_base_url = Config::get("cfp.base_url");
+    if (is_null($summit)) {
+      return $speaker_management_base_url;
     }
+    return is_null($selectionPlan)
+      ? sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug())
+      : sprintf(
+        "%s/app/%s/all-plans/%s",
+        $speaker_management_base_url,
+        $summit->getRawSlug(),
+        $selectionPlan->getId(),
+      );
+  }
 }

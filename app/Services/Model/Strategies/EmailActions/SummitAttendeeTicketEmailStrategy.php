@@ -22,82 +22,77 @@ use models\summit\SummitAttendee;
  * Class SummitAttendeeTicketEmailStrategy
  * @package App\Services\Model\Strategies\EmailActions
  */
-class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
-{
-    /**
-     * SummitAttendeeTicketEmailStrategy constructor.
-     * @param String $flow_event
-     */
-    public function __construct(String $flow_event)
-    {
-        parent::__construct($flow_event);
-    }
+class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction {
+  /**
+   * SummitAttendeeTicketEmailStrategy constructor.
+   * @param String $flow_event
+   */
+  public function __construct(string $flow_event) {
+    parent::__construct($flow_event);
+  }
 
-    /**
-     * @param SummitAttendee $attendee
-     * @param string|null $test_email_recipient
-     * @param callable|null $onSuccess
-     * @param callable|null $onError
-     * @return void
-     */
-    public function process
-    (
-        SummitAttendee $attendee,
-        ?string $test_email_recipient = null,
-        callable $onSuccess = null,
-        callable $onError = null
-    )
-    {
-        foreach ($attendee->getTickets() as $ticket) {
-            try {
-                if(!$ticket->isActive()) continue;
-                if(!$ticket->isPaid()) continue;
-                $is_complete = $attendee->isComplete();
-                $original_flow_event = $this->flow_event;
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "SummitAttendeeTicketEmailStrategy::send processing attendee %s - ticket %s - isComplete %b - original flow event %s",
-                        $attendee->getEmail(),
-                        $ticket->getId(),
-                        $attendee->isComplete(),
-                        $original_flow_event
-                    )
-                );
-                if ($is_complete) {
-                    $this->flow_event = InviteAttendeeTicketEditionMail::EVENT_SLUG;
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitAttendeeTicketEmailStrategy::send changing from %s to %s bc attendee is complete",
-                            $original_flow_event,
-                            $this->flow_event
-                        )
-                    );
-                }
-
-                // send email
-                if ($this->flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
-                    $ticket->sendPublicEditEmail($test_email_recipient);
-                }
-
-                if ($this->flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
-                    $attendee->sendInvitationEmail($ticket, true, [], $test_email_recipient);
-                }
-                $this->flow_event = $original_flow_event;
-
-                if (!is_null($onSuccess)) {
-                    $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
-                }
-
-            } catch (\Exception $ex) {
-                Log::warning($ex);
-                if (!is_null($onError)) {
-                    $onError($ex->getMessage());
-                }
-            }
+  /**
+   * @param SummitAttendee $attendee
+   * @param string|null $test_email_recipient
+   * @param callable|null $onSuccess
+   * @param callable|null $onError
+   * @return void
+   */
+  public function process(
+    SummitAttendee $attendee,
+    ?string $test_email_recipient = null,
+    callable $onSuccess = null,
+    callable $onError = null,
+  ) {
+    foreach ($attendee->getTickets() as $ticket) {
+      try {
+        if (!$ticket->isActive()) {
+          continue;
         }
+        if (!$ticket->isPaid()) {
+          continue;
+        }
+        $is_complete = $attendee->isComplete();
+        $original_flow_event = $this->flow_event;
+        Log::debug(
+          sprintf(
+            "SummitAttendeeTicketEmailStrategy::send processing attendee %s - ticket %s - isComplete %b - original flow event %s",
+            $attendee->getEmail(),
+            $ticket->getId(),
+            $attendee->isComplete(),
+            $original_flow_event,
+          ),
+        );
+        if ($is_complete) {
+          $this->flow_event = InviteAttendeeTicketEditionMail::EVENT_SLUG;
+          Log::debug(
+            sprintf(
+              "SummitAttendeeTicketEmailStrategy::send changing from %s to %s bc attendee is complete",
+              $original_flow_event,
+              $this->flow_event,
+            ),
+          );
+        }
+
+        // send email
+        if ($this->flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
+          $ticket->sendPublicEditEmail($test_email_recipient);
+        }
+
+        if ($this->flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
+          $attendee->sendInvitationEmail($ticket, true, [], $test_email_recipient);
+        }
+        $this->flow_event = $original_flow_event;
+
+        if (!is_null($onSuccess)) {
+          $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
+        }
+      } catch (\Exception $ex) {
+        Log::warning($ex);
+        if (!is_null($onError)) {
+          $onError($ex->getMessage());
+        }
+      }
     }
+  }
 }

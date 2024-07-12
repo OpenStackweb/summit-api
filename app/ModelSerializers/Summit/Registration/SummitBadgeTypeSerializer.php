@@ -19,127 +19,129 @@ use models\summit\SummitBadgeType;
  * Class SummitBadgeTypeSerializer
  * @package ModelSerializers
  */
-final class SummitBadgeTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'              => 'name:json_string',
-        'Description'       => 'description:json_string',
-        'TemplateContent'   => 'template_content:json_string',
-        'Default'           => 'is_default:json_boolean',
-        'SummitId'          => 'summit_id:json_int',
-    ];
+final class SummitBadgeTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "TemplateContent" => "template_content:json_string",
+    "Default" => "is_default:json_boolean",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    protected static $allowed_relations = [
-        'access_levels',
-        'badge_features',
-        'allowed_view_types',
-    ];
+  protected static $allowed_relations = ["access_levels", "badge_features", "allowed_view_types"];
 
-    use RequestScopedCache;
+  use RequestScopedCache;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        return $this->cache($this->getRequestKey
-        (
-            "SummitBadgeTypeSerializer",
-            $this->object->getIdentifier(),
-            $expand,
-            $fields,
-            $relations
-        ), function () use ($expand, $fields, $relations, $params) {
-            $badge_type = $this->object;
-            if (!$badge_type instanceof SummitBadgeType) return [];
-            $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    return $this->cache(
+      $this->getRequestKey(
+        "SummitBadgeTypeSerializer",
+        $this->object->getIdentifier(),
+        $expand,
+        $fields,
+        $relations,
+      ),
+      function () use ($expand, $fields, $relations, $params) {
+        $badge_type = $this->object;
+        if (!$badge_type instanceof SummitBadgeType) {
+          return [];
+        }
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
-            // access_levels
-            if(in_array('access_levels', $relations)) {
+        // access_levels
+        if (in_array("access_levels", $relations)) {
+          $access_levels = [];
+          foreach ($badge_type->getAccessLevels() as $access_level) {
+            $access_levels[] = $access_level->getId();
+          }
+          $values["access_levels"] = $access_levels;
+        }
+
+        // badge_features
+        if (in_array("badge_features", $relations)) {
+          $features = [];
+          foreach ($badge_type->getBadgeFeatures() as $feature) {
+            $features[] = $feature->getId();
+          }
+          $values["badge_features"] = $features;
+        }
+
+        // allowed_view_types
+        if (in_array("allowed_view_types", $relations)) {
+          $allowed_view_types = [];
+          foreach ($badge_type->getAllowedViewTypes() as $viewType) {
+            $allowed_view_types[] = $viewType->getId();
+          }
+          $values["allowed_view_types"] = $allowed_view_types;
+        }
+
+        if (!empty($expand)) {
+          $exp_expand = explode(",", $expand);
+          foreach ($exp_expand as $relation) {
+            $relation = trim($relation);
+            switch (trim($relation)) {
+              case "access_levels":
+                unset($values["access_levels"]);
                 $access_levels = [];
                 foreach ($badge_type->getAccessLevels() as $access_level) {
-                    $access_levels[] = $access_level->getId();
+                  $access_levels[] = SerializerRegistry::getInstance()
+                    ->getSerializer($access_level)
+                    ->serialize(
+                      AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                      AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                      AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                      $params,
+                    );
                 }
-                $values['access_levels'] = $access_levels;
-            }
-
-            // badge_features
-            if(in_array('badge_features', $relations)) {
-                $features = [];
+                $values["access_levels"] = $access_levels;
+                break;
+              case "badge_features":
+                unset($values["badge_features"]);
+                $badge_features = [];
                 foreach ($badge_type->getBadgeFeatures() as $feature) {
-                    $features[] = $feature->getId();
+                  $badge_features[] = SerializerRegistry::getInstance()
+                    ->getSerializer($feature)
+                    ->serialize(
+                      AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                      AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                      AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                      $params,
+                    );
                 }
-                $values['badge_features'] = $features;
-            }
-
-            // allowed_view_types
-            if(in_array('allowed_view_types', $relations)) {
+                $values["badge_features"] = $badge_features;
+                break;
+              case "allowed_view_types":
+                unset($values["allowed_view_types"]);
                 $allowed_view_types = [];
                 foreach ($badge_type->getAllowedViewTypes() as $viewType) {
-                    $allowed_view_types[] = $viewType->getId();
+                  $allowed_view_types[] = SerializerRegistry::getInstance()
+                    ->getSerializer($viewType)
+                    ->serialize(
+                      AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                      AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                      AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                      $params,
+                    );
                 }
-                $values['allowed_view_types'] = $allowed_view_types;
+                $values["allowed_view_types"] = $allowed_view_types;
+                break;
             }
-
-            if (!empty($expand)) {
-                $exp_expand = explode(',', $expand);
-                foreach ($exp_expand as $relation) {
-                    $relation = trim($relation);
-                    switch (trim($relation)) {
-                        case 'access_levels': {
-                            unset($values['access_levels']);
-                            $access_levels = [];
-                            foreach ($badge_type->getAccessLevels() as $access_level) {
-                                $access_levels[] = SerializerRegistry::getInstance()->getSerializer($access_level)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['access_levels'] = $access_levels;
-                        }
-                            break;
-                        case 'badge_features': {
-                            unset($values['badge_features']);
-                            $badge_features = [];
-                            foreach ($badge_type->getBadgeFeatures() as $feature) {
-                                $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['badge_features'] = $badge_features;
-                        }
-                            break;
-                        case 'allowed_view_types': {
-                            unset($values['allowed_view_types']);
-                            $allowed_view_types = [];
-                            foreach ($badge_type->getAllowedViewTypes() as $viewType) {
-                                $allowed_view_types[] = SerializerRegistry::getInstance()->getSerializer($viewType)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['allowed_view_types'] = $allowed_view_types;
-                        }
-                            break;
-                    }
-
-                }
-            }
-            return $values;
-        });
-    }
+          }
+        }
+        return $values;
+      },
+    );
+  }
 }

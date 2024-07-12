@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IDefaultTrackTagGroup
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IDefaultTrackTagGroupRepository extends IBaseRepository
-{
-
+interface IDefaultTrackTagGroupRepository extends IBaseRepository {
 }

@@ -12,83 +12,76 @@
  * limitations under the License.
  **/
 use models\utils\IEntity;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /***
  * @ORM\MappedSuperclass
  * Class ResourceServerEntity
  * @package App\Models\ResourceServer
  */
-class ResourceServerEntity implements IEntity
-{
-    const EntityManager = 'config';
+class ResourceServerEntity implements IEntity {
+  const EntityManager = "config";
 
-    const DefaultTimeZone = 'America/Chicago';
+  const DefaultTimeZone = "America/Chicago";
 
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="id", type="integer", unique=true, nullable=false)
-     */
-    protected $id;
+  /**
+   * @ORM\Id
+   * @ORM\GeneratedValue
+   * @ORM\Column(name="id", type="integer", unique=true, nullable=false)
+   */
+  protected $id;
 
-    /**
-     * @ORM\Column(name="created_at", type="datetime")
-     */
-    protected $created;
+  /**
+   * @ORM\Column(name="created_at", type="datetime")
+   */
+  protected $created;
 
-    /**
-     * @ORM\Column(name="updated_at", type="datetime")
-     */
-    protected $last_edited;
+  /**
+   * @ORM\Column(name="updated_at", type="datetime")
+   */
+  protected $last_edited;
 
-    /**
-     * @return int
-     */
-    public function getIdentifier()
-    {
-        return (int)$this->id;
-    }
+  /**
+   * @return int
+   */
+  public function getIdentifier() {
+    return (int) $this->id;
+  }
 
-    public function getId(){
-        return $this->getIdentifier();
-    }
+  public function getId() {
+    return $this->getIdentifier();
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getCreated()
-    {
-        return $this->created;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getCreated() {
+    return $this->created;
+  }
 
-    /**
-     * @param \DateTime $created
-     */
-    public function setCreated($created)
-    {
-        $this->created = $created;
-    }
+  /**
+   * @param \DateTime $created
+   */
+  public function setCreated($created) {
+    $this->created = $created;
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getLastEdited()
-    {
-        return $this->last_edited;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getLastEdited() {
+    return $this->last_edited;
+  }
 
-    /**
-     * @param \DateTime $last_edited
-     */
-    public function setLastEdited($last_edited)
-    {
-        $this->last_edited = $last_edited;
-    }
+  /**
+   * @param \DateTime $last_edited
+   */
+  public function setLastEdited($last_edited) {
+    $this->last_edited = $last_edited;
+  }
 
-    public function __construct()
-    {
-        $now               = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
-        $this->created     = $now;
-        $this->last_edited = $now;
-    }
+  public function __construct() {
+    $now = new \DateTime("now", new \DateTimeZone(self::DefaultTimeZone));
+    $this->created = $now;
+    $this->last_edited = $now;
+  }
 }

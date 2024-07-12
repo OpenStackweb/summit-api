@@ -17,22 +17,21 @@ use models\utils\IBaseRepository;
  * Interface ITrackQuestionTemplateRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ITrackQuestionTemplateRepository extends IBaseRepository
-{
-    /**
-     * @param string $name
-     * @return TrackQuestionTemplate
-     */
-    public function getByName($name);
+interface ITrackQuestionTemplateRepository extends IBaseRepository {
+  /**
+   * @param string $name
+   * @return TrackQuestionTemplate
+   */
+  public function getByName($name);
 
-    /**
-     * @param string $label
-     * @return TrackQuestionTemplate
-     */
-    public function getByLabel($label);
+  /**
+   * @param string $label
+   * @return TrackQuestionTemplate
+   */
+  public function getByLabel($label);
 
-    /**
-     * @return array
-     */
-    public function getQuestionsMetadata();
+  /**
+   * @return array
+   */
+  public function getQuestionsMetadata();
 }

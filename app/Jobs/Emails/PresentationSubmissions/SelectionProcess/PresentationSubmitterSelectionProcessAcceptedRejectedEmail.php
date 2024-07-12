@@ -21,33 +21,35 @@ use utils\Filter;
  * Class PresentationSubmitterSelectionProcessAcceptedRejectedEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
  */
-class PresentationSubmitterSelectionProcessAcceptedRejectedEmail extends PresentationSubmitterSelectionProcessEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class PresentationSubmitterSelectionProcessAcceptedRejectedEmail extends
+  PresentationSubmitterSelectionProcessEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_REJECTED';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_REJECTED';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_REJECTED';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_REJECTED";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_REJECTED";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_REJECTED";
 
-    /**
-     * @param Summit $summit
-     * @param Member $submitter
-     * @param string|null $test_email_recipient
-     * @param Filter|null $filter
-     */
-    public function __construct
-    (
-        Summit  $summit,
-        Member  $submitter,
-        ?string $test_email_recipient,
-        ?Filter $filter = null
-    )
-    {
-        parent::__construct($summit, $submitter, $test_email_recipient, $filter);
-        Log::debug(sprintf("PresentationSubmitterSelectionProcessAcceptedRejectedEmail::__construct payload %s", json_encode($this->payload)));
-    }
+  /**
+   * @param Summit $summit
+   * @param Member $submitter
+   * @param string|null $test_email_recipient
+   * @param Filter|null $filter
+   */
+  public function __construct(
+    Summit $summit,
+    Member $submitter,
+    ?string $test_email_recipient,
+    ?Filter $filter = null,
+  ) {
+    parent::__construct($summit, $submitter, $test_email_recipient, $filter);
+    Log::debug(
+      sprintf(
+        "PresentationSubmitterSelectionProcessAcceptedRejectedEmail::__construct payload %s",
+        json_encode($this->payload),
+      ),
+    );
+  }
 }

@@ -25,34 +25,30 @@ use Exception;
  * RabbitMQ job
  * @package App\Jobs
  */
-class PublishUserDeleted implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class PublishUserDeleted implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    public $user_id;
-    /**
-     * @var string
-     */
-    public $user_email;
+  /**
+   * @var int
+   */
+  public $user_id;
+  /**
+   * @var string
+   */
+  public $user_email;
 
-    /**
-     * @param IMemberService $service
-     */
-    public function handle(IMemberService $service)
-    {
-        Log::debug(sprintf("PublishUserDeleted::handle user %s %s", $this->user_id, $this->user_email));
+  /**
+   * @param IMemberService $service
+   */
+  public function handle(IMemberService $service) {
+    Log::debug(sprintf("PublishUserDeleted::handle user %s %s", $this->user_id, $this->user_email));
 
-        try {
-            $service->deleteExternalUserById($this->user_id);
-        }
-        catch (EntityNotFoundException $ex){
-            Log::warning($ex);
-        }
-        catch (Exception $ex){
-            Log::error($ex);
-        }
+    try {
+      $service->deleteExternalUserById($this->user_id);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
+  }
 }

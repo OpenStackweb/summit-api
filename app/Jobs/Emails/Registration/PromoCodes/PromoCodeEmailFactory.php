@@ -19,21 +19,22 @@ use models\summit\SummitRegistrationPromoCode;
  * Class PromoCodeEmailFactory
  * @package App\Jobs\Emails\Registration
  */
-final class PromoCodeEmailFactory
-{
-    /**
-     * @param SummitRegistrationPromoCode $promo_code
-     */
-    public static function send(SummitRegistrationPromoCode $promo_code){
-        if(!$promo_code instanceof IOwnablePromoCode) return;
-        if($promo_code->getOwnerType() == 'MEMBER'){
-            MemberPromoCodeEmail::dispatch($promo_code);
-        }
-        if($promo_code->getOwnerType() == 'SPEAKER'){
-            SpeakerPromoCodeEMail::dispatch($promo_code);
-        }
-        if($promo_code->getOwnerType() == 'SPONSOR'){
-            SponsorPromoCodeEmail::dispatch($promo_code);
-        }
+final class PromoCodeEmailFactory {
+  /**
+   * @param SummitRegistrationPromoCode $promo_code
+   */
+  public static function send(SummitRegistrationPromoCode $promo_code) {
+    if (!$promo_code instanceof IOwnablePromoCode) {
+      return;
     }
+    if ($promo_code->getOwnerType() == "MEMBER") {
+      MemberPromoCodeEmail::dispatch($promo_code);
+    }
+    if ($promo_code->getOwnerType() == "SPEAKER") {
+      SpeakerPromoCodeEMail::dispatch($promo_code);
+    }
+    if ($promo_code->getOwnerType() == "SPONSOR") {
+      SponsorPromoCodeEmail::dispatch($promo_code);
+    }
+  }
 }

@@ -12,130 +12,128 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPDropDownQuestionTemplate")
  * @ORM\Entity
  * Class RSVPDropDownQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPDropDownQuestionTemplate extends RSVPMultiValueQuestionTemplate
-{
-    const ClassName = 'RSVPDropDownQuestionTemplate';
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
+class RSVPDropDownQuestionTemplate extends RSVPMultiValueQuestionTemplate {
+  const ClassName = "RSVPDropDownQuestionTemplate";
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
+
+  /**
+   * @ORM\Column(name="IsMultiSelect", type="boolean")
+   * @var bool
+   */
+  protected $is_multiselect;
+
+  /**
+   * @ORM\Column(name="IsCountrySelector", type="boolean")
+   * @var bool
+   */
+  protected $is_country_selector;
+
+  /**
+   * @ORM\Column(name="UseChosenPlugin", type="boolean")
+   * @var bool
+   */
+  protected $use_chosen_plugin;
+
+  /**
+   * @return bool
+   */
+  public function isMultiselect() {
+    return $this->is_multiselect;
+  }
+
+  /**
+   * @param bool $is_multiselect
+   */
+  public function setIsMultiselect($is_multiselect) {
+    $this->is_multiselect = $is_multiselect;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isCountrySelector() {
+    return $this->is_country_selector;
+  }
+
+  /**
+   * @param bool $is_country_selector
+   */
+  public function setIsCountrySelector($is_country_selector) {
+    $this->is_country_selector = $is_country_selector;
+  }
+
+  /**
+   * @return bool
+   */
+  public function getUseChosenPlugin() {
+    return $this->use_chosen_plugin;
+  }
+
+  /**
+   * @param bool $use_chosen_plugin
+   */
+  public function setUseChosenPlugin($use_chosen_plugin) {
+    $this->use_chosen_plugin = $use_chosen_plugin;
+  }
+
+  public function __construct() {
+    parent::__construct();
+    $this->use_chosen_plugin = false;
+    $this->is_multiselect = false;
+    $this->is_country_selector = false;
+  }
+
+  public static $metadata = [
+    "use_chosen_plugin" => "boolean",
+    "is_multiselect" => "boolean",
+    "is_country_selector" => "boolean",
+    "class_name" => self::ClassName,
+  ];
+
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(RSVPMultiValueQuestionTemplate::getMetadata(), self::$metadata);
+  }
+
+  /**
+   * @param array|string $value
+   * @return bool
+   */
+  public function isValidValue($value): bool {
+    if (!$this->is_multiselect) {
+      if (!is_string($value)) {
+        return false;
+      }
+      $valId = intval($value);
+      $val = $this->getValueById($valId);
+      if (is_null($val)) {
+        return false;
+      }
+      return true;
     }
-
-    /**
-     * @ORM\Column(name="IsMultiSelect", type="boolean")
-     * @var bool
-     */
-    protected $is_multiselect;
-
-    /**
-     * @ORM\Column(name="IsCountrySelector", type="boolean")
-     * @var bool
-     */
-    protected $is_country_selector;
-
-    /**
-     * @ORM\Column(name="UseChosenPlugin", type="boolean")
-     * @var bool
-     */
-    protected $use_chosen_plugin;
-
-    /**
-     * @return bool
-     */
-    public function isMultiselect()
-    {
-        return $this->is_multiselect;
+    if (!is_array($value)) {
+      return false;
     }
-
-    /**
-     * @param bool $is_multiselect
-     */
-    public function setIsMultiselect($is_multiselect)
-    {
-        $this->is_multiselect = $is_multiselect;
+    foreach ($value as $valId) {
+      $val = $this->getValueById(intval($valId));
+      if (is_null($val)) {
+        return false;
+      }
     }
-
-    /**
-     * @return bool
-     */
-    public function isCountrySelector()
-    {
-        return $this->is_country_selector;
-    }
-
-    /**
-     * @param bool $is_country_selector
-     */
-    public function setIsCountrySelector($is_country_selector)
-    {
-        $this->is_country_selector = $is_country_selector;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getUseChosenPlugin()
-    {
-        return $this->use_chosen_plugin;
-    }
-
-    /**
-     * @param bool $use_chosen_plugin
-     */
-    public function setUseChosenPlugin($use_chosen_plugin)
-    {
-        $this->use_chosen_plugin = $use_chosen_plugin;
-    }
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->use_chosen_plugin   = false;
-        $this->is_multiselect      = false;
-        $this->is_country_selector = false;
-    }
-
-
-    public static $metadata = [
-        'use_chosen_plugin'   => 'boolean',
-        'is_multiselect'      => 'boolean',
-        'is_country_selector' => 'boolean',
-        'class_name'          => self::ClassName,
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(RSVPMultiValueQuestionTemplate::getMetadata(), self::$metadata);
-    }
-
-    /**
-     * @param array|string $value
-     * @return bool
-     */
-    public function isValidValue($value): bool
-    {
-        if(!$this->is_multiselect){
-            if(!is_string($value)) return false;
-            $valId = intval($value);
-            $val   = $this->getValueById($valId);
-            if(is_null($val)) return false;
-            return true;
-        }
-        if(!is_array($value)) return false;
-        foreach($value as $valId){
-            $val   = $this->getValueById(intval($valId));
-            if(is_null($val)) return false;
-        }
-        return true;
-    }
+    return true;
+  }
 }

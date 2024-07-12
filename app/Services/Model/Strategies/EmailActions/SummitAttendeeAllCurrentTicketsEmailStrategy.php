@@ -21,45 +21,39 @@ use models\summit\SummitAttendee;
  * Class SummitAttendeeAllCurrentTicketsEmailStrategy
  * @package App\Services\Model\Strategies\EmailActions
  */
-final class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction
-{
-    /**
-     * SummitAttendeeAllCurrentTicketsEmailStrategy constructor.
-     * @param String $flow_event
-     */
-    public function __construct(String $flow_event)
-    {
-        parent::__construct($flow_event);
-    }
+final class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAction {
+  /**
+   * SummitAttendeeAllCurrentTicketsEmailStrategy constructor.
+   * @param String $flow_event
+   */
+  public function __construct(string $flow_event) {
+    parent::__construct($flow_event);
+  }
 
-    /**
-     * @param SummitAttendee $attendee
-     * @param string|null $test_email_recipient
-     * @param callable|null $onSuccess
-     * @param callable|null $onError
-     * @return void
-     */
-    public function process
-    (
-        SummitAttendee $attendee,
-        ?string $test_email_recipient = null,
-        callable $onSuccess = null,
-        callable $onError = null
-    )
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitAttendeeAllCurrentTicketsEmailStrategy::sending all tickets to attendee %s - flow event %s",
-                $attendee->getEmail(),
-                $this->flow_event
-            )
-        );
-        SummitAttendeeAllTicketsEditionEmail::dispatch($attendee, $test_email_recipient);
+  /**
+   * @param SummitAttendee $attendee
+   * @param string|null $test_email_recipient
+   * @param callable|null $onSuccess
+   * @param callable|null $onError
+   * @return void
+   */
+  public function process(
+    SummitAttendee $attendee,
+    ?string $test_email_recipient = null,
+    callable $onSuccess = null,
+    callable $onError = null,
+  ) {
+    Log::debug(
+      sprintf(
+        "SummitAttendeeAllCurrentTicketsEmailStrategy::sending all tickets to attendee %s - flow event %s",
+        $attendee->getEmail(),
+        $this->flow_event,
+      ),
+    );
+    SummitAttendeeAllTicketsEditionEmail::dispatch($attendee, $test_email_recipient);
 
-        if (!is_null($onSuccess)) {
-            $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
-        }
+    if (!is_null($onSuccess)) {
+      $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);
     }
+  }
 }

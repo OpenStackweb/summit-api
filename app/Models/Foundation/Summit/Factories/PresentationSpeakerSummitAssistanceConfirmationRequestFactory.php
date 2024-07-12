@@ -19,44 +19,40 @@ use models\summit\Summit;
  * Class PresentationSpeakerSummitAssistanceConfirmationRequestFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationSpeakerSummitAssistanceConfirmationRequestFactory
-{
-    /**
-     * @param Summit $summit
-     * @param PresentationSpeaker $speaker
-     * @param array $data
-     * @return PresentationSpeakerSummitAssistanceConfirmationRequest
-     */
-    public static function build(Summit $summit, PresentationSpeaker $speaker, array $data){
+final class PresentationSpeakerSummitAssistanceConfirmationRequestFactory {
+  /**
+   * @param Summit $summit
+   * @param PresentationSpeaker $speaker
+   * @param array $data
+   * @return PresentationSpeakerSummitAssistanceConfirmationRequest
+   */
+  public static function build(Summit $summit, PresentationSpeaker $speaker, array $data) {
+    $request = new PresentationSpeakerSummitAssistanceConfirmationRequest();
+    $request->setSummit($summit);
+    $request->setSpeaker($speaker);
+    $request = self::populate($request, $data);
+    return $request;
+  }
 
-        $request = new PresentationSpeakerSummitAssistanceConfirmationRequest();
-        $request->setSummit($summit);
-        $request->setSpeaker($speaker);
-        $request = self::populate($request, $data);
-        return $request;
-    }
+  /**
+   * @param PresentationSpeakerSummitAssistanceConfirmationRequest $summit_assistance
+   * @param array $data
+   * @return PresentationSpeakerSummitAssistanceConfirmationRequest
+   */
+  public static function populate(
+    PresentationSpeakerSummitAssistanceConfirmationRequest $summit_assistance,
+    array $data,
+  ) {
+    $on_site_phone = isset($data["on_site_phone"]) ? trim($data["on_site_phone"]) : null;
+    $registered = isset($data["registered"]) ? boolval($data["registered"]) : 0;
+    $checked_in = isset($data["checked_in"]) ? boolval($data["checked_in"]) : 0;
+    $confirmed = isset($data["is_confirmed"]) ? boolval($data["is_confirmed"]) : 0;
 
-    /**
-     * @param PresentationSpeakerSummitAssistanceConfirmationRequest $summit_assistance
-     * @param array $data
-     * @return PresentationSpeakerSummitAssistanceConfirmationRequest
-     */
-    public static function populate
-    (
-        PresentationSpeakerSummitAssistanceConfirmationRequest $summit_assistance,
-        array $data
-    )
-    {
-        $on_site_phone = isset($data['on_site_phone']) ? trim($data['on_site_phone'])   : null;
-        $registered    = isset($data['registered'])    ? boolval($data['registered'])   : 0;
-        $checked_in    = isset($data['checked_in'])    ? boolval($data['checked_in'])   : 0;
-        $confirmed     = isset($data['is_confirmed'])  ? boolval($data['is_confirmed']) : 0;
+    $summit_assistance->setOnSitePhone($on_site_phone);
+    $summit_assistance->setRegistered($registered);
+    $summit_assistance->setIsConfirmed($confirmed);
+    $summit_assistance->setCheckedIn($checked_in);
 
-        $summit_assistance->setOnSitePhone($on_site_phone);
-        $summit_assistance->setRegistered($registered);
-        $summit_assistance->setIsConfirmed($confirmed);
-        $summit_assistance->setCheckedIn($checked_in);
-
-        return $summit_assistance;
-    }
+    return $summit_assistance;
+  }
 }

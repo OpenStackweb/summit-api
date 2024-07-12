@@ -14,7 +14,7 @@
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use models\utils\IEntity;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use ReflectionClass;
 
 /***
@@ -23,51 +23,46 @@ use ReflectionClass;
  * Class BaseEntity
  * @package App\Models\Utils
  */
-class BaseEntity implements IEntity
-{
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="ID", type="integer", unique=true, nullable=false)
-     */
-    protected $id;
+class BaseEntity implements IEntity {
+  /**
+   * @ORM\Id
+   * @ORM\GeneratedValue
+   * @ORM\Column(name="ID", type="integer", unique=true, nullable=false)
+   */
+  protected $id;
 
-    /**
-     * @return bool
-     */
-    public function isNew():bool{
-        return is_null($this->id);
-    }
+  /**
+   * @return bool
+   */
+  public function isNew(): bool {
+    return is_null($this->id);
+  }
 
-    /**
-     * @return int
-     */
-    public function getIdentifier()
-    {
-        return (int)$this->id;
-    }
+  /**
+   * @return int
+   */
+  public function getIdentifier() {
+    return (int) $this->id;
+  }
 
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->getIdentifier();
-    }
+  /**
+   * @return int
+   */
+  public function getId() {
+    return $this->getIdentifier();
+  }
 
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        $class_name = (new ReflectionClass($this))->getShortName();
-        return "{$class_name}@{$this->getIdentifier()}";
-    }
+  /**
+   * @return string
+   */
+  public function __toString() {
+    $class_name = (new ReflectionClass($this))->getShortName();
+    return "{$class_name}@{$this->getIdentifier()}";
+  }
 
-    /**
-     * @ORM\PreUpdate:
-     */
-    public function updating(PreUpdateEventArgs $args)
-    {
-    }
+  /**
+   * @ORM\PreUpdate:
+   */
+  public function updating(PreUpdateEventArgs $args) {
+  }
 }

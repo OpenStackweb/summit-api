@@ -21,61 +21,53 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2UserStoriesApiController
  * @package App\Http\Controllers
  */
-final class OAuth2UserStoriesApiController extends OAuth2ProtectedController
-{
+final class OAuth2UserStoriesApiController extends OAuth2ProtectedController {
+  use ParametrizedGetAll;
 
-    use ParametrizedGetAll;
+  /**
+   * OAuth2UserStoriesApiController constructor.
+   * @param IUserStoryRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IUserStoryRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+  }
 
-    /**
-     * OAuth2UserStoriesApiController constructor.
-     * @param IUserStoryRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IUserStoryRepository   $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-    }
+  /**
+   * @return mixed
+   */
+  public function getAllUserStories() {
+    return $this->_getAll(
+      function () {
+        return [
+          "name" => ["=@", "==", "@@"],
+        ];
+      },
+      function () {
+        return [
+          "name" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["name", "id"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        return $this->getEntitySerializerType();
+      },
+    );
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getAllUserStories()
-    {
-        return $this->_getAll(
-            function () {
-                return [
-                    'name' => ['=@', '==', '@@'],
-                ];
-            },
-            function () {
-                return [
-                    'name' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'name',
-                    'id',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-              return $this->getEntitySerializerType();
-            }
-        );
-    }
-
-    protected function getEntitySerializerType(): string
-    {
-        $currentUser = $this->resource_server_context->getCurrentUser();
-        return !is_null($currentUser) ? SerializerRegistry::SerializerType_Private :
-            SerializerRegistry::SerializerType_Public;
-    }
+  protected function getEntitySerializerType(): string {
+    $currentUser = $this->resource_server_context->getCurrentUser();
+    return !is_null($currentUser)
+      ? SerializerRegistry::SerializerType_Private
+      : SerializerRegistry::SerializerType_Public;
+  }
 }

@@ -16,32 +16,31 @@ use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitBadgeViewType;
 
-interface IBadgeViewTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitBadgeViewType|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload):?SummitBadgeViewType;
+interface IBadgeViewTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitBadgeViewType|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): ?SummitBadgeViewType;
 
-    /**
-     * @param Summit $summit
-     * @param int $id
-     * @param array $payload
-     * @return SummitBadgeViewType|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $id, array $payload):?SummitBadgeViewType;
+  /**
+   * @param Summit $summit
+   * @param int $id
+   * @param array $payload
+   * @return SummitBadgeViewType|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(Summit $summit, int $id, array $payload): ?SummitBadgeViewType;
 
-    /**
-     * @param Summit $summit
-     * @param int $id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $id):void;
+  /**
+   * @param Summit $summit
+   * @param int $id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $id): void;
 }

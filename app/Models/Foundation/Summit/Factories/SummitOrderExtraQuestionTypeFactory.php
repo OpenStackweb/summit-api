@@ -18,32 +18,32 @@ use models\summit\SummitOrderExtraQuestionType;
  * Class SummitOrderExtraQuestionTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitOrderExtraQuestionTypeFactory extends ExtraQuestionTypeFactory
-{
-    /**
-     * @param ExtraQuestionType $question
-     * @param array $data
-     * @return ExtraQuestionType
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function populate(ExtraQuestionType $question, array $data):ExtraQuestionType{
+final class SummitOrderExtraQuestionTypeFactory extends ExtraQuestionTypeFactory {
+  /**
+   * @param ExtraQuestionType $question
+   * @param array $data
+   * @return ExtraQuestionType
+   * @throws \models\exceptions\ValidationException
+   */
+  public static function populate(ExtraQuestionType $question, array $data): ExtraQuestionType {
+    $question = parent::populate($question, $data);
 
-        $question = parent::populate($question, $data);
-
-        if(isset($data['usage']))
-            $question->setUsage(trim($data['usage']));
-
-        if(isset($data['external_id']))
-            $question->setExternalId(trim($data['external_id']));
-
-        if(isset($data['printable']))
-            $question->setPrintable(boolval($data['printable']));
-
-        return $question;
+    if (isset($data["usage"])) {
+      $question->setUsage(trim($data["usage"]));
     }
 
-    protected static function getNewEntity(): ExtraQuestionType
-    {
-        return new SummitOrderExtraQuestionType;
+    if (isset($data["external_id"])) {
+      $question->setExternalId(trim($data["external_id"]));
     }
+
+    if (isset($data["printable"])) {
+      $question->setPrintable(boolval($data["printable"]));
+    }
+
+    return $question;
+  }
+
+  protected static function getNewEntity(): ExtraQuestionType {
+    return new SummitOrderExtraQuestionType();
+  }
 }

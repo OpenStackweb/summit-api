@@ -24,46 +24,40 @@ use services\model\ISummitService;
  * Class CreateMUXURLSigningKeyForSummit
  * @package App\Jobs
  */
-final class CreateMUXURLSigningKeyForSummit implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+final class CreateMUXURLSigningKeyForSummit implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 2;
-    /**
-     * @var int
-     */
-    private $summit_id;
+  public $tries = 2;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @param int $summit_id
-     */
-    public function __construct(int $summit_id)
-    {
-        $this->summit_id = $summit_id;
+  /**
+   * @param int $summit_id
+   */
+  public function __construct(int $summit_id) {
+    $this->summit_id = $summit_id;
+  }
+
+  public function handle(ISummitService $service) {
+    try {
+      Log::debug("CreateMUXURLSigningKeyForSummit::handle summit id {$this->summit_id}");
+      $service->generateMUXPrivateKey($this->summit_id);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    public function handle(ISummitService $service)
-    {
-        try {
-            Log::debug("CreateMUXURLSigningKeyForSummit::handle summit id {$this->summit_id}");
-            $service->generateMUXPrivateKey($this->summit_id);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            throw $ex;
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "CreateMUXURLSigningKeyForSummit::failed summit id %s error %s",
-                $this->summit_id,
-                $exception->getMessage()
-            )
-        );
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::debug(
+      sprintf(
+        "CreateMUXURLSigningKeyForSummit::failed summit id %s error %s",
+        $this->summit_id,
+        $exception->getMessage(),
+      ),
+    );
+    Log::error($exception);
+  }
 }

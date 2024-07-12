@@ -20,82 +20,106 @@ use models\summit\Presentation;
  * Class PresentationCreatorNotificationEmail
  * @package App\Jobs\Emails\PresentationSubmissions
  */
-class PresentationCreatorNotificationEmail extends AbstractSummitEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
+class PresentationCreatorNotificationEmail extends AbstractSummitEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
+
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_CREATOR_NOTIFICATION";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_CREATOR_NOTIFICATION";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_CREATOR_NOTIFICATION";
+
+  public function __construct(Presentation $presentation) {
+    $summit = $presentation->getSummit();
+    $creator = $presentation->getCreator();
+    $selection_plan = $presentation->getSelectionPlan();
+
+    if (is_null($selection_plan)) {
+      throw new \InvalidArgumentException("Presentation selection plan is null.");
     }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_CREATOR_NOTIFICATION';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_CREATOR_NOTIFICATION';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_CREATOR_NOTIFICATION';
+    $speaker_management_base_url = Config::get("cfp.base_url");
+    $idp_base_url = Config::get("idp.base_url");
+    $support_email = $summit->getSupportEmail();
+    $support_email = !empty($support_email)
+      ? $support_email
+      : Config::get("cfp.support_email", null);
 
-    public function __construct(Presentation $presentation)
-    {
-        $summit = $presentation->getSummit();
-        $creator = $presentation->getCreator();
-        $selection_plan = $presentation->getSelectionPlan();
-
-        if(is_null($selection_plan))
-            throw new \InvalidArgumentException('Presentation selection plan is null.');
-
-        $speaker_management_base_url = Config::get('cfp.base_url');
-        $idp_base_url = Config::get('idp.base_url');
-        $support_email = $summit->getSupportEmail();
-        $support_email = !empty($support_email) ? $support_email: Config::get("cfp.support_email", null);
-
-        if(empty($speaker_management_base_url))
-            throw new \InvalidArgumentException('cfp.base_url is null.');
-
-        if(empty($idp_base_url))
-            throw new \InvalidArgumentException('idp.base_url is null.');
-
-        if(empty($support_email))
-            throw new \InvalidArgumentException('cfp.support_email is null.');
-
-        $payload = [];
-
-        $payload[IMailTemplatesConstants::creator_full_name] = $creator->getFullName();
-        $payload[IMailTemplatesConstants::creator_email] = $creator->getEmail();
-        $payload[IMailTemplatesConstants::selection_plan_name] = $selection_plan->getName();
-        $payload[IMailTemplatesConstants::presentation_edit_link] = $presentation->getEditLink();
-
-        $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
-        $payload[IMailTemplatesConstants::until_date] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
-
-        $payload[IMailTemplatesConstants::selection_process_link] = sprintf("%s/app/%s/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug(), $selection_plan->getId());
-        $payload[IMailTemplatesConstants::speaker_management_link] = EmailUtils::getSpeakerManagementLink($summit, $selection_plan);
-        $payload[IMailTemplatesConstants::bio_edit_link] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
-        $payload[IMailTemplatesConstants::reset_password_link] = sprintf("%s/auth/password/reset", $idp_base_url);
-        $payload[IMailTemplatesConstants::support_email] = $support_email;
-
-        $selectionPlanTemplateName = $selection_plan->getPresentationCreatorNotificationEmailTemplate();
-
-        $template_identifier =  !empty($selectionPlanTemplateName) ?
-            $selectionPlanTemplateName : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-
-        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::creator_email]);
+    if (empty($speaker_management_base_url)) {
+      throw new \InvalidArgumentException("cfp.base_url is null.");
     }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-
-        $payload = parent::getEmailTemplateSchema();
-
-        $payload[IMailTemplatesConstants::creator_full_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::creator_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::selection_plan_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::presentation_edit_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::until_date]['type'] = 'string';
-        $payload[IMailTemplatesConstants::selection_process_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::bio_edit_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::reset_password_link]['type'] = 'string';
-        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
-
-        return $payload;
+    if (empty($idp_base_url)) {
+      throw new \InvalidArgumentException("idp.base_url is null.");
     }
+
+    if (empty($support_email)) {
+      throw new \InvalidArgumentException("cfp.support_email is null.");
+    }
+
+    $payload = [];
+
+    $payload[IMailTemplatesConstants::creator_full_name] = $creator->getFullName();
+    $payload[IMailTemplatesConstants::creator_email] = $creator->getEmail();
+    $payload[IMailTemplatesConstants::selection_plan_name] = $selection_plan->getName();
+    $payload[IMailTemplatesConstants::presentation_edit_link] = $presentation->getEditLink();
+
+    $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
+    $payload[IMailTemplatesConstants::until_date] = !is_null($submissionEndDateLocal)
+      ? $submissionEndDateLocal->format("F d, Y")
+      : "";
+
+    $payload[IMailTemplatesConstants::selection_process_link] = sprintf(
+      "%s/app/%s/%s/selection_process",
+      $speaker_management_base_url,
+      $summit->getRawSlug(),
+      $selection_plan->getId(),
+    );
+    $payload[
+      IMailTemplatesConstants::speaker_management_link
+    ] = EmailUtils::getSpeakerManagementLink($summit, $selection_plan);
+    $payload[IMailTemplatesConstants::bio_edit_link] = sprintf(
+      "%s/app/%s/profile",
+      $speaker_management_base_url,
+      $summit->getRawSlug(),
+    );
+    $payload[IMailTemplatesConstants::reset_password_link] = sprintf(
+      "%s/auth/password/reset",
+      $idp_base_url,
+    );
+    $payload[IMailTemplatesConstants::support_email] = $support_email;
+
+    $selectionPlanTemplateName = $selection_plan->getPresentationCreatorNotificationEmailTemplate();
+
+    $template_identifier = !empty($selectionPlanTemplateName)
+      ? $selectionPlanTemplateName
+      : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+    parent::__construct(
+      $summit,
+      $payload,
+      $template_identifier,
+      $payload[IMailTemplatesConstants::creator_email],
+    );
+  }
+
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+
+    $payload[IMailTemplatesConstants::creator_full_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::creator_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::selection_plan_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::presentation_edit_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::until_date]["type"] = "string";
+    $payload[IMailTemplatesConstants::selection_process_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::bio_edit_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::reset_password_link]["type"] = "string";
+    $payload[IMailTemplatesConstants::support_email]["type"] = "string";
+
+    return $payload;
+  }
 }

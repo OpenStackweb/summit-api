@@ -16,7 +16,7 @@ use App\Models\Foundation\Summit\Registration\Traits\TaxTrait;
 use App\Models\Utils\BaseEntity;
 use App\Models\Utils\Traits\FinancialTrait;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
@@ -24,93 +24,85 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitAttendeeTicket_Taxes
  * @package models\summit
  */
-class SummitAttendeeTicketTax extends BaseEntity
-{
-    use FinancialTrait;
+class SummitAttendeeTicketTax extends BaseEntity {
+  use FinancialTrait;
 
-    use One2ManyPropertyTrait;
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getTicketId' => 'ticket',
-        'getTaxId' => 'tax',
-    ];
+  protected $getIdMappings = [
+    "getTicketId" => "ticket",
+    "getTaxId" => "tax",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasTicket' => 'ticket',
-        'hasTax' => 'tax',
-    ];
+  protected $hasPropertyMappings = [
+    "hasTicket" => "ticket",
+    "hasTax" => "tax",
+  ];
 
-    /**
-     * @return SummitAttendeeTicket
-     */
-    public function getTicket(): SummitAttendeeTicket
-    {
-        return $this->ticket;
-    }
+  /**
+   * @return SummitAttendeeTicket
+   */
+  public function getTicket(): SummitAttendeeTicket {
+    return $this->ticket;
+  }
 
-    /**
-     * @return SummitTaxType
-     */
-    public function getTax(): SummitTaxType
-    {
-        return $this->tax;
-    }
+  /**
+   * @return SummitTaxType
+   */
+  public function getTax(): SummitTaxType {
+    return $this->tax;
+  }
 
+  /**
+   * @return float
+   */
+  public function getAmount(): float {
+    return $this->amount;
+  }
 
-    /**
-     * @return float
-     */
-    public function getAmount(): float
-    {
-        return $this->amount;
-    }
+  /**
+   * @return int
+   */
+  public function getAmountInCents(): int {
+    return self::convertToCents($this->amount);
+  }
 
-    /**
-     * @return int
-     */
-    public function getAmountInCents(): int
-    {
-        return self::convertToCents($this->amount);
-    }
+  /**
+   * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="applied_taxes")
+   * @ORM\JoinColumn(name="SummitAttendeeTicketID", referencedColumnName="ID")
+   * @var SummitAttendeeTicket
+   */
+  private $ticket;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="applied_taxes")
-     * @ORM\JoinColumn(name="SummitAttendeeTicketID", referencedColumnName="ID")
-     * @var SummitAttendeeTicket
-     */
-    private $ticket;
+  /**
+   * @ORM\ManyToOne(targetEntity="SummitTaxType")
+   * @ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")
+   * @var SummitTaxType
+   */
+  private $tax;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="SummitTaxType")
-     * @ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")
-     * @var SummitTaxType
-     */
-    private $tax;
+  /**
+   * @ORM\Column(name="Amount", type="float")
+   * @var float
+   */
+  private $amount;
 
-    /**
-     * @ORM\Column(name="Amount", type="float")
-     * @var float
-     */
-    private $amount;
+  /**
+   * @ORM\Column(name="Rate", type="float")
+   * @var double
+   */
+  private $rate;
 
-    /**
-     * @ORM\Column(name="Rate", type="float")
-     * @var double
-     */
-    private $rate;
+  /**
+   * @param SummitTaxType $tax
+   * @param SummitAttendeeTicket $ticket
+   */
+  public function __construct(SummitTaxType $tax, SummitAttendeeTicket $ticket) {
+    $this->tax = $tax;
+    $this->ticket = $ticket;
+    $this->amount = $tax->applyTo($ticket->getNetSellingPrice(), false);
+    $this->rate = $tax->getRate();
+  }
 
-    /**
-     * @param SummitTaxType $tax
-     * @param SummitAttendeeTicket $ticket
-     */
-    public function __construct(SummitTaxType $tax, SummitAttendeeTicket $ticket)
-    {
-        $this->tax = $tax;
-        $this->ticket = $ticket;
-        $this->amount = $tax->applyTo($ticket->getNetSellingPrice(), false);
-        $this->rate = $tax->getRate();
-    }
-
-    use TaxTrait;
-
+  use TaxTrait;
 }

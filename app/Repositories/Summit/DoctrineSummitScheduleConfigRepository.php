@@ -22,61 +22,55 @@ use utils\Filter;
  * Class DoctrineSummitScheduleConfigRepository
  * @package App\Repositories\Summit
  */
-class DoctrineSummitScheduleConfigRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitScheduleConfigRepository
-{
+class DoctrineSummitScheduleConfigRepository extends SilverStripeDoctrineRepository implements
+  ISummitScheduleConfigRepository {
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.summit", "s", Join::ON);
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->innerJoin("e.summit", "s", Join::ON);
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings(): array {
+    return [
+      "key" => "e.key",
+      "is_enabled" => "e.is_enabled",
+      "is_my_schedule" => "e.is_my_schedule",
+      "only_events_with_attendee_access" => "e.only_events_with_attendee_access",
+      "color_source" => "e.color_source",
+      "summit_id" => "s.id",
+      "hide_past_events_with_show_always_on_schedule" =>
+        "e.hide_past_events_with_show_always_on_schedule",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings(): array
-    {
-        return [
-            'key' => 'e.key',
-            'is_enabled' => 'e.is_enabled',
-            'is_my_schedule' => 'e.is_my_schedule',
-            'only_events_with_attendee_access' => 'e.only_events_with_attendee_access',
-            'color_source' => 'e.color_source',
-            'summit_id' => 's.id',
-            'hide_past_events_with_show_always_on_schedule' => 'e.hide_past_events_with_show_always_on_schedule'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings(): array {
+    return [
+      "key" => "e.key",
+      "id" => "e.id",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings(): array
-    {
-        return [
-            'key' => 'e.key',
-            'id' => 'e.id',
-        ];
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraFilters(QueryBuilder $query): QueryBuilder {
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query): QueryBuilder
-    {
-        return $query;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity():string
-    {
-       return SummitScheduleConfig::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity(): string {
+    return SummitScheduleConfig::class;
+  }
 }

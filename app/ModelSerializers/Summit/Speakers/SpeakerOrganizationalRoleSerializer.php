@@ -11,11 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class SpeakerOrganizationalRoleSerializer
-    extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Role'      => 'role:json_string',
-        'Default'   => 'is_default:json_boolean',
-    ];
+final class SpeakerOrganizationalRoleSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Role" => "role:json_string",
+    "Default" => "is_default:json_boolean",
+  ];
 }

@@ -10,7 +10,6 @@ use Illuminate\Foundation\Auth\Access\AuthorizesResources;
  * Class Controller
  * @package App\Http\Controllers
  */
-class Controller extends BaseController
-{
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+class Controller extends BaseController {
+  use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 }

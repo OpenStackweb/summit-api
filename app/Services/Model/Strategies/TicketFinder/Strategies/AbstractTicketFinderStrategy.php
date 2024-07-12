@@ -20,34 +20,31 @@ use models\summit\Summit;
  * Class AbstractTicketFinderStrategy
  * @package App\Services\Model\Strategies\TicketFinder\Strategies
  */
-abstract class AbstractTicketFinderStrategy implements ITicketFinderStrategy
-{
-    /**
-     * @var ISummitAttendeeTicketRepository
-     */
-    protected $repository;
+abstract class AbstractTicketFinderStrategy implements ITicketFinderStrategy {
+  /**
+   * @var ISummitAttendeeTicketRepository
+   */
+  protected $repository;
 
-    /**
-     * @var Summit
-     */
-    protected $summit;
+  /**
+   * @var Summit
+   */
+  protected $summit;
 
-    protected $ticket_criteria;
+  protected $ticket_criteria;
 
-    /**
-     * @param ISummitAttendeeTicketRepository $repository
-     * @param Summit $summit
-     * @param $ticket_criteria
-     */
-    public function __construct
-    (
-        ISummitAttendeeTicketRepository $repository,
-        Summit $summit,
-        $ticket_criteria
-    )
-    {
-        $this->summit = $summit;
-        $this->ticket_criteria = $ticket_criteria;
-        $this->repository = $repository;
-    }
+  /**
+   * @param ISummitAttendeeTicketRepository $repository
+   * @param Summit $summit
+   * @param $ticket_criteria
+   */
+  public function __construct(
+    ISummitAttendeeTicketRepository $repository,
+    Summit $summit,
+    $ticket_criteria,
+  ) {
+    $this->summit = $summit;
+    $this->ticket_criteria = $ticket_criteria;
+    $this->repository = $repository;
+  }
 }

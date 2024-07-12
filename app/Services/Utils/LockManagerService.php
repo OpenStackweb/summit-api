@@ -21,93 +21,98 @@ use Closure;
  * @package App\Services\Utils
  */
 final class LockManagerService implements ILockManagerService {
+  const MaxRetries = 3;
+  const BackOffMultiplier = 2.0;
+  const BackOffBaseInterval = 100000; // 1 ms
+  /**
+   * @var ICacheService
+   */
+  private $cache_service;
 
-    const MaxRetries = 3;
-    const BackOffMultiplier = 2.0;
-    const BackOffBaseInterval = 100000; // 1 ms
-    /**
-     * @var ICacheService
-     */
-    private $cache_service;
+  /**
+   * LockManagerService constructor.
+   * @param ICacheService $cache_service
+   */
+  public function __construct(ICacheService $cache_service) {
+    $this->cache_service = $cache_service;
+  }
 
-    /**
-     * LockManagerService constructor.
-     * @param ICacheService $cache_service
-     */
-    public function __construct(ICacheService $cache_service){
-        $this->cache_service = $cache_service;
-    }
-
-    /**
-     * @param string $name
-     * @param int $lifetime
-     * @return LockManagerService
-     * @throws UnacquiredLockException
-     */
-    public function acquireLock(string $name, int $lifetime = 3600):LockManagerService
-    {
-        Log::debug(sprintf("LockManagerService::acquireLock name %s lifetime %s",$name, $lifetime));
-        $attempt  = 0 ;
-        do {
-            $time = time() + $lifetime + 1;
-            $success = $this->cache_service->addSingleValue($name, $time, $time);
-            if($success) return $this;
-            $wait_interval = self::BackOffBaseInterval * ( self::BackOffMultiplier ^ $attempt );
-            Log::debug(sprintf("LockManagerService::acquireLock name %s retrying in %s microseconds (%s).", $name, $wait_interval, $attempt));
-            usleep($wait_interval);
-            if($attempt >= (self::MaxRetries - 1 )) {
-                // only one time we could use this handle
-                Log::error(sprintf("LockManagerService::acquireLock name %s lifetime %s ERROR MAX RETRIES attempt %s", $name, $lifetime, $attempt));
-                throw new UnacquiredLockException(sprintf("lock name %s", $name));
-            }
-            ++$attempt;
-        } while(1);
-    }
-
-    /**
-     * @param string $name
-     * @return $this
-     */
-    public function releaseLock(string $name):LockManagerService
-    {
-        Log::debug(sprintf("LockManagerService::releaseLock name %s",$name));
-        $this->cache_service->delete($name);
+  /**
+   * @param string $name
+   * @param int $lifetime
+   * @return LockManagerService
+   * @throws UnacquiredLockException
+   */
+  public function acquireLock(string $name, int $lifetime = 3600): LockManagerService {
+    Log::debug(sprintf("LockManagerService::acquireLock name %s lifetime %s", $name, $lifetime));
+    $attempt = 0;
+    do {
+      $time = time() + $lifetime + 1;
+      $success = $this->cache_service->addSingleValue($name, $time, $time);
+      if ($success) {
         return $this;
+      }
+      $wait_interval = self::BackOffBaseInterval * (self::BackOffMultiplier ^ $attempt);
+      Log::debug(
+        sprintf(
+          "LockManagerService::acquireLock name %s retrying in %s microseconds (%s).",
+          $name,
+          $wait_interval,
+          $attempt,
+        ),
+      );
+      usleep($wait_interval);
+      if ($attempt >= self::MaxRetries - 1) {
+        // only one time we could use this handle
+        Log::error(
+          sprintf(
+            "LockManagerService::acquireLock name %s lifetime %s ERROR MAX RETRIES attempt %s",
+            $name,
+            $lifetime,
+            $attempt,
+          ),
+        );
+        throw new UnacquiredLockException(sprintf("lock name %s", $name));
+      }
+      ++$attempt;
+    } while (1);
+  }
+
+  /**
+   * @param string $name
+   * @return $this
+   */
+  public function releaseLock(string $name): LockManagerService {
+    Log::debug(sprintf("LockManagerService::releaseLock name %s", $name));
+    $this->cache_service->delete($name);
+    return $this;
+  }
+
+  /**
+   * @param string $name
+   * @param Closure $callback
+   * @param int $lifetime
+   * @return null
+   * @throws UnacquiredLockException
+   * @throws Exception
+   */
+  public function lock(string $name, Closure $callback, int $lifetime = 3600) {
+    $result = null;
+    Log::debug(sprintf("LockManagerService::lock name %s lifetime %s", $name, $lifetime));
+
+    try {
+      $this->acquireLock($name, $lifetime);
+      Log::debug(sprintf("LockManagerService::lock name %s calling callback", $name));
+      $result = $callback($this);
+    } catch (UnacquiredLockException $ex) {
+      Log::warning($ex);
+      throw $ex;
+    } catch (Exception $ex) {
+      Log::error($ex);
+      throw $ex;
+    } finally {
+      $this->releaseLock($name);
     }
-
-    /**
-     * @param string $name
-     * @param Closure $callback
-     * @param int $lifetime
-     * @return null
-     * @throws UnacquiredLockException
-     * @throws Exception
-     */
-    public function lock(string $name, Closure $callback, int $lifetime = 3600)
-    {
-        $result = null;
-        Log::debug(sprintf("LockManagerService::lock name %s lifetime %s", $name, $lifetime));
-
-        try
-        {
-            $this->acquireLock($name, $lifetime);
-            Log::debug(sprintf("LockManagerService::lock name %s calling callback", $name));
-            $result = $callback($this);
-        }
-        catch(UnacquiredLockException $ex)
-        {
-            Log::warning($ex);
-            throw $ex;
-        }
-        catch(Exception $ex)
-        {
-            Log::error($ex);
-            throw $ex;
-        }
-        finally {
-            $this->releaseLock($name);
-        }
-        return $result;
-    }
-
+    return $result;
+  }
 }

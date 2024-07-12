@@ -19,23 +19,25 @@ use models\summit\Summit;
  * Interface ISummitEmailEventFlowService
  * @package App\Services\Model
  */
-interface ISummitEmailEventFlowService
-{
-    /**
-     * @param Summit $summit
-     * @param int $event_id
-     * @param array $data
-     * @return SummitEmailEventFlow
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateEmailEventFlow(Summit $summit, int $event_id, array $data):SummitEmailEventFlow;
+interface ISummitEmailEventFlowService {
+  /**
+   * @param Summit $summit
+   * @param int $event_id
+   * @param array $data
+   * @return SummitEmailEventFlow
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateEmailEventFlow(
+    Summit $summit,
+    int $event_id,
+    array $data,
+  ): SummitEmailEventFlow;
 
-    /**
-     * @param Summit $summit
-     * @param int $event_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteEmailEventFlow(Summit $summit, int $event_id):void;
-
+  /**
+   * @param Summit $summit
+   * @param int $event_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteEmailEventFlow(Summit $summit, int $event_id): void;
 }

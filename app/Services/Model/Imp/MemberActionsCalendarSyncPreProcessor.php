@@ -21,59 +21,57 @@ use models\summit\IAbstractCalendarSyncWorkRequestRepository;
  * Class MemberActionsCalendarSyncPreProcessor
  * @package services\model
  */
-final class MemberActionsCalendarSyncPreProcessor
-    implements ICalendarSyncWorkRequestPreProcessor
-{
-    /**
-     * @var ICalendarSyncWorkRequestQueueManager
-     */
-    private $queue_manager;
+final class MemberActionsCalendarSyncPreProcessor implements ICalendarSyncWorkRequestPreProcessor {
+  /**
+   * @var ICalendarSyncWorkRequestQueueManager
+   */
+  private $queue_manager;
 
-    /**
-     * @var IAbstractCalendarSyncWorkRequestRepository
-     */
-    private $work_request_repository;
+  /**
+   * @var IAbstractCalendarSyncWorkRequestRepository
+   */
+  private $work_request_repository;
 
-    /**
-     * @var ICalendarSyncWorkRequestPreProcessorStrategyFactory
-     */
-    private $strategy_factory;
+  /**
+   * @var ICalendarSyncWorkRequestPreProcessorStrategyFactory
+   */
+  private $strategy_factory;
 
-    /**
-     * MemberActionsCalendarSyncPreProcessor constructor.
-     * @param ICalendarSyncWorkRequestQueueManager $queue_manager
-     * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
-     * @param ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory
-     */
-    public function __construct
-    (
-        ICalendarSyncWorkRequestQueueManager $queue_manager,
-        IAbstractCalendarSyncWorkRequestRepository $work_request_repository,
-        ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory
-    )
-    {
-        $this->queue_manager           = $queue_manager;
-        $this->work_request_repository = $work_request_repository;
-        $this->strategy_factory        = $strategy_factory;
+  /**
+   * MemberActionsCalendarSyncPreProcessor constructor.
+   * @param ICalendarSyncWorkRequestQueueManager $queue_manager
+   * @param IAbstractCalendarSyncWorkRequestRepository $work_request_repository
+   * @param ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory
+   */
+  public function __construct(
+    ICalendarSyncWorkRequestQueueManager $queue_manager,
+    IAbstractCalendarSyncWorkRequestRepository $work_request_repository,
+    ICalendarSyncWorkRequestPreProcessorStrategyFactory $strategy_factory,
+  ) {
+    $this->queue_manager = $queue_manager;
+    $this->work_request_repository = $work_request_repository;
+    $this->strategy_factory = $strategy_factory;
+  }
+
+  /**
+   * @param MemberScheduleSummitActionSyncWorkRequest[] $requests
+   * @return MemberScheduleSummitActionSyncWorkRequest[]
+   */
+  function preProcessActions(array $requests) {
+    foreach ($requests as $request) {
+      $strategy = $this->strategy_factory->build($this->queue_manager, $request);
+      if (is_null($strategy)) {
+        continue;
+      }
+      $request = $strategy->process($request);
+      if (!is_null($request)) {
+        $this->queue_manager->registerRequest($request);
+      }
     }
 
-    /**
-     * @param MemberScheduleSummitActionSyncWorkRequest[] $requests
-     * @return MemberScheduleSummitActionSyncWorkRequest[]
-     */
-    function preProcessActions(array $requests){
-
-        foreach ($requests as $request){
-            $strategy = $this->strategy_factory->build($this->queue_manager, $request);
-            if(is_null($strategy)) continue;
-            $request = $strategy->process($request);
-            if(!is_null($request))
-                $this->queue_manager->registerRequest($request);
-        }
-
-        foreach($this->queue_manager->getRequestsToDelete() as $request_2_delete){
-            $this->work_request_repository->delete($request_2_delete);
-        }
-        return $this->queue_manager->getPurgedRequests();
+    foreach ($this->queue_manager->getRequestsToDelete() as $request_2_delete) {
+      $this->work_request_repository->delete($request_2_delete);
     }
+    return $this->queue_manager->getPurgedRequests();
+  }
 }

@@ -20,25 +20,27 @@ use ModelSerializers\SilverStripeSerializer;
  * Class AuditLogSerializer
  * @package ModelSerializers
  */
-class AuditLogSerializer extends SilverStripeSerializer
-{
+class AuditLogSerializer extends SilverStripeSerializer {
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    return parent::serialize($expand, $fields, $relations, $params);
+  }
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        return parent::serialize($expand, $fields, $relations, $params);
-    }
+  protected static $array_mappings = [
+    "Action" => "action:json_string",
+    "UserId" => "user_id:json_int",
+  ];
 
-    protected static $array_mappings = [
-        'Action' => 'action:json_string',
-        'UserId' => 'user_id:json_int',
-    ];
-
-    protected static $expand_mappings = [
-        'user' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'user_id',
-            'getter' => 'getUser',
-            'has' => 'hasUser'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "user" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "user_id",
+      "getter" => "getUser",
+      "has" => "hasUser",
+    ],
+  ];
 }

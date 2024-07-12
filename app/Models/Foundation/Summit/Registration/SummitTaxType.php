@@ -14,7 +14,7 @@
 
 use App\Models\Foundation\Summit\Registration\Traits\TaxTrait;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTaxTypeRepository")
@@ -28,111 +28,109 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Class SummitTaxType
  * @package models\summitSummitTicketType_Taxes
  */
-class SummitTaxType extends SilverstripeBaseModel
-{
-    use TaxTrait;
+class SummitTaxType extends SilverstripeBaseModel {
+  use TaxTrait;
 
-    use SummitOwned;
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="TaxID", type="string")
-     * @var string
-     */
-    private $tax_id;
+  /**
+   * @ORM\Column(name="TaxID", type="string")
+   * @var string
+   */
+  private $tax_id;
 
-    /**
-     * @ORM\Column(name="Rate", type="float")
-     * @var double
-     */
-    private $rate;
+  /**
+   * @ORM\Column(name="Rate", type="float")
+   * @var double
+   */
+  private $rate;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="SummitTicketType", inversedBy="applied_taxes")
-     * @ORM\JoinTable(name="SummitTicketType_Taxes",
-     *      joinColumns={@ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
-     * @var SummitTicketType[]
-     */
-    private $ticket_types;
+  /**
+   * @ORM\ManyToMany(targetEntity="SummitTicketType", inversedBy="applied_taxes")
+   * @ORM\JoinTable(name="SummitTicketType_Taxes",
+   *      joinColumns={@ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
+   *      )
+   * @var SummitTicketType[]
+   */
+  private $ticket_types;
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getTaxId(): ?string {
+    return $this->tax_id;
+  }
+
+  /**
+   * @param string $tax_id
+   */
+  public function setTaxId(string $tax_id): void {
+    $this->tax_id = $tax_id;
+  }
+
+  public function __construct() {
+    parent::__construct();
+    $this->ticket_types = new ArrayCollection();
+    $this->tax_id = "";
+    $this->rate = 0.0;
+  }
+
+  /**
+   * @param SummitTicketType $ticketType
+   */
+  public function addTicketType(SummitTicketType $ticketType) {
+    if ($this->ticket_types->contains($ticketType)) {
+      return;
     }
+    $this->ticket_types->add($ticketType);
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
+  /**
+   * @param SummitTicketType $ticketType
+   */
+  public function removeTicketType(SummitTicketType $ticketType) {
+    if (!$this->ticket_types->contains($ticketType)) {
+      return;
     }
+    $this->ticket_types->removeElement($ticketType);
+  }
 
-    /**
-     * @return string|null
-     */
-    public function getTaxId(): ?string
-    {
-        return $this->tax_id;
+  /**
+   * @return SummitTicketType[]
+   */
+  public function getTicketTypes() {
+    return $this->ticket_types;
+  }
+
+  /**
+   * @param SummitTicketType $ticket_type
+   * @return bool
+   */
+  public function mustApplyTo(SummitTicketType $ticket_type): bool {
+    if ($this->ticket_types->count() == 0) {
+      return true;
     }
-
-    /**
-     * @param string $tax_id
-     */
-    public function setTaxId(string $tax_id): void
-    {
-        $this->tax_id = $tax_id;
-    }
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->ticket_types = new ArrayCollection();
-        $this->tax_id = "";
-        $this->rate = 0.0;
-    }
-
-    /**
-     * @param SummitTicketType $ticketType
-     */
-    public function addTicketType(SummitTicketType $ticketType){
-        if($this->ticket_types->contains($ticketType)) return;
-        $this->ticket_types->add($ticketType);
-    }
-
-    /**
-     * @param SummitTicketType $ticketType
-     */
-    public function removeTicketType(SummitTicketType $ticketType){
-        if(!$this->ticket_types->contains($ticketType)) return;
-        $this->ticket_types->removeElement($ticketType);
-    }
-
-    /**
-     * @return SummitTicketType[]
-     */
-    public function getTicketTypes()
-    {
-        return $this->ticket_types;
-    }
-
-    /**
-     * @param SummitTicketType $ticket_type
-     * @return bool
-     */
-    public function mustApplyTo(SummitTicketType $ticket_type):bool{
-        if($this->ticket_types->count() == 0) return true;
-        return $this->ticket_types->contains($ticket_type);
-    }
-
+    return $this->ticket_types->contains($ticket_type);
+  }
 }

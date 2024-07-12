@@ -21,62 +21,72 @@ use utils\PagingResponse;
  * Class ISummitAttendeeRepository
  * @package models\summit
  */
-interface ISummitAttendeeRepository extends IBaseRepository
-{
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+interface ISummitAttendeeRepository extends IBaseRepository {
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @return SummitAttendee|null
-     */
-    public function getBySummitAndMember(Summit $summit, Member $member):?SummitAttendee;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @return SummitAttendee|null
+   */
+  public function getBySummitAndMember(Summit $summit, Member $member): ?SummitAttendee;
 
-    /**
-     * @param Member $member
-     */
-    public function getByMember(Member $member);
+  /**
+   * @param Member $member
+   */
+  public function getByMember(Member $member);
 
-    /**
-     * @param Summit $summit
-     * @param string $email
-     * @return SummitAttendee|null
-     */
-    public function getBySummitAndEmail(Summit $summit, string $email):?SummitAttendee;
+  /**
+   * @param Summit $summit
+   * @param string $email
+   * @return SummitAttendee|null
+   */
+  public function getBySummitAndEmail(Summit $summit, string $email): ?SummitAttendee;
 
-    /**
-     * @param Summit $summit
-     * @param string $email
-     * @param null|string $first_name
-     * @param null|string $last_name
-     * @param null|string $external_id
-     * @return SummitAttendee|null
-     */
-    public function getBySummitAndEmailAndFirstNameAndLastNameAndExternalId(Summit $summit, string $email, ?string $first_name = null, ?string $last_name = null, ?string $external_id = null):?SummitAttendee;
+  /**
+   * @param Summit $summit
+   * @param string $email
+   * @param null|string $first_name
+   * @param null|string $last_name
+   * @param null|string $external_id
+   * @return SummitAttendee|null
+   */
+  public function getBySummitAndEmailAndFirstNameAndLastNameAndExternalId(
+    Summit $summit,
+    string $email,
+    ?string $first_name = null,
+    ?string $last_name = null,
+    ?string $external_id = null,
+  ): ?SummitAttendee;
 
-    /**
-     * @param string $email
-     * @return mixed
-     */
-    public function getByEmail(string $email);
+  /**
+   * @param string $email
+   * @return mixed
+   */
+  public function getByEmail(string $email);
 
-    /**
-     * @param string $email
-     * @return mixed
-     */
-    public function getByEmailAndMemberNotSet(string $email);
+  /**
+   * @param string $email
+   * @return mixed
+   */
+  public function getByEmailAndMemberNotSet(string $email);
 
-    /**
-     * @param Summit $summit
-     * @param null|string $external_id
-     * @return SummitAttendee|null
-     */
-    public function getBySummitAndExternalId(Summit $summit, string $external_id):?SummitAttendee;
+  /**
+   * @param Summit $summit
+   * @param null|string $external_id
+   * @return SummitAttendee|null
+   */
+  public function getBySummitAndExternalId(Summit $summit, string $external_id): ?SummitAttendee;
 }

@@ -20,31 +20,25 @@ use utils\PagingResponse;
  * Interface IChatTeamPushNotificationMessageRepository
  * @package models\main
  */
-interface IChatTeamPushNotificationMessageRepository extends IBaseRepository
-{
-    /**
-     * @param int $team_id
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    function getAllSentByTeamPaginated
-    (
-        $team_id,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    );
+interface IChatTeamPushNotificationMessageRepository extends IBaseRepository {
+  /**
+   * @param int $team_id
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  function getAllSentByTeamPaginated(
+    $team_id,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param int $team_id
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    function getAllNotSentByTeamPaginated
-    (
-        $team_id,
-        PagingInfo $paging_info
-    );
+  /**
+   * @param int $team_id
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  function getAllNotSentByTeamPaginated($team_id, PagingInfo $paging_info);
 }

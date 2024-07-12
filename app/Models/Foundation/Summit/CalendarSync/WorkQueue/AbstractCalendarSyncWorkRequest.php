@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineAbstractCalendarSyncWorkRequestRepository")
@@ -22,89 +22,81 @@ use models\utils\SilverstripeBaseModel;
  * Class AbstractCalendarSyncWorkRequest
  * @package models\summit\CalendarSync\WorkQueue
  */
-class AbstractCalendarSyncWorkRequest extends SilverstripeBaseModel
-{
+class AbstractCalendarSyncWorkRequest extends SilverstripeBaseModel {
+  const TypeAdd = "ADD";
+  const TypeRemove = "REMOVE";
+  const TypeUpdate = "UPDATE";
 
-    const TypeAdd    = 'ADD';
-    const TypeRemove = 'REMOVE';
-    const TypeUpdate = 'UPDATE';
+  public function __construct() {
+    parent::__construct();
+    $this->is_processed = false;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_processed = false;
-    }
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  protected $type;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    protected $type;
+  /**
+   * @ORM\Column(name="IsProcessed", type="boolean", options={"default":"0"})
+   * @var bool
+   */
+  protected $is_processed;
 
-    /**
-     * @ORM\Column(name="IsProcessed", type="boolean", options={"default":"0"})
-     * @var bool
-     */
-    protected $is_processed;
+  /**
+   * @ORM\Column(name="ProcessedDate", type="datetime")
+   * @var \DateTime
+   */
+  protected $processed_date;
 
-    /**
-     * @ORM\Column(name="ProcessedDate", type="datetime")
-     * @var \DateTime
-     */
-    protected $processed_date;
+  /**
+   * @return mixed
+   */
+  public function getType() {
+    return $this->type;
+  }
 
+  /**
+   * @param mixed $type
+   */
+  public function setType($type) {
+    $this->type = $type;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @return bool
+   */
+  public function IsProcessed() {
+    return $this->is_processed;
+  }
 
-    /**
-     * @param mixed $type
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-    }
+  /**
+   * @param bool $is_processed
+   */
+  public function setIsProcessed($is_processed) {
+    $this->is_processed = $is_processed;
+  }
 
-    /**
-     * @return bool
-     */
-    public function IsProcessed()
-    {
-        return $this->is_processed;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getProcessedDate() {
+    return $this->processed_date;
+  }
 
-    /**
-     * @param bool $is_processed
-     */
-    public function setIsProcessed($is_processed)
-    {
-        $this->is_processed = $is_processed;
-    }
+  /**
+   * @param \DateTime $processed_date
+   */
+  public function setProcessedDate($processed_date) {
+    $this->processed_date = $processed_date;
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getProcessedDate()
-    {
-        return $this->processed_date;
-    }
-
-    /**
-     * @param \DateTime $processed_date
-     */
-    public function setProcessedDate($processed_date)
-    {
-        $this->processed_date = $processed_date;
-    }
-
-
-    public function markProcessed(){
-        $this->is_processed   = true;
-        $this->processed_date = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
-    }
+  public function markProcessed() {
+    $this->is_processed = true;
+    $this->processed_date = new \DateTime(
+      "now",
+      new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone),
+    );
+  }
 }

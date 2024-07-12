@@ -23,100 +23,119 @@ use models\main\SupportingCompany;
  * Interface ISponsoredProjectService
  * @package App\Services\Model
  */
-interface ISponsoredProjectService
-{
-    /**
-     * @param array $payload
-     * @return SponsoredProject
-     * @throws ValidationException
-     */
-    public function add(array $payload):SponsoredProject;
+interface ISponsoredProjectService {
+  /**
+   * @param array $payload
+   * @return SponsoredProject
+   * @throws ValidationException
+   */
+  public function add(array $payload): SponsoredProject;
 
-    /**
-     * @param int $project_id
-     * @param array $payload
-     * @return SponsoredProject
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function update(int $project_id, array $payload):SponsoredProject;
+  /**
+   * @param int $project_id
+   * @param array $payload
+   * @return SponsoredProject
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function update(int $project_id, array $payload): SponsoredProject;
 
-    /**
-     * @param int $project_id
-     * @throws EntityNotFoundException
-     */
-    public function delete(int $project_id):void;
+  /**
+   * @param int $project_id
+   * @throws EntityNotFoundException
+   */
+  public function delete(int $project_id): void;
 
-    /**
-     * @param int $project_id
-     * @param array $payload
-     * @return ProjectSponsorshipType
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addProjectSponsorshipType(int $project_id, array $payload):ProjectSponsorshipType;
+  /**
+   * @param int $project_id
+   * @param array $payload
+   * @return ProjectSponsorshipType
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function addProjectSponsorshipType(
+    int $project_id,
+    array $payload,
+  ): ProjectSponsorshipType;
 
-    /**
-     * @param int $project_id
-     * @param int $sponsorship_id
-     * @param array $payload
-     * @return ProjectSponsorshipType
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateProjectSponsorshipType(int $project_id, int $sponsorship_id, array $payload):ProjectSponsorshipType;
+  /**
+   * @param int $project_id
+   * @param int $sponsorship_id
+   * @param array $payload
+   * @return ProjectSponsorshipType
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updateProjectSponsorshipType(
+    int $project_id,
+    int $sponsorship_id,
+    array $payload,
+  ): ProjectSponsorshipType;
 
-    /**
-     * @param int $project_id
-     * @param int $sponsorship_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deleteProjectSponsorshipType(int $project_id, int $sponsorship_id):void;
+  /**
+   * @param int $project_id
+   * @param int $sponsorship_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deleteProjectSponsorshipType(int $project_id, int $sponsorship_id): void;
 
-    /**
-     * @param int $project_id
-     * @param int $sponsorship_id
-     * @param array $payload
-     * @return SupportingCompany
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, array $payload):SupportingCompany;
+  /**
+   * @param int $project_id
+   * @param int $sponsorship_id
+   * @param array $payload
+   * @return SupportingCompany
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function addCompanyToProjectSponsorshipType(
+    int $project_id,
+    int $sponsorship_id,
+    array $payload,
+  ): SupportingCompany;
 
-    /**
-     * @param int $project_id
-     * @param int $sponsorship_id
-     * @param int $company_id
-     * @param array $payload
-     * @return SupportingCompany
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id, array $payload):SupportingCompany;
+  /**
+   * @param int $project_id
+   * @param int $sponsorship_id
+   * @param int $company_id
+   * @param array $payload
+   * @return SupportingCompany
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updateCompanyToProjectSponsorshipType(
+    int $project_id,
+    int $sponsorship_id,
+    int $company_id,
+    array $payload,
+  ): SupportingCompany;
 
-    /**
-     * @param int $project_id
-     * @param int $sponsorship_id
-     * @param int $company_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function removeCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id):void;
+  /**
+   * @param int $project_id
+   * @param int $sponsorship_id
+   * @param int $company_id
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function removeCompanyToProjectSponsorshipType(
+    int $project_id,
+    int $sponsorship_id,
+    int $company_id,
+  ): void;
 
-    /**
-     * @param int $project_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @return File
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addLogo(int $project_id,  UploadedFile $file,  $max_file_size = 10485760):File;
+  /**
+   * @param int $project_id
+   * @param UploadedFile $file
+   * @param int $max_file_size
+   * @return File
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addLogo(int $project_id, UploadedFile $file, $max_file_size = 10485760): File;
 
-    /**
-     * @param int $project_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteLogo(int $project_id):void;
+  /**
+   * @param int $project_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteLogo(int $project_id): void;
 }

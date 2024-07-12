@@ -18,42 +18,46 @@ use ModelSerializers\SilverStripeSerializer;
  * Class TrackQuestionTemplateSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-class TrackQuestionTemplateSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'          => 'name:json_string',
-        'Label'         => 'label:json_string',
-        'Mandatory'     => 'is_mandatory:json_boolean',
-        'ReadOnly'      => 'is_read_only:json_boolean',
-        'AfterQuestion' => 'after_question:json_string',
-        'ClassName'     => 'class_name:json_string',
-    ];
+class TrackQuestionTemplateSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Label" => "label:json_string",
+    "Mandatory" => "is_mandatory:json_boolean",
+    "ReadOnly" => "is_read_only:json_boolean",
+    "AfterQuestion" => "after_question:json_string",
+    "ClassName" => "class_name:json_string",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $question_template = $this->object;
-        if(!$question_template instanceof TrackQuestionTemplate) return $values;
-
-        $tracks = [];
-
-        foreach($question_template->getTracks() as $t)
-        {
-            if(!is_null($expand) &&  in_array('tracks', explode(',',$expand))){
-                $tracks[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize();
-            }
-            else
-                $tracks[] = intval($t->getId());
-        }
-
-        $values['tracks'] = $tracks;
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $question_template = $this->object;
+    if (!$question_template instanceof TrackQuestionTemplate) {
+      return $values;
     }
+
+    $tracks = [];
+
+    foreach ($question_template->getTracks() as $t) {
+      if (!is_null($expand) && in_array("tracks", explode(",", $expand))) {
+        $tracks[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize();
+      } else {
+        $tracks[] = intval($t->getId());
+      }
+    }
+
+    $values["tracks"] = $tracks;
+    return $values;
+  }
 }

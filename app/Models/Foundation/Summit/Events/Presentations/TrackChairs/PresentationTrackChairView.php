@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\Member;
 use models\summit\Presentation;
 use models\utils\SilverstripeBaseModel;
@@ -22,60 +22,56 @@ use models\utils\One2ManyPropertyTrait;
  * Class PresentationTrackChairView
  * @package models\summit;
  */
-class PresentationTrackChairView extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class PresentationTrackChairView extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getViewerId' => 'viewer',
-        'getPresentationId' => 'presentation',
-    ];
+  protected $getIdMappings = [
+    "getViewerId" => "viewer",
+    "getPresentationId" => "presentation",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasViewer' => 'viewer',
-        'hasPresentation' => 'presentation',
-    ];
+  protected $hasPropertyMappings = [
+    "hasViewer" => "viewer",
+    "hasPresentation" => "presentation",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $viewer;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  private $viewer;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chair_views")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Presentation
-     */
-    private $presentation;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chair_views")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Presentation
+   */
+  private $presentation;
 
-    /**
-     * @param Member $viewer
-     * @param Presentation $presentation
-     * @return PresentationTrackChairView
-     */
-    public static function build(Member $viewer, Presentation $presentation){
-        $view =  new PresentationTrackChairView();
-        $view->viewer = $viewer;
-        $view->presentation = $presentation;
-        return $view;
-    }
+  /**
+   * @param Member $viewer
+   * @param Presentation $presentation
+   * @return PresentationTrackChairView
+   */
+  public static function build(Member $viewer, Presentation $presentation) {
+    $view = new PresentationTrackChairView();
+    $view->viewer = $viewer;
+    $view->presentation = $presentation;
+    return $view;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getViewer(): Member
-    {
-        return $this->viewer;
-    }
+  /**
+   * @return Member
+   */
+  public function getViewer(): Member {
+    return $this->viewer;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation(): Presentation
-    {
-        return $this->presentation;
-    }
-
+  /**
+   * @return Presentation
+   */
+  public function getPresentation(): Presentation {
+    return $this->presentation;
+  }
 }

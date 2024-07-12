@@ -17,33 +17,32 @@ use models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest;
  * Interface ICalendarSyncWorkRequestQueueManager
  * @package App\Services\Model
  */
-interface ICalendarSyncWorkRequestQueueManager
-{
-    /**
-     * @return array
-     */
-    public function getPurgedRequests();
+interface ICalendarSyncWorkRequestQueueManager {
+  /**
+   * @return array
+   */
+  public function getPurgedRequests();
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return bool
-     */
-    public function registerRequest(AbstractCalendarSyncWorkRequest $request);
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return bool
+   */
+  public function registerRequest(AbstractCalendarSyncWorkRequest $request);
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return bool
-     */
-    public function removeRequest(AbstractCalendarSyncWorkRequest $request);
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return bool
+   */
+  public function removeRequest(AbstractCalendarSyncWorkRequest $request);
 
-    /**
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return bool
-     */
-    public function registerRequestForDelete(AbstractCalendarSyncWorkRequest $request);
+  /**
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return bool
+   */
+  public function registerRequestForDelete(AbstractCalendarSyncWorkRequest $request);
 
-    /**
-     * @return array
-     */
-    public function getRequestsToDelete();
+  /**
+   * @return array
+   */
+  public function getRequestsToDelete();
 }

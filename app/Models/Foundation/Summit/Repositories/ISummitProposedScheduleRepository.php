@@ -18,12 +18,11 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
  * Interface ISummitProposedScheduleRepository
  * @package models\summit
  */
-interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository
-{
-    /**
-     * @param string $source
-     * @param int $summit_id
-     * @return SummitProposedSchedule|null
-     */
-    public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule;
+interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository {
+  /**
+   * @param string $source
+   * @param int $summit_id
+   * @return SummitProposedSchedule|null
+   */
+  public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule;
 }

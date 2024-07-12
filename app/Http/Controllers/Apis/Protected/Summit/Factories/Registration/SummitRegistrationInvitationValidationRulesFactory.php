@@ -19,34 +19,42 @@ use models\summit\SummitRegistrationInvitation;
  * Class SummitRegistrationInvitationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRegistrationInvitationValidationRulesFactory
-extends AbstractValidationRulesFactory
-{
+final class SummitRegistrationInvitationValidationRulesFactory extends
+  AbstractValidationRulesFactory {
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "email" => "required|email|max:255",
+      "first_name" => "required|string|max:255",
+      "last_name" => "required|string|max:255",
+      "allowed_ticket_types" => "sometimes|int_array",
+      "tags" => "sometimes|string_array",
+      "acceptance_criteria" => sprintf(
+        "required|string|in:%s",
+        implode(",", SummitRegistrationInvitation::AllowedAcceptanceCriteria),
+      ),
+      "status" => sprintf(
+        "sometimes|string|in:%s",
+        implode(",", SummitRegistrationInvitation::AllowedStatus),
+      ),
+    ];
+  }
 
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'email' => 'required|email|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'allowed_ticket_types' => 'sometimes|int_array',
-            'tags' => 'sometimes|string_array',
-            'acceptance_criteria' => sprintf('required|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedAcceptanceCriteria)),
-            'status' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedStatus)),
-        ];
-    }
-
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'email' => 'sometimes|email|max:255',
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'allowed_ticket_types' => 'sometimes|int_array',
-            'tags' => 'sometimes|string_array',
-            'is_accepted' => 'sometimes|boolean',
-            'acceptance_criteria' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedAcceptanceCriteria)),
-            'status' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedStatus)),
-        ];
-    }
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "email" => "sometimes|email|max:255",
+      "first_name" => "sometimes|string|max:255",
+      "last_name" => "sometimes|string|max:255",
+      "allowed_ticket_types" => "sometimes|int_array",
+      "tags" => "sometimes|string_array",
+      "is_accepted" => "sometimes|boolean",
+      "acceptance_criteria" => sprintf(
+        "sometimes|string|in:%s",
+        implode(",", SummitRegistrationInvitation::AllowedAcceptanceCriteria),
+      ),
+      "status" => sprintf(
+        "sometimes|string|in:%s",
+        implode(",", SummitRegistrationInvitation::AllowedStatus),
+      ),
+    ];
+  }
 }

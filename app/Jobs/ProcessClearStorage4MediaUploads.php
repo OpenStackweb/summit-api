@@ -24,68 +24,61 @@ use Illuminate\Support\Facades\Log;
  * Class ProcessClearStorage4MediaUploadsimplements
  * @package App\Jobs
  */
-final class ProcessClearStorage4MediaUploads implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+final class ProcessClearStorage4MediaUploads implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 5;
+  public $tries = 5;
 
-    /**
-     * @var array
-     */
-    public $payload;
+  /**
+   * @var array
+   */
+  public $payload;
 
-    /**
-     * @param array $payload
-     */
-    public function __construct(array $payload)
-    {
-        Log::debug(sprintf("ProcessClearStorage4MediaUploads::__construct %s", json_encode($payload)));
-        $this->payload = $payload;
+  /**
+   * @param array $payload
+   */
+  public function __construct(array $payload) {
+    Log::debug(sprintf("ProcessClearStorage4MediaUploads::__construct %s", json_encode($payload)));
+    $this->payload = $payload;
+  }
+
+  public function handle() {
+    Log::debug(
+      sprintf("ProcessClearStorage4MediaUploads::handle payload %s", json_encode($this->payload)),
+    );
+
+    foreach ($this->payload as $storageType => $header) {
+      $strategy = FileUploadStrategyFactory::build($storageType);
+
+      $files = $header["files"];
+      foreach ($files as $file) {
+        Log::debug(
+          sprintf(
+            "ProcessClearStorage4MediaUploads::handle processing storage type %s file %s",
+            $storageType,
+            $file,
+          ),
+        );
+        $file_parts = explode("|", $file);
+        $strategy->markAsDeleted($file_parts[0], $file_parts[1]);
+      }
+
+      $paths = $header["paths"];
+      foreach ($paths as $path) {
+        Log::debug(
+          sprintf(
+            "ProcessClearStorage4MediaUploads::handle processing storage type %s path %s",
+            $storageType,
+            $path,
+          ),
+        );
+
+        $strategy->markAsDeleted($path);
+      }
     }
+  }
 
-    public function handle()
-    {
-        Log::debug(sprintf("ProcessClearStorage4MediaUploads::handle payload %s", json_encode($this->payload)));
-
-        foreach($this->payload as $storageType => $header) {
-
-            $strategy = FileUploadStrategyFactory::build($storageType);
-
-            $files = $header['files'];
-            foreach ($files as $file) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "ProcessClearStorage4MediaUploads::handle processing storage type %s file %s",
-                        $storageType,
-                        $file
-                    )
-                );
-                $file_parts = explode("|", $file);
-                $strategy->markAsDeleted($file_parts[0], $file_parts[1]);
-            }
-
-            $paths = $header['paths'];
-            foreach ($paths as $path) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "ProcessClearStorage4MediaUploads::handle processing storage type %s path %s",
-                        $storageType,
-                        $path
-                    )
-                );
-
-                $strategy->markAsDeleted($path);
-            }
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }

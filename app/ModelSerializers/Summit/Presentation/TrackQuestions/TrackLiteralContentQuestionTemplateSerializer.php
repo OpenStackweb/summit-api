@@ -16,9 +16,8 @@
  * Class TrackLiteralContentQuestionTemplateSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-class TrackLiteralContentQuestionTemplateSerializer extends TrackQuestionTemplateSerializer
-{
-    protected static $array_mappings = [
-        'Content'   => 'content:json_string',
-    ];
+class TrackLiteralContentQuestionTemplateSerializer extends TrackQuestionTemplateSerializer {
+  protected static $array_mappings = [
+    "Content" => "content:json_string",
+  ];
 }

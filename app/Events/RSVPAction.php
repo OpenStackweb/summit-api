@@ -17,25 +17,21 @@ use models\summit\RSVP;
  * Class RSVPAction
  * @package App\Events
  */
-class RSVPAction extends SummitEventAction
-{
-    /**
-     * @var int
-     */
-    protected $rsvp_id;
+class RSVPAction extends SummitEventAction {
+  /**
+   * @var int
+   */
+  protected $rsvp_id;
 
-    public function __construct(RSVP $rsvp){
+  public function __construct(RSVP $rsvp) {
+    $this->rsvp_id = $rsvp->getId();
+    parent::__construct($rsvp->getEventId());
+  }
 
-        $this->rsvp_id = $rsvp->getId();
-        parent::__construct($rsvp->getEventId());
-    }
-
-    /**
-     * @return int
-     */
-    public function getRsvpId(): int
-    {
-        return $this->rsvp_id;
-    }
-
+  /**
+   * @return int
+   */
+  public function getRsvpId(): int {
+    return $this->rsvp_id;
+  }
 }

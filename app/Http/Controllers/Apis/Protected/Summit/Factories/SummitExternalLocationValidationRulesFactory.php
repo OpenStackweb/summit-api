@@ -12,24 +12,24 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class SummitExternalLocationValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitExternalLocationValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class SummitExternalLocationValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = SummitGeoLocatedLocationValidationRulesFactory::build($data, $update);
 
-        $rules = SummitGeoLocatedLocationValidationRulesFactory::build($data, $update);
-
-        return array_merge([
-            'capacity' => 'sometimes|integer|min:0'
-        ], $rules);
-    }
+    return array_merge(
+      [
+        "capacity" => "sometimes|integer|min:0",
+      ],
+      $rules,
+    );
+  }
 }

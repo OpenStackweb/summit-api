@@ -15,17 +15,15 @@
 
 use models\main\Member;
 
-class MemberSummitStrategyFactory
-{
-    /**
-     * @param Member $member
-     * @return IMemberSummitStrategy
-     */
-    public static function getMemberSummitStrategy(Member $member): IMemberSummitStrategy
-    {
-        if ($member->isSponsorUser()) {
-            return new SponsorMemberSummitStrategy($member->getId());
-        }
-        return new MemberSummitStrategy($member->getId());
+class MemberSummitStrategyFactory {
+  /**
+   * @param Member $member
+   * @return IMemberSummitStrategy
+   */
+  public static function getMemberSummitStrategy(Member $member): IMemberSummitStrategy {
+    if ($member->isSponsorUser()) {
+      return new SponsorMemberSummitStrategy($member->getId());
     }
+    return new MemberSummitStrategy($member->getId());
+  }
 }

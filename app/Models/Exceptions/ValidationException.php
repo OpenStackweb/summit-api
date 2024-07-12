@@ -18,44 +18,39 @@ use Exception;
  * Class ValidationException
  * @package models\exceptions
  */
-class ValidationException extends Exception
-{
-    /**
-     * @var array
-     */
-    private $messages;
+class ValidationException extends Exception {
+  /**
+   * @var array
+   */
+  private $messages;
 
-    /**
-     * ValidationException constructor.
-     * @param string|array $message
-     * @param int $code
-     * @param Exception|null $previous
-     */
-    public function __construct($message = '', $code = 0, Exception $previous = null)
-    {
-        parent::__construct(is_array($message)? '': $message, $code, $previous);
-        if(!is_array($message)){
-            $message = [$message];
-        }
-        $this->messages = $message;
+  /**
+   * ValidationException constructor.
+   * @param string|array $message
+   * @param int $code
+   * @param Exception|null $previous
+   */
+  public function __construct($message = "", $code = 0, Exception $previous = null) {
+    parent::__construct(is_array($message) ? "" : $message, $code, $previous);
+    if (!is_array($message)) {
+      $message = [$message];
     }
+    $this->messages = $message;
+  }
 
-    /**
-     * @param array $messages
-     * @return $this
-     */
-    public function setMessages(array $messages)
-    {
-        $this->messages = $messages;
-        return $this;
-    }
+  /**
+   * @param array $messages
+   * @return $this
+   */
+  public function setMessages(array $messages) {
+    $this->messages = $messages;
+    return $this;
+  }
 
-    public function getMessages():array
-    {
-        if(is_null($this->messages))
-        {
-            $this->messages = [$this->getMessage()];
-        }
-        return $this->messages;
+  public function getMessages(): array {
+    if (is_null($this->messages)) {
+      $this->messages = [$this->getMessage()];
     }
+    return $this->messages;
+  }
 }

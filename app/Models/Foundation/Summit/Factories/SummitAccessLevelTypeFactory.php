@@ -16,35 +16,37 @@ use models\summit\SummitAccessLevelType;
  * Class SummitAccessLevelTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitAccessLevelTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SummitAccessLevelType
-     */
-    public static function build(array $data){
-        return self::populate(new SummitAccessLevelType, $data);
+final class SummitAccessLevelTypeFactory {
+  /**
+   * @param array $data
+   * @return SummitAccessLevelType
+   */
+  public static function build(array $data) {
+    return self::populate(new SummitAccessLevelType(), $data);
+  }
+
+  /**
+   * @param SummitAccessLevelType $access_level
+   * @param array $data
+   * @return SummitAccessLevelType
+   */
+  public static function populate(SummitAccessLevelType $access_level, array $data) {
+    if (isset($data["name"])) {
+      $access_level->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitAccessLevelType $access_level
-     * @param array $data
-     * @return SummitAccessLevelType
-     */
-    public static function populate(SummitAccessLevelType $access_level, array $data){
-
-        if(isset($data['name']))
-            $access_level->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $access_level->setDescription(trim($data['description']));
-
-        if(isset($data['template_content']))
-            $access_level->setTemplateContent(trim($data['template_content']));
-
-        if(isset($data['is_default']))
-            $access_level->setIsDefault(boolval($data['is_default']));
-
-        return $access_level;
+    if (isset($data["description"])) {
+      $access_level->setDescription(trim($data["description"]));
     }
+
+    if (isset($data["template_content"])) {
+      $access_level->setTemplateContent(trim($data["template_content"]));
+    }
+
+    if (isset($data["is_default"])) {
+      $access_level->setIsDefault(boolval($data["is_default"]));
+    }
+
+    return $access_level;
+  }
 }

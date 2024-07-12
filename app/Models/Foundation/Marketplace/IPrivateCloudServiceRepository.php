@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IPrivateCloudServiceRepository
  * @package App\Models\Foundation\Marketplace
  */
-interface IPrivateCloudServiceRepository extends IBaseRepository
-{
-
+interface IPrivateCloudServiceRepository extends IBaseRepository {
 }

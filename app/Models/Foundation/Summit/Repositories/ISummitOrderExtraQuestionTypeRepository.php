@@ -22,17 +22,18 @@ use utils\PagingResponse;
  * Interface ISummitOrderExtraQuestionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitOrderExtraQuestionTypeRepository extends IExtraQuestionTypeRepository
-{
-    /**
-     * @param SummitAttendee $attendee
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllAllowedByPage
-    (
-        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
-    ): PagingResponse;
+interface ISummitOrderExtraQuestionTypeRepository extends IExtraQuestionTypeRepository {
+  /**
+   * @param SummitAttendee $attendee
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllAllowedByPage(
+    SummitAttendee $attendee,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 }

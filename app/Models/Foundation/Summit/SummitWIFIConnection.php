@@ -13,7 +13,7 @@
  **/
 use Doctrine\ORM\Cache;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\AssociationOverrides({
@@ -26,74 +26,66 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitWIFIConnection
  * @package models\summit\SummitWIFIConnection
  */
-class SummitWIFIConnection extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitWIFIConnection extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="SSID", type="string")
-     * @var string
-     */
-    private $ssid;
+  /**
+   * @ORM\Column(name="SSID", type="string")
+   * @var string
+   */
+  private $ssid;
 
-    /**
-     * @ORM\Column(name="Password", type="string")
-     * @var string
-     */
-    private $password;
+  /**
+   * @ORM\Column(name="Password", type="string")
+   * @var string
+   */
+  private $password;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @return string
-     */
-    public function getSsid()
-    {
-        return $this->ssid;
-    }
+  /**
+   * @return string
+   */
+  public function getSsid() {
+    return $this->ssid;
+  }
 
-    /**
-     * @param string $ssid
-     */
-    public function setSsid($ssid)
-    {
-        $this->ssid = $ssid;
-    }
+  /**
+   * @param string $ssid
+   */
+  public function setSsid($ssid) {
+    $this->ssid = $ssid;
+  }
 
-    /**
-     * @return string
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
+  /**
+   * @return string
+   */
+  public function getPassword() {
+    return $this->password;
+  }
 
-    /**
-     * @param string $password
-     */
-    public function setPassword($password)
-    {
-        $this->password = $password;
-    }
+  /**
+   * @param string $password
+   */
+  public function setPassword($password) {
+    $this->password = $password;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription() {
+    return $this->description;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
-
+  /**
+   * @param string $description
+   */
+  public function setDescription($description) {
+    $this->description = $description;
+  }
 }

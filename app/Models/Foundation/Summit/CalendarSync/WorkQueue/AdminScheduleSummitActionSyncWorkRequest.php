@@ -12,50 +12,43 @@
  * limitations under the License.
  **/
 use models\main\Member;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * Class AdminScheduleSummitActionSyncWorkRequest
  * @ORM\Entity
  * @ORM\Table(name="AdminScheduleSummitActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
-class AdminScheduleSummitActionSyncWorkRequest
-    extends AbstractCalendarSyncWorkRequest
-{
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID")
-     * @var Member
-     */
-    protected $created_by;
+class AdminScheduleSummitActionSyncWorkRequest extends AbstractCalendarSyncWorkRequest {
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
+   * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID")
+   * @var Member
+   */
+  protected $created_by;
 
-    /**
-     * @return Member
-     */
-    public function getCreatedBy()
-    {
-        return $this->created_by;
+  /**
+   * @return Member
+   */
+  public function getCreatedBy() {
+    return $this->created_by;
+  }
+
+  /**
+   * @param Member $created_by
+   */
+  public function setCreatedBy($created_by) {
+    $this->created_by = $created_by;
+  }
+
+  /**
+   * @return int
+   */
+  public function getCreatedById() {
+    try {
+      return is_null($this->created_by) ? 0 : $this->created_by->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
-
-    /**
-     * @param Member $created_by
-     */
-    public function setCreatedBy($created_by)
-    {
-        $this->created_by = $created_by;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCreatedById(){
-        try {
-            return is_null($this->created_by) ? 0 :$this->created_by->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-
+  }
 }

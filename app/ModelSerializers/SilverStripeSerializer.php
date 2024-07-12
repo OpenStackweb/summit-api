@@ -16,11 +16,10 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class SilverStripeSerializer
  * @package ModelSerializers
  */
-class SilverStripeSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id'            => 'id:json_int',
-        'CreatedUTC'    => 'created:datetime_epoch',
-        'LastEditedUTC' => 'last_edited:datetime_epoch',
-    ];
+class SilverStripeSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "CreatedUTC" => "created:datetime_epoch",
+    "LastEditedUTC" => "last_edited:datetime_epoch",
+  ];
 }

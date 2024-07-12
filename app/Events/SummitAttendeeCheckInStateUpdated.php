@@ -18,26 +18,23 @@ use Illuminate\Support\Facades\Log;
  * Class SummitAttendeeCheckInStateUpdated
  * @package App\Events
  */
-class SummitAttendeeCheckInStateUpdated extends Event
-{
-    use Dispatchable, SerializesModels;
+class SummitAttendeeCheckInStateUpdated extends Event {
+  use Dispatchable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $attendee_id;
+  /**
+   * @var int
+   */
+  private $attendee_id;
 
-    /**
-     * @param int $attendee_id
-     */
-    public function __construct(int $attendee_id)
-    {
-        Log::debug(sprintf("SummitAttendeeCheckInStateUpdated::constructor attendee %s", $attendee_id));
-        $this->attendee_id = $attendee_id;
-    }
+  /**
+   * @param int $attendee_id
+   */
+  public function __construct(int $attendee_id) {
+    Log::debug(sprintf("SummitAttendeeCheckInStateUpdated::constructor attendee %s", $attendee_id));
+    $this->attendee_id = $attendee_id;
+  }
 
-    public function getAttendeeId(): int
-    {
-        return $this->attendee_id;
-    }
+  public function getAttendeeId(): int {
+    return $this->attendee_id;
+  }
 }

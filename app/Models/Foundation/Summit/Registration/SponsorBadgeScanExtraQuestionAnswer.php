@@ -14,68 +14,68 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SponsorBadgeScanExtraQuestionAnswer")
  * Class SponsorBadgeScanExtraQuestionAnswer
  * @package models\summit
  */
-class SponsorBadgeScanExtraQuestionAnswer extends ExtraQuestionAnswer
-{
-    use One2ManyPropertyTrait;
+class SponsorBadgeScanExtraQuestionAnswer extends ExtraQuestionAnswer {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getQuestionId' => 'question',
-        'getBadgeScanId' => 'badge_scan',
-    ];
+  protected $getIdMappings = [
+    "getQuestionId" => "question",
+    "getBadgeScanId" => "badge_scan",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasQuestion' => 'question',
-        'hasBadgeScan' => 'badge_scan',
-    ];
+  protected $hasPropertyMappings = [
+    "hasQuestion" => "question",
+    "hasBadgeScan" => "badge_scan",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SponsorBadgeScan", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="SponsorBadgeScanID", referencedColumnName="ID")
-     * @var SponsorBadgeScan
-     */
-    private $badge_scan;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SponsorBadgeScan", inversedBy="extra_question_answers")
+   * @ORM\JoinColumn(name="SponsorBadgeScanID", referencedColumnName="ID")
+   * @var SponsorBadgeScan
+   */
+  private $badge_scan;
 
-    /**
-     * @return SponsorBadgeScan
-     */
-    public function getBadgeScan(): ?SponsorBadgeScan
-    {
-        return $this->badge_scan;
+  /**
+   * @return SponsorBadgeScan
+   */
+  public function getBadgeScan(): ?SponsorBadgeScan {
+    return $this->badge_scan;
+  }
+
+  /**
+   * @param SponsorBadgeScan $badge_scan
+   */
+  public function setBadgeScan(SponsorBadgeScan $badge_scan): void {
+    $this->badge_scan = $badge_scan;
+  }
+
+  public function clearBadgeScan() {
+    $this->badge_scan = null;
+  }
+
+  /**
+   * @param string|array $value
+   * @throws ValidationException
+   */
+  public function setValue($value): void {
+    parent::setValue($value);
+    if (!is_null($this->badge_scan)) {
+      $this->badge_scan->updateLastEdited();
     }
+  }
 
-    /**
-     * @param SponsorBadgeScan $badge_scan
-     */
-    public function setBadgeScan(SponsorBadgeScan $badge_scan): void
-    {
-        $this->badge_scan = $badge_scan;
-    }
-
-    public function clearBadgeScan(){
-        $this->badge_scan = null;
-    }
-
-    /**
-     * @param string|array $value
-     * @throws ValidationException
-     */
-    public function setValue($value): void
-    {
-        parent::setValue($value);
-        if(!is_null($this->badge_scan))
-            $this->badge_scan->updateLastEdited();
-    }
-
-    public function __toString():string
-    {
-        return sprintf("SponsorBadgeScanExtraQuestionAnswer badge scan %s question %s value %s",
-            $this->badge_scan->getId(), $this->question->getId(), $this->value);
-    }
+  public function __toString(): string {
+    return sprintf(
+      "SponsorBadgeScanExtraQuestionAnswer badge scan %s question %s value %s",
+      $this->badge_scan->getId(),
+      $this->question->getId(),
+      $this->value,
+    );
+  }
 }

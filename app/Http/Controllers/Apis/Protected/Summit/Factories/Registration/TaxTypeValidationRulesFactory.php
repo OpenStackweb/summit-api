@@ -16,26 +16,24 @@
  * Class TaxTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class TaxTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'name'   => 'sometimes|string',
-                'tax_id' => 'sometimes|string',
-                'rate'   => 'sometimes|numeric|greater_than:0'
-            ];
-        }
-        return [
-            'name'   => 'required|string',
-            'tax_id' => 'sometimes|string',
-            'rate'   => 'required|numeric|greater_than:0'
-        ];
+final class TaxTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string",
+        "tax_id" => "sometimes|string",
+        "rate" => "sometimes|numeric|greater_than:0",
+      ];
     }
+    return [
+      "name" => "required|string",
+      "tax_id" => "sometimes|string",
+      "rate" => "required|numeric|greater_than:0",
+    ];
+  }
 }

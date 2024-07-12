@@ -16,33 +16,31 @@
  * Trait SummitRegistrationPromoCodeCSVSerializerTrait
  * @package ModelSerializers
  */
-trait SummitRegistrationPromoCodeCSVSerializerTrait
-{
-    static function serializeFields2CSV($code, array $values):array {
-
-        // features ( ids)
-        $features = [];
-        foreach ($code->getBadgeFeatures() as $feature) {
-            $features[] = $feature->getId();
-        }
-        $values['badge_features'] = implode('|', $features);
-        // tickets types ( ids)
-        $ticket_types = [];
-        foreach ($code->getAllowedTicketTypes() as $ticket_type) {
-            $ticket_types[] = $ticket_type->getId();
-        }
-        $values['allowed_ticket_types'] = implode('|', $ticket_types);
-        // tags ( value )
-        $tags = [];
-        foreach ($code->getTags() as $tag) {
-            $tags[] = $tag->getTag();
-        }
-        $values['tags'] = implode('|', $tags);
-
-        if ($code->isInfinite()) {
-            $values['quantity_remaining'] = 'N/A';
-        }
-
-        return $values;
+trait SummitRegistrationPromoCodeCSVSerializerTrait {
+  static function serializeFields2CSV($code, array $values): array {
+    // features ( ids)
+    $features = [];
+    foreach ($code->getBadgeFeatures() as $feature) {
+      $features[] = $feature->getId();
     }
+    $values["badge_features"] = implode("|", $features);
+    // tickets types ( ids)
+    $ticket_types = [];
+    foreach ($code->getAllowedTicketTypes() as $ticket_type) {
+      $ticket_types[] = $ticket_type->getId();
+    }
+    $values["allowed_ticket_types"] = implode("|", $ticket_types);
+    // tags ( value )
+    $tags = [];
+    foreach ($code->getTags() as $tag) {
+      $tags[] = $tag->getTag();
+    }
+    $values["tags"] = implode("|", $tags);
+
+    if ($code->isInfinite()) {
+      $values["quantity_remaining"] = "N/A";
+    }
+
+    return $values;
+  }
 }

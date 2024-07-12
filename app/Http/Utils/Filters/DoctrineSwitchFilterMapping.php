@@ -19,81 +19,88 @@ use Doctrine\ORM\QueryBuilder;
  * Class DoctrineSwitchFilterMapping
  * @package utils
  */
-class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyable
-{
-    /**
-     * @var string
-     */
-    protected $main_operator;
+class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyable {
+  /**
+   * @var string
+   */
+  protected $main_operator;
 
-    /**
-     * @var DoctrineCaseFilterMapping[]
-     */
-    private $case_statements;
+  /**
+   * @var DoctrineCaseFilterMapping[]
+   */
+  private $case_statements;
 
-    public function __construct($case_statements = [])
-    {
-        parent::__construct("", "");
-        $this->case_statements = $case_statements;
-        $this->main_operator = Filter::MainOperatorAnd;
+  public function __construct($case_statements = []) {
+    parent::__construct("", "");
+    $this->case_statements = $case_statements;
+    $this->main_operator = Filter::MainOperatorAnd;
+  }
+
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  public function toRawSQL(FilterElement $filter, array $bindings = []): string {
+    throw new \Exception();
+  }
+
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return QueryBuilder
+   */
+  public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder {
+    $value = $filter->getValue();
+    if (!is_array($value)) {
+      $value = [$value];
     }
-
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public function toRawSQL(FilterElement $filter, array $bindings = []):string
-    {
-        throw new \Exception;
+    $condition = "";
+    foreach ($value as $v) {
+      if (!isset($this->case_statements[$v])) {
+        continue;
+      }
+      $case_statement = $this->case_statements[$v];
+      if (!empty($condition)) {
+        $condition .= " OR ";
+      }
+      $condition .= " ( " . $case_statement->getCondition() . " ) ";
     }
-
-
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return QueryBuilder
-     */
-    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
-    {
-        $value = $filter->getValue();
-        if(!is_array($value)) $value = [$value];
-        $condition = '';
-        foreach ($value as $v) {
-            if (!isset($this->case_statements[$v])) continue;
-            $case_statement = $this->case_statements[$v];
-            if(!empty($condition)) $condition .= ' OR ';
-            $condition .= ' ( '.$case_statement->getCondition().' ) ';
-        }
-        if(!empty($condition))
-            $condition = ' ( '.$condition.' ) ';
-        if($this->main_operator === Filter::MainOperatorAnd)
-            return $query->andWhere($condition);
-        else
-            return $query->orWhere($condition);
+    if (!empty($condition)) {
+      $condition = " ( " . $condition . " ) ";
     }
-
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return string
-     */
-    public function applyOr(QueryBuilder $query, FilterElement $filter): string
-    {
-        $value = $filter->getValue();
-        if(!is_array($value)) $value = [$value];
-        $condition = '';
-        foreach ($value as $v) {
-            if (!isset($this->case_statements[$filter->getValue()])) continue;
-            $case_statement = $this->case_statements[$v];
-            if(!empty($condition)) $condition .= ' OR ';
-            $condition .= ' ( '.$case_statement->getCondition().' ) ';
-        }
-        return $condition;
+    if ($this->main_operator === Filter::MainOperatorAnd) {
+      return $query->andWhere($condition);
+    } else {
+      return $query->orWhere($condition);
     }
+  }
 
-    public function setMainOperator(string $op): void
-    {
-        $this->main_operator = $op;
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return string
+   */
+  public function applyOr(QueryBuilder $query, FilterElement $filter): string {
+    $value = $filter->getValue();
+    if (!is_array($value)) {
+      $value = [$value];
     }
+    $condition = "";
+    foreach ($value as $v) {
+      if (!isset($this->case_statements[$filter->getValue()])) {
+        continue;
+      }
+      $case_statement = $this->case_statements[$v];
+      if (!empty($condition)) {
+        $condition .= " OR ";
+      }
+      $condition .= " ( " . $case_statement->getCondition() . " ) ";
+    }
+    return $condition;
+  }
+
+  public function setMainOperator(string $op): void {
+    $this->main_operator = $op;
+  }
 }

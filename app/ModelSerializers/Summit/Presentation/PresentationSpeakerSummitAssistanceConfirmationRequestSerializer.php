@@ -18,59 +18,66 @@ use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
  * Class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer
  * @package ModelSerializers
  */
-final class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer
-    extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'OnSitePhone'      => 'on_site_phone:json_string',
-        'Registered'       => 'registered:json_boolean',
-        'Confirmed'        => 'is_confirmed:json_boolean',
-        'CheckedIn'        => 'checked_in:json_boolean',
-        'SummitId'         => 'summit_id:json_int',
-        'SpeakerEmail'     => 'speaker_email:json_string',
-        'SpeakerFullName'  => 'speaker_full_name:json_string',
-        'SpeakerId'        => 'speaker_id:json_int',
-        'ConfirmationDate' => 'confirmation_date:datetime_epoch',
-    ];
+final class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer extends
+  SilverStripeSerializer {
+  protected static $array_mappings = [
+    "OnSitePhone" => "on_site_phone:json_string",
+    "Registered" => "registered:json_boolean",
+    "Confirmed" => "is_confirmed:json_boolean",
+    "CheckedIn" => "checked_in:json_boolean",
+    "SummitId" => "summit_id:json_int",
+    "SpeakerEmail" => "speaker_email:json_string",
+    "SpeakerFullName" => "speaker_full_name:json_string",
+    "SpeakerId" => "speaker_id:json_int",
+    "ConfirmationDate" => "confirmation_date:datetime_epoch",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $request = $this->object;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $request = $this->object;
 
-        if(!$request instanceof PresentationSpeakerSummitAssistanceConfirmationRequest) return [];
-
-        $serializer_type = SerializerRegistry::SerializerType_Public;
-
-        if(isset($params['serializer_type']))
-            $serializer_type = $params['serializer_type'];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'speaker': {
-                        if(isset($values['speaker_id']) && intval($values['speaker_id']) > 0 ){
-                            unset($values['speaker_id']);
-                            $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($request->getSpeaker(), $serializer_type)->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+    if (!$request instanceof PresentationSpeakerSummitAssistanceConfirmationRequest) {
+      return [];
     }
+
+    $serializer_type = SerializerRegistry::SerializerType_Public;
+
+    if (isset($params["serializer_type"])) {
+      $serializer_type = $params["serializer_type"];
+    }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        switch (trim($relation)) {
+          case "speaker":
+            if (isset($values["speaker_id"]) && intval($values["speaker_id"]) > 0) {
+              unset($values["speaker_id"]);
+              $values["speaker"] = SerializerRegistry::getInstance()
+                ->getSerializer($request->getSpeaker(), $serializer_type)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

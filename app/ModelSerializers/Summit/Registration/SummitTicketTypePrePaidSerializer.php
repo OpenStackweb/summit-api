@@ -18,30 +18,35 @@ use models\summit\SummitTicketTypePrePaid;
  * Class SummitTicketTypePrePaidSerializer
  * @package ModelSerializers
  */
-final class SummitTicketTypePrePaidSerializer extends SummitTicketTypeWithPromoSerializer
-{
-    /**
-     * @param $entity
-     * @param array $values
-     * @return array
-     */
-    protected function serializeCustomFields($entity, $values): array {
-        return $values;
+final class SummitTicketTypePrePaidSerializer extends SummitTicketTypeWithPromoSerializer {
+  /**
+   * @param $entity
+   * @param array $values
+   * @return array
+   */
+  protected function serializeCustomFields($entity, $values): array {
+    return $values;
+  }
+
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $ticket_type = $this->object;
+    if (!$ticket_type instanceof SummitTicketTypePrePaid) {
+      return [];
     }
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $ticket_type = $this->object;
-        if (!$ticket_type instanceof SummitTicketTypePrePaid) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        return $this->serializeCustomFields($ticket_type, $values);
-    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    return $this->serializeCustomFields($ticket_type, $values);
+  }
 }

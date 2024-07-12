@@ -13,7 +13,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="repositories\main\DoctrineGroupRepository")
@@ -21,173 +21,163 @@ use models\utils\SilverstripeBaseModel;
  * Class Group
  * @package models\main
  */
-class Group extends SilverstripeBaseModel
-{
+class Group extends SilverstripeBaseModel {
+  public function __construct() {
+    parent::__construct();
+    $this->members = new ArrayCollection();
+    $this->groups = new ArrayCollection();
+    $this->is_external = false;
+  }
 
-    public function __construct(){
-        parent::__construct();
-        $this->members  = new ArrayCollection();
-        $this->groups   = new ArrayCollection();
-        $this->is_external = false;
+  /**
+   * @param Member $member
+   */
+  public function addMember(Member $member) {
+    if ($this->members->contains($member)) {
+      return;
     }
+    $this->members->add($member);
+  }
 
-    /**
-     * @param Member $member
-     */
-    public function addMember(Member $member){
-        if($this->members->contains($member)) return;
-        $this->members->add($member);
+  /**
+   * @param Member $member
+   */
+  public function removeMember(Member $member) {
+    if (!$this->members->contains($member)) {
+      return;
     }
+    $this->members->removeElement($member);
+  }
 
-    /**
-     * @param Member $member
-     */
-    public function removeMember(Member $member){
-        if(!$this->members->contains($member)) return;
-        $this->members->removeElement($member);
-    }
+  /**
+   * @return string
+   */
+  public function getTitle() {
+    return $this->title;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->title;
-    }
+  /**
+   * @param string $title
+   */
+  public function setTitle($title) {
+    $this->title = $title;
+  }
 
-    /**
-     * @param string $title
-     */
-    public function setTitle($title)
-    {
-        $this->title = $title;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription() {
+    return $this->description;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
+  /**
+   * @param string $description
+   */
+  public function setDescription($description) {
+    $this->description = $description;
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
+  /**
+   * @return string
+   */
+  public function getCode() {
+    return $this->code;
+  }
 
-    /**
-     * @return string
-     */
-    public function getCode()
-    {
-        return $this->code;
-    }
+  /**
+   * @param string $code
+   */
+  public function setCode($code) {
+    $this->code = $code;
+  }
 
-    /**
-     * @param string $code
-     */
-    public function setCode($code)
-    {
-        $this->code = $code;
-    }
+  /**
+   * @return mixed
+   */
+  public function getMembers() {
+    return $this->members;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getMembers()
-    {
-        return $this->members;
-    }
+  /**
+   * @param mixed $members
+   */
+  public function setMembers($members) {
+    $this->members = $members;
+  }
 
-    /**
-     * @param mixed $members
-     */
-    public function setMembers($members)
-    {
-        $this->members = $members;
-    }
+  /**
+   * @return mixed
+   */
+  public function getParent() {
+    return $this->parent;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getParent()
-    {
-        return $this->parent;
-    }
+  /**
+   * @param mixed $parent
+   */
+  public function setParent($parent) {
+    $this->parent = $parent;
+  }
 
-    /**
-     * @param mixed $parent
-     */
-    public function setParent($parent)
-    {
-        $this->parent = $parent;
-    }
+  /**
+   * @return mixed
+   */
+  public function getGroups() {
+    return $this->groups;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getGroups()
-    {
-        return $this->groups;
-    }
+  /**
+   * @param mixed $groups
+   */
+  public function setGroups($groups) {
+    $this->groups = $groups;
+  }
 
-    /**
-     * @param mixed $groups
-     */
-    public function setGroups($groups)
-    {
-        $this->groups = $groups;
-    }
+  /**
+   * @ORM\Column(name="Title", type="string")
+   * @var string
+   */
+  private $title;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     * @var string
-     */
-    private $title;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Code", type="string")
+   * @var string
+   */
+  private $code;
 
-    /**
-     * @ORM\Column(name="Code", type="string")
-     * @var string
-     */
-    private $code;
+  /**
+   * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="groups", fetch="EXTRA_LAZY")
+   */
+  private $members;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="groups", fetch="EXTRA_LAZY")
-     */
-    private $members;
+  /**
+   * @ORM\ManyToOne(targetEntity="Group", inversedBy="groups")
+   * @ORM\JoinColumn(name="ParentID", referencedColumnName="ID")
+   */
+  private $parent;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Group", inversedBy="groups")
-     * @ORM\JoinColumn(name="ParentID", referencedColumnName="ID")
-     */
-    private $parent;
+  /**
+   * @ORM\OneToMany(targetEntity="Group", mappedBy="parent")
+   */
+  private $groups;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Group", mappedBy="parent")
-     */
-    private $groups;
+  /**
+   * @ORM\Column(name="IsExternal", type="boolean")
+   * @var bool
+   */
+  private $is_external;
 
-    /**
-     * @ORM\Column(name="IsExternal", type="boolean")
-     * @var bool
-     */
-    private $is_external;
+  public function setExternal() {
+    $this->is_external = true;
+  }
 
-    public function setExternal(){
-        $this->is_external = true;
-    }
-
-    public function isExternal():bool {
-        return $this->is_external;
-    }
+  public function isExternal(): bool {
+    return $this->is_external;
+  }
 }

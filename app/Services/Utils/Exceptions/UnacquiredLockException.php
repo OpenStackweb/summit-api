@@ -17,10 +17,8 @@ use Exception;
  * @package App\Services\Utils\Exceptions
  */
 final class UnacquiredLockException extends Exception {
-
-    public function __construct($message = "")
-    {
-        $message = "Unacquired Lock : " . $message;
-        parent::__construct($message, 0, null);
-    }
+  public function __construct($message = "") {
+    $message = "Unacquired Lock : " . $message;
+    parent::__construct($message, 0, null);
+  }
 }

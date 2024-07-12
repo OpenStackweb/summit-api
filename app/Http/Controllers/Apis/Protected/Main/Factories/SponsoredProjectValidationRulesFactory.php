@@ -16,36 +16,32 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SponsoredProjectValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsoredProjectValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class SponsoredProjectValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "required|string",
+      "description" => "sometimes|string",
+      "is_active" => "sometimes|boolean",
+      "should_show_on_nav_bar" => "sometimes|boolean",
+      "site_url" => "sometimes|url",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name' => 'required|string',
-            'description' => 'sometimes|string',
-            'is_active' => 'sometimes|boolean',
-            'should_show_on_nav_bar' => 'sometimes|boolean',
-            'site_url' => 'sometimes|url',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'name' => 'sometimes|string',
-            'description' => 'sometimes|string',
-            'is_active' => 'sometimes|boolean',
-            'should_show_on_nav_bar' => 'sometimes|boolean',
-            'site_url' => 'sometimes|url',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "name" => "sometimes|string",
+      "description" => "sometimes|string",
+      "is_active" => "sometimes|boolean",
+      "should_show_on_nav_bar" => "sometimes|boolean",
+      "site_url" => "sometimes|url",
+    ];
+  }
 }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,19 +19,17 @@ use models\utils\SilverstripeBaseModel;
  * Class HyperVisorType
  * @package App\Models\Foundation\Marketplace
  */
-class HyperVisorType extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
+class HyperVisorType extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Type", type="string")
+   * @var string
+   */
+  private $type;
 
-    /**
-     * @return string
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @return string
+   */
+  public function getType() {
+    return $this->type;
+  }
 }

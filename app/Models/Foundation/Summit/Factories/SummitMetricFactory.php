@@ -21,49 +21,48 @@ use models\summit\SummitSponsorMetric;
  * Class SummitMetricFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitMetricFactory
-{
-    /**
-     * @param Member $member
-     * @param array $data
-     * @return SummitMetric
-     * @throws ValidationException
-     */
-    public static function build(Member $member, array $data):SummitMetric{
-        if(!isset($data['type'])) throw new ValidationException("type param is mandatory");
-        $type = trim($data['type']);
-        $metric = null;
-        switch($type){
-            case ISummitMetricType::General:
-            case ISummitMetricType::Lobby:
-            case ISummitMetricType::Posters:
-            {
-                $metric = SummitMetric::build($member);
-            }
-                break;
-            case ISummitMetricType::Event:
-            case ISummitMetricType::Poster:
-            {
-                $metric = SummitEventAttendanceMetric::build($member);
-            }
-                break;
-            case ISummitMetricType::Sponsor:
-                $metric = SummitSponsorMetric::build($member);
-                break;
-        }
-        return self::populate($metric, $data);
+final class SummitMetricFactory {
+  /**
+   * @param Member $member
+   * @param array $data
+   * @return SummitMetric
+   * @throws ValidationException
+   */
+  public static function build(Member $member, array $data): SummitMetric {
+    if (!isset($data["type"])) {
+      throw new ValidationException("type param is mandatory");
     }
+    $type = trim($data["type"]);
+    $metric = null;
+    switch ($type) {
+      case ISummitMetricType::General:
+      case ISummitMetricType::Lobby:
+      case ISummitMetricType::Posters:
+        $metric = SummitMetric::build($member);
+        break;
+      case ISummitMetricType::Event:
+      case ISummitMetricType::Poster:
+        $metric = SummitEventAttendanceMetric::build($member);
+        break;
+      case ISummitMetricType::Sponsor:
+        $metric = SummitSponsorMetric::build($member);
+        break;
+    }
+    return self::populate($metric, $data);
+  }
 
-    /**
-     * @param SummitMetric $metric
-     * @param array $data
-     * @return SummitMetric
-     */
-    public static function populate(SummitMetric $metric, array $data):SummitMetric{
-        if(isset($data['type']))
-            $metric->setType($data['type']);
-        if(isset($data['location']))
-            $metric->setLocation(urldecode($data['location']));
-        return $metric;
+  /**
+   * @param SummitMetric $metric
+   * @param array $data
+   * @return SummitMetric
+   */
+  public static function populate(SummitMetric $metric, array $data): SummitMetric {
+    if (isset($data["type"])) {
+      $metric->setType($data["type"]);
     }
+    if (isset($data["location"])) {
+      $metric->setLocation(urldecode($data["location"]));
+    }
+    return $metric;
+  }
 }

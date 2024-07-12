@@ -31,112 +31,109 @@ use utils\Filter;
  * Class SubmitterService
  * @package services\model
  */
-final class SubmitterService
-    extends AbstractService
-    implements ISubmitterService
-{
-    use ParametrizedSendEmails;
+final class SubmitterService extends AbstractService implements ISubmitterService {
+  use ParametrizedSendEmails;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * SubmitterService constructor.
-     * @param IMemberRepository $member_repository
-     * @param ISummitRepository $summit_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        IMemberRepository   $member_repository,
-        ISummitRepository   $summit_repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->member_repository = $member_repository;
-        $this->summit_repository = $summit_repository;
-    }
+  /**
+   * SubmitterService constructor.
+   * @param IMemberRepository $member_repository
+   * @param ISummitRepository $summit_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    IMemberRepository $member_repository,
+    ISummitRepository $summit_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->member_repository = $member_repository;
+    $this->summit_repository = $summit_repository;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
-    {
-        ProcessSubmittersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
-    }
+  /**
+   * @inheritDoc
+   */
+  public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void {
+    ProcessSubmittersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function sendEmails(int $summit_id, array $payload, Filter $filter = null): void
-    {
-        $this->_sendEmails(
-            $summit_id,
-            $payload,
-            "submitter",
-            function ($summit, $paging_info, $filter) {
-                return $this->member_repository->getSubmittersIdsBySummit($summit, $paging_info, $filter);
-            },
-            function
-            (
-                $summit,
-                $flow_event,
-                $submitter_id,
-                $test_email_recipient,
-                $email_config,
-                $filter,
-                $onDispatchSuccess,
-                $onDispatchError,
-                $onDispatchInfo
-            ) {
-                try {
-                    $this->tx_service->transaction(function () use (
-                        $flow_event,
-                        $summit,
-                        $submitter_id,
-                        $filter,
-                        $test_email_recipient,
-                        $onDispatchSuccess,
-                        $onDispatchError,
-                        $onDispatchInfo
-                    ) {
-                        $email_strategy = new SubmitterActionsEmailStrategy($summit, $flow_event);
+  /**
+   * @inheritDoc
+   */
+  public function sendEmails(int $summit_id, array $payload, Filter $filter = null): void {
+    $this->_sendEmails(
+      $summit_id,
+      $payload,
+      "submitter",
+      function ($summit, $paging_info, $filter) {
+        return $this->member_repository->getSubmittersIdsBySummit($summit, $paging_info, $filter);
+      },
+      function (
+        $summit,
+        $flow_event,
+        $submitter_id,
+        $test_email_recipient,
+        $email_config,
+        $filter,
+        $onDispatchSuccess,
+        $onDispatchError,
+        $onDispatchInfo,
+      ) {
+        try {
+          $this->tx_service->transaction(function () use (
+            $flow_event,
+            $summit,
+            $submitter_id,
+            $filter,
+            $test_email_recipient,
+            $onDispatchSuccess,
+            $onDispatchError,
+            $onDispatchInfo,
+          ) {
+            $email_strategy = new SubmitterActionsEmailStrategy($summit, $flow_event);
 
-                        Log::debug("SubmitterService::send processing submitter id {$submitter_id}");
+            Log::debug("SubmitterService::send processing submitter id {$submitter_id}");
 
-                        $submitter = $this->member_repository->getByIdExclusiveLock(intval($submitter_id));
+            $submitter = $this->member_repository->getByIdExclusiveLock(intval($submitter_id));
 
-                        if (!$submitter instanceof Member) {
-                            throw new EntityNotFoundException('submitter not found!');
-                        }
+            if (!$submitter instanceof Member) {
+              throw new EntityNotFoundException("submitter not found!");
+            }
 
-                        $email_strategy->process
-                        (
-                            $submitter,
-                            $test_email_recipient,
-                            $filter,
-                            $onDispatchSuccess,
-                            $onDispatchInfo,
-                            $onDispatchError
-                        );
-                    });
-                } catch (Exception $ex) {
-                    Log::warning($ex);
-                    if(!is_null($onDispatchError))
-                        $onDispatchError($ex->getMessage());
-                }
-            },
-            function ($summit, $outcome_email_recipient, $report) {
-                PresentationSubmitterSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
-            },
-            $filter);
-    }
+            $email_strategy->process(
+              $submitter,
+              $test_email_recipient,
+              $filter,
+              $onDispatchSuccess,
+              $onDispatchInfo,
+              $onDispatchError,
+            );
+          });
+        } catch (Exception $ex) {
+          Log::warning($ex);
+          if (!is_null($onDispatchError)) {
+            $onDispatchError($ex->getMessage());
+          }
+        }
+      },
+      function ($summit, $outcome_email_recipient, $report) {
+        PresentationSubmitterSelectionProcessExcerptEmail::dispatch(
+          $summit,
+          $outcome_email_recipient,
+          $report,
+        );
+      },
+      $filter,
+    );
+  }
 }

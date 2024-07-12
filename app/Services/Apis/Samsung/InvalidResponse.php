@@ -16,7 +16,5 @@
  * Class InvalidResponse
  * @package App\Services\Apis\Samsung
  */
-final class InvalidResponse extends \Exception
-{
-
+final class InvalidResponse extends \Exception {
 }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,48 +19,44 @@ use models\utils\SilverstripeBaseModel;
  * Class ConsultantClient
  * @package App\Models\Foundation\Marketplace
  */
-class ConsultantClient extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class ConsultantClient extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Order", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="Order", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Consultant",inversedBy="clients", fetch="LAZY")
-     * @ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")
-     * @var Consultant
-     */
-    private $consultant;
+  /**
+   * @ORM\ManyToOne(targetEntity="Consultant",inversedBy="clients", fetch="LAZY")
+   * @ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")
+   * @var Consultant
+   */
+  private $consultant;
 
-    /**
-     * @return mixed
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return mixed
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
 
-    /**
-     * @return Consultant
-     */
-    public function getConsultant()
-    {
-        return $this->consultant;
-    }
+  /**
+   * @return Consultant
+   */
+  public function getConsultant() {
+    return $this->consultant;
+  }
 }

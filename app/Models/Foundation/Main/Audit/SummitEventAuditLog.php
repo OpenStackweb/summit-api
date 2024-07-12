@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\utils\One2ManyPropertyTrait;
@@ -22,62 +22,57 @@ use models\utils\One2ManyPropertyTrait;
  * Class SummitEventAuditLog
  * @package models\main
  */
-class SummitEventAuditLog extends SummitAuditLog
-{
-    const ClassName = 'SummitEventAuditLog';
+class SummitEventAuditLog extends SummitAuditLog {
+  const ClassName = "SummitEventAuditLog";
 
-    use One2ManyPropertyTrait;
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getUserId'  => 'user',
-    ];
+  protected $getIdMappings = [
+    "getUserId" => "user",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasEvent' => 'related_entity',
-        'hasUser'  => 'user',
-    ];
+  protected $hasPropertyMappings = [
+    "hasEvent" => "related_entity",
+    "hasUser" => "user",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID")
-     * @var SummitEvent
-     */
-    private $related_entity;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
+   * @ORM\JoinColumn(name="EventID", referencedColumnName="ID")
+   * @var SummitEvent
+   */
+  private $related_entity;
 
-    /**
-     * @ORM\Column(name="EventID", type="integer")
-     * @var int
-     */
-    private  $related_entity_id;
+  /**
+   * @ORM\Column(name="EventID", type="integer")
+   * @var int
+   */
+  private $related_entity_id;
 
-    public function getClassName(): string
-    {
-        return self::ClassName;
-    }
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    public function getEvent(): SummitEvent
-    {
-        return $this->related_entity;
-    }
+  public function getEvent(): SummitEvent {
+    return $this->related_entity;
+  }
 
-    public function setEvent(int $event)
-    {
-        $this->related_entity = $event;
-    }
+  public function setEvent(int $event) {
+    $this->related_entity = $event;
+  }
 
-    /**
-     * @param Member|null $user
-     * @param string $action
-     * @param Summit $summit
-     * @param SummitEvent $event
-     */
-    public function __construct(?Member $user, string $action, Summit $summit, SummitEvent $event)
-    {
-        parent::__construct($user, $action, $summit);
-        $this->related_entity = $event;
-    }
+  /**
+   * @param Member|null $user
+   * @param string $action
+   * @param Summit $summit
+   * @param SummitEvent $event
+   */
+  public function __construct(?Member $user, string $action, Summit $summit, SummitEvent $event) {
+    parent::__construct($user, $action, $summit);
+    $this->related_entity = $event;
+  }
 
-    public function getEventId():int{
-        return $this->related_entity_id;
-    }
+  public function getEventId(): int {
+    return $this->related_entity_id;
+  }
 }

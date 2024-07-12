@@ -22,28 +22,27 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
  * @package App\Audit
  */
 class AuditEventListener {
+  public function onFlush(OnFlushEventArgs $eventArgs) {
+    $em = $eventArgs->getEntityManager();
+    $uow = $em->getUnitOfWork();
 
-    public function onFlush(OnFlushEventArgs $eventArgs) {
-        $em = $eventArgs->getEntityManager();
-        $uow = $em->getUnitOfWork();
+    $strategy = new AuditLogStrategy($em);
 
-        $strategy = new AuditLogStrategy($em);
-
-        foreach ($uow->getScheduledEntityInsertions() as $entity) {
-            $strategy->audit($entity, null, $strategy::EVENT_ENTITY_CREATION);
-        }
-
-        foreach ($uow->getScheduledEntityUpdates() as $entity) {
-            $change_set = $uow->getEntityChangeSet($entity);
-            $strategy->audit($entity, $change_set, $strategy::EVENT_ENTITY_UPDATE);
-        }
-
-        foreach ($uow->getScheduledEntityDeletions() as $entity) {
-            $strategy->audit($entity, null, $strategy::EVENT_ENTITY_DELETION);
-        }
-
-        foreach ($uow->getScheduledCollectionUpdates() as $col) {
-            $strategy->audit($col, null, $strategy::EVENT_COLLECTION_UPDATE);
-        }
+    foreach ($uow->getScheduledEntityInsertions() as $entity) {
+      $strategy->audit($entity, null, $strategy::EVENT_ENTITY_CREATION);
     }
+
+    foreach ($uow->getScheduledEntityUpdates() as $entity) {
+      $change_set = $uow->getEntityChangeSet($entity);
+      $strategy->audit($entity, $change_set, $strategy::EVENT_ENTITY_UPDATE);
+    }
+
+    foreach ($uow->getScheduledEntityDeletions() as $entity) {
+      $strategy->audit($entity, null, $strategy::EVENT_ENTITY_DELETION);
+    }
+
+    foreach ($uow->getScheduledCollectionUpdates() as $col) {
+      $strategy->audit($col, null, $strategy::EVENT_COLLECTION_UPDATE);
+    }
+  }
 }

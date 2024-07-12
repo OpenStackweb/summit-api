@@ -21,9 +21,8 @@ use models\summit\SummitDocument;
  * Interface ISummitDocumentService
  * @package App\Services\Model
  */
-interface ISummitDocumentService
-{
-    /**
+interface ISummitDocumentService {
+  /**
      * @param Summit $summit
      * @param array $payload
      * @throws EntityNotFoundException
@@ -31,61 +30,77 @@ interface ISummitDocumentService
 
      * @return SummitDocument
      */
-    public function addSummitDocument(Summit $summit, array $payload):SummitDocument;
+  public function addSummitDocument(Summit $summit, array $payload): SummitDocument;
 
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param array $payload
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @return SummitDocument
-     */
-    public function updateSummitDocument(Summit $summit, int $document_id, array $payload):SummitDocument;
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param array $payload
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @return SummitDocument
+   */
+  public function updateSummitDocument(
+    Summit $summit,
+    int $document_id,
+    array $payload,
+  ): SummitDocument;
 
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteSummitDocument(Summit $summit, int $document_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteSummitDocument(Summit $summit, int $document_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param int $event_type_id
-     * @return SummitDocument
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addEventTypeToSummitDocument(Summit $summit, int $document_id, int $event_type_id):SummitDocument;
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param int $event_type_id
+   * @return SummitDocument
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addEventTypeToSummitDocument(
+    Summit $summit,
+    int $document_id,
+    int $event_type_id,
+  ): SummitDocument;
 
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param int $event_type_id
-     * @return SummitDocument
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removeEventTypeFromSummitDocument(Summit $summit, int $document_id, int $event_type_id):SummitDocument;
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param int $event_type_id
+   * @return SummitDocument
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function removeEventTypeFromSummitDocument(
+    Summit $summit,
+    int $document_id,
+    int $event_type_id,
+  ): SummitDocument;
 
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @return SummitDocument
-     * @throws \Exception
-     */
-    public function addFile2SummitDocument(
-        Summit $summit, int $document_id, UploadedFile $file, int $max_file_size = 10485760): SummitDocument;
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param UploadedFile $file
+   * @param int $max_file_size
+   * @return SummitDocument
+   * @throws \Exception
+   */
+  public function addFile2SummitDocument(
+    Summit $summit,
+    int $document_id,
+    UploadedFile $file,
+    int $max_file_size = 10485760,
+  ): SummitDocument;
 
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @return SummitDocument
-     * @throws \Exception
-     */
-    public function removeFileFromSummitDocument(Summit $summit, int $document_id): SummitDocument;
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @return SummitDocument
+   * @throws \Exception
+   */
+  public function removeFileFromSummitDocument(Summit $summit, int $document_id): SummitDocument;
 }

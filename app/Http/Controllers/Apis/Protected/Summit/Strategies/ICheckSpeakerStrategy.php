@@ -19,12 +19,11 @@ use models\summit\Summit;
  * Interface ICheckSpeakerStrategy
  * @package App\Http\Controllers
  */
-interface ICheckSpeakerStrategy
-{
-    /**
-     * @param mixed $speaker_id
-     * @param Summit $summit
-     * @return null|PresentationSpeaker
-     */
-    public function check($speaker_id, Summit $summit);
+interface ICheckSpeakerStrategy {
+  /**
+   * @param mixed $speaker_id
+   * @param Summit $summit
+   * @return null|PresentationSpeaker
+   */
+  public function check($speaker_id, Summit $summit);
 }

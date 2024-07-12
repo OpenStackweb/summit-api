@@ -17,43 +17,42 @@ use Illuminate\Http\UploadedFile;
  * Interface IFileUploadStrategy
  * @package App\Services\FileSystem
  */
-interface IFileUploadStrategy
-{
-    /**
-     * @return string
-     */
-    public function getDriver():string;
+interface IFileUploadStrategy {
+  /**
+   * @return string
+   */
+  public function getDriver(): string;
 
-    /**
-     * @param UploadedFile $file
-     * @param string $path
-     * @param string $filename
-     * @param mixed $options
-     * @return false|string
-     */
-    public function save(UploadedFile $file, string $path, string $filename, $options = []);
+  /**
+   * @param UploadedFile $file
+   * @param string $path
+   * @param string $filename
+   * @param mixed $options
+   * @return false|string
+   */
+  public function save(UploadedFile $file, string $path, string $filename, $options = []);
 
-    /**
-     * @param string $path
-     * @param string|null $filename
-     * @return mixed
-     */
-    public function markAsDeleted(string $path, ?string $filename = null);
+  /**
+   * @param string $path
+   * @param string|null $filename
+   * @return mixed
+   */
+  public function markAsDeleted(string $path, ?string $filename = null);
 
-    /**
-     * @param resource $fp
-     * @param string $path
-     * @param mixed $options
-     * @return bool
-     */
-    public function saveFromStream($fp, string $path, $options = []):bool;
+  /**
+   * @param resource $fp
+   * @param string $path
+   * @param mixed $options
+   * @return bool
+   */
+  public function saveFromStream($fp, string $path, $options = []): bool;
 
-    /**
-     * @param string $file
-     * @param string $path
-     * @param string $filename
-     * @param mixed $options
-     * @return false|string
-     */
-    public function saveFromPath(string $file, string $path, string $filename, $options = []):bool;
+  /**
+   * @param string $file
+   * @param string $path
+   * @param string $filename
+   * @param mixed $options
+   * @return false|string
+   */
+  public function saveFromPath(string $file, string $path, string $filename, $options = []): bool;
 }

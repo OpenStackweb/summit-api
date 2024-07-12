@@ -12,31 +12,29 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class ILawPayCardValidationMessages
  * @package App\Services\Apis\PaymentGateways
  * @see namespace App\Services\Apis\PaymentGateways;
  */
-final class LawPayCardValidationMessages
-{
-    const card_number_invalid = 'card_number_invalid';
-    const card_number_incorrect = 'card_number_incorrect';
-    const card_expired = 'card_expired';
-    const card_cvv_incorrect = 'card_cvv_incorrect';
-    const card_avs_rejected = 'card_avs_rejected';
+final class LawPayCardValidationMessages {
+  const card_number_invalid = "card_number_invalid";
+  const card_number_incorrect = "card_number_incorrect";
+  const card_expired = "card_expired";
+  const card_cvv_incorrect = "card_cvv_incorrect";
+  const card_avs_rejected = "card_avs_rejected";
 
-    /**
-     * @param string $code
-     * @return bool
-     */
-    public static function isCardValidationError(string $code):bool{
-        return in_array($code, [
-            self::card_number_invalid,
-            self::card_number_incorrect,
-            self::card_expired,
-            self::card_cvv_incorrect,
-            self::card_avs_rejected,
-        ]);
-    }
+  /**
+   * @param string $code
+   * @return bool
+   */
+  public static function isCardValidationError(string $code): bool {
+    return in_array($code, [
+      self::card_number_invalid,
+      self::card_number_incorrect,
+      self::card_expired,
+      self::card_cvv_incorrect,
+      self::card_avs_rejected,
+    ]);
+  }
 }

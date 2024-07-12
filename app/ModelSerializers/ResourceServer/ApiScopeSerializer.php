@@ -16,12 +16,11 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class ApiScopeSerializer
  * @package App\ModelSerializers\ResourceServer
  */
-final class ApiScopeSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id'            => 'id:json_int',
-        'Name'          => 'name:json_string',
-        'Description'   => 'description:json_string',
-        'Active'        => 'active:json_boolean',
-    ];
+final class ApiScopeSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "Active" => "active:json_boolean",
+  ];
 }

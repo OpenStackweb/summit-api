@@ -19,79 +19,113 @@ use models\summit\SummitSelectedPresentationList;
  * Interface ISummitSelectedPresentationListService
  * @package App\Services\Model
  */
-interface ISummitSelectedPresentationListService
-{
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_id
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     */
-    public function getTeamSelectionList(Summit $summit, int $selection_plan_id, int $track_id):SummitSelectedPresentationList;
+interface ISummitSelectedPresentationListService {
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_id
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   */
+  public function getTeamSelectionList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+  ): SummitSelectedPresentationList;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_id
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function createTeamSelectionList(Summit $summit, int $selection_plan_id, int $track_id):SummitSelectedPresentationList;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_id
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function createTeamSelectionList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+  ): SummitSelectedPresentationList;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_id
-     * @param int $owner_id
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     */
-    public function getIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id, int $owner_id):SummitSelectedPresentationList;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_id
+   * @param int $owner_id
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   */
+  public function getIndividualSelectionList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+    int $owner_id,
+  ): SummitSelectedPresentationList;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_id
-     * @param int $member_id
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id, int $member_id):SummitSelectedPresentationList;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_id
+   * @param int $member_id
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function createIndividualSelectionList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+    int $member_id,
+  ): SummitSelectedPresentationList;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_id
-     * @param int $list_id
-     * @param array $payload
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function reorderList(Summit $summit, int $selection_plan_id, int $track_id, int $list_id, array $payload):SummitSelectedPresentationList;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_id
+   * @param int $list_id
+   * @param array $payload
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function reorderList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+    int $list_id,
+    array $payload,
+  ): SummitSelectedPresentationList;
 
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $track_id
-     * @param string $collection
-     * @param int $presentation_id
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function assignPresentationToMyIndividualList(Summit $summit, int $selection_plan_id, int $track_id, string $collection, int $presentation_id):SummitSelectedPresentationList;
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $track_id
+   * @param string $collection
+   * @param int $presentation_id
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function assignPresentationToMyIndividualList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+    string $collection,
+    int $presentation_id,
+  ): SummitSelectedPresentationList;
 
-    /**
-     * @param Summit $summit
-     * @param int $track_id
-     * @param int $presentation_id
-     * @return SummitSelectedPresentationList
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removePresentationFromMyIndividualList(Summit $summit, int $selection_plan_id, int $track_id, int $presentation_id):SummitSelectedPresentationList;
+  /**
+   * @param Summit $summit
+   * @param int $track_id
+   * @param int $presentation_id
+   * @return SummitSelectedPresentationList
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function removePresentationFromMyIndividualList(
+    Summit $summit,
+    int $selection_plan_id,
+    int $track_id,
+    int $presentation_id,
+  ): SummitSelectedPresentationList;
 }

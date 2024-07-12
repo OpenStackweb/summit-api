@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerOrganizationalRoleRepository")
@@ -19,60 +19,53 @@ use models\utils\SilverstripeBaseModel;
  * Class SpeakerOrganizationalRole
  * @package models\summit
  */
-class SpeakerOrganizationalRole extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Role", type="string")
-     */
-    private $role;
+class SpeakerOrganizationalRole extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Role", type="string")
+   */
+  private $role;
 
-    /**
-     * @ORM\Column(name="IsDefault", type="boolean")
-     */
-    private $is_default;
+  /**
+   * @ORM\Column(name="IsDefault", type="boolean")
+   */
+  private $is_default;
 
-    /**
-     * SpeakerOrganizationalRole constructor.
-     * @param string $role
-     * @param bool $is_default
-     */
-    public function __construct($role, $is_default = false)
-    {
-        parent::__construct();
-        $this->role = $role;
-        $this->is_default = $is_default;
-    }
+  /**
+   * SpeakerOrganizationalRole constructor.
+   * @param string $role
+   * @param bool $is_default
+   */
+  public function __construct($role, $is_default = false) {
+    parent::__construct();
+    $this->role = $role;
+    $this->is_default = $is_default;
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getRole()
-    {
-        return $this->role;
-    }
+  /**
+   * @return mixed
+   */
+  public function getRole() {
+    return $this->role;
+  }
 
-    /**
-     * @param mixed $role
-     */
-    public function setRole($role)
-    {
-        $this->role = $role;
-    }
+  /**
+   * @param mixed $role
+   */
+  public function setRole($role) {
+    $this->role = $role;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isDefault()
-    {
-        return $this->is_default;
-    }
+  /**
+   * @return bool
+   */
+  public function isDefault() {
+    return $this->is_default;
+  }
 
-    /**
-     * @param bool $is_default
-     */
-    public function setIsDefault($is_default)
-    {
-        $this->is_default = $is_default;
-    }
-
+  /**
+   * @param bool $is_default
+   */
+  public function setIsDefault($is_default) {
+    $this->is_default = $is_default;
+  }
 }

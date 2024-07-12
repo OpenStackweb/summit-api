@@ -18,33 +18,36 @@ use models\summit\Summit;
  * Trait DeleteSummitChildElement
  * @package App\Http\Controllers
  */
-trait DeleteSummitChildElement
-{
-    use BaseSummitAPI;
+trait DeleteSummitChildElement {
+  use BaseSummitAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    /**
-     * @param Summit $summit
-     * @param $child_id
-     * @return void
-     */
-    abstract protected function deleteChild(Summit $summit, $child_id):void;
+  /**
+   * @param Summit $summit
+   * @param $child_id
+   * @return void
+   */
+  abstract protected function deleteChild(Summit $summit, $child_id): void;
 
-    /**
-     * @param $summit_id
-     * @param $child_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function delete($summit_id, $child_id){
-        return $this->processRequest(function () use ($summit_id, $child_id) {
+  /**
+   * @param $summit_id
+   * @param $child_id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function delete($summit_id, $child_id) {
+    return $this->processRequest(function () use ($summit_id, $child_id) {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->getSummitRepository(),
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $this->deleteChild($summit, $child_id);
 
-            $this->deleteChild($summit, $child_id);
-
-            return $this->deleted();
-        });
-    }
+      return $this->deleted();
+    });
+  }
 }

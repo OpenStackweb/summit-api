@@ -20,59 +20,63 @@ use models\exceptions\ValidationException;
  * Class SubQuestionRuleFactory
  * @package App\Models\Foundation\Main\ExtraQuestions\Factories
  */
-final class SubQuestionRuleFactory
-{
-    /**
-     * @param ExtraQuestionType $parent
-     * @param ExtraQuestionType $subQuestion
-     * @param array $payload
-     * @return SubQuestionRule
-     * @throws ValidationException
-     */
-    public static function build(ExtraQuestionType $parent, ExtraQuestionType $subQuestion, array $payload):SubQuestionRule{
-        return self::populate(new SubQuestionRule, $parent, $subQuestion, $payload);
+final class SubQuestionRuleFactory {
+  /**
+   * @param ExtraQuestionType $parent
+   * @param ExtraQuestionType $subQuestion
+   * @param array $payload
+   * @return SubQuestionRule
+   * @throws ValidationException
+   */
+  public static function build(
+    ExtraQuestionType $parent,
+    ExtraQuestionType $subQuestion,
+    array $payload,
+  ): SubQuestionRule {
+    return self::populate(new SubQuestionRule(), $parent, $subQuestion, $payload);
+  }
+
+  /**
+   * @param SubQuestionRule $rule
+   * @param ExtraQuestionType $parent
+   * @param ExtraQuestionType $subQuestion
+   * @param array $payload
+   * @return SubQuestionRule
+   * @throws ValidationException
+   */
+  public static function populate(
+    SubQuestionRule $rule,
+    ExtraQuestionType $parent,
+    ExtraQuestionType $subQuestion,
+    array $payload,
+  ): SubQuestionRule {
+    $parent->addSubQuestionRule($rule);
+    $subQuestion->addParentRule($rule);
+
+    if (isset($payload["visibility"])) {
+      $rule->setVisibility(trim($payload["visibility"]));
     }
 
-    /**
-     * @param SubQuestionRule $rule
-     * @param ExtraQuestionType $parent
-     * @param ExtraQuestionType $subQuestion
-     * @param array $payload
-     * @return SubQuestionRule
-     * @throws ValidationException
-     */
-    public static function populate(SubQuestionRule $rule, ExtraQuestionType $parent, ExtraQuestionType $subQuestion, array $payload):SubQuestionRule{
+    if (isset($payload["visibility_condition"])) {
+      $rule->setVisibilityCondition(trim($payload["visibility_condition"]));
+    }
 
-        $parent->addSubQuestionRule($rule);
-        $subQuestion->addParentRule($rule);
+    if (isset($payload["answer_values_operator"])) {
+      $rule->setAnswerValuesOperator(trim($payload["answer_values_operator"]));
+    }
 
-        if(isset($payload['visibility']))
-            $rule->setVisibility(trim($payload['visibility']));
-
-        if(isset($payload['visibility_condition']))
-            $rule->setVisibilityCondition(trim($payload['visibility_condition']));
-
-        if(isset($payload['answer_values_operator']))
-            $rule->setAnswerValuesOperator(trim($payload['answer_values_operator']));
-
-        if(isset($payload['answer_values']) && is_array($payload['answer_values'])) {
-            $values = $payload['answer_values'];
-            foreach ($values as $v){
-                if(!$parent->allowValue(intval($v))){
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "Parent Question %s does not allows value %s.",
-                            $parent->getId(),
-                            $v
-                        )
-                    );
-                }
-            }
-            $rule->setAnswerValues($values);
+    if (isset($payload["answer_values"]) && is_array($payload["answer_values"])) {
+      $values = $payload["answer_values"];
+      foreach ($values as $v) {
+        if (!$parent->allowValue(intval($v))) {
+          throw new ValidationException(
+            sprintf("Parent Question %s does not allows value %s.", $parent->getId(), $v),
+          );
         }
-
-        return $rule;
+      }
+      $rule->setAnswerValues($values);
     }
+
+    return $rule;
+  }
 }

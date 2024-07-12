@@ -11,32 +11,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPTextBoxQuestionTemplate")
  * @ORM\Entity
  * Class RSVPTextBoxQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPTextBoxQuestionTemplate extends RSVPSingleValueTemplateQuestion
-{
-    const ClassName = 'RSVPTextBoxQuestionTemplate';
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+class RSVPTextBoxQuestionTemplate extends RSVPSingleValueTemplateQuestion {
+  const ClassName = "RSVPTextBoxQuestionTemplate";
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public static $metadata = [
-        'class_name'       => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(RSVPSingleValueTemplateQuestion::getMetadata(), self::$metadata);
-    }
-
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(RSVPSingleValueTemplateQuestion::getMetadata(), self::$metadata);
+  }
 }

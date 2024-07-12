@@ -16,12 +16,11 @@
  * Class SummitRefundPolicyTypeSerializer
  * @package ModelSerializers
  */
-final class SummitRefundPolicyTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'                        => 'name:json_string',
-        'UntilXDaysBeforeEventStarts' => 'until_x_days_before_event_starts:json_int',
-        'RefundRate'                  => 'refund_rate:json_float',
-        'SummitId'                    => 'summit_id:json_int',
-    ];
+final class SummitRefundPolicyTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "UntilXDaysBeforeEventStarts" => "until_x_days_before_event_starts:json_int",
+    "RefundRate" => "refund_rate:json_float",
+    "SummitId" => "summit_id:json_int",
+  ];
 }

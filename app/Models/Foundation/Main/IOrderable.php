@@ -16,16 +16,15 @@ use models\utils\IEntity;
  * Interface IOrderable
  * @package App\Models\Foundation\Main
  */
-interface IOrderable extends IEntity
-{
-    /**
-     * @param int $order
-     * @return void
-     */
-    public function setOrder($order);
+interface IOrderable extends IEntity {
+  /**
+   * @param int $order
+   * @return void
+   */
+  public function setOrder($order);
 
-    /**
-     * @return int
-     */
-    public function getOrder();
+  /**
+   * @return int
+   */
+  public function getOrder();
 }

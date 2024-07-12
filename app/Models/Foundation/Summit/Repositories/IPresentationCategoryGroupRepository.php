@@ -16,11 +16,10 @@ use models\summit\Summit;
  * Interface IPresentationCategoryGroupRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IPresentationCategoryGroupRepository extends ISummitOwnedEntityRepository
-{
-    /**
-     * @param Summit $summit
-     * @return array
-     */
-    public function getMetadata(Summit $summit);
+interface IPresentationCategoryGroupRepository extends ISummitOwnedEntityRepository {
+  /**
+   * @param Summit $summit
+   * @return array
+   */
+  public function getMetadata(Summit $summit);
 }

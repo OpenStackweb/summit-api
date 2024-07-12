@@ -16,21 +16,26 @@ use models\summit\SummitHotel;
  * Class SummitHotelValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitHotelValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class SummitHotelValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = SummitExternalLocationValidationRulesFactory::build($data, $update);
 
-        $rules = SummitExternalLocationValidationRulesFactory::build($data, $update);
-
-        return array_merge([
-            'hotel_type'   => sprintf('sometimes|in:%s,%s',SummitHotel::HotelTypePrimary, SummitHotel::HotelTypeAlternate),
-            'sold_out'     => 'sometimes|boolean',
-            'booking_link' => 'sometimes|url'
-        ], $rules);
-    }
+    return array_merge(
+      [
+        "hotel_type" => sprintf(
+          "sometimes|in:%s,%s",
+          SummitHotel::HotelTypePrimary,
+          SummitHotel::HotelTypeAlternate,
+        ),
+        "sold_out" => "sometimes|boolean",
+        "booking_link" => "sometimes|url",
+      ],
+      $rules,
+    );
+  }
 }

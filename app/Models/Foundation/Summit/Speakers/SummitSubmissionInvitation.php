@@ -31,191 +31,176 @@ use Doctrine\ORM\Mapping as ORM;
  * Class SummitSubmissionInvitation
  * @package models\summit
  */
-class SummitSubmissionInvitation extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitSubmissionInvitation extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    use One2ManyPropertyTrait;
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getSpeakerId' => 'speaker',
-    ];
+  protected $getIdMappings = [
+    "getSpeakerId" => "speaker",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSpeaker' => 'speaker',
-    ];
+  protected $hasPropertyMappings = [
+    "hasSpeaker" => "speaker",
+  ];
 
-    /**
-     * @ORM\Column(name="FirstName", type="string")
-     * @var string
-     */
-    private $first_name;
+  /**
+   * @ORM\Column(name="FirstName", type="string")
+   * @var string
+   */
+  private $first_name;
 
-    /**
-     * @ORM\Column(name="LastName", type="string")
-     * @var string
-     */
-    private $last_name;
+  /**
+   * @ORM\Column(name="LastName", type="string")
+   * @var string
+   */
+  private $last_name;
 
-    /**
-     * @ORM\Column(name="Email", type="string")
-     * @var string
-     */
-    private $email;
+  /**
+   * @ORM\Column(name="Email", type="string")
+   * @var string
+   */
+  private $email;
 
-    /**
-     * @ORM\Column(name="OTP", type="string")
-     * @var string
-     */
-    private $otp;
+  /**
+   * @ORM\Column(name="OTP", type="string")
+   * @var string
+   */
+  private $otp;
 
-    /**
-     * @var \DateTime
-     * @ORM\Column(name="SentDate", type="datetime")
-     */
-    private $sent_date;
+  /**
+   * @var \DateTime
+   * @ORM\Column(name="SentDate", type="datetime")
+   */
+  private $sent_date;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitSubmissionInvitation_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="SummitSubmissionInvitationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
-     */
-    private $tags;
+  /**
+   * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
+   * @ORM\JoinTable(name="SummitSubmissionInvitation_Tags",
+   *      joinColumns={@ORM\JoinColumn(name="SummitSubmissionInvitationID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
+   *      )
+   */
+  private $tags;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID", nullable=true)
-     * @var PresentationSpeaker
-     */
-    private $speaker;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker")
+   * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID", nullable=true)
+   * @var PresentationSpeaker
+   */
+  private $speaker;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->tags = new ArrayCollection();
-        $this->speaker = null;
+  public function __construct() {
+    parent::__construct();
+    $this->tags = new ArrayCollection();
+    $this->speaker = null;
+  }
+
+  /**
+   * @return string
+   */
+  public function getFirstName(): ?string {
+    return $this->first_name;
+  }
+
+  /**
+   * @param string $first_name
+   */
+  public function setFirstName(string $first_name): void {
+    $this->first_name = $first_name;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLastName(): ?string {
+    return $this->last_name;
+  }
+
+  /**
+   * @param string $last_name
+   */
+  public function setLastName(string $last_name): void {
+    $this->last_name = $last_name;
+  }
+
+  /**
+   * @return string
+   */
+  public function getEmail(): string {
+    return $this->email;
+  }
+
+  /**
+   * @param string $email
+   */
+  public function setEmail(string $email): void {
+    $this->email = strtolower($email);
+  }
+
+  /**
+   * @return string
+   */
+  public function getOtp(): ?string {
+    return $this->otp;
+  }
+
+  /**
+   * @param string $otp
+   */
+  public function setOtp(string $otp): void {
+    $this->otp = $otp;
+  }
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getTags() {
+    return $this->tags;
+  }
+
+  /**
+   * @param Tag $tag
+   */
+  public function addTag(Tag $tag) {
+    if ($this->tags->contains($tag)) {
+      return;
     }
+    $this->tags->add($tag);
+  }
 
-    /**
-     * @return string
-     */
-    public function getFirstName(): ?string
-    {
-        return $this->first_name;
-    }
+  public function clearTags() {
+    $this->tags->clear();
+  }
 
-    /**
-     * @param string $first_name
-     */
-    public function setFirstName(string $first_name): void
-    {
-        $this->first_name = $first_name;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getSentDate(): ?\DateTime {
+    return $this->sent_date;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLastName(): ?string
-    {
-        return $this->last_name;
-    }
+  /**
+   * @return bool
+   */
+  public function isSent(): bool {
+    return !is_null($this->sent_date);
+  }
 
-    /**
-     * @param string $last_name
-     */
-    public function setLastName(string $last_name): void
-    {
-        $this->last_name = $last_name;
-    }
+  public function markAsSent(): void {
+    $this->sent_date = new \DateTime("now", new \DateTimeZone("UTC"));
+  }
+  /**
+   * @return PresentationSpeaker
+   */
+  public function getSpeaker(): ?PresentationSpeaker {
+    return $this->speaker;
+  }
 
-    /**
-     * @return string
-     */
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
-    /**
-     * @param string $email
-     */
-    public function setEmail(string $email): void
-    {
-        $this->email = strtolower($email);
-    }
-
-    /**
-     * @return string
-     */
-    public function getOtp(): ?string
-    {
-        return $this->otp;
-    }
-
-    /**
-     * @param string $otp
-     */
-    public function setOtp(string $otp): void
-    {
-        $this->otp = $otp;
-    }
-
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getTags()
-    {
-        return $this->tags;
-    }
-
-    /**
-     * @param Tag $tag
-     */
-    public function addTag(Tag $tag)
-    {
-        if ($this->tags->contains($tag)) return;
-        $this->tags->add($tag);
-    }
-
-    public function clearTags()
-    {
-        $this->tags->clear();
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getSentDate(): ?\DateTime
-    {
-        return $this->sent_date;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isSent():bool{
-        return !is_null($this->sent_date);
-    }
-
-    public function markAsSent():void{
-        $this->sent_date = new \DateTime('now', new \DateTimeZone('UTC'));
-    }
-    /**
-     * @return PresentationSpeaker
-     */
-    public function getSpeaker(): ?PresentationSpeaker
-    {
-        return $this->speaker;
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function setSpeaker(?PresentationSpeaker $speaker): void
-    {
-        $this->speaker = $speaker;
-    }
+  /**
+   * @param PresentationSpeaker $speaker
+   */
+  public function setSpeaker(?PresentationSpeaker $speaker): void {
+    $this->speaker = $speaker;
+  }
 }

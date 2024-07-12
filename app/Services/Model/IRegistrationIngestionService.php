@@ -20,23 +20,26 @@ use models\summit\SummitAttendee;
  * Interface IRegistrationIngestionService
  * @package App\Services\Model
  */
-interface IRegistrationIngestionService
-{
+interface IRegistrationIngestionService {
+  public function ingestAllSummits(): void;
 
-    public function ingestAllSummits():void;
+  /**
+   * @param Summit $summit
+   * @return void
+   */
+  public function ingestSummit(Summit $summit): void;
 
-    /**
-     * @param Summit $summit
-     * @return void
-     */
-    public function ingestSummit(Summit $summit):void;
-
-    /**
-     * @param int $summit_id
-     * @param int $index
-     * @param array $external_attendee
-     * @param IExternalRegistrationFeed $feed
-     * @return SummitAttendee|null
-     */
-    public function ingestExternalAttendee(int $summit_id, int $index, array $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee;
+  /**
+   * @param int $summit_id
+   * @param int $index
+   * @param array $external_attendee
+   * @param IExternalRegistrationFeed $feed
+   * @return SummitAttendee|null
+   */
+  public function ingestExternalAttendee(
+    int $summit_id,
+    int $index,
+    array $external_attendee,
+    IExternalRegistrationFeed $feed,
+  ): ?SummitAttendee;
 }

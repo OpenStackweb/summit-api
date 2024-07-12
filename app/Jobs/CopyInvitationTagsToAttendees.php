@@ -24,51 +24,52 @@ use Illuminate\Support\Facades\Log;
  * Class CopyInvitationTagsToAttendees
  * @package App\Jobs
  */
-class CopyInvitationTagsToAttendees implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class CopyInvitationTagsToAttendees implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /*
-     * @var int
-     */
-    public $summit_id;
+  /*
+   * @var int
+   */
+  public $summit_id;
 
-    /*
-     * @var int
-     */
-    public $invitation_id;
+  /*
+   * @var int
+   */
+  public $invitation_id;
 
-    /*
-     * @var int
-     */
-    public $attendee_id;
+  /*
+   * @var int
+   */
+  public $attendee_id;
 
-    /**
-     * @param int $summit_id
-     * @param int $invitation_id
-     * @param int $attendee_id
-     */
-    public function __construct(int $summit_id, int $invitation_id, int $attendee_id)
-    {
-        $this->summit_id = $summit_id;
-        $this->invitation_id = $invitation_id;
-        $this->attendee_id = $attendee_id;
+  /**
+   * @param int $summit_id
+   * @param int $invitation_id
+   * @param int $attendee_id
+   */
+  public function __construct(int $summit_id, int $invitation_id, int $attendee_id) {
+    $this->summit_id = $summit_id;
+    $this->invitation_id = $invitation_id;
+    $this->attendee_id = $attendee_id;
+  }
+
+  public function handle(ISummitOrderService $service) {
+    try {
+      Log::debug(
+        "CopyInvitationTagsToAttendees::handle summit id {$this->summit_id}, invitation id {$this->invitation_id}, attendee id {$this->attendee_id}",
+      );
+      $service->copyInvitationTagsToAttendee(
+        $this->summit_id,
+        $this->invitation_id,
+        $this->attendee_id,
+      );
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      throw $ex;
     }
+  }
 
-    public function handle(ISummitOrderService $service)
-    {
-        try {
-            Log::debug(
-                "CopyInvitationTagsToAttendees::handle summit id {$this->summit_id}, invitation id {$this->invitation_id}, attendee id {$this->attendee_id}");
-            $service->copyInvitationTagsToAttendee($this->summit_id, $this->invitation_id, $this->attendee_id);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            throw $ex;
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error($exception);
-    }
+  public function failed(\Throwable $exception) {
+    Log::error($exception);
+  }
 }

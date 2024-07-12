@@ -16,13 +16,10 @@ use App\Services\FileSystem\AbstractFileUploadStrategy;
  * Class SwiftStorageFileUploadStrategy
  * @package App\Services\FileSystem\Swift
  */
-class SwiftStorageFileUploadStrategy extends AbstractFileUploadStrategy
-{
+class SwiftStorageFileUploadStrategy extends AbstractFileUploadStrategy {
+  const Driver = "swift";
 
-    const Driver = "swift";
-
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

@@ -22,25 +22,25 @@ use Illuminate\Support\Facades\App;
  * Class ExternalRegistrationFeedFactory
  * @package App\Services\Apis\ExternalRegistrationFeeds
  */
-final class ExternalRegistrationFeedFactory implements IExternalRegistrationFeedFactory
-{
-
-    /**
-     * @param Summit $summit
-     * @return IExternalRegistrationFeed|null
-     */
-    public function build(Summit $summit): ?IExternalRegistrationFeed
-    {
-        $client = App::make(ClientInterface::class);
-        switch ($summit->getExternalRegistrationFeedType()){
-            case ISummitExternalRegistrationFeedType::Eventbrite:
-                return new EventbriteRegistrationFeed($summit, $client);
-                break;
-            case ISummitExternalRegistrationFeedType::Samsung:{
-                return new SamsungRegistrationFeed($summit, App::make(ISamsungRegistrationAPI::class), $client);
-            }
-            break;
-        }
-        return null;
+final class ExternalRegistrationFeedFactory implements IExternalRegistrationFeedFactory {
+  /**
+   * @param Summit $summit
+   * @return IExternalRegistrationFeed|null
+   */
+  public function build(Summit $summit): ?IExternalRegistrationFeed {
+    $client = App::make(ClientInterface::class);
+    switch ($summit->getExternalRegistrationFeedType()) {
+      case ISummitExternalRegistrationFeedType::Eventbrite:
+        return new EventbriteRegistrationFeed($summit, $client);
+        break;
+      case ISummitExternalRegistrationFeedType::Samsung:
+        return new SamsungRegistrationFeed(
+          $summit,
+          App::make(ISamsungRegistrationAPI::class),
+          $client,
+        );
+        break;
     }
+    return null;
+  }
 }

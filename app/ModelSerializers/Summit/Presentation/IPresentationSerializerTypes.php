@@ -16,12 +16,11 @@
  * Interface IPresentationSerializerTypes
  * @package ModelSerializers
  */
-interface IPresentationSerializerTypes
-{
-    const TrackChairs = "TRACK_CHAIRS";
-    const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
-    const SpeakerEmails = "SPEAKER_EMAILS";
-    const SubmitterEmails = "SUBMITTER_EMAILS";
+interface IPresentationSerializerTypes {
+  const TrackChairs = "TRACK_CHAIRS";
+  const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
+  const SpeakerEmails = "SPEAKER_EMAILS";
+  const SubmitterEmails = "SUBMITTER_EMAILS";
 
-    const SecureStream = 'SECURE_STREAM';
+  const SecureStream = "SECURE_STREAM";
 }

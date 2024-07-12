@@ -12,24 +12,22 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IGroup
  * @package App\Models\Foundation\Main
  */
-interface IGroup
-{
-    const Administrators           = 'administrators';
-    const SuperAdmins              = 'super-admins';
-    const BadgePrinters            = 'badge-printers';
-    const SummitAccessControl      = 'summit-access-control';
-    const TrackChairs              = 'track-chairs';
-    const TrackChairsAdmins        = 'track-chairs-admins';
-    const CommunityMembers         = 'community-members';
-    const FoundationMembers        = 'foundation-members';
-    const SummitAdministrators     = 'summit-front-end-administrators';
-    const SummitRoomAdministrators = 'summit-room-administrators';
-    const SummitRegistrationAdmins = 'summit-registration-administrators';
-    const Testers                  = 'tester-groups';
-    const Sponsors                 = 'sponsors';
+interface IGroup {
+  const Administrators = "administrators";
+  const SuperAdmins = "super-admins";
+  const BadgePrinters = "badge-printers";
+  const SummitAccessControl = "summit-access-control";
+  const TrackChairs = "track-chairs";
+  const TrackChairsAdmins = "track-chairs-admins";
+  const CommunityMembers = "community-members";
+  const FoundationMembers = "foundation-members";
+  const SummitAdministrators = "summit-front-end-administrators";
+  const SummitRoomAdministrators = "summit-room-administrators";
+  const SummitRegistrationAdmins = "summit-registration-administrators";
+  const Testers = "tester-groups";
+  const Sponsors = "sponsors";
 }

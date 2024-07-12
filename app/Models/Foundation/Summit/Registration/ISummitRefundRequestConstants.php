@@ -16,15 +16,10 @@
  * Interface ISummitRefundRequestConstants
  * @package models\summit
  */
-interface ISummitRefundRequestConstants
-{
-    const RefundRequestedStatus = 'Requested';
-    const ApprovedStatus        = 'Approved';
-    const RejectedStatus        = 'Rejected';
+interface ISummitRefundRequestConstants {
+  const RefundRequestedStatus = "Requested";
+  const ApprovedStatus = "Approved";
+  const RejectedStatus = "Rejected";
 
-    const ValidStatus = [
-        self::RefundRequestedStatus,
-        self::ApprovedStatus,
-        self::RejectedStatus,
-    ];
+  const ValidStatus = [self::RefundRequestedStatus, self::ApprovedStatus, self::RejectedStatus];
 }

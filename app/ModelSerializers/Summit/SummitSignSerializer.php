@@ -12,18 +12,16 @@
  * limitations under the License.
  **/
 
-
 use ModelSerializers\SilverStripeSerializer;
 
 /**
  * Class SummitSignSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SummitSignSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Template' => 'template:json_string',
-        'SummitId' => 'summit_id:json_int',
-        'LocationId' => 'location_id:json_int',
-    ];
+final class SummitSignSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Template" => "template:json_string",
+    "SummitId" => "summit_id:json_int",
+    "LocationId" => "location_id:json_int",
+  ];
 }

@@ -21,37 +21,25 @@ use utils\PagingResponse;
  * Class TimezonesApiController
  * @package App\Http\Controllers
  */
-final class TimezonesApiController extends JsonController
-{
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        try {
-            $timezones   = \DateTimeZone::listIdentifiers();
-            $response    = new PagingResponse
-            (
-                count($timezones),
-                count($timezones),
-                1,
-                1,
-                $timezones
-            );
+final class TimezonesApiController extends JsonController {
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    try {
+      $timezones = \DateTimeZone::listIdentifiers();
+      $response = new PagingResponse(count($timezones), count($timezones), 1, 1, $timezones);
 
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->ok($response->toArray($expand = Request::input("expand", "")));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

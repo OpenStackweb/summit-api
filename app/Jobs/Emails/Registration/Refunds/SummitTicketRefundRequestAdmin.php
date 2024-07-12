@@ -22,72 +22,70 @@ use models\summit\SummitAttendeeTicket;
  * Class SummitTicketRefundRequestAdmin
  * @package App\Jobs\Emails\Registration\Refunds
  */
-class SummitTicketRefundRequestAdmin extends AbstractSummitEmailJob
-{
+class SummitTicketRefundRequestAdmin extends AbstractSummitEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_TICKET_REFUND_REQUEST_ADMIN";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_TICKET_REFUND_REQUEST_ADMIN";
+  const DEFAULT_TEMPLATE = "REGISTRATION_TICKET_REFUND_REQUESTED_ADMIN";
+
+  /**
+   * SummitTicketRefundRequestAdmin constructor.
+   * @param SummitAttendeeTicket $ticket
+   */
+  public function __construct(SummitAttendeeTicket $ticket) {
+    $order = $ticket->getOrder();
+    $summit = $order->getSummit();
+    $payload = [];
+    $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
+    $payload[IMailTemplatesConstants::owner_email] = $order->getOwnerEmail();
+    $payload[IMailTemplatesConstants::owner_company] = $order->getOwnerCompanyName();
+    $payload[IMailTemplatesConstants::ticket_number] = $ticket->getNumber();
+    $payload[IMailTemplatesConstants::ticket_id] = $ticket->getId();
+    $payload[IMailTemplatesConstants::order_id] = $order->getId();
+    $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
+    $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat(
+      $order->getFinalAmount(),
+    );
+    $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
+    $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
+
+    $admin_ticket_edit_url = Config::get("registration.admin_ticket_edit_url", null);
+    $payload[IMailTemplatesConstants::admin_ticket_edit_url] = !empty($admin_ticket_edit_url)
+      ? sprintf($admin_ticket_edit_url, $summit->getId(), $order->getId(), $ticket->getId())
+      : "";
+
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+    $to = Config::get("registration.admin_email");
+    if (empty($to)) {
+      throw new \InvalidArgumentException("registration.admin_email is not set");
     }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_TICKET_REFUND_REQUEST_ADMIN';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_TICKET_REFUND_REQUEST_ADMIN';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_TICKET_REFUND_REQUESTED_ADMIN';
+    parent::__construct($summit, $payload, $template_identifier, $to);
+  }
 
-    /**
-     * SummitTicketRefundRequestAdmin constructor.
-     * @param SummitAttendeeTicket $ticket
-     */
-    public function __construct(SummitAttendeeTicket $ticket)
-    {
-        $order = $ticket->getOrder();
-        $summit = $order->getSummit();
-        $payload = [];
-        $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
-        $payload[IMailTemplatesConstants::owner_email] = $order->getOwnerEmail();
-        $payload[IMailTemplatesConstants::owner_company] = $order->getOwnerCompanyName();
-        $payload[IMailTemplatesConstants::ticket_number] = $ticket->getNumber();
-        $payload[IMailTemplatesConstants::ticket_id] = $ticket->getId();
-        $payload[IMailTemplatesConstants::order_id] = $order->getId();
-        $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
-        $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat($order->getFinalAmount());
-        $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
-        $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
 
-        $admin_ticket_edit_url = Config::get("registration.admin_ticket_edit_url", null);
-        $payload[IMailTemplatesConstants::admin_ticket_edit_url] = !empty($admin_ticket_edit_url) ?
-            sprintf($admin_ticket_edit_url, $summit->getId(), $order->getId(), $ticket->getId()) : '';
+    $payload[IMailTemplatesConstants::owner_full_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_company]["type"] = "string";
+    $payload[IMailTemplatesConstants::ticket_number]["type"] = "string";
+    $payload[IMailTemplatesConstants::ticket_id]["type"] = "int";
+    $payload[IMailTemplatesConstants::order_id]["type"] = "int";
+    $payload[IMailTemplatesConstants::order_number]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_amount]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_currency]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_currency_symbol]["type"] = "string";
+    $payload[IMailTemplatesConstants::admin_ticket_edit_url]["type"] = "string";
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-
-        $to = Config::get("registration.admin_email");
-        if(empty($to)){
-            throw new \InvalidArgumentException("registration.admin_email is not set");
-        }
-
-        parent::__construct($summit, $payload, $template_identifier, $to);
-    }
-
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-
-        $payload = parent::getEmailTemplateSchema();
-
-        $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
-        $payload[IMailTemplatesConstants::ticket_number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::ticket_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::order_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_amount]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
-        $payload[IMailTemplatesConstants::admin_ticket_edit_url]['type'] = 'string';
-
-        return $payload;
-    }
+    return $payload;
+  }
 }

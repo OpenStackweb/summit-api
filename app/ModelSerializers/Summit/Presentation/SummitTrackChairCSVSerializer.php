@@ -17,49 +17,49 @@ use models\summit\SummitTrackChair;
  * Class SummitTrackChairCSVSerializer
  * @package ModelSerializers
  */
-final class SummitTrackChairCSVSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'SummitId' => 'summit_id:json_int',
-        'MemberId' => 'member_id:json_int',
-    ];
+final class SummitTrackChairCSVSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "SummitId" => "summit_id:json_int",
+    "MemberId" => "member_id:json_int",
+  ];
 
-    protected static $allowed_fields = [
-        'summit_id',
-        'member_id',
-    ];
+  protected static $allowed_fields = ["summit_id", "member_id"];
 
-    protected static $allowed_relations = [
-        'categories',
-    ];
+  protected static $allowed_relations = ["categories"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $track_chair = $this->object;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $track_chair = $this->object;
 
-        if (!$track_chair instanceof SummitTrackChair) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $values['member_first_name'] = $track_chair->getMember()->getFirstName();
-        $values['member_last_name'] = $track_chair->getMember()->getLastName();
-        $values['member_email'] = $track_chair->getMember()->getEmail();
-
-        if (in_array('categories', $relations)) {
-            $categories = [];
-            foreach ($track_chair->getCategories() as $t) {
-                $categories[] = $t->getTitle();
-            }
-            $values['categories'] = implode("|", $categories);
-        }
-
-        return $values;
+    if (!$track_chair instanceof SummitTrackChair) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $values["member_first_name"] = $track_chair->getMember()->getFirstName();
+    $values["member_last_name"] = $track_chair->getMember()->getLastName();
+    $values["member_email"] = $track_chair->getMember()->getEmail();
+
+    if (in_array("categories", $relations)) {
+      $categories = [];
+      foreach ($track_chair->getCategories() as $t) {
+        $categories[] = $t->getTitle();
+      }
+      $values["categories"] = implode("|", $categories);
+    }
+
+    return $values;
+  }
 }

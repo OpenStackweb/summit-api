@@ -18,44 +18,39 @@ namespace utils;
  * Class OrderParser
  * @package utils
  */
-final class OrderParser
-{
-    /**
-     * @param string $orders
-     * @param array $allowed_fields
-     * @return Order
-     * @throws OrderParserException
-     */
-    public static function parse($orders, $allowed_fields = [])
-    {
-        $res    = [];
-        $orders = explode(',', trim($orders));
-        //default ordering is asc
-        foreach($orders as $field)
-        {
-            $element = null;
-            if(strpos($field, '+') === 0)
-            {
-                $field = trim($field,'+');
-                if(!in_array($field, $allowed_fields))
-                    throw new OrderParserException(sprintf("order by field %s is not allowed", $field));
-                $element = OrderElement::buildAscFor($field);
-            }
-            else if(strpos($field, '-') === 0)
-            {
-                $field = trim($field,'-');
-                if(!in_array($field, $allowed_fields))
-                    throw new OrderParserException(sprintf("order by field %s is not allowed", $field));
-                $element = OrderElement::buildDescFor($field);
-            }
-            else
-            {
-                if(!in_array($field, $allowed_fields))
-                    throw new OrderParserException(sprintf("order by field %s is not allowed", $field));
-                $element = OrderElement::buildAscFor($field);
-            }
-            array_push($res, $element);
+final class OrderParser {
+  /**
+   * @param string $orders
+   * @param array $allowed_fields
+   * @return Order
+   * @throws OrderParserException
+   */
+  public static function parse($orders, $allowed_fields = []) {
+    $res = [];
+    $orders = explode(",", trim($orders));
+    //default ordering is asc
+    foreach ($orders as $field) {
+      $element = null;
+      if (strpos($field, "+") === 0) {
+        $field = trim($field, "+");
+        if (!in_array($field, $allowed_fields)) {
+          throw new OrderParserException(sprintf("order by field %s is not allowed", $field));
         }
-        return new Order($res);
+        $element = OrderElement::buildAscFor($field);
+      } elseif (strpos($field, "-") === 0) {
+        $field = trim($field, "-");
+        if (!in_array($field, $allowed_fields)) {
+          throw new OrderParserException(sprintf("order by field %s is not allowed", $field));
+        }
+        $element = OrderElement::buildDescFor($field);
+      } else {
+        if (!in_array($field, $allowed_fields)) {
+          throw new OrderParserException(sprintf("order by field %s is not allowed", $field));
+        }
+        $element = OrderElement::buildAscFor($field);
+      }
+      array_push($res, $element);
     }
+    return new Order($res);
+  }
 }

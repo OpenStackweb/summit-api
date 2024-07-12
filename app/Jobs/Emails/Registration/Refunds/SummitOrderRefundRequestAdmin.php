@@ -20,59 +20,57 @@ use models\summit\SummitOrder;
  * Class SummitOrderRefundRequestAdmin
  * @package App\Jobs\Emails\Registration\Refunds
  */
-class SummitOrderRefundRequestAdmin extends AbstractSummitEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
+class SummitOrderRefundRequestAdmin extends AbstractSummitEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
+
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ADMIN";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ADMIN";
+  const DEFAULT_TEMPLATE = "REGISTRATION_ORDER_REFUND_REQUESTED_ADMIN";
+
+  /**
+   * SummitOrderRefundRequestOwner constructor.
+   * @param SummitOrder $order
+   */
+  public function __construct(SummitOrder $order) {
+    $payload = [];
+    $summit = $order->getSummit();
+    $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
+    $payload[IMailTemplatesConstants::owner_email] = $order->getOwnerEmail();
+    $payload[IMailTemplatesConstants::owner_company] = $order->getOwnerCompanyName();
+    $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
+    $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat(
+      $order->getFinalAmount(),
+    );
+    $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
+    $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
+
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+    $to = Config::get("registration.admin_email");
+    if (empty($to)) {
+      throw new \InvalidArgumentException("registration.admin_email is not set");
     }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ADMIN';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ADMIN';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_ORDER_REFUND_REQUESTED_ADMIN';
+    parent::__construct($summit, $payload, $template_identifier, $to);
+  }
 
-    /**
-     * SummitOrderRefundRequestOwner constructor.
-     * @param SummitOrder $order
-     */
-    public function __construct(SummitOrder $order)
-    {
-        $payload = [];
-        $summit = $order->getSummit();
-        $payload[IMailTemplatesConstants::owner_full_name] = $order->getOwnerFullName();
-        $payload[IMailTemplatesConstants::owner_email]     = $order->getOwnerEmail();
-        $payload[IMailTemplatesConstants::owner_company]   = $order->getOwnerCompanyName();
-        $payload[IMailTemplatesConstants::order_number]    = $order->getNumber();
-        $payload[IMailTemplatesConstants::order_amount] = FormatUtils::getNiceFloat($order->getFinalAmount());
-        $payload[IMailTemplatesConstants::order_currency] = $order->getCurrency();
-        $payload[IMailTemplatesConstants::order_currency_symbol] = $order->getCurrencySymbol();
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    $payload[IMailTemplatesConstants::owner_full_name]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_company]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_number]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_amount]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_currency]["type"] = "string";
+    $payload[IMailTemplatesConstants::order_currency_symbol]["type"] = "string";
 
-        $to = Config::get("registration.admin_email");
-        if(empty($to)){
-            throw new \InvalidArgumentException("registration.admin_email is not set");
-        }
-
-        parent::__construct($summit, $payload, $template_identifier, $to);
-    }
-
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-
-        $payload = parent::getEmailTemplateSchema();
-
-        $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_amount]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
-
-        return $payload;
-    }
+    return $payload;
+  }
 }

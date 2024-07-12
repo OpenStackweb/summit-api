@@ -16,29 +16,26 @@ use Illuminate\Queue\SerializesModels;
  * Class BookableRoomReservationAction
  * @package App\Events
  */
-abstract class BookableRoomReservationAction
-{
-    use SerializesModels;
+abstract class BookableRoomReservationAction {
+  use SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $reservation_id;
+  /**
+   * @var int
+   */
+  private $reservation_id;
 
-    /**
-     * BookableRoomReservationAction constructor.
-     * @param int $reservation_id
-     */
-    public function __construct(int $reservation_id)
-    {
-        $this->reservation_id = $reservation_id;
-    }
+  /**
+   * BookableRoomReservationAction constructor.
+   * @param int $reservation_id
+   */
+  public function __construct(int $reservation_id) {
+    $this->reservation_id = $reservation_id;
+  }
 
-    /**
-     * @return int
-     */
-    public function getReservationId(): int
-    {
-        return $this->reservation_id;
-    }
+  /**
+   * @return int
+   */
+  public function getReservationId(): int {
+    return $this->reservation_id;
+  }
 }

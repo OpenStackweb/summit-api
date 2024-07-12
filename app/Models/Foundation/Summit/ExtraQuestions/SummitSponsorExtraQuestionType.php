@@ -13,7 +13,7 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\Sponsor;
 use models\utils\One2ManyPropertyTrait;
 
@@ -23,43 +23,39 @@ use models\utils\One2ManyPropertyTrait;
  * Class SummitSponsorExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
-class SummitSponsorExtraQuestionType extends ExtraQuestionType
-{
-    use One2ManyPropertyTrait;
+class SummitSponsorExtraQuestionType extends ExtraQuestionType {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getSponsorId' => 'sponsor'
-    ];
+  protected $getIdMappings = [
+    "getSponsorId" => "sponsor",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSponsor' => 'sponsor'
-    ];
+  protected $hasPropertyMappings = [
+    "hasSponsor" => "sponsor",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="extra_questions")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Sponsor
-     */
-    private $sponsor;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="extra_questions")
+   * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Sponsor
+   */
+  private $sponsor;
 
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor(): Sponsor
-    {
-        return $this->sponsor;
-    }
+  /**
+   * @return Sponsor
+   */
+  public function getSponsor(): Sponsor {
+    return $this->sponsor;
+  }
 
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
-    }
+  /**
+   * @param Sponsor $sponsor
+   */
+  public function setSponsor(Sponsor $sponsor): void {
+    $this->sponsor = $sponsor;
+  }
 
-    public function clearSponsor(): void
-    {
-        $this->sponsor = null;
-    }
+  public function clearSponsor(): void {
+    $this->sponsor = null;
+  }
 }

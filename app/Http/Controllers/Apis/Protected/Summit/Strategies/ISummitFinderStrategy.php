@@ -12,19 +12,16 @@
  * limitations under the License.
  **/
 
-
-
 use models\summit\Summit;
 
 /**
  * Interface ISummitFinderStrategy
  * @package App\Http\Controllers
  */
-interface ISummitFinderStrategy
-{
-    /**
-     * @param mixed $summit_id
-     * @return null|Summit
-     */
-    public function find($summit_id);
+interface ISummitFinderStrategy {
+  /**
+   * @param mixed $summit_id
+   * @return null|Summit
+   */
+  public function find($summit_id);
 }

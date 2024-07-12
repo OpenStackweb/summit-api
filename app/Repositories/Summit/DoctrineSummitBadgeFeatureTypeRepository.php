@@ -21,37 +21,32 @@ use utils\DoctrineLeftJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitBadgeFeatureTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitBadgeFeatureTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitBadgeFeatureTypeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitBadgeFeatureType::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitBadgeFeatureType::class;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'        => 'e.name:json_string',
-            'summit_id'   => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 }

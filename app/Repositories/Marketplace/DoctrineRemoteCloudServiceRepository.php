@@ -18,16 +18,12 @@ use App\Models\Foundation\Marketplace\RemoteCloudService;
  * Class DoctrineRemoteCloudServiceRepository
  * @package App\Repositories\Marketplace
  */
-final class DoctrineRemoteCloudServiceRepository
-    extends DoctrineCompanyServiceRepository
-    implements IRemoteCloudServiceRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return RemoteCloudService::class;
-    }
+final class DoctrineRemoteCloudServiceRepository extends DoctrineCompanyServiceRepository implements
+  IRemoteCloudServiceRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return RemoteCloudService::class;
+  }
 }

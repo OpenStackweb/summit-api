@@ -16,35 +16,37 @@ use models\summit\SummitRegistrationInvitation;
  * Class SummitRegistrationInvitationFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitRegistrationInvitationFactory
-{
-    /**
-     * @param array $data
-     * @return SummitRegistrationInvitation
-     */
-    public static function build(array $data): SummitRegistrationInvitation {
-        return self::populate(new SummitRegistrationInvitation(), $data);
-    }
+final class SummitRegistrationInvitationFactory {
+  /**
+   * @param array $data
+   * @return SummitRegistrationInvitation
+   */
+  public static function build(array $data): SummitRegistrationInvitation {
+    return self::populate(new SummitRegistrationInvitation(), $data);
+  }
 
-    /**
-     * @param SummitRegistrationInvitation $invitation
-     * @param array $data
-     * @return SummitRegistrationInvitation
-     */
-    public static function populate(SummitRegistrationInvitation $invitation, array $data):SummitRegistrationInvitation {
-        $invitation->setEmail(trim($data['email']));
-        if(isset($data['first_name'])){
-            $invitation->setFirstName(trim($data['first_name']));
-        }
-        if(isset($data['last_name'])){
-            $invitation->setLastName(trim($data['last_name']));
-        }
-        if(isset($data['status'])) {
-            $invitation->setStatus($data['status']);
-        }
-        if(isset($data['acceptance_criteria'])){
-            $invitation->setAcceptanceCriteria(trim($data['acceptance_criteria']));
-        }
-        return $invitation;
+  /**
+   * @param SummitRegistrationInvitation $invitation
+   * @param array $data
+   * @return SummitRegistrationInvitation
+   */
+  public static function populate(
+    SummitRegistrationInvitation $invitation,
+    array $data,
+  ): SummitRegistrationInvitation {
+    $invitation->setEmail(trim($data["email"]));
+    if (isset($data["first_name"])) {
+      $invitation->setFirstName(trim($data["first_name"]));
     }
+    if (isset($data["last_name"])) {
+      $invitation->setLastName(trim($data["last_name"]));
+    }
+    if (isset($data["status"])) {
+      $invitation->setStatus($data["status"]);
+    }
+    if (isset($data["acceptance_criteria"])) {
+      $invitation->setAcceptanceCriteria(trim($data["acceptance_criteria"]));
+    }
+    return $invitation;
+  }
 }

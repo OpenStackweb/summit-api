@@ -21,75 +21,66 @@ use Exception;
  * @package App\Console\Commands
  */
 final class SummitRoomReservationRevocationCommand extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:room-reservation-revocation";
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:room-reservation-revocation';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:room-reservation-revocation";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:room-reservation-revocation';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Revokes all reserved bookable room reservations after N minutes";
 
+  /**
+   * @var ILocationService
+   */
+  private $location_service;
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Revokes all reserved bookable room reservations after N minutes';
+  /**
+   * SummitRoomReservationRevocationCommand constructor.
+   * @param ILocationService $location_service
+   */
+  public function __construct(ILocationService $location_service) {
+    parent::__construct();
+    $this->location_service = $location_service;
+  }
 
-
-    /**
-     * @var ILocationService
-     */
-    private $location_service;
-
-
-    /**
-     * SummitRoomReservationRevocationCommand constructor.
-     * @param ILocationService $location_service
-     */
-    public function __construct
-    (
-        ILocationService $location_service
-    )
-    {
-        parent::__construct();
-        $this->location_service = $location_service;
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    $enabled = Config::get("bookable_rooms.enable_bookable_rooms_reservation_revocation", false);
+    if (!$enabled) {
+      $this->info("task is not enabled!");
+      return false;
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        $enabled = Config::get("bookable_rooms.enable_bookable_rooms_reservation_revocation", false);
-        if(!$enabled){
-            $this->info("task is not enabled!");
-            return false;
-        }
-
-        try {
-
-            $this->info("processing summit room reservations");
-            $start   = time();
-            $lifetime = intval(Config::get("bookable_rooms.reservation_lifetime", 30));
-            Log::info(sprintf("SummitRoomReservationRevocationCommand: using lifetime of %s ", $lifetime));
-            $this->location_service->revokeBookableRoomsReservedOlderThanNMinutes($lifetime);
-            $end   = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-        }
+    try {
+      $this->info("processing summit room reservations");
+      $start = time();
+      $lifetime = intval(Config::get("bookable_rooms.reservation_lifetime", 30));
+      Log::info(
+        sprintf("SummitRoomReservationRevocationCommand: using lifetime of %s ", $lifetime),
+      );
+      $this->location_service->revokeBookableRoomsReservedOlderThanNMinutes($lifetime);
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
+  }
 }

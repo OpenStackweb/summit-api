@@ -21,38 +21,47 @@ use utils\PagingResponse;
  * Interface IElectionsRepository
  * @package App\Models\Foundation\Elections
  */
-interface IElectionsRepository extends IBaseRepository
-{
-    /**
-     * @return Election|null
-     */
-    public function getCurrent():?Election;
+interface IElectionsRepository extends IBaseRepository {
+  /**
+   * @return Election|null
+   */
+  public function getCurrent(): ?Election;
 
-    /**
-     * @return Election|null
-     */
-    public function getActive():?Election;
+  /**
+   * @return Election|null
+   */
+  public function getActive(): ?Election;
 
-    /**
-     * @return Election|null
-     */
-    public function getLatest():?Election;
+  /**
+   * @return Election|null
+   */
+  public function getLatest(): ?Election;
 
-    /**
-     * @param Election $election
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAcceptedCandidates(Election  $election, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+  /**
+   * @param Election $election
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAcceptedCandidates(
+    Election $election,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 
-    /**
-     * @param Election $election
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getGoldCandidates(Election  $election, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+  /**
+   * @param Election $election
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getGoldCandidates(
+    Election $election,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 }

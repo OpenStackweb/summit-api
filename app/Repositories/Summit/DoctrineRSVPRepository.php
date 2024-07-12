@@ -20,16 +20,12 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * Class DoctrineRSVPRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineRSVPRepository
-    extends SilverStripeDoctrineRepository
-    implements IRSVPRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return RSVP::class;
-    }
+final class DoctrineRSVPRepository extends SilverStripeDoctrineRepository implements
+  IRSVPRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return RSVP::class;
+  }
 }

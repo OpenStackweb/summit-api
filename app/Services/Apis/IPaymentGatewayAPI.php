@@ -21,104 +21,106 @@ use models\summit\SummitOrder;
  * @package App\Services\Apis
  */
 class CartAlreadyPaidException extends Exception {
-
 }
 /**
  * Interface IPaymentGatewayAPI
  * @package App\Services\Apis
  */
-interface IPaymentGatewayAPI
-{
-    /**
-     * @param SummitOrder $order
-     * @throws ValidationException
-     * @return SummitOrder
-     */
-    public function preProcessOrder(SummitOrder $order):SummitOrder;
+interface IPaymentGatewayAPI {
+  /**
+   * @param SummitOrder $order
+   * @throws ValidationException
+   * @return SummitOrder
+   */
+  public function preProcessOrder(SummitOrder $order): SummitOrder;
 
-    /**
-     * @param SummitOrder $order
-     * @param array $payload
-     * @throws ValidationException
-     * @return SummitOrder
-     */
-    public function postProcessOrder(SummitOrder $order, array $payload = []):SummitOrder;
+  /**
+   * @param SummitOrder $order
+   * @param array $payload
+   * @throws ValidationException
+   * @return SummitOrder
+   */
+  public function postProcessOrder(SummitOrder $order, array $payload = []): SummitOrder;
 
-    /**
-     * @param array $info
-     * @return array
-     */
-    public function generatePayment(array $payload):array;
+  /**
+   * @param array $info
+   * @return array
+   */
+  public function generatePayment(array $payload): array;
 
-    /**
-     * @param LaravelRequest $request
-     * @return array
-     */
-    public function processCallback(LaravelRequest $request):array;
+  /**
+   * @param LaravelRequest $request
+   * @return array
+   */
+  public function processCallback(LaravelRequest $request): array;
 
-    /**
-     * @param array $payload
-     * @return bool
-     */
-    public function isSuccessFullPayment(array $payload):bool;
+  /**
+   * @param array $payload
+   * @return bool
+   */
+  public function isSuccessFullPayment(array $payload): bool;
 
-    /**
-     * @param array $payload
-     * @return string
-     */
-    public function getPaymentError(array $payload):?string;
+  /**
+   * @param array $payload
+   * @return string
+   */
+  public function getPaymentError(array $payload): ?string;
 
-    /**
-     * @param string $cart_id
-     * @param float $amount
-     * @param string $currency
-     * @param string $reason
-     * @return string|null
-     */
-    public function refundPayment(string $cart_id, float $amount, string $currency, string $reason = 'requested_by_customer'): ?string;
+  /**
+   * @param string $cart_id
+   * @param float $amount
+   * @param string $currency
+   * @param string $reason
+   * @return string|null
+   */
+  public function refundPayment(
+    string $cart_id,
+    float $amount,
+    string $currency,
+    string $reason = "requested_by_customer",
+  ): ?string;
 
-    /**
-     * @param string $cart_id
-     * @return mixed|void
-     * @throws CartAlreadyPaidException
-     */
-    public function abandonCart(string $cart_id);
+  /**
+   * @param string $cart_id
+   * @return mixed|void
+   * @throws CartAlreadyPaidException
+   */
+  public function abandonCart(string $cart_id);
 
-    /**
-     * @param string $status
-     * @return bool
-     */
-    public function canAbandon(string $status):bool;
+  /**
+   * @param string $status
+   * @return bool
+   */
+  public function canAbandon(string $status): bool;
 
-    /**
-     * @param string $cart_id
-     * @return string|null
-     */
-    public function getCartStatus(string $cart_id):?string;
+  /**
+   * @param string $cart_id
+   * @return string|null
+   */
+  public function getCartStatus(string $cart_id): ?string;
 
-    /**
-     * @param string $cart_id
-     * @return array|null
-     */
-    public function getCartCreditCardInfo(string $cart_id):?array;
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public function getCreditCardInfo(array $payload): array;
+  /**
+   * @param string $cart_id
+   * @return array|null
+   */
+  public function getCartCreditCardInfo(string $cart_id): ?array;
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public function getCreditCardInfo(array $payload): array;
 
-    /**
-     * @param string $status
-     * @return bool
-     */
-    public function isSucceeded(string $status):bool;
+  /**
+   * @param string $status
+   * @return bool
+   */
+  public function isSucceeded(string $status): bool;
 
-    /**
-     * @param string $webhook_endpoint_url
-     * @return array
-     */
-    public function createWebHook(string $webhook_endpoint_url): array;
+  /**
+   * @param string $webhook_endpoint_url
+   * @return array
+   */
+  public function createWebHook(string $webhook_endpoint_url): array;
 
-
-    public function clearWebHooks():void;
+  public function clearWebHooks(): void;
 }

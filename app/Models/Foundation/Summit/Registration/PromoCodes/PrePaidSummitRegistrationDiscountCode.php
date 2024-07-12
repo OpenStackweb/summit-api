@@ -11,34 +11,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PrePaidSummitRegistrationDiscountCode")
  * Class PrePaidSummitRegistrationDiscountCode
  * @package models\summit
  */
-class PrePaidSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode
-{
-    use PrePaidPromoCodeTrait;
+class PrePaidSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode {
+  use PrePaidPromoCodeTrait;
 
-    const ClassName = 'PRE_PAID_DISCOUNT_CODE';
+  const ClassName = "PRE_PAID_DISCOUNT_CODE";
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationPromoCode::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 }

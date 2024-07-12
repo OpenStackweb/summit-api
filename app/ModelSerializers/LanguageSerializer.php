@@ -17,10 +17,9 @@ use ModelSerializers\SilverStripeSerializer;
  * Class LanguageSerializer
  * @package App\ModelSerializers
  */
-final class LanguageSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'IsoCode' => 'iso_code:json_string',
-    ];
+final class LanguageSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "IsoCode" => "iso_code:json_string",
+  ];
 }

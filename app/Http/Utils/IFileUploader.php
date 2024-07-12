@@ -17,14 +17,13 @@ use models\main\File;
  * Interface IFileUploader
  * @package App\Http\Utils
  */
-interface IFileUploader
-{
-    /**
-     * @param UploadedFile $file
-     * @param string $path
-     * @param bool $is_image
-     * @return File
-     * @throws \Exception
-     */
-    public function build(UploadedFile $file, string $path, bool $is_image = false);
+interface IFileUploader {
+  /**
+   * @param UploadedFile $file
+   * @param string $path
+   * @param bool $is_image
+   * @return File
+   * @throws \Exception
+   */
+  public function build(UploadedFile $file, string $path, bool $is_image = false);
 }

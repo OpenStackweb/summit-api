@@ -12,51 +12,50 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class AbstractPayloadRequest
  * @package App\Services\Apis\Samsung
  */
-abstract class AbstractPayload
-{
-    protected $payload = [];
+abstract class AbstractPayload {
+  protected $payload = [];
 
-    protected $params = [];
+  protected $params = [];
 
-    /**
-     * @param array $params
-     */
-    function __construct(array $params)
-    {
-        if(!isset($params[PayloadParamNames::Forum]))
-            throw new \InvalidArgumentException("Missing forum param.");
-
-        if(!isset($params[PayloadParamNames::Region]))
-            throw new \InvalidArgumentException("Missing region param.");
-
-        if(!isset($params[PayloadParamNames::GBM]))
-            throw new \InvalidArgumentException("Missing gbm param.");
-
-        if(!isset($params[PayloadParamNames::Year]))
-            throw new \InvalidArgumentException("Missing year param.");
-
-        $this->params = $params;
-
-        $this->payload = [
-            PayloadParamNames::Forum => $params[PayloadParamNames::Forum],
-            PayloadParamNames::Region => $params[PayloadParamNames::Region],
-            PayloadParamNames::GBM => $params[PayloadParamNames::GBM],
-            PayloadParamNames::Year => $params[PayloadParamNames::Year],
-        ];
+  /**
+   * @param array $params
+   */
+  function __construct(array $params) {
+    if (!isset($params[PayloadParamNames::Forum])) {
+      throw new \InvalidArgumentException("Missing forum param.");
     }
 
-    public function __toString()
-    {
-        return json_encode($this->payload, JSON_UNESCAPED_UNICODE);
+    if (!isset($params[PayloadParamNames::Region])) {
+      throw new \InvalidArgumentException("Missing region param.");
     }
 
-    public function getPayload(): array
-    {
-        return $this->payload;
+    if (!isset($params[PayloadParamNames::GBM])) {
+      throw new \InvalidArgumentException("Missing gbm param.");
     }
+
+    if (!isset($params[PayloadParamNames::Year])) {
+      throw new \InvalidArgumentException("Missing year param.");
+    }
+
+    $this->params = $params;
+
+    $this->payload = [
+      PayloadParamNames::Forum => $params[PayloadParamNames::Forum],
+      PayloadParamNames::Region => $params[PayloadParamNames::Region],
+      PayloadParamNames::GBM => $params[PayloadParamNames::GBM],
+      PayloadParamNames::Year => $params[PayloadParamNames::Year],
+    ];
+  }
+
+  public function __toString() {
+    return json_encode($this->payload, JSON_UNESCAPED_UNICODE);
+  }
+
+  public function getPayload(): array {
+    return $this->payload;
+  }
 }

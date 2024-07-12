@@ -20,50 +20,51 @@ use ReflectionException;
  * limitations under the License.
  **/
 
-
 /**
  * Class EntityCollectionUpdateAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class EntityCollectionUpdateAuditLogFormatter implements IAuditLogFormatter
-{
-    /**
-     * @var IChildEntityAuditLogFormatter
-     */
-    private $child_entity_formatter;
+class EntityCollectionUpdateAuditLogFormatter implements IAuditLogFormatter {
+  /**
+   * @var IChildEntityAuditLogFormatter
+   */
+  private $child_entity_formatter;
 
-    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
-    {
-        $this->child_entity_formatter = $child_entity_formatter;
-    }
+  public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter) {
+    $this->child_entity_formatter = $child_entity_formatter;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function format($subject, $change_set): ?string {
-        try {
-            if ($this->child_entity_formatter != null) {
-                $changes = [];
+  /**
+   * @inheritDoc
+   */
+  public function format($subject, $change_set): ?string {
+    try {
+      if ($this->child_entity_formatter != null) {
+        $changes = [];
 
-                $insertDiff = $subject->getInsertDiff();
+        $insertDiff = $subject->getInsertDiff();
 
-                foreach ($insertDiff as $child_changed_entity) {
-                    $changes[] = $this->child_entity_formatter
-                        ->format($child_changed_entity, IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION);
-                }
-
-                $deleteDiff = $subject->getDeleteDiff();
-
-                foreach ($deleteDiff as $child_changed_entity) {
-                    $changes[] = $this->child_entity_formatter
-                        ->format($child_changed_entity, IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION);
-                }
-                return implode("|", $changes);
-            }
-            return null;
-        } catch (ReflectionException $e) {
-            Log::error($e);
-            return null;
+        foreach ($insertDiff as $child_changed_entity) {
+          $changes[] = $this->child_entity_formatter->format(
+            $child_changed_entity,
+            IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION,
+          );
         }
+
+        $deleteDiff = $subject->getDeleteDiff();
+
+        foreach ($deleteDiff as $child_changed_entity) {
+          $changes[] = $this->child_entity_formatter->format(
+            $child_changed_entity,
+            IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION,
+          );
+        }
+        return implode("|", $changes);
+      }
+      return null;
+    } catch (ReflectionException $e) {
+      Log::error($e);
+      return null;
     }
+  }
 }

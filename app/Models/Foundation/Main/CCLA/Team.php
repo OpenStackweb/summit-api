@@ -15,7 +15,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\main\Company;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class Team
@@ -23,55 +23,54 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\Table(name="Team")
  * @package Models\Foundation\Main\CCLA
  */
-class Team extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     */
-    private $name;
+class Team extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   */
+  private $name;
 
-    public function __construct(){
-        parent::__construct();
-        $this->members  = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->members = new ArrayCollection();
+  }
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="ccla_teams")
-     */
-    private $members;
+  /**
+   * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="ccla_teams")
+   */
+  private $members;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")
-     * @var Company
-     */
-    private $company;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Company")
+   * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")
+   * @var Company
+   */
+  private $company;
 
-    /**
-     * @return Company
-     */
-    public function getCompany(){
-        return $this->company;
-    }
+  /**
+   * @return Company
+   */
+  public function getCompany() {
+    return $this->company;
+  }
 
-    /**
-     * @return Member[]
-     */
-    public function getMembers(){
-        return $this->members->toArray();
-    }
+  /**
+   * @return Member[]
+   */
+  public function getMembers() {
+    return $this->members->toArray();
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(){
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return int
-     */
-    public function getCompanyId(){
-        return $this->company->getId();
-    }
+  /**
+   * @return int
+   */
+  public function getCompanyId() {
+    return $this->company->getId();
+  }
 }

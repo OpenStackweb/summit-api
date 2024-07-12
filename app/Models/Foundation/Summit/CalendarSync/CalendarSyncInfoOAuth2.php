@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use services\utils\Facades\Encryption;
 /**
  * Class CalendarSyncInfoOAuth2
@@ -19,54 +19,45 @@ use services\utils\Facades\Encryption;
  * @ORM\Table(name="CalendarSyncInfoOAuth2")
  * @package models\summit\CalendarSync
  */
-class CalendarSyncInfoOAuth2 extends CalendarSyncInfo
-{
-    /**
-     * @ORM\Column(name="AccessToken", type="string")
-     * @var string
-     */
-    protected $access_token;
+class CalendarSyncInfoOAuth2 extends CalendarSyncInfo {
+  /**
+   * @ORM\Column(name="AccessToken", type="string")
+   * @var string
+   */
+  protected $access_token;
 
-    /**
-     * @ORM\Column(name="RefreshToken", type="string")
-     * @var string
-     */
-    protected $refresh_token;
+  /**
+   * @ORM\Column(name="RefreshToken", type="string")
+   * @var string
+   */
+  protected $refresh_token;
 
-    /**
-     * @return string
-     */
-    public function getAccessToken()
-    {
-        $access_token = Encryption::decrypt($this->access_token);
-        return json_decode($access_token, true);
-    }
+  /**
+   * @return string
+   */
+  public function getAccessToken() {
+    $access_token = Encryption::decrypt($this->access_token);
+    return json_decode($access_token, true);
+  }
 
-    /**
-     * @param string $access_token
-     */
-    public function setAccessToken($access_token)
-    {
-        $this->access_token = Encryption::encrypt
-        (
-            json_encode($access_token)
-        );
-    }
+  /**
+   * @param string $access_token
+   */
+  public function setAccessToken($access_token) {
+    $this->access_token = Encryption::encrypt(json_encode($access_token));
+  }
 
-    /**
-     * @return string
-     */
-    public function getRefreshToken()
-    {
-        return Encryption::decrypt($this->refresh_token);
-    }
+  /**
+   * @return string
+   */
+  public function getRefreshToken() {
+    return Encryption::decrypt($this->refresh_token);
+  }
 
-    /**
-     * @param string $refresh_token
-     */
-    public function setRefreshToken($refresh_token)
-    {
-        $this->refresh_token = Encryption::encrypt($refresh_token);
-    }
-
+  /**
+   * @param string $refresh_token
+   */
+  public function setRefreshToken($refresh_token) {
+    $this->refresh_token = Encryption::encrypt($refresh_token);
+  }
 }

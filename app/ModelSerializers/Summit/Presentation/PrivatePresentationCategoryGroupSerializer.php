@@ -19,46 +19,51 @@ use models\summit\PrivatePresentationCategoryGroup;
  * Class PrivatePresentationCategoryGroupSerializer
  * @package ModelSerializers
  */
-final class PrivatePresentationCategoryGroupSerializer
-    extends PresentationCategoryGroupSerializer
-{
-    protected static $array_mappings = [
-        'SubmissionBeginDate'         => 'submission_begin_date:datetime_epoch',
-        'SubmissionEndDate'           => 'submission_end_date:datetime_epoch',
-        'MaxSubmissionAllowedPerUser' => 'max_submission_allowed_per_user:json_int',
-    ];
+final class PrivatePresentationCategoryGroupSerializer extends PresentationCategoryGroupSerializer {
+  protected static $array_mappings = [
+    "SubmissionBeginDate" => "submission_begin_date:datetime_epoch",
+    "SubmissionEndDate" => "submission_end_date:datetime_epoch",
+    "MaxSubmissionAllowedPerUser" => "max_submission_allowed_per_user:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $track_group  = $this->object;
-        if(!$track_group instanceof PrivatePresentationCategoryGroup) return $values;
-
-        $allowed_groups= [];
-
-        foreach($track_group->getAllowedGroups() as $g)
-        {
-            if(!is_null($expand) &&  in_array('allowed_groups', explode(',',$expand))){
-                $allowed_groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(
-                    AbstractSerializer::filterExpandByPrefix($expand, 'allowed_groups'),
-                    AbstractSerializer::filterFieldsByPrefix($fields, 'allowed_groups'),
-                    AbstractSerializer::filterFieldsByPrefix($relations, 'allowed_groups'),
-                    $params
-                );
-            }
-            else
-                $allowed_groups[] = intval($g->getId());
-        }
-
-        $values['allowed_groups'] = $allowed_groups;
-        return $values;
+    $track_group = $this->object;
+    if (!$track_group instanceof PrivatePresentationCategoryGroup) {
+      return $values;
     }
+
+    $allowed_groups = [];
+
+    foreach ($track_group->getAllowedGroups() as $g) {
+      if (!is_null($expand) && in_array("allowed_groups", explode(",", $expand))) {
+        $allowed_groups[] = SerializerRegistry::getInstance()
+          ->getSerializer($g)
+          ->serialize(
+            AbstractSerializer::filterExpandByPrefix($expand, "allowed_groups"),
+            AbstractSerializer::filterFieldsByPrefix($fields, "allowed_groups"),
+            AbstractSerializer::filterFieldsByPrefix($relations, "allowed_groups"),
+            $params,
+          );
+      } else {
+        $allowed_groups[] = intval($g->getId());
+      }
+    }
+
+    $values["allowed_groups"] = $allowed_groups;
+    return $values;
+  }
 }

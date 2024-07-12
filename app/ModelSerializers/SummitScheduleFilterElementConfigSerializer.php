@@ -18,27 +18,32 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitScheduleFilterElementConfigSerializer
  * @package App\ModelSerializers
  */
-final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Label' => 'label:json_string',
-        'Enabled' => 'is_enabled:json_boolean',
-        "Order" => 'order:json_int'
-    ];
+final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Label" => "label:json_string",
+    "Enabled" => "is_enabled:json_boolean",
+    "Order" => "order:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relation
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $filter = $this->object;
-        if (!$filter instanceof SummitScheduleFilterElementConfig) return [];
-        
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-        return [ $filter->getType() => $values];
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relation
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $filter = $this->object;
+    if (!$filter instanceof SummitScheduleFilterElementConfig) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    return [$filter->getType() => $values];
+  }
 }

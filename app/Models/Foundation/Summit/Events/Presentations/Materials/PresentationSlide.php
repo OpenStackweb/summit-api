@@ -12,109 +12,101 @@
  * limitations under the License.
  **/
 use models\main\File;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PresentationSlide")
  * Class PresentationSlide
  * @package models\summit
  */
-class PresentationSlide extends PresentationMaterial
-{
-    const ClassName = 'PresentationSlide';
+class PresentationSlide extends PresentationMaterial {
+  const ClassName = "PresentationSlide";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
+
+  /**
+   * @ORM\Column(name="Link", type="string")
+   * @var string
+   */
+  private $link;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+   * @ORM\JoinColumn(name="SlideID", referencedColumnName="ID")
+   * @var File
+   */
+  private $slide;
+
+  /**
+   * @return File
+   */
+  public function getSlide() {
+    return $this->slide;
+  }
+
+  public function clearSlide() {
+    $this->slide = null;
+  }
+
+  /**
+   * @param File $slide
+   */
+  public function setSlide($slide) {
+    $this->slide = $slide;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLink() {
+    return $this->link;
+  }
+
+  /**
+   * @param string $link
+   */
+  public function setLink($link) {
+    $this->link = $link;
+  }
+
+  public function clearLink(): void {
+    $this->link = "";
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasSlide() {
+    return $this->getSlideId() > 0;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSlideId() {
+    try {
+      return !is_null($this->slide) ? $this->slide->getId() : 0;
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @ORM\Column(name="Link", type="string")
-     * @var string
-     */
-    private $link;
+  /**
+   * @return PresentationMaterial
+   */
+  public function clone(): PresentationMaterial {
+    $clone = parent::clone();
+    $clone->setLink($this->getLink());
+    $clone->setSlide($this->getSlide());
+    return $clone;
+  }
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="SlideID", referencedColumnName="ID")
-     * @var File
-     */
-    private $slide;
-
-    /**
-     * @return File
-     */
-    public function getSlide()
-    {
-        return $this->slide;
-    }
-
-    public function clearSlide(){
-        $this->slide = null;
-    }
-
-    /**
-     * @param File $slide
-     */
-    public function setSlide($slide)
-    {
-        $this->slide = $slide;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLink()
-    {
-        return $this->link;
-    }
-
-    /**
-     * @param string $link
-     */
-    public function setLink($link)
-    {
-        $this->link = $link;
-    }
-
-    public function clearLink():void
-    {
-        $this->link = "";
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasSlide(){
-        return $this->getSlideId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSlideId(){
-        try{
-            return !is_null($this->slide) ? $this->slide->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return PresentationMaterial
-     */
-    public function clone(): PresentationMaterial {
-        $clone = parent::clone();
-        $clone->setLink($this->getLink());
-        $clone->setSlide($this->getSlide());
-        return $clone;
-    }
-
-    protected function createInstance(): PresentationMaterial
-    {
-        return new PresentationSlide();
-    }
+  protected function createInstance(): PresentationMaterial {
+    return new PresentationSlide();
+  }
 }

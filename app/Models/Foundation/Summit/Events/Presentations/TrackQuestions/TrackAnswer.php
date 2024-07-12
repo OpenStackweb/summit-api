@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\Presentation;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -20,93 +20,84 @@ use models\utils\SilverstripeBaseModel;
  * Class TrackAnswer
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackAnswer extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    private $value;
+class TrackAnswer extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Value", type="string")
+   * @var string
+   */
+  private $value;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="TrackQuestionTemplate", fetch="EXTRA_LAZY", inversedBy="answers")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var TrackQuestionTemplate
-     */
-    private $question;
+  /**
+   * @ORM\ManyToOne(targetEntity="TrackQuestionTemplate", fetch="EXTRA_LAZY", inversedBy="answers")
+   * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var TrackQuestionTemplate
+   */
+  private $question;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", fetch="EXTRA_LAZY", inversedBy="answers")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var Presentation
-     */
-    private $presentation;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", fetch="EXTRA_LAZY", inversedBy="answers")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var Presentation
+   */
+  private $presentation;
 
-    /**
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
+  /**
+   * @return string
+   */
+  public function getValue() {
+    return $this->value;
+  }
 
-    /**
-     * @param string $value
-     */
-    public function setValue($value)
-    {
-        $this->value = $value;
-    }
+  /**
+   * @param string $value
+   */
+  public function setValue($value) {
+    $this->value = $value;
+  }
 
-    /**
-     * @return TrackQuestionTemplate
-     */
-    public function getQuestion()
-    {
-        return $this->question;
-    }
+  /**
+   * @return TrackQuestionTemplate
+   */
+  public function getQuestion() {
+    return $this->question;
+  }
 
-    /**
-     * @param TrackQuestionTemplate $question
-     */
-    public function setQuestion($question)
-    {
-        $this->question = $question;
-    }
+  /**
+   * @param TrackQuestionTemplate $question
+   */
+  public function setQuestion($question) {
+    $this->question = $question;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation()
-    {
-        return $this->presentation;
-    }
+  /**
+   * @return Presentation
+   */
+  public function getPresentation() {
+    return $this->presentation;
+  }
 
-    /**
-     * @param Presentation $presentation
-     */
-    public function setPresentation($presentation)
-    {
-        $this->presentation = $presentation;
-    }
+  /**
+   * @param Presentation $presentation
+   */
+  public function setPresentation($presentation) {
+    $this->presentation = $presentation;
+  }
 
-    /**
-     * @return string
-     */
-    public function getQuestionName(){
-        return $this->question->getName();
-    }
+  /**
+   * @return string
+   */
+  public function getQuestionName() {
+    return $this->question->getName();
+  }
 
-    /**
-     * @return int
-     */
-    public function getQuestionId(){
-        return $this->question->getId();
-    }
+  /**
+   * @return int
+   */
+  public function getQuestionId() {
+    return $this->question->getId();
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
+  public function __construct() {
+    parent::__construct();
+  }
 }

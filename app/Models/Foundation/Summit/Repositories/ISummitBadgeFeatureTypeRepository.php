@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitBadgeFeatureTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitBadgeFeatureTypeRepository extends IBaseRepository
-{
-
+interface ISummitBadgeFeatureTypeRepository extends IBaseRepository {
 }

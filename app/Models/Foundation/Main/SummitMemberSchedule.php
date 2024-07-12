@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Utils\BaseEntity;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\SummitEvent;
 use models\utils\IEntity;
 /**
@@ -21,58 +21,51 @@ use models\utils\IEntity;
  * Class SummitMemberSchedule
  * @package models\main
  */
-class SummitMemberSchedule extends BaseEntity
-{
+class SummitMemberSchedule extends BaseEntity {
+  /**
+   * @ORM\ManyToOne(targetEntity="Member", inversedBy="schedule")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  private $member;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Member", inversedBy="schedule")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $member;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
+   * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var SummitEvent
+   */
+  private $event;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitEvent
-     */
-    private $event;
+  /**
+   * @return Member
+   */
+  public function getMember() {
+    return $this->member;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getMember()
-    {
-        return $this->member;
-    }
+  /**
+   * @param Member $member
+   */
+  public function setMember($member) {
+    $this->member = $member;
+  }
 
-    /**
-     * @param Member $member
-     */
-    public function setMember($member)
-    {
-        $this->member = $member;
-    }
+  public function clearOwner() {
+    $this->member = null;
+    $this->event = null;
+  }
 
+  /**
+   * @return SummitEvent
+   */
+  public function getEvent() {
+    return $this->event;
+  }
 
-    public function clearOwner(){
-        $this->member = null;
-        $this->event  = null;
-    }
-
-    /**
-     * @return SummitEvent
-     */
-    public function getEvent()
-    {
-        return $this->event;
-    }
-
-    /**
-     * @param SummitEvent $event
-     */
-    public function setEvent($event)
-    {
-        $this->event = $event;
-    }
+  /**
+   * @param SummitEvent $event
+   */
+  public function setEvent($event) {
+    $this->event = $event;
+  }
 }

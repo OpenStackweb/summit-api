@@ -20,27 +20,26 @@ use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
  * Class FileUploadStrategyFactory
  * @package App\Services\Filesystem
  */
-final class FileUploadStrategyFactory
-{
-    /**
-     * @param string $storageType
-     * @return IFileUploadStrategy|null
-     */
-    public static function build(string $storageType):? IFileUploadStrategy{
-        switch ($storageType){
-            case IStorageTypesConstants::Local;
-            return new LocalStorageFileUploadStrategy();
-                break;
-            case IStorageTypesConstants::DropBox;
-                return new DropboxStorageFileUploadStrategy();
-                break;
-            case IStorageTypesConstants::Swift;
-                return new SwiftStorageFileUploadStrategy();
-                break;
-            case IStorageTypesConstants::S3;
-                return new S3StorageFileUploadStrategy();
-                break;
-        }
-        return null;
+final class FileUploadStrategyFactory {
+  /**
+   * @param string $storageType
+   * @return IFileUploadStrategy|null
+   */
+  public static function build(string $storageType): ?IFileUploadStrategy {
+    switch ($storageType) {
+      case IStorageTypesConstants::Local:
+        return new LocalStorageFileUploadStrategy();
+        break;
+      case IStorageTypesConstants::DropBox:
+        return new DropboxStorageFileUploadStrategy();
+        break;
+      case IStorageTypesConstants::Swift:
+        return new SwiftStorageFileUploadStrategy();
+        break;
+      case IStorageTypesConstants::S3:
+        return new S3StorageFileUploadStrategy();
+        break;
     }
+    return null;
+  }
 }

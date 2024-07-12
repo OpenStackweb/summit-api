@@ -18,38 +18,41 @@ use models\summit\SpeakersSummitRegistrationPromoCode;
  * Class SpeakersSummitRegistrationPromoCodeCSVSerializer
  * @package ModelSerializers
  */
-class SpeakersSummitRegistrationPromoCodeCSVSerializer
-    extends SpeakersSummitRegistrationPromoCodeSerializer
-{
-    use SummitRegistrationPromoCodeCSVSerializerTrait;
+class SpeakersSummitRegistrationPromoCodeCSVSerializer extends
+  SpeakersSummitRegistrationPromoCodeSerializer {
+  use SummitRegistrationPromoCodeCSVSerializerTrait;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code            = $this->object;
-        if(!$code instanceof SpeakersSummitRegistrationPromoCode) return [];
-        $values = self::serializeFields2CSV
-        (
-            $code,
-            parent::serialize($expand, $fields, $relations, $params)
-        );
-
-        $owner_name = [];
-        $owner_email = [];
-        foreach($code->getOwners() as $owner){
-            $owner_name[] = $owner->getSpeaker()->getFullName();
-            $owner_email[] = $owner->getSpeaker()->getEmail();
-
-        }
-
-        $values['owner_name'] = implode('|', $owner_name);
-        $values['owner_email'] = implode('|', $owner_email);
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SpeakersSummitRegistrationPromoCode) {
+      return [];
     }
+    $values = self::serializeFields2CSV(
+      $code,
+      parent::serialize($expand, $fields, $relations, $params),
+    );
+
+    $owner_name = [];
+    $owner_email = [];
+    foreach ($code->getOwners() as $owner) {
+      $owner_name[] = $owner->getSpeaker()->getFullName();
+      $owner_email[] = $owner->getSpeaker()->getEmail();
+    }
+
+    $values["owner_name"] = implode("|", $owner_name);
+    $values["owner_email"] = implode("|", $owner_email);
+    return $values;
+  }
 }

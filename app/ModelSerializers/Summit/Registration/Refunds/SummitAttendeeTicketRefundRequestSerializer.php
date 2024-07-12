@@ -16,19 +16,17 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitAttendeeTicketRefundRequestSerializer
  * @package App\ModelSerializers\Summit\Registration\Refunds
  */
-final class SummitAttendeeTicketRefundRequestSerializer extends SummitRefundRequestSerializer
-{
-    protected static $array_mappings = [
-        'TicketId' => 'ticket_id:json_int',
-    ];
+final class SummitAttendeeTicketRefundRequestSerializer extends SummitRefundRequestSerializer {
+  protected static $array_mappings = [
+    "TicketId" => "ticket_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'ticket' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'ticket_id',
-            'getter' => 'getTicket',
-            'has' => 'hasTicket'
-        ],
-    ];
-
+  protected static $expand_mappings = [
+    "ticket" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "ticket_id",
+      "getter" => "getTicket",
+      "has" => "hasTicket",
+    ],
+  ];
 }

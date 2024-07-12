@@ -21,40 +21,34 @@ use utils\DoctrineLeftJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitRefundPolicyTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitRefundPolicyTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitRefundPolicyTypeRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "until_x_days_before_event_starts" => "e.until_x_days_before_event_starts:json_int",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+      "until_x_days_before_event_starts" => "e.until_x_days_before_event_starts",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'                              => 'e.name:json_string',
-            'until_x_days_before_event_starts'  => 'e.until_x_days_before_event_starts:json_int',
-            'summit_id'                         => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'                               => 'e.id',
-            'name'                             => 'e.name',
-            'until_x_days_before_event_starts' => 'e.until_x_days_before_event_starts'
-        ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitRefundPolicyType::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitRefundPolicyType::class;
+  }
 }

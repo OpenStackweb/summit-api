@@ -19,46 +19,41 @@ use models\main\Group;
  * Class BaseSerializerTypeSelector
  * @package ModelSerializers
  */
-final class BaseSerializerTypeSelector implements ISerializerTypeSelector
-{
+final class BaseSerializerTypeSelector implements ISerializerTypeSelector {
+  /**
+   * @var IResourceServerContext
+   */
+  private $resource_server_context;
 
-    /**
-     * @var IResourceServerContext
-     */
-    private $resource_server_context;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * BaseSerializerTypeSelector constructor.
+   * @param IMemberRepository $member_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IMemberRepository $member_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    $this->resource_server_context = $resource_server_context;
+    $this->member_repository = $member_repository;
+  }
 
-    /**
-     * BaseSerializerTypeSelector constructor.
-     * @param IMemberRepository $member_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IMemberRepository $member_repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        $this->resource_server_context = $resource_server_context;
-        $this->member_repository       = $member_repository;
+  /**
+   * @return string
+   */
+  public function getSerializerType(): string {
+    $serializer_type = SerializerRegistry::SerializerType_Public;
+    $current_member = $this->resource_server_context->getCurrentUser();
+    if (!is_null($current_member)) {
+      if ($current_member->isAdmin()) {
+        $serializer_type = SerializerRegistry::SerializerType_Private;
+      }
     }
-
-    /**
-     * @return string
-     */
-    public function getSerializerType():string
-    {
-        $serializer_type = SerializerRegistry::SerializerType_Public;
-        $current_member  = $this->resource_server_context->getCurrentUser();
-        if(!is_null($current_member)){
-            if($current_member->isAdmin()){
-                $serializer_type = SerializerRegistry::SerializerType_Private;
-            }
-        }
-        return $serializer_type;
-    }
+    return $serializer_type;
+  }
 }

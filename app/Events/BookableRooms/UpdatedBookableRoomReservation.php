@@ -18,7 +18,5 @@ use App\Events\BookableRoomReservationAction;
  * Class UpdatedBookableRoomReservation
  * @package App\Events\BookableRooms
  */
-final class UpdatedBookableRoomReservation extends BookableRoomReservationAction
-{
-
+final class UpdatedBookableRoomReservation extends BookableRoomReservationAction {
 }

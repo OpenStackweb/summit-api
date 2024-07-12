@@ -12,13 +12,11 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface IFIleConstants
  * @package App\Models\Foundation\Main
  */
-interface IFileConstants
-{
-    const ValidImageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'jfif'];
-    const MaxImageSizeInBytes = 10485760;
+interface IFileConstants {
+  const ValidImageExtensions = ["png", "jpg", "jpeg", "gif", "svg", "jfif"];
+  const MaxImageSizeInBytes = 10485760;
 }

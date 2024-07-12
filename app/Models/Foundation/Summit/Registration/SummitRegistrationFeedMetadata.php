@@ -28,63 +28,55 @@ use Doctrine\ORM\Mapping as ORM;
  * Class SummitRegistrationFeedMetadata
  * @package App\Models\Foundation\Summit\Registration
  */
-class SummitRegistrationFeedMetadata extends SilverstripeBaseModel
-{
-    /**
-     * @param string $key
-     */
-    public function setKey(string $key): void
-    {
-        $this->key = $key;
-    }
+class SummitRegistrationFeedMetadata extends SilverstripeBaseModel {
+  /**
+   * @param string $key
+   */
+  public function setKey(string $key): void {
+    $this->key = $key;
+  }
 
-    /**
-     * @param string $value
-     */
-    public function setValue(string $value): void
-    {
-        $this->value = $value;
-    }
-    use SummitOwned;
+  /**
+   * @param string $value
+   */
+  public function setValue(string $value): void {
+    $this->value = $value;
+  }
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="`Key`", type="string")
-     * @var string
-     */
-    private $key;
+  /**
+   * @ORM\Column(name="`Key`", type="string")
+   * @var string
+   */
+  private $key;
 
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    private $value;
+  /**
+   * @ORM\Column(name="Value", type="string")
+   * @var string
+   */
+  private $value;
 
-    /**
-     * @param string $key
-     * @param string $value
-     */
-    public function __construct(string $key, string $value)
-    {
-        parent::__construct();
-        $this->key = trim($key);
-        $this->value = trim($value);
-    }
+  /**
+   * @param string $key
+   * @param string $value
+   */
+  public function __construct(string $key, string $value) {
+    parent::__construct();
+    $this->key = trim($key);
+    $this->value = trim($value);
+  }
 
-    /**
-     * @return string
-     */
-    public function getKey(): string
-    {
-        return $this->key;
-    }
+  /**
+   * @return string
+   */
+  public function getKey(): string {
+    return $this->key;
+  }
 
-    /**
-     * @return string
-     */
-    public function getValue(): string
-    {
-        return $this->value;
-    }
-
-
+  /**
+   * @return string
+   */
+  public function getValue(): string {
+    return $this->value;
+  }
 }

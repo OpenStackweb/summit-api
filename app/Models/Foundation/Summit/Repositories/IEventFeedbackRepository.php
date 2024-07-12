@@ -22,14 +22,18 @@ use utils\PagingResponse;
  * Interface IEventFeedbackRepository
  * @package models\summit
  */
-interface IEventFeedbackRepository extends IBaseRepository
-{
-    /**
-     * @param SummitEvent $event
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getByEvent(SummitEvent $event, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+interface IEventFeedbackRepository extends IBaseRepository {
+  /**
+   * @param SummitEvent $event
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getByEvent(
+    SummitEvent $event,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

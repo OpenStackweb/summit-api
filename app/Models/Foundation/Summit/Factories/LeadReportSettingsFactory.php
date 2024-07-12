@@ -18,30 +18,29 @@ use models\summit\SummitLeadReportSetting;
  * Class LeadReportSettingsFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class LeadReportSettingsFactory
-{
-    /**
-     * @param array $data
-     * @return SummitLeadReportSetting
-     */
-    public static function build(array $data): SummitLeadReportSetting
-    {
-        return self::populate(self::getNewEntity(), $data);
-    }
+final class LeadReportSettingsFactory {
+  /**
+   * @param array $data
+   * @return SummitLeadReportSetting
+   */
+  public static function build(array $data): SummitLeadReportSetting {
+    return self::populate(self::getNewEntity(), $data);
+  }
 
-    /**
-     * @param SummitLeadReportSetting $settings
-     * @param array $data
-     * @return SummitLeadReportSetting
-     */
-    public static function populate(SummitLeadReportSetting $settings, array $data): SummitLeadReportSetting
-    {
-        $settings->setColumns($data['allowed_columns']);
-        return $settings;
-    }
+  /**
+   * @param SummitLeadReportSetting $settings
+   * @param array $data
+   * @return SummitLeadReportSetting
+   */
+  public static function populate(
+    SummitLeadReportSetting $settings,
+    array $data,
+  ): SummitLeadReportSetting {
+    $settings->setColumns($data["allowed_columns"]);
+    return $settings;
+  }
 
-    protected static function getNewEntity(): SummitLeadReportSetting
-    {
-        return new SummitLeadReportSetting;
-    }
+  protected static function getNewEntity(): SummitLeadReportSetting {
+    return new SummitLeadReportSetting();
+  }
 }

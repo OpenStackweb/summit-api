@@ -20,79 +20,72 @@ use ModelSerializers\SerializerRegistry;
  * Class OpenStackImplementationSerializer
  * @package App\ModelSerializers\Marketplace
  */
-class OpenStackImplementationSerializer extends RegionalSupportedCompanyServiceSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'CompatibleWithStorage'           => 'is_compatible_with_storage:json_boolean',
-        'CompatibleWithCompute'           => 'is_compatible_with_compute:json_boolean',
-        'CompatibleWithFederatedIdentity' => 'is_compatible_with_federated_identity:json_boolean',
-        'CompatibleWithPlatform'          => 'is_compatible_with_platform:json_boolean',
-        'OpenStackPowered'                => 'is_openstack_powered:json_boolean',
-        'OpenStackTested'                 => 'is_openstack_tested:json_boolean',
-        'OpenStackTestedLabel'            => 'openstack_tested_info:json_string',
-    ];
+class OpenStackImplementationSerializer extends RegionalSupportedCompanyServiceSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "CompatibleWithStorage" => "is_compatible_with_storage:json_boolean",
+    "CompatibleWithCompute" => "is_compatible_with_compute:json_boolean",
+    "CompatibleWithFederatedIdentity" => "is_compatible_with_federated_identity:json_boolean",
+    "CompatibleWithPlatform" => "is_compatible_with_platform:json_boolean",
+    "OpenStackPowered" => "is_openstack_powered:json_boolean",
+    "OpenStackTested" => "is_openstack_tested:json_boolean",
+    "OpenStackTestedLabel" => "openstack_tested_info:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'capabilities',
-        'guests',
-        'hypervisors',
-    ];
+  protected static $allowed_relations = ["capabilities", "guests", "hypervisors"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $implementation  = $this->object;
-        if(!$implementation instanceof OpenStackImplementation) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('capabilities', $relations)){
-            $res = [];
-            foreach ($implementation->getCapabilities() as $capability){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($capability)
-                    ->serialize($expand);
-            }
-            $values['capabilities'] = $res;
-        }
-
-        if(in_array('hypervisors', $relations)){
-            $res = [];
-            foreach ($implementation->getHypervisors() as $hypervisor){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($hypervisor)
-                    ->serialize($expand);
-            }
-            $values['hypervisors'] = $res;
-        }
-
-        if(in_array('guests', $relations)){
-            $res = [];
-            foreach ($implementation->getGuests() as $guest){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($guest)
-                    ->serialize($expand);
-            }
-            $values['guests'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $implementation = $this->object;
+    if (!$implementation instanceof OpenStackImplementation) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("capabilities", $relations)) {
+      $res = [];
+      foreach ($implementation->getCapabilities() as $capability) {
+        $res[] = SerializerRegistry::getInstance()->getSerializer($capability)->serialize($expand);
+      }
+      $values["capabilities"] = $res;
+    }
+
+    if (in_array("hypervisors", $relations)) {
+      $res = [];
+      foreach ($implementation->getHypervisors() as $hypervisor) {
+        $res[] = SerializerRegistry::getInstance()->getSerializer($hypervisor)->serialize($expand);
+      }
+      $values["hypervisors"] = $res;
+    }
+
+    if (in_array("guests", $relations)) {
+      $res = [];
+      foreach ($implementation->getGuests() as $guest) {
+        $res[] = SerializerRegistry::getInstance()->getSerializer($guest)->serialize($expand);
+      }
+      $values["guests"] = $res;
+    }
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+        }
+      }
+    }
+    return $values;
+  }
 }

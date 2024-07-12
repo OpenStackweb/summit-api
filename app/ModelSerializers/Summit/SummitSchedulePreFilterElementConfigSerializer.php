@@ -17,26 +17,30 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitSchedulePreFilterElementConfigSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SummitSchedulePreFilterElementConfigSerializer extends SilverStripeSerializer
-{
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relation
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $filter = $this->object;
-        if (!$filter instanceof SummitSchedulePreFilterElementConfig) return [];
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('values', $relations) && !isset($values['values'])){
-            $values['values'] = $filter->getValues();
-        }
-
-        return [$filter->getType() => $values];
+final class SummitSchedulePreFilterElementConfigSerializer extends SilverStripeSerializer {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relation
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $filter = $this->object;
+    if (!$filter instanceof SummitSchedulePreFilterElementConfig) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("values", $relations) && !isset($values["values"])) {
+      $values["values"] = $filter->getValues();
+    }
+
+    return [$filter->getType() => $values];
+  }
 }

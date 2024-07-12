@@ -17,51 +17,54 @@ use DateTimeZone;
  * Class EpochCellFormatter
  * @package App\Http\Utils
  */
-final class EpochCellFormatter implements ICellFormatter
-{
-    const DefaultFormat = 'Y-m-d H:i:s';
-    /**
-     * @var string
-     */
-    private $format;
+final class EpochCellFormatter implements ICellFormatter {
+  const DefaultFormat = "Y-m-d H:i:s";
+  /**
+   * @var string
+   */
+  private $format;
 
-    /**
-     * @var DateTimeZone
-     */
-    private $dateTimeZone;
+  /**
+   * @var DateTimeZone
+   */
+  private $dateTimeZone;
 
-    /**
-     * @var bool
-     */
-    private $displayTimeZone;
+  /**
+   * @var bool
+   */
+  private $displayTimeZone;
 
-    /**
-     * @param string $format
-     * @param DateTimeZone|null $dateTimeZone
-     * @param bool $showTimeZone
-     */
-    public function __construct(string $format = EpochCellFormatter::DefaultFormat, DateTimeZone $dateTimeZone = null, bool $displayTimeZone = false)
-    {
-        $this->format = $format;
-        $this->dateTimeZone = $dateTimeZone;
-        $this->displayTimeZone = $displayTimeZone;
+  /**
+   * @param string $format
+   * @param DateTimeZone|null $dateTimeZone
+   * @param bool $showTimeZone
+   */
+  public function __construct(
+    string $format = EpochCellFormatter::DefaultFormat,
+    DateTimeZone $dateTimeZone = null,
+    bool $displayTimeZone = false,
+  ) {
+    $this->format = $format;
+    $this->dateTimeZone = $dateTimeZone;
+    $this->displayTimeZone = $displayTimeZone;
+  }
+
+  /**
+   * @param string $val
+   * @return string
+   */
+  public function format($val): string {
+    if (empty($val)) {
+      return "";
     }
-
-    /**
-     * @param string $val
-     * @return string
-     */
-    public function format($val): string
-    {
-        if(empty($val)) return '';
-        $date = new DateTime("@$val");
-        $tzName = 'UTC';
-        if(!is_null($this->dateTimeZone)) {
-            $date->setTimezone($this->dateTimeZone);
-            $tzName = $this->dateTimeZone->getName();
-        }
-        return $this->displayTimeZone ?
-            sprintf("%s (%s)", $date->format($this->format), $tzName) :
-            $date->format($this->format);
+    $date = new DateTime("@$val");
+    $tzName = "UTC";
+    if (!is_null($this->dateTimeZone)) {
+      $date->setTimezone($this->dateTimeZone);
+      $tzName = $this->dateTimeZone->getName();
     }
+    return $this->displayTimeZone
+      ? sprintf("%s (%s)", $date->format($this->format), $tzName)
+      : $date->format($this->format);
+  }
 }

@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IPaymentGatewayProfileRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IPaymentGatewayProfileRepository extends IBaseRepository
-{
-
+interface IPaymentGatewayProfileRepository extends IBaseRepository {
 }

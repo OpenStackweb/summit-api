@@ -15,189 +15,180 @@ use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use models\exceptions\ValidationException;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="TrackMultiValueQuestionTemplate")
  * Class TrackMultiValueQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackMultiValueQuestionTemplate extends TrackQuestionTemplate
-{
+class TrackMultiValueQuestionTemplate extends TrackQuestionTemplate {
+  /**
+   * @ORM\Column(name="EmptyString", type="string")
+   * @var string
+   */
+  protected $empty_string;
 
-    /**
-     * @ORM\Column(name="EmptyString", type="string")
-     * @var string
-     */
-    protected $empty_string;
+  /**
+   * @ORM\OneToMany(targetEntity="TrackQuestionValueTemplate", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+   * @var TrackQuestionValueTemplate[]
+   */
+  protected $values;
 
-    /**
-     * @ORM\OneToMany(targetEntity="TrackQuestionValueTemplate", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
-     * @var TrackQuestionValueTemplate[]
-     */
-    protected $values;
+  /**
+   * @ORM\ManyToOne(targetEntity="TrackQuestionValueTemplate", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="DefaultValueID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var TrackQuestionValueTemplate
+   */
+  protected $default_value;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="TrackQuestionValueTemplate", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="DefaultValueID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var TrackQuestionValueTemplate
-     */
-    protected $default_value;
+  public function __construct() {
+    parent::__construct();
+    $this->values = new ArrayCollection();
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->values = new ArrayCollection;
+  /**
+   * @return string
+   */
+  public function getEmptyString() {
+    return $this->empty_string;
+  }
+
+  /**
+   * @param string $empty_string
+   */
+  public function setEmptyString($empty_string) {
+    $this->empty_string = $empty_string;
+  }
+
+  /**
+   * @return TrackQuestionValueTemplate[]
+   */
+  public function getValues() {
+    return $this->values;
+  }
+
+  /**
+   * @param TrackQuestionValueTemplate[] $values
+   */
+  public function setValues($values) {
+    $this->values = $values;
+  }
+
+  /**
+   * @return TrackQuestionValueTemplate
+   */
+  public function getDefaultValue() {
+    return $this->default_value;
+  }
+
+  /**
+   * @param TrackQuestionValueTemplate $default_value
+   */
+  public function setDefaultValue($default_value) {
+    $this->default_value = $default_value;
+  }
+
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
+
+  const ClassName = "TrackMultiValueQuestionTemplate";
+
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "empty_string" => "string",
+    "default_value_id" => "int",
+    "values" => "array",
+  ];
+
+  /**
+   * @return int
+   */
+  public function getDefaultValueId() {
+    try {
+      if (is_null($this->default_value)) {
+        return 0;
+      }
+      return $this->default_value->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return string
-     */
-    public function getEmptyString()
-    {
-        return $this->empty_string;
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(TrackQuestionTemplate::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @param string $empty_string
-     */
-    public function setEmptyString($empty_string)
-    {
-        $this->empty_string = $empty_string;
-    }
+  /**
+   * @param int $id
+   * @return TrackQuestionValueTemplate|null
+   */
+  public function getValueById($id) {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("id", intval($id)));
+    $res = $this->values->matching($criteria)->first();
+    return $res ? $res : null;
+  }
 
-    /**
-     * @return TrackQuestionValueTemplate[]
-     */
-    public function getValues()
-    {
-        return $this->values;
-    }
+  /**
+   * @param string $value
+   * @return TrackQuestionValueTemplate|null
+   */
+  public function getValueByValue($value) {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("value", strtolower(trim($value))));
+    $res = $this->values->matching($criteria)->first();
+    return $res ? $res : null;
+  }
 
-    /**
-     * @param TrackQuestionValueTemplate[] $values
-     */
-    public function setValues($values)
-    {
-        $this->values = $values;
-    }
+  /**
+   * @param string $label
+   * @return TrackQuestionValueTemplate|null
+   */
+  public function getValueByLabel($label) {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("label", strtolower(trim($label))));
+    $res = $this->values->matching($criteria)->first();
+    return $res ? $res : null;
+  }
 
-    /**
-     * @return TrackQuestionValueTemplate
-     */
-    public function getDefaultValue()
-    {
-        return $this->default_value;
-    }
+  /**
+   * @param TrackQuestionValueTemplate $value
+   * @return $this
+   */
+  public function addValue(TrackQuestionValueTemplate $value) {
+    $values = $this->getValues();
+    $this->values->add($value);
+    $value->setOwner($this);
+    $value->setOrder(count($values));
+    return $this;
+  }
 
-    /**
-     * @param TrackQuestionValueTemplate $default_value
-     */
-    public function setDefaultValue($default_value)
-    {
-        $this->default_value = $default_value;
-    }
+  use OrderableChilds;
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  /**
+   * @param TrackQuestionValueTemplate $value
+   * @param int $new_order
+   * @throws ValidationException
+   */
+  public function recalculateValueOrder(TrackQuestionValueTemplate $value, $new_order) {
+    self::recalculateOrderForSelectable($this->values, $value, $new_order);
+  }
 
-    const ClassName = 'TrackMultiValueQuestionTemplate';
-
-    public static $metadata = [
-        'class_name'       => self::ClassName,
-        'empty_string'     => 'string',
-        'default_value_id' => 'int',
-        'values'           => 'array'
-    ];
-
-    /**
-     * @return int
-     */
-    public function getDefaultValueId(){
-        try{
-            if(is_null($this->default_value)) return 0;
-            return $this->default_value->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(TrackQuestionTemplate::getMetadata(), self::$metadata);
-    }
-
-    /**
-     * @param int $id
-     * @return TrackQuestionValueTemplate|null
-     */
-    public function getValueById($id){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($id)));
-        $res = $this->values->matching($criteria)->first();
-        return $res ? $res : null;
-    }
-
-    /**
-     * @param string $value
-     * @return TrackQuestionValueTemplate|null
-     */
-    public function getValueByValue($value){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('value', strtolower(trim($value))));
-        $res = $this->values->matching($criteria)->first();
-        return $res ? $res : null;
-    }
-
-    /**
-     * @param string $label
-     * @return TrackQuestionValueTemplate|null
-     */
-    public function getValueByLabel($label){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('label', strtolower(trim($label))));
-        $res = $this->values->matching($criteria)->first();
-        return $res ? $res : null;
-    }
-
-    /**
-     * @param TrackQuestionValueTemplate $value
-     * @return $this
-     */
-    public function addValue(TrackQuestionValueTemplate $value){
-        $values = $this->getValues();
-        $this->values->add($value);
-        $value->setOwner($this);
-        $value->setOrder(count($values));
-        return $this;
-    }
-
-    use OrderableChilds;
-
-    /**
-     * @param TrackQuestionValueTemplate $value
-     * @param int $new_order
-     * @throws ValidationException
-     */
-    public function recalculateValueOrder(TrackQuestionValueTemplate $value, $new_order){
-        self::recalculateOrderForSelectable($this->values, $value, $new_order);
-    }
-
-    /**
-     * @param TrackQuestionValueTemplate $value
-     * @return $this
-     */
-    public function removeValue(TrackQuestionValueTemplate $value){
-        $this->values->removeElement($value);
-        $value->clearOwner();
-        return $this;
-    }
-
+  /**
+   * @param TrackQuestionValueTemplate $value
+   * @return $this
+   */
+  public function removeValue(TrackQuestionValueTemplate $value) {
+    $this->values->removeElement($value);
+    $value->clearOwner();
+    return $this;
+  }
 }

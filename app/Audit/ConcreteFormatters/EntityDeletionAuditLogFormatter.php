@@ -24,38 +24,37 @@ use ReflectionClass;
  * Class EntityDeletionAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class EntityDeletionAuditLogFormatter implements IAuditLogFormatter
-{
-    /**
-     * @var IChildEntityAuditLogFormatter
-     */
-    private $child_entity_formatter;
+class EntityDeletionAuditLogFormatter implements IAuditLogFormatter {
+  /**
+   * @var IChildEntityAuditLogFormatter
+   */
+  private $child_entity_formatter;
 
-    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
-    {
-        $this->child_entity_formatter = $child_entity_formatter;
+  public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter) {
+    $this->child_entity_formatter = $child_entity_formatter;
+  }
+
+  protected function getCreationIgnoredEntities(): array {
+    return ["PresentationAction", "PresentationExtraQuestionAnswer"];
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function format($subject, $change_set): ?string {
+    $class_name = (new ReflectionClass($subject))->getShortName();
+    $ignored_entities = $this->getCreationIgnoredEntities();
+    if (in_array($class_name, $ignored_entities)) {
+      return null;
     }
 
-    protected function getCreationIgnoredEntities(): array {
-        return [
-            'PresentationAction',
-            'PresentationExtraQuestionAnswer'
-        ];
+    if ($this->child_entity_formatter != null) {
+      return $this->child_entity_formatter->format(
+        $subject,
+        IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION,
+      );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function format($subject, $change_set): ?string {
-        $class_name = (new ReflectionClass($subject))->getShortName();
-        $ignored_entities = $this->getCreationIgnoredEntities();
-        if (in_array($class_name, $ignored_entities)) return null;
-
-        if ($this->child_entity_formatter != null) {
-            return $this->child_entity_formatter
-                ->format($subject, IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION);
-        }
-
-        return "{$class_name} deleted";
-    }
+    return "{$class_name} deleted";
+  }
 }

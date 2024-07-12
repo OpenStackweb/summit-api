@@ -21,67 +21,86 @@ use models\utils\IBaseRepository;
  * Interface ISpeakerRepository
  * @package models\repositories
  */
-interface ISpeakerRepository extends IBaseRepository
-{
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getSpeakersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+interface ISpeakerRepository extends IBaseRepository {
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getSpeakersBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return mixed
-     */
-    public function getSpeakersBySummitAndOnSchedule(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return mixed
+   */
+  public function getSpeakersBySummitAndOnSchedule(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getFeaturedSpeakers(Summit $summit,  PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getFeaturedSpeakers(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 
-    /**
-     * @param Member $member
-     * @return PresentationSpeaker
-     */
-    public function getByMember(Member $member);
+  /**
+   * @param Member $member
+   * @return PresentationSpeaker
+   */
+  public function getByMember(Member $member);
 
-    /**
-     * @param string $fullname
-     * @return PresentationSpeaker|null
-     */
-    public function getByFullName(string $fullname):?PresentationSpeaker;
+  /**
+   * @param string $fullname
+   * @return PresentationSpeaker|null
+   */
+  public function getByFullName(string $fullname): ?PresentationSpeaker;
 
-    /**
-     * @param string $email
-     * @return PresentationSpeaker|null
-     */
-    public function getByEmail(string $email):?PresentationSpeaker;
+  /**
+   * @param string $email
+   * @return PresentationSpeaker|null
+   */
+  public function getByEmail(string $email): ?PresentationSpeaker;
 
-    /**
-     * @param int $speaker_id
-     * @param int $summit_id
-     * @return bool
-     */
-    public function speakerBelongsToSummitSchedule(int $speaker_id, int $summit_id):bool;
+  /**
+   * @param int $speaker_id
+   * @param int $summit_id
+   * @return bool
+   */
+  public function speakerBelongsToSummitSchedule(int $speaker_id, int $summit_id): bool;
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     * @throws \Doctrine\DBAL\Exception
-     */
-    public function getSpeakersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   * @throws \Doctrine\DBAL\Exception
+   */
+  public function getSpeakersIdsBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

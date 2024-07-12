@@ -21,51 +21,48 @@ use models\summit\Summit;
  * Class SuccessfulIIngestionEmail
  * @package App\Jobs\Emails\Registration\ExternalIngestion
  */
-class SuccessfulIIngestionEmail extends AbstractSummitEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class SuccessfulIIngestionEmail extends AbstractSummitEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_SUCCESSFUL_EXTERNAL_INGESTION';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_SUCCESSFUL_EXTERNAL_INGESTION';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_EXTERNAL_INGESTION_SUCCESSFUL';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_SUCCESSFUL_EXTERNAL_INGESTION";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_SUCCESSFUL_EXTERNAL_INGESTION";
+  const DEFAULT_TEMPLATE = "REGISTRATION_EXTERNAL_INGESTION_SUCCESSFUL";
 
-    /**
-     * SuccessfulIIngestionEmail constructor.
-     * @param string $email_to
-     * @param Summit $summit
-     */
-    public function __construct(string $email_to, Summit $summit)
-    {
-        $payload = [];
-        $payload[IMailTemplatesConstants::email_to]    = $email_to;
-        $payload[IMailTemplatesConstants::feed_type]   = $summit->getExternalRegistrationFeedType();
-        $payload[IMailTemplatesConstants::external_id] = $summit->getExternalSummitId();
+  /**
+   * SuccessfulIIngestionEmail constructor.
+   * @param string $email_to
+   * @param Summit $summit
+   */
+  public function __construct(string $email_to, Summit $summit) {
+    $payload = [];
+    $payload[IMailTemplatesConstants::email_to] = $email_to;
+    $payload[IMailTemplatesConstants::feed_type] = $summit->getExternalRegistrationFeedType();
+    $payload[IMailTemplatesConstants::external_id] = $summit->getExternalSummitId();
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-        Log::debug
-        (
-            sprintf
-            (
-                "SuccessfulIIngestionEmail::__construct template_identifier %s email_to %s payload %s"
-                , $template_identifier, $email_to, json_encode($payload)
-            )
-        );
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    Log::debug(
+      sprintf(
+        "SuccessfulIIngestionEmail::__construct template_identifier %s email_to %s payload %s",
+        $template_identifier,
+        $email_to,
+        json_encode($payload),
+      ),
+    );
 
-        parent::__construct($summit, $payload, $template_identifier, $email_to);
-    }
+    parent::__construct($summit, $payload, $template_identifier, $email_to);
+  }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = parent::getEmailTemplateSchema();
-        $payload[IMailTemplatesConstants::email_to]['type'] = 'string';
-        $payload[IMailTemplatesConstants::feed_type]['type'] = 'string';
-        $payload[IMailTemplatesConstants::external_id]['type'] = 'int';
-        return $payload;
-    }
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::email_to]["type"] = "string";
+    $payload[IMailTemplatesConstants::feed_type]["type"] = "string";
+    $payload[IMailTemplatesConstants::external_id]["type"] = "int";
+    return $payload;
+  }
 }

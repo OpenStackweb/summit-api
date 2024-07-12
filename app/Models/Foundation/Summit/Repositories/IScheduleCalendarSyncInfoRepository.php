@@ -18,20 +18,18 @@ use utils\PagingResponse;
  * Interface IScheduleCalendarSyncInfoRepository
  * @package models\summit
  */
-interface IScheduleCalendarSyncInfoRepository extends IBaseRepository
-{
-    /**
-     * @param int $summit_event_id
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getAllBySummitEvent($summit_event_id, PagingInfo $paging_info);
+interface IScheduleCalendarSyncInfoRepository extends IBaseRepository {
+  /**
+   * @param int $summit_event_id
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  public function getAllBySummitEvent($summit_event_id, PagingInfo $paging_info);
 
-    /**
-     * @param int $location_id
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getAllBySummitLocation($location_id, PagingInfo $paging_info);
-
+  /**
+   * @param int $location_id
+   * @param PagingInfo $paging_info
+   * @return PagingResponse
+   */
+  public function getAllBySummitLocation($location_id, PagingInfo $paging_info);
 }

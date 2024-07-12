@@ -16,25 +16,21 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class ExtraQuestionTypeValueValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class ExtraQuestionTypeValueValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class ExtraQuestionTypeValueValidationRulesFactory extends AbstractValidationRulesFactory {
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "label" => "sometimes|string",
+      "value" => "required|string|max:255",
+      "is_default" => "sometimes|boolean",
+    ];
+  }
 
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'label' => 'sometimes|string',
-            'value' => 'required|string|max:255',
-            'is_default' => 'sometimes|boolean',
-        ];
-    }
-
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'label' => 'sometimes|string',
-            'value' => 'sometimes|string|max:255',
-            'order' => 'sometimes|integer|min:1',
-            'is_default' => 'sometimes|boolean',
-        ];
-    }
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "label" => "sometimes|string",
+      "value" => "sometimes|string|max:255",
+      "order" => "sometimes|integer|min:1",
+      "is_default" => "sometimes|boolean",
+    ];
+  }
 }

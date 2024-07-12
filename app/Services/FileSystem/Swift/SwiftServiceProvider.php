@@ -21,78 +21,72 @@ use OpenStack\OpenStack;
  * Class SwiftServiceProvider
  * @package App\Services\FileSystem\Swift
  */
-final class SwiftServiceProvider extends ServiceProvider
-{
-    /**
-     * Register bindings in the container.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
-    }
+final class SwiftServiceProvider extends ServiceProvider {
+  /**
+   * Register bindings in the container.
+   *
+   * @return void
+   */
+  public function register() {
+    //
+  }
 
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot(): void
-    {
-        Storage::extend('swift', function ($app, $config) {
+  /**
+   * Bootstrap any application services.
+   *
+   * @return void
+   */
+  public function boot(): void {
+    Storage::extend("swift", function ($app, $config) {
+      try {
+        $configOptions = [
+          "authUrl" => $config["auth_url"],
+          "region" => $config["region"],
+        ];
 
-            try {
-                $configOptions = [
-                    'authUrl' => $config["auth_url"],
-                    'region' => $config["region"],
-                ];
+        $userName = $config["user_name"] ?? null;
+        $userPassword = $config["api_key"] ?? null;
 
-                $userName = $config["user_name"] ?? null;
-                $userPassword = $config["api_key"] ?? null;
+        if (!empty($userName) && !empty($userPassword)) {
+          $configOptions["user"] = [
+            "name" => $userName,
+            "password" => $userPassword,
+            "domain" => [
+              "id" => $config["user_domain"] ?? "default",
+            ],
+          ];
 
-                if (!empty($userName) && !empty($userPassword)) {
+          $configOptions["scope"] = [
+            "project" => [
+              "name" => $config["project_name"],
+              "domain" => [
+                "id" => $config["project_domain"] ?? "default",
+              ],
+            ],
+          ];
+        }
 
-                    $configOptions['user'] = [
-                        'name' => $userName,
-                        'password' => $userPassword,
-                        'domain' => ['id' => $config["user_domain"] ?? 'default']
-                    ];
+        $appCredentialId = $config["app_credential_id"] ?? null;
+        $appCredentialSecret = $config["app_credential_secret"] ?? null;
 
-                    $configOptions['scope'] = [
-                        'project' => [
-                            'name' => $config["project_name"],
-                            'domain' => ['id' => $config["project_domain"] ?? 'default']
-                        ],
-                    ];
-                }
+        if (!empty($appCredentialId) && !empty($appCredentialSecret)) {
+          $configOptions["application_credential"] = [
+            "id" => $appCredentialId,
+            "secret" => $appCredentialSecret,
+          ];
+        }
 
-                $appCredentialId = $config["app_credential_id"] ?? null;
-                $appCredentialSecret = $config["app_credential_secret"] ?? null;
+        $openstackClient = new OpenStack($configOptions);
 
-                if (!empty($appCredentialId) && !empty($appCredentialSecret)) {
-                    $configOptions['application_credential'] = [
-                        'id' => $appCredentialId,
-                        'secret' => $appCredentialSecret,
-                    ];
-                }
+        $container = $openstackClient->objectStoreV1()->getContainer($config["container"]);
 
-                $openstackClient = new OpenStack($configOptions);
+        $adapter = new SwiftAdapter($container);
 
-                $container = $openstackClient->objectStoreV1()->getContainer($config["container"]);
-
-                $adapter = new SwiftAdapter($container);
-
-                return new FilesystemAdapter(
-                    new Filesystem($adapter, $config),
-                    $adapter,
-                    $config
-                );
-            }
-            catch(\Exception $ex){
-                Log::error($ex);
-                return null;
-            }
-        });
-    }
+        return new FilesystemAdapter(new Filesystem($adapter, $config), $adapter, $config);
+      } catch (\Exception $ex) {
+        Log::error($ex);
+        return null;
+      }
+    });
+  }
 }

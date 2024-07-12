@@ -18,47 +18,51 @@ use ModelSerializers\SilverStripeSerializer;
  * Class DataCenterLocationSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class DataCenterLocationSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'City'     => 'city:json_string',
-        'State'    => 'state:json_string',
-        'Country'  => 'country:json_string',
-        'Lat'      => 'lat:json_float',
-        'Lng'      => 'lng:json_float',
-        'RegionId' => 'region_id:json_int',
-    ];
+final class DataCenterLocationSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "City" => "city:json_string",
+    "State" => "state:json_string",
+    "Country" => "country:json_string",
+    "Lat" => "lat:json_float",
+    "Lng" => "lng:json_float",
+    "RegionId" => "region_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-
-        $location  = $this->object;
-        if(!$location instanceof DataCenterLocation) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'region':
-                        unset($values['region_id']);
-                        $values['region'] = SerializerRegistry  ::getInstance()
-                            ->getSerializer($location->getRegion())
-                            ->serialize($expand);
-                        break;
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $location = $this->object;
+    if (!$location instanceof DataCenterLocation) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "region":
+            unset($values["region_id"]);
+            $values["region"] = SerializerRegistry::getInstance()
+              ->getSerializer($location->getRegion())
+              ->serialize($expand);
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

@@ -21,12 +21,11 @@ use models\utils\IBaseRepository;
  * Interface IAuditLogRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface IAuditLogRepository extends IBaseRepository
-{
-    /**
-     * @param int $summit_id
-     * @param DateTime $date_backward_from
-     * @throws Exception
-     */
-    public function deleteOldLogEntries(int $summit_id, DateTime $date_backward_from);
+interface IAuditLogRepository extends IBaseRepository {
+  /**
+   * @param int $summit_id
+   * @param DateTime $date_backward_from
+   * @throws Exception
+   */
+  public function deleteOldLogEntries(int $summit_id, DateTime $date_backward_from);
 }

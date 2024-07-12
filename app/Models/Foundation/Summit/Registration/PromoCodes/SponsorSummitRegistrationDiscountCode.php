@@ -12,37 +12,35 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SponsorSummitRegistrationDiscountCode")
  * Class SponsorSummitRegistrationDiscountCode
  * @package models\summit
  */
-class SponsorSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode
-{
+class SponsorSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode {
+  use SponsorPromoCodeTrait;
 
-    use SponsorPromoCodeTrait;
+  const ClassName = "SPONSOR_DISCOUNT_CODE";
 
-    const ClassName = 'SPONSOR_DISCOUNT_CODE';
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "sponsor_id" => "integer",
+    "contact_email" => "string",
+  ];
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-        'sponsor_id' => 'integer',
-        'contact_email' => 'string',
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
+  }
 }

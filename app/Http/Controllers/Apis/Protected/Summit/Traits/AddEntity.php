@@ -21,47 +21,46 @@ use ModelSerializers\SerializerRegistry;
  * Trait AddEntity
  * @package App\Http\Controllers
  */
-trait AddEntity
-{
-    use BaseAPI;
+trait AddEntity {
+  use BaseAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    use GetAndValidateJsonPayload;
+  use GetAndValidateJsonPayload;
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    abstract function getAddValidationRules(array $payload): array;
+  /**
+   * @param array $payload
+   * @return array
+   */
+  abstract function getAddValidationRules(array $payload): array;
 
-    /**
-     * @param array $payload
-     * @return IEntity
-     */
-    abstract protected function addEntity(array $payload): IEntity;
+  /**
+   * @param array $payload
+   * @return IEntity
+   */
+  abstract protected function addEntity(array $payload): IEntity;
 
+  protected function addEntitySerializerType() {
+    return SerializerRegistry::SerializerType_Public;
+  }
+  /**
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function add() {
+    return $this->processRequest(function () {
+      $payload = $this->getJsonPayload($this->getAddValidationRules(Request::all()));
 
-    protected function addEntitySerializerType(){
-        return SerializerRegistry::SerializerType_Public;
-    }
-    /**
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function add()
-    {
-        return $this->processRequest(function () {
+      $entity = $this->addEntity($payload);
 
-            $payload = $this->getJsonPayload($this->getAddValidationRules(Request::all()));
-
-            $entity = $this->addEntity($payload);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($entity, $this->addEntitySerializerType())->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-            ));
-        });
-    }
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($entity, $this->addEntitySerializerType())
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 }

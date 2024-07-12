@@ -60,6 +60,6 @@ RUN echo 'memory_limit = 1024M' >> $PHP_INI_DIR/php.ini;
 WORKDIR /var/www
 COPY . /var/www
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
+RUN git config --global --add safe.directory /var/www
 RUN composer config -g github-oauth.github.com $GITHUB_OAUTH_TOKEN
 RUN chmod 777 -R storage

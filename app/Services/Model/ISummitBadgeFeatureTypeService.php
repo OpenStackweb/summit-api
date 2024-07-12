@@ -22,56 +22,57 @@ use models\summit\SummitBadgeFeatureType;
  * Interface ISummitBadgeFeatureTypeService
  * @package App\Services\Model
  */
-interface ISummitBadgeFeatureTypeService
-{
+interface ISummitBadgeFeatureTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitBadgeFeatureType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addBadgeFeatureType(Summit $summit, array $data): SummitBadgeFeatureType;
 
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitBadgeFeatureType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addBadgeFeatureType(Summit $summit, array $data):SummitBadgeFeatureType;
+  /**
+   * @param Summit $summit
+   * @param int $feature_id
+   * @param array $data
+   * @return SummitBadgeFeatureType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateBadgeFeatureType(
+    Summit $summit,
+    int $feature_id,
+    array $data,
+  ): SummitBadgeFeatureType;
 
-    /**
-     * @param Summit $summit
-     * @param int $feature_id
-     * @param array $data
-     * @return SummitBadgeFeatureType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateBadgeFeatureType(Summit $summit, int $feature_id, array $data):SummitBadgeFeatureType;
+  /**
+   * @param Summit $summit
+   * @param int $feature_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteBadgeFeatureType(Summit $summit, int $feature_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $feature_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteBadgeFeatureType(Summit $summit, int $feature_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $feature_id
+   * @param UploadedFile $file
+   * @param int $max_file_size
+   * @return File
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addFeatureImage(
+    Summit $summit,
+    int $feature_id,
+    UploadedFile $file,
+    int $max_file_size = 10485760,
+  ): File;
 
-    /**
-     * @param Summit $summit
-     * @param int $feature_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @return File
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addFeatureImage
-    (
-        Summit $summit,
-        int $feature_id,
-        UploadedFile $file,
-        int $max_file_size = 10485760
-    ):File;
-
-    /**
-     * @param Summit $summit
-     * @param int $feature_id
-     * @throws EntityNotFoundException
-     */
-    public function removeFeatureImage(Summit $summit, int $feature_id): void;
+  /**
+   * @param Summit $summit
+   * @param int $feature_id
+   * @throws EntityNotFoundException
+   */
+  public function removeFeatureImage(Summit $summit, int $feature_id): void;
 }

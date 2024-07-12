@@ -18,52 +18,54 @@ use Illuminate\Support\Facades\Log;
  * Class ETagsMiddleware
  * @package App\Http\Middleware
  */
-final class ETagsMiddleware
-{
+final class ETagsMiddleware {
+  /**
+   * Handle an incoming request.
+   * @param  \Illuminate\Http\Request $request
+   * @param  \Closure $next
+   * @return mixed
+   */
+  public function handle($request, Closure $next) {
+    // Handle request
+    $method = $request->getMethod();
 
-    /**
-     * Handle an incoming request.
-     * @param  \Illuminate\Http\Request $request
-     * @param  \Closure $next
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
-    {
-        // Handle request
-        $method = $request->getMethod();
+    // Support using HEAD method for checking If-None-Match
+    if ($request->isMethod("HEAD")) {
+      $request->setMethod("GET");
+    }
+    //Handle response
+    $response = $next($request);
 
-        // Support using HEAD method for checking If-None-Match
-        if ($request->isMethod('HEAD')) {
-            $request->setMethod('GET');
-        }
-        //Handle response
-        $response = $next($request);
+    if ($response->getStatusCode() === 200 && $request->getMethod() === "GET") {
+      $etag = md5($response->getContent());
+      $requestETag = str_replace('"', "", $request->getETags());
+      $requestETag = str_replace("-gzip", "", $requestETag);
+      if ($requestETag && is_array($requestETag)) {
+        Log::debug(
+          sprintf(
+            "ETagsMiddleware::handle requestEtag %s calculated etag %s",
+            $requestETag[0],
+            $etag,
+          ),
+        );
+      }
 
-        if ($response->getStatusCode() === 200 && $request->getMethod() === 'GET')
-        {
-            $etag        = md5($response->getContent());
-            $requestETag = str_replace('"', '', $request->getETags());
-            $requestETag = str_replace('-gzip', '', $requestETag);
-            if($requestETag && is_array($requestETag))
-                Log::debug(sprintf("ETagsMiddleware::handle requestEtag %s calculated etag %s", $requestETag[0], $etag));
+      // Strip W/ if weak comparison algorithm can be used
+      $requestETag = array_map([$this, "stripWeakTags"], $requestETag);
 
-            // Strip W/ if weak comparison algorithm can be used
-            $requestETag = array_map([$this, 'stripWeakTags'], $requestETag);
+      if (in_array($etag, $requestETag)) {
+        $response->setNotModified();
+      }
 
-            if (in_array($etag, $requestETag)) {
-                $response->setNotModified();
-            }
-
-            $response->setEtag($etag);
-        }
-
-        $request->setMethod($method);
-
-        return $response;
+      $response->setEtag($etag);
     }
 
-    private function stripWeakTags($etag)
-    {
-        return str_replace('W/', '', $etag);
-    }
+    $request->setMethod($method);
+
+    return $response;
+  }
+
+  private function stripWeakTags($etag) {
+    return str_replace("W/", "", $etag);
+  }
 }

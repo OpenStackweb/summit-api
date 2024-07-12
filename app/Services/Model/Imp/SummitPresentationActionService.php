@@ -23,45 +23,60 @@ use models\summit\Summit;
  * Class SummitPresentationActionService
  * @package App\Services\Model\Imp
  */
-final class SummitPresentationActionService
-    extends AbstractService
-implements ISummitPresentationActionService
-{
+final class SummitPresentationActionService extends AbstractService implements
+  ISummitPresentationActionService {
+  /**
+   * @inheritDoc
+   */
+  public function updateAction(
+    Summit $summit,
+    int $selection_plan_id,
+    int $presentation_id,
+    int $presentation_action_type_id,
+    bool $isCompleted,
+  ): ?PresentationAction {
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $selection_plan_id,
+      $presentation_id,
+      $presentation_action_type_id,
+      $isCompleted,
+    ) {
+      $performer = ResourceServerContext::getCurrentUser(false);
+      $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+      if (is_null($selection_plan)) {
+        throw new EntityNotFoundException(
+          sprintf("Selection Plan %s not found.", $selection_plan_id),
+        );
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function updateAction(
-        Summit $summit, int $selection_plan_id, int $presentation_id, int $presentation_action_type_id, bool $isCompleted): ?PresentationAction
-    {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $presentation_action_type_id, $isCompleted){
+      $presentation = $selection_plan->getPresentation($presentation_id);
 
-            $performer = ResourceServerContext::getCurrentUser(false);
-            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
-            if(is_null($selection_plan))
-                throw new EntityNotFoundException(sprintf("Selection Plan %s not found.", $selection_plan_id));
+      if (is_null($presentation)) {
+        throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
+      }
 
-            $presentation = $selection_plan->getPresentation($presentation_id);
+      $presentation_action_type = $selection_plan->getPresentationActionTypeById(
+        $presentation_action_type_id,
+      );
 
-            if(is_null($presentation))
-                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
+      if (is_null($presentation_action_type)) {
+        throw new EntityNotFoundException(
+          sprintf("Presentation action type %s not found.", $presentation_action_type_id),
+        );
+      }
 
-            $presentation_action_type = $selection_plan->getPresentationActionTypeById($presentation_action_type_id);
+      $action = $presentation->setActionByType($presentation_action_type);
 
-            if(is_null($presentation_action_type))
-                throw new EntityNotFoundException(sprintf("Presentation action type %s not found.", $presentation_action_type_id));
+      $action->setUpdatedBy($performer);
+      $action->setIsCompleted($isCompleted);
+      if (!$action->hasCreatedBy()) {
+        $action->setCreatedBy($performer);
+      }
 
-            $action = $presentation->setActionByType($presentation_action_type);
+      $presentation->setUpdatedBy($performer);
 
-            $action->setUpdatedBy($performer);
-            $action->setIsCompleted($isCompleted);
-            if(!$action->hasCreatedBy()){
-                $action->setCreatedBy($performer);
-            }
-
-            $presentation->setUpdatedBy($performer);
-
-            return $action;
-        });
-    }
+      return $action;
+    });
+  }
 }

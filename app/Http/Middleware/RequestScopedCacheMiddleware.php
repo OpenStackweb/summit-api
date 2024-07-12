@@ -21,30 +21,28 @@ use Closure;
  * Class RequestScopedCacheMiddleware
  * @package App\Http\Middleware
  */
-final class RequestScopedCacheMiddleware
-{
-    /**
-     * @param $request
-     * @param Closure $next
-     * @param $cache_lifetime
-     * @return JsonResponse
-     */
-    public function handle($request, Closure $next)
-    {
-        $scope = RequestScopedCache::getScopeId();
+final class RequestScopedCacheMiddleware {
+  /**
+   * @param $request
+   * @param Closure $next
+   * @param $cache_lifetime
+   * @return JsonResponse
+   */
+  public function handle($request, Closure $next) {
+    $scope = RequestScopedCache::getScopeId();
 
-        Log::debug(sprintf('RequestScopedCacheMiddleware::handle scope %s', $scope));
-        if ($request->getMethod() !== 'GET') {
-            // short circuit
-            Log::debug('RequestScopedCacheMiddleware::handle method is not GET');
-            return $next($request);
-        }
-
-        $response = $next($request);
-
-        // clear all related to current session
-        Log::debug(sprintf( 'RequestScopedCacheMiddleware::handle clearing cache scope %s', $scope));
-        Cache::tags($scope)->flush();
-        return $response;
+    Log::debug(sprintf("RequestScopedCacheMiddleware::handle scope %s", $scope));
+    if ($request->getMethod() !== "GET") {
+      // short circuit
+      Log::debug("RequestScopedCacheMiddleware::handle method is not GET");
+      return $next($request);
     }
+
+    $response = $next($request);
+
+    // clear all related to current session
+    Log::debug(sprintf("RequestScopedCacheMiddleware::handle clearing cache scope %s", $scope));
+    Cache::tags($scope)->flush();
+    return $response;
+  }
 }

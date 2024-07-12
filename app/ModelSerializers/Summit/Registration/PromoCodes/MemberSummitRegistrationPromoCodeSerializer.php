@@ -18,69 +18,69 @@ use models\summit\MemberSummitRegistrationPromoCode;
  * Class MemberSummitRegistrationPromoCodeSerializer
  * @package ModelSerializers
  */
-class MemberSummitRegistrationPromoCodeSerializer
-    extends SummitRegistrationPromoCodeSerializer
-{
-    protected static $array_mappings = [
-        'FirstName'   => 'first_name:json_string',
-        'LastName'    => 'last_name:json_string',
-        'Email'       => 'email:json_string',
-        'Type'        => 'type:json_string',
-        'OwnerId'     => 'owner_id:json_int',
-    ];
+class MemberSummitRegistrationPromoCodeSerializer extends SummitRegistrationPromoCodeSerializer {
+  protected static $array_mappings = [
+    "FirstName" => "first_name:json_string",
+    "LastName" => "last_name:json_string",
+    "Email" => "email:json_string",
+    "Type" => "type:json_string",
+    "OwnerId" => "owner_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code            = $this->object;
-        if(!$code instanceof MemberSummitRegistrationPromoCode) return [];
-        $values          = parent::serialize($expand, $fields, $relations, $params);
-        $serializer_type = SerializerRegistry::SerializerType_Public;
-
-        if(isset($params['serializer_type']))
-            $serializer_type = $params['serializer_type'];
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'owner': {
-                        if($code->hasOwner()){
-                            unset($values['owner_id']);
-                            $values['owner'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $code->getOwner(),
-                                $serializer_type
-                            )->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                    }
-                    break;
-                    case 'owner_name': {
-                        if($code->hasOwner()){
-                            $values['owner_name'] = $code->getOwner()->getFullName();
-                        }
-                    }
-                    break;
-                    case 'owner_email': {
-                        if($code->hasOwner()){
-                            $values['owner_email'] = $code->getOwner()->getEmail();
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof MemberSummitRegistrationPromoCode) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $serializer_type = SerializerRegistry::SerializerType_Public;
+
+    if (isset($params["serializer_type"])) {
+      $serializer_type = $params["serializer_type"];
+    }
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        switch (trim($relation)) {
+          case "owner":
+            if ($code->hasOwner()) {
+              unset($values["owner_id"]);
+              $values["owner"] = SerializerRegistry::getInstance()
+                ->getSerializer($code->getOwner(), $serializer_type)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+          case "owner_name":
+            if ($code->hasOwner()) {
+              $values["owner_name"] = $code->getOwner()->getFullName();
+            }
+            break;
+          case "owner_email":
+            if ($code->hasOwner()) {
+              $values["owner_email"] = $code->getOwner()->getEmail();
+            }
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

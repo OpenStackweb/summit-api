@@ -16,33 +16,35 @@ use models\summit\PresentationSlide;
  * Class PresentationSlideSerializer
  * @package ModelSerializers
  */
-final class PresentationSlideSerializer extends PresentationMaterialSerializer
-{
-    protected static $array_mappings = array
-    (
-        'Link' => 'link:json_text',
-    );
+final class PresentationSlideSerializer extends PresentationMaterialSerializer {
+  protected static $array_mappings = [
+    "Link" => "link:json_text",
+  ];
 
-    protected static $allowed_fields = [
-        'link',
-    ];
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $slide  = $this->object;
-        if(!$slide instanceof PresentationSlide) return [];
-        $values['has_file'] = false;
-        if(empty($values['link'])){
-            $values['link']     = $slide->hasSlide() ?  $slide->getSlide()->getUrl(): null;
-            $values['has_file'] = !empty($values['link']);
-        }
-        return $values;
+  protected static $allowed_fields = ["link"];
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $slide = $this->object;
+    if (!$slide instanceof PresentationSlide) {
+      return [];
     }
+    $values["has_file"] = false;
+    if (empty($values["link"])) {
+      $values["link"] = $slide->hasSlide() ? $slide->getSlide()->getUrl() : null;
+      $values["has_file"] = !empty($values["link"]);
+    }
+    return $values;
+  }
 }

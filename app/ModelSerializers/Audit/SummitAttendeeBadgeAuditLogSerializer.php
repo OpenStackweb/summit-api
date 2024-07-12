@@ -18,18 +18,17 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitAttendeeBadgeAuditLogSerializer
  * @package ModelSerializers
  */
-class SummitAttendeeBadgeAuditLogSerializer extends SummitAuditLogSerializer
-{
-    protected static $array_mappings = [
-        'SummitAttendeeBadgeID' => 'attendee_badge_id:json_int',
-    ];
+class SummitAttendeeBadgeAuditLogSerializer extends SummitAuditLogSerializer {
+  protected static $array_mappings = [
+    "SummitAttendeeBadgeID" => "attendee_badge_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'event' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'attendee_badge_id',
-            'getter' => 'getAttendeeBadge',
-            'has' => 'hasSummitAttendeeBadge'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "event" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "attendee_badge_id",
+      "getter" => "getAttendeeBadge",
+      "has" => "hasSummitAttendeeBadge",
+    ],
+  ];
 }

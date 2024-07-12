@@ -15,10 +15,9 @@
  * Class RetrieveAllSummitEventsBySummitCSVStrategy
  * @package App\Http\Controllers
  */
-final class RetrieveAllSummitEventsBySummitCSVStrategy
-extends RetrieveAllSummitEventsBySummitStrategy
-{
-    public static function getPaginationParams(callable $defaultPageSize = null): array {
-        return [1, PHP_INT_MAX];
-    }
+final class RetrieveAllSummitEventsBySummitCSVStrategy extends
+  RetrieveAllSummitEventsBySummitStrategy {
+  public static function getPaginationParams(callable $defaultPageSize = null): array {
+    return [1, PHP_INT_MAX];
+  }
 }

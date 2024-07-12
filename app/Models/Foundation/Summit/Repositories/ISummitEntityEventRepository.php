@@ -19,30 +19,28 @@ use DateTime;
  * Interface ISummitEntityEventRepository
  * @package models\summit
  */
-interface ISummitEntityEventRepository extends IBaseRepository
-{
-    /**
-     * @param Summit $summit
-     * @param int|null $member_id
-     * @param int|null $from_id
-     * @param DateTime|null $from_date
-     * @param int $limit
-     * @param bool $detach
-     * @return SummitEntityEvent[]
-     */
-    public function getEntityEvents
-    (
-        Summit $summit,
-        $member_id = null,
-        $from_id   = null,
-        DateTime $from_date = null,
-        $limit = 25,
-        $detach = true
-    );
+interface ISummitEntityEventRepository extends IBaseRepository {
+  /**
+   * @param Summit $summit
+   * @param int|null $member_id
+   * @param int|null $from_id
+   * @param DateTime|null $from_date
+   * @param int $limit
+   * @param bool $detach
+   * @return SummitEntityEvent[]
+   */
+  public function getEntityEvents(
+    Summit $summit,
+    $member_id = null,
+    $from_id = null,
+    DateTime $from_date = null,
+    $limit = 25,
+    $detach = true,
+  );
 
-    /**
-     * @param Summit $summit
-     * @return int
-     */
-    public function getLastEntityEventId(Summit $summit);
+  /**
+   * @param Summit $summit
+   * @return int
+   */
+  public function getLastEntityEventId(Summit $summit);
 }

@@ -25,54 +25,47 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitAttendeeBadgePrintRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitAttendeeBadgePrintRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitAttendeeBadgePrintRepository {
+  protected function getBaseEntity() {
+    return SummitAttendeeBadgePrint::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitAttendeeBadgePrint::class;
-    }
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.badge", "b");
+    $query = $query->innerJoin("e.requestor", "r");
+    $query = $query->innerJoin("e.view_type", "vt");
+    $query = $query->innerJoin("b.ticket", "t");
+    $query = $query->innerJoin("t.order", "o");
+    $query = $query->innerJoin("o.summit", "s");
+    return $query;
+  }
 
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query = $query->innerJoin("e.badge", "b");
-        $query = $query->innerJoin("e.requestor", "r");
-        $query = $query->innerJoin("e.view_type", "vt");
-        $query = $query->innerJoin("b.ticket", "t");
-        $query = $query->innerJoin("t.order", "o");
-        $query = $query->innerJoin("o.summit", "s");
-        return $query;
-    }
+  protected function getFilterMappings() {
+    return [
+      "id" => new DoctrineInFilterMapping("e.id"),
+      "ticket_id" => Filter::buildIntField("t.id"),
+      "summit_id" => Filter::buildIntField("s.id"),
+      "view_type_id" => new DoctrineInFilterMapping("vt.id"),
+      "created" => sprintf("e.created:datetime_epoch|%s", SilverstripeBaseModel::DefaultTimeZone),
+      "print_date" => Filter::buildDateTimeEpochField("e.print_date"),
+      "requestor_full_name" =>
+        "CONCAT(LOWER(r.first_name), ' ', LOWER(r.last_name)) :operator LOWER(:value) )",
+      "requestor_email" => "r.email",
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'id' => new DoctrineInFilterMapping('e.id'),
-            'ticket_id' => Filter::buildIntField('t.id'),
-            'summit_id' => Filter::buildIntField('s.id'),
-            'view_type_id' => new DoctrineInFilterMapping('vt.id'),
-            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'print_date'=>Filter::buildDateTimeEpochField('e.print_date'),
-            'requestor_full_name' => "CONCAT(LOWER(r.first_name), ' ', LOWER(r.last_name)) :operator LOWER(:value) )",
-            'requestor_email' => 'r.email',
-        ];
-    }
-
-    protected function getOrderMappings()
-    {
-        return [
-            'id' => 'e.id',
-            'created' => 'e.created',
-            'view_type_id' => 'vt.id',
-            'print_date'=>'e.print_date',
-            "requestor_full_name" => <<<SQL
-LOWER(CONCAT(r.first_name, ' ', r.first_name))
-SQL,
-            'requestor_email' => 'r.email',
-        ];
-    }
-
-
-
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "created" => "e.created",
+      "view_type_id" => "vt.id",
+      "print_date" => "e.print_date",
+      "requestor_full_name" => <<<SQL
+      LOWER(CONCAT(r.first_name, ' ', r.first_name))
+      SQL
+      ,
+      "requestor_email" => "r.email",
+    ];
+  }
 }

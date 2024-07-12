@@ -20,50 +20,53 @@ use ModelSerializers\SilverStripeSerializer;
  * Class OpenStackReleaseSerializer
  * @package App\ModelSerializers\Software
  */
-final class OpenStackReleaseSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Name'           => 'name:json_string',
-        'ReleaseNumber'  => 'release_number:json_string',
-        'ReleaseDate' => 'release_date:datetime_epoch',
-        'Status' => 'status:json_string'
-    ];
+final class OpenStackReleaseSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "ReleaseNumber" => "release_number:json_string",
+    "ReleaseDate" => "release_date:datetime_epoch",
+    "Status" => "status:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'components',
-    ];
+  protected static $allowed_relations = ["components"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relation
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $release = $this->object;
-        if (!$release instanceof OpenStackRelease) return [];
-
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('components', $relations) && !isset($values['components'])){
-            $components = [];
-            foreach ($release->getOrderedComponents() as $component){
-                $components[] = $component->getId();
-            }
-            $values['components'] = $components;
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relation
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $release = $this->object;
+    if (!$release instanceof OpenStackRelease) {
+      return [];
     }
 
-    protected static $expand_mappings = [
-        'components' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getOrderedComponents',
-        ]
-    ];
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (in_array("components", $relations) && !isset($values["components"])) {
+      $components = [];
+      foreach ($release->getOrderedComponents() as $component) {
+        $components[] = $component->getId();
+      }
+      $values["components"] = $components;
+    }
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "components" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getOrderedComponents",
+    ],
+  ];
 }

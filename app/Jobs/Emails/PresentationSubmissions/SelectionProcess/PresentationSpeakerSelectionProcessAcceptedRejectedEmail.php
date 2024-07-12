@@ -24,55 +24,67 @@ use utils\Filter;
  * Class PresentationSpeakerSelectionProcessAcceptedRejectedEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
  */
-class PresentationSpeakerSelectionProcessAcceptedRejectedEmail extends PresentationSpeakerSelectionProcessEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
+class PresentationSpeakerSelectionProcessAcceptedRejectedEmail extends
+  PresentationSpeakerSelectionProcessEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
+
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED";
+
+  /**
+   * @param Summit $summit
+   * @param SummitRegistrationPromoCode|null $promo_code
+   * @param PresentationSpeaker $speaker
+   * @param string|null $test_email_recipient
+   * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
+   * @param string|null $confirmation_token
+   * @param Filter|null $filter
+   */
+  public function __construct(
+    Summit $summit,
+    ?SummitRegistrationPromoCode $promo_code,
+    PresentationSpeaker $speaker,
+    ?string $test_email_recipient,
+    SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config,
+    ?string $confirmation_token = null,
+    ?Filter $filter = null,
+  ) {
+    parent::__construct(
+      $summit,
+      $speaker,
+      $test_email_recipient,
+      $speaker_announcement_email_config,
+      $promo_code,
+      $filter,
+    );
+
+    if (!empty($confirmation_token)) {
+      $this->payload[IMailTemplatesConstants::speaker_confirmation_link] = sprintf(
+        "%s?t=%s",
+        $this->payload[IMailTemplatesConstants::speaker_confirmation_link],
+        base64_encode($confirmation_token),
+      );
     }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED';
+    Log::debug(
+      sprintf(
+        "PresentationSpeakerSelectionProcessAcceptedRejectedEmail::__construct payload %s",
+        json_encode($this->payload),
+      ),
+    );
+  }
 
-    /**
-     * @param Summit $summit
-     * @param SummitRegistrationPromoCode|null $promo_code
-     * @param PresentationSpeaker $speaker
-     * @param string|null $test_email_recipient
-     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
-     * @param string|null $confirmation_token
-     * @param Filter|null $filter
-     */
-    public function __construct
-    (
-        Summit                              $summit,
-        ?SummitRegistrationPromoCode        $promo_code,
-        PresentationSpeaker                 $speaker,
-        ?string                             $test_email_recipient,
-        SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
-        ?string                             $confirmation_token = null,
-        ?Filter                             $filter = null
-    )
-    {
-        parent::__construct($summit, $speaker, $test_email_recipient, $speaker_announcement_email_config, $promo_code, $filter);
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::speaker_confirmation_link]["type"] = "string";
 
-        if (!empty($confirmation_token)) {
-            $this->payload[IMailTemplatesConstants::speaker_confirmation_link] =
-                sprintf("%s?t=%s", $this->payload[IMailTemplatesConstants::speaker_confirmation_link], base64_encode($confirmation_token));
-        }
-
-        Log::debug(sprintf("PresentationSpeakerSelectionProcessAcceptedRejectedEmail::__construct payload %s", json_encode($this->payload)));
-    }
-
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-        $payload = parent::getEmailTemplateSchema();
-        $payload[IMailTemplatesConstants::speaker_confirmation_link]['type'] = 'string';
-
-        return $payload;
-    }
+    return $payload;
+  }
 }

@@ -21,21 +21,20 @@ use models\summit\SummitVenueRoom;
  * Class SummitLocationConstants
  * @package App\Models\Foundation\Summit\Locations
  */
-final class SummitLocationConstants
-{
-    public static $valid_first_level_class_names = [
-        SummitVenue::ClassName,
-        SummitAirport::ClassName,
-        SummitHotel::ClassName,
-        SummitExternalLocation::ClassName,
-    ];
+final class SummitLocationConstants {
+  public static $valid_first_level_class_names = [
+    SummitVenue::ClassName,
+    SummitAirport::ClassName,
+    SummitHotel::ClassName,
+    SummitExternalLocation::ClassName,
+  ];
 
-    public static $valid_class_names = [
-        SummitVenue::ClassName,
-        SummitAirport::ClassName,
-        SummitHotel::ClassName,
-        SummitExternalLocation::ClassName,
-        SummitVenueRoom::ClassName,
-        SummitBookableVenueRoom::ClassName
-    ];
+  public static $valid_class_names = [
+    SummitVenue::ClassName,
+    SummitAirport::ClassName,
+    SummitHotel::ClassName,
+    SummitExternalLocation::ClassName,
+    SummitVenueRoom::ClassName,
+    SummitBookableVenueRoom::ClassName,
+  ];
 }

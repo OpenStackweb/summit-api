@@ -18,37 +18,32 @@ use Libs\ModelSerializers\Many2OneExpandSerializer;
  * Class SummitGeoLocatedLocationSerializer
  * @package ModelSerializers\Locations
  */
-class SummitGeoLocatedLocationSerializer extends SummitAbstractLocationSerializer
-{
-    protected static $array_mappings = [
-        'Address1'        => 'address_1:json_string',
-        'Address2'        => 'address_2:json_string',
-        'ZipCode'         => 'zip_code',
-        'City'            => 'city:json_string',
-        'State'           => 'state:json_string',
-        'Country'         => 'country:json_string',
-        'Lng'             => 'lng',
-        'Lat'             => 'lat',
-        'WebsiteUrl'      => 'website_url:json_string',
-        'DisplayOnSite'   => 'display_on_site:json_boolean',
-        'DetailsPage'     => 'details_page:json_boolean',
-        'LocationMessage' => 'location_message:json_string',
-    ];
+class SummitGeoLocatedLocationSerializer extends SummitAbstractLocationSerializer {
+  protected static $array_mappings = [
+    "Address1" => "address_1:json_string",
+    "Address2" => "address_2:json_string",
+    "ZipCode" => "zip_code",
+    "City" => "city:json_string",
+    "State" => "state:json_string",
+    "Country" => "country:json_string",
+    "Lng" => "lng",
+    "Lat" => "lat",
+    "WebsiteUrl" => "website_url:json_string",
+    "DisplayOnSite" => "display_on_site:json_boolean",
+    "DetailsPage" => "details_page:json_boolean",
+    "LocationMessage" => "location_message:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'maps',
-        'images',
-    ];
+  protected static $allowed_relations = ["maps", "images"];
 
-    protected static $expand_mappings = [
-        'maps' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getMaps',
-        ],
-        'images' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getImages',
-        ],
-    ];
-
+  protected static $expand_mappings = [
+    "maps" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getMaps",
+    ],
+    "images" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getImages",
+    ],
+  ];
 }

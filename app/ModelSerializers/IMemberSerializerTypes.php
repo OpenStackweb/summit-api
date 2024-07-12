@@ -16,8 +16,7 @@
  * Interface IMemberSerializerTypes
  * @package App\ModelSerializers
  */
-interface IMemberSerializerTypes
-{
-    const Submitter    = 'SUBMITTER';
-    const SubmitterCSV = 'SUBMITTER_CSV';
+interface IMemberSerializerTypes {
+  const Submitter = "SUBMITTER";
+  const SubmitterCSV = "SUBMITTER_CSV";
 }

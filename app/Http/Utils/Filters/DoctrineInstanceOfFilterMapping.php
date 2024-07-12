@@ -19,80 +19,79 @@ use Doctrine\ORM\QueryBuilder;
  * Class DoctrineInstanceOfFilterMapping
  * @package utils
  */
-final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQueryApplyable
-{
-    /**
-     * @var string
-     */
-    protected $main_operator;
+final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQueryApplyable {
+  /**
+   * @var string
+   */
+  protected $main_operator;
 
-    private $class_names = [];
+  private $class_names = [];
 
-    public function __construct($alias, $class_names = [])
-    {
-        $this->main_operator = Filter::MainOperatorAnd;
-        $this->class_names = $class_names;
-        parent::__construct($alias, sprintf("%s %s :class_name", $alias, self::InstanceOfDoctrine));
+  public function __construct($alias, $class_names = []) {
+    $this->main_operator = Filter::MainOperatorAnd;
+    $this->class_names = $class_names;
+    parent::__construct($alias, sprintf("%s %s :class_name", $alias, self::InstanceOfDoctrine));
+  }
+
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  public function toRawSQL(FilterElement $filter, array $bindings = []): string {
+    throw new \Exception();
+  }
+
+  const InstanceOfDoctrine = "INSTANCE OF";
+
+  private function translateClassName($value) {
+    if (isset($this->class_names[$value])) {
+      return $this->class_names[$value];
     }
+    return $value;
+  }
 
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public function toRawSQL(FilterElement $filter, array $bindings = []):string
-    {
-        throw new \Exception;
+  private function buildWhere(QueryBuilder $query, FilterElement $filter): string {
+    $value = $filter->getValue();
+
+    if (is_array($value)) {
+      $where_components = [];
+      // see @https://github.com/doctrine/orm/issues/4462
+      foreach ($value as $val) {
+        $where_components[] = str_replace(
+          ":class_name",
+          $this->translateClassName($val),
+          $this->where,
+        );
+      }
+      return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
     }
+    return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
+  }
 
-    const InstanceOfDoctrine = 'INSTANCE OF';
-
-    private function translateClassName($value)
-    {
-        if (isset($this->class_names[$value])) return $this->class_names[$value];
-        return $value;
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return QueryBuilder
+   */
+  public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder {
+    if ($this->main_operator === Filter::MainOperatorAnd) {
+      return $query->andWhere($this->buildWhere($query, $filter));
+    } else {
+      return $query->orWhere($this->buildWhere($query, $filter));
     }
+  }
 
-    private function buildWhere(QueryBuilder $query, FilterElement $filter):string{
-        $value = $filter->getValue();
+  /**
+   * @param QueryBuilder $query
+   * @param FilterElement $filter
+   * @return string
+   */
+  public function applyOr(QueryBuilder $query, FilterElement $filter): string {
+    return $this->buildWhere($query, $filter);
+  }
 
-        if (is_array($value)) {
-            $where_components = [];
-            // see @https://github.com/doctrine/orm/issues/4462
-            foreach ($value as $val) {
-                $where_components[] =  str_replace(":class_name", $this->translateClassName($val), $this->where);
-            }
-            return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
-        }
-        return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return QueryBuilder
-     */
-    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
-    {
-        if($this->main_operator === Filter::MainOperatorAnd)
-            return $query->andWhere($this->buildWhere($query, $filter));
-        else
-            return $query->orWhere($this->buildWhere($query, $filter));
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @param FilterElement $filter
-     * @return string
-     */
-    public function applyOr(QueryBuilder $query, FilterElement $filter): string
-    {
-        return $this->buildWhere($query, $filter);
-    }
-
-    public function setMainOperator(string $op): void
-    {
-        $this->main_operator = $op;
-    }
-
+  public function setMainOperator(string $op): void {
+    $this->main_operator = $op;
+  }
 }

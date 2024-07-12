@@ -31,239 +31,225 @@ use utils\FilterElement;
  * Class OAuth2SummitAdministratorPermissionGroupApiController
  * @package App\Http\Controllers
  */
-class OAuth2SummitAdministratorPermissionGroupApiController
-    extends OAuth2ProtectedController
-{
-    /**
-     * @var ISummitAdministratorPermissionGroupService
-     */
-    private $service;
+class OAuth2SummitAdministratorPermissionGroupApiController extends OAuth2ProtectedController {
+  /**
+   * @var ISummitAdministratorPermissionGroupService
+   */
+  private $service;
 
-    /**
-     * OAuth2SummitAdministratorPermissionGroupApiController constructor.
-     * @param ISummitAdministratorPermissionGroupService $service
-     * @param ISummitAdministratorPermissionGroupRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISummitAdministratorPermissionGroupService $service,
-        ISummitAdministratorPermissionGroupRepository $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->service = $service;
-        $this->repository = $repository;
-    }
+  /**
+   * OAuth2SummitAdministratorPermissionGroupApiController constructor.
+   * @param ISummitAdministratorPermissionGroupService $service
+   * @param ISummitAdministratorPermissionGroupRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISummitAdministratorPermissionGroupService $service,
+    ISummitAdministratorPermissionGroupRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->service = $service;
+    $this->repository = $repository;
+  }
 
-    use ParametrizedGetAll;
+  use ParametrizedGetAll;
 
-    use AddEntity;
+  use AddEntity;
 
-    use DeleteEntity;
+  use DeleteEntity;
 
-    use UpdateEntity;
+  use UpdateEntity;
 
-    use GetEntity;
+  use GetEntity;
 
-    function getAll()
-    {
-        return $this->_getAll(
-            function () {
-                return [
-                    'title' => ['=@', '=='],
-                    'member_first_name' => ['=@', '=='],
-                    'member_last_name' => ['=@', '=='],
-                    'member_full_name' => ['=@', '=='],
-                    'member_email' => ['=@', '=='],
-                    'summit_id' => ['=='],
-                    'member_id' => ['=='],
-                ];
-            },
-            function () {
-                return [
-                   'title' => 'sometimes|string',
-                    'member_first_name' => 'sometimes|string',
-                    'member_last_name' => 'sometimes|string',
-                    'member_full_name' => 'sometimes|string',
-                    'member_email' => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'member_id' => 'sometimes|integer',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'title',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    function getAddValidationRules(array $payload): array
-    {
+  function getAll() {
+    return $this->_getAll(
+      function () {
         return [
-            'title' => 'required|string',
-            'summits' => 'required|int_array',
-            'members' => 'required|int_array',
+          "title" => ["=@", "=="],
+          "member_first_name" => ["=@", "=="],
+          "member_last_name" => ["=@", "=="],
+          "member_full_name" => ["=@", "=="],
+          "member_email" => ["=@", "=="],
+          "summit_id" => ["=="],
+          "member_id" => ["=="],
         ];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function addEntity(array $payload): IEntity
-    {
-        return $this->service->create($payload);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function deleteEntity(int $id): void
-    {
-        $this->service->delete($id);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function getEntity(int $id): IEntity
-    {
-        return $this->repository->getById($id);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    function getUpdateValidationRules(array $payload): array
-    {
+      },
+      function () {
         return [
-            'title' => 'sometimes|string',
-            'summits' => 'sometimes|int_array',
-            'members' => 'sometimes|int_array',
+          "title" => "sometimes|string",
+          "member_first_name" => "sometimes|string",
+          "member_last_name" => "sometimes|string",
+          "member_full_name" => "sometimes|string",
+          "member_email" => "sometimes|string",
+          "summit_id" => "sometimes|integer",
+          "member_id" => "sometimes|integer",
         ];
-    }
+      },
+      function () {
+        return ["id", "title"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_Public;
+      },
+    );
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function updateEntity($id, array $payload): IEntity
-    {
-        return $this->service->update($id, $payload);
-    }
+  /**
+   * @inheritDoc
+   */
+  function getAddValidationRules(array $payload): array {
+    return [
+      "title" => "required|string",
+      "summits" => "required|int_array",
+      "members" => "required|int_array",
+    ];
+  }
 
-    public function addMember($id, $member_id)
-    {
-        try {
-            $group = $this->repository->getById($id);
-            if (is_null($group))
-                throw new EntityNotFoundException();
-            $group = $this->service->addMemberTo($group, $member_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function addEntity(array $payload): IEntity {
+    return $this->service->create($payload);
+  }
 
-    public function removeMember($id, $member_id)
-    {
-        try {
-            $group = $this->repository->getById($id);
-            if (is_null($group))
-                throw new EntityNotFoundException();
-            $group = $this->service->removeMemberFrom($group, $member_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function deleteEntity(int $id): void {
+    $this->service->delete($id);
+  }
 
-    public function addSummit($id, $summit_id)
-    {
-        try {
-            $group = $this->repository->getById($id);
-            if (is_null($group))
-                throw new EntityNotFoundException();
-            $group = $this->service->addSummitTo($group, $summit_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getEntity(int $id): IEntity {
+    return $this->repository->getById($id);
+  }
 
-    public function removeSummit($id, $summit_id)
-    {
-        try {
-            $group = $this->repository->getById($id);
-            if (is_null($group))
-                throw new EntityNotFoundException();
-            $group = $this->service->removeSummitFrom($group, $summit_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+  /**
+   * @inheritDoc
+   */
+  function getUpdateValidationRules(array $payload): array {
+    return [
+      "title" => "sometimes|string",
+      "summits" => "sometimes|int_array",
+      "members" => "sometimes|int_array",
+    ];
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected function updateEntity($id, array $payload): IEntity {
+    return $this->service->update($id, $payload);
+  }
+
+  public function addMember($id, $member_id) {
+    try {
+      $group = $this->repository->getById($id);
+      if (is_null($group)) {
+        throw new EntityNotFoundException();
+      }
+      $group = $this->service->addMemberTo($group, $member_id);
+      return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412([$ex->getMessage()]);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404(["message" => $ex->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
+
+  public function removeMember($id, $member_id) {
+    try {
+      $group = $this->repository->getById($id);
+      if (is_null($group)) {
+        throw new EntityNotFoundException();
+      }
+      $group = $this->service->removeMemberFrom($group, $member_id);
+      return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412([$ex->getMessage()]);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404(["message" => $ex->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
+    }
+  }
+
+  public function addSummit($id, $summit_id) {
+    try {
+      $group = $this->repository->getById($id);
+      if (is_null($group)) {
+        throw new EntityNotFoundException();
+      }
+      $group = $this->service->addSummitTo($group, $summit_id);
+      return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412([$ex->getMessage()]);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404(["message" => $ex->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
+    }
+  }
+
+  public function removeSummit($id, $summit_id) {
+    try {
+      $group = $this->repository->getById($id);
+      if (is_null($group)) {
+        throw new EntityNotFoundException();
+      }
+      $group = $this->service->removeSummitFrom($group, $summit_id);
+      return $this->updated(SerializerRegistry::getInstance()->getSerializer($group)->serialize());
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+      return $this->error412([$ex->getMessage()]);
+    } catch (EntityNotFoundException $ex) {
+      Log::warning($ex);
+      return $this->error404(["message" => $ex->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex) {
+      Log::warning($ex);
+      return $this->error401();
+    } catch (HTTP403ForbiddenException $ex) {
+      Log::warning($ex);
+      return $this->error403();
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
+    }
+  }
 }

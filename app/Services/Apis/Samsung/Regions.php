@@ -16,7 +16,6 @@
  * Class Regions
  * @package App\Services\Apis\Samsung
  */
-final class Regions
-{
-    const US = 'US';
+final class Regions {
+  const US = "US";
 }

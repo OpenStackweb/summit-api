@@ -20,59 +20,70 @@ use models\summit\SummitMediaUploadType;
  * Interface ISummitMediaUploadTypeService
  * @package App\Services\Model
  */
-interface ISummitMediaUploadTypeService
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitMediaUploadType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $data):SummitMediaUploadType;
+interface ISummitMediaUploadTypeService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitMediaUploadType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $data): SummitMediaUploadType;
 
-    /**
-     * @param Summit $summit
-     * @param int $media_upload_type_id
-     * @param array $data
-     * @return SummitMediaUploadType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $media_upload_type_id, array $data):SummitMediaUploadType;
+  /**
+   * @param Summit $summit
+   * @param int $media_upload_type_id
+   * @param array $data
+   * @return SummitMediaUploadType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(
+    Summit $summit,
+    int $media_upload_type_id,
+    array $data,
+  ): SummitMediaUploadType;
 
-    /**
-     * @param Summit $summit
-     * @param int $media_upload_type_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $media_upload_type_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $media_upload_type_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $media_upload_type_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $media_upload_type_id
-     * @param int $presentation_type_id
-     * @return SummitMediaUploadType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addToPresentationType(Summit $summit, int $media_upload_type_id, int $presentation_type_id):SummitMediaUploadType;
+  /**
+   * @param Summit $summit
+   * @param int $media_upload_type_id
+   * @param int $presentation_type_id
+   * @return SummitMediaUploadType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addToPresentationType(
+    Summit $summit,
+    int $media_upload_type_id,
+    int $presentation_type_id,
+  ): SummitMediaUploadType;
 
-    /**
-     * @param Summit $summit
-     * @param int $media_upload_type_id
-     * @param int $presentation_type_id
-     * @return SummitMediaUploadType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteFromPresentationType(Summit $summit, int $media_upload_type_id,  int $presentation_type_id):SummitMediaUploadType;
+  /**
+   * @param Summit $summit
+   * @param int $media_upload_type_id
+   * @param int $presentation_type_id
+   * @return SummitMediaUploadType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteFromPresentationType(
+    Summit $summit,
+    int $media_upload_type_id,
+    int $presentation_type_id,
+  ): SummitMediaUploadType;
 
-    /**
-     * @param Summit $fromSummit
-     * @param Summit $toSummit
-     * @return Summit
-     */
-    public function cloneMediaUploadTypes(Summit $fromSummit, Summit $toSummit):Summit;
+  /**
+   * @param Summit $fromSummit
+   * @param Summit $toSummit
+   * @return Summit
+   */
+  public function cloneMediaUploadTypes(Summit $fromSummit, Summit $toSummit): Summit;
 }

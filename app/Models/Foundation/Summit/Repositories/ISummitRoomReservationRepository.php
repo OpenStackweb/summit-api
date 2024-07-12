@@ -22,28 +22,34 @@ use utils\PagingResponse;
  * Interface ISummitRoomReservationRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitRoomReservationRepository extends IBaseRepository
-{
-    /**
-     * @param string $payment_gateway_cart_id
-     * @return SummitRoomReservation|null
-     */
-    public function getByPaymentGatewayCartIdExclusiveLock(string $payment_gateway_cart_id): ?SummitRoomReservation;
+interface ISummitRoomReservationRepository extends IBaseRepository {
+  /**
+   * @param string $payment_gateway_cart_id
+   * @return SummitRoomReservation|null
+   */
+  public function getByPaymentGatewayCartIdExclusiveLock(
+    string $payment_gateway_cart_id,
+  ): ?SummitRoomReservation;
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllBySummitByPage(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse;
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllBySummitByPage(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 
-    /**
-     * @param int $minutes
-     * @param int $max
-     * @return mixed
-     * @throws \Exception
-     */
-    public function getAllReservedOlderThanXMinutes(int $minutes, int $max = 100);
+  /**
+   * @param int $minutes
+   * @param int $max
+   * @return mixed
+   * @throws \Exception
+   */
+  public function getAllReservedOlderThanXMinutes(int $minutes, int $max = 100);
 }

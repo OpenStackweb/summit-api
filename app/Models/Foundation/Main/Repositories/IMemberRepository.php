@@ -23,62 +23,71 @@ use utils\PagingResponse;
  * Interface IMemberRepository
  * @package models\main
  */
-interface IMemberRepository extends IBaseRepository
-{
-    /**
-     * @param string $email
-     * @return Member|null
-     */
-    public function getByEmail($email):?Member;
+interface IMemberRepository extends IBaseRepository {
+  /**
+   * @param string $email
+   * @return Member|null
+   */
+  public function getByEmail($email): ?Member;
 
-    /**
-     * @param string $email
-     * @return Member|null
-     */
-    public function getByEmailExclusiveLock($email):?Member;
+  /**
+   * @param string $email
+   * @return Member|null
+   */
+  public function getByEmailExclusiveLock($email): ?Member;
 
-    /**
-     * @param string $fullname
-     * @return Member|null
-     */
-    public function getByFullName(string $fullname):?Member;
+  /**
+   * @param string $fullname
+   * @return Member|null
+   */
+  public function getByFullName(string $fullname): ?Member;
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
-    /**
-     * @param int $external_id
-     * @return Member|null
-     */
-    public function getByExternalId(int $external_id):?Member;
+  /**
+   * @param int $external_id
+   * @return Member|null
+   */
+  public function getByExternalId(int $external_id): ?Member;
 
-    /**
-     * @param int $external_id
-     * @return Member|null
-     */
-    public function getByExternalIdExclusiveLock(int $external_id): ?Member;
+  /**
+   * @param int $external_id
+   * @return Member|null
+   */
+  public function getByExternalIdExclusiveLock(int $external_id): ?Member;
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getSubmittersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getSubmittersBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     * @throws \Doctrine\DBAL\Exception
-     */
-    public function getSubmittersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   * @throws \Doctrine\DBAL\Exception
+   */
+  public function getSubmittersIdsBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

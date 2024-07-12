@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitPresentationSpeakerAssignmentRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitPresentationSpeakerAssignmentRepository extends IBaseRepository
-{
-
+interface ISummitPresentationSpeakerAssignmentRepository extends IBaseRepository {
 }

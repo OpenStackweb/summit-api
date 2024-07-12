@@ -18,34 +18,34 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
  * Class ExtraQuestionTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-abstract class ExtraQuestionTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'name'        => 'sometimes|string',
-                'type'        => 'sometimes|string|in:'.implode(",", ExtraQuestionTypeConstants::ValidQuestionTypes),
-                'label'       => 'sometimes|string',
-                'mandatory'   => 'sometimes|boolean',
-                'placeholder' => 'sometimes|nullable|string',
-                'order'       => 'sometimes|integer|min:1',
-                'max_selected_values' => 'sometimes|integer|min:0',
-            ];
-        }
-
-        return [
-            'name'        => 'required|string',
-            'type'        => 'required|string|in:'.implode(",", ExtraQuestionTypeConstants::ValidQuestionTypes),
-            'label'       => 'required|string',
-            'mandatory'   => 'required|boolean',
-            'placeholder' => 'sometimes|nullable|string',
-            'max_selected_values' => 'sometimes|integer|min:0',
-        ];
+abstract class ExtraQuestionTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string",
+        "type" =>
+          "sometimes|string|in:" . implode(",", ExtraQuestionTypeConstants::ValidQuestionTypes),
+        "label" => "sometimes|string",
+        "mandatory" => "sometimes|boolean",
+        "placeholder" => "sometimes|nullable|string",
+        "order" => "sometimes|integer|min:1",
+        "max_selected_values" => "sometimes|integer|min:0",
+      ];
     }
+
+    return [
+      "name" => "required|string",
+      "type" =>
+        "required|string|in:" . implode(",", ExtraQuestionTypeConstants::ValidQuestionTypes),
+      "label" => "required|string",
+      "mandatory" => "required|boolean",
+      "placeholder" => "sometimes|nullable|string",
+      "max_selected_values" => "sometimes|integer|min:0",
+    ];
+  }
 }

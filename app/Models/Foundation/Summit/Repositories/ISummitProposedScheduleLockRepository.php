@@ -22,22 +22,20 @@ use utils\PagingInfo;
  * Interface ISummitProposedScheduleLockRepository
  * @package models\summit
  */
-interface ISummitProposedScheduleLockRepository extends IBaseRepository
-{
-    /**
-     * @param int $summit_id
-     * @param string $source
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return mixed
-     */
-    public function getBySummitAndSource
-    (
-        int $summit_id,
-        string $source,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order   = null
-    );
+interface ISummitProposedScheduleLockRepository extends IBaseRepository {
+  /**
+   * @param int $summit_id
+   * @param string $source
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return mixed
+   */
+  public function getBySummitAndSource(
+    int $summit_id,
+    string $source,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

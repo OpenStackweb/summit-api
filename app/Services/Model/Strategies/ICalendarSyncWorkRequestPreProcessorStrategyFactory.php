@@ -19,12 +19,14 @@ use models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest;
  * Interface ICalendarSyncWorkRequestPreProcessorStrategyFactory
  * @package App\Services\Model\Strategies
  */
-interface ICalendarSyncWorkRequestPreProcessorStrategyFactory
-{
-    /**
-     * @param ICalendarSyncWorkRequestQueueManager   $queue_manager
-     * @param AbstractCalendarSyncWorkRequest $request
-     * @return ICalendarSyncWorkRequestPreProcessorStrategy|null
-     */
-    public function build(ICalendarSyncWorkRequestQueueManager $queue_manager, AbstractCalendarSyncWorkRequest $request);
+interface ICalendarSyncWorkRequestPreProcessorStrategyFactory {
+  /**
+   * @param ICalendarSyncWorkRequestQueueManager   $queue_manager
+   * @param AbstractCalendarSyncWorkRequest $request
+   * @return ICalendarSyncWorkRequestPreProcessorStrategy|null
+   */
+  public function build(
+    ICalendarSyncWorkRequestQueueManager $queue_manager,
+    AbstractCalendarSyncWorkRequest $request,
+  );
 }

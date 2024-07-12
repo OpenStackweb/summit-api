@@ -16,30 +16,29 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SubQuestionRuleSerializer
  * @package ModelSerializers
  */
-final class SubQuestionRuleSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Visibility' => 'visibility:json_string',
-        'VisibilityCondition' => 'visibility_condition:json_string',
-        'AnswerValues' => 'answer_values:json_string_array',
-        'AnswerValuesOperator' => 'answer_values_operator:json_string',
-        'Order' => 'order:json_int',
-        'SubQuestionId' => 'sub_question_id:json_int',
-        'ParentQuestionId' => 'parent_question_id:json_int',
-    ];
+final class SubQuestionRuleSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Visibility" => "visibility:json_string",
+    "VisibilityCondition" => "visibility_condition:json_string",
+    "AnswerValues" => "answer_values:json_string_array",
+    "AnswerValuesOperator" => "answer_values_operator:json_string",
+    "Order" => "order:json_int",
+    "SubQuestionId" => "sub_question_id:json_int",
+    "ParentQuestionId" => "parent_question_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'parent_question' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'parent_question_id',
-            'getter' => 'getParentQuestion',
-            'has' => 'hasParentQuestion'
-        ],
-        'sub_question' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'sub_question_id',
-            'getter' => 'getSubQuestion',
-            'has' => 'hasSubQuestion'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "parent_question" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "parent_question_id",
+      "getter" => "getParentQuestion",
+      "has" => "hasParentQuestion",
+    ],
+    "sub_question" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "sub_question_id",
+      "getter" => "getSubQuestion",
+      "has" => "hasSubQuestion",
+    ],
+  ];
 }

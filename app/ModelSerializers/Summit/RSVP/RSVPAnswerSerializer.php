@@ -17,47 +17,53 @@ use models\summit\RSVPAnswer;
  * Class RSVPAnswerSerializer
  * @package ModelSerializers
  */
-class RSVPAnswerSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Value'      => 'value:json_string',
-        'RSVPId'     => 'rsvp_id:json_int',
-        'QuestionId' => 'question_id:json_string',
-        'Created'    => 'created:datetime_epoch',
-    ];
+class RSVPAnswerSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Value" => "value:json_string",
+    "RSVPId" => "rsvp_id:json_int",
+    "QuestionId" => "question_id:json_string",
+    "Created" => "created:datetime_epoch",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $answer = $this->object;
-        if(! $answer instanceof RSVPAnswer) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $answer = $this->object;
+    if (!$answer instanceof RSVPAnswer) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'rsvp': {
-                        unset($values['rsvp_id']);
-                        $values['rsvp_id'] = SerializerRegistry::getInstance()->getSerializer($answer->getRsvp())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                    }
-                    break;
-                    case 'question': {
-                        unset($values['question_id']);
-                        $values['question'] = SerializerRegistry::getInstance()->getSerializer($answer->getQuestion())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                    }
-                    break;
-                }
-            }
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "rsvp":
+            unset($values["rsvp_id"]);
+            $values["rsvp_id"] = SerializerRegistry::getInstance()
+              ->getSerializer($answer->getRsvp())
+              ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            break;
+          case "question":
+            unset($values["question_id"]);
+            $values["question"] = SerializerRegistry::getInstance()
+              ->getSerializer($answer->getQuestion())
+              ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            break;
         }
-
-        return $values;
+      }
     }
 
+    return $values;
+  }
 }

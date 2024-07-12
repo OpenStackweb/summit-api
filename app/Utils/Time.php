@@ -12,22 +12,19 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class Time
  * @package App\Utils
  */
-final class Time
-{
-    /**
-     * @param int $time
-     * @return array
-     */
-    public static function getHourAndMinutesFromInt(int $time):array
-    {
-        $time = sprintf("%04d", $time);
-        $hours = intval(substr($time,0,2));
-        $minutes = intval(substr($time,2,2));
-        return [$hours, $minutes];
-    }
+final class Time {
+  /**
+   * @param int $time
+   * @return array
+   */
+  public static function getHourAndMinutesFromInt(int $time): array {
+    $time = sprintf("%04d", $time);
+    $hours = intval(substr($time, 0, 2));
+    $minutes = intval(substr($time, 2, 2));
+    return [$hours, $minutes];
+  }
 }

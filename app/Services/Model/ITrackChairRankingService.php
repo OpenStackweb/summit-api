@@ -23,82 +23,103 @@ use models\exceptions\ValidationException;
  * Interface ITrackChairRankingService
  * @package App\Services\Model
  */
-interface ITrackChairRankingService
-{
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param int $track_chair_rating_type_id
-     * @return PresentationTrackChairRatingType
-     * @throws EntityNotFoundException
-     * @throws AuthzException
-     */
-    public function getTrackChairRatingType(SelectionPlan $selection_plan, int $track_chair_rating_type_id): PresentationTrackChairRatingType;
+interface ITrackChairRankingService {
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param int $track_chair_rating_type_id
+   * @return PresentationTrackChairRatingType
+   * @throws EntityNotFoundException
+   * @throws AuthzException
+   */
+  public function getTrackChairRatingType(
+    SelectionPlan $selection_plan,
+    int $track_chair_rating_type_id,
+  ): PresentationTrackChairRatingType;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param array $payload
-     * @return PresentationTrackChairRatingType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function addTrackChairRatingType(SelectionPlan $selection_plan, array $payload): PresentationTrackChairRatingType;
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param array $payload
+   * @return PresentationTrackChairRatingType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function addTrackChairRatingType(
+    SelectionPlan $selection_plan,
+    array $payload,
+  ): PresentationTrackChairRatingType;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param int $track_chair_rating_type_id
-     * @param array $payload
-     * @return PresentationTrackChairRatingType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function updateTrackChairRatingType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, array $payload): PresentationTrackChairRatingType;
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param int $track_chair_rating_type_id
+   * @param array $payload
+   * @return PresentationTrackChairRatingType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function updateTrackChairRatingType(
+    SelectionPlan $selection_plan,
+    int $track_chair_rating_type_id,
+    array $payload,
+  ): PresentationTrackChairRatingType;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param int $track_chair_rating_type_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function deleteTrackChairRatingType(SelectionPlan $selection_plan, int $track_chair_rating_type_id): void;
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param int $track_chair_rating_type_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function deleteTrackChairRatingType(
+    SelectionPlan $selection_plan,
+    int $track_chair_rating_type_id,
+  ): void;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param int $track_chair_rating_type_id
-     * @param array $payload
-     * @return PresentationTrackChairScoreType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     * @throws \Exception
-     */
-    public function addTrackChairScoreType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, array $payload): PresentationTrackChairScoreType;
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param int $track_chair_rating_type_id
+   * @param array $payload
+   * @return PresentationTrackChairScoreType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   * @throws \Exception
+   */
+  public function addTrackChairScoreType(
+    SelectionPlan $selection_plan,
+    int $track_chair_rating_type_id,
+    array $payload,
+  ): PresentationTrackChairScoreType;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param int $track_chair_rating_type_id
-     * @param int $track_chair_score_type_id
-     * @param array $payload
-     * @return PresentationTrackChairScoreType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function updateTrackChairScoreType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, int $track_chair_score_type_id, array $payload): PresentationTrackChairScoreType;
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param int $track_chair_rating_type_id
+   * @param int $track_chair_score_type_id
+   * @param array $payload
+   * @return PresentationTrackChairScoreType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function updateTrackChairScoreType(
+    SelectionPlan $selection_plan,
+    int $track_chair_rating_type_id,
+    int $track_chair_score_type_id,
+    array $payload,
+  ): PresentationTrackChairScoreType;
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param int $track_chair_rating_type_id
-     * @param int $track_chair_score_type_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function deleteTrackChairScoreType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, int $track_chair_score_type_id): void;
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param int $track_chair_rating_type_id
+   * @param int $track_chair_score_type_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function deleteTrackChairScoreType(
+    SelectionPlan $selection_plan,
+    int $track_chair_rating_type_id,
+    int $track_chair_score_type_id,
+  ): void;
 }

@@ -22,77 +22,79 @@ use DateTime;
  * Class EventbriteRegistrationFeed
  * @package App\Services\Apis\ExternalRegistrationFeeds\implementations
  */
-final class EventbriteRegistrationFeed extends AbstractExternalFeed
-    implements IExternalRegistrationFeed
-{
+final class EventbriteRegistrationFeed extends AbstractExternalFeed implements
+  IExternalRegistrationFeed {
+  /**
+   * @param int $page
+   * @param DateTime|null $changed_since
+   * @return IExternalRegistrationFeedResponse|null
+   */
+  public function getAttendees(
+    int $page = 1,
+    ?DateTime $changed_since = null,
+  ): ?IExternalRegistrationFeedResponse {
+    try {
+      $apiFeedKey = $this->summit->getExternalRegistrationFeedApiKey();
+      $eventId = $this->summit->getExternalSummitId();
 
-    /**
-     * @param int $page
-     * @param DateTime|null $changed_since
-     * @return IExternalRegistrationFeedResponse|null
-     */
-    public function getAttendees(int $page = 1, ?DateTime $changed_since = null):?IExternalRegistrationFeedResponse
-    {
-        try {
-            $apiFeedKey = $this->summit->getExternalRegistrationFeedApiKey();
-            $eventId    = $this->summit->getExternalSummitId();
+      if (empty($apiFeedKey)) {
+        Log::warning(
+          sprintf(
+            "external_registration_feed_api_key is empty for summit %s",
+            $this->summit->getId(),
+          ),
+        );
+        return null;
+      }
+      if (empty($eventId)) {
+        Log::warning(sprintf("external_summit_id is empty for summit %s", $this->summit->getId()));
+        return null;
+      }
 
-            if (empty($apiFeedKey)) {
-                Log::warning(sprintf("external_registration_feed_api_key is empty for summit %s", $this->summit->getId()));
-                return null;
-            }
-            if (empty($eventId)) {
-                Log::warning(sprintf("external_summit_id is empty for summit %s", $this->summit->getId()));
-                return null;
-            }
+      $api = new EventbriteAPI();
 
-            $api = new EventbriteAPI();
+      $api->setCredentials([
+        "token" => $apiFeedKey,
+      ]);
 
-            $api->setCredentials([
-                'token' => $apiFeedKey
-            ]);
-
-            return $api->getAttendees($this->summit, $page, $changed_since,'promotional_code,order,ticket_class');
-        }
-        catch(RequestException $ex){
-            Log::warning($ex->getMessage());
-            throw $ex;
-        }
+      return $api->getAttendees(
+        $this->summit,
+        $page,
+        $changed_since,
+        "promotional_code,order,ticket_class",
+      );
+    } catch (RequestException $ex) {
+      Log::warning($ex->getMessage());
+      throw $ex;
     }
+  }
 
-    public function isValidQRCode(string $qr_code_content): bool
-    {
-        // TODO: Implement isValidQRCode() method.
-        throw new \Exception("Not Implemented");
-    }
+  public function isValidQRCode(string $qr_code_content): bool {
+    // TODO: Implement isValidQRCode() method.
+    throw new \Exception("Not Implemented");
+  }
 
-    public function getAttendeeByQRCode(string $qr_code_content)
-    {
-        throw new \Exception("Not Implemented");
-    }
+  public function getAttendeeByQRCode(string $qr_code_content) {
+    throw new \Exception("Not Implemented");
+  }
 
-    public function getAttendeeByEmail(string $email)
-    {
-        throw new \Exception("Not Implemented");
-    }
+  public function getAttendeeByEmail(string $email) {
+    throw new \Exception("Not Implemented");
+  }
 
-    public function getExternalUserIdFromQRCode(string $qr_code_content): ?string
-    {
-        throw new \Exception("Not Implemented");
-    }
+  public function getExternalUserIdFromQRCode(string $qr_code_content): ?string {
+    throw new \Exception("Not Implemented");
+  }
 
-    public function shouldCreateExtraQuestions(): bool
-    {
-        return false;
-    }
+  public function shouldCreateExtraQuestions(): bool {
+    return false;
+  }
 
-    public function checkAttendee(string $external_id): void
-    {
-        throw new \Exception("Not Implemented");
-    }
+  public function checkAttendee(string $external_id): void {
+    throw new \Exception("Not Implemented");
+  }
 
-    public function unCheckAttendee(string $external_id): void
-    {
-        throw new \Exception("Not Implemented");
-    }
+  public function unCheckAttendee(string $external_id): void {
+    throw new \Exception("Not Implemented");
+  }
 }

@@ -18,49 +18,53 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitAttendeeCSVSerializer
  * @package App\ModelSerializers\Summit\Registration
  */
-final class SummitAttendeeCSVSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'MemberId'                => 'member_id:json_int',
-        'SummitId'                => 'summit_id:json_int',
-        'FirstName'               => 'first_name:json_string',
-        'Surname'                 => 'last_name:json_string',
-        'Email'                   => 'email:json_string',
-        'CompanyName'             => 'company:json_string',
-        'CompanyId'               => 'company_id:json_string',
-        'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
-        'Status'                  => 'status:json_string',
-        'VirtualCheckedIn'        => 'has_virtual_check_in:json_boolean',
-    ];
+final class SummitAttendeeCSVSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "MemberId" => "member_id:json_int",
+    "SummitId" => "summit_id:json_int",
+    "FirstName" => "first_name:json_string",
+    "Surname" => "last_name:json_string",
+    "Email" => "email:json_string",
+    "CompanyName" => "company:json_string",
+    "CompanyId" => "company_id:json_string",
+    "DisclaimerAcceptedDate" => "disclaimer_accepted_date:datetime_epoch",
+    "Status" => "status:json_string",
+    "VirtualCheckedIn" => "has_virtual_check_in:json_boolean",
+  ];
 
-    /**
-     * @param $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $attendee = $this->object;
-        if (!$attendee instanceof SummitAttendee) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $notes = [];
-        foreach ($attendee->getOrderedNotes() as $note){
-            $notes[] = $note->getContent();
-        }
-
-        $values['notes'] = implode("|", $notes);
-
-        $tags = [];
-        foreach ($attendee->getTags() as $tag){
-            $tags[] = $tag->getTag();
-        }
-
-        $values['tags'] = implode("|", $tags);
-
-        return $values;
+  /**
+   * @param $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $attendee = $this->object;
+    if (!$attendee instanceof SummitAttendee) {
+      return [];
     }
-    
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $notes = [];
+    foreach ($attendee->getOrderedNotes() as $note) {
+      $notes[] = $note->getContent();
+    }
+
+    $values["notes"] = implode("|", $notes);
+
+    $tags = [];
+    foreach ($attendee->getTags() as $tag) {
+      $tags[] = $tag->getTag();
+    }
+
+    $values["tags"] = implode("|", $tags);
+
+    return $values;
+  }
 }

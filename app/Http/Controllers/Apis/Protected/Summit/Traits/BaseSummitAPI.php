@@ -16,12 +16,10 @@ use models\summit\ISummitRepository;
  * Trait BaseSummitAPI
  * @package App\Http\Controllers
  */
-trait BaseSummitAPI
-{
-    use BaseAPI;
-    /**
-     * @return ISummitRepository
-     */
-    abstract protected function getSummitRepository():ISummitRepository;
-
+trait BaseSummitAPI {
+  use BaseAPI;
+  /**
+   * @return ISummitRepository
+   */
+  abstract protected function getSummitRepository(): ISummitRepository;
 }

@@ -18,35 +18,34 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitAttendeeBadgePrintSerializer
  * @package ModelSerializers
  */
-class SummitAttendeeBadgePrintSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'PrintDate'           => 'print_date:datetime_epoch',
-        'RequestorId'         => 'requestor_id:json_int',
-        'BadgeId'             => 'badge_id:json_int',
-        'ViewTypeId'          => 'view_type_id:json_int',
-        'ViewTypeName'        => 'view_type_name:json_string',
-    ];
+class SummitAttendeeBadgePrintSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "PrintDate" => "print_date:datetime_epoch",
+    "RequestorId" => "requestor_id:json_int",
+    "BadgeId" => "badge_id:json_int",
+    "ViewTypeId" => "view_type_id:json_int",
+    "ViewTypeName" => "view_type_name:json_string",
+  ];
 
-    protected static $expand_mappings = [
-        'requestor' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'requestor_id',
-            'getter' => 'getRequestor',
-            'has' => 'hasRequestor',
-            'serializer_type' => SerializerRegistry::SerializerType_Admin,
-        ],
-        'badge' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'badge_id',
-            'getter' => 'getBadge',
-            'has' => 'hasBadge'
-        ],
-        'view_type' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'view_type_id',
-            'getter' => 'getViewType',
-            'has' => 'hasViewType'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "requestor" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "requestor_id",
+      "getter" => "getRequestor",
+      "has" => "hasRequestor",
+      "serializer_type" => SerializerRegistry::SerializerType_Admin,
+    ],
+    "badge" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "badge_id",
+      "getter" => "getBadge",
+      "has" => "hasBadge",
+    ],
+    "view_type" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "view_type_id",
+      "getter" => "getViewType",
+      "has" => "hasViewType",
+    ],
+  ];
 }

@@ -16,7 +16,5 @@
  * Class LawPayPaymentProfileSerializer
  * @package App\ModelSerializers\Summit
  */
-class LawPayPaymentProfileSerializer extends PaymentGatewayProfileSerializer
-{
-
+class LawPayPaymentProfileSerializer extends PaymentGatewayProfileSerializer {
 }

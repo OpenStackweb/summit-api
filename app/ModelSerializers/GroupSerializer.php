@@ -20,38 +20,39 @@ use models\main\Group;
  * Class GroupSerializer
  * @package ModelSerializers
  */
-final class GroupSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'Title'       => 'title:json_string',
-        'Description' => 'description:json_string',
-        'Code'        => 'code:json_string',
-    );
+final class GroupSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Title" => "title:json_string",
+    "Description" => "description:json_string",
+    "Code" => "code:json_string",
+  ];
 
-    protected static $allowed_relations = array
-    (
-        'members',
-    );
+  protected static $allowed_relations = ["members"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $group = $this->object;
-        if(! $group instanceof Group) return [];
-        return parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $group = $this->object;
+    if (!$group instanceof Group) {
+      return [];
     }
+    return parent::serialize($expand, $fields, $relations, $params);
+  }
 
-    protected static $expand_mappings = [
-        'members' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getMembers',
-        ],
-    ];
+  protected static $expand_mappings = [
+    "members" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getMembers",
+    ],
+  ];
 }

@@ -18,31 +18,36 @@ use models\summit\SummitAttendeeNote;
  * Class AdminSummitAttendeeNoteCSVSerializer
  * @package App\ModelSerializers\Summit
  */
-final class AdminSummitAttendeeNoteCSVSerializer extends AdminSummitAttendeeNoteSerializer
-{
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $note = $this->object;
-        if (!$note instanceof SummitAttendeeNote) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        // custom fields
-
-        $values['author'] = '';
-        if($note->hasAuthor()){
-            $values['author'] = $note->getAuthor()->getFullName();
-        }
-
-        $values['ticket'] = '';
-        if($note->hasTicket()){
-            $values['ticket'] = $note->getTicket()->getId();
-        }
-        return $values;
+final class AdminSummitAttendeeNoteCSVSerializer extends AdminSummitAttendeeNoteSerializer {
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $note = $this->object;
+    if (!$note instanceof SummitAttendeeNote) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    // custom fields
+
+    $values["author"] = "";
+    if ($note->hasAuthor()) {
+      $values["author"] = $note->getAuthor()->getFullName();
+    }
+
+    $values["ticket"] = "";
+    if ($note->hasTicket()) {
+      $values["ticket"] = $note->getTicket()->getId();
+    }
+    return $values;
+  }
 }

@@ -16,32 +16,33 @@ use models\summit\SummitVenueFloor;
  * Class SummitVenueFloorFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitVenueFloorFactory
-{
-    /**
-     * @param array $data
-     * @return SummitVenueFloor
-     */
-    static public function build(array $data){
-        return self::populate(new SummitVenueFloor, $data);
+final class SummitVenueFloorFactory {
+  /**
+   * @param array $data
+   * @return SummitVenueFloor
+   */
+  public static function build(array $data) {
+    return self::populate(new SummitVenueFloor(), $data);
+  }
+
+  /**
+   * @param SummitVenueFloor $floor
+   * @param array $data
+   * @return SummitVenueFloor
+   */
+  public static function populate(SummitVenueFloor $floor, array $data) {
+    if (isset($data["name"])) {
+      $floor->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitVenueFloor $floor
-     * @param array $data
-     * @return SummitVenueFloor
-     */
-    static public function populate(SummitVenueFloor $floor, array $data){
-
-        if(isset($data['name']))
-            $floor->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $floor->setDescription(trim($data['description']));
-
-        if(isset($data['number']))
-            $floor->setNumber(intval($data['number']));
-
-        return $floor;
+    if (isset($data["description"])) {
+      $floor->setDescription(trim($data["description"]));
     }
+
+    if (isset($data["number"])) {
+      $floor->setNumber(intval($data["number"]));
+    }
+
+    return $floor;
+  }
 }

@@ -12,63 +12,59 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class CompanyValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class CompanyValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false)
-    {
-        if ($update) {
-
-            return [
-                'name' => 'sometimes|string',
-                'url' => 'nullable|url',
-                'display_on_site' => 'nullable|boolean',
-                'featured' => 'nullable|boolean',
-                'city' => 'nullable|string',
-                'state' => 'nullable|string',
-                'country' => 'nullable|string',
-                'description' => 'nullable|string',
-                'industry' => 'nullable|string',
-                'products' => 'nullable|string',
-                'contributions' => 'nullable|string',
-                'contact_email' => 'nullable|email',
-                'member_level' => 'nullable|string',
-                'admin_email' => 'nullable|email',
-                'color' => 'nullable|hex_color',
-                'overview' => 'nullable|string',
-                'commitment' => 'nullable|string',
-                'commitment_author' => 'nullable|string',
-            ];
-        }
-
-        return [
-            'name' => 'required|string',
-            'url' => 'nullable|url',
-            'display_on_site' => 'nullable|boolean',
-            'featured' => 'nullable|boolean',
-            'city' => 'nullable|string',
-            'state' => 'nullable|string',
-            'country' => 'nullable|string',
-            'description' => 'nullable|string',
-            'industry' => 'nullable|string',
-            'products' => 'nullable|string',
-            'contributions' => 'nullable|string',
-            'contact_email' => 'nullable|email',
-            'member_level' => 'nullable|string',
-            'admin_email' => 'nullable|email',
-            'color' => 'nullable|hex_color',
-            'overview' => 'nullable|string',
-            'commitment' => 'nullable|string',
-            'commitment_author' => 'nullable|string',
-        ];
+final class CompanyValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string",
+        "url" => "nullable|url",
+        "display_on_site" => "nullable|boolean",
+        "featured" => "nullable|boolean",
+        "city" => "nullable|string",
+        "state" => "nullable|string",
+        "country" => "nullable|string",
+        "description" => "nullable|string",
+        "industry" => "nullable|string",
+        "products" => "nullable|string",
+        "contributions" => "nullable|string",
+        "contact_email" => "nullable|email",
+        "member_level" => "nullable|string",
+        "admin_email" => "nullable|email",
+        "color" => "nullable|hex_color",
+        "overview" => "nullable|string",
+        "commitment" => "nullable|string",
+        "commitment_author" => "nullable|string",
+      ];
     }
+
+    return [
+      "name" => "required|string",
+      "url" => "nullable|url",
+      "display_on_site" => "nullable|boolean",
+      "featured" => "nullable|boolean",
+      "city" => "nullable|string",
+      "state" => "nullable|string",
+      "country" => "nullable|string",
+      "description" => "nullable|string",
+      "industry" => "nullable|string",
+      "products" => "nullable|string",
+      "contributions" => "nullable|string",
+      "contact_email" => "nullable|email",
+      "member_level" => "nullable|string",
+      "admin_email" => "nullable|email",
+      "color" => "nullable|hex_color",
+      "overview" => "nullable|string",
+      "commitment" => "nullable|string",
+      "commitment_author" => "nullable|string",
+    ];
+  }
 }

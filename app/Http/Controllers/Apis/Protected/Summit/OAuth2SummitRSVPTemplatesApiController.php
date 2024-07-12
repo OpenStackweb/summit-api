@@ -33,653 +33,692 @@ use Exception;
  * Class OAuth2SummitRSVPTemplatesApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedController
-{
+final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedController {
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+  /**
+   * @var IRSVPTemplateRepository
+   */
+  private $rsvp_template_repository;
 
-    /**
-     * @var IRSVPTemplateRepository
-     */
-    private $rsvp_template_repository;
+  /**
+   * @var IRSVPTemplateService
+   */
+  private $rsvp_template_service;
 
-    /**
-     * @var IRSVPTemplateService
-     */
-    private $rsvp_template_service;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * OAuth2SummitRSVPTemplatesApiController constructor.
+   * @param ISummitRepository $summit_repository
+   * @param IRSVPTemplateRepository $rsvp_template_repository
+   * @param IMemberRepository $member_repository
+   * @param IRSVPTemplateService $rsvp_template_service
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISummitRepository $summit_repository,
+    IRSVPTemplateRepository $rsvp_template_repository,
+    IMemberRepository $member_repository,
+    IRSVPTemplateService $rsvp_template_service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->summit_repository = $summit_repository;
+    $this->member_repository = $member_repository;
+    $this->rsvp_template_service = $rsvp_template_service;
+    $this->rsvp_template_repository = $rsvp_template_repository;
+  }
 
-    /**
-     * OAuth2SummitRSVPTemplatesApiController constructor.
-     * @param ISummitRepository $summit_repository
-     * @param IRSVPTemplateRepository $rsvp_template_repository
-     * @param IMemberRepository $member_repository
-     * @param IRSVPTemplateService $rsvp_template_service
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISummitRepository $summit_repository,
-        IRSVPTemplateRepository $rsvp_template_repository,
-        IMemberRepository $member_repository,
-        IRSVPTemplateService $rsvp_template_service,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->summit_repository        = $summit_repository;
-        $this->member_repository        = $member_repository;
-        $this->rsvp_template_service    = $rsvp_template_service;
-        $this->rsvp_template_repository = $rsvp_template_repository;
+  /**
+   *  Template endpoints
+   */
+
+  /**
+   * @param $summit_id
+   * @return mixed
+   */
+  public function getAllBySummit($summit_id) {
+    $values = Request::all();
+    $rules = PaginationValidationRules::get();
+
+    try {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $validation = Validator::make($values, $rules);
+
+      if ($validation->fails()) {
+        $ex = new ValidationException();
+        throw $ex->setMessages($validation->messages()->toArray());
+      }
+
+      // default values
+      $page = 1;
+      $per_page = PaginationValidationRules::PerPageMin;
+
+      if (Request::has("page")) {
+        $page = intval(Request::input("page"));
+        $per_page = intval(Request::input("per_page"));
+      }
+
+      $filter = null;
+
+      if (Request::has("filter")) {
+        $filter = FilterParser::parse(Request::input("filter"), [
+          "title" => ["=@", "=="],
+          "is_enabled" => ["=="],
+        ]);
+      }
+
+      if (is_null($filter)) {
+        $filter = new Filter();
+      }
+
+      $filter->validate([
+        "title" => "sometimes|string",
+        "is_enabled" => "sometimes|boolean",
+      ]);
+
+      $order = null;
+
+      if (Request::has("order")) {
+        $order = OrderParser::parse(Request::input("order"), ["id", "title"]);
+      }
+
+      $data = $this->rsvp_template_repository->getBySummit(
+        $summit,
+        new PagingInfo($page, $per_page),
+        $filter,
+        $order,
+      );
+
+      return $this->ok($data->toArray(Request::input("expand", ""), [], [], []));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\HTTP401UnauthorizedException $ex3) {
+      Log::warning($ex3);
+      return $this->error401();
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
+    }
+  }
+
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @return mixed
+   */
+  public function getRSVPTemplate($summit_id, $template_id) {
+    try {
+      $expand = Request::input("expand", "");
+      $relations = Request::input("relations", "");
+      $relations = !empty($relations) ? explode(",", $relations) : [];
+
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
+
+      $template = $summit->getRSVPTemplateById($template_id);
+
+      if (is_null($template)) {
+        return $this->error404();
+      }
+
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($template)
+          ->serialize($expand, [], $relations),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
+    }
+  }
+
+  /**
+   * @param $summit_id
+   * @return mixed
+   */
+  public function getRSVPTemplateQuestionsMetadata($summit_id) {
+    $summit = SummitFinderStrategyFactory::build(
+      $this->summit_repository,
+      $this->resource_server_context,
+    )->find($summit_id);
+    if (is_null($summit)) {
+      return $this->error404();
     }
 
-    /**
-     *  Template endpoints
-     */
+    return $this->ok($this->rsvp_template_repository->getQuestionsMetadata($summit));
+  }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
-    public function getAllBySummit($summit_id){
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @return mixed
+   */
+  public function deleteRSVPTemplate($summit_id, $template_id) {
+    try {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-        $values = Request::all();
-        $rules  = PaginationValidationRules::get();
+      $this->rsvp_template_service->deleteTemplate($summit, $template_id);
 
-        try {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = PaginationValidationRules::PerPageMin;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'title'          => ['=@', '=='],
-                    'is_enabled'     => [ '=='],
-                ]);
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'title'      => 'sometimes|string',
-                'is_enabled' => 'sometimes|boolean',
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
-                    'id',
-                    'title',
-                ]);
-            }
-
-            $data = $this->rsvp_template_repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $data->toArray
-                (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
-                )
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412([ $ex1->getMessage()]);
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @return mixed
-     */
-    public function getRSVPTemplate($summit_id, $template_id){
-        try {
+  /**
+   * @param $summit_id
+   * @return mixed
+   */
+  public function addRSVPTemplate($summit_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-            $expand    = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit    = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $rules = SummitRSVPTemplateValidationRulesFactory::build($payload);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $template = $summit->getRSVPTemplateById($template_id);
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if (is_null($template)) {
-                return $this->error404();
-            }
+        return $this->error412($messages);
+      }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($template)->serialize($expand, [], $relations));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      $template = $this->rsvp_template_service->addTemplate(
+        $summit,
+        $this->resource_server_context->getCurrentUser(),
+        $payload,
+      );
+
+      return $this->created(
+        SerializerRegistry::getInstance()->getSerializer($template)->serialize(),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @return mixed
+   */
+  public function updateRSVPTemplate($summit_id, $template_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
-    public function getRSVPTemplateQuestionsMetadata($summit_id){
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-        return $this->ok
-        (
-            $this->rsvp_template_repository->getQuestionsMetadata($summit)
-        );
+      $rules = SummitRSVPTemplateValidationRulesFactory::build($payload, true);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
+
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
+
+        return $this->error412($messages);
+      }
+
+      $template = $this->rsvp_template_service->updateTemplate($summit, $template_id, $payload);
+
+      return $this->updated(
+        SerializerRegistry::getInstance()->getSerializer($template)->serialize(),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @return mixed
-     */
-    public function deleteRSVPTemplate($summit_id, $template_id){
-        try {
+  /**
+   *  Questions endpoints
+   */
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @return mixed
+   */
+  public function getRSVPTemplateQuestion($summit_id, $template_id, $question_id) {
+    try {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $this->rsvp_template_service->deleteTemplate($summit, $template_id);
+      $template = $summit->getRSVPTemplateById($template_id);
+      if (is_null($template)) {
+        return $this->error404();
+      }
 
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      $question = $template->getQuestionById($question_id);
+      if (is_null($question)) {
+        return $this->error404();
+      }
+      return $this->ok(SerializerRegistry::getInstance()->getSerializer($question)->serialize());
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
-    public function addRSVPTemplate($summit_id){
-        try {
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @return mixed
+   */
+  public function addRSVPTemplateQuestion($summit_id, $template_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $rules = SummitRSVPTemplateQuestionValidationRulesFactory::build($payload);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $rules = SummitRSVPTemplateValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+        return $this->error412($messages);
+      }
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+      $question = $this->rsvp_template_service->addQuestion($summit, $template_id, $payload);
 
-            $template = $this->rsvp_template_service->addTemplate($summit, $this->resource_server_context->getCurrentUser(), $payload);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($template)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->created(
+        SerializerRegistry::getInstance()->getSerializer($question)->serialize(),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @return mixed
-     */
-    public function updateRSVPTemplate($summit_id, $template_id){
-        try {
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @return mixed
+   */
+  public function updateRSVPTemplateQuestion($summit_id, $template_id, $question_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $rules = SummitRSVPTemplateQuestionValidationRulesFactory::build($payload, true);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $rules = SummitRSVPTemplateValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+        return $this->error412($messages);
+      }
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+      $question = $this->rsvp_template_service->updateQuestion(
+        $summit,
+        $template_id,
+        $question_id,
+        $payload,
+      );
 
-            $template = $this->rsvp_template_service->updateTemplate($summit, $template_id, $payload);
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($template)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->updated(
+        SerializerRegistry::getInstance()->getSerializer($question)->serialize(),
+      );
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     *  Questions endpoints
-     */
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @return mixed
+   */
+  public function deleteRSVPTemplateQuestion($summit_id, $template_id, $question_id) {
+    try {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @return mixed
-     */
-    public function getRSVPTemplateQuestion($summit_id, $template_id, $question_id){
-        try {
+      $this->rsvp_template_service->deleteQuestion($summit, $template_id, $question_id);
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $template = $summit->getRSVPTemplateById($template_id);
-            if (is_null($template)) return $this->error404();
-
-            $question = $template->getQuestionById($question_id);
-            if (is_null($question)) return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($question)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @return mixed
-     */
-    public function addRSVPTemplateQuestion($summit_id, $template_id){
-        try {
+  /**
+   * values endpoints
+   */
 
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @param $value_id
+   * @return mixed
+   */
+  public function getRSVPTemplateQuestionValue($summit_id, $template_id, $question_id, $value_id) {
+    try {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $template = $summit->getRSVPTemplateById($template_id);
+      if (is_null($template)) {
+        return $this->error404();
+      }
 
-            $rules = SummitRSVPTemplateQuestionValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
+      $question = $template->getQuestionById($question_id);
+      if (is_null($question)) {
+        return $this->error404();
+      }
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+      if (!$question instanceof RSVPMultiValueQuestionTemplate) {
+        return $this->error404();
+      }
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+      $value = $question->getValueById($value_id);
+      if (is_null($value)) {
+        return $this->error404();
+      }
 
-            $question = $this->rsvp_template_service->addQuestion($summit, $template_id, $payload);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($question)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->ok(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @return mixed
-     */
-    public function updateRSVPTemplateQuestion($summit_id, $template_id, $question_id){
-        try {
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @return mixed
+   */
+  public function addRSVPTemplateQuestionValue($summit_id, $template_id, $question_id) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $rules = SummitRSVPTemplateQuestionValueValidationRulesFactory::build($payload);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            $rules = SummitRSVPTemplateQuestionValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+        return $this->error412($messages);
+      }
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+      $value = $this->rsvp_template_service->addQuestionValue(
+        $summit,
+        $template_id,
+        $question_id,
+        $payload,
+      );
 
-            $question = $this->rsvp_template_service->updateQuestion($summit, $template_id, $question_id, $payload);
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($question)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->created(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @return mixed
-     */
-    public function deleteRSVPTemplateQuestion($summit_id, $template_id, $question_id){
-        try {
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @param $value_id
+   * @return mixed
+   */
+  public function updateRSVPTemplateQuestionValue(
+    $summit_id,
+    $template_id,
+    $question_id,
+    $value_id,
+  ) {
+    try {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $payload = Request::json()->all();
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $this->rsvp_template_service->deleteQuestion($summit, $template_id, $question_id);
+      $rules = SummitRSVPTemplateQuestionValueValidationRulesFactory::build($payload, true);
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $rules);
 
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
+
+        return $this->error412($messages);
+      }
+
+      $value = $this->rsvp_template_service->updateQuestionValue(
+        $summit,
+        $template_id,
+        $question_id,
+        $value_id,
+        $payload,
+      );
+
+      return $this->updated(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 
-    /**
-     * values endpoints
-     */
+  /**
+   * @param $summit_id
+   * @param $template_id
+   * @param $question_id
+   * @param $value_id
+   * @return mixed
+   */
+  public function deleteRSVPTemplateQuestionValue(
+    $summit_id,
+    $template_id,
+    $question_id,
+    $value_id,
+  ) {
+    try {
+      $summit = SummitFinderStrategyFactory::build(
+        $this->summit_repository,
+        $this->resource_server_context,
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @param $value_id
-     * @return mixed
-     */
-    public function getRSVPTemplateQuestionValue($summit_id, $template_id, $question_id, $value_id){
-        try {
+      $this->rsvp_template_service->deleteQuestionValue(
+        $summit,
+        $template_id,
+        $question_id,
+        $value_id,
+      );
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $template = $summit->getRSVPTemplateById($template_id);
-            if (is_null($template)) return $this->error404();
-
-            $question = $template->getQuestionById($question_id);
-            if (is_null($question)) return $this->error404();
-
-            if (!$question instanceof RSVPMultiValueQuestionTemplate) return $this->error404();
-
-            $value = $question->getValueById($value_id);
-            if (is_null($value)) return $this->error404();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+      return $this->deleted();
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @return mixed
-     */
-    public function addRSVPTemplateQuestionValue($summit_id, $template_id, $question_id){
-        try {
-
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $rules = SummitRSVPTemplateQuestionValueValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $value = $this->rsvp_template_service->addQuestionValue($summit, $template_id, $question_id, $payload);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @param $value_id
-     * @return mixed
-     */
-    public function updateRSVPTemplateQuestionValue($summit_id, $template_id, $question_id, $value_id){
-        try {
-
-            if(!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $rules = SummitRSVPTemplateQuestionValueValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $value = $this->rsvp_template_service->updateQuestionValue($summit, $template_id, $question_id, $value_id, $payload);
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param $summit_id
-     * @param $template_id
-     * @param $question_id
-     * @param $value_id
-     * @return mixed
-     */
-    public function deleteRSVPTemplateQuestionValue($summit_id, $template_id, $question_id, $value_id){
-        try {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $this->rsvp_template_service->deleteQuestionValue($summit, $template_id, $question_id, $value_id);
-
-            return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  }
 }

@@ -20,35 +20,33 @@ use ModelSerializers\SerializerRegistry;
  * Trait ParametrizedAddEntity
  * @package App\Http\Controllers
  */
-trait ParametrizedAddEntity
-{
-    use BaseAPI;
+trait ParametrizedAddEntity {
+  use BaseAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    use GetAndValidateJsonPayload;
+  use GetAndValidateJsonPayload;
 
-    public function _add(
-        callable $getAddValidationRulesFn,
-        callable $addEntityFn,
-                 ...$args
-    )
-    {
-        return $this->processRequest(function () use ($getAddValidationRulesFn, $addEntityFn, $args) {
+  public function _add(callable $getAddValidationRulesFn, callable $addEntityFn, ...$args) {
+    return $this->processRequest(function () use ($getAddValidationRulesFn, $addEntityFn, $args) {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $data = Request::json();
 
-            if (!Request::isJson()) return $this->error400();
-            $data = Request::json();
+      $payload = $this->getJsonPayload($getAddValidationRulesFn($data->all()));
 
-            $payload = $this->getJsonPayload($getAddValidationRulesFn($data->all()));
+      $entity = $addEntityFn($payload, ...$args);
 
-            $entity = $addEntityFn($payload, ...$args);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($entity)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->created(
+        SerializerRegistry::getInstance()
+          ->getSerializer($entity)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 }

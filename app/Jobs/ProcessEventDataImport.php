@@ -24,64 +24,64 @@ use Exception;
  * Class ProcessEventDataImport
  * @package App\Jobs
  */
-class ProcessEventDataImport implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class ProcessEventDataImport implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 2;
+  public $tries = 2;
 
-    // no timeout
-    public $timeout = 0;
+  // no timeout
+  public $timeout = 0;
 
-    /*
-     * @var int
-     */
-    private $summit_id;
+  /*
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @var string
-     */
-    private $filename;
+  /**
+   * @var string
+   */
+  private $filename;
 
-    /**
-     * @var boolean
-     */
-    private $send_speaker_email;
+  /**
+   * @var boolean
+   */
+  private $send_speaker_email;
 
-    /**
-     * ProcessEventDataImport constructor.
-     * @param int $summit_id
-     * @param string $filename
-     * @param array $payload
-     */
-    public function __construct(int $summit_id, string $filename, array $payload)
-    {
-        Log::debug(sprintf("ProcessEventDataImport::__construct"));
-        $this->summit_id = $summit_id;
-        $this->filename = $filename;
-        $this->send_speaker_email = boolval($payload['send_speaker_email']);
+  /**
+   * ProcessEventDataImport constructor.
+   * @param int $summit_id
+   * @param string $filename
+   * @param array $payload
+   */
+  public function __construct(int $summit_id, string $filename, array $payload) {
+    Log::debug(sprintf("ProcessEventDataImport::__construct"));
+    $this->summit_id = $summit_id;
+    $this->filename = $filename;
+    $this->send_speaker_email = boolval($payload["send_speaker_email"]);
+  }
+
+  /**
+   * @param ISummitService $service
+   */
+  public function handle(ISummitService $service) {
+    try {
+      Log::debug(
+        sprintf(
+          "ProcessEventDataImport::handle summit %s filename %s send_speaker_email %s",
+          $this->summit_id,
+          $this->filename,
+          $this->send_speaker_email,
+        ),
+      );
+      $service->processEventData($this->summit_id, $this->filename, $this->send_speaker_email);
+    } catch (ValidationException $ex) {
+      Log::warning($ex);
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
+  }
 
-    /**
-     * @param ISummitService $service
-     */
-    public function handle
-    (
-        ISummitService $service
-    )
-    {
-        try {
-            Log::debug(sprintf("ProcessEventDataImport::handle summit %s filename %s send_speaker_email %s", $this->summit_id, $this->filename, $this->send_speaker_email));
-            $service->processEventData($this->summit_id, $this->filename, $this->send_speaker_email);
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-        } catch (\Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
-    public function failed(\Throwable $exception)
-    {
-        Log::error(sprintf( "ProcessEventDataImport::failed %s", $exception->getMessage()));
-    }
+  public function failed(\Throwable $exception) {
+    Log::error(sprintf("ProcessEventDataImport::failed %s", $exception->getMessage()));
+  }
 }

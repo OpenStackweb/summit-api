@@ -20,44 +20,43 @@ use models\summit\SummitPushNotification;
  * Interface ISummitPushNotificationService
  * @package App\Services\Model
  */
-interface ISummitPushNotificationService
-{
-    /**
-     * @param Summit $summit
-     * @param Member|null $current_member
-     * @param array $data
-     * @return SummitPushNotification
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addPushNotification(Summit $summit, Member $current_member, array $data);
+interface ISummitPushNotificationService {
+  /**
+   * @param Summit $summit
+   * @param Member|null $current_member
+   * @param array $data
+   * @return SummitPushNotification
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function addPushNotification(Summit $summit, Member $current_member, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param Member|null $current_member
-     * @param int $notification_id
-     * @return SummitPushNotification
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function approveNotification(Summit $summit, Member $current_member, $notification_id);
+  /**
+   * @param Summit $summit
+   * @param Member|null $current_member
+   * @param int $notification_id
+   * @return SummitPushNotification
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function approveNotification(Summit $summit, Member $current_member, $notification_id);
 
-    /**
-     * @param Summit $summit
-     * @param Member|null $current_member
-     * @param int $notification_id
-     * @return SummitPushNotification
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function unApproveNotification(Summit $summit, Member $current_member, $notification_id);
+  /**
+   * @param Summit $summit
+   * @param Member|null $current_member
+   * @param int $notification_id
+   * @return SummitPushNotification
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function unApproveNotification(Summit $summit, Member $current_member, $notification_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $notification_id
-     * @return void
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deleteNotification(Summit $summit, $notification_id);
+  /**
+   * @param Summit $summit
+   * @param int $notification_id
+   * @return void
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deleteNotification(Summit $summit, $notification_id);
 }

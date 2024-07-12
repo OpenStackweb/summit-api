@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\summit\Presentation;
 use models\summit\SummitTrackChair;
 use models\utils\One2ManyPropertyTrait;
@@ -22,97 +22,89 @@ use models\utils\SilverstripeBaseModel;
  * Class PresentationTrackChairScore
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs
  */
-class PresentationTrackChairScore
-    extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class PresentationTrackChairScore extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getTypeId' => 'type',
-        'getReviewerId' => 'reviewer',
-        'getPresentationId' => 'presentation',
-    ];
+  protected $getIdMappings = [
+    "getTypeId" => "type",
+    "getReviewerId" => "reviewer",
+    "getPresentationId" => "presentation",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasType' => 'type',
-        'hasReviewer' => 'reviewer',
-        'hasPresentation' => 'presentation',
-    ];
+  protected $hasPropertyMappings = [
+    "hasType" => "type",
+    "hasReviewer" => "reviewer",
+    "hasPresentation" => "presentation",
+  ];
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var PresentationTrackChairScoreType
-     */
-    private $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType")
+   * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var PresentationTrackChairScoreType
+   */
+  private $type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitTrackChair", inversedBy="scores")
-     * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitTrackChair
-     */
-    private $reviewer;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitTrackChair", inversedBy="scores")
+   * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var SummitTrackChair
+   */
+  private $reviewer;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chairs_scores")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Presentation
-     */
-    private $presentation;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chairs_scores")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Presentation
+   */
+  private $presentation;
 
-    /**
-     * @return PresentationTrackChairScoreType
-     */
-    public function getType(): PresentationTrackChairScoreType
-    {
-        return $this->type;
-    }
+  /**
+   * @return PresentationTrackChairScoreType
+   */
+  public function getType(): PresentationTrackChairScoreType {
+    return $this->type;
+  }
 
-    /**
-     * @param PresentationTrackChairScoreType $type
-     */
-    public function setType(PresentationTrackChairScoreType $type): void
-    {
-        $this->type = $type;
-    }
+  /**
+   * @param PresentationTrackChairScoreType $type
+   */
+  public function setType(PresentationTrackChairScoreType $type): void {
+    $this->type = $type;
+  }
 
-    /**
-     * @return SummitTrackChair
-     */
-    public function getReviewer(): SummitTrackChair
-    {
-        return $this->reviewer;
-    }
+  /**
+   * @return SummitTrackChair
+   */
+  public function getReviewer(): SummitTrackChair {
+    return $this->reviewer;
+  }
 
-    /**
-     * @param SummitTrackChair $reviewer
-     */
-    public function setReviewer(SummitTrackChair $reviewer): void
-    {
-        $this->reviewer = $reviewer;
-    }
+  /**
+   * @param SummitTrackChair $reviewer
+   */
+  public function setReviewer(SummitTrackChair $reviewer): void {
+    $this->reviewer = $reviewer;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation(): Presentation
-    {
-        return $this->presentation;
-    }
+  /**
+   * @return Presentation
+   */
+  public function getPresentation(): Presentation {
+    return $this->presentation;
+  }
 
-    /**
-     * @param Presentation $presentation
-     */
-    public function setPresentation(Presentation $presentation): void
-    {
-        $this->presentation = $presentation;
-    }
+  /**
+   * @param Presentation $presentation
+   */
+  public function setPresentation(Presentation $presentation): void {
+    $this->presentation = $presentation;
+  }
 
-    public function clearReviewer():void{
-        $this->reviewer = null;
-    }
+  public function clearReviewer(): void {
+    $this->reviewer = null;
+  }
 
-    public function clearPresentation():void{
-        $this->presentation = null;
-    }
+  public function clearPresentation(): void {
+    $this->presentation = null;
+  }
 }

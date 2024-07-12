@@ -16,12 +16,11 @@
  * Class SponsorshipTypeSerializer
  * @package ModelSerializers
  */
-final class SponsorshipTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'  => 'name:json_string',
-        'Label' => 'label:json_string',
-        'Order' => 'order:json_int',
-        'Size'  => 'size:json_string',
-    ];
+final class SponsorshipTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Label" => "label:json_string",
+    "Order" => "order:json_int",
+    "Size" => "size:json_string",
+  ];
 }

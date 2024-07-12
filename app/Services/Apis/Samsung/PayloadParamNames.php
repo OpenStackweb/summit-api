@@ -16,47 +16,53 @@
  * Class PayloadParamNames
  * @package App\Services\Apis\Samsung
  */
-final class PayloadParamNames
-{
-    const Type = 'type';
-    const UserId = 'userId';
+final class PayloadParamNames {
+  const Type = "type";
+  const UserId = "userId";
 
-    const Email = 'email';
-    const Forum = 'forum';
+  const Email = "email";
+  const Forum = "forum";
 
-    const Region = 'region';
+  const Region = "region";
 
-    const Data = 'data';
+  const Data = "data";
 
-    const FirstName = 'firstName';
+  const FirstName = "firstName";
 
-    const LastName = 'lastName';
+  const LastName = "lastName";
 
-    const CompanyName = 'companyName';
+  const CompanyName = "companyName";
 
-    const Group = 'groupId';
+  const Group = "groupId";
 
-    const Session = 'session';
+  const Session = "session";
 
-    const CompanyType = 'companyType';
+  const CompanyType = "companyType";
 
-    const JobFunction = 'jobFunction';
+  const JobFunction = "jobFunction";
 
-    const JobTitle = 'jobTitle';
+  const JobTitle = "jobTitle";
 
-    const Country = 'country';
+  const Country = "country";
 
-    const AllowedExtraQuestions = [self::Session, self::CompanyType, self::JobFunction, self::JobTitle, self::Country, self::Forum];
+  const AllowedExtraQuestions = [
+    self::Session,
+    self::CompanyType,
+    self::JobFunction,
+    self::JobTitle,
+    self::Country,
+    self::Forum,
+  ];
 
-    const GBM = 'gbm';
+  const GBM = "gbm";
 
-    const Year = 'year';
+  const Year = "year";
 
-    const ExternalShowId = 'externalShowId';
+  const ExternalShowId = "externalShowId";
 
-    const DefaultTicketId = 'defaultTicketId';
+  const DefaultTicketId = "defaultTicketId";
 
-    const DefaultTicketDescription = 'defaultTicketDescription';
+  const DefaultTicketDescription = "defaultTicketDescription";
 
-    const DefaultTicketName = 'defaultTicketName';
+  const DefaultTicketName = "defaultTicketName";
 }

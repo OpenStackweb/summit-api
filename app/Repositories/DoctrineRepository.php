@@ -34,500 +34,510 @@ use utils\PagingResponse;
  * Class DoctrineRepository
  * @package App\Repositories
  */
-abstract class DoctrineRepository extends EntityRepository implements IBaseRepository
-{
+abstract class DoctrineRepository extends EntityRepository implements IBaseRepository {
+  /**
+   * @var string
+   */
+  protected $manager_name;
 
-    /**
-     * @var string
-     */
-    protected $manager_name;
+  /**
+   * @return EntityManager
+   */
+  protected function getEntityManager() {
+    return Registry::getManager($this->manager_name);
+  }
 
-    /**
-     * @return EntityManager
-     */
-    protected function getEntityManager()
-    {
-        return Registry::getManager($this->manager_name);
+  public function getById($id) {
+    return $this->find($id);
+  }
+
+  /**
+   * @param int $id
+   * @return IEntity
+   */
+  public function getByIdRefreshed($id) {
+    return $this->find($id, null, null, true);
+  }
+
+  /**
+   * @param int $id
+   * @p
+   * @return IEntity|null|object
+   */
+  public function getByIdExclusiveLock($id, bool $refresh = false) {
+    return $this->find($id, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE, null, $refresh);
+  }
+
+  /**
+   * @param $entity
+   * @param bool $sync
+   * @return mixed|void
+   * @throws \Doctrine\ORM\ORMException
+   * @throws \Doctrine\ORM\OptimisticLockException
+   */
+  public function add($entity, $sync = false) {
+    $this->getEntityManager()->persist($entity);
+    if ($sync) {
+      $this->getEntityManager()->flush($entity);
+    }
+  }
+
+  /**
+   * @param IEntity $entity
+   * @return void
+   */
+  public function delete($entity) {
+    $this->getEntityManager()->remove($entity);
+  }
+
+  /**
+   * @return IEntity[]
+   */
+  public function getAll() {
+    return $this->findAll();
+  }
+
+  /**
+   * @return string
+   */
+  abstract protected function getBaseEntity();
+
+  /**
+   * @return array
+   */
+  abstract protected function getFilterMappings();
+
+  /**
+   * @return array
+   */
+  abstract protected function getOrderMappings();
+
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  abstract protected function applyExtraFilters(QueryBuilder $query);
+
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @return QueryBuilder
+   */
+  abstract protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null);
+
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return QueryBuilder
+   */
+  protected function applyExtraSelects(
+    QueryBuilder $query,
+    ?Filter $filter = null,
+    ?Order $order = null,
+  ): QueryBuilder {
+    return $query;
+  }
+
+  /**
+   * @param callable $fnQuery
+   *  @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @param callable|null $fnDefaultFilter
+   * @return PagingResponse
+   */
+  protected function getParametrizedAllByPage(
+    callable $fnQuery,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+    callable $fnDefaultFilter = null,
+  ) {
+    $query = call_user_func($fnQuery);
+
+    $query = $this->applyExtraJoins($query, $filter);
+
+    $query = $this->applyExtraSelects($query, $filter, $order);
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings($filter));
     }
 
-    public function getById($id)
-    {
-        return $this->find($id);
+    $query = $this->applyExtraFilters($query);
+
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings($filter));
+    } elseif (!is_null($fnDefaultFilter)) {
+      $query = call_user_func($fnDefaultFilter, $query);
     }
 
-    /**
-     * @param int $id
-     * @return IEntity
-     */
-    public function getByIdRefreshed($id){
-        return $this->find($id, null, null, true);
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
+
+    Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage DQL %s", $query->getDQL()));
+    $start = time();
+
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $end = time();
+    $delta = $end - $start;
+
+    Log::debug(
+      sprintf("DoctrineRepository::getParametrizedAllByPage count %s time %s", $total, $delta),
+    );
+    $data = [];
+
+    $start = time();
+
+    foreach ($paginator as $entity) {
+      $data[] = $entity;
     }
 
-    /**
-     * @param int $id
-     * @p
-     * @return IEntity|null|object
-     */
-    public function getByIdExclusiveLock($id, bool $refresh = false){
-        return $this->find($id, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE, null, $refresh);
+    $end = time();
+    $delta = $end - $start;
+    Log::debug(
+      sprintf("DoctrineRepository::getParametrizedAllByPage entities hydratation time %s", $delta),
+    );
+
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
+
+  /**
+   * @param callable $fnQuery
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @param callable|null $fnDefaultFilter
+   * @return array
+   */
+  public function getParametrizedAllIdsByPage(
+    callable $fnQuery,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+    callable $fnDefaultFilter = null,
+  ): array {
+    $query = call_user_func($fnQuery);
+
+    $query = $this->applyExtraJoins($query, $filter);
+
+    $query = $this->applyExtraSelects($query, $filter, $order);
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings($filter));
+    } elseif (!is_null($fnDefaultFilter)) {
+      $query = call_user_func($fnDefaultFilter, $query);
     }
 
-    /**
-     * @param $entity
-     * @param bool $sync
-     * @return mixed|void
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function add($entity, $sync = false)
-    {
-        $this->getEntityManager()->persist($entity);
-        if($sync)
-            $this->getEntityManager()->flush($entity);
+    $query = $this->applyExtraFilters($query);
+
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings($filter));
     }
 
-    /**
-     * @param IEntity $entity
-     * @return void
-     */
-    public function delete($entity)
-    {
-        $this->getEntityManager()->remove($entity);
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
+
+    $res = $query->getQuery()->getArrayResult();
+    return array_column($res, "id");
+  }
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e");
+
+    $query = $this->applyExtraJoins($query, $filter);
+
+    $query = $this->applyExtraSelects($query, $filter, $order);
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings($filter));
     }
 
-    /**
-     * @return IEntity[]
-     */
-    public function getAll()
-    {
-        return $this->findAll();
+    $query = $this->applyExtraFilters($query);
+
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings($filter));
     }
 
-    /**
-     * @return string
-     */
-    protected abstract function getBaseEntity();
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-    /**
-     * @return array
-     */
-    protected abstract function getFilterMappings();
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
 
-    /**
-     * @return array
-     */
-    protected abstract function getOrderMappings();
-
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected abstract function applyExtraFilters(QueryBuilder $query);
-
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @return QueryBuilder
-     */
-    protected abstract function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null);
-
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return QueryBuilder
-     */
-    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
-        return $query;
+    foreach ($paginator as $entity) {
+      array_push($data, $entity);
     }
 
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
 
-    /**
-     * @param callable $fnQuery
-     *  @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @param callable|null $fnDefaultFilter
-     * @return PagingResponse
-     */
-    protected function getParametrizedAllByPage
-    (
-        callable $fnQuery,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null,
-        callable $fnDefaultFilter = null
-    ){
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return array
+   */
+  public function getAllIdsByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): array {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->distinct(true)
+      ->select("e.id")
+      ->from($this->getBaseEntity(), "e");
 
-        $query  = call_user_func($fnQuery);
+    $query = $this->applyExtraJoins($query, $filter);
 
-        $query = $this->applyExtraJoins($query, $filter);
+    $query = $this->applyExtraSelects($query, $filter, $order);
 
-        $query = $this->applyExtraSelects($query, $filter, $order);
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
-        }
-
-        $query = $this->applyExtraFilters($query);
-
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
-        else if(!is_null($fnDefaultFilter)){
-            $query = call_user_func($fnDefaultFilter, $query);
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage DQL %s", $query->getDQL()));
-        $start  = time();
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $end = time();
-        $delta = $end - $start;
-
-        Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage count %s time %s", $total, $delta));
-        $data      = [];
-
-        $start  = time();
-
-        foreach($paginator as $entity)
-            $data[] = $entity;
-
-        $end = time();
-        $delta = $end - $start;
-        Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage entities hydratation time %s", $delta));
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings($filter));
     }
 
-    /**
-     * @param callable $fnQuery
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @param callable|null $fnDefaultFilter
-     * @return array
-     */
-    public function getParametrizedAllIdsByPage(callable $fnQuery,PagingInfo $paging_info, Filter $filter = null, Order $order = null, callable $fnDefaultFilter = null):array {
+    $query = $this->applyExtraFilters($query);
 
-        $query  = call_user_func($fnQuery);
-
-        $query = $this->applyExtraJoins($query, $filter);
-
-        $query = $this->applyExtraSelects($query, $filter, $order);
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
-        }
-        else if(!is_null($fnDefaultFilter)){
-            $query = call_user_func($fnDefaultFilter, $query);
-        }
-
-        $query = $this->applyExtraFilters($query);
-
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $res = $query->getQuery()->getArrayResult();
-        return array_column($res, 'id');
-    }
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null){
-
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e");
-
-        $query = $this->applyExtraJoins($query, $filter);
-
-        $query = $this->applyExtraSelects($query, $filter, $order);
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
-        }
-
-        $query = $this->applyExtraFilters($query);
-
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
-
-        $query= $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
-
-        foreach($paginator as $entity)
-            array_push($data, $entity);
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings($filter));
     }
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return array
-     */
-    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array {
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->distinct(true)
-            ->select("e.id")
-            ->from($this->getBaseEntity(), "e");
+    $res = $query->getQuery()->getArrayResult();
+    return array_column($res, "id");
+  }
 
-        $query = $this->applyExtraJoins($query, $filter);
+  /**
+   * Creates a new QueryBuilder instance that is prepopulated for this entity name.
+   *
+   * @param string $alias
+   * @param string $indexBy The index for the from.
+   *
+   * @return QueryBuilder
+   */
+  public function createQueryBuilder($alias, $indexBy = null) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select($alias)
+      ->from($this->_entityName, $alias, $indexBy);
+  }
 
-        $query = $this->applyExtraSelects($query, $filter, $order);
+  /**
+   * Creates a new result set mapping builder for this entity.
+   *
+   * The column naming strategy is "INCREMENT".
+   *
+   * @param string $alias
+   *
+   * @return ResultSetMappingBuilder
+   */
+  public function createResultSetMappingBuilder($alias) {
+    $rsm = new ResultSetMappingBuilder(
+      $this->getEntityManager(),
+      ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT,
+    );
+    $rsm->addRootEntityFromClassMetadata($this->_entityName, $alias);
 
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
-        }
+    return $rsm;
+  }
 
-        $query = $this->applyExtraFilters($query);
+  /**
+   * Creates a new Query instance based on a predefined metadata named query.
+   *
+   * @param string $queryName
+   *
+   * @return Query
+   */
+  public function createNamedQuery($queryName) {
+    return $this->getEntityManager()->createQuery($this->_class->getNamedQuery($queryName));
+  }
 
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
+  /**
+   * Creates a native SQL query.
+   *
+   * @param string $queryName
+   *
+   * @return NativeQuery
+   */
+  public function createNativeNamedQuery($queryName) {
+    $queryMapping = $this->_class->getNamedNativeQuery($queryName);
+    $rsm = new Query\ResultSetMappingBuilder($this->getEntityManager());
+    $rsm->addNamedNativeQueryMapping($this->_class, $queryMapping);
 
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
+    return $this->getEntityManager()->createNativeQuery($queryMapping["query"], $rsm);
+  }
 
-        $res = $query->getQuery()->getArrayResult();
-        return array_column($res, 'id');
+  /**
+   * Clears the repository, causing all managed entities to become detached.
+   *
+   * @return void
+   */
+  public function clear() {
+    $this->getEntityManager()->clear($this->_class->rootEntityName);
+  }
+
+  /**
+   * Finds an entity by its primary key / identifier.
+   *
+   * @param mixed    $id          The identifier.
+   * @param int|null $lockMode    One of the \Doctrine\DBAL\LockMode::* constants
+   *                              or NULL if no specific lock mode should be used
+   *                              during the search.
+   * @param int|null $lockVersion The lock version.
+   *
+   * @return object|null The entity instance or NULL if the entity can not be found.
+   */
+  public function find($id, $lockMode = null, $lockVersion = null, $refresh = false) {
+    $em = $this->getEntityManager();
+    $res = $em->find($this->_entityName, $id, $lockMode, $lockVersion);
+    if ($refresh) {
+      $em->refresh($res);
+    }
+    return $res;
+  }
+
+  /**
+   * Finds entities by a set of criteria.
+   *
+   * @param array      $criteria
+   * @param array|null $orderBy
+   * @param int|null   $limit
+   * @param int|null   $offset
+   *
+   * @return array The objects.
+   */
+  public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null) {
+    $persister = $this->getEntityManager()
+      ->getUnitOfWork()
+      ->getEntityPersister($this->_entityName);
+
+    return $persister->loadAll($criteria, $orderBy, $limit, $offset);
+  }
+
+  /**
+   * Finds a single entity by a set of criteria.
+   *
+   * @param array      $criteria
+   * @param array|null $orderBy
+   *
+   * @return object|null The entity instance or NULL if the entity can not be found.
+   */
+  public function findOneBy(array $criteria, array $orderBy = null) {
+    $persister = $this->getEntityManager()
+      ->getUnitOfWork()
+      ->getEntityPersister($this->_entityName);
+
+    return $persister->load($criteria, null, null, [], null, 1, $orderBy);
+  }
+
+  /**
+   * Counts entities by a set of criteria.
+   *
+   * @todo Add this method to `ObjectRepository` interface in the next major release
+   *
+   * @param array $criteria
+   *
+   * @return int The cardinality of the objects that match the given criteria.
+   */
+  public function count(array $criteria) {
+    return $this->getEntityManager()
+      ->getUnitOfWork()
+      ->getEntityPersister($this->_entityName)
+      ->count($criteria);
+  }
+
+  /**
+   * Select all elements from a selectable that match the expression and
+   * return a new collection containing these elements.
+   *
+   * @param \Doctrine\Common\Collections\Criteria $criteria
+   *
+   * @return \Doctrine\Common\Collections\Collection
+   */
+  public function matching(Criteria $criteria) {
+    $persister = $this->getEntityManager()
+      ->getUnitOfWork()
+      ->getEntityPersister($this->_entityName);
+
+    return new LazyCriteriaCollection($persister, $criteria);
+  }
+
+  /**
+   * @param QueryBuilder $query
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @param callable|null $filterMappings
+   * @param callable|null $orderMappings
+   * @return PagingResponse
+   */
+  protected function getAllAbstractByPage(
+    QueryBuilder $query,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+    array $filterMappings = [],
+    array $orderMappings = [],
+  ): PagingResponse {
+    if (!is_null($filter) && count($filterMappings) > 0) {
+      $filter->apply2Query($query, $filterMappings);
     }
 
-    /**
-     * Creates a new QueryBuilder instance that is prepopulated for this entity name.
-     *
-     * @param string $alias
-     * @param string $indexBy The index for the from.
-     *
-     * @return QueryBuilder
-     */
-    public function createQueryBuilder($alias, $indexBy = null)
-    {
-        return $this->getEntityManager()->createQueryBuilder()
-            ->select($alias)
-            ->from($this->_entityName, $alias, $indexBy);
+    if (!is_null($order) && count($orderMappings) > 0) {
+      $order->apply2Query($query, $orderMappings);
     }
 
-    /**
-     * Creates a new result set mapping builder for this entity.
-     *
-     * The column naming strategy is "INCREMENT".
-     *
-     * @param string $alias
-     *
-     * @return ResultSetMappingBuilder
-     */
-    public function createResultSetMappingBuilder($alias)
-    {
-        $rsm = new ResultSetMappingBuilder($this->getEntityManager(), ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
-        $rsm->addRootEntityFromClassMetadata($this->_entityName, $alias);
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
 
-        return $rsm;
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
+
+    foreach ($paginator as $entity) {
+      array_push($data, $entity);
     }
 
-    /**
-     * Creates a new Query instance based on a predefined metadata named query.
-     *
-     * @param string $queryName
-     *
-     * @return Query
-     */
-    public function createNamedQuery($queryName)
-    {
-        return $this->getEntityManager()->createQuery($this->_class->getNamedQuery($queryName));
-    }
-
-    /**
-     * Creates a native SQL query.
-     *
-     * @param string $queryName
-     *
-     * @return NativeQuery
-     */
-    public function createNativeNamedQuery($queryName)
-    {
-        $queryMapping   = $this->_class->getNamedNativeQuery($queryName);
-        $rsm            = new Query\ResultSetMappingBuilder($this->getEntityManager());
-        $rsm->addNamedNativeQueryMapping($this->_class, $queryMapping);
-
-        return $this->getEntityManager()->createNativeQuery($queryMapping['query'], $rsm);
-    }
-
-    /**
-     * Clears the repository, causing all managed entities to become detached.
-     *
-     * @return void
-     */
-    public function clear()
-    {
-        $this->getEntityManager()->clear($this->_class->rootEntityName);
-    }
-
-    /**
-     * Finds an entity by its primary key / identifier.
-     *
-     * @param mixed    $id          The identifier.
-     * @param int|null $lockMode    One of the \Doctrine\DBAL\LockMode::* constants
-     *                              or NULL if no specific lock mode should be used
-     *                              during the search.
-     * @param int|null $lockVersion The lock version.
-     *
-     * @return object|null The entity instance or NULL if the entity can not be found.
-     */
-    public function find($id, $lockMode = null, $lockVersion = null, $refresh = false)
-    {
-        $em = $this->getEntityManager();
-        $res = $em->find($this->_entityName, $id, $lockMode, $lockVersion);
-        if($refresh)
-            $em->refresh($res);
-        return $res;
-    }
-
-    /**
-     * Finds entities by a set of criteria.
-     *
-     * @param array      $criteria
-     * @param array|null $orderBy
-     * @param int|null   $limit
-     * @param int|null   $offset
-     *
-     * @return array The objects.
-     */
-    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
-    {
-        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
-
-        return $persister->loadAll($criteria, $orderBy, $limit, $offset);
-    }
-
-    /**
-     * Finds a single entity by a set of criteria.
-     *
-     * @param array      $criteria
-     * @param array|null $orderBy
-     *
-     * @return object|null The entity instance or NULL if the entity can not be found.
-     */
-    public function findOneBy(array $criteria, array $orderBy = null)
-    {
-        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
-
-        return $persister->load($criteria, null, null, [], null, 1, $orderBy);
-    }
-
-    /**
-     * Counts entities by a set of criteria.
-     *
-     * @todo Add this method to `ObjectRepository` interface in the next major release
-     *
-     * @param array $criteria
-     *
-     * @return int The cardinality of the objects that match the given criteria.
-     */
-    public function count(array $criteria)
-    {
-        return $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName)->count($criteria);
-    }
-
-    /**
-     * Select all elements from a selectable that match the expression and
-     * return a new collection containing these elements.
-     *
-     * @param \Doctrine\Common\Collections\Criteria $criteria
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function matching(Criteria $criteria)
-    {
-        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
-
-        return new LazyCriteriaCollection($persister, $criteria);
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @param callable|null $filterMappings
-     * @param callable|null $orderMappings
-     * @return PagingResponse
-     */
-    protected function getAllAbstractByPage
-    (
-        QueryBuilder $query,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null,
-        array $filterMappings = [],
-        array $orderMappings = []
-    ):PagingResponse{
-
-        if(!is_null($filter) && count($filterMappings) > 0){
-            $filter->apply2Query($query, $filterMappings);
-        }
-
-        if(!is_null($order) && count($orderMappings) > 0 ){
-            $order->apply2Query($query, $orderMappings);
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = array();
-
-        foreach($paginator as $entity)
-            array_push($data, $entity);
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
-    }
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
 }

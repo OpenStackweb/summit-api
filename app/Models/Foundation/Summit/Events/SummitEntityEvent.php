@@ -14,7 +14,7 @@
 use models\main\Member;
 use models\utils\IEntity;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\AssociationOverrides({
@@ -28,149 +28,156 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitEntityEvent
  * @package models\summit
  */
-class SummitEntityEvent extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitEntityEvent extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="EntityID", type="integer")
-     */
-    protected $entity_id;
+  /**
+   * @ORM\Column(name="EntityID", type="integer")
+   */
+  protected $entity_id;
 
-    /**
-     * @param int $entity_id
-     */
-    public function setEntityId($entity_id){
-        $this->entity_id = $entity_id;
+  /**
+   * @param int $entity_id
+   */
+  public function setEntityId($entity_id) {
+    $this->entity_id = $entity_id;
+  }
+
+  /**
+   * @return int
+   */
+  public function getEntityId() {
+    return $this->entity_id;
+  }
+
+  /**
+   * @ORM\Column(name="EntityClassName", type="string")
+   */
+  private $entity_class_name;
+
+  /**
+   * @return string
+   */
+  public function getEntityClassName() {
+    return $this->entity_class_name;
+  }
+
+  /**
+   * @param string $entity_class_name
+   */
+  public function setEntityClassName($entity_class_name) {
+    $this->entity_class_name = $entity_class_name;
+  }
+
+  /**
+   * @ORM\Column(name="Type", type="string")
+   */
+  private $type;
+
+  /**
+   * @return string
+   */
+  public function getType() {
+    return $this->type;
+  }
+
+  /**
+   * @param string $type
+   */
+  public function setType($type) {
+    $this->type = $type;
+  }
+
+  /**
+   * @ORM\Column(name="Metadata", type="string")
+   */
+  private $metadata;
+
+  /**
+   * @param string $metadata
+   */
+  public function setMetadata($metadata) {
+    $this->metadata = $metadata;
+  }
+
+  /**
+   * @return array
+   */
+  public function getMetadata() {
+    return !empty($this->metadata) ? json_decode($this->metadata, true) : [];
+  }
+
+  /**
+   * @return string
+   */
+  public function getRawMetadata() {
+    return $this->metadata;
+  }
+
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
+   * @var Member
+   */
+  private $owner;
+
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return is_null($this->owner) ? 0 : $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getEntityId(){return $this->entity_id;}
+  /**
+   * @return bool
+   */
+  public function hasOwner() {
+    return $this->getOwnerId() > 0;
+  }
 
-    /**
-     * @ORM\Column(name="EntityClassName", type="string")
-     */
-    private $entity_class_name;
+  /**
+   * @return Member
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
 
-    /**
-     * @return string
-     */
-    public function getEntityClassName(){return $this->entity_class_name;}
+  /**
+   * @param Member $owner
+   */
+  public function setOwner(Member $owner) {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @param string $entity_class_name
-     */
-    public function setEntityClassName($entity_class_name){$this->entity_class_name = $entity_class_name;}
+  /**
+   * @return string
+   */
+  public function getKey() {
+    return sprintf("%s.%s", $this->entity_class_name, $this->entity_id);
+  }
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     */
-    private $type;
+  /**
+   * @var IEntity
+   */
+  private $entity;
 
-    /**
-     * @return string
-     */
-    public function getType(){return $this->type;}
+  /**
+   * @return IEntity
+   */
+  public function getEntity() {
+    return $this->entity;
+  }
 
-    /**
-     * @param string $type
-     */
-    public function setType($type){$this->type = $type;}
-
-    /**
-     * @ORM\Column(name="Metadata", type="string")
-     */
-    private $metadata;
-
-    /**
-     * @param string $metadata
-     */
-    public function setMetadata($metadata){
-        $this->metadata = $metadata;
-    }
-
-    /**
-     * @return array
-     */
-    public function getMetadata(){
-        return !empty($this->metadata) ? json_decode($this->metadata, true) : array();
-    }
-
-    /**
-     * @return string
-     */
-    public function getRawMetadata(){
-        return $this->metadata;
-    }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
-     * @var Member
-     */
-    private $owner;
-
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try{
-            return is_null($this->owner) ? 0 : $this->owner->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasOwner(){
-        return $this->getOwnerId() > 0;
-    }
-
-    /**
-     * @return Member
-     */
-    public function getOwner(){
-        return $this->owner;
-    }
-
-    /**
-     * @param Member $owner
-     */
-    public function setOwner(Member $owner){
-        $this->owner = $owner;
-    }
-
-    /**
-     * @return string
-     */
-    public function getKey(){
-        return sprintf("%s.%s", $this->entity_class_name, $this->entity_id);
-    }
-
-    /**
-     * @var IEntity
-     */
-    private $entity;
-
-    /**
-     * @return IEntity
-     */
-    public function getEntity(){
-        return $this->entity;
-    }
-
-    /**
-     * @param IEntity $entity
-     * @return IEntity
-     */
-    public function registerEntity(IEntity $entity){
-        $this->entity = $entity;
-        return $this->entity;
-    }
-
+  /**
+   * @param IEntity $entity
+   * @return IEntity
+   */
+  public function registerEntity(IEntity $entity) {
+    $this->entity = $entity;
+    return $this->entity;
+  }
 }

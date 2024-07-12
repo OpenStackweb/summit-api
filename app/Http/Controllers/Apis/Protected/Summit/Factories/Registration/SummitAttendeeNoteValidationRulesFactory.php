@@ -18,29 +18,26 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SummitAttendeeNoteValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitAttendeeNoteValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'content'   => 'required|string|max:1024',
-            'ticket_id' => 'sometimes|integer',
-        ];
-    }
+final class SummitAttendeeNoteValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "content" => "required|string|max:1024",
+      "ticket_id" => "sometimes|integer",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'content'   => 'sometimes|string|max:1024',
-            'ticket_id' => 'sometimes|integer',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "content" => "sometimes|string|max:1024",
+      "ticket_id" => "sometimes|integer",
+    ];
+  }
 }

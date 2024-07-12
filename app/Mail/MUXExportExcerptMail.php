@@ -21,44 +21,41 @@ use Illuminate\Support\Facades\Log;
  * Class MUXExportExcerptMail
  * @package App\Mail
  */
-class MUXExportExcerptMail extends Mailable
-{
-    use Queueable, SerializesModels;
+class MUXExportExcerptMail extends Mailable {
+  use Queueable, SerializesModels;
 
-    public $tries = 1;
+  public $tries = 1;
 
-    private $mail_to;
+  private $mail_to;
 
-    /**
-     * @var string
-     */
-    public $step;
+  /**
+   * @var string
+   */
+  public $step;
 
-    /**
-     * @var string
-     */
-    public $excerpt;
+  /**
+   * @var string
+   */
+  public $excerpt;
 
-    /**
-     * MUXExportExcerptMail constructor.
-     * @param $mail_to
-     * @param string $step
-     * @param string $excerpt
-     */
-    public function __construct($mail_to, string $step, string $excerpt)
-    {
-        $this->mail_to = $mail_to;
-        $this->step = $step;
-        $this->excerpt = nl2br($excerpt);
-    }
+  /**
+   * MUXExportExcerptMail constructor.
+   * @param $mail_to
+   * @param string $step
+   * @param string $excerpt
+   */
+  public function __construct($mail_to, string $step, string $excerpt) {
+    $this->mail_to = $mail_to;
+    $this->step = $step;
+    $this->excerpt = nl2br($excerpt);
+  }
 
-    public function build()
-    {
-        $subject = sprintf("[%s] Mux Export Process - %s", Config::get('app.tenant_name'), $this->step);
-        Log::warning(sprintf("MUXExportExcerptMail::build to %s", $this->mail_to));
-        return $this->from(Config::get("mail.from"))
-            ->to($this->mail_to)
-            ->subject($subject)
-            ->view('emails.mux_export_excerpt');
-    }
+  public function build() {
+    $subject = sprintf("[%s] Mux Export Process - %s", Config::get("app.tenant_name"), $this->step);
+    Log::warning(sprintf("MUXExportExcerptMail::build to %s", $this->mail_to));
+    return $this->from(Config::get("mail.from"))
+      ->to($this->mail_to)
+      ->subject($subject)
+      ->view("emails.mux_export_excerpt");
+  }
 }

@@ -19,12 +19,11 @@ use models\summit\SummitAttendee;
  * Interface ICheckAttendeeStrategy
  * @package App\Http\Controllers
  */
-interface ICheckAttendeeStrategy
-{
-    /**
-     * @param mixed $attendee_id
-     * @param Summit $summit
-     * @return null|SummitAttendee
-     */
-    public function check($attendee_id, Summit $summit);
+interface ICheckAttendeeStrategy {
+  /**
+   * @param mixed $attendee_id
+   * @param Summit $summit
+   * @return null|SummitAttendee
+   */
+  public function check($attendee_id, Summit $summit);
 }

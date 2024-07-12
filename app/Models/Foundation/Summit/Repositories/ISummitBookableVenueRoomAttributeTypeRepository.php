@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitBookableVenueRoomAttributeTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitBookableVenueRoomAttributeTypeRepository extends IBaseRepository
-{
-
+interface ISummitBookableVenueRoomAttributeTypeRepository extends IBaseRepository {
 }

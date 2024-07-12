@@ -29,66 +29,57 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitSign
  * @package App\Models\Foundation\Summit\Signs;
  */
-class SummitSign extends SilverstripeBaseModel
-{
+class SummitSign extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    use One2ManyPropertyTrait;
+  protected $getIdMappings = [
+    "getLocationId" => "location",
+  ];
 
-    protected $getIdMappings = [
-        'getLocationId' => 'location',
-    ];
+  protected $hasPropertyMappings = [
+    "hasLocation" => "location",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasLocation' => 'location',
-    ];
+  use SummitOwned;
 
-    use SummitOwned;
+  /**
+   * @ORM\Column(name="Template", type="string")
+   * @var string
+   */
+  private $template;
 
-    /**
-     * @ORM\Column(name="Template", type="string")
-     * @var string
-     */
-    private $template;
+  /**
+   * @ORM\OneToOne(targetEntity="models\summit\SummitAbstractLocation")
+   * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID")
+   * @var SummitAbstractLocation
+   */
+  private $location;
 
+  /**
+   * @return string
+   */
+  public function getTemplate(): ?string {
+    return $this->template;
+  }
 
-    /**
-     * @ORM\OneToOne(targetEntity="models\summit\SummitAbstractLocation")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID")
-     * @var SummitAbstractLocation
-     */
-    private $location;
+  /**
+   * @param string $template
+   */
+  public function setTemplate(string $template): void {
+    $this->template = trim($template);
+  }
 
-    /**
-     * @return string
-     */
-    public function getTemplate(): ?string
-    {
-        return $this->template;
-    }
+  /**
+   * @return SummitAbstractLocation
+   */
+  public function getLocation(): ?SummitAbstractLocation {
+    return $this->location;
+  }
 
-    /**
-     * @param string $template
-     */
-    public function setTemplate(string $template): void
-    {
-        $this->template = trim($template);
-    }
-
-    /**
-     * @return SummitAbstractLocation
-     */
-    public function getLocation(): ?SummitAbstractLocation
-    {
-        return $this->location;
-    }
-
-    /**
-     * @param SummitAbstractLocation $location
-     */
-    public function setLocation(SummitAbstractLocation $location): void
-    {
-        $this->location = $location;
-    }
-
-
+  /**
+   * @param SummitAbstractLocation $location
+   */
+  public function setLocation(SummitAbstractLocation $location): void {
+    $this->location = $location;
+  }
 }

@@ -17,97 +17,106 @@ use models\summit\Presentation;
  * Class AdminPresentationSerializer
  * @package ModelSerializers
  */
-class AdminPresentationSerializer extends PresentationSerializer
-{
+class AdminPresentationSerializer extends PresentationSerializer {
+  /**
+   * @param string|null $relation
+   * @return string
+   */
+  protected function getSerializerType(?string $relation = null): string {
+    $relation = trim($relation);
+    if ($relation == "created_by") {
+      return SerializerRegistry::SerializerType_Admin;
+    }
+    if ($relation == "updated_by") {
+      return SerializerRegistry::SerializerType_Admin;
+    }
+    if ($relation == "speakers") {
+      return SerializerRegistry::SerializerType_Admin;
+    }
+    // deprecated
+    if ($relation == "creator") {
+      return SerializerRegistry::SerializerType_Admin;
+    }
+    return SerializerRegistry::SerializerType_Private;
+  }
 
-    /**
-     * @param string|null $relation
-     * @return string
-     */
-    protected function getSerializerType(?string $relation=null):string{
-        $relation = trim($relation);
-        if($relation == 'created_by')
-            return SerializerRegistry::SerializerType_Admin;
-        if($relation == 'updated_by')
-            return SerializerRegistry::SerializerType_Admin;
-        if($relation == 'speakers')
-            return SerializerRegistry::SerializerType_Admin;
-        // deprecated
-        if($relation == 'creator')
-            return SerializerRegistry::SerializerType_Admin;
-        return SerializerRegistry::SerializerType_Private;
+  protected static $array_mappings = [
+    "Rank" => "rank:json_int",
+    "SelectionStatus" => "selection_status:json_string",
+    "ViewsCount" => "views_count:json_int",
+    "CommentsCount" => "comments_count:json_int",
+    "PopularityScore" => "popularity_score:json_float",
+    "VotesCount" => "votes_count:json_int",
+    "VotesAverage" => "votes_average:json_float",
+    "VotesTotalPoints" => "votes_total_points:json_int",
+    "TrackChairAvgScore" => "track_chair_avg_score:json_float",
+    "PassersCount" => "passers_count:json_int",
+    "LikersCount" => "likers_count:json_int",
+    "SelectorsCount" => "selectors_count:json_int",
+    "Occupancy" => "occupancy:json_string",
+  ];
+
+  protected static $allowed_fields = [
+    "rank",
+    "selection_status",
+    "views_count",
+    "comments_count",
+    "popularity_score",
+    "votes_count",
+    "votes_average",
+    "votes_total_points",
+    "track_chair_avg_score",
+    "remaining_selections",
+    "passers_count",
+    "likers_count",
+    "selectors_count",
+    "track_chair_scores_avg",
+    "occupancy",
+    "streaming_url",
+    "streaming_type",
+    "etherpad_link",
+  ];
+
+  /**
+   * @return string
+   */
+  protected function getSpeakersSerializerType(): string {
+    return SerializerRegistry::SerializerType_Private;
+  }
+
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $presentation = $this->object;
+    if (!$presentation instanceof Presentation) {
+      return [];
     }
 
-    protected static $array_mappings = [
-        'Rank'              => 'rank:json_int',
-        'SelectionStatus'   => 'selection_status:json_string',
-        'ViewsCount'  => 'views_count:json_int',
-        'CommentsCount' => 'comments_count:json_int',
-        'PopularityScore' => 'popularity_score:json_float',
-        'VotesCount'      => 'votes_count:json_int',
-        'VotesAverage' => 'votes_average:json_float',
-        'VotesTotalPoints' => 'votes_total_points:json_int',
-        'TrackChairAvgScore' => 'track_chair_avg_score:json_float',
-        'PassersCount' => 'passers_count:json_int',
-        'LikersCount' => 'likers_count:json_int',
-        'SelectorsCount' => 'selectors_count:json_int',
-        'Occupancy' => 'occupancy:json_string',
-    ];
-
-    protected static $allowed_fields = [
-        'rank',
-        'selection_status',
-        'views_count',
-        'comments_count',
-        'popularity_score',
-        'votes_count',
-        'votes_average',
-        'votes_total_points',
-        'track_chair_avg_score',
-        'remaining_selections',
-        'passers_count',
-        'likers_count',
-        'selectors_count',
-        'track_chair_scores_avg',
-        'occupancy',
-        'streaming_url',
-        'streaming_type',
-        'etherpad_link',
-    ];
-
-    /**
-     * @return string
-     */
-    protected function getSpeakersSerializerType():string{
-        return SerializerRegistry::SerializerType_Private;
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    // alway set
+    if (in_array("streaming_url", $fields)) {
+      $values["streaming_url"] = $presentation->getStreamingUrl();
+    }
+    if (in_array("streaming_type", $fields)) {
+      $values["streaming_type"] = $presentation->getStreamingType();
+    }
+    if (in_array("etherpad_link", $fields)) {
+      $values["etherpad_link"] = $presentation->getEtherpadLink();
+    }
+    if (in_array("track_chair_scores_avg", $fields)) {
+      $values["track_chair_scores_avg"] = $presentation->getTrackChairAvgScoresPerRakingType();
     }
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize
-    (
-        $expand = null, array $fields = [], array $relations = [], array $params = []
-    )
-    {
-        $presentation = $this->object;
-        if (!$presentation instanceof Presentation) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        // alway set
-        if (in_array('streaming_url', $fields))
-            $values['streaming_url'] = $presentation->getStreamingUrl();
-        if (in_array('streaming_type', $fields))
-            $values['streaming_type'] = $presentation->getStreamingType();
-        if (in_array('etherpad_link', $fields))
-            $values['etherpad_link'] = $presentation->getEtherpadLink();
-        if (in_array('track_chair_scores_avg', $fields))
-            $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
-
-        return $values;
-    }
+    return $values;
+  }
 }

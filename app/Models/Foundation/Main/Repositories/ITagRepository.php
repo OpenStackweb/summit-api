@@ -19,11 +19,10 @@ use models\utils\IBaseRepository;
  * Interface ITagRepository
  * @package models\main
  */
-interface ITagRepository extends IBaseRepository
-{
-    /**
-     * @param string $tag
-     * @return Tag
-     */
-    public function getByTag($tag);
+interface ITagRepository extends IBaseRepository {
+  /**
+   * @param string $tag
+   * @return Tag
+   */
+  public function getByTag($tag);
 }

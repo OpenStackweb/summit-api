@@ -17,7 +17,5 @@
  * Class DistributionSerializer
  * @package App\ModelSerializers\Marketplace
  */
-class DistributionSerializer extends OpenStackImplementationSerializer
-{
-
+class DistributionSerializer extends OpenStackImplementationSerializer {
 }

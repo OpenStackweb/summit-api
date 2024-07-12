@@ -27,99 +27,92 @@ use utils\PagingResponse;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitProposedScheduleLockRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitProposedScheduleLockRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return SummitProposedScheduleLock::class;
+  extends SilverStripeDoctrineRepository
+  implements ISummitProposedScheduleLockRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitProposedScheduleLock::class;
+  }
+
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    return $query->innerJoin("e.summit_proposed_schedule", "s")->innerJoin("e.track", "t");
+  }
+
+  protected function getFilterMappings() {
+    return [
+      "summit_id" => "s.summit:json_int",
+      "source" => "s.source:json_string",
+      "track_id" => "t.id:json_int",
+    ];
+  }
+
+  /**
+   * @return array
+   */
+  protected function getOrderMappings(): array {
+    return [
+      "track_id" => "t.id",
+    ];
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function getBySummitAndSource(
+    int $summit_id,
+    string $source,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->join("e.track", "t")
+      ->join("e.summit_proposed_schedule", "ps")
+      ->join("ps.summit", "s")
+      ->where("ps.source = :source")
+      ->andWhere("s.id = :summit_id")
+      ->setParameter("source", $source)
+      ->setParameter("summit_id", $summit_id);
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings());
     }
 
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        return $query->innerJoin('e.summit_proposed_schedule', 's')
-            ->innerJoin('e.track', 't');
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings());
+    } else {
+      //default order
+      $query = $query->addOrderBy("t.id", "ASC");
     }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'summit_id'          => 's.summit:json_int',
-            'source'             => 's.source:json_string',
-            'track_id'           => 't.id:json_int',
-        ];
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
+
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
+
+    foreach ($paginator as $entity) {
+      $data[] = $entity;
     }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings(): array
-    {
-        return [
-            'track_id' => 't.id',
-        ];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getBySummitAndSource
-    (
-        int $summit_id,
-        string $source,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order   = null
-    )
-    {
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->join("e.track","t")
-            ->join("e.summit_proposed_schedule","ps")
-            ->join("ps.summit","s")
-            ->where('ps.source = :source')
-            ->andWhere('s.id = :summit_id')
-            ->setParameter('source', $source)
-            ->setParameter('summit_id', $summit_id);
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
-        }
-
-        if (!is_null($order)) {
-            $order->apply2Query($query, $this->getOrderMappings());
-        } else {
-            //default order
-            $query = $query->addOrderBy("t.id",'ASC');
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
-
-        foreach($paginator as $entity)
-            $data[] = $entity;
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
-    }
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
 }

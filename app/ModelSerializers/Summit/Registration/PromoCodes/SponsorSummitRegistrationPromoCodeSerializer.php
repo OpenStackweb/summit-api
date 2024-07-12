@@ -19,57 +19,58 @@ use models\summit\SponsorSummitRegistrationPromoCode;
  * Class SponsorSummitRegistrationPromoCodeSerializer
  * @package ModelSerializers
  */
-class SponsorSummitRegistrationPromoCodeSerializer
-extends SummitRegistrationPromoCodeSerializer
-{
-    protected static $array_mappings = [
-        'ContactEmail' => 'contact_email:json_string',
-        'SponsorId'  => 'sponsor_id:json_int',
-    ];
+class SponsorSummitRegistrationPromoCodeSerializer extends SummitRegistrationPromoCodeSerializer {
+  protected static $array_mappings = [
+    "ContactEmail" => "contact_email:json_string",
+    "SponsorId" => "sponsor_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code            = $this->object;
-        if(!$code instanceof SponsorSummitRegistrationPromoCode) return [];
-        $values          = parent::serialize($expand, $fields, $relations, $params);
-        $serializer_type = SerializerRegistry::SerializerType_Public;
-
-        if(isset($params['serializer_type']))
-            $serializer_type = $params['serializer_type'];
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'sponsor': {
-                        if($code->hasSponsor()){
-                            unset($values['sponsor_id']);
-                            $values['sponsor'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $code->getSponsor(),
-                                $serializer_type
-                            )->serialize(
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            );
-                        }
-                    }
-                        break;
-                    case 'sponsor_name':{
-                        $values['sponsor_name'] = $code->getSponsor()->getCompany()->getName();
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SponsorSummitRegistrationPromoCode) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $serializer_type = SerializerRegistry::SerializerType_Public;
+
+    if (isset($params["serializer_type"])) {
+      $serializer_type = $params["serializer_type"];
+    }
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        switch (trim($relation)) {
+          case "sponsor":
+            if ($code->hasSponsor()) {
+              unset($values["sponsor_id"]);
+              $values["sponsor"] = SerializerRegistry::getInstance()
+                ->getSerializer($code->getSponsor(), $serializer_type)
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                );
+            }
+            break;
+          case "sponsor_name":
+            $values["sponsor_name"] = $code->getSponsor()->getCompany()->getName();
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

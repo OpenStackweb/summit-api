@@ -16,14 +16,13 @@ use ModelSerializers\SilverStripeSerializer;
  * Class RSVPQuestionTemplateSerializer
  * @package App\ModelSerializers\Summit\RSVP\Templates
  */
-class RSVPQuestionTemplateSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'      => 'name:json_string',
-        'Label'     => 'label:json_string',
-        'Order'     => 'order:json_int',
-        'Mandatory' => 'is_mandatory:json_boolean',
-        'ReadOnly'  => 'is_read_only:json_boolean',
-        'ClassName' => 'class_name:json_string',
-    ];
+class RSVPQuestionTemplateSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Label" => "label:json_string",
+    "Order" => "order:json_int",
+    "Mandatory" => "is_mandatory:json_boolean",
+    "ReadOnly" => "is_read_only:json_boolean",
+    "ClassName" => "class_name:json_string",
+  ];
 }

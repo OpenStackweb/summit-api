@@ -16,9 +16,8 @@
  * Class SummitSponsorMetricSerializer
  * @package ModelSerializers
  */
-class SummitSponsorMetricSerializer extends SummitMetricSerializer
-{
-    protected static $array_mappings = [
-        'SponsorId' => 'sponsor_id:json_int',
-    ];
+class SummitSponsorMetricSerializer extends SummitMetricSerializer {
+  protected static $array_mappings = [
+    "SponsorId" => "sponsor_id:json_int",
+  ];
 }

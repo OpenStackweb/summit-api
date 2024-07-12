@@ -18,8 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitAttendeeNoteRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitAttendeeNoteRepository
-    extends IBaseRepository
-{
-
+interface ISummitAttendeeNoteRepository extends IBaseRepository {
 }

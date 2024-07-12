@@ -15,89 +15,92 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 
-
 /**
  * Class ExtraQuestionTypeSerializer
  * @package ModelSerializers
  */
-class ExtraQuestionTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'        => 'name:json_string',
-        'Type'        => 'type:json_string',
-        'Label'       => 'label:json_string',
-        'Placeholder' => 'placeholder:json_string',
-        'Order'       => 'order:json_int',
-        'Mandatory'   => 'mandatory:json_boolean',
-        'MaxSelectedValues' => 'max_selected_values:json_int',
-        'Class' => 'class:json_string',
-    ];
+class ExtraQuestionTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Type" => "type:json_string",
+    "Label" => "label:json_string",
+    "Placeholder" => "placeholder:json_string",
+    "Order" => "order:json_int",
+    "Mandatory" => "mandatory:json_boolean",
+    "MaxSelectedValues" => "max_selected_values:json_int",
+    "Class" => "class:json_string",
+  ];
 
-    protected static $allowed_relations = [
-        'values',
-        'sub_question_rules',
-        'parent_rules',
-    ];
+  protected static $allowed_relations = ["values", "sub_question_rules", "parent_rules"];
 
-    public static function testRule($e){
-        return $e->allowsValues();
+  public static function testRule($e) {
+    return $e->allowsValues();
+  }
+
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $question = $this->object;
+    if (!$question instanceof ExtraQuestionType) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    Log::debug(sprintf("ExtraQuestionTypeSerializer expand %s", $expand));
+    if (in_array("values", $relations) && !isset($values["values"]) && $question->allowsValues()) {
+      $question_values = [];
+      foreach ($question->getValues() as $value) {
+        $question_values[] = $value->getId();
+      }
+      $values["values"] = $question_values;
     }
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $question = $this->object;
-        if (!$question instanceof ExtraQuestionType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        Log::debug(sprintf("ExtraQuestionTypeSerializer expand %s", $expand));
-        if(in_array('values', $relations) && !isset($values['values']) && $question->allowsValues()) {
-            $question_values = [];
-            foreach ($question->getValues() as $value) {
-                $question_values[] = $value->getId();
-            }
-            $values['values'] = $question_values;
-        }
-
-        if(in_array('sub_question_rules', $relations) && !isset($values['sub_question_rules']) && $question->allowsValues()) {
-            $sub_question_rules = [];
-            foreach ($question->getOrderedSubQuestionRules() as $rule) {
-                $sub_question_rules[] = $rule->getId();
-            }
-            $values['sub_question_rules'] = $sub_question_rules;
-        }
-
-        if(in_array('parent_rules', $relations) && !isset($values['parent_rules'])) {
-            $parent_rules = [];
-            foreach ($question->getParentRules() as $rule) {
-                $parent_rules[] = $rule->getId();
-            }
-            $values['parent_rules'] = $parent_rules;
-        }
-
-        return $values;
+    if (
+      in_array("sub_question_rules", $relations) &&
+      !isset($values["sub_question_rules"]) &&
+      $question->allowsValues()
+    ) {
+      $sub_question_rules = [];
+      foreach ($question->getOrderedSubQuestionRules() as $rule) {
+        $sub_question_rules[] = $rule->getId();
+      }
+      $values["sub_question_rules"] = $sub_question_rules;
     }
 
+    if (in_array("parent_rules", $relations) && !isset($values["parent_rules"])) {
+      $parent_rules = [];
+      foreach ($question->getParentRules() as $rule) {
+        $parent_rules[] = $rule->getId();
+      }
+      $values["parent_rules"] = $parent_rules;
+    }
 
-    protected static $expand_mappings = [
-        'values' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getValues',
-            'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule',
-        ],
-        'sub_question_rules' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getOrderedSubQuestionRules',
-            'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule',
-        ],
-        'parent_rules' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getParentRules',
-        ]
-    ];
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "values" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getValues",
+      "test_rule" => "ModelSerializers\\ExtraQuestionTypeSerializer::testRule",
+    ],
+    "sub_question_rules" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getOrderedSubQuestionRules",
+      "test_rule" => "ModelSerializers\\ExtraQuestionTypeSerializer::testRule",
+    ],
+    "parent_rules" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getParentRules",
+    ],
+  ];
 }

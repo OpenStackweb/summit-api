@@ -18,80 +18,77 @@ use models\summit\ISummitRepository;
  * Class EventBritePromoCodesRedeemProcessor
  * @package App\Console\Commands
  */
-final class EventBritePromoCodesRedeemProcessor extends Command
-{
-    /**
-     * @var IAttendeeService
-     */
-    private $service;
+final class EventBritePromoCodesRedeemProcessor extends Command {
+  /**
+   * @var IAttendeeService
+   */
+  private $service;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $repository;
+  /**
+   * @var ISummitRepository
+   */
+  private $repository;
 
+  /**
+   * EventBritePromoCodesRedeemProcessor constructor.
+   * @param IAttendeeService $service
+   * @param ISummitRepository $repository
+   */
+  public function __construct(IAttendeeService $service, ISummitRepository $repository) {
+    parent::__construct();
+    $this->repository = $repository;
+    $this->service = $service;
+  }
 
-    /**
-     * EventBritePromoCodesRedeemProcessor constructor.
-     * @param IAttendeeService $service
-     * @param ISummitRepository $repository
-     */
-    public function __construct
-    (
-        IAttendeeService $service,
-        ISummitRepository $repository
-    )
-    {
-        parent::__construct();
-        $this->repository = $repository;
-        $this->service    = $service;
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:eventbrite-promo-codes-redeem-processor";
+
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:eventbrite-promo-codes-redeem-processor {summit_id?}";
+
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Redeems EventBrite promo codes per summit";
+
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    $summit_id = $this->argument("summit_id");
+
+    if (is_null($summit_id)) {
+      // if we dont provide a summit id, then get current
+      $summit = $this->repository->getCurrentAndAvailable();
+    } else {
+      $summit = $this->repository->getById(intval($summit_id));
     }
+    $this->info(
+      sprintf("starting to process promo codes for summit id %s", $summit->getIdentifier()),
+    );
+    $has_more_items = false;
+    $page = 1;
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:eventbrite-promo-codes-redeem-processor';
+    do {
+      $this->info(sprintf("processing page %s for summit id %s", $page, $summit->getIdentifier()));
+      $has_more_items = $this->service->updateRedeemedPromoCodes($summit, $page);
+      ++$page;
+    } while ($has_more_items);
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:eventbrite-promo-codes-redeem-processor {summit_id?}';
-
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Redeems EventBrite promo codes per summit';
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        $summit_id = $this->argument('summit_id');
-
-        if(is_null($summit_id))// if we dont provide a summit id, then get current
-            $summit = $this->repository->getCurrentAndAvailable();
-        else
-            $summit = $this->repository->getById(intval($summit_id));
-        $this->info(sprintf("starting to process promo codes for summit id %s", $summit->getIdentifier()));
-        $has_more_items = false;
-        $page           = 1;
-
-        do{
-            $this->info(sprintf("processing page %s for summit id %s", $page, $summit->getIdentifier()));
-            $has_more_items = $this->service->updateRedeemedPromoCodes($summit, $page);
-            ++$page;
-        } while($has_more_items);
-
-        $this->info(sprintf("finished to process promo codes for summit id %s", $summit->getIdentifier()));
-    }
+    $this->info(
+      sprintf("finished to process promo codes for summit id %s", $summit->getIdentifier()),
+    );
+  }
 }

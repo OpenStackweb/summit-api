@@ -11,66 +11,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPSingleValueTemplateQuestion")
  * @ORM\Entity
  * Class RSVPSingleValueTemplateQuestion
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPSingleValueTemplateQuestion extends RSVPQuestionTemplate
-{
-    /**
-     * @ORM\Column(name="InitialValue", type="string")
-     * @var string
-     */
-    protected $initial_value;
+class RSVPSingleValueTemplateQuestion extends RSVPQuestionTemplate {
+  /**
+   * @ORM\Column(name="InitialValue", type="string")
+   * @var string
+   */
+  protected $initial_value;
 
-    /**
-     * @return string
-     */
-    public function getInitialValue()
-    {
-        return $this->initial_value;
+  /**
+   * @return string
+   */
+  public function getInitialValue() {
+    return $this->initial_value;
+  }
+
+  /**
+   * @param string $initial_value
+   */
+  public function setInitialValue($initial_value) {
+    $this->initial_value = $initial_value;
+  }
+
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
+
+  const ClassName = "RSVPSingleValueTemplateQuestion";
+
+  public static $metadata = [
+    "initial_value" => "string",
+    "class_name" => self::ClassName,
+  ];
+
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(RSVPQuestionTemplate::getMetadata(), self::$metadata);
+  }
+
+  /**
+   * @param array|string $value
+   * @return bool
+   */
+  public function isValidValue($value): bool {
+    if (empty($value) && !$this->is_mandatory) {
+      return true;
     }
-
-    /**
-     * @param string $initial_value
-     */
-    public function setInitialValue($initial_value)
-    {
-        $this->initial_value = $initial_value;
+    if (!is_string($value)) {
+      return false;
     }
-
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
-
-    const ClassName = 'RSVPSingleValueTemplateQuestion';
-
-    public static $metadata = [
-        'initial_value' => 'string',
-        'class_name'    => self::ClassName,
-    ];
-
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(RSVPQuestionTemplate::getMetadata(), self::$metadata);
-    }
-
-    /**
-     * @param array|string $value
-     * @return bool
-     */
-    public function isValidValue($value): bool
-    {
-        if(empty($value) && !$this->is_mandatory) return true;
-        if(!is_string($value)) return false;
-        return true;
-    }
+    return true;
+  }
 }

@@ -17,7 +17,5 @@ use models\utils\IBaseRepository;
  * Interface IPresentationActionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IPresentationActionTypeRepository extends IBaseRepository
-{
-
+interface IPresentationActionTypeRepository extends IBaseRepository {
 }

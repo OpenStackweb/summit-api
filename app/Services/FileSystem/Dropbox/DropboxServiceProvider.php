@@ -23,35 +23,26 @@ use Spatie\FlysystemDropbox\DropboxAdapter;
  * Class DropboxServiceProvider
  * @package App\Services\FileSystem\Dropbox
  */
-class DropboxServiceProvider extends ServiceProvider
-{
-    /**
-     * Register bindings in the container.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
-    }
+class DropboxServiceProvider extends ServiceProvider {
+  /**
+   * Register bindings in the container.
+   *
+   * @return void
+   */
+  public function register() {
+    //
+  }
 
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot(): void
-    {
-        Storage::extend('dropbox', function ($app, $config) {
-            $adapter = new DropboxAdapter(
-                new DropboxClient($config['authorization_token'] ?? '')
-            );
+  /**
+   * Bootstrap any application services.
+   *
+   * @return void
+   */
+  public function boot(): void {
+    Storage::extend("dropbox", function ($app, $config) {
+      $adapter = new DropboxAdapter(new DropboxClient($config["authorization_token"] ?? ""));
 
-            return new FilesystemAdapter(
-                new Filesystem($adapter, $config),
-                $adapter,
-                $config
-            );
-        });
-    }
+      return new FilesystemAdapter(new Filesystem($adapter, $config), $adapter, $config);
+    });
+  }
 }

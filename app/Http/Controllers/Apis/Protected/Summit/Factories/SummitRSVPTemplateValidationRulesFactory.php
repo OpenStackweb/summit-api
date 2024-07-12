@@ -16,18 +16,17 @@
  * Class SummitRSVPTemplateValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRSVPTemplateValidationRulesFactory
-{
-    public static function build(array $data, $update = false){
-        if($update){
-            return [
-                'title'      => 'sometimes|string|max:255',
-                'is_enabled' => 'sometimes|boolean',
-            ];
-        }
-        return [
-            'title'      => 'required|string|max:255',
-            'is_enabled' => 'required|boolean',
-        ];
+final class SummitRSVPTemplateValidationRulesFactory {
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "title" => "sometimes|string|max:255",
+        "is_enabled" => "sometimes|boolean",
+      ];
     }
+    return [
+      "title" => "required|string|max:255",
+      "is_enabled" => "required|boolean",
+    ];
+  }
 }

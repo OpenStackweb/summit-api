@@ -13,7 +13,7 @@
  **/
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
@@ -25,182 +25,182 @@ use models\summit\Summit;
  * Class Group
  * @package models\main
  */
-class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Title", type="string")
-     * @var string
-     */
-    private $title;
+class SummitAdministratorPermissionGroup extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Title", type="string")
+   * @var string
+   */
+  private $title;
 
-    const ValidGroups = [
-        IGroup::SummitAdministrators,
-        IGroup::TrackChairsAdmins,
-        IGroup::TrackChairs,
-        IGroup::BadgePrinters,
-        IGroup::SummitRegistrationAdmins,
-        IGroup::SummitAccessControl
-    ];
+  const ValidGroups = [
+    IGroup::SummitAdministrators,
+    IGroup::TrackChairsAdmins,
+    IGroup::TrackChairs,
+    IGroup::BadgePrinters,
+    IGroup::SummitRegistrationAdmins,
+    IGroup::SummitAccessControl,
+  ];
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->members = new ArrayCollection();
-        $this->summits = new ArrayCollection();
+  public function __construct() {
+    parent::__construct();
+    $this->members = new ArrayCollection();
+    $this->summits = new ArrayCollection();
+  }
+
+  /**
+   * @ORM\ManyToMany(targetEntity="models\main\Member", inversedBy="summit_permission_groups")
+   * @ORM\JoinTable(name="SummitAdministratorPermissionGroup_Members",
+   *      joinColumns={@ORM\JoinColumn(name="SummitAdministratorPermissionGroupID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
+   *      )
+   * @var Member[]
+   */
+  private $members;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="models\summit\Summit", inversedBy="permission_groups")
+   * @ORM\JoinTable(name="SummitAdministratorPermissionGroup_Summits",
+   *      joinColumns={@ORM\JoinColumn(name="SummitAdministratorPermissionGroupID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")}
+   *      )
+   * @var Summit[]
+   */
+  private $summits;
+
+  /**
+   * @param Member $member
+   * @throws ValidationException
+   */
+  public function addMember(Member $member) {
+    if (!$this->canAddMember($member)) {
+      throw new ValidationException(
+        sprintf(
+          "Member %s should belong to following groups (%s).",
+          $member->getId(),
+          implode(",", self::ValidGroups),
+        ),
+      );
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", inversedBy="summit_permission_groups")
-     * @ORM\JoinTable(name="SummitAdministratorPermissionGroup_Members",
-     *      joinColumns={@ORM\JoinColumn(name="SummitAdministratorPermissionGroupID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
-     *      )
-     * @var Member[]
-     */
-    private $members;
-
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\Summit", inversedBy="permission_groups")
-     * @ORM\JoinTable(name="SummitAdministratorPermissionGroup_Summits",
-     *      joinColumns={@ORM\JoinColumn(name="SummitAdministratorPermissionGroupID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")}
-     *      )
-     * @var Summit[]
-     */
-    private $summits;
-
-    /**
-     * @param Member $member
-     * @throws ValidationException
-     */
-    public function addMember(Member $member)
-    {
-        if(!$this->canAddMember($member)){
-            throw new ValidationException(sprintf("Member %s should belong to following groups (%s).", $member->getId(),
-            implode(",", self::ValidGroups)));
-        }
-
-        if ($this->members->contains($member)) return;
-        $this->members->add($member);
-        $member->add2SummitAdministratorPermissionGroup($this);
+    if ($this->members->contains($member)) {
+      return;
     }
+    $this->members->add($member);
+    $member->add2SummitAdministratorPermissionGroup($this);
+  }
 
-    public function canAddMember(Member $member):bool{
-        foreach (self::ValidGroups as $slug){
-            if($member->isOnGroup($slug, true)) return true;
-        }
-        return false;
+  public function canAddMember(Member $member): bool {
+    foreach (self::ValidGroups as $slug) {
+      if ($member->isOnGroup($slug, true)) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    /**
-     * @param Member $member
-     */
-    public function removeMember(Member $member)
-    {
-        if (!$this->members->contains($member)) return;
-        $this->members->removeElement($member);
-        $member->removeFromSummitAdministratorPermissionGroup($this);
+  /**
+   * @param Member $member
+   */
+  public function removeMember(Member $member) {
+    if (!$this->members->contains($member)) {
+      return;
     }
+    $this->members->removeElement($member);
+    $member->removeFromSummitAdministratorPermissionGroup($this);
+  }
 
-    public function getMembers()
-    {
-        return $this->members;
+  public function getMembers() {
+    return $this->members;
+  }
+
+  public function getMembersIds(): array {
+    $sql = <<<SQL
+    SELECT DISTINCT(SummitAdministratorPermissionGroup_Members.MemberID)
+    FROM SummitAdministratorPermissionGroup_Members
+    WHERE SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID = :group_id
+    SQL;
+
+    $stmt = $this->prepareRawSQL($sql, [
+      "group_id" => $this->id,
+    ]);
+    $res = $stmt->executeQuery();
+    return $res->fetchFirstColumn();
+  }
+
+  /**
+   * @param Summit $summit
+   */
+  public function addSummit(Summit $summit) {
+    if ($this->summits->contains($summit)) {
+      return;
     }
+    $this->summits->add($summit);
+    $summit->add2SummitAdministratorPermissionGroup($this);
+  }
 
-    public function getMembersIds(): array
-    {
-
-        $sql = <<<SQL
-SELECT DISTINCT(SummitAdministratorPermissionGroup_Members.MemberID) 
-FROM SummitAdministratorPermissionGroup_Members 
-WHERE SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID = :group_id
-SQL;
-
-        $stmt = $this->prepareRawSQL($sql, [
-            'group_id' => $this->id,
-        ]);
-        $res = $stmt->executeQuery();
-        return $res->fetchFirstColumn();
+  public function removeSummit(Summit $summit) {
+    if (!$this->summits->contains($summit)) {
+      return;
     }
+    $this->summits->removeElement($summit);
+    $summit->removeFromSummitAdministratorPermissionGroup($this);
+  }
 
-    /**
-     * @param Summit $summit
-     */
-    public function addSummit(Summit $summit)
-    {
-        if ($this->summits->contains($summit)) return;
-        $this->summits->add($summit);
-        $summit->add2SummitAdministratorPermissionGroup($this);
-    }
+  public function getSummits() {
+    return $this->summits;
+  }
 
-    public function removeSummit(Summit $summit)
-    {
-        if (!$this->summits->contains($summit)) return;
-        $this->summits->removeElement($summit);
-        $summit->removeFromSummitAdministratorPermissionGroup($this);
-    }
+  public function getSummitsIds(): array {
+    $sql = <<<SQL
+    SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID)
+    FROM SummitAdministratorPermissionGroup_Summits
+    WHERE SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = :group_id;
+    SQL;
 
-    public function getSummits()
-    {
-        return $this->summits;
-    }
+    $stmt = $this->prepareRawSQL($sql, [
+      "group_id" => $this->id,
+    ]);
+    $res = $stmt->executeQuery();
+    return $res->fetchFirstColumn();
+  }
 
-    public function getSummitsIds(): array
-    {
+  /**
+   * @return string
+   */
+  public function getTitle(): string {
+    return $this->title;
+  }
 
-        $sql = <<<SQL
-SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Summits 
-WHERE SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = :group_id;
-SQL;
+  /**
+   * @param string $title
+   */
+  public function setTitle(string $title): void {
+    $this->title = $title;
+  }
 
-        $stmt = $this->prepareRawSQL($sql, [
-            'group_id' => $this->id,
-        ]);
-        $res = $stmt->executeQuery();
-        return $res->fetchFirstColumn();
+  public function clearMembers() {
+    $this->members->clear();
+  }
 
-    }
+  public function clearSummits() {
+    $this->summits->clear();
+  }
 
-    /**
-     * @return string
-     */
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
+  /**
+   * @param string $groupSlug
+   * @return bool
+   */
+  public static function isValidGroup(string $groupSlug): bool {
+    return in_array($groupSlug, self::ValidGroups);
+  }
 
-    /**
-     * @param string $title
-     */
-    public function setTitle(string $title): void
-    {
-        $this->title = $title;
-    }
-
-    public function clearMembers(){
-        $this->members->clear();
-    }
-
-    public function clearSummits(){
-        $this->summits->clear();
-    }
-
-    /**
-     * @param string $groupSlug
-     * @return bool
-     */
-    public static function isValidGroup(string $groupSlug):bool {
-        return in_array($groupSlug,self::ValidGroups);
-    }
-
-    /**
-     * @param Member $member
-     * @return bool
-     */
-    public function hasMember(Member $member):bool{
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', $member->getId()));
-        return $this->members->matching($criteria)->count() > 0;
-    }
+  /**
+   * @param Member $member
+   * @return bool
+   */
+  public function hasMember(Member $member): bool {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("id", $member->getId()));
+    return $this->members->matching($criteria)->count() > 0;
+  }
 }

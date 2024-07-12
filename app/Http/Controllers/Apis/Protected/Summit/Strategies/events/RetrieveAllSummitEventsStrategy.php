@@ -24,31 +24,31 @@ use utils\PagingResponse;
  * Class RetrieveAllSummitEventsStrategy
  * @package App\Http\Controllers
  */
-class RetrieveAllSummitEventsStrategy extends RetrieveSummitEventsStrategy
-{
-    /**
-     * @var ISummitEventRepository
-     */
-    protected $event_repository;
+class RetrieveAllSummitEventsStrategy extends RetrieveSummitEventsStrategy {
+  /**
+   * @var ISummitEventRepository
+   */
+  protected $event_repository;
 
-    /**
-     * RetrieveAllSummitEventsStrategy constructor.
-     * @param ISummitEventRepository $event_repository
-     */
-    public function __construct(ISummitEventRepository $event_repository)
-    {
-        $this->event_repository = $event_repository;
-    }
+  /**
+   * RetrieveAllSummitEventsStrategy constructor.
+   * @param ISummitEventRepository $event_repository
+   */
+  public function __construct(ISummitEventRepository $event_repository) {
+    $this->event_repository = $event_repository;
+  }
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
-        return $this->event_repository->getAllByPage($paging_info, $filter, $order);
-    }
-
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function retrieveEventsFromSource(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    return $this->event_repository->getAllByPage($paging_info, $filter, $order);
+  }
 }

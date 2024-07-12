@@ -19,33 +19,28 @@ use models\summit\SummitSubmissionInvitation;
  * Class ReInviteSubmissionEmail
  * @package App\Jobs\Emails\PresentationSubmissions\Invitations
  */
-class ReInviteSubmissionEmail extends InviteSubmissionEmail
-{
-    /**
-     * @param SummitSubmissionInvitation $invitation
-     * @param array $extra_data
-     */
-    public function __construct(SummitSubmissionInvitation $invitation, array $extra_data)
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "ReInviteSubmissionEmail::____construct invitation %s email %s",
-                $invitation->getId(),
-                $invitation->getEmail()
-            )
-        );
-        parent::__construct($invitation, $extra_data);
-    }
+class ReInviteSubmissionEmail extends InviteSubmissionEmail {
+  /**
+   * @param SummitSubmissionInvitation $invitation
+   * @param array $extra_data
+   */
+  public function __construct(SummitSubmissionInvitation $invitation, array $extra_data) {
+    Log::debug(
+      sprintf(
+        "ReInviteSubmissionEmail::____construct invitation %s email %s",
+        $invitation->getId(),
+        $invitation->getEmail(),
+      ),
+    );
+    parent::__construct($invitation, $extra_data);
+  }
 
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSION_REINVITE_REGISTRATION';
-    const EVENT_NAME = 'SUMMIT_SUBMISSION_REINVITE_REGISTRATION';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSION_REINVITE_REGISTRATION';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSION_REINVITE_REGISTRATION";
+  const EVENT_NAME = "SUMMIT_SUBMISSION_REINVITE_REGISTRATION";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSION_REINVITE_REGISTRATION";
 }

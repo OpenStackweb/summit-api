@@ -22,59 +22,66 @@ use utils\PagingResponse;
  * Interface ISummitEventRepository
  * @package models\summit
  */
-interface ISummitEventRepository extends ISummitEventPublishRepository
-{
-    /**
-     * @param IPublishableEvent $event
-     * @return IPublishableEvent[]
-     */
-    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array;
+interface ISummitEventRepository extends ISummitEventPublishRepository {
+  /**
+   * @param IPublishableEvent $event
+   * @return IPublishableEvent[]
+   */
+  public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array;
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllPublishedTagsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllPublishedTagsByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPageLocationTBD(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPageLocationTBD(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param int $event_id
-     */
-    public function cleanupScheduleAndFavoritesForEvent(int $event_id):void;
+  /**
+   * @param int $event_id
+   */
+  public function cleanupScheduleAndFavoritesForEvent(int $event_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param array $external_ids
-     * @return mixed
-     */
-    public function getPublishedEventsBySummitNotInExternalIds(Summit $summit, array $external_ids);
+  /**
+   * @param Summit $summit
+   * @param array $external_ids
+   * @return mixed
+   */
+  public function getPublishedEventsBySummitNotInExternalIds(Summit $summit, array $external_ids);
 
-    /**
-     * @param int $summit_id,
-     * @return array
-     */
-    public function getPublishedEventsIdsBySummit(int $summit_id):array;
+  /**
+   * @param int $summit_id,
+   * @return array
+   */
+  public function getPublishedEventsIdsBySummit(int $summit_id): array;
 
-    /**
-     * @param int $summit_id ,
-     * @return int
-     */
-    public function getLastPresentationOrderBySummit(int $summit_id):int;
+  /**
+   * @param int $summit_id ,
+   * @return int
+   */
+  public function getLastPresentationOrderBySummit(int $summit_id): int;
 }

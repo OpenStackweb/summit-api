@@ -16,7 +16,6 @@ use models\summit\PaymentGatewayProfile;
  * Interface IBuildDefaultPaymentGatewayProfileStrategy
  * @package App\Models\Foundation\Summit\Registration
  */
-interface IBuildDefaultPaymentGatewayProfileStrategy
-{
-    public function build(string $application_type):?PaymentGatewayProfile;
+interface IBuildDefaultPaymentGatewayProfileStrategy {
+  public function build(string $application_type): ?PaymentGatewayProfile;
 }

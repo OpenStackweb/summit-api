@@ -19,65 +19,57 @@ use Illuminate\Support\Facades\Log;
  * Class SummitEventSetAvgRateProcessor
  * @package App\Console\Commands
  */
-class SummitEventSetAvgRateProcessor extends Command
-{
+class SummitEventSetAvgRateProcessor extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:feedback-avg-rate-processor";
 
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:feedback-avg-rate-processor";
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:feedback-avg-rate-processor';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Calculate all AVG feedback rate for all schedule for all ongoing summits";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:feedback-avg-rate-processor';
+  /**
+   * @var ISummitService
+   */
+  private $summit_service;
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Calculate all AVG feedback rate for all schedule for all ongoing summits';
+  /**
+   * SummitEventSetAvgRateProcessor constructor.
+   * @param ISummitService $summit_service
+   */
+  public function __construct(ISummitService $summit_service) {
+    parent::__construct();
+    $this->summit_service = $summit_service;
+  }
 
-    /**
-     * @var ISummitService
-     */
-    private $summit_service;
-
-    /**
-     * SummitEventSetAvgRateProcessor constructor.
-     * @param ISummitService $summit_service
-     */
-    public function __construct(ISummitService $summit_service)
-    {
-        parent::__construct();
-        $this->summit_service = $summit_service;
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    try {
+      $this->info("processing SummitEventSetAvgRateProcessor");
+      $start = time();
+      $this->summit_service->calculateFeedbackAverageForOngoingSummits();
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        try {
-
-            $this->info("processing SummitEventSetAvgRateProcessor");
-            $start   = time();
-            $this->summit_service->calculateFeedbackAverageForOngoingSummits();
-            $end   = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
+  }
 }

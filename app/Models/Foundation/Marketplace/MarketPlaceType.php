@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,48 +19,43 @@ use models\utils\SilverstripeBaseModel;
  * Class MarketPlaceType
  * @package App\Models\Foundation\Marketplace
  */
-class MarketPlaceType extends SilverstripeBaseModel
-{
+class MarketPlaceType extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Slug", type="string")
+   * @var string
+   */
+  private $slug;
 
-    /**
-     * @ORM\Column(name="Slug", type="string")
-     * @var string
-     */
-    private $slug;
+  /**
+   * @ORM\Column(name="Active", type="boolean")
+   * @var bool
+   */
+  private $is_active;
 
-    /**
-     * @ORM\Column(name="Active", type="boolean")
-     * @var bool
-     */
-    private $is_active;
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getSlug() {
+    return $this->slug;
+  }
 
-    /**
-     * @return string
-     */
-    public function getSlug()
-    {
-        return $this->slug;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isActive()
-    {
-        return $this->is_active;
-    }
+  /**
+   * @return bool
+   */
+  public function isActive() {
+    return $this->is_active;
+  }
 }

@@ -17,13 +17,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class GuestOSTypeSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class GuestOSTypeSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Type'      => 'type:json_string',
-    ];
-
+final class GuestOSTypeSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Type" => "type:json_string",
+  ];
 }

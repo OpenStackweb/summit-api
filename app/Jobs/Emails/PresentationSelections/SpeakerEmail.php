@@ -20,15 +20,13 @@ use App\Jobs\Emails\AbstractEmailJob;
  * Class SpeakerEmail
  * @package App\Jobs\Emails\PresentationSelections
  */
-class SpeakerEmail extends AbstractEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class SpeakerEmail extends AbstractEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SELECTIONS_SPEAKER_EMAIL';
-    const EVENT_NAME = 'SUMMIT_SELECTIONS_SPEAKER_EMAIL';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SELECTIONS_SPEAKER_EMAIL';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SELECTIONS_SPEAKER_EMAIL";
+  const EVENT_NAME = "SUMMIT_SELECTIONS_SPEAKER_EMAIL";
+  const DEFAULT_TEMPLATE = "SUMMIT_SELECTIONS_SPEAKER_EMAIL";
 }

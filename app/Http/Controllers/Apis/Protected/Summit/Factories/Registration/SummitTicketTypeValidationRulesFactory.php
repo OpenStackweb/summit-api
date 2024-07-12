@@ -19,47 +19,44 @@ use models\summit\SummitTicketType;
  * Class SummitTicketTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitTicketTypeValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name'                   => 'required|string',
-            'cost'                   => 'sometimes|numeric|greater_than_or_equal:0',
-            'currency'               => 'required_with:cost|string|currency_iso',
-            'quantity_2_sell'        => 'sometimes|integer|greater_than_or_equal:0',
-            'max_quantity_per_order' => 'sometimes|integer|greater_than_or_equal:0',
-            'sales_start_date'       => 'nullable|date_format:U',
-            'sales_end_date'         => 'nullable:sales_start_date|date_format:U|after:sales_start_date',
-            'description'            => 'sometimes|string',
-            'external_id'            => 'sometimes|string|max:255',
-            'badge_type_id'          => 'sometimes|integer',
-            'audience'               => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
-        ];
-    }
+final class SummitTicketTypeValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "required|string",
+      "cost" => "sometimes|numeric|greater_than_or_equal:0",
+      "currency" => "required_with:cost|string|currency_iso",
+      "quantity_2_sell" => "sometimes|integer|greater_than_or_equal:0",
+      "max_quantity_per_order" => "sometimes|integer|greater_than_or_equal:0",
+      "sales_start_date" => "nullable|date_format:U",
+      "sales_end_date" => "nullable:sales_start_date|date_format:U|after:sales_start_date",
+      "description" => "sometimes|string",
+      "external_id" => "sometimes|string|max:255",
+      "badge_type_id" => "sometimes|integer",
+      "audience" => "sometimes|string|in:" . implode(",", SummitTicketType::AllowedAudience),
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'name'                    => 'sometimes|string',
-            'description'             => 'sometimes|string',
-            'badge_type_id'           => 'sometimes|integer',
-            'external_id'             => 'sometimes|string|max:255',
-            'currency'                => 'sometimes|string|currency_iso',
-            'quantity_2_sell'         => 'sometimes|integer|greater_than_or_equal:0',
-            'max_quantity_per_order'  => 'sometimes|integer|greater_than_or_equal:0',
-            'sales_start_date'        => 'nullable|date_format:U',
-            'sales_end_date'          => 'nullable:sales_start_date|date_format:U|after:sales_start_date',
-            'cost'                    => 'sometimes|numeric|greater_than_or_equal:0',
-            'audience'                => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "name" => "sometimes|string",
+      "description" => "sometimes|string",
+      "badge_type_id" => "sometimes|integer",
+      "external_id" => "sometimes|string|max:255",
+      "currency" => "sometimes|string|currency_iso",
+      "quantity_2_sell" => "sometimes|integer|greater_than_or_equal:0",
+      "max_quantity_per_order" => "sometimes|integer|greater_than_or_equal:0",
+      "sales_start_date" => "nullable|date_format:U",
+      "sales_end_date" => "nullable:sales_start_date|date_format:U|after:sales_start_date",
+      "cost" => "sometimes|numeric|greater_than_or_equal:0",
+      "audience" => "sometimes|string|in:" . implode(",", SummitTicketType::AllowedAudience),
+    ];
+  }
 }

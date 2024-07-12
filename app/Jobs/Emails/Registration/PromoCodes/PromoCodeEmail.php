@@ -21,44 +21,47 @@ use models\summit\SummitRegistrationPromoCode;
  * Class PromoCodeEmail
  * @package App\Jobs\Emails\Registration
  */
-abstract class PromoCodeEmail extends AbstractSummitEmailJob
-{
-
-    /**
-     * PromoCodeEmail constructor.
-     * @param SummitRegistrationPromoCode $promo_code
-     */
-    public function __construct(SummitRegistrationPromoCode $promo_code){
-
-        if(!$promo_code instanceof IOwnablePromoCode)
-            throw new \InvalidArgumentException('promo code is not ownerable.');
-
-        $summit = $promo_code->getSummit();
-        $payload = [];
-
-        $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
-
-        $payload[IMailTemplatesConstants::owner_email] = $promo_code->getOwnerEmail();
-        $payload[IMailTemplatesConstants::owner_fullname] = $promo_code->getOwnerFullname();
-        if(empty($payload[IMailTemplatesConstants::owner_fullname])){
-            $payload[IMailTemplatesConstants::owner_fullname] = $payload[IMailTemplatesConstants::owner_email];
-        }
-
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-        parent::__construct($summit, $payload, $template_identifier, $payload[IMailTemplatesConstants::owner_email]);
+abstract class PromoCodeEmail extends AbstractSummitEmailJob {
+  /**
+   * PromoCodeEmail constructor.
+   * @param SummitRegistrationPromoCode $promo_code
+   */
+  public function __construct(SummitRegistrationPromoCode $promo_code) {
+    if (!$promo_code instanceof IOwnablePromoCode) {
+      throw new \InvalidArgumentException("promo code is not ownerable.");
     }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
+    $summit = $promo_code->getSummit();
+    $payload = [];
 
-        $payload = parent::getEmailTemplateSchema();
+    $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
 
-        $payload[IMailTemplatesConstants::owner_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
-        $payload[IMailTemplatesConstants::promo_code]['type'] = 'string';
-
-        return $payload;
+    $payload[IMailTemplatesConstants::owner_email] = $promo_code->getOwnerEmail();
+    $payload[IMailTemplatesConstants::owner_fullname] = $promo_code->getOwnerFullname();
+    if (empty($payload[IMailTemplatesConstants::owner_fullname])) {
+      $payload[IMailTemplatesConstants::owner_fullname] =
+        $payload[IMailTemplatesConstants::owner_email];
     }
+
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    parent::__construct(
+      $summit,
+      $payload,
+      $template_identifier,
+      $payload[IMailTemplatesConstants::owner_email],
+    );
+  }
+
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
+
+    $payload[IMailTemplatesConstants::owner_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::owner_fullname]["type"] = "string";
+    $payload[IMailTemplatesConstants::promo_code]["type"] = "string";
+
+    return $payload;
+  }
 }

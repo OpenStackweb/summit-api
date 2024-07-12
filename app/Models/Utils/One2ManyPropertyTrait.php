@@ -16,44 +16,41 @@
  * Trait One2ManyPropertyTrait
  * @package models\utils
  */
-trait One2ManyPropertyTrait
-{
-    /**
-     * @param $name
-     * @param $arguments
-     * @return bool|int|null
-     */
-    public function __call($name, $arguments)
-    {
-        $property = $this->getIdMappings[$name] ?? null;
-        if(!is_null($property)) {
-            return $this->getPropertyId($property);
-        }
-        $property = $this->hasPropertyMappings[$name] ?? null;
-        if(!is_null($property)) {
-            return $this->hasPropertySet($property);
-        }
-        return null;
+trait One2ManyPropertyTrait {
+  /**
+   * @param $name
+   * @param $arguments
+   * @return bool|int|null
+   */
+  public function __call($name, $arguments) {
+    $property = $this->getIdMappings[$name] ?? null;
+    if (!is_null($property)) {
+      return $this->getPropertyId($property);
     }
+    $property = $this->hasPropertyMappings[$name] ?? null;
+    if (!is_null($property)) {
+      return $this->hasPropertySet($property);
+    }
+    return null;
+  }
 
-    /**
-     * @param string $property_name
-     * @return int
-     */
-    public function getPropertyId(string $property_name){
-        try {
-            return is_null($this->{$property_name}) ? 0 : $this->{$property_name}->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @param string $property_name
+   * @return int
+   */
+  public function getPropertyId(string $property_name) {
+    try {
+      return is_null($this->{$property_name}) ? 0 : $this->{$property_name}->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param string $property_name
-     * @return bool
-     */
-    public function hasPropertySet(string $property_name):bool{
-        return $this->getPropertyId($property_name) > 0;
-    }
+  /**
+   * @param string $property_name
+   * @return bool
+   */
+  public function hasPropertySet(string $property_name): bool {
+    return $this->getPropertyId($property_name) > 0;
+  }
 }

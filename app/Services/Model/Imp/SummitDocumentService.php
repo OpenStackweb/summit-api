@@ -27,284 +27,322 @@ use models\summit\SummitDocument;
  * Class SummitDocumentService
  * @package App\Services\Model\Imp
  */
-final class SummitDocumentService
-    extends AbstractService
-    implements ISummitDocumentService
-{
+final class SummitDocumentService extends AbstractService implements ISummitDocumentService {
+  /**
+   * @var IFileUploader
+   */
+  private $file_uploader;
 
-    /**
-     * @var IFileUploader
-     */
-    private $file_uploader;
+  /**
+   * @var IFolderRepository
+   */
+  private $folder_repository;
 
-    /**
-     * @var IFolderRepository
-     */
-    private $folder_repository;
+  /**
+   * SummitDocumentService constructor.
+   * @param IFileUploader $file_uploader
+   * @param IFolderRepository $folder_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    IFileUploader $file_uploader,
+    IFolderRepository $folder_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->file_uploader = $file_uploader;
+    $this->folder_repository = $folder_repository;
+  }
 
-    /**
-     * SummitDocumentService constructor.
-     * @param IFileUploader $file_uploader
-     * @param IFolderRepository $folder_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        IFileUploader $file_uploader,
-        IFolderRepository $folder_repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->file_uploader = $file_uploader;
-        $this->folder_repository = $folder_repository;
-    }
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitDocument
+   * @throws \Exception
+   */
+  public function addSummitDocument(Summit $summit, array $payload): SummitDocument {
+    return $this->tx_service->transaction(function () use ($summit, $payload) {
+      if (isset($payload["name"])) {
+        $former_document = $summit->getSummitDocumentByName($payload["name"]);
+        if (!is_null($former_document)) {
+          throw new ValidationException(sprintf("name %s already exists.", $payload["name"]));
+        }
+      }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitDocument
-     * @throws \Exception
-     */
-    public function addSummitDocument(Summit $summit, array $payload): SummitDocument
-    {
-        return $this->tx_service->transaction(function() use($summit, $payload){
+      if (isset($payload["label"])) {
+        $former_document = $summit->getSummitDocumentByLabel($payload["label"]);
+        if (!is_null($former_document)) {
+          throw new ValidationException(sprintf("label %s already exists.", $payload["label"]));
+        }
+      }
 
-            if(isset($payload['name'])){
-                $former_document = $summit->getSummitDocumentByName($payload['name']);
-                if(!is_null($former_document))
-                    throw new ValidationException(sprintf("name %s already exists.", $payload['name']));
-            }
+      $document = SummitDocumentFactory::build($summit, $payload);
 
-            if(isset($payload['label'])){
-                $former_document = $summit->getSummitDocumentByLabel($payload['label']);
-                if(!is_null($former_document) )
-                    throw new ValidationException(sprintf("label %s already exists.", $payload['label']));
-            }
+      if (!$document->isShowAlways() && isset($payload["event_types"])) {
+        $document->clearEventTypes();
+        foreach ($payload["event_types"] as $event_type_id) {
+          $event_type = $summit->getEventType(intval($event_type_id));
+          if (is_null($event_type)) {
+            throw new EntityNotFoundException();
+          }
+          $document->addEventType($event_type);
+        }
+      }
 
-            $document = SummitDocumentFactory::build($summit, $payload);
+      if (!$document->isShowAlways() && $document->getEventTypes()->count() == 0) {
+        throw new ValidationException("You need to to set at least one Activity Type.");
+      }
 
-            if(!$document->isShowAlways() && isset($payload['event_types'])){
-                $document->clearEventTypes();
-                foreach($payload['event_types'] as $event_type_id){
-                    $event_type = $summit->getEventType(intval($event_type_id));
-                    if(is_null($event_type)){
-                        throw new EntityNotFoundException();
-                    }
-                    $document->addEventType($event_type);
-                }
-            }
+      if (isset($payload["file"])) {
+        $file = $payload["file"];
+        $attachment = $this->file_uploader->build(
+          $file,
+          sprintf("summits/%s/documents", $summit->getId()),
+          false,
+        );
 
-            if(!$document->isShowAlways() && $document->getEventTypes()->count() == 0)
-                throw new ValidationException("You need to to set at least one Activity Type.");
+        $document->setFile($attachment);
+      }
 
-            if(isset($payload['file'])) {
-                $file = $payload['file'];
-                $attachment = $this->file_uploader->build
-                (
-                    $file,
-                    sprintf('summits/%s/documents', $summit->getId()),
-                    false
-                );
-
-                $document->setFile($attachment);
-            }
-
-            if(isset($payload['selection_plan_id'])){
-                $document->clearSelectionPlan();
-                $selection_plan_id = intval($payload['selection_plan_id']);
-                if($selection_plan_id > 0) {
-
-                    $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
-                    if (is_null($selection_plan))
-                        throw new EntityNotFoundException(sprintf("Selection Plan %s not found.", $selection_plan_id));
-
-                    $document->setSelectionPlan($selection_plan);
-                }
-            }
-
-            $summit->addSummitDocument($document);
-
-            return $document;
-
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param array $payload
-     * @return SummitDocument
-     * @throws \Exception
-     */
-    public function updateSummitDocument(Summit $summit, int $document_id, array $payload): SummitDocument
-    {
-        return $this->tx_service->transaction(function() use($summit, $document_id, $payload){
-
-            Log::debug(sprintf("SummitDocumentService::updateSummitDocument document %s payload %s", $document_id, json_encode($payload) ));
-
-            $document = $summit->getSummitDocumentById($document_id);
-            if(is_null($document))
-                throw new EntityNotFoundException();
-
-            if(isset($payload['name'])){
-                $former_document = $summit->getSummitDocumentByName($payload['name']);
-                if(!is_null($former_document) && $former_document->getId() !== $document_id)
-                    throw new ValidationException(sprintf("name %s already exists.", $payload['name']));
-            }
-
-            if(isset($payload['label'])){
-                $former_document = $summit->getSummitDocumentByLabel($payload['label']);
-                if(!is_null($former_document) && $former_document->getId() !== $document_id)
-                    throw new ValidationException(sprintf("label %s already exists.", $payload['label']));
-            }
-
-            $document = SummitDocumentFactory::populate($summit, $document, $payload);
-
-            if (empty($document->getWebLink()) && !$document->hasFile())
-                throw new ValidationException("The document must have a file or a web link");
-
-            if(!$document->isShowAlways() && isset($payload['event_types'])){
-                $document->clearEventTypes();
-                foreach($payload['event_types'] as $event_type_id){
-                    $event_type = $summit->getEventType(intval($event_type_id));
-                    if(is_null($event_type)){
-                        throw new EntityNotFoundException();
-                    }
-                    $document->addEventType($event_type);
-                }
-            }
-
-            if(!$document->isShowAlways() && $document->getEventTypes()->count() == 0)
-                throw new ValidationException("You need to to set at least one Activity Type.");
-
-            if(isset($payload['selection_plan_id'])){
-                Log::debug(sprintf("SummitDocumentService::updateSummitDocument document %s selection plan id %s", $document_id, $payload['selection_plan_id'] ));
-                $document->clearSelectionPlan();
-                $selection_plan_id = intval($payload['selection_plan_id']);
-                if($selection_plan_id > 0) {
-                    $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
-                    if (is_null($selection_plan))
-                        throw new EntityNotFoundException(sprintf("Selection Plan %s not found.", $selection_plan_id));
-
-                    $document->setSelectionPlan($selection_plan);
-                }
-            }
-
-            return $document;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @throws \Exception
-     */
-    public function deleteSummitDocument(Summit $summit, int $document_id): void
-    {
-        $this->tx_service->transaction(function() use($summit, $document_id){
-            $document = $summit->getSummitDocumentById($document_id);
-            if(is_null($document))
-                throw new EntityNotFoundException();
-
-            $summit->removeSummitDocument($document);
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param int $event_type_id
-     * @return SummitDocument
-     * @throws \Exception
-     */
-    public function addEventTypeToSummitDocument(Summit $summit, int $document_id, int $event_type_id): SummitDocument
-    {
-        return $this->tx_service->transaction(function() use($summit, $document_id, $event_type_id){
-            $document = $summit->getSummitDocumentById($document_id);
-            if(is_null($document))
-                throw new EntityNotFoundException();
-
-            $event_type = $summit->getEventType($event_type_id);
-            if(is_null($event_type))
-                throw new EntityNotFoundException();
-
-            $document->addEventType($event_type);
-
-            return $document;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $document_id
-     * @param int $event_type_id
-     * @return SummitDocument
-     * @throws \Exception
-     */
-    public function removeEventTypeFromSummitDocument(Summit $summit, int $document_id, int $event_type_id): SummitDocument
-    {
-        return $this->tx_service->transaction(function() use($summit, $document_id, $event_type_id){
-            $document = $summit->getSummitDocumentById($document_id);
-            if(is_null($document))
-                throw new EntityNotFoundException();
-
-            $event_type = $summit->getEventType($event_type_id);
-            if(is_null($event_type))
-                throw new EntityNotFoundException();
-
-            $document->removeEventType($event_type);
-
-            return $document;
-        });
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function addFile2SummitDocument(
-        Summit $summit, int $document_id, UploadedFile $file, int $max_file_size = 10485760): SummitDocument
-    {
-        return $this->tx_service->transaction(function() use($summit, $document_id, $file, $max_file_size){
-            $document = $summit->getSummitDocumentById($document_id);
-            if(is_null($document))
-                throw new EntityNotFoundException();
-
-            if ($file->getSize() > $max_file_size)
-                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
-
-            $attachment = $this->file_uploader->build
-            (
-                $file,
-                sprintf('summits/%s/documents', $summit->getId()),
-                false
+      if (isset($payload["selection_plan_id"])) {
+        $document->clearSelectionPlan();
+        $selection_plan_id = intval($payload["selection_plan_id"]);
+        if ($selection_plan_id > 0) {
+          $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+          if (is_null($selection_plan)) {
+            throw new EntityNotFoundException(
+              sprintf("Selection Plan %s not found.", $selection_plan_id),
             );
+          }
 
-            $document->setFile($attachment);
+          $document->setSelectionPlan($selection_plan);
+        }
+      }
 
-            return $document;
-        });
-    }
+      $summit->addSummitDocument($document);
 
-    /**
-     * @inheritDoc
-     */
-    public function removeFileFromSummitDocument(Summit $summit, int $document_id): SummitDocument
-    {
-        return $this->tx_service->transaction(function() use($summit, $document_id){
-            $document = $summit->getSummitDocumentById($document_id);
-            if(is_null($document))
-                throw new EntityNotFoundException();
+      return $document;
+    });
+  }
 
-            if($document->hasFile()){
-                // drop file
-                $attachment = $document->getFile();
-                $this->folder_repository->delete($attachment);
-                $document->clearFile();
-                $attachment = null;
-            }
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param array $payload
+   * @return SummitDocument
+   * @throws \Exception
+   */
+  public function updateSummitDocument(
+    Summit $summit,
+    int $document_id,
+    array $payload,
+  ): SummitDocument {
+    return $this->tx_service->transaction(function () use ($summit, $document_id, $payload) {
+      Log::debug(
+        sprintf(
+          "SummitDocumentService::updateSummitDocument document %s payload %s",
+          $document_id,
+          json_encode($payload),
+        ),
+      );
 
-            return $document;
-        });
-    }
+      $document = $summit->getSummitDocumentById($document_id);
+      if (is_null($document)) {
+        throw new EntityNotFoundException();
+      }
+
+      if (isset($payload["name"])) {
+        $former_document = $summit->getSummitDocumentByName($payload["name"]);
+        if (!is_null($former_document) && $former_document->getId() !== $document_id) {
+          throw new ValidationException(sprintf("name %s already exists.", $payload["name"]));
+        }
+      }
+
+      if (isset($payload["label"])) {
+        $former_document = $summit->getSummitDocumentByLabel($payload["label"]);
+        if (!is_null($former_document) && $former_document->getId() !== $document_id) {
+          throw new ValidationException(sprintf("label %s already exists.", $payload["label"]));
+        }
+      }
+
+      $document = SummitDocumentFactory::populate($summit, $document, $payload);
+
+      if (empty($document->getWebLink()) && !$document->hasFile()) {
+        throw new ValidationException("The document must have a file or a web link");
+      }
+
+      if (!$document->isShowAlways() && isset($payload["event_types"])) {
+        $document->clearEventTypes();
+        foreach ($payload["event_types"] as $event_type_id) {
+          $event_type = $summit->getEventType(intval($event_type_id));
+          if (is_null($event_type)) {
+            throw new EntityNotFoundException();
+          }
+          $document->addEventType($event_type);
+        }
+      }
+
+      if (!$document->isShowAlways() && $document->getEventTypes()->count() == 0) {
+        throw new ValidationException("You need to to set at least one Activity Type.");
+      }
+
+      if (isset($payload["selection_plan_id"])) {
+        Log::debug(
+          sprintf(
+            "SummitDocumentService::updateSummitDocument document %s selection plan id %s",
+            $document_id,
+            $payload["selection_plan_id"],
+          ),
+        );
+        $document->clearSelectionPlan();
+        $selection_plan_id = intval($payload["selection_plan_id"]);
+        if ($selection_plan_id > 0) {
+          $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+          if (is_null($selection_plan)) {
+            throw new EntityNotFoundException(
+              sprintf("Selection Plan %s not found.", $selection_plan_id),
+            );
+          }
+
+          $document->setSelectionPlan($selection_plan);
+        }
+      }
+
+      return $document;
+    });
+  }
+
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @throws \Exception
+   */
+  public function deleteSummitDocument(Summit $summit, int $document_id): void {
+    $this->tx_service->transaction(function () use ($summit, $document_id) {
+      $document = $summit->getSummitDocumentById($document_id);
+      if (is_null($document)) {
+        throw new EntityNotFoundException();
+      }
+
+      $summit->removeSummitDocument($document);
+    });
+  }
+
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param int $event_type_id
+   * @return SummitDocument
+   * @throws \Exception
+   */
+  public function addEventTypeToSummitDocument(
+    Summit $summit,
+    int $document_id,
+    int $event_type_id,
+  ): SummitDocument {
+    return $this->tx_service->transaction(function () use ($summit, $document_id, $event_type_id) {
+      $document = $summit->getSummitDocumentById($document_id);
+      if (is_null($document)) {
+        throw new EntityNotFoundException();
+      }
+
+      $event_type = $summit->getEventType($event_type_id);
+      if (is_null($event_type)) {
+        throw new EntityNotFoundException();
+      }
+
+      $document->addEventType($event_type);
+
+      return $document;
+    });
+  }
+
+  /**
+   * @param Summit $summit
+   * @param int $document_id
+   * @param int $event_type_id
+   * @return SummitDocument
+   * @throws \Exception
+   */
+  public function removeEventTypeFromSummitDocument(
+    Summit $summit,
+    int $document_id,
+    int $event_type_id,
+  ): SummitDocument {
+    return $this->tx_service->transaction(function () use ($summit, $document_id, $event_type_id) {
+      $document = $summit->getSummitDocumentById($document_id);
+      if (is_null($document)) {
+        throw new EntityNotFoundException();
+      }
+
+      $event_type = $summit->getEventType($event_type_id);
+      if (is_null($event_type)) {
+        throw new EntityNotFoundException();
+      }
+
+      $document->removeEventType($event_type);
+
+      return $document;
+    });
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function addFile2SummitDocument(
+    Summit $summit,
+    int $document_id,
+    UploadedFile $file,
+    int $max_file_size = 10485760,
+  ): SummitDocument {
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $document_id,
+      $file,
+      $max_file_size,
+    ) {
+      $document = $summit->getSummitDocumentById($document_id);
+      if (is_null($document)) {
+        throw new EntityNotFoundException();
+      }
+
+      if ($file->getSize() > $max_file_size) {
+        throw new ValidationException(
+          sprintf("file exceeds max_file_size (%s MB).", $max_file_size / 1024 / 1024),
+        );
+      }
+
+      $attachment = $this->file_uploader->build(
+        $file,
+        sprintf("summits/%s/documents", $summit->getId()),
+        false,
+      );
+
+      $document->setFile($attachment);
+
+      return $document;
+    });
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function removeFileFromSummitDocument(Summit $summit, int $document_id): SummitDocument {
+    return $this->tx_service->transaction(function () use ($summit, $document_id) {
+      $document = $summit->getSummitDocumentById($document_id);
+      if (is_null($document)) {
+        throw new EntityNotFoundException();
+      }
+
+      if ($document->hasFile()) {
+        // drop file
+        $attachment = $document->getFile();
+        $this->folder_repository->delete($attachment);
+        $document->clearFile();
+        $attachment = null;
+      }
+
+      return $document;
+    });
+  }
 }

@@ -21,48 +21,38 @@ use utils\DoctrineJoinFilterMapping;
  * Class DoctrineCompanyServiceRepository
  * @package App\Repositories\Marketplace
  */
-class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepository
-implements ICompanyServiceRepository
-{
+class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepository implements
+  ICompanyServiceRepository {
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraFilters(QueryBuilder $query) {
+    $query = $query->andWhere("e.is_active = 1");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query){
-        $query = $query->andWhere('e.is_active = 1');
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name",
+      "company" => new DoctrineJoinFilterMapping("e.company", "c", "c.name :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'    => 'e.name',
-            'company' => new DoctrineJoinFilterMapping
-            (
-                'e.company',
-                'c',
-                "c.name :operator :value"
-            ),
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "e.name",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'name' => 'e.name',
-        ];
-    }
-
-    protected function getBaseEntity()
-    {
-       return CompanyService::class;
-    }
+  protected function getBaseEntity() {
+    return CompanyService::class;
+  }
 }

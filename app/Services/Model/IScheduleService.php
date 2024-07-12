@@ -24,65 +24,86 @@ use utils\Filter;
  * Interface IScheduleService
  * @package App\Services\Model
  */
-interface IScheduleService
-{
-    /**
-     * @param string $source
-     * @param int $presentation_id
-     * @param array $payload
-     * @return SummitProposedScheduleSummitEvent
-     */
-    public function publishProposedActivityToSource(
-        string $source, int $presentation_id, array $payload):SummitProposedScheduleSummitEvent;
+interface IScheduleService {
+  /**
+   * @param string $source
+   * @param int $presentation_id
+   * @param array $payload
+   * @return SummitProposedScheduleSummitEvent
+   */
+  public function publishProposedActivityToSource(
+    string $source,
+    int $presentation_id,
+    array $payload,
+  ): SummitProposedScheduleSummitEvent;
 
-    /**
-     * @param int $schedule_id
-     * @param int $presentation_id
-     * @param array $payload
-     * @return SummitProposedScheduleSummitEvent
-     */
-    public function publishProposedActivity(
-        int $schedule_id, int $presentation_id, array $payload):SummitProposedScheduleSummitEvent;
+  /**
+   * @param int $schedule_id
+   * @param int $presentation_id
+   * @param array $payload
+   * @return SummitProposedScheduleSummitEvent
+   */
+  public function publishProposedActivity(
+    int $schedule_id,
+    int $presentation_id,
+    array $payload,
+  ): SummitProposedScheduleSummitEvent;
 
-    /**
-     * @param string $source
-     * @param int $presentation_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function unPublishProposedActivity(string $source, int $presentation_id):void;
+  /**
+   * @param string $source
+   * @param int $presentation_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function unPublishProposedActivity(string $source, int $presentation_id): void;
 
-    /**
-     * @param string $source
-     * @param int $summit_id
-     * @param array $payload
-     * @param Filter|null $filter;
-     * @return SummitProposedSchedule
-     * @throws EntityNotFoundException
-     * @throws \Exception
-     */
-    public function publishAll(string $source, int $summit_id, array $payload, ?Filter $filter = null):SummitProposedSchedule;
+  /**
+   * @param string $source
+   * @param int $summit_id
+   * @param array $payload
+   * @param Filter|null $filter;
+   * @return SummitProposedSchedule
+   * @throws EntityNotFoundException
+   * @throws \Exception
+   */
+  public function publishAll(
+    string $source,
+    int $summit_id,
+    array $payload,
+    ?Filter $filter = null,
+  ): SummitProposedSchedule;
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param string $source
-     * @param int $track_id
-     * @param array $payload
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function send2Review(Summit $summit, Member $member, string $source, int $track_id, array $payload): SummitProposedSchedule;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param string $source
+   * @param int $track_id
+   * @param array $payload
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function send2Review(
+    Summit $summit,
+    Member $member,
+    string $source,
+    int $track_id,
+    array $payload,
+  ): SummitProposedSchedule;
 
-    /**
-     * @param Summit $summit
-     * @param string $source
-     * @param int $track_id
-     * @param array $payload
-     * @return void
-     * @throws EntityNotFoundException
-     */
-    public function removeReview(Summit $summit, string $source, int $track_id, array $payload): SummitProposedSchedule;
+  /**
+   * @param Summit $summit
+   * @param string $source
+   * @param int $track_id
+   * @param array $payload
+   * @return void
+   * @throws EntityNotFoundException
+   */
+  public function removeReview(
+    Summit $summit,
+    string $source,
+    int $track_id,
+    array $payload,
+  ): SummitProposedSchedule;
 }

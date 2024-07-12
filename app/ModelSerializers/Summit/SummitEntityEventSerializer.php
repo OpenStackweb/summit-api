@@ -15,42 +15,40 @@
  * Class SummitEntityEventSerializer
  * @package ModelSerializers
  */
-final class SummitEntityEventSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'EntityId'        => 'entity_id:json_int',
-        'EntityClassName' => 'class_name:json_string',
-        'Type'            => 'type',
-    );
+final class SummitEntityEventSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "EntityId" => "entity_id:json_int",
+    "EntityClassName" => "class_name:json_string",
+    "Type" => "type",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $entity_event = $this->object;
-        $values       = parent::serialize($expand, $fields, $relations, $params);
-        $entity       = $entity_event->getEntity();
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $entity_event = $this->object;
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $entity = $entity_event->getEntity();
 
-        if(!is_null($entity))
-        {
-            $values['entity'] = SerializerRegistry::getInstance()->getSerializer($entity)->serialize
-            (
-                $expand,
-                $fields,
-                $relations,
-                $params
-            );
-        }
-
-        if($values['class_name'] == 'PresentationType')
-            $values['class_name'] = 'SummitEventType';
-
-        return $values;
+    if (!is_null($entity)) {
+      $values["entity"] = SerializerRegistry::getInstance()
+        ->getSerializer($entity)
+        ->serialize($expand, $fields, $relations, $params);
     }
+
+    if ($values["class_name"] == "PresentationType") {
+      $values["class_name"] = "SummitEventType";
+    }
+
+    return $values;
+  }
 }

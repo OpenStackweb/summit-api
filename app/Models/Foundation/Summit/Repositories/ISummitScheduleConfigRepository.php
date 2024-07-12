@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
 /**
  *
  */
-interface ISummitScheduleConfigRepository extends IBaseRepository
-{
-
+interface ISummitScheduleConfigRepository extends IBaseRepository {
 }

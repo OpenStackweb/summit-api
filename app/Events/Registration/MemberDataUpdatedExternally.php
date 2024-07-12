@@ -16,30 +16,26 @@ use Illuminate\Queue\SerializesModels;
  * Class UpdateAttendeesData
  * @package App\Events\Registration
  */
-class MemberDataUpdatedExternally
-{
+class MemberDataUpdatedExternally {
+  use SerializesModels;
 
-    use SerializesModels;
+  /**
+   * @var int
+   */
+  private $member_id;
 
-    /**
-     * @var int
-     */
-    private $member_id;
+  /**
+   * NewMember constructor.
+   * @param int $member_id
+   */
+  public function __construct(int $member_id) {
+    $this->member_id = $member_id;
+  }
 
-    /**
-     * NewMember constructor.
-     * @param int $member_id
-     */
-    public function __construct(int $member_id)
-    {
-        $this->member_id = $member_id;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMemberId(): int
-    {
-        return $this->member_id;
-    }
+  /**
+   * @return int
+   */
+  public function getMemberId(): int {
+    return $this->member_id;
+  }
 }

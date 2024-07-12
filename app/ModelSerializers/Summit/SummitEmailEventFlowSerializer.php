@@ -20,31 +20,37 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitEmailEventFlowSerializer
  * @package App\ModelSerializers\Summit
  */
-class SummitEmailEventFlowSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'SummitId' => 'summit_id:json_int',
-        'EmailTemplateIdentifier' => 'email_template_identifier:json_string',
-        'FlowName' => 'flow_name:json_string',
-        'EventTypeName' => 'event_type_name:json_string',
-        'EmailRecipients' => 'recipients:json_string_array'
-    );
+class SummitEmailEventFlowSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "SummitId" => "summit_id:json_int",
+    "EmailTemplateIdentifier" => "email_template_identifier:json_string",
+    "FlowName" => "flow_name:json_string",
+    "EventTypeName" => "event_type_name:json_string",
+    "EmailRecipients" => "recipients:json_string_array",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $event_flow = $this->object;
-        if (!$event_flow instanceof SummitEmailEventFlow) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $values['template_schema'] = EmailTemplatesSchemaSerializerRegistry::getInstance()->serialize($event_flow->getEventType()->getSlug());
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $event_flow = $this->object;
+    if (!$event_flow instanceof SummitEmailEventFlow) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $values["template_schema"] = EmailTemplatesSchemaSerializerRegistry::getInstance()->serialize(
+      $event_flow->getEventType()->getSlug(),
+    );
+    return $values;
+  }
 }

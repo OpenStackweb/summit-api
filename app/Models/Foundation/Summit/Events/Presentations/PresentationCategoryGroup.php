@@ -33,357 +33,330 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @package models\summit
  * @ORM\HasLifecycleCallbacks
  */
-class PresentationCategoryGroup extends SilverstripeBaseModel
-{
+class PresentationCategoryGroup extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  protected $name;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    protected $name;
+  /**
+   * @ORM\Column(name="Color", type="string")
+   * @var string
+   */
+  protected $color;
 
-    /**
-     * @ORM\Column(name="Color", type="string")
-     * @var string
-     */
-    protected $color;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  protected $description;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    protected $description;
+  /**
+   * @ORM\Column(name="BeginAttendeeVotingPeriodDate", type="datetime")
+   * @var \DateTime
+   */
+  protected $begin_attendee_voting_period_date;
 
-    /**
-     * @ORM\Column(name="BeginAttendeeVotingPeriodDate", type="datetime")
-     * @var \DateTime
-     */
-    protected $begin_attendee_voting_period_date;
+  /**
+   * @ORM\Column(name="EndAttendeeVotingPeriodDate", type="datetime")
+   * @var \DateTime
+   */
+  protected $end_attendee_voting_period_date;
 
-    /**
-     * @ORM\Column(name="EndAttendeeVotingPeriodDate", type="datetime")
-     * @var \DateTime
-     */
-    protected $end_attendee_voting_period_date;
+  /**
+   * @ORM\Column(name="MaxUniqueAttendeeVotes", type="integer")
+   * @var int
+   */
+  protected $max_attendee_votes;
 
-    /**
-     * @ORM\Column(name="MaxUniqueAttendeeVotes", type="integer")
-     * @var int
-     */
-    protected $max_attendee_votes;
+  public function __construct() {
+    parent::__construct();
+    $this->begin_attendee_voting_period_date = null;
+    $this->end_attendee_voting_period_date = null;
+    $this->max_attendee_votes = 0;
+    $this->categories = new ArrayCollection();
+  }
 
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->begin_attendee_voting_period_date = null;
-        $this->end_attendee_voting_period_date = null;
-        $this->max_attendee_votes = 0;
-        $this->categories = new ArrayCollection;
+  /**
+   * @param string $name
+   */
+  public function setName(string $name) {
+    $this->name = $name;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getColor() {
+    return $this->color;
+  }
+
+  /**
+   * @param mixed $color
+   */
+  public function setColor($color) {
+    $this->color = $color;
+  }
+
+  /**
+   * @return string
+   */
+  public function getDescription(): ?string {
+    return $this->description;
+  }
+
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description) {
+    $this->description = $description;
+  }
+
+  /**
+   * @ORM\ManyToOne(targetEntity="Summit", inversedBy="category_groups")
+   * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
+   * @var Summit
+   */
+  protected $summit;
+
+  public function setSummit($summit) {
+    $this->summit = $summit;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSummitId() {
+    try {
+      return is_null($this->summit) ? 0 : $this->summit->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
+  public function clearSummit() {
+    $this->summit = null;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  /**
+   * @return Summit
+   */
+  public function getSummit() {
+    return $this->summit;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name)
-    {
-        $this->name = $name;
-    }
+  /**
+   * owning side
+   * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", inversedBy="groups")
+   * @ORM\JoinTable(name="PresentationCategoryGroup_Categories",
+   *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryGroupID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
+   * )
+   * @var PresentationCategory[]
+   */
+  protected $categories;
 
-    /**
-     * @return mixed
-     */
-    public function getColor()
-    {
-        return $this->color;
-    }
+  /**
+   * @return PresentationCategory[]
+   */
+  public function getCategories() {
+    return $this->categories;
+  }
 
-    /**
-     * @param mixed $color
-     */
-    public function setColor($color)
-    {
-        $this->color = $color;
-    }
+  /**
+   * @param PresentationCategory $track
+   */
+  public function addCategory(PresentationCategory $track) {
+    $track->addToGroup($this);
+    $this->categories[] = $track;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
+  /**
+   * @param PresentationCategory $track
+   */
+  public function removeCategory(PresentationCategory $track) {
+    $track->removeFromGroup($this);
+    $this->categories->removeElement($track);
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description)
-    {
-        $this->description = $description;
-    }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Summit", inversedBy="category_groups")
-     * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
-     * @var Summit
-     */
-    protected $summit;
-
-    public function setSummit($summit)
-    {
-        $this->summit = $summit;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSummitId()
-    {
-        try {
-            return is_null($this->summit) ? 0 : $this->summit->getId();
-        } catch (\Exception $ex) {
-            return 0;
-        }
-    }
-
-    public function clearSummit()
-    {
-        $this->summit = null;
-    }
-
-    /**
-     * @return Summit
-     */
-    public function getSummit()
-    {
-        return $this->summit;
-    }
-
-    /**
-     * owning side
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", inversedBy="groups")
-     * @ORM\JoinTable(name="PresentationCategoryGroup_Categories",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryGroupID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
-     * @var PresentationCategory[]
-     */
-    protected $categories;
-
-    /**
-     * @return PresentationCategory[]
-     */
-    public function getCategories()
-    {
-        return $this->categories;
-    }
-
-    /**
-     * @param PresentationCategory $track
-     */
-    public function addCategory(PresentationCategory $track)
-    {
-        $track->addToGroup($this);
-        $this->categories[] = $track;
-    }
-
-    /**
-     * @param PresentationCategory $track
-     */
-    public function removeCategory(PresentationCategory $track)
-    {
-        $track->removeFromGroup($this);
-        $this->categories->removeElement($track);
-    }
-
-    /**
-     * @param int $category_id
-     * @return PresentationCategory|null
-     */
-    public function getCategoryById($category_id)
-    {
-        /*$criteria = Criteria::create();
+  /**
+   * @param int $category_id
+   * @return PresentationCategory|null
+   */
+  public function getCategoryById($category_id) {
+    /*$criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($category_id)));
         $res = $this->categories->matching($criteria)->first();
         return $res === false ? null : $res;*/
-        $res = $this->categories->filter(function (PresentationCategory $t) use ($category_id) {
-            return $t->getId() == $category_id;
-        })->first();
+    $res = $this->categories
+      ->filter(function (PresentationCategory $t) use ($category_id) {
+        return $t->getId() == $category_id;
+      })
+      ->first();
 
-        return $res == false ? null : $res;
+    return $res == false ? null : $res;
+  }
+
+  /**
+   * @param int $category_id
+   * @return bool
+   */
+  public function hasCategory($category_id) {
+    return $this->getCategoryById($category_id) != null;
+  }
+
+  const ClassName = "PresentationCategoryGroup";
+
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
+
+  public static $metadata = [
+    "class_name" => self::ClassName,
+    "id" => "integer",
+    "summit_id" => "integer",
+    "name" => "string",
+    "color" => "string",
+    "description" => "string",
+    "categories" => "array",
+    "begin_attendee_voting_period_date" => "datetime",
+    "end_attendee_voting_period_date" => "datetime",
+    "max_attendee_votes" => "integer",
+  ];
+
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return self::$metadata;
+  }
+
+  /**
+   * @return \DateTime
+   */
+  public function getBeginAttendeeVotingPeriodDate(): ?\DateTime {
+    return $this->begin_attendee_voting_period_date;
+  }
+
+  /**
+   * @param \DateTime $value
+   */
+  public function setBeginAttendeeVotingPeriodDate(?\DateTime $value): void {
+    $summit = $this->getSummit();
+    if (!is_null($summit)) {
+      $value = $summit->convertDateFromTimeZone2UTC($value);
     }
+    $this->begin_attendee_voting_period_date = $value;
+  }
 
-    /**
-     * @param int $category_id
-     * @return bool
-     */
-    public function hasCategory($category_id)
-    {
-        return $this->getCategoryById($category_id) != null;
+  /**
+   * @return \DateTime
+   */
+  public function getEndAttendeeVotingPeriodDate(): ?\DateTime {
+    return $this->end_attendee_voting_period_date;
+  }
+
+  /**
+   * @param \DateTime $value
+   */
+  public function setEndAttendeeVotingPeriodDate(?\DateTime $value): void {
+    $summit = $this->getSummit();
+    if (!is_null($summit)) {
+      $value = $summit->convertDateFromTimeZone2UTC($value);
     }
+    $this->end_attendee_voting_period_date = $value;
+  }
 
-    const ClassName = 'PresentationCategoryGroup';
+  /**
+   * @return int
+   */
+  public function getMaxAttendeeVotes(): int {
+    return $this->max_attendee_votes;
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName()
-    {
-        return self::ClassName;
+  /**
+   * @param int $max_attendee_votes
+   */
+  public function setMaxAttendeeVotes(int $max_attendee_votes): void {
+    $this->max_attendee_votes = $max_attendee_votes;
+  }
+
+  /**
+   * @throws \Exception
+   */
+  public function isAttendeeVotingPeriodOpen(): bool {
+    $now = new \DateTime("now", new \DateTimeZone("UTC"));
+    if (
+      !is_null($this->begin_attendee_voting_period_date) &&
+      !is_null($this->end_attendee_voting_period_date)
+    ) {
+      return $now >= $this->begin_attendee_voting_period_date &&
+        $now <= $this->end_attendee_voting_period_date;
     }
+    return true;
+  }
 
-    public static $metadata = [
-        'class_name' => self::ClassName,
-        'id' => 'integer',
-        'summit_id' => 'integer',
-        'name' => 'string',
-        'color' => 'string',
-        'description' => 'string',
-        'categories' => 'array',
-        'begin_attendee_voting_period_date' => 'datetime',
-        'end_attendee_voting_period_date' => 'datetime',
-        'max_attendee_votes' => 'integer',
-    ];
+  public function isNotLimitedAttendeeVotingCount(): bool {
+    return $this->max_attendee_votes == 0;
+  }
 
-    /**
-     * @return array
-     */
-    public static function getMetadata()
-    {
-        return self::$metadata;
+  /**
+   * @param SummitAttendee $attendee
+   * @return bool
+   */
+  public function canEmitAttendeeVote(SummitAttendee $attendee): bool {
+    if ($this->isNotLimitedAttendeeVotingCount()) {
+      return true;
     }
+    try {
+      $sql = <<<SQL
+      SELECT COUNT(DISTINCT(PresentationAttendeeVote.ID)) FROM `PresentationAttendeeVote`
+      INNER JOIN Presentation ON Presentation.ID = PresentationAttendeeVote.PresentationID
+      INNER JOIN SummitEvent ON SummitEvent.ID = Presentation.ID
+      INNER JOIN PresentationCategoryGroup_Categories ON PresentationCategoryGroup_Categories.PresentationCategoryID = SummitEvent.CategoryID
+      WHERE PresentationAttendeeVote.SummitAttendeeID = :attendee_id
+      AND PresentationCategoryGroup_Categories.PresentationCategoryGroupID = :id
+      SQL;
+      $stmt = $this->prepareRawSQL($sql, [
+        "id" => $this->id,
+        "attendee_id" => $attendee->getId(),
+      ]);
 
-    /**
-     * @return \DateTime
-     */
-    public function getBeginAttendeeVotingPeriodDate(): ?\DateTime
-    {
-        return $this->begin_attendee_voting_period_date;
+      $res = $stmt->executeQuery();
+      $res = $res->fetchFirstColumn();
+      $res = count($res) > 0 ? $res[0] : 0;
+      $res = !is_null($res) ? $res : 0;
+      Log::debug(
+        sprintf(
+          "PresentationCategoryGroup::canEmitAttendeeVote group %s attendee %s votes %s max vote %s",
+          $this->id,
+          $attendee->getId(),
+          $res,
+          $this->max_attendee_votes,
+        ),
+      );
+      return $res + 1 <= $this->max_attendee_votes;
+    } catch (\Exception $ex) {
+      Log::warning($ex);
     }
+    return true;
+  }
 
-    /**
-     * @param \DateTime $value
-     */
-    public function setBeginAttendeeVotingPeriodDate(?\DateTime $value): void
-    {
-        $summit = $this->getSummit();
-        if (!is_null($summit)) {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $this->begin_attendee_voting_period_date = $value;
-    }
+  public function clearAttendeeVotingPeriod(): void {
+    $this->begin_attendee_voting_period_date = null;
+    $this->end_attendee_voting_period_date = null;
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getEndAttendeeVotingPeriodDate(): ?\DateTime
-    {
-        return $this->end_attendee_voting_period_date;
-    }
-
-    /**
-     * @param \DateTime $value
-     */
-    public function setEndAttendeeVotingPeriodDate(?\DateTime $value): void
-    {
-        $summit = $this->getSummit();
-        if (!is_null($summit)) {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $this->end_attendee_voting_period_date = $value;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMaxAttendeeVotes(): int
-    {
-        return $this->max_attendee_votes;
-    }
-
-    /**
-     * @param int $max_attendee_votes
-     */
-    public function setMaxAttendeeVotes(int $max_attendee_votes): void
-    {
-        $this->max_attendee_votes = $max_attendee_votes;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function isAttendeeVotingPeriodOpen(): bool
-    {
-        $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        if (!is_null($this->begin_attendee_voting_period_date) && !is_null($this->end_attendee_voting_period_date)) {
-            return $now >= $this->begin_attendee_voting_period_date && $now <= $this->end_attendee_voting_period_date;
-        }
-        return true;
-    }
-
-    public function isNotLimitedAttendeeVotingCount(): bool
-    {
-        return $this->max_attendee_votes == 0;
-    }
-
-    /**
-     * @param SummitAttendee $attendee
-     * @return bool
-     */
-    public function canEmitAttendeeVote(SummitAttendee $attendee): bool
-    {
-        if ($this->isNotLimitedAttendeeVotingCount()) return true;
-        try {
-            $sql = <<<SQL
-SELECT COUNT(DISTINCT(PresentationAttendeeVote.ID)) FROM `PresentationAttendeeVote`
-INNER JOIN Presentation ON Presentation.ID = PresentationAttendeeVote.PresentationID
-INNER JOIN SummitEvent ON SummitEvent.ID = Presentation.ID
-INNER JOIN PresentationCategoryGroup_Categories ON PresentationCategoryGroup_Categories.PresentationCategoryID = SummitEvent.CategoryID
-WHERE PresentationAttendeeVote.SummitAttendeeID = :attendee_id
-AND PresentationCategoryGroup_Categories.PresentationCategoryGroupID = :id
-SQL;
-            $stmt = $this->prepareRawSQL($sql,
-                [
-                    'id' => $this->id,
-                    'attendee_id' => $attendee->getId(),
-                ]
-            );
-
-            $res = $stmt->executeQuery();
-            $res = $res->fetchFirstColumn();
-            $res = count($res) > 0 ? $res[0] : 0;
-            $res = !is_null($res) ? $res : 0;
-            Log::debug
-            (
-                sprintf
-                (
-                    "PresentationCategoryGroup::canEmitAttendeeVote group %s attendee %s votes %s max vote %s",
-                    $this->id,
-                    $attendee->getId(),
-                    $res,
-                    $this->max_attendee_votes
-                )
-            );
-            return ($res + 1) <= $this->max_attendee_votes;
-        } catch (\Exception $ex) {
-            Log::warning($ex);
-        }
-        return true;
-    }
-
-    public function clearAttendeeVotingPeriod():void{
-        $this->begin_attendee_voting_period_date = null;
-        $this->end_attendee_voting_period_date = null;
-    }
-
-    use ScheduleEntity;
+  use ScheduleEntity;
 }

@@ -30,51 +30,49 @@ use utils\PagingResponse;
  * Class DoctrineSummitAttendeeNoteRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitAttendeeNoteRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitAttendeeNoteRepository
-{
+final class DoctrineSummitAttendeeNoteRepository extends SilverStripeDoctrineRepository implements
+  ISummitAttendeeNoteRepository {
+  protected function getBaseEntity() {
+    return SummitAttendeeNote::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitAttendeeNote::class;
-    }
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->leftJoin("e.author", "a");
+    $query = $query->innerJoin("e.owner", "o");
+    $query = $query->leftJoin("e.ticket", "t");
+    $query = $query->innerJoin("o.summit", "s");
+    return $query;
+  }
 
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query = $query->leftJoin("e.author", "a");
-        $query = $query->innerJoin("e.owner", "o");
-        $query = $query->leftJoin("e.ticket", "t");
-        $query = $query->innerJoin("o.summit", "s");
-        return $query;
-    }
+  protected function getFilterMappings() {
+    return [
+      "id" => new DoctrineInFilterMapping("e.id"),
+      "owner_id" => Filter::buildIntField("o.id"),
+      "ticket_id" => Filter::buildIntField("t.id"),
+      "summit_id" => Filter::buildIntField("s.id"),
+      "content" => "e.content",
+      "author_fullname" =>
+        "CONCAT(LOWER(a.first_name), ' ', LOWER(a.last_name)) :operator LOWER(:value))",
+      "author_email" => "a.email",
+      "owner_fullname" =>
+        "CONCAT(LOWER(o.first_name), ' ', LOWER(o.surname)) :operator LOWER(:value))",
+      "owner_email" => "o.email",
+      "created" => sprintf("e.created:datetime_epoch|%s", SilverstripeBaseModel::DefaultTimeZone),
+      "edited" => sprintf(
+        "e.last_edited:datetime_epoch|%s",
+        SilverstripeBaseModel::DefaultTimeZone,
+      ),
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'id'              => new DoctrineInFilterMapping('e.id'),
-            'owner_id'        => Filter::buildIntField('o.id'),
-            'ticket_id'       => Filter::buildIntField('t.id'),
-            'summit_id'       => Filter::buildIntField('s.id'),
-            'content'         => 'e.content',
-            'author_fullname' => "CONCAT(LOWER(a.first_name), ' ', LOWER(a.last_name)) :operator LOWER(:value))",
-            'author_email'    => 'a.email',
-            'owner_fullname'  => "CONCAT(LOWER(o.first_name), ' ', LOWER(o.surname)) :operator LOWER(:value))",
-            'owner_email'     => 'o.email',
-            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-        ];
-    }
-
-    protected function getOrderMappings()
-    {
-        return [
-            'id'                => 'e.id',
-            'created'           => 'e.created',
-            'author_fullname'   => "CONCAT(LOWER(a.first_name), ' ', LOWER(a.last_name))",
-            'author_email'      => 'a.email',
-            'owner_fullname'    => "CONCAT(LOWER(o.first_name), ' ', LOWER(o.surname))",
-            'owner_email'       => 'o.email',
-        ];
-    }
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "created" => "e.created",
+      "author_fullname" => "CONCAT(LOWER(a.first_name), ' ', LOWER(a.last_name))",
+      "author_email" => "a.email",
+      "owner_fullname" => "CONCAT(LOWER(o.first_name), ' ', LOWER(o.surname))",
+      "owner_email" => "o.email",
+    ];
+  }
 }

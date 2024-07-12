@@ -20,37 +20,37 @@ use ModelSerializers\SerializerRegistry;
  * Trait GetEntity
  * @package App\Http\Controllers
  */
-trait GetEntity
-{
-    use BaseAPI;
+trait GetEntity {
+  use BaseAPI;
 
-    /**
-     * @param int $id
-     * @return IEntity
-     */
-    abstract protected function getEntity(int $id): IEntity;
+  /**
+   * @param int $id
+   * @return IEntity
+   */
+  abstract protected function getEntity(int $id): IEntity;
 
-    protected function getEntitySerializerType()
-    {
-        return SerializerRegistry::SerializerType_Public;
-    }
+  protected function getEntitySerializerType() {
+    return SerializerRegistry::SerializerType_Public;
+  }
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    /**
-     * @param $id
-     * @return mixed
-     */
-    public function get($id)
-    {
-        return $this->processRequest(function () use ($id) {
-            $entity = $this->getEntity(intval($id));
-            return $this->ok(SerializerRegistry::getInstance()
-                ->getSerializer($entity, $this->getEntitySerializerType())->serialize(
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                ));
-        });
-    }
+  /**
+   * @param $id
+   * @return mixed
+   */
+  public function get($id) {
+    return $this->processRequest(function () use ($id) {
+      $entity = $this->getEntity(intval($id));
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($entity, $this->getEntitySerializerType())
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 }

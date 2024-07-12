@@ -31,296 +31,327 @@ use models\summit\SummitPresentationComment;
  * Interface IPresentationService
  * @package services\model
  */
-interface IPresentationService
-{
-    /**
-     * @param int $presentation_id
-     * @param array $video_data
-     * @return PresentationVideo
-     */
-    public function addVideoTo($presentation_id, array $video_data);
+interface IPresentationService {
+  /**
+   * @param int $presentation_id
+   * @param array $video_data
+   * @return PresentationVideo
+   */
+  public function addVideoTo($presentation_id, array $video_data);
 
-    /**
-     * @param int $presentation_id
-     * @param int $video_id
-     * @param array $video_data
-     * @return PresentationVideo
-     */
-    public function updateVideo($presentation_id, $video_id, array $video_data);
+  /**
+   * @param int $presentation_id
+   * @param int $video_id
+   * @param array $video_data
+   * @return PresentationVideo
+   */
+  public function updateVideo($presentation_id, $video_id, array $video_data);
 
+  /**
+   * @param int $presentation_id
+   * @param int $video_id
+   * @return void
+   */
+  public function deleteVideo($presentation_id, $video_id);
 
-    /**
-     * @param int $presentation_id
-     * @param int $video_id
-     * @return void
-     */
-    public function deleteVideo($presentation_id, $video_id);
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return Presentation
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function submitPresentation(Summit $summit, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return Presentation
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function submitPresentation(Summit $summit, array $data);
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param array $data
+   * @return Presentation
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updatePresentationSubmission(Summit $summit, $presentation_id, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param array $data
-     * @return Presentation
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updatePresentationSubmission(Summit $summit, $presentation_id, array $data);
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @return Presentation
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function completePresentationSubmission(Summit $summit, $presentation_id);
 
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deletePresentation(Summit $summit, $presentation_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @return Presentation
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function completePresentationSubmission(Summit $summit, $presentation_id);
+  /**
+   * @param LaravelRequest $request
+   * @param int $presentation_id
+   * @param array $slide_data
+   * @param array $allowed_extensions
+   * @param int $max_file_size
+   * @return mixed|PresentationSlide
+   * @throws Exception
+   */
+  public function addSlideTo(
+    LaravelRequest $request,
+    $presentation_id,
+    array $slide_data,
+    array $allowed_extensions = [],
+    $max_file_size = 1048576, // bytes
+  );
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deletePresentation(Summit $summit, $presentation_id);
+  /**
+   * @param LaravelRequest $request
+   * @param int $presentation_id
+   * @param int $slide_id
+   * @param array $slide_data
+   * @param array $allowed_extensions
+   * @param int $max_file_size
+   * @return mixed|PresentationSlide
+   * @throws Exception
+   */
+  public function updateSlide(
+    LaravelRequest $request,
+    $presentation_id,
+    $slide_id,
+    array $slide_data,
+    array $allowed_extensions = [],
+    $max_file_size = 62914560,
+  );
 
-    /**
-     * @param LaravelRequest $request
-     * @param int $presentation_id
-     * @param array $slide_data
-     * @param array $allowed_extensions
-     * @param int $max_file_size
-     * @return mixed|PresentationSlide
-     * @throws Exception
-     */
-    public function addSlideTo
-    (
-        LaravelRequest $request,
-        $presentation_id,
-        array $slide_data,
-        array $allowed_extensions = [],
-        $max_file_size = 1048576 // bytes
-    );
+  /**
+   * @param int $presentation_id
+   * @param int $slide_id
+   * @return void
+   */
+  public function deleteSlide($presentation_id, $slide_id);
 
-    /**
-     * @param LaravelRequest $request
-     * @param int $presentation_id
-     * @param int $slide_id
-     * @param array $slide_data
-     * @param array $allowed_extensions
-     * @param int $max_file_size
-     * @return mixed|PresentationSlide
-     * @throws Exception
-     */
-    public function updateSlide
-    (
-        LaravelRequest $request,
-        $presentation_id,
-        $slide_id,
-        array $slide_data,
-        array $allowed_extensions = [],
-        $max_file_size = 62914560
-    );
+  /**
+   * @param $presentation_id
+   * @param array $link_data
+   * @return PresentationLink
+   */
+  public function addLinkTo($presentation_id, array $link_data);
 
-    /**
-     * @param int $presentation_id
-     * @param int $slide_id
-     * @return void
-     */
-    public function deleteSlide($presentation_id, $slide_id);
+  /**
+   * @param $presentation_id
+   * @param $link_id
+   * @param array $link_data
+   * @return PresentationLink
+   */
+  public function updateLink($presentation_id, $link_id, array $link_data);
 
-    /**
-     * @param $presentation_id
-     * @param array $link_data
-     * @return PresentationLink
-     */
-    public function addLinkTo($presentation_id, array $link_data);
+  /**
+   * @param int $presentation_id
+   * @param int $link_id
+   * @return void
+   */
+  public function deleteLink($presentation_id, $link_id);
 
-    /**
-     * @param $presentation_id
-     * @param $link_id
-     * @param array $link_data
-     * @return PresentationLink
-     */
-    public function updateLink($presentation_id, $link_id, array $link_data);
+  /**
+   * @param LaravelRequest $request
+   * @param Summit $summit
+   * @param $presentation_id
+   * @param array $payload
+   * @return PresentationMediaUpload
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addMediaUploadTo(
+    LaravelRequest $request,
+    Summit $summit,
+    int $presentation_id,
+    array $payload,
+  ): PresentationMediaUpload;
 
-    /**
-     * @param int $presentation_id
-     * @param int $link_id
-     * @return void
-     */
-    public function deleteLink($presentation_id, $link_id);
+  /**
+   * @param LaravelRequest $request
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param int $media_upload_id
+   * @param array $payload
+   * @param Member|null $current_user
+   * @return PresentationMediaUpload
+   */
+  public function updateMediaUploadFrom(
+    LaravelRequest $request,
+    Summit $summit,
+    int $presentation_id,
+    int $media_upload_id,
+    array $payload,
+    Member $current_user = null,
+  ): PresentationMediaUpload;
 
-    /**
-     * @param LaravelRequest $request
-     * @param Summit $summit
-     * @param $presentation_id
-     * @param array $payload
-     * @return PresentationMediaUpload
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addMediaUploadTo
-    (
-        LaravelRequest $request,
-        Summit         $summit,
-        int            $presentation_id,
-        array          $payload
-    ): PresentationMediaUpload;
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param int $media_upload_id
+   * @param Member|null $current_user
+   * @return void
+   */
+  public function deleteMediaUpload(
+    Summit $summit,
+    int $presentation_id,
+    int $media_upload_id,
+    Member $current_user = null,
+  ): void;
 
-    /**
-     * @param LaravelRequest $request
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param int $media_upload_id
-     * @param array $payload
-     * @param Member|null $current_user
-     * @return PresentationMediaUpload
-     */
-    public function updateMediaUploadFrom
-    (
-        LaravelRequest $request,
-        Summit         $summit,
-        int            $presentation_id,
-        int            $media_upload_id,
-        array          $payload,
-        Member $current_user = null
-    ): PresentationMediaUpload;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param int $presentation_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function castAttendeeVote(
+    Summit $summit,
+    Member $member,
+    int $presentation_id,
+  ): PresentationAttendeeVote;
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param int $media_upload_id
-     * @param Member|null $current_user
-     * @return void
-     */
-    public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id, Member $current_user = null): void;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param int $presentation_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $presentation_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id): PresentationAttendeeVote;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @param int $score_type_id
+   * @return PresentationTrackChairScore
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTrackChairScore(
+    Summit $summit,
+    Member $member,
+    int $selection_plan_id,
+    int $presentation_id,
+    int $score_type_id,
+  ): PresentationTrackChairScore;
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $presentation_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id): void;
+  /**
+   * @param Summit $summit
+   * @param Member $member
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @param int $score_type_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function removeTrackChairScore(
+    Summit $summit,
+    Member $member,
+    int $selection_plan_id,
+    int $presentation_id,
+    int $score_type_id,
+  ): void;
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @param int $score_type_id
-     * @return PresentationTrackChairScore
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id, int $presentation_id, int $score_type_id): PresentationTrackChairScore;
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param int $comment_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deletePresentationComment(
+    Summit $summit,
+    int $presentation_id,
+    int $comment_id,
+  ): void;
 
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @param int $score_type_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function removeTrackChairScore
-    (
-        Summit $summit,
-        Member $member,
-        int    $selection_plan_id,
-        int    $presentation_id,
-        int    $score_type_id
-    ): void;
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param Member $current_user
+   * @param array $payload
+   * @return SummitPresentationComment
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function createPresentationComment(
+    Summit $summit,
+    int $presentation_id,
+    Member $current_user,
+    array $payload,
+  ): SummitPresentationComment;
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param int $comment_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deletePresentationComment(Summit $summit, int $presentation_id, int $comment_id): void;
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param int $comment_id
+   * @param array $payload
+   * @return SummitPresentationComment
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updatePresentationComment(
+    Summit $summit,
+    int $presentation_id,
+    int $comment_id,
+    array $payload,
+  ): SummitPresentationComment;
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param Member $current_user
-     * @param array $payload
-     * @return SummitPresentationComment
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function createPresentationComment(Summit $summit, int $presentation_id, Member $current_user, array $payload): SummitPresentationComment;
+  /**
+   * @param int $summit_id
+   * @param int $media_upload_type_id
+   * @param string|null $public_path
+   * @param string|null $private_path
+   * @param string $file_name
+   * @param string $path
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function processMediaUpload(
+    int $summit_id,
+    int $media_upload_type_id,
+    ?string $public_path,
+    ?string $private_path,
+    string $file_name,
+    string $path,
+  ): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param int $comment_id
-     * @param array $payload
-     * @return SummitPresentationComment
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload): SummitPresentationComment;
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param int $speaker_id
+   * @param array $data
+   * @return Presentation
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function upsertPresentationSpeaker(
+    Summit $summit,
+    int $presentation_id,
+    int $speaker_id,
+    array $data,
+  ): Presentation;
 
-    /**
-     * @param int $summit_id
-     * @param int $media_upload_type_id
-     * @param string|null $public_path
-     * @param string|null $private_path
-     * @param string $file_name
-     * @param string $path
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function processMediaUpload(int     $summit_id,
-                                       int     $media_upload_type_id,
-                                       ?string $public_path,
-                                       ?string $private_path,
-                                       string  $file_name,
-                                       string  $path): void;
-
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param int $speaker_id
-     * @param array $data
-     * @return Presentation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation;
-
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param int $speaker_id
-     * @return Presentation
-     * @throws \Exception
-     */
-    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void;
-
+  /**
+   * @param Summit $summit
+   * @param int $presentation_id
+   * @param int $speaker_id
+   * @return Presentation
+   * @throws \Exception
+   */
+  public function removeSpeakerFromPresentation(
+    Summit $summit,
+    int $presentation_id,
+    int $speaker_id,
+  ): void;
 }

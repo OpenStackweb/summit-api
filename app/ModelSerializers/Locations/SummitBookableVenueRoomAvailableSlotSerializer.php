@@ -16,12 +16,11 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class SummitBookableVenueRoomAvailableSlotSerializer
  * @package App\ModelSerializers\Locations
  */
-final class SummitBookableVenueRoomAvailableSlotSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'StartDate'       => 'start_date:datetime_epoch',
-        'EndDate'         => 'end_date:datetime_epoch',
-        'Free'            => 'is_free:json_boolean',
-        'Status'          => 'status:json_string',
-    ];
+final class SummitBookableVenueRoomAvailableSlotSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "StartDate" => "start_date:datetime_epoch",
+    "EndDate" => "end_date:datetime_epoch",
+    "Free" => "is_free:json_boolean",
+    "Status" => "status:json_string",
+  ];
 }

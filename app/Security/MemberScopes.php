@@ -16,13 +16,12 @@
  * Class MemberScopes
  * @package App\Security
  */
-final class MemberScopes
-{
-    const ReadMemberData    = '%s/members/read';
+final class MemberScopes {
+  const ReadMemberData = "%s/members/read";
 
-    const ReadMyMemberData    = '%s/members/read/me';
+  const ReadMyMemberData = "%s/members/read/me";
 
-    const WriteMemberData    = '%s/members/write';
+  const WriteMemberData = "%s/members/write";
 
-    const WriteMyMemberData    = '%s/members/write/me';
+  const WriteMyMemberData = "%s/members/write/me";
 }

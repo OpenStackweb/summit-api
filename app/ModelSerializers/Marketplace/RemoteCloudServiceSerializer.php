@@ -16,15 +16,14 @@
  * Class RemoteCloudServiceSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class RemoteCloudServiceSerializer extends OpenStackImplementationSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'HardwareSpec'          => 'hardware_spec:json_string',
-        'PricingModels'         => 'pricing_models:json_string',
-        'PublishedSla'          => 'published_sla:json_string',
-        'VendorManagedUpgrades' => 'is_vendor_managed_upgrades:json_boolean',
-    ];
+final class RemoteCloudServiceSerializer extends OpenStackImplementationSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "HardwareSpec" => "hardware_spec:json_string",
+    "PricingModels" => "pricing_models:json_string",
+    "PublishedSla" => "published_sla:json_string",
+    "VendorManagedUpgrades" => "is_vendor_managed_upgrades:json_boolean",
+  ];
 }

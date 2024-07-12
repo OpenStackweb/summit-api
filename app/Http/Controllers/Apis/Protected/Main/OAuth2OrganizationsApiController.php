@@ -22,78 +22,69 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2OrganizationsApiController
  * @package App\Http\Controllers
  */
-final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
-{
-    /**
-     * @var IOrganizationService
-     */
-    private $service;
+final class OAuth2OrganizationsApiController extends OAuth2ProtectedController {
+  /**
+   * @var IOrganizationService
+   */
+  private $service;
 
-    use ParametrizedGetAll;
+  use ParametrizedGetAll;
 
-    /**
-     * OAuth2OrganizationsApiController constructor.
-     * @param IOrganizationRepository $company_repository
-     * @param IResourceServerContext $resource_server_context
-     * @param IOrganizationService $service
-     */
-    public function __construct
-    (
-        IOrganizationRepository $company_repository,
-        IResourceServerContext  $resource_server_context,
-        IOrganizationService    $service
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $company_repository;
-        $this->service = $service;
-    }
+  /**
+   * OAuth2OrganizationsApiController constructor.
+   * @param IOrganizationRepository $company_repository
+   * @param IResourceServerContext $resource_server_context
+   * @param IOrganizationService $service
+   */
+  public function __construct(
+    IOrganizationRepository $company_repository,
+    IResourceServerContext $resource_server_context,
+    IOrganizationService $service,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $company_repository;
+    $this->service = $service;
+  }
 
-    public function getAll()
-    {
-        return $this->_getAll(
-            function () {
-                return [
-                    'name' => ['=@', '==', '@@'],
-                ];
-            },
-            function () {
-                return [
-                    'name' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'name',
-                    'id',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
-    }
-
-    use AddEntity;
-
-    /**
-     * @inheritDoc
-     */
-    function getAddValidationRules(array $payload): array
-    {
+  public function getAll() {
+    return $this->_getAll(
+      function () {
         return [
-            'name' => 'required|string|max:255',
+          "name" => ["=@", "==", "@@"],
         ];
-    }
+      },
+      function () {
+        return [
+          "name" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["name", "id"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
+        return SerializerRegistry::SerializerType_Public;
+      },
+    );
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function addEntity(array $payload): IEntity
-    {
-        return $this->service->addOrganization($payload);
-    }
+  use AddEntity;
+
+  /**
+   * @inheritDoc
+   */
+  function getAddValidationRules(array $payload): array {
+    return [
+      "name" => "required|string|max:255",
+    ];
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected function addEntity(array $payload): IEntity {
+    return $this->service->addOrganization($payload);
+  }
 }

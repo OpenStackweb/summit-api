@@ -19,49 +19,44 @@ use models\summit\SummitAttendeeBadgePrintRule;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitAttendeeBadgePrintRuleRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitAttendeeBadgePrintRuleRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitAttendeeBadgePrintRuleRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitAttendeeBadgePrintRule::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitAttendeeBadgePrintRule::class;
-    }
+  /**
+   * @param array $group_ids
+   * @return mixed
+   */
+  public function getByGroupsIds(array $group_ids) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->join("e.group", "g")
+      ->where("g.id in :group_ids")
+      ->setParameter("group_ids", $group_ids)
+      ->getQuery()
+      ->getResult();
+  }
 
-    /**
-     * @param array $group_ids
-     * @return mixed
-     */
-    public function getByGroupsIds(array $group_ids)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->join('e.group','g')
-            ->where("g.id in :group_ids")
-            ->setParameter("group_ids", $group_ids)
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * @param array $group_slugs
-     * @return mixed
-     */
-    public function getByGroupsSlugs(array $group_slugs)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->join('e.group','g')
-            ->where("g.code in (:group_slugs)")
-            ->setParameter("group_slugs", $group_slugs)
-            ->getQuery()
-            ->getResult();
-    }
+  /**
+   * @param array $group_slugs
+   * @return mixed
+   */
+  public function getByGroupsSlugs(array $group_slugs) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from($this->getBaseEntity(), "e")
+      ->join("e.group", "g")
+      ->where("g.code in (:group_slugs)")
+      ->setParameter("group_slugs", $group_slugs)
+      ->getQuery()
+      ->getResult();
+  }
 }

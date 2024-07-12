@@ -16,30 +16,28 @@ use models\utils\IBaseRepository;
  * Interface ISpeakerRegistrationRequestRepository
  * @package models\summit
  */
-interface ISpeakerRegistrationRequestRepository
-    extends IBaseRepository
-{
-    /**
-     * @param string $hash
-     * @return bool
-     */
-    public function existByHash($hash);
+interface ISpeakerRegistrationRequestRepository extends IBaseRepository {
+  /**
+   * @param string $hash
+   * @return bool
+   */
+  public function existByHash($hash);
 
-    /**
-     * @param string $hash
-     * @return SpeakerRegistrationRequest
-     */
-    public function getByHash($hash);
+  /**
+   * @param string $hash
+   * @return SpeakerRegistrationRequest
+   */
+  public function getByHash($hash);
 
-    /**
-     * @param string $email
-     * @return bool
-     */
-    public function existByEmail($email);
+  /**
+   * @param string $email
+   * @return bool
+   */
+  public function existByEmail($email);
 
-    /**
-     * @param string $email
-     * @return SpeakerRegistrationRequest
-     */
-    public function getByEmail($email);
+  /**
+   * @param string $email
+   * @return SpeakerRegistrationRequest
+   */
+  public function getByEmail($email);
 }

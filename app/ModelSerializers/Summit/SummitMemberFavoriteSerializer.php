@@ -16,25 +16,20 @@
  * Class SummitMemberFavoriteSerializer
  * @package ModelSerializers
  */
-final class SummitMemberFavoriteSerializer extends SilverStripeSerializer
-{
+final class SummitMemberFavoriteSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [];
 
-    protected static $array_mappings = array
-    (
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $favorite = $this->object;
+    $values = SerializerRegistry::getInstance()
+      ->getSerializer($favorite->getEvent())
+      ->serialize($expand, $fields, $relations, $params);
 
-    );
-
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $favorite                = $this->object;
-        $values                  = SerializerRegistry::getInstance()->getSerializer($favorite->getEvent())->serialize
-        (
-            $expand,
-            $fields,
-            $relations,
-            $params
-        );
-
-        return $values;
-    }
+    return $values;
+  }
 }

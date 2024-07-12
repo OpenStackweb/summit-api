@@ -18,22 +18,21 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class ExtraQuestionTypeValueSerializer
  * @package ModelSerializers
  */
-class ExtraQuestionTypeValueSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Label'      => 'label:json_string',
-        'Value'      => 'value:json_string',
-        'Order'      => 'order:json_int',
-        'QuestionId' => 'question_id:json_int',
-        'Default'    => 'is_default:json_boolean',
-    ];
+class ExtraQuestionTypeValueSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Label" => "label:json_string",
+    "Value" => "value:json_string",
+    "Order" => "order:json_int",
+    "QuestionId" => "question_id:json_int",
+    "Default" => "is_default:json_boolean",
+  ];
 
-    protected static $expand_mappings = [
-        'question' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'question_id',
-            'getter' => 'getQuestion',
-            'has' => 'hasQuestion'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "question" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "question_id",
+      "getter" => "getQuestion",
+      "has" => "hasQuestion",
+    ],
+  ];
 }

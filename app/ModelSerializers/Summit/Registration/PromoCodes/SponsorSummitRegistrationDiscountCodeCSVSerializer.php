@@ -16,27 +16,31 @@
  * Class SponsorSummitRegistrationDiscountCodeCSVSerializer
  * @package ModelSerializers
  */
-class SponsorSummitRegistrationDiscountCodeCSVSerializer
-extends SponsorSummitRegistrationDiscountCodeSerializer
-{
-    use SummitRegistrationDiscountCodeCSVSerializerTrait;
+class SponsorSummitRegistrationDiscountCodeCSVSerializer extends
+  SponsorSummitRegistrationDiscountCodeSerializer {
+  use SummitRegistrationDiscountCodeCSVSerializerTrait;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code            = $this->object;
-        if(!$code instanceof SponsorSummitRegistrationDiscountCodeSerializer) return [];
-
-        return self::serializeFields2CSV
-        (
-            $code,
-            parent::serialize($expand, $fields, $relations, $params)
-        );
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SponsorSummitRegistrationDiscountCodeSerializer) {
+      return [];
     }
+
+    return self::serializeFields2CSV(
+      $code,
+      parent::serialize($expand, $fields, $relations, $params),
+    );
+  }
 }

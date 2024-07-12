@@ -16,22 +16,21 @@
  * Class TrackMultiValueQuestionTemplateValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class TrackMultiValueQuestionTemplateValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-        if($update){
-            return [
-                'empty_string' => 'sometimes|string',
-                'default_value_id' => 'sometimes|integer',
-            ];
-        }
-        return [
-            'empty_string' => 'required|string'
-        ];
+final class TrackMultiValueQuestionTemplateValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "empty_string" => "sometimes|string",
+        "default_value_id" => "sometimes|integer",
+      ];
     }
+    return [
+      "empty_string" => "required|string",
+    ];
+  }
 }

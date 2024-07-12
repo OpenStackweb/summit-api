@@ -28,78 +28,80 @@ use utils\PagingResponse;
  * @package App\Repositories\Summit
  */
 final class DoctrineSponsorExtraQuestionTypeRepository
-    extends DoctrineExtraQuestionTypeRepository
-    implements ISponsorExtraQuestionTypeRepository
-{
+  extends DoctrineExtraQuestionTypeRepository
+  implements ISponsorExtraQuestionTypeRepository {
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "sponsor_id" => new DoctrineLeftJoinFilterMapping("e.sponsor", "s", "s.id :operator :value"),
+      "name" => "e.name:json_string",
+      "label" => "e.label:json_string",
+      "type" => "e.type:json_string",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'sponsor_id' => new DoctrineLeftJoinFilterMapping("e.sponsor", "s" ,"s.id :operator :value"),
-            'name'       => 'e.name:json_string',
-            'label'      => 'e.label:json_string',
-            'type'       => 'e.type:json_string',
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return array_merge(parent::getOrderMappings(), [
+      "type" => "e.type",
+    ]);
+  }
+
+  /**
+   * @return array
+   */
+  public function getQuestionsMetadata() {
+    $metadata = [];
+    foreach (Sponsor::getAllowedQuestionTypes() as $type) {
+      $metadata[] = in_array($type, ExtraQuestionTypeConstants::AllowedMultiValueQuestionType)
+        ? [
+          "type" => $type,
+          "values" => "array",
+        ]
+        : [
+          "type" => $type,
         ];
     }
+    return $metadata;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return array_merge(parent::getOrderMappings() , [
-            'type' => 'e.type',
-        ]);
-    }
+  /**
+   *
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitSponsorExtraQuestionType::class;
+  }
 
-    /**
-     * @return array
-     */
-    public function getQuestionsMetadata()
-    {
-        $metadata = [];
-        foreach (Sponsor::getAllowedQuestionTypes() as $type){
-            $metadata[] = in_array($type, ExtraQuestionTypeConstants::AllowedMultiValueQuestionType)?[
-                'type' => $type,
-                'values' => 'array',
-            ]: [
-                'type' => $type,
-            ];
-        }
-        return $metadata;
-    }
-
-    /**
-     *
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitSponsorExtraQuestionType::class;
-    }
-
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
-    {
-        return $this->getParametrizedAllByPage(function () {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("e")
-                ->from($this->getBaseEntity(), "e");
-        },
-            $paging_info,
-            $filter,
-            $order,
-            function ($query) {
-                //default order
-                return $query;
-            });
-    }
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse {
+    return $this->getParametrizedAllByPage(
+      function () {
+        return $this->getEntityManager()
+          ->createQueryBuilder()
+          ->select("e")
+          ->from($this->getBaseEntity(), "e");
+      },
+      $paging_info,
+      $filter,
+      $order,
+      function ($query) {
+        //default order
+        return $query;
+      },
+    );
+  }
 }

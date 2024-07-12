@@ -20,57 +20,53 @@ use models\exceptions\ValidationException;
  * Class SubmitForReviewEmail
  * @package App\Jobs\Emails\Schedule
  */
-class SubmitForReviewEmail extends AbstractSummitEmailJob
-{
+class SubmitForReviewEmail extends AbstractSummitEmailJob {
+  /**
+   * SubmitForReviewEmail constructor.
+   * @param SummitProposedScheduleLock $lock
+   */
+  public function __construct(SummitProposedScheduleLock $lock) {
+    $summit = $lock->getProposedSchedule()->getSummit();
+    $submitter = $lock->getCreatedBy()->getMember();
+    $payload = [];
 
-    /**
-     * SubmitForReviewEmail constructor.
-     * @param SummitProposedScheduleLock $lock
-     */
-    public function __construct(SummitProposedScheduleLock $lock)
-    {
-        $summit = $lock->getProposedSchedule()->getSummit();
-        $submitter = $lock->getCreatedBy()->getMember();
-        $payload = [];
+    $payload[IMailTemplatesConstants::submitter_fullname] = $submitter->getFullName();
+    $payload[IMailTemplatesConstants::submitter_email] = $submitter->getEmail();
+    $payload[IMailTemplatesConstants::track] = $lock->getTrack()->getTitle();
+    $payload[IMailTemplatesConstants::track_id] = $lock->getTrack()->getId();
+    $payload[IMailTemplatesConstants::message] = $lock->getReason() ?? "";
 
-        $payload[IMailTemplatesConstants::submitter_fullname]  = $submitter->getFullName();
-        $payload[IMailTemplatesConstants::submitter_email]     = $submitter->getEmail();
-        $payload[IMailTemplatesConstants::track]               = $lock->getTrack()->getTitle();
-        $payload[IMailTemplatesConstants::track_id]            = $lock->getTrack()->getId();
-        $payload[IMailTemplatesConstants::message]             = $lock->getReason() ?? "";
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    $to_email = $this->getEmailRecipientFromEmailEvent($summit);
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-        $to_email = $this->getEmailRecipientFromEmailEvent($summit);
-
-        if (is_null($to_email))
-            throw new ValidationException("There is no registered recipient to send the email.");
-
-        parent::__construct($summit, $payload, $template_identifier, $to_email);
+    if (is_null($to_email)) {
+      throw new ValidationException("There is no registered recipient to send the email.");
     }
 
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
+    parent::__construct($summit, $payload, $template_identifier, $to_email);
+  }
 
-        $payload = parent::getEmailTemplateSchema();
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
 
-        $payload[IMailTemplatesConstants::submitter_fullname]['type'] = 'string';
-        $payload[IMailTemplatesConstants::submitter_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::track]['type'] = 'string';
-        $payload[IMailTemplatesConstants::track_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::message]['type'] = 'string';
+    $payload[IMailTemplatesConstants::submitter_fullname]["type"] = "string";
+    $payload[IMailTemplatesConstants::submitter_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::track]["type"] = "string";
+    $payload[IMailTemplatesConstants::track_id]["type"] = "int";
+    $payload[IMailTemplatesConstants::message]["type"] = "string";
 
-        return $payload;
-    }
+    return $payload;
+  }
 
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW';
-    const EVENT_NAME = 'SUMMIT_PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW';
-    const DEFAULT_TEMPLATE = 'PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW";
+  const EVENT_NAME = "SUMMIT_PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW";
+  const DEFAULT_TEMPLATE = "PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW";
 }

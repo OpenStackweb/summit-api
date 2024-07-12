@@ -22,32 +22,33 @@ use ModelSerializers\SerializerRegistry;
  * Trait ParametrizedGetEntity
  * @package App\Http\Controllers
  */
-trait ParametrizedGetEntity
-{
-    use BaseAPI;
+trait ParametrizedGetEntity {
+  use BaseAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    /**
-     * @param $id
-     * @param callable $getEntityFn
-     * @param mixed ...$args
-     * @return mixed
-     */
-    public function _get($id, callable $getEntityFn, ...$args)
-    {
-        return $this->processRequest(function() use($id, $getEntityFn, $args){
+  /**
+   * @param $id
+   * @param callable $getEntityFn
+   * @param mixed ...$args
+   * @return mixed
+   */
+  public function _get($id, callable $getEntityFn, ...$args) {
+    return $this->processRequest(function () use ($id, $getEntityFn, $args) {
+      $entity = $getEntityFn($id, ...$args);
+      if (is_null($entity)) {
+        throw new EntityNotFoundException();
+      }
 
-            $entity = $getEntityFn($id, ...$args);
-            if(is_null($entity))
-                throw new EntityNotFoundException();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($entity)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
-        });
-    }
+      return $this->ok(
+        SerializerRegistry::getInstance()
+          ->getSerializer($entity)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 }

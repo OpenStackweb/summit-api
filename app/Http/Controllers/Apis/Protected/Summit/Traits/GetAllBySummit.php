@@ -17,33 +17,36 @@ use utils\FilterElement;
  * Trait GetAllBySummit
  * @package App\Http\Controllers
  */
-trait GetAllBySummit
-{
+trait GetAllBySummit {
+  use GetAll;
 
-    use GetAll;
+  /**
+   * @var mixed
+   */
+  protected $summit_id;
 
-    /**
-     * @var mixed
-     */
-    protected $summit_id;
+  /**
+   * @param Filter $filter
+   * @return Filter
+   */
+  protected function applyExtraFilters(Filter $filter): Filter {
+    $filter->addFilterCondition(FilterElement::makeEqual("summit_id", intval($this->summit_id)));
+    return $filter;
+  }
 
-    /**
-     * @param Filter $filter
-     * @return Filter
-     */
-    protected function applyExtraFilters(Filter $filter):Filter {
-        $filter->addFilterCondition(FilterElement::makeEqual("summit_id", intval($this->summit_id)));
-        return $filter;
+  /**
+   * @param $summit_id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function getAllBySummit($summit_id) {
+    $this->summit_id = $summit_id;
+    $summit = SummitFinderStrategyFactory::build(
+      $this->getSummitRepository(),
+      $this->getResourceServerContext(),
+    )->find($this->summit_id);
+    if (is_null($summit)) {
+      return $this->error404();
     }
-
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function getAllBySummit($summit_id){
-        $this->summit_id = $summit_id;
-        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($this->summit_id);
-        if (is_null($summit)) return $this->error404();
-        return $this->getAll();
-    }
+    return $this->getAll();
+  }
 }

@@ -18,53 +18,58 @@ use ModelSerializers\SilverStripeSerializer;
  * Class RSVPTemplateSerializer
  * @package App\ModelSerializers\Summit
  */
-final class RSVPTemplateSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Title'        => 'title:json_string',
-        'Enabled'      => 'is_enabled:json_boolean',
-        'CreatedById'  => 'created_by_id:json_int',
-        'SummitId'     => 'summit_id:json_int',
-    ];
+final class RSVPTemplateSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Title" => "title:json_string",
+    "Enabled" => "is_enabled:json_boolean",
+    "CreatedById" => "created_by_id:json_int",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $template = $this->object;
-        if(! $template instanceof RSVPTemplate) return [];
-        $values  = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $template = $this->object;
+    if (!$template instanceof RSVPTemplate) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $questions           = [];
-        foreach ($template->getQuestions() as $question){
-            $questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize($expand, [], ['none']);
-        }
-
-        $values['questions'] = $questions;
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                    case 'created_by':
-                    {
-                        if($template->hasCreatedBy()) {
-                            unset($values['created_by_id']);
-                            $values['created_by'] = SerializerRegistry::getInstance()->getSerializer($template)->serialize($expand, [], ['none']);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+    $questions = [];
+    foreach ($template->getQuestions() as $question) {
+      $questions[] = SerializerRegistry::getInstance()
+        ->getSerializer($question)
+        ->serialize($expand, [], ["none"]);
     }
 
+    $values["questions"] = $questions;
+
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "created_by":
+            if ($template->hasCreatedBy()) {
+              unset($values["created_by_id"]);
+              $values["created_by"] = SerializerRegistry::getInstance()
+                ->getSerializer($template)
+                ->serialize($expand, [], ["none"]);
+            }
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

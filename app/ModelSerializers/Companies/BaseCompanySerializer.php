@@ -16,25 +16,24 @@ use ModelSerializers\SilverStripeSerializer;
  * Class BaseCompanySerializer
  * @package App\ModelSerializers\Companies
  */
-class BaseCompanySerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Url' => 'url:json_string',
-        'UrlSegment' => 'url_segment:json_string',
-        'City' => 'city:json_string',
-        'State' => 'state:json_string',
-        'Country' => 'country:json_string',
-        'Description' => 'description:json_string',
-        'Industry' => 'industry:json_string',
-        'Contributions' => 'contributions:json_string',
-        'MemberLevel' => 'member_level:json_string',
-        'Overview' => 'overview:json_string',
-        'Products' => 'products:json_string',
-        'Commitment' => 'commitment:json_string',
-        'CommitmentAuthor' => 'commitment_author:json_string',
-        'LogoUrl' => 'logo:json_url',
-        'BigLogoUrl' => 'big_logo:json_url',
-        'Color' => 'color:json_color',
-    ];
+class BaseCompanySerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Url" => "url:json_string",
+    "UrlSegment" => "url_segment:json_string",
+    "City" => "city:json_string",
+    "State" => "state:json_string",
+    "Country" => "country:json_string",
+    "Description" => "description:json_string",
+    "Industry" => "industry:json_string",
+    "Contributions" => "contributions:json_string",
+    "MemberLevel" => "member_level:json_string",
+    "Overview" => "overview:json_string",
+    "Products" => "products:json_string",
+    "Commitment" => "commitment:json_string",
+    "CommitmentAuthor" => "commitment_author:json_string",
+    "LogoUrl" => "logo:json_url",
+    "BigLogoUrl" => "big_logo:json_url",
+    "Color" => "color:json_color",
+  ];
 }

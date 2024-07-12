@@ -16,24 +16,27 @@ use models\summit\PresentationMaterial;
  * Class PresentationMaterialFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-abstract class PresentationMaterialFactory
-{
-    /**
-     * @param PresentationMaterial $presentationMaterial
-     * @param array $data
-     * @return PresentationMaterial
-     */
-    public static function populate(PresentationMaterial $presentationMaterial, array $data){
-
-        if(isset($data['name']))
-            $presentationMaterial->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $presentationMaterial->setDescription(trim($data['description']));
-
-        if(isset($data['display_on_site']))
-            $presentationMaterial->setDisplayOnSite(isset($data['display_on_site']) ? boolval($data['display_on_site']) : true);
-
-        return $presentationMaterial;
+abstract class PresentationMaterialFactory {
+  /**
+   * @param PresentationMaterial $presentationMaterial
+   * @param array $data
+   * @return PresentationMaterial
+   */
+  public static function populate(PresentationMaterial $presentationMaterial, array $data) {
+    if (isset($data["name"])) {
+      $presentationMaterial->setName(trim($data["name"]));
     }
+
+    if (isset($data["description"])) {
+      $presentationMaterial->setDescription(trim($data["description"]));
+    }
+
+    if (isset($data["display_on_site"])) {
+      $presentationMaterial->setDisplayOnSite(
+        isset($data["display_on_site"]) ? boolval($data["display_on_site"]) : true,
+      );
+    }
+
+    return $presentationMaterial;
+  }
 }

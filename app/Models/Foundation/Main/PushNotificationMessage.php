@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -26,280 +26,258 @@ use models\utils\SilverstripeBaseModel;
  * Class PushNotificationMessage
  * @package models\main
  */
-class PushNotificationMessage extends SilverstripeBaseModel
-{
-    const PlatformMobile = 'MOBILE';
-    const PlatformWeb    = 'WEB';
+class PushNotificationMessage extends SilverstripeBaseModel {
+  const PlatformMobile = "MOBILE";
+  const PlatformWeb = "WEB";
 
-    const PriorityHigh = 'HIGH';
-    const PriorityNormal = 'NORMAL';
+  const PriorityHigh = "HIGH";
+  const PriorityNormal = "NORMAL";
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_sent  = false;
-        $this->approved = false;
-        $this->priority = self::PriorityNormal;
+  public function __construct() {
+    parent::__construct();
+    $this->is_sent = false;
+    $this->approved = false;
+    $this->priority = self::PriorityNormal;
+  }
+
+  /**
+   * @ORM\Column(name="Message", type="string")
+   * @var string
+   */
+  protected $message;
+
+  /**
+   * @ORM\Column(name="Priority", type="string")
+   * @var string
+   */
+  protected $priority;
+
+  /**
+   * @ORM\Column(name="SentDate", type="datetime")
+   * @var \DateTime
+   */
+  protected $sent_date;
+
+  /**
+   * @ORM\Column(name="IsSent", type="boolean")
+   * @var bool
+   */
+  protected $is_sent;
+
+  /**
+   * @ORM\Column(name="Approved", type="boolean")
+   * @var bool
+   */
+  protected $approved;
+
+  /**
+   * @ORM\Column(name="Platform", type="string")
+   * @var bool
+   */
+  protected $platform;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
+   * @var Member
+   */
+  protected $owner;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="ApprovedByID", referencedColumnName="ID")
+   * @var Member
+   */
+  protected $approved_by;
+
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      return is_null($this->owner) ? 0 : $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @ORM\Column(name="Message", type="string")
-     * @var string
-     */
-    protected $message;
-
-    /**
-     * @ORM\Column(name="Priority", type="string")
-     * @var string
-     */
-    protected $priority;
-
-    /**
-     * @ORM\Column(name="SentDate", type="datetime")
-     * @var \DateTime
-     */
-    protected $sent_date;
-
-    /**
-     * @ORM\Column(name="IsSent", type="boolean")
-     * @var bool
-     */
-    protected $is_sent;
-
-    /**
-     * @ORM\Column(name="Approved", type="boolean")
-     * @var bool
-     */
-    protected $approved;
-
-    /**
-     * @ORM\Column(name="Platform", type="string")
-     * @var bool
-     */
-    protected $platform;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
-     * @var Member
-     */
-    protected $owner;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="ApprovedByID", referencedColumnName="ID")
-     * @var Member
-     */
-    protected $approved_by;
-
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try{
-            return is_null($this->owner) ? 0 : $this->owner->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getApprovedById() {
+    try {
+      return is_null($this->approved_by) ? 0 : $this->approved_by->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return int
-     */
-    public function getApprovedById(){
-        try{
-            return is_null($this->approved_by) ? 0 : $this->approved_by->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @return string
+   */
+  public function getMessage() {
+    return $this->message;
+  }
 
-    /**
-     * @return string
-     */
-    public function getMessage()
-    {
-        return $this->message;
-    }
+  /**
+   * @return $this
+   */
+  public function markSent() {
+    $this->is_sent = true;
+    $now = new \DateTime("now", new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+    $this->sent_date = $now;
+    return $this;
+  }
 
-    /**
-     * @return $this
-     */
-    public function markSent(){
-        $this->is_sent     = true;
-        $now               = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
-        $this->sent_date   = $now;
-        return $this;
-    }
+  /**
+   * @param string $message
+   */
+  public function setMessage($message) {
+    $this->message = $message;
+  }
 
-    /**
-     * @param string $message
-     */
-    public function setMessage($message)
-    {
-        $this->message = $message;
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getSentDate() {
+    return $this->sent_date;
+  }
 
-    /**
-     * @return \DateTime
-     */
-    public function getSentDate()
-    {
-        return $this->sent_date;
-    }
+  /**
+   * @return \DateTime|null
+   */
+  public function getSentDateUTC() {
+    return $this->getDateFromLocalToUTC($this->sent_date);
+  }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getSentDateUTC(){
-        return $this->getDateFromLocalToUTC($this->sent_date);
-    }
+  /**
+   * @param \DateTime $sent_date
+   */
+  public function setSentDate($sent_date) {
+    $this->sent_date = $sent_date;
+  }
 
-    /**
-     * @param \DateTime $sent_date
-     */
-    public function setSentDate($sent_date)
-    {
-        $this->sent_date = $sent_date;
-    }
+  /**
+   * @return boolean
+   */
+  public function isSent() {
+    return $this->is_sent;
+  }
 
-    /**
-     * @return boolean
-     */
-    public function isSent()
-    {
-        return $this->is_sent;
-    }
+  /**
+   * @return boolean
+   */
+  public function getIsSent() {
+    return $this->isSent();
+  }
 
-    /**
-     * @return boolean
-     */
-    public function getIsSent()
-    {
-        return $this->isSent();
-    }
+  /**
+   * @param boolean $is_sent
+   */
+  public function setIsSent($is_sent) {
+    $this->is_sent = $is_sent;
+  }
 
-    /**
-     * @param boolean $is_sent
-     */
-    public function setIsSent($is_sent)
-    {
-        $this->is_sent = $is_sent;
-    }
+  /**
+   * @return Member
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
+  /**
+   * @return bool
+   */
+  public function hasOwner() {
+    return $this->getOwnerId() > 0;
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasOwner(){
-        return $this->getOwnerId() > 0;
-    }
+  /**
+   * @param Member $owner
+   */
+  public function setOwner($owner) {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @param Member $owner
-     */
-    public function setOwner($owner)
-    {
-        $this->owner = $owner;
-    }
+  /**
+   * @param Member|null $approved_by
+   * @return $this
+   */
+  public function approve(Member $approved_by = null) {
+    $this->approved = true;
+    $this->approved_by = $approved_by;
+    return $this;
+  }
 
-    /**
-     * @param Member|null $approved_by
-     * @return $this
-     */
-    public function approve(Member $approved_by = null){
-        $this->approved = true;
-        $this->approved_by = $approved_by;
-        return $this;
-    }
+  /**
+   * @return $this
+   */
+  public function unApprove() {
+    $this->approved = false;
+    $this->approved_by = null;
+    return $this;
+  }
 
-    /**
-     * @return $this
-     */
-    public function unApprove(){
-        $this->approved = false;
-        $this->approved_by = null;
-        return $this;
-    }
+  /**
+   * @return string
+   */
+  public function getPriority() {
+    return $this->priority;
+  }
 
-    /**
-     * @return string
-     */
-    public function getPriority()
-    {
-        return $this->priority;
-    }
+  /**
+   * @param string $priority
+   */
+  public function setPriority($priority) {
+    $this->priority = $priority;
+  }
 
-    /**
-     * @param string $priority
-     */
-    public function setPriority($priority)
-    {
-        $this->priority = $priority;
-    }
+  /**
+   * @return bool
+   */
+  public function isApproved() {
+    return $this->approved;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isApproved()
-    {
-        return $this->approved;
-    }
+  /**
+   * @param bool $approved
+   */
+  public function setApproved($approved) {
+    $this->approved = $approved;
+  }
 
-    /**
-     * @param bool $approved
-     */
-    public function setApproved($approved)
-    {
-        $this->approved = $approved;
-    }
+  /**
+   * @return string
+   */
+  public function getPlatform() {
+    return $this->platform;
+  }
 
-    /**
-     * @return string
-     */
-    public function getPlatform()
-    {
-        return $this->platform;
-    }
+  /**
+   * @param string $platform
+   */
+  public function setPlatform($platform) {
+    $this->platform = $platform;
+  }
 
-    /**
-     * @param string $platform
-     */
-    public function setPlatform($platform)
-    {
-        $this->platform = $platform;
-    }
+  /**
+   * @return Member
+   */
+  public function getApprovedBy() {
+    return $this->approved_by;
+  }
 
-    /**
-     * @return Member
-     */
-    public function getApprovedBy()
-    {
-        return $this->approved_by;
-    }
+  /**
+   * @return bool
+   */
+  public function hasApprovedBy() {
+    return $this->getApprovedById() > 0;
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasApprovedBy(){
-        return $this->getApprovedById() > 0;
-    }
-
-    /**
-     * @param Member $approved_by
-     */
-    public function setApprovedBy($approved_by)
-    {
-        $this->approved_by = $approved_by;
-    }
-
+  /**
+   * @param Member $approved_by
+   */
+  public function setApprovedBy($approved_by) {
+    $this->approved_by = $approved_by;
+  }
 }

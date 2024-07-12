@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitDocumentRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitDocumentRepository extends IBaseRepository
-{
-
+interface ISummitDocumentRepository extends IBaseRepository {
 }

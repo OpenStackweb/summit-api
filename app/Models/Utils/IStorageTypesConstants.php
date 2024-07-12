@@ -16,18 +16,17 @@
  * Interface IStorageTypesConstants
  * @package App\Models\Utils
  */
-interface IStorageTypesConstants
-{
-    public const PublicType = 'Public';
-    public const PrivateType = 'Private';
+interface IStorageTypesConstants {
+  public const PublicType = "Public";
+  public const PrivateType = "Private";
 
-    public const DropBox = 'DropBox';
-    public const Swift = 'Swift';
-    public const S3 = 'S3';
-    public const Local = 'Local';
-    public const None = 'None';
+  public const DropBox = "DropBox";
+  public const Swift = "Swift";
+  public const S3 = "S3";
+  public const Local = "Local";
+  public const None = "None";
 
-    const ValidPrivateTypes = [self::None, self::DropBox, self::Local];
+  const ValidPrivateTypes = [self::None, self::DropBox, self::Local];
 
-    const ValidPublicTypes = [self::None, self::Swift, self::S3, self::Local];
+  const ValidPublicTypes = [self::None, self::Swift, self::S3, self::Local];
 }

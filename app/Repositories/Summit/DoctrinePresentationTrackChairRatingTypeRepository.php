@@ -23,46 +23,40 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrinePresentationTrackChairRatingTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements IPresentationTrackChairRatingTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements IPresentationTrackChairRatingTypeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PresentationTrackChairRatingType::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PresentationTrackChairRatingType::class;
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    if ($filter->hasFilter("selection_plan_id")) {
+      $query->join("e.selection_plan", "sp");
     }
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        if($filter->hasFilter('selection_plan_id'))
-            $query->join('e.selection_plan', 'sp');
-        return $query;
-    }
-
-
-    protected function getFilterMappings()
-    {
-        return [
-            'selection_plan_id' => 'sp.id',
-            'name' => "e.name",
-        ];
-    }
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'order' => 'e.order',
-            'name' => 'e.name'
-        ];
-    }
+  protected function getFilterMappings() {
+    return [
+      "selection_plan_id" => "sp.id",
+      "name" => "e.name",
+    ];
+  }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "order" => "e.order",
+      "name" => "e.name",
+    ];
+  }
 }

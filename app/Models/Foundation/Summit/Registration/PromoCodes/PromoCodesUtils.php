@@ -20,14 +20,13 @@ use models\summit\SummitRegistrationPromoCode;
  * Class PromoCodesUtils
  * @package App\Models\Foundation\Summit\Registration\PromoCodes
  */
-final class PromoCodesUtils
-{
-    /**
-     * @param SummitRegistrationPromoCode|null $promo_code
-     * @return bool
-     */
-    public static function isPrePaidPromoCode(?SummitRegistrationPromoCode $promo_code):bool{
-        return $promo_code instanceof PrePaidSummitRegistrationPromoCode ||
-            $promo_code instanceof PrePaidSummitRegistrationDiscountCode;
-    }
+final class PromoCodesUtils {
+  /**
+   * @param SummitRegistrationPromoCode|null $promo_code
+   * @return bool
+   */
+  public static function isPrePaidPromoCode(?SummitRegistrationPromoCode $promo_code): bool {
+    return $promo_code instanceof PrePaidSummitRegistrationPromoCode ||
+      $promo_code instanceof PrePaidSummitRegistrationDiscountCode;
+  }
 }

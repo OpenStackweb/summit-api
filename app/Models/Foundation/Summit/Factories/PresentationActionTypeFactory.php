@@ -16,26 +16,28 @@ use models\summit\PresentationActionType;
  * Class PresentationActionTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationActionTypeFactory
-{
-    /**
-     * @param array $data
-     * @return PresentationActionType
-     */
-    public static function build(array $data):PresentationActionType{
-        return self::populate(new PresentationActionType, $data);
+final class PresentationActionTypeFactory {
+  /**
+   * @param array $data
+   * @return PresentationActionType
+   */
+  public static function build(array $data): PresentationActionType {
+    return self::populate(new PresentationActionType(), $data);
+  }
+
+  /**
+   * @param PresentationActionType $action
+   * @param array $data
+   * @return PresentationActionType
+   */
+  public static function populate(
+    PresentationActionType $action,
+    array $data,
+  ): PresentationActionType {
+    if (isset($data["label"])) {
+      $action->setLabel(trim($data["label"]));
     }
 
-    /**
-     * @param PresentationActionType $action
-     * @param array $data
-     * @return PresentationActionType
-     */
-    public static function populate(PresentationActionType $action, array $data):PresentationActionType{
-
-        if(isset($data['label']))
-            $action->setLabel(trim($data['label']));
-
-        return $action;
-    }
+    return $action;
+  }
 }

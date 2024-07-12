@@ -12,20 +12,20 @@
  * limitations under the License.
  **/
 
-final class SummitPushNotificationValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @return array
-     */
-    public static function build(array $data){
-        return [
-            'message'       => 'required|string',
-            'platform'      => 'required|in:MOBILE,WEB',
-            'channel'       => 'required_if:platform,MOBILE|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
-            'event_id'      => 'required_if:channel,EVENT|integer',
-            'group_id'      => 'required_if:channel,GROUP|integer',
-            'recipient_ids' => 'required_if:channel,MEMBERS|int_array',
-        ];
-    }
+final class SummitPushNotificationValidationRulesFactory {
+  /**
+   * @param array $data
+   * @return array
+   */
+  public static function build(array $data) {
+    return [
+      "message" => "required|string",
+      "platform" => "required|in:MOBILE,WEB",
+      "channel" =>
+        "required_if:platform,MOBILE|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP",
+      "event_id" => "required_if:channel,EVENT|integer",
+      "group_id" => "required_if:channel,GROUP|integer",
+      "recipient_ids" => "required_if:channel,MEMBERS|int_array",
+    ];
+  }
 }

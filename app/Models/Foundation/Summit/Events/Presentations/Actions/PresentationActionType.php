@@ -13,7 +13,7 @@
  **/
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationActionTypeRepository")
@@ -28,69 +28,65 @@ use models\utils\SilverstripeBaseModel;
  * Class PresentationActionType
  * @package models\summit
  */
-class PresentationActionType extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class PresentationActionType extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    private $label;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  private $label;
 
-    /**
-     * @deprecated
-     * @var int
-     */
-    private $order;
+  /**
+   * @deprecated
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="type", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     * @var AllowedPresentationActionType[]
-     */
-    private $assigned_selection_plans;
+  /**
+   * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="type", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+   * @var AllowedPresentationActionType[]
+   */
+  private $assigned_selection_plans;
 
-    /**
-     * PresentationActionType constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->assigned_selection_plans = new ArrayCollection;
-    }
+  /**
+   * PresentationActionType constructor.
+   */
+  public function __construct() {
+    parent::__construct();
+    $this->assigned_selection_plans = new ArrayCollection();
+  }
 
-    /**
-     * @return string
-     */
-    public function getLabel(): string
-    {
-        return $this->label;
-    }
+  /**
+   * @return string
+   */
+  public function getLabel(): string {
+    return $this->label;
+  }
 
-    /**
-     * @param string $label
-     */
-    public function setLabel(string $label): void
-    {
-        $this->label = $label;
-    }
+  /**
+   * @param string $label
+   */
+  public function setLabel(string $label): void {
+    $this->label = $label;
+  }
 
-    /**
-     * @return ArrayCollection
-     */
-    public function getSelectionPlanAssignmentOrder(int $selection_plan_id): int {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('selection_plan_id', $selection_plan_id));
-        $assigned_selection_plan = $this->assigned_selection_plans->matching($criteria)->first();
-        return $assigned_selection_plan === false ? 0 : $assigned_selection_plan->getOrder();
-    }
+  /**
+   * @return ArrayCollection
+   */
+  public function getSelectionPlanAssignmentOrder(int $selection_plan_id): int {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("selection_plan_id", $selection_plan_id));
+    $assigned_selection_plan = $this->assigned_selection_plans->matching($criteria)->first();
+    return $assigned_selection_plan === false ? 0 : $assigned_selection_plan->getOrder();
+  }
 
-    /**
-     * @return ArrayCollection
-     */
-    public function getSelectionPlans(): ArrayCollection {
-        return $this->assigned_selection_plans->map(function ($entity) {
-            return $entity->getSelectionPlan();
-        });
-    }
+  /**
+   * @return ArrayCollection
+   */
+  public function getSelectionPlans(): ArrayCollection {
+    return $this->assigned_selection_plans->map(function ($entity) {
+      return $entity->getSelectionPlan();
+    });
+  }
 }

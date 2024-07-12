@@ -18,7 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitSubmissionInvitationRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitSubmissionInvitationRepository extends IBaseRepository
-{
-
+interface ISummitSubmissionInvitationRepository extends IBaseRepository {
 }

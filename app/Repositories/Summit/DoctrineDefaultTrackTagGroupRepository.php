@@ -18,15 +18,12 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * Class DoctrineDefaultTrackTagGroupRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineDefaultTrackTagGroupRepository extends SilverStripeDoctrineRepository
-    implements IDefaultTrackTagGroupRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return DefaultTrackTagGroup::class;
-    }
+final class DoctrineDefaultTrackTagGroupRepository extends SilverStripeDoctrineRepository implements
+  IDefaultTrackTagGroupRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return DefaultTrackTagGroup::class;
+  }
 }

@@ -25,59 +25,51 @@ use Illuminate\Support\Facades\Log;
  * Class DoctrineApiEndpointRepository
  * @package repositories\resource_server
  */
-final class DoctrineApiEndpointRepository
-    extends ConfigDoctrineRepository
-    implements IApiEndpointRepository
-{
-
-    /**
-     * @param string $url
-     * @param string $http_method
-     * @return IApiEndpoint
-     */
-    public function getApiEndpointByUrlAndMethod($url, $http_method)
-    {
-        try {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("e")
-                ->from(\App\Models\ResourceServer\ApiEndpoint::class, "e")
-                ->where('e.route = :route')
-                ->andWhere('e.http_method = :http_method')
-                ->setParameter('route', trim($url))
-                ->setParameter('http_method', trim($http_method))
-                ->setCacheable(true)
-                ->setCacheRegion('resource_server_region')
-                ->getQuery()
-                ->getOneOrNullResult();
-        }
-        catch(\Exception $ex){
-            Log::error($ex);
-            return null;
-        }
+final class DoctrineApiEndpointRepository extends ConfigDoctrineRepository implements
+  IApiEndpointRepository {
+  /**
+   * @param string $url
+   * @param string $http_method
+   * @return IApiEndpoint
+   */
+  public function getApiEndpointByUrlAndMethod($url, $http_method) {
+    try {
+      return $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select("e")
+        ->from(\App\Models\ResourceServer\ApiEndpoint::class, "e")
+        ->where("e.route = :route")
+        ->andWhere("e.http_method = :http_method")
+        ->setParameter("route", trim($url))
+        ->setParameter("http_method", trim($http_method))
+        ->setCacheable(true)
+        ->setCacheRegion("resource_server_region")
+        ->getQuery()
+        ->getOneOrNullResult();
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return null;
     }
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return ApiEndpoint::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return ApiEndpoint::class;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [];
-    }
-
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [];
+  }
 }

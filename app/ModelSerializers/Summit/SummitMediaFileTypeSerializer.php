@@ -16,28 +16,35 @@ use models\summit\SummitMediaFileType;
  * Class SummitMediaFileTypeSerializer
  * @package ModelSerializers
  */
-final class SummitMediaFileTypeSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name' => 'name:json_string',
-        'Description' => 'description:json_string',
-        'SystemDefined' => 'is_system_defined:json_boolean',
-    ];
+final class SummitMediaFileTypeSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "SystemDefined" => "is_system_defined:json_boolean",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $type = $this->object;
-        if (!$type instanceof SummitMediaFileType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $allowed_extensions = $type->getAllowedExtensions();
-        $values['allowed_extensions'] = !is_null($allowed_extensions) ? explode('|', $allowed_extensions): [];
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $type = $this->object;
+    if (!$type instanceof SummitMediaFileType) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $allowed_extensions = $type->getAllowedExtensions();
+    $values["allowed_extensions"] = !is_null($allowed_extensions)
+      ? explode("|", $allowed_extensions)
+      : [];
+    return $values;
+  }
 }

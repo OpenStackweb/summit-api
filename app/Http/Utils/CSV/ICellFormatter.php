@@ -12,12 +12,10 @@
  * limitations under the License.
  **/
 
-
-interface ICellFormatter
-{
-    /**
-     * @param string $val
-     * @return string
-     */
-    public function format($val);
+interface ICellFormatter {
+  /**
+   * @param string $val
+   * @return string
+   */
+  public function format($val);
 }

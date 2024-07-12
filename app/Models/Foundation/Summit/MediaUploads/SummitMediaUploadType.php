@@ -17,7 +17,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitMediaUploadTypeRepository")
  * @ORM\Table(name="SummitMediaUploadType")
@@ -30,427 +30,415 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitMediaUploadType
  * @package models\summit
  */
-class SummitMediaUploadType extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class SummitMediaUploadType extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaFileType")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
-     * @var SummitMediaFileType
-     */
-    protected $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaFileType")
+   * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
+   * @var SummitMediaFileType
+   */
+  protected $type;
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="MaxSize", type="integer")
-     * @var int
-     * in KB
-     */
-    private $max_size;
+  /**
+   * @ORM\Column(name="MaxSize", type="integer")
+   * @var int
+   * in KB
+   */
+  private $max_size;
 
-    /**
-     * @deprecated
-     */
-    private $is_mandatory;
+  /**
+   * @deprecated
+   */
+  private $is_mandatory;
 
-    /**
-     * @ORM\Column(name="MinUploadsQty", type="integer")
-     * @var int
-     */
-    private $min_uploads_qty;
+  /**
+   * @ORM\Column(name="MinUploadsQty", type="integer")
+   * @var int
+   */
+  private $min_uploads_qty;
 
-    /**
-     * @ORM\Column(name="MaxUploadsQty", type="integer")
-     * @var int
-     */
-    private $max_uploads_qty;
+  /**
+   * @ORM\Column(name="MaxUploadsQty", type="integer")
+   * @var int
+   */
+  private $max_uploads_qty;
 
-    /**
-     * @ORM\Column(name="PrivateStorageType", type="string")
-     * @var string
-     */
-    private $private_storage_type;
+  /**
+   * @ORM\Column(name="PrivateStorageType", type="string")
+   * @var string
+   */
+  private $private_storage_type;
 
-    /**
-     * @ORM\Column(name="PublicStorageType", type="string")
-     * @var string
-     */
-    private $public_storage_type;
+  /**
+   * @ORM\Column(name="PublicStorageType", type="string")
+   * @var string
+   */
+  private $public_storage_type;
 
-    /**
-     * @ORM\Column(name="UseTemporaryLinksOnPublicStorage", type="boolean")
-     * @var bool
-     */
-    private $use_temporary_links_on_public_storage;
+  /**
+   * @ORM\Column(name="UseTemporaryLinksOnPublicStorage", type="boolean")
+   * @var bool
+   */
+  private $use_temporary_links_on_public_storage;
 
-    /**
-     * @ORM\Column(name="TemporaryLinksOnPublicStorageTTL", type="integer")
-     * @var int
-     * in minutes
-     */
-    private $temporary_links_public_storage_ttl;
+  /**
+   * @ORM\Column(name="TemporaryLinksOnPublicStorageTTL", type="integer")
+   * @var int
+   * in minutes
+   */
+  private $temporary_links_public_storage_ttl;
 
-    /**
-     * @ORM\Column(name="IsEditable", type="boolean")
-     * @var bool
-     */
-    private $is_editable;
+  /**
+   * @ORM\Column(name="IsEditable", type="boolean")
+   * @var bool
+   */
+  private $is_editable;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationType", inversedBy="allowed_media_upload_types", cascade={"persist"})
-     * @ORM\JoinTable(name="PresentationType_SummitMediaUploadType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationTypeID", referencedColumnName="ID")}
-     *      )
-     * @var PresentationType[]
-     */
-    private $presentation_types;
+  /**
+   * @ORM\ManyToMany(targetEntity="models\summit\PresentationType", inversedBy="allowed_media_upload_types", cascade={"persist"})
+   * @ORM\JoinTable(name="PresentationType_SummitMediaUploadType",
+   *      joinColumns={@ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationTypeID", referencedColumnName="ID")}
+   *      )
+   * @var PresentationType[]
+   */
+  private $presentation_types;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationMediaUpload", mappedBy="media_upload_type", cascade={"persist","remove"}, orphanRemoval=true)
-     */
-    private $media_uploads;
+  /**
+   * @ORM\OneToMany(targetEntity="models\summit\PresentationMediaUpload", mappedBy="media_upload_type", cascade={"persist","remove"}, orphanRemoval=true)
+   */
+  private $media_uploads;
 
-    /**
-     * SummitMediaUploadType constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_mandatory = false;
-        $this->max_size = 0;
-        $this->min_uploads_qty = 0;
-        $this->max_uploads_qty = 0;
-        $this->presentation_types = new ArrayCollection();
-        $this->public_storage_type = IStorageTypesConstants::None;
-        $this->private_storage_type = IStorageTypesConstants::None;
-        $this->use_temporary_links_on_public_storage = false;
-        $this->temporary_links_public_storage_ttl = 10;
-        $this->is_editable = true;
+  /**
+   * SummitMediaUploadType constructor.
+   */
+  public function __construct() {
+    parent::__construct();
+    $this->is_mandatory = false;
+    $this->max_size = 0;
+    $this->min_uploads_qty = 0;
+    $this->max_uploads_qty = 0;
+    $this->presentation_types = new ArrayCollection();
+    $this->public_storage_type = IStorageTypesConstants::None;
+    $this->private_storage_type = IStorageTypesConstants::None;
+    $this->use_temporary_links_on_public_storage = false;
+    $this->temporary_links_public_storage_ttl = 10;
+    $this->is_editable = true;
+  }
+
+  public function setType(SummitMediaFileType $type) {
+    $this->type = $type;
+  }
+
+  /**
+   * @return SummitMediaFileType
+   */
+  public function getType(): ?SummitMediaFileType {
+    return $this->type;
+  }
+
+  /**
+   * @return int
+   */
+  public function getTypeId() {
+    try {
+      return is_null($this->type) ? 0 : $this->type->getId();
+    } catch (\Exception $ex) {
+      return 0;
+    }
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasType(): bool {
+    return $this->getTypeId() > 0;
+  }
+
+  public function clearType() {
+    $this->type = null;
+  }
+
+  /**
+   * @return string
+   */
+  public function getName(): string {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   */
+  public function setName(string $name): void {
+    $this->name = $name;
+  }
+
+  /**
+   * @return string
+   */
+  public function getDescription(): string {
+    return $this->description;
+  }
+
+  /**
+   * @param string $description
+   */
+  public function setDescription(string $description): void {
+    $this->description = $description;
+  }
+
+  /**
+   * @return int
+   */
+  public function getMaxSize(): int {
+    return $this->max_size;
+  }
+
+  /**
+   * @return int
+   */
+  public function getMaxSizeMB(): int {
+    return $this->max_size / 1024;
+  }
+
+  /**
+   * @param int $max_size
+   */
+  public function setMaxSize(int $max_size): void {
+    $this->max_size = $max_size;
+  }
+
+  /**
+   * @return int
+   */
+  public function getMinUploadsQty(): int {
+    return $this->min_uploads_qty;
+  }
+
+  /**
+   * @param int $min_uploads_qty
+   * @throws ValidationException
+   */
+  public function setMinUploadsQty(int $min_uploads_qty): void {
+    if ($min_uploads_qty < 0) {
+      throw new ValidationException("min_uploads_qty should be greater than zero.");
     }
 
-    public function setType(SummitMediaFileType $type){
-        $this->type = $type;
+    $this->min_uploads_qty = $min_uploads_qty;
+  }
+
+  /**
+   * @return int
+   *
+   * 0 -> INFINITE
+   */
+  public function getMaxUploadsQty(): int {
+    return $this->max_uploads_qty;
+  }
+
+  /**
+   * @param int $max_uploads_qty
+   * @throws ValidationException
+   */
+  public function setMaxUploadsQty(int $max_uploads_qty): void {
+    if ($max_uploads_qty < 0) {
+      throw new ValidationException("max_uploads_qty should be greater than zero.");
     }
 
-    /**
-     * @return SummitMediaFileType
-     */
-    public function getType(): ?SummitMediaFileType{
-        return $this->type;
+    if ($max_uploads_qty > 0 && $this->min_uploads_qty > 0) {
+      // is not infinite, then should be greater or equal to min
+      if ($max_uploads_qty < $this->min_uploads_qty) {
+        throw new ValidationException("max_uploads_qty should be greater than min_uploads_qty.");
+      }
+    }
+    $this->max_uploads_qty = $max_uploads_qty;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isMandatory(): bool {
+    return $this->min_uploads_qty > 0;
+  }
+
+  /**
+   * @deprecated use SummitMediaUploadType::setMinUploadsQty(1) instead
+   */
+  public function markAsMandatory(): void {
+    $this->is_mandatory = true;
+  }
+
+  /**
+   * @deprecated use SummitMediaUploadType::setMinUploadsQty(0) instead
+   */
+  public function markAsOptional(): void {
+    $this->is_mandatory = false;
+  }
+
+  /**
+   * @return string
+   */
+  public function getPrivateStorageType(): ?string {
+    return $this->private_storage_type;
+  }
+
+  /**
+   * @param string $private_storage_type
+   */
+  public function setPrivateStorageType(string $private_storage_type): void {
+    if (!in_array($private_storage_type, IStorageTypesConstants::ValidPrivateTypes)) {
+      throw new ValidationException(
+        sprintf("invalid private storage type %s", $private_storage_type),
+      );
+    }
+    $this->private_storage_type = $private_storage_type;
+  }
+
+  /**
+   * @return string
+   */
+  public function getPublicStorageType(): ?string {
+    return $this->public_storage_type;
+  }
+
+  /**
+   * @param string $public_storage_type
+   */
+  public function setPublicStorageType(string $public_storage_type): void {
+    if (!in_array($public_storage_type, IStorageTypesConstants::ValidPublicTypes)) {
+      throw new ValidationException(
+        sprintf("invalid public storage type %s", $public_storage_type),
+      );
     }
 
-    /**
-     * @return int
-     */
-    public function getTypeId(){
-        try {
-            return is_null($this->type) ? 0 : $this->type->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+    $this->public_storage_type = $public_storage_type;
+  }
+
+  /**
+   * @param PresentationType $presentationType
+   */
+  public function addPresentationType(PresentationType $presentationType) {
+    if ($this->presentation_types->contains($presentationType)) {
+      return;
     }
+    $this->presentation_types->add($presentationType);
+    $presentationType->addAllowedMediaUploadType($this);
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasType():bool{
-        return $this->getTypeId() > 0;
+  /**
+   * @param PresentationType $presentationType
+   */
+  public function removePresentationType(PresentationType $presentationType) {
+    if (!$this->presentation_types->contains($presentationType)) {
+      return;
     }
+    $this->presentation_types->removeElement($presentationType);
+    $presentationType->removeAllowedMediaUploadType($this);
+  }
 
-    public function clearType(){
-        $this->type = null;
-    }
+  public function getPresentationTypes() {
+    return $this->presentation_types;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
+  public function isPresentationTypeAllowed(SummitEventType $type): bool {
+    return $this->presentation_types->contains($type);
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+  public function clearPresentationTypes(): void {
+    $this->presentation_types->clear();
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return $this->description;
-    }
+  /**
+   * @param string $ext
+   * @return bool
+   */
+  public function isValidExtension(string $ext): bool {
+    return in_array(strtoupper($ext), explode("|", $this->type->getAllowedExtensions()));
+  }
 
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
-    }
+  public function getValidExtensions() {
+    return $this->type->getAllowedExtensions();
+  }
 
-    /**
-     * @return int
-     */
-    public function getMaxSize(): int
-    {
-        return $this->max_size;
-    }
+  public function hasStorageSet(): bool {
+    return $this->private_storage_type != IStorageTypesConstants::None ||
+      $this->public_storage_type != IStorageTypesConstants::None;
+  }
 
-    /**
-     * @return int
-     */
-    public function getMaxSizeMB(): int
-    {
-        return $this->max_size/1024;
-    }
+  /**
+   * @return bool
+   */
+  public function hasPublicStorageSet(): bool {
+    return $this->public_storage_type != IStorageTypesConstants::None;
+  }
 
-    /**
-     * @param int $max_size
-     */
-    public function setMaxSize(int $max_size): void
-    {
-        $this->max_size = $max_size;
-    }
+  public function isVideo(): bool {
+    return str_contains(strtolower($this->getType()->getName()), "video");
+  }
 
-    /**
-     * @return int
-     */
-    public function getMinUploadsQty(): int
-    {
-        return $this->min_uploads_qty;
-    }
+  /**
+   * @return mixed
+   */
+  public function getMediaUploadsToDisplayOnSite() {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("display_on_site", true));
+    return $this->media_uploads->matching($criteria);
+  }
 
-    /**
-     * @param int $min_uploads_qty
-     * @throws ValidationException
-     */
-    public function setMinUploadsQty(int $min_uploads_qty): void
-    {
-        if($min_uploads_qty < 0)
-            throw new ValidationException("min_uploads_qty should be greater than zero.");
+  /**
+   * @return bool
+   */
+  public function isUseTemporaryLinksOnPublicStorage(): bool {
+    return $this->use_temporary_links_on_public_storage;
+  }
 
-        $this->min_uploads_qty = $min_uploads_qty;
-    }
+  /**
+   * @param bool $use_temporary_links_on_public_storage
+   */
+  public function setUseTemporaryLinksOnPublicStorage(
+    bool $use_temporary_links_on_public_storage,
+  ): void {
+    $this->use_temporary_links_on_public_storage = $use_temporary_links_on_public_storage;
+  }
 
-    /**
-     * @return int
-     *
-     * 0 -> INFINITE
-     */
-    public function getMaxUploadsQty(): int
-    {
-        return $this->max_uploads_qty;
-    }
+  /**
+   * @return int
+   */
+  public function getTemporaryLinksPublicStorageTtl(): int {
+    return $this->temporary_links_public_storage_ttl;
+  }
 
-    /**
-     * @param int $max_uploads_qty
-     * @throws ValidationException
-     */
-    public function setMaxUploadsQty(int $max_uploads_qty): void
-    {
-        if($max_uploads_qty < 0)
-            throw new ValidationException("max_uploads_qty should be greater than zero.");
+  /**
+   * @param int $temporary_links_public_storage_ttl
+   */
+  public function setTemporaryLinksPublicStorageTtl(int $temporary_links_public_storage_ttl): void {
+    $this->temporary_links_public_storage_ttl = $temporary_links_public_storage_ttl;
+  }
 
-        if($max_uploads_qty > 0 && $this->min_uploads_qty > 0){
-            // is not infinite, then should be greater or equal to min
-            if($max_uploads_qty < $this->min_uploads_qty){
-                throw new ValidationException("max_uploads_qty should be greater than min_uploads_qty.");
-            }
-        }
-        $this->max_uploads_qty = $max_uploads_qty;
-    }
+  /**
+   * @return bool
+   */
+  public function isEditable(): bool {
+    return $this->is_editable;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isMandatory(): bool
-    {
-        return $this->min_uploads_qty > 0;
-    }
-
-    /**
-     * @deprecated use SummitMediaUploadType::setMinUploadsQty(1) instead
-     */
-    public function markAsMandatory(): void
-    {
-        $this->is_mandatory = true;
-    }
-
-    /**
-     * @deprecated use SummitMediaUploadType::setMinUploadsQty(0) instead
-     */
-    public function markAsOptional():void{
-        $this->is_mandatory = false;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPrivateStorageType(): ?string
-    {
-        return $this->private_storage_type;
-    }
-
-    /**
-     * @param string $private_storage_type
-     */
-    public function setPrivateStorageType(string $private_storage_type): void
-    {
-        if(!in_array($private_storage_type, IStorageTypesConstants::ValidPrivateTypes))
-            throw new ValidationException(sprintf("invalid private storage type %s", $private_storage_type));
-        $this->private_storage_type = $private_storage_type;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPublicStorageType(): ?string
-    {
-        return $this->public_storage_type;
-    }
-
-    /**
-     * @param string $public_storage_type
-     */
-    public function setPublicStorageType(string $public_storage_type): void
-    {
-        if(!in_array($public_storage_type, IStorageTypesConstants::ValidPublicTypes))
-            throw new ValidationException(sprintf("invalid public storage type %s", $public_storage_type));
-
-        $this->public_storage_type = $public_storage_type;
-    }
-
-    /**
-     * @param PresentationType $presentationType
-     */
-    public function addPresentationType(PresentationType $presentationType){
-        if($this->presentation_types->contains($presentationType)) return;
-        $this->presentation_types->add($presentationType);
-        $presentationType->addAllowedMediaUploadType($this);
-    }
-
-    /**
-     * @param PresentationType $presentationType
-     */
-    public function removePresentationType(PresentationType $presentationType){
-        if(!$this->presentation_types->contains($presentationType)) return;
-        $this->presentation_types->removeElement($presentationType);
-        $presentationType->removeAllowedMediaUploadType($this);
-    }
-
-    public function getPresentationTypes(){
-        return $this->presentation_types;
-    }
-
-    public function isPresentationTypeAllowed(SummitEventType $type):bool {
-        return $this->presentation_types->contains($type);
-    }
-
-    public function clearPresentationTypes():void{
-        $this->presentation_types->clear();
-    }
-
-    /**
-     * @param string $ext
-     * @return bool
-     */
-    public function isValidExtension(string $ext):bool {
-        return in_array(strtoupper($ext), explode('|', $this->type->getAllowedExtensions()));
-    }
-
-    public function getValidExtensions(){
-        return $this->type->getAllowedExtensions();
-    }
-
-    public function hasStorageSet():bool {
-        return  ($this->private_storage_type != IStorageTypesConstants::None ||  $this->public_storage_type != IStorageTypesConstants::None);
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasPublicStorageSet():bool{
-        return $this->public_storage_type != IStorageTypesConstants::None;
-    }
-
-    public function isVideo():bool{
-        return str_contains(strtolower($this->getType()->getName()), "video");
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getMediaUploadsToDisplayOnSite(){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('display_on_site', true));
-        return $this->media_uploads->matching($criteria);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isUseTemporaryLinksOnPublicStorage(): bool
-    {
-        return $this->use_temporary_links_on_public_storage;
-    }
-
-    /**
-     * @param bool $use_temporary_links_on_public_storage
-     */
-    public function setUseTemporaryLinksOnPublicStorage(bool $use_temporary_links_on_public_storage): void
-    {
-        $this->use_temporary_links_on_public_storage = $use_temporary_links_on_public_storage;
-    }
-
-    /**
-     * @return int
-     */
-    public function getTemporaryLinksPublicStorageTtl(): int
-    {
-        return $this->temporary_links_public_storage_ttl;
-    }
-
-    /**
-     * @param int $temporary_links_public_storage_ttl
-     */
-    public function setTemporaryLinksPublicStorageTtl(int $temporary_links_public_storage_ttl): void
-    {
-        $this->temporary_links_public_storage_ttl = $temporary_links_public_storage_ttl;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isEditable(): bool
-    {
-        return $this->is_editable;
-    }
-
-    /**
-     * @param bool $is_editable
-     */
-    public function setIsEditable(bool $is_editable): void
-    {
-        $this->is_editable = $is_editable;
-    }
-
+  /**
+   * @param bool $is_editable
+   */
+  public function setIsEditable(bool $is_editable): void {
+    $this->is_editable = $is_editable;
+  }
 }

@@ -15,11 +15,10 @@
  * Interface ICalendarSyncWorkRequestPreProcessor
  * @package services\model
  */
-interface ICalendarSyncWorkRequestPreProcessor
-{
-    /**
-     * @param array $requests
-     * @return array
-     */
-    public function preProcessActions(array $requests);
+interface ICalendarSyncWorkRequestPreProcessor {
+  /**
+   * @param array $requests
+   * @return array
+   */
+  public function preProcessActions(array $requests);
 }

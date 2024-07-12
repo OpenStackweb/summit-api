@@ -16,17 +16,16 @@
  * Class AbstractValidationRulesFactory
  * @package App\Http\ValidationRulesFactories
  */
-abstract class AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public abstract static function buildForAdd(array $payload = []):array;
+abstract class AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  abstract public static function buildForAdd(array $payload = []): array;
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public abstract static function buildForUpdate(array $payload = []):array;
+  /**
+   * @param array $payload
+   * @return array
+   */
+  abstract public static function buildForUpdate(array $payload = []): array;
 }

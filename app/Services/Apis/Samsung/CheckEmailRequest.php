@@ -12,22 +12,20 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class CheckEmailRequest
  * @package App\Services\Apis\Samsung
  */
-final class CheckEmailRequest extends AbstractPayload
-{
-    /**
-     * @param string $email
-     * @param array $params
-     */
-    public function __construct(string $email, array $params = []){
-        parent::__construct($params);
-        $this->payload = array_merge($this->payload, [
-            PayloadParamNames::Type => RequestTypes::EmailCheck,
-            PayloadParamNames::Email => trim($email),
-        ]);
-    }
+final class CheckEmailRequest extends AbstractPayload {
+  /**
+   * @param string $email
+   * @param array $params
+   */
+  public function __construct(string $email, array $params = []) {
+    parent::__construct($params);
+    $this->payload = array_merge($this->payload, [
+      PayloadParamNames::Type => RequestTypes::EmailCheck,
+      PayloadParamNames::Email => trim($email),
+    ]);
+  }
 }

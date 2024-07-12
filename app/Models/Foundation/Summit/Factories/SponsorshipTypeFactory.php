@@ -16,34 +16,35 @@ use models\summit\SponsorshipType;
  * Class SponsorshipTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SponsorshipTypeFactory
-{
-    /**
-     * @param array $data
-     * @return SponsorshipType
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function build(array $data):SponsorshipType{
-        return self::populate(new SponsorshipType, $data);
+final class SponsorshipTypeFactory {
+  /**
+   * @param array $data
+   * @return SponsorshipType
+   * @throws \models\exceptions\ValidationException
+   */
+  public static function build(array $data): SponsorshipType {
+    return self::populate(new SponsorshipType(), $data);
+  }
+
+  /**
+   * @param SponsorshipType $sponsorship_type
+   * @param array $data
+   * @return SponsorshipType
+   * @throws \models\exceptions\ValidationException
+   */
+  public static function populate(SponsorshipType $sponsorship_type, array $data): SponsorshipType {
+    if (isset($data["label"])) {
+      $sponsorship_type->setLabel(trim($data["label"]));
     }
 
-    /**
-     * @param SponsorshipType $sponsorship_type
-     * @param array $data
-     * @return SponsorshipType
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function populate(SponsorshipType $sponsorship_type, array $data):SponsorshipType{
-
-        if(isset($data['label']))
-            $sponsorship_type->setLabel(trim($data['label']));
-
-        if(isset($data['name']))
-            $sponsorship_type->setName(trim($data['name']));
-
-        if(isset($data['size']))
-            $sponsorship_type->setSize(trim($data['size']));
-
-        return $sponsorship_type;
+    if (isset($data["name"])) {
+      $sponsorship_type->setName(trim($data["name"]));
     }
+
+    if (isset($data["size"])) {
+      $sponsorship_type->setSize(trim($data["size"]));
+    }
+
+    return $sponsorship_type;
+  }
 }

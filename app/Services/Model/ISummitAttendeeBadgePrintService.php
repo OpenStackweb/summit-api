@@ -18,13 +18,12 @@ use models\summit\Summit;
  * Interface ISummitAttendeeBadgePrintService
  * @package services\model
  */
-interface ISummitAttendeeBadgePrintService
-{
-    /**
-     * @param Summit $summit
-     * @param int $ticket_id
-     * @return void
-     * @throws ValidationException
-     */
-    public function deleteBadgePrintsByTicket(Summit $summit, int $ticket_id): void;
+interface ISummitAttendeeBadgePrintService {
+  /**
+   * @param Summit $summit
+   * @param int $ticket_id
+   * @return void
+   * @throws ValidationException
+   */
+  public function deleteBadgePrintsByTicket(Summit $summit, int $ticket_id): void;
 }

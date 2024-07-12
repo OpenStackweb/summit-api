@@ -16,11 +16,10 @@ use ModelSerializers\SilverStripeSerializer;
  * Class TrackAnswerSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-final class TrackAnswerSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Value'        => 'value:json_string',
-        'QuestionName' => 'question_name:json_string',
-        'QuestionId'   => 'question_id:json_int',
-    ];
+final class TrackAnswerSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Value" => "value:json_string",
+    "QuestionName" => "question_name:json_string",
+    "QuestionId" => "question_id:json_int",
+  ];
 }

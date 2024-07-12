@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -20,112 +20,103 @@ use models\utils\SilverstripeBaseModel;
  * Class TrackQuestionValueTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
-class TrackQuestionValueTemplate extends SilverstripeBaseModel implements IOrderable
-{
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    private $value;
+class TrackQuestionValueTemplate extends SilverstripeBaseModel implements IOrderable {
+  /**
+   * @ORM\Column(name="Value", type="string")
+   * @var string
+   */
+  private $value;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    private $label;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  private $label;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="TrackMultiValueQuestionTemplate", fetch="EXTRA_LAZY", inversedBy="values")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var TrackMultiValueQuestionTemplate
-     */
-    private $owner;
+  /**
+   * @ORM\ManyToOne(targetEntity="TrackMultiValueQuestionTemplate", fetch="EXTRA_LAZY", inversedBy="values")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="SET NULL")
+   * @var TrackMultiValueQuestionTemplate
+   */
+  private $owner;
 
-    /**
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->value;
+  /**
+   * @return string
+   */
+  public function getValue() {
+    return $this->value;
+  }
+
+  /**
+   * @param string $value
+   */
+  public function setValue($value) {
+    $this->value = $value;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLabel() {
+    return $this->label;
+  }
+
+  /**
+   * @param string $label
+   */
+  public function setLabel($label) {
+    $this->label = $label;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
+
+  /**
+   * @param int $order
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
+
+  /**
+   * @return TrackMultiValueQuestionTemplate
+   */
+  public function getOwner() {
+    return $this->owner;
+  }
+
+  /**
+   * @param TrackMultiValueQuestionTemplate $owner
+   */
+  public function setOwner($owner) {
+    $this->owner = $owner;
+  }
+
+  public function clearOwner() {
+    $this->owner = null;
+  }
+
+  /**
+   * @return int
+   */
+  public function getOwnerId() {
+    try {
+      if (is_null($this->owner)) {
+        return 0;
+      }
+      return $this->owner->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
-
-    /**
-     * @param string $value
-     */
-    public function setValue($value)
-    {
-        $this->value = $value;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLabel()
-    {
-        return $this->label;
-    }
-
-    /**
-     * @param string $label
-     */
-    public function setLabel($label)
-    {
-        $this->label = $label;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
-
-    /**
-     * @param int $order
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
-
-    /**
-     * @return TrackMultiValueQuestionTemplate
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
-
-    /**
-     * @param TrackMultiValueQuestionTemplate $owner
-     */
-    public function setOwner($owner)
-    {
-        $this->owner = $owner;
-    }
-
-    public function clearOwner(){
-        $this->owner = null;
-    }
-
-    /**
-     * @return int
-     */
-    public function getOwnerId(){
-        try{
-            if(is_null($this->owner)) return 0;
-            return $this->owner->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
+  }
 }

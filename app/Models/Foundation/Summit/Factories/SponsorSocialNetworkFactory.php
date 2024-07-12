@@ -18,29 +18,33 @@ use models\summit\SponsorSocialNetwork;
  * Class SponsorSocialNetworkFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SponsorSocialNetworkFactory
-{
-    /**
-     * @param array $data
-     * @return SponsorSocialNetwork
-     */
-    public static function build(array $data):SponsorSocialNetwork{
-        return self::populate(new SponsorSocialNetwork(), $data);
-    }
+final class SponsorSocialNetworkFactory {
+  /**
+   * @param array $data
+   * @return SponsorSocialNetwork
+   */
+  public static function build(array $data): SponsorSocialNetwork {
+    return self::populate(new SponsorSocialNetwork(), $data);
+  }
 
-    /**
-     * @param SponsorSocialNetwork $social_network
-     * @param array $data
-     * @return SponsorSocialNetwork
-     */
-    public static function populate(SponsorSocialNetwork $social_network, array $data):SponsorSocialNetwork{
-        if(isset($data['link']))
-            $social_network->setLink(trim($data['link']));
-        if(isset($data['icon_css_class']))
-            $social_network->setIconCssClass(trim($data['icon_css_class']));
-        if (isset($data['is_enabled'])) {
-            $social_network->setIsEnabled(boolval($data['is_enabled']));
-        }
-        return $social_network;
+  /**
+   * @param SponsorSocialNetwork $social_network
+   * @param array $data
+   * @return SponsorSocialNetwork
+   */
+  public static function populate(
+    SponsorSocialNetwork $social_network,
+    array $data,
+  ): SponsorSocialNetwork {
+    if (isset($data["link"])) {
+      $social_network->setLink(trim($data["link"]));
     }
+    if (isset($data["icon_css_class"])) {
+      $social_network->setIconCssClass(trim($data["icon_css_class"]));
+    }
+    if (isset($data["is_enabled"])) {
+      $social_network->setIsEnabled(boolval($data["is_enabled"]));
+    }
+    return $social_network;
+  }
 }

@@ -18,32 +18,31 @@ use ModelSerializers\SilverStripeSerializer;
  * Class CandidateSerializer
  * @package App\ModelSerializers\Elections
  */
-class CandidateSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'MemberId' => 'member_id:json_int',
-        'ElectionId' => 'election_id:json_int',
-        'HasAcceptedNomination' => 'has_accepted_nomination:json_boolean',
-        'GoldMember' => 'is_gold_member:json_boolean',
-        'RelationshipToOpenstack' => 'relationship_to_openstack:json_string',
-        'Experience' => 'experience:json_string',
-        'BoardsRole' => 'boards_role:json_string',
-        'Bio' => 'bio:json_string',
-        'TopPriority' => 'top_priority:json_string',
-    ];
+class CandidateSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "MemberId" => "member_id:json_int",
+    "ElectionId" => "election_id:json_int",
+    "HasAcceptedNomination" => "has_accepted_nomination:json_boolean",
+    "GoldMember" => "is_gold_member:json_boolean",
+    "RelationshipToOpenstack" => "relationship_to_openstack:json_string",
+    "Experience" => "experience:json_string",
+    "BoardsRole" => "boards_role:json_string",
+    "Bio" => "bio:json_string",
+    "TopPriority" => "top_priority:json_string",
+  ];
 
-    protected static $expand_mappings = [
-        'election' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'election_id',
-            'getter' => 'getElection',
-            'has' => 'hasElection'
-        ],
-        'member' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'member_id',
-            'getter' => 'getMember',
-            'has' => 'hasMember'
-        ]
-    ];
+  protected static $expand_mappings = [
+    "election" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "election_id",
+      "getter" => "getElection",
+      "has" => "hasElection",
+    ],
+    "member" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "member_id",
+      "getter" => "getMember",
+      "has" => "hasMember",
+    ],
+  ];
 }

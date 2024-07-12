@@ -13,130 +13,117 @@
  **/
 use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineDefaultTrackTagGroupRepository")
  * @ORM\Table(name="DefaultTrackTagGroup")
  * Class DefaultTrackTagGroup
  * @package models\summit\DefaultTrackTagGroup
  */
-class DefaultTrackTagGroup extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class DefaultTrackTagGroup extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Label", type="string")
-     * @var string
-     */
-    private $label;
+  /**
+   * @ORM\Column(name="Label", type="string")
+   * @var string
+   */
+  private $label;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\Column(name="Mandatory", type="boolean")
-     * @var boolean
-     */
-    private $is_mandatory;
+  /**
+   * @ORM\Column(name="Mandatory", type="boolean")
+   * @var boolean
+   */
+  private $is_mandatory;
 
-    /**
-     * @ORM\OneToMany(targetEntity="DefaultTrackTagGroupAllowedTag", mappedBy="track_tag_group", cascade={"persist"}, orphanRemoval=true)
-     * @var DefaultTrackTagGroupAllowedTag[]
-     */
-    private $allowed_tags;
+  /**
+   * @ORM\OneToMany(targetEntity="DefaultTrackTagGroupAllowedTag", mappedBy="track_tag_group", cascade={"persist"}, orphanRemoval=true)
+   * @var DefaultTrackTagGroupAllowedTag[]
+   */
+  private $allowed_tags;
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName($name) {
+    $this->name = $name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLabel()
-    {
-        return $this->label;
-    }
+  /**
+   * @return string
+   */
+  public function getLabel() {
+    return $this->label;
+  }
 
-    /**
-     * @param string $label
-     */
-    public function setLabel($label)
-    {
-        $this->label = $label;
-    }
+  /**
+   * @param string $label
+   */
+  public function setLabel($label) {
+    $this->label = $label;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
+  /**
+   * @param int $order
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isMandatory()
-    {
-        return $this->is_mandatory;
-    }
+  /**
+   * @return bool
+   */
+  public function isMandatory() {
+    return $this->is_mandatory;
+  }
 
-    /**
-     * @param bool $is_mandatory
-     */
-    public function setIsMandatory($is_mandatory)
-    {
-        $this->is_mandatory = $is_mandatory;
-    }
+  /**
+   * @param bool $is_mandatory
+   */
+  public function setIsMandatory($is_mandatory) {
+    $this->is_mandatory = $is_mandatory;
+  }
 
-    /**
-     * @return DefaultTrackTagGroupAllowedTag[]
-     */
-    public function getAllowedTags()
-    {
-        return $this->allowed_tags;
-    }
+  /**
+   * @return DefaultTrackTagGroupAllowedTag[]
+   */
+  public function getAllowedTags() {
+    return $this->allowed_tags;
+  }
 
-    /**
-     * @param DefaultTrackTagGroupAllowedTag[] $allowed_tags
-     */
-    public function setAllowedTags($allowed_tags)
-    {
-        $this->allowed_tags = $allowed_tags;
-    }
+  /**
+   * @param DefaultTrackTagGroupAllowedTag[] $allowed_tags
+   */
+  public function setAllowedTags($allowed_tags) {
+    $this->allowed_tags = $allowed_tags;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->allowed_tags = new ArrayCollection;
-        $this->is_mandatory = false;
-    }
-
+  public function __construct() {
+    parent::__construct();
+    $this->allowed_tags = new ArrayCollection();
+    $this->is_mandatory = false;
+  }
 }

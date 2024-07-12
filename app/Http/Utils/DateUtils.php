@@ -17,16 +17,20 @@ use DateTime;
  * Class DateUtils
  * @package App\Http\Utils
  */
-final class DateUtils
-{
-    /**
-     * @param DateTime $start1
-     * @param DateTime $end1
-     * @param DateTime $start2
-     * @param DateTime $end2
-     * @return bool
-     */
-    public static function checkTimeFramesOverlap(DateTime $start1, DateTime $end1, DateTime $start2, DateTime $end2){
-        return $start1 <= $end2 && $end1 >= $start2;
-    }
+final class DateUtils {
+  /**
+   * @param DateTime $start1
+   * @param DateTime $end1
+   * @param DateTime $start2
+   * @param DateTime $end2
+   * @return bool
+   */
+  public static function checkTimeFramesOverlap(
+    DateTime $start1,
+    DateTime $end1,
+    DateTime $start2,
+    DateTime $end2,
+  ) {
+    return $start1 <= $end2 && $end1 >= $start2;
+  }
 }

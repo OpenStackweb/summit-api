@@ -19,63 +19,66 @@ use ModelSerializers\SilverStripeSerializer;
  * Class ChatTeamInvitationSerializer
  * @package ModelSerializers\ChatTeams
  */
-final class ChatTeamInvitationSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'TeamId'        => 'team_id:json_int',
-        'InviteeId'     => 'invitee_id:json_int',
-        'InviterId'     => 'inviter_id:json_int',
-        'Permission'    => 'permission:json_string',
-        'IsAccepted'    => 'is_accepted:json_boolean',
-        'CreatedUTC'    => 'created_at:datetime_epoch',
-        'LastEditedUTC' => 'updated_at:datetime_epoch',
-    );
+final class ChatTeamInvitationSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "TeamId" => "team_id:json_int",
+    "InviteeId" => "invitee_id:json_int",
+    "InviterId" => "inviter_id:json_int",
+    "Permission" => "permission:json_string",
+    "IsAccepted" => "is_accepted:json_boolean",
+    "CreatedUTC" => "created_at:datetime_epoch",
+    "LastEditedUTC" => "updated_at:datetime_epoch",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $invitation = $this->object;
-        if(! $invitation instanceof ChatTeamInvitation) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!empty($expand)) {
-            $expand = explode(',', $expand);
-            foreach ($expand as $relation) {
-                switch (trim($relation)) {
-                    case 'inviter':{
-                        if(isset($values['inviter_id']))
-                        {
-                            unset($values['inviter_id']);
-                            $values['inviter'] =  SerializerRegistry::getInstance()->getSerializer($invitation->getInviter())->serialize('groups');
-                        }
-                    }
-                    break;
-                    case 'invitee':{
-                        if(isset($values['invitee_id']))
-                        {
-                            unset($values['invitee_id']);
-                            $values['invitee'] =  SerializerRegistry::getInstance()->getSerializer($invitation->getInvitee())->serialize('groups');
-                        }
-                    }
-                    break;
-                    case 'team':{
-                        if(isset($values['team_id']))
-                        {
-                            unset($values['team_id']);
-                            $values['team'] =  SerializerRegistry::getInstance()->getSerializer($invitation->getTeam())->serialize($expand = 'owner,members,member, groups');
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $invitation = $this->object;
+    if (!$invitation instanceof ChatTeamInvitation) {
+      return [];
     }
-
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (!empty($expand)) {
+      $expand = explode(",", $expand);
+      foreach ($expand as $relation) {
+        switch (trim($relation)) {
+          case "inviter":
+            if (isset($values["inviter_id"])) {
+              unset($values["inviter_id"]);
+              $values["inviter"] = SerializerRegistry::getInstance()
+                ->getSerializer($invitation->getInviter())
+                ->serialize("groups");
+            }
+            break;
+          case "invitee":
+            if (isset($values["invitee_id"])) {
+              unset($values["invitee_id"]);
+              $values["invitee"] = SerializerRegistry::getInstance()
+                ->getSerializer($invitation->getInvitee())
+                ->serialize("groups");
+            }
+            break;
+          case "team":
+            if (isset($values["team_id"])) {
+              unset($values["team_id"]);
+              $values["team"] = SerializerRegistry::getInstance()
+                ->getSerializer($invitation->getTeam())
+                ->serialize($expand = "owner,members,member, groups");
+            }
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

@@ -22,53 +22,44 @@ use Illuminate\Support\Facades\Request;
  * Class OAuth2SpeakerActiveInvolvementApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedController
-{
+final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedController {
+  /**
+   * OAuth2SpeakerActiveInvolvementApiController constructor.
+   * @param ISpeakerActiveInvolvementRepository $repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISpeakerActiveInvolvementRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+  }
 
-    /**
-     * OAuth2SpeakerActiveInvolvementApiController constructor.
-     * @param ISpeakerActiveInvolvementRepository $repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISpeakerActiveInvolvementRepository $repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    try {
+      $involvements = $this->repository->getDefaultOnes();
+      $response = new PagingResponse(
+        count($involvements),
+        count($involvements),
+        1,
+        1,
+        $involvements,
+      );
+
+      return $this->ok($response->toArray($expand = Request::input("expand", "")));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        try {
-            $involvements   = $this->repository->getDefaultOnes();
-            $response    = new PagingResponse
-            (
-                count($involvements),
-                count($involvements),
-                1,
-                1,
-                $involvements
-            );
-
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  }
 }

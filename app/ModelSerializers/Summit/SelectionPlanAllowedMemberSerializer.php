@@ -18,10 +18,9 @@ use Libs\ModelSerializers\AbstractSerializer;
  * Class SelectionPlanAllowedMemberSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SelectionPlanAllowedMemberSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Email' => 'email:json_string',
-    ];
+final class SelectionPlanAllowedMemberSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Email" => "email:json_string",
+  ];
 }

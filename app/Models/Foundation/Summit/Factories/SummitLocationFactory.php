@@ -24,264 +24,290 @@ use models\summit\SummitVenueRoom;
  * Class SummitLocationFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitLocationFactory
-{
-    /**
-     * @param array $data
-     * @return SummitAbstractLocation|null
-     * @throws ValidationException
-     */
-    public static function build(array $data){
-        if(!isset($data['class_name'])) throw new ValidationException("missing class_name param");
-        $location = null;
-        switch($data['class_name']){
-            case SummitVenue::ClassName :{
-                $location = self::populateSummitVenue(new SummitVenue, $data);
-            }
-            break;
-            case SummitExternalLocation::ClassName :{
-                $location = self::populateSummitExternalLocation(new SummitExternalLocation, $data);
-            }
-            break;
-            case SummitHotel::ClassName :{
-                $location = self::populateSummitHotel(new SummitHotel, $data);
-            }
-                break;
-            case SummitAirport::ClassName :{
-                $location = self::populateSummitAirport(new SummitAirport, $data);
-            }
-            break;
-            case SummitBookableVenueRoom::ClassName :{
-                $location = self::populateSummitVenueBookableRoom(new SummitBookableVenueRoom, $data);
-            }
-            break;
-            case SummitVenueRoom::ClassName :{
-                $location = self::populateSummitVenueRoom(new SummitVenueRoom, $data);
-            }
-            break;
-        }
-        return $location;
+final class SummitLocationFactory {
+  /**
+   * @param array $data
+   * @return SummitAbstractLocation|null
+   * @throws ValidationException
+   */
+  public static function build(array $data) {
+    if (!isset($data["class_name"])) {
+      throw new ValidationException("missing class_name param");
+    }
+    $location = null;
+    switch ($data["class_name"]) {
+      case SummitVenue::ClassName:
+        $location = self::populateSummitVenue(new SummitVenue(), $data);
+        break;
+      case SummitExternalLocation::ClassName:
+        $location = self::populateSummitExternalLocation(new SummitExternalLocation(), $data);
+        break;
+      case SummitHotel::ClassName:
+        $location = self::populateSummitHotel(new SummitHotel(), $data);
+        break;
+      case SummitAirport::ClassName:
+        $location = self::populateSummitAirport(new SummitAirport(), $data);
+        break;
+      case SummitBookableVenueRoom::ClassName:
+        $location = self::populateSummitVenueBookableRoom(new SummitBookableVenueRoom(), $data);
+        break;
+      case SummitVenueRoom::ClassName:
+        $location = self::populateSummitVenueRoom(new SummitVenueRoom(), $data);
+        break;
+    }
+    return $location;
+  }
+
+  /**
+   * @param SummitAbstractLocation $location
+   * @param array $data
+   * @return SummitAbstractLocation
+   */
+  private static function populateSummitAbstractLocation(
+    SummitAbstractLocation $location,
+    array $data,
+  ) {
+    if (isset($data["name"])) {
+      $location->setName(trim($data["name"]));
     }
 
-    /**
-     * @param SummitAbstractLocation $location
-     * @param array $data
-     * @return SummitAbstractLocation
-     */
-    private static function populateSummitAbstractLocation(SummitAbstractLocation $location, array $data){
-        if(isset($data['name']))
-            $location->setName(trim($data['name']));
-
-        if(isset($data['short_name']))
-            $location->setShortName(trim($data['short_name']));
-
-        if(isset($data['description']))
-            $location->setDescription(trim($data['description']));
-
-        if(array_key_exists('opening_hour', $data))
-            $location->setOpeningHour(is_null($data['opening_hour']) ? null : intval($data['opening_hour']));
-
-        if(array_key_exists('closing_hour', $data))
-            $location->setClosingHour(is_null($data['closing_hour']) ? null : intval($data['closing_hour']));
-
-        return $location;
+    if (isset($data["short_name"])) {
+      $location->setShortName(trim($data["short_name"]));
     }
 
-    /**
-     * @param SummitGeoLocatedLocation $location
-     * @param array $data
-     * @return SummitGeoLocatedLocation
-     */
-    private static function populateSummitGeoLocatedLocation(SummitGeoLocatedLocation $location, array $data){
-        if(isset($data['address_1']))
-            $location->setAddress1(trim($data['address_1']));
-
-        if(isset($data['address_2']))
-            $location->setAddress2(trim($data['address_2']));
-
-        if(isset($data['zip_code']))
-            $location->setZipCode(trim($data['zip_code']));
-
-        if(isset($data['city']))
-            $location->setCity(trim($data['city']));
-
-        if(isset($data['state']))
-            $location->setState(trim($data['state']));
-
-        if(isset($data['country']))
-            $location->setCountry(trim($data['country']));
-
-        if(isset($data['website_url']))
-            $location->setWebsiteUrl(trim($data['website_url']));
-
-        if(isset($data['lng']))
-            $location->setLng(trim($data['lng']));
-
-        if(isset($data['lat']))
-            $location->setLat(trim($data['lat']));
-
-        if(isset($data['display_on_site']))
-            $location->setDisplayOnSite(boolval($data['display_on_site']));
-
-        if(isset($data['details_page']))
-            $location->setDetailsPage(boolval($data['details_page']));
-
-        if(isset($data['location_message']))
-            $location->setLocationMessage(trim($data['location_message']));
-
-        return $location;
+    if (isset($data["description"])) {
+      $location->setDescription(trim($data["description"]));
     }
 
-    /**
-     * @param SummitVenue $venue
-     * @param array $data
-     * @return SummitVenue
-     */
-    public static function populateSummitVenue(SummitVenue $venue, array $data){
-        self::populateSummitGeoLocatedLocation
-        (
-            self::populateSummitAbstractLocation($venue, $data),
-            $data
-        );
-
-        if(isset($data['is_main']))
-            $venue->setIsMain(boolval($data['is_main']));
-
-        return $venue;
+    if (array_key_exists("opening_hour", $data)) {
+      $location->setOpeningHour(
+        is_null($data["opening_hour"]) ? null : intval($data["opening_hour"]),
+      );
     }
 
-    /**
-     * @param SummitExternalLocation $external_location
-     * @param array $data
-     * @return SummitExternalLocation
-     */
-    public static function populateSummitExternalLocation(SummitExternalLocation $external_location, array $data){
-
-        self::populateSummitGeoLocatedLocation
-        (
-            self::populateSummitAbstractLocation($external_location, $data),
-            $data
-        );
-
-        if(isset($data['capacity']))
-            $external_location->setCapacity(intval($data['capacity']));
-
-        return $external_location;
+    if (array_key_exists("closing_hour", $data)) {
+      $location->setClosingHour(
+        is_null($data["closing_hour"]) ? null : intval($data["closing_hour"]),
+      );
     }
 
-    /**
-     * @param SummitHotel $hotel
-     * @param array $data
-     * @return SummitHotel
-     */
-    public static function populateSummitHotel(SummitHotel $hotel, array $data){
+    return $location;
+  }
 
-        self::populateSummitExternalLocation
-        (
-            self::populateSummitGeoLocatedLocation
-            (
-                self::populateSummitAbstractLocation($hotel, $data),
-                $data
-            ),
-            $data
-        );
-
-        if(isset($data['hotel_type']))
-            $hotel->setHotelType(trim($data['hotel_type']));
-
-        if(isset($data['sold_out']))
-            $hotel->setSoldOut(boolval($data['sold_out']));
-
-        if(isset($data['booking_link']))
-            $hotel->setBookingLink(trim($data['booking_link']));
-
-        return $hotel;
+  /**
+   * @param SummitGeoLocatedLocation $location
+   * @param array $data
+   * @return SummitGeoLocatedLocation
+   */
+  private static function populateSummitGeoLocatedLocation(
+    SummitGeoLocatedLocation $location,
+    array $data,
+  ) {
+    if (isset($data["address_1"])) {
+      $location->setAddress1(trim($data["address_1"]));
     }
 
-    /**
-     * @param SummitAirport $airport
-     * @param array $data
-     * @return SummitAirport
-     */
-    public static function populateSummitAirport(SummitAirport $airport, array $data){
-
-        self::populateSummitExternalLocation
-        (
-            self::populateSummitGeoLocatedLocation
-            (
-                self::populateSummitAbstractLocation($airport, $data),
-                $data
-            ),
-            $data
-        );
-
-        if(isset($data['airport_type']))
-            $airport->setAirportType(trim($data['airport_type']));
-
-        return $airport;
+    if (isset($data["address_2"])) {
+      $location->setAddress2(trim($data["address_2"]));
     }
 
-    /**
-     * @param SummitVenueRoom $room
-     * @param array $data
-     * @return SummitVenueRoom
-     */
-    public static function populateSummitVenueRoom(SummitVenueRoom $room, array $data){
-
-        self::populateSummitAbstractLocation($room, $data);
-
-        if(isset($data['capacity']))
-            $room->setCapacity(intval($data['capacity']));
-
-        if(isset($data['override_blackouts']))
-            $room->setOverrideBlackouts(boolval($data['override_blackouts']));
-
-        return $room;
+    if (isset($data["zip_code"])) {
+      $location->setZipCode(trim($data["zip_code"]));
     }
 
-    /**
-     * @param SummitBookableVenueRoom $room
-     * @param array $data
-     * @return SummitBookableVenueRoom
-     */
-    public static function populateSummitVenueBookableRoom(SummitBookableVenueRoom $room, array $data){
-
-        self::populateSummitVenueRoom($room, $data);
-
-        if(isset($data['time_slot_cost']))
-            $room->setTimeSlotCost(intval($data['time_slot_cost']));
-
-        if(isset($data['currency']))
-            $room->setCurrency(trim($data['currency']));
-
-        return $room;
+    if (isset($data["city"])) {
+      $location->setCity(trim($data["city"]));
     }
 
-
-    /**
-     * @param SummitAbstractLocation $location
-     * @param array $data
-     * @return SummitAbstractLocation
-     */
-    public static function populate(SummitAbstractLocation $location, array $data){
-        if($location instanceof SummitVenue){
-            return self::populateSummitVenue($location, $data);
-        }
-        if($location instanceof SummitHotel){
-            return self::populateSummitHotel($location, $data);
-        }
-        if($location instanceof SummitAirport){
-            return self::populateSummitAirport($location, $data);
-        }
-        if($location instanceof SummitExternalLocation){
-            return self::populateSummitExternalLocation($location, $data);
-        }
-        if($location instanceof SummitBookableVenueRoom){
-            return self::populateSummitVenueBookableRoom($location, $data);
-        }
-        if($location instanceof SummitVenueRoom){
-            return self::populateSummitVenueRoom($location, $data);
-        }
-        return $location;
+    if (isset($data["state"])) {
+      $location->setState(trim($data["state"]));
     }
+
+    if (isset($data["country"])) {
+      $location->setCountry(trim($data["country"]));
+    }
+
+    if (isset($data["website_url"])) {
+      $location->setWebsiteUrl(trim($data["website_url"]));
+    }
+
+    if (isset($data["lng"])) {
+      $location->setLng(trim($data["lng"]));
+    }
+
+    if (isset($data["lat"])) {
+      $location->setLat(trim($data["lat"]));
+    }
+
+    if (isset($data["display_on_site"])) {
+      $location->setDisplayOnSite(boolval($data["display_on_site"]));
+    }
+
+    if (isset($data["details_page"])) {
+      $location->setDetailsPage(boolval($data["details_page"]));
+    }
+
+    if (isset($data["location_message"])) {
+      $location->setLocationMessage(trim($data["location_message"]));
+    }
+
+    return $location;
+  }
+
+  /**
+   * @param SummitVenue $venue
+   * @param array $data
+   * @return SummitVenue
+   */
+  public static function populateSummitVenue(SummitVenue $venue, array $data) {
+    self::populateSummitGeoLocatedLocation(
+      self::populateSummitAbstractLocation($venue, $data),
+      $data,
+    );
+
+    if (isset($data["is_main"])) {
+      $venue->setIsMain(boolval($data["is_main"]));
+    }
+
+    return $venue;
+  }
+
+  /**
+   * @param SummitExternalLocation $external_location
+   * @param array $data
+   * @return SummitExternalLocation
+   */
+  public static function populateSummitExternalLocation(
+    SummitExternalLocation $external_location,
+    array $data,
+  ) {
+    self::populateSummitGeoLocatedLocation(
+      self::populateSummitAbstractLocation($external_location, $data),
+      $data,
+    );
+
+    if (isset($data["capacity"])) {
+      $external_location->setCapacity(intval($data["capacity"]));
+    }
+
+    return $external_location;
+  }
+
+  /**
+   * @param SummitHotel $hotel
+   * @param array $data
+   * @return SummitHotel
+   */
+  public static function populateSummitHotel(SummitHotel $hotel, array $data) {
+    self::populateSummitExternalLocation(
+      self::populateSummitGeoLocatedLocation(
+        self::populateSummitAbstractLocation($hotel, $data),
+        $data,
+      ),
+      $data,
+    );
+
+    if (isset($data["hotel_type"])) {
+      $hotel->setHotelType(trim($data["hotel_type"]));
+    }
+
+    if (isset($data["sold_out"])) {
+      $hotel->setSoldOut(boolval($data["sold_out"]));
+    }
+
+    if (isset($data["booking_link"])) {
+      $hotel->setBookingLink(trim($data["booking_link"]));
+    }
+
+    return $hotel;
+  }
+
+  /**
+   * @param SummitAirport $airport
+   * @param array $data
+   * @return SummitAirport
+   */
+  public static function populateSummitAirport(SummitAirport $airport, array $data) {
+    self::populateSummitExternalLocation(
+      self::populateSummitGeoLocatedLocation(
+        self::populateSummitAbstractLocation($airport, $data),
+        $data,
+      ),
+      $data,
+    );
+
+    if (isset($data["airport_type"])) {
+      $airport->setAirportType(trim($data["airport_type"]));
+    }
+
+    return $airport;
+  }
+
+  /**
+   * @param SummitVenueRoom $room
+   * @param array $data
+   * @return SummitVenueRoom
+   */
+  public static function populateSummitVenueRoom(SummitVenueRoom $room, array $data) {
+    self::populateSummitAbstractLocation($room, $data);
+
+    if (isset($data["capacity"])) {
+      $room->setCapacity(intval($data["capacity"]));
+    }
+
+    if (isset($data["override_blackouts"])) {
+      $room->setOverrideBlackouts(boolval($data["override_blackouts"]));
+    }
+
+    return $room;
+  }
+
+  /**
+   * @param SummitBookableVenueRoom $room
+   * @param array $data
+   * @return SummitBookableVenueRoom
+   */
+  public static function populateSummitVenueBookableRoom(
+    SummitBookableVenueRoom $room,
+    array $data,
+  ) {
+    self::populateSummitVenueRoom($room, $data);
+
+    if (isset($data["time_slot_cost"])) {
+      $room->setTimeSlotCost(intval($data["time_slot_cost"]));
+    }
+
+    if (isset($data["currency"])) {
+      $room->setCurrency(trim($data["currency"]));
+    }
+
+    return $room;
+  }
+
+  /**
+   * @param SummitAbstractLocation $location
+   * @param array $data
+   * @return SummitAbstractLocation
+   */
+  public static function populate(SummitAbstractLocation $location, array $data) {
+    if ($location instanceof SummitVenue) {
+      return self::populateSummitVenue($location, $data);
+    }
+    if ($location instanceof SummitHotel) {
+      return self::populateSummitHotel($location, $data);
+    }
+    if ($location instanceof SummitAirport) {
+      return self::populateSummitAirport($location, $data);
+    }
+    if ($location instanceof SummitExternalLocation) {
+      return self::populateSummitExternalLocation($location, $data);
+    }
+    if ($location instanceof SummitBookableVenueRoom) {
+      return self::populateSummitVenueBookableRoom($location, $data);
+    }
+    if ($location instanceof SummitVenueRoom) {
+      return self::populateSummitVenueRoom($location, $data);
+    }
+    return $location;
+  }
 }

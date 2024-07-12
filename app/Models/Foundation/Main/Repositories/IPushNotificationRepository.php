@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface IPushNotificationRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface IPushNotificationRepository extends IBaseRepository
-{
-
+interface IPushNotificationRepository extends IBaseRepository {
 }

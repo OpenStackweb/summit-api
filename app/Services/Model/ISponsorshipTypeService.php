@@ -18,27 +18,26 @@ use models\summit\SponsorshipType;
  * Interface ISponsorshipTypeService
  * @package App\Services\Model
  */
-interface ISponsorshipTypeService
-{
-    /**
-     * @param array $payload
-     * @return SponsorshipType
-     * @throws ValidationException
-     */
-    public function addSponsorShipType(array $payload):SponsorshipType;
+interface ISponsorshipTypeService {
+  /**
+   * @param array $payload
+   * @return SponsorshipType
+   * @throws ValidationException
+   */
+  public function addSponsorShipType(array $payload): SponsorshipType;
 
-    /**
-     * @param int $sponsorship_type_id
-     * @param array $payload
-     * @return SponsorshipType
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateSponsorShipType(int $sponsorship_type_id, array $payload):SponsorshipType;
+  /**
+   * @param int $sponsorship_type_id
+   * @param array $payload
+   * @return SponsorshipType
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function updateSponsorShipType(int $sponsorship_type_id, array $payload): SponsorshipType;
 
-    /**
-     * @param int $sponsorship_type_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteSponsorShipType(int $sponsorship_type_id):void;
+  /**
+   * @param int $sponsorship_type_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteSponsorShipType(int $sponsorship_type_id): void;
 }

@@ -17,11 +17,10 @@ use services\apis\CalendarSync\ICalendarSyncRemoteFacade;
  * Interface ICalendarSyncRemoteFacadeFactory
  * @package App\Services\Apis\CalendarSync
  */
-interface ICalendarSyncRemoteFacadeFactory
-{
-    /**
-     * @param CalendarSyncInfo $sync_calendar_info
-     * @return ICalendarSyncRemoteFacade|null
-     */
-    public function build(CalendarSyncInfo $sync_calendar_info);
+interface ICalendarSyncRemoteFacadeFactory {
+  /**
+   * @param CalendarSyncInfo $sync_calendar_info
+   * @return ICalendarSyncRemoteFacade|null
+   */
+  public function build(CalendarSyncInfo $sync_calendar_info);
 }

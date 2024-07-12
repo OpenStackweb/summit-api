@@ -18,39 +18,36 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SummitTrackValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitTrackValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name' => 'sometimes|string|max:100',
-            'description' => 'sometimes|string|max:1500',
-            'color' => 'sometimes|hex_color|max:50',
-            'text_color' => 'sometimes|hex_color|max:50',
-            'code' => 'sometimes|string|max:5',
-            'session_count' => 'sometimes|integer',
-            'alternate_count' => 'sometimes|integer',
-            'lightning_count' => 'sometimes|integer',
-            'lightning_alternate_count' => 'sometimes|integer',
-            'voting_visible' => 'sometimes|boolean',
-            'chair_visible' => 'sometimes|boolean',
-            'allowed_tags' => 'sometimes|string_array',
-            'allowed_access_levels' => 'sometimes|int_array',
-            'order' => 'sometimes|integer|min:1',
-            'proposed_schedule_transition_time' => 'nullable|integer|min:1',
-        ];
-    }
+final class SummitTrackValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "sometimes|string|max:100",
+      "description" => "sometimes|string|max:1500",
+      "color" => "sometimes|hex_color|max:50",
+      "text_color" => "sometimes|hex_color|max:50",
+      "code" => "sometimes|string|max:5",
+      "session_count" => "sometimes|integer",
+      "alternate_count" => "sometimes|integer",
+      "lightning_count" => "sometimes|integer",
+      "lightning_alternate_count" => "sometimes|integer",
+      "voting_visible" => "sometimes|boolean",
+      "chair_visible" => "sometimes|boolean",
+      "allowed_tags" => "sometimes|string_array",
+      "allowed_access_levels" => "sometimes|int_array",
+      "order" => "sometimes|integer|min:1",
+      "proposed_schedule_transition_time" => "nullable|integer|min:1",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return self::buildForAdd($payload);
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return self::buildForAdd($payload);
+  }
 }

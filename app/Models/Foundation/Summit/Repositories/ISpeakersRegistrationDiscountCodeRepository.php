@@ -23,20 +23,18 @@ use utils\PagingResponse;
  * Interface ISpeakersRegistrationDiscountCodeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISpeakersRegistrationDiscountCodeRepository extends IBaseRepository
-{
-    /**
-     * @param SpeakersRegistrationDiscountCode $discount_code
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getDiscountCodeSpeakers
-    (
-        SpeakersRegistrationDiscountCode $discount_code,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    );
+interface ISpeakersRegistrationDiscountCodeRepository extends IBaseRepository {
+  /**
+   * @param SpeakersRegistrationDiscountCode $discount_code
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getDiscountCodeSpeakers(
+    SpeakersRegistrationDiscountCode $discount_code,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

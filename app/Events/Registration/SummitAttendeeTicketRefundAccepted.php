@@ -16,44 +16,43 @@
  * Class SummitAttendeeTicketRefundAccepted
  * @package App\Events
  */
-final class SummitAttendeeTicketRefundAccepted extends SummitAttendeeTicketAction
-{
-    /**
-     * @var array
-     */
-    private $tickets_to_return;
-    /**
-     * @var array
-     */
-    private $promo_codes_to_return;
+final class SummitAttendeeTicketRefundAccepted extends SummitAttendeeTicketAction {
+  /**
+   * @var array
+   */
+  private $tickets_to_return;
+  /**
+   * @var array
+   */
+  private $promo_codes_to_return;
 
-    /**
-     * SummitAttendeeTicketRefundAccepted constructor.
-     * @param int $ticket_id
-     * @param array $tickets_to_return
-     * @param array $promo_codes_to_return
-     */
-    public function __construct(int $ticket_id, array $tickets_to_return, array $promo_codes_to_return)
-    {
-        parent::__construct($ticket_id);
-        $this->tickets_to_return      = $tickets_to_return;
-        $this->promo_codes_to_return = $promo_codes_to_return;
-    }
+  /**
+   * SummitAttendeeTicketRefundAccepted constructor.
+   * @param int $ticket_id
+   * @param array $tickets_to_return
+   * @param array $promo_codes_to_return
+   */
+  public function __construct(
+    int $ticket_id,
+    array $tickets_to_return,
+    array $promo_codes_to_return,
+  ) {
+    parent::__construct($ticket_id);
+    $this->tickets_to_return = $tickets_to_return;
+    $this->promo_codes_to_return = $promo_codes_to_return;
+  }
 
-    /**
-     * @return array
-     */
-    public function getTicketsToReturn(): array
-    {
-        return $this->tickets_to_return;
-    }
+  /**
+   * @return array
+   */
+  public function getTicketsToReturn(): array {
+    return $this->tickets_to_return;
+  }
 
-    /**
-     * @return array
-     */
-    public function getPromoCodesToReturn(): array
-    {
-        return $this->promo_codes_to_return;
-    }
-
+  /**
+   * @return array
+   */
+  public function getPromoCodesToReturn(): array {
+    return $this->promo_codes_to_return;
+  }
 }

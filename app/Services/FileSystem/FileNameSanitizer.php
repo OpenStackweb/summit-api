@@ -16,25 +16,24 @@ use Behat\Transliterator\Transliterator;
  * Class FileNameSanitizer
  * @package App\Services\FileSystem
  */
-final class FileNameSanitizer
-{
-    private static $default_replacements = [
-        '/\s/' => '-', // remove whitespace
-        '/_/' => '-', // underscores to dashes
-        '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
-        '/[\-]{2,}/' => '-', // remove duplicate dashes
-        '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
-    ];
+final class FileNameSanitizer {
+  private static $default_replacements = [
+    "/\s/" => "-", // remove whitespace
+    "/_/" => "-", // underscores to dashes
+    "/[^A-Za-z0-9+.\-]+/" => "", // remove non-ASCII chars, only allow alphanumeric plus dash and dot
+    "/[\-]{2,}/" => "-", // remove duplicate dashes
+    "/^[\.\-_]+/" => "", // Remove all leading dots, dashes or underscores
+  ];
 
-    /**
-     * @param string $filename
-     * @return string
-     */
-    public static function sanitize(string $filename):string {
-        $filename = trim(Transliterator::utf8ToAscii($filename));
-        foreach(self::$default_replacements as $regex => $replace) {
-            $filename = preg_replace($regex, $replace, $filename);
-        }
-        return $filename;
+  /**
+   * @param string $filename
+   * @return string
+   */
+  public static function sanitize(string $filename): string {
+    $filename = trim(Transliterator::utf8ToAscii($filename));
+    foreach (self::$default_replacements as $regex => $replace) {
+      $filename = preg_replace($regex, $replace, $filename);
     }
+    return $filename;
+  }
 }

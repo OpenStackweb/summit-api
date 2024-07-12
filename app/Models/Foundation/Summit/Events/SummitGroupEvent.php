@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\main\Group;
 
@@ -22,70 +22,65 @@ use models\main\Group;
  * @ORM\Table(name="SummitGroupEvent")
  * @package models\summit
  */
-class SummitGroupEvent extends SummitEvent
-{
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Group")
-     * @ORM\JoinTable(name="SummitGroupEvent_Groups",
-     *  joinColumns={
-     *      @ORM\JoinColumn(name="`SummitGroupEventID`", referencedColumnName="ID")
-     * },
-     * inverseJoinColumns={
-     *      @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
-     * }
-     * )
-     */
-    private $groups;
+class SummitGroupEvent extends SummitEvent {
+  /**
+   * @ORM\ManyToMany(targetEntity="models\main\Group")
+   * @ORM\JoinTable(name="SummitGroupEvent_Groups",
+   *  joinColumns={
+   *      @ORM\JoinColumn(name="`SummitGroupEventID`", referencedColumnName="ID")
+   * },
+   * inverseJoinColumns={
+   *      @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
+   * }
+   * )
+   */
+  private $groups;
 
-    const ClassName = 'SummitGroupEvent';
-    /**
-     * @return string
-     */
-    public function getClassName():string{
-        return self::ClassName;
+  const ClassName = "SummitGroupEvent";
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
+
+  public function __construct() {
+    $this->groups = new ArrayCollection();
+  }
+
+  /**
+   * @return Group[]
+   */
+  public function getGroups() {
+    return $this->groups;
+  }
+
+  /**
+   * @param ArrayCollection $groups
+   */
+  public function setGroups($groups) {
+    $this->groups = $groups;
+  }
+
+  /**
+   * @return int[]
+   */
+  public function getGroupsIds() {
+    $ids = [];
+    foreach ($this->getGroups() as $g) {
+      $ids[] = intval($g->getId());
     }
+    return $ids;
+  }
 
-    public function __construct()
-    {
-        $this->groups = new ArrayCollection();
-    }
+  /**
+   * @param Group $group
+   */
+  public function addGroup(Group $group) {
+    $this->groups->add($group);
+  }
 
-    /**
-     * @return Group[]
-     */
-    public function getGroups()
-    {
-        return $this->groups;
-    }
-
-    /**
-     * @param ArrayCollection $groups
-     */
-    public function setGroups($groups)
-    {
-        $this->groups = $groups;
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getGroupsIds(){
-        $ids = [];
-        foreach ($this->getGroups() as $g){
-            $ids[] = intval($g->getId());
-        }
-        return $ids;
-    }
-
-    /**
-     * @param Group $group
-     */
-    public function addGroup(Group $group){
-        $this->groups->add($group);
-    }
-
-    public function clearGroups(){
-        $this->groups->clear();
-    }
-
+  public function clearGroups() {
+    $this->groups->clear();
+  }
 }

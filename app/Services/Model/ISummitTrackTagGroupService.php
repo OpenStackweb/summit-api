@@ -20,62 +20,59 @@ use models\summit\Summit;
  * Interface ISummitTrackTagGroupService
  * @package App\Services\Model
  */
-interface ISummitTrackTagGroupService
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return TrackTagGroup
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTrackTagGroup(Summit $summit, array $data);
+interface ISummitTrackTagGroupService {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return TrackTagGroup
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTrackTagGroup(Summit $summit, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param int $track_tag_group_id
-     * @param array $data
-     * @return TrackTagGroup
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTrackTagGroup(Summit $summit, $track_tag_group_id, array $data);
+  /**
+   * @param Summit $summit
+   * @param int $track_tag_group_id
+   * @param array $data
+   * @return TrackTagGroup
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTrackTagGroup(Summit $summit, $track_tag_group_id, array $data);
 
-    /**
-     * @param Summit $summit
-     * @param int $track_tag_group_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteTrackTagGroup(Summit $summit, $track_tag_group_id);
+  /**
+   * @param Summit $summit
+   * @param int $track_tag_group_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteTrackTagGroup(Summit $summit, $track_tag_group_id);
 
+  /**
+   * @param Summit $summit
+   * @return TrackTagGroup[]
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function seedDefaultTrackTagGroups(Summit $summit);
 
-    /**
-     * @param Summit $summit
-     * @return TrackTagGroup[]
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function seedDefaultTrackTagGroups(Summit $summit);
+  /**
+   * @param Summit $summit
+   * @param int $tag_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function seedTagOnAllTrack(Summit $summit, $tag_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $tag_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function seedTagOnAllTrack(Summit $summit, $tag_id);
-
-    /**
-     * @param Summit $summit
-     * @param int $track_tag_group_id
-     * @param int $track_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function seedTagTrackGroupTagsOnTrack(Summit $summit, $track_tag_group_id, $track_id);
-
+  /**
+   * @param Summit $summit
+   * @param int $track_tag_group_id
+   * @param int $track_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function seedTagTrackGroupTagsOnTrack(Summit $summit, $track_tag_group_id, $track_id);
 }

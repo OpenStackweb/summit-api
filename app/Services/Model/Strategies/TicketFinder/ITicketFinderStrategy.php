@@ -18,7 +18,6 @@ use models\summit\SummitAttendeeTicket;
  * Interface ITicketFinderStrategy
  * @package App\Services\Model\Strategies\TicketFinder
  */
-interface ITicketFinderStrategy
-{
-    public function find():?SummitAttendeeTicket;
+interface ITicketFinderStrategy {
+  public function find(): ?SummitAttendeeTicket;
 }

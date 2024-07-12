@@ -14,33 +14,34 @@
 
 use models\summit\SponsorAd;
 
-
 /**
  * Class SponsorAdFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SponsorAdFactory
-{
-    /**
-     * @param array $data
-     * @return SponsorAd
-     */
-    public static function build(array $data):SponsorAd{
-        return self::populate(new SponsorAd(), $data);
-    }
+final class SponsorAdFactory {
+  /**
+   * @param array $data
+   * @return SponsorAd
+   */
+  public static function build(array $data): SponsorAd {
+    return self::populate(new SponsorAd(), $data);
+  }
 
-    /**
-     * @param SponsorAd $sponsor_ad
-     * @param array $data
-     * @return SponsorAd
-     */
-    public static function populate(SponsorAd $sponsor_ad, array $data):SponsorAd{
-        if(isset($data['alt']))
-            $sponsor_ad->setAlt(trim($data['alt']));
-        if(isset($data['link']))
-            $sponsor_ad->setLink(trim($data['link']));
-        if(isset($data['text']))
-            $sponsor_ad->setText(trim($data['text']));
-        return $sponsor_ad;
+  /**
+   * @param SponsorAd $sponsor_ad
+   * @param array $data
+   * @return SponsorAd
+   */
+  public static function populate(SponsorAd $sponsor_ad, array $data): SponsorAd {
+    if (isset($data["alt"])) {
+      $sponsor_ad->setAlt(trim($data["alt"]));
     }
+    if (isset($data["link"])) {
+      $sponsor_ad->setLink(trim($data["link"]));
+    }
+    if (isset($data["text"])) {
+      $sponsor_ad->setText(trim($data["text"]));
+    }
+    return $sponsor_ad;
+  }
 }

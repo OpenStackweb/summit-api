@@ -17,15 +17,12 @@ use App\Models\Foundation\Marketplace\IDistributionRepository;
  * Class DoctrineDistributionRepository
  * @package App\Repositories\Marketplace
  */
-final class DoctrineDistributionRepository
-    extends DoctrineCompanyServiceRepository
-    implements IDistributionRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return Distribution::class;
-    }
+final class DoctrineDistributionRepository extends DoctrineCompanyServiceRepository implements
+  IDistributionRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Distribution::class;
+  }
 }

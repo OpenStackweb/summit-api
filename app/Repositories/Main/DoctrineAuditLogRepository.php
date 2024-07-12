@@ -32,114 +32,116 @@ use utils\Filter;
  * Class DoctrineAuditLogRepository
  * @package repositories\main
  */
-final class DoctrineAuditLogRepository
-    extends SilverStripeDoctrineRepository
-    implements IAuditLogRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return AuditLog::class;
-    }
+final class DoctrineAuditLogRepository extends SilverStripeDoctrineRepository implements
+  IAuditLogRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return AuditLog::class;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
-    {
-        $query = $query->leftJoin(Member::class, 'u', 'WITH', 'e.user = u.id');
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder {
+    $query = $query->leftJoin(Member::class, "u", "WITH", "e.user = u.id");
 
-        if ($filter instanceof Filter) {
-            $e = $filter->getFilter("class_name");
-            foreach($e as $f){
-                if ($f->getValue() === SummitAuditLog::ClassName ||
-                    $f->getValue() === SummitEventAuditLog::ClassName ||
-                    $f->getValue() === SummitAttendeeBadgeAuditLog::ClassName)
-                {
-                    $query = $query->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id');
-                    if ($f->getValue() === SummitEventAuditLog::ClassName) {
-                        $query = $query->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
-                            ->leftJoin(SummitEvent::class, 're', 'WITH', 're.id = seal.related_entity');
-                    } else if ($f->getValue() === SummitAttendeeBadgeAuditLog::ClassName) {
-                        $query = $query->leftJoin(SummitAttendeeBadgeAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
-                            ->leftJoin(SummitAttendeeBadge::class, 're', 'WITH', 're.id = seal.related_entity');
-                    }
-                    break;
-                }
-            }
+    if ($filter instanceof Filter) {
+      $e = $filter->getFilter("class_name");
+      foreach ($e as $f) {
+        if (
+          $f->getValue() === SummitAuditLog::ClassName ||
+          $f->getValue() === SummitEventAuditLog::ClassName ||
+          $f->getValue() === SummitAttendeeBadgeAuditLog::ClassName
+        ) {
+          $query = $query->leftJoin(SummitAuditLog::class, "sal", "WITH", "e.id = sal.id");
+          if ($f->getValue() === SummitEventAuditLog::ClassName) {
+            $query = $query
+              ->leftJoin(SummitEventAuditLog::class, "seal", "WITH", "e.id = seal.id")
+              ->leftJoin(SummitEvent::class, "re", "WITH", "re.id = seal.related_entity");
+          } elseif ($f->getValue() === SummitAttendeeBadgeAuditLog::ClassName) {
+            $query = $query
+              ->leftJoin(SummitAttendeeBadgeAuditLog::class, "seal", "WITH", "e.id = seal.id")
+              ->leftJoin(SummitAttendeeBadge::class, "re", "WITH", "re.id = seal.related_entity");
+          }
+          break;
         }
-
-        return $query;
+      }
     }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings(): array
-    {
-        return [
-            'class_name' => new DoctrineInstanceOfFilterMapping(
-                "e",
-                [
-                    SummitAuditLog::ClassName               => SummitAuditLog::class,
-                    SummitEventAuditLog::ClassName          => SummitEventAuditLog::class,
-                    SummitAttendeeBadgeAuditLog::ClassName  => SummitAttendeeBadgeAuditLog::class,
-                ]
-            ),
-            'summit_id'      => new DoctrineFilterMapping("sal.summit :operator :value"),
-            'event_id'       => new DoctrineFilterMapping("seal.related_entity :operator :value"),  //REMARK: backward compatibility
-            'entity_id'      => new DoctrineFilterMapping("seal.related_entity :operator :value"),
-            'user_id'        => new DoctrineFilterMapping("u.id :operator :value"),
-            'user_email'     => new DoctrineFilterMapping("u.email :operator :value"),
-            'user_full_name' => new DoctrineFilterMapping("concat(u.first_name, ' ', u.last_name) :operator :value"),
-            'action'         => 'e.action:json_string',
-            'created'        => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'last_edited'    => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-        ];
-    }
+    return $query;
+  }
 
-    protected function getOrderMappings(): array
-    {
-        $args  = func_get_args();
-        $filter = count($args) > 0 ? $args[0] : null;
+  /**
+   * @return array
+   */
+  protected function getFilterMappings(): array {
+    return [
+      "class_name" => new DoctrineInstanceOfFilterMapping("e", [
+        SummitAuditLog::ClassName => SummitAuditLog::class,
+        SummitEventAuditLog::ClassName => SummitEventAuditLog::class,
+        SummitAttendeeBadgeAuditLog::ClassName => SummitAttendeeBadgeAuditLog::class,
+      ]),
+      "summit_id" => new DoctrineFilterMapping("sal.summit :operator :value"),
+      "event_id" => new DoctrineFilterMapping("seal.related_entity :operator :value"), //REMARK: backward compatibility
+      "entity_id" => new DoctrineFilterMapping("seal.related_entity :operator :value"),
+      "user_id" => new DoctrineFilterMapping("u.id :operator :value"),
+      "user_email" => new DoctrineFilterMapping("u.email :operator :value"),
+      "user_full_name" => new DoctrineFilterMapping(
+        "concat(u.first_name, ' ', u.last_name) :operator :value",
+      ),
+      "action" => "e.action:json_string",
+      "created" => sprintf("e.created:datetime_epoch|%s", SilverstripeBaseModel::DefaultTimeZone),
+      "last_edited" => sprintf(
+        "e.last_edited:datetime_epoch|%s",
+        SilverstripeBaseModel::DefaultTimeZone,
+      ),
+    ];
+  }
 
-        $order_mappings = [
-            'id' => 'e.id',
-            'created' => 'e.created',
-            'user_id' => 'u.id',
-            'user_full_name' => <<<SQL
-LOWER(CONCAT(u.first_name, ' ', u.last_name))
-SQL,
-            'user_email' => <<<SQL
-LOWER(u.email)
-SQL,
-        ];
+  protected function getOrderMappings(): array {
+    $args = func_get_args();
+    $filter = count($args) > 0 ? $args[0] : null;
 
-        if($filter instanceof Filter && $filter->hasFilter("class_name")){
-            $e = $filter->getFilter("class_name");
-            foreach($e as $f){
-                if ($f->getValue() === SummitEventAuditLog::ClassName) {
-                    $order_mappings['event_id'] = 're.id';
-                    break;
-                } else if ($f->getValue() === SummitAttendeeBadgeAuditLog::ClassName) {
-                    $order_mappings['entity_id'] = 're.id';
-                    break;
-                }
-            }
+    $order_mappings = [
+      "id" => "e.id",
+      "created" => "e.created",
+      "user_id" => "u.id",
+      "user_full_name" => <<<SQL
+      LOWER(CONCAT(u.first_name, ' ', u.last_name))
+      SQL
+      ,
+      "user_email" => <<<SQL
+      LOWER(u.email)
+      SQL
+    ,
+    ];
+
+    if ($filter instanceof Filter && $filter->hasFilter("class_name")) {
+      $e = $filter->getFilter("class_name");
+      foreach ($e as $f) {
+        if ($f->getValue() === SummitEventAuditLog::ClassName) {
+          $order_mappings["event_id"] = "re.id";
+          break;
+        } elseif ($f->getValue() === SummitAttendeeBadgeAuditLog::ClassName) {
+          $order_mappings["entity_id"] = "re.id";
+          break;
         }
-        return $order_mappings;
+      }
     }
+    return $order_mappings;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function deleteOldLogEntries(int $summit_id, DateTime $date_backward_from)
-    {
-        $query = "DELETE FROM AuditLog WHERE ID IN (SELECT ID FROM SummitAuditLog WHERE SummitID = {$summit_id}) AND Created < '{$date_backward_from->format('Y-m-d')}';";
-        $this->getEntityManager()->getConnection()->executeStatement($query);
-    }
+  /**
+   * @inheritDoc
+   */
+  public function deleteOldLogEntries(int $summit_id, DateTime $date_backward_from) {
+    $query = "DELETE FROM AuditLog WHERE ID IN (SELECT ID FROM SummitAuditLog WHERE SummitID = {$summit_id}) AND Created < '{$date_backward_from->format(
+      "Y-m-d",
+    )}';";
+    $this->getEntityManager()->getConnection()->executeStatement($query);
+  }
 }

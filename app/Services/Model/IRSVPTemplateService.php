@@ -22,100 +22,98 @@ use models\summit\Summit;
  * Interface IRSVPTemplateService
  * @package App\Services\Model
  */
-interface IRSVPTemplateService
-{
-    /**
-     * @param Summit $summit
-     * @param Member|null $creator
-     * @param array $payload
-     * @return RSVPTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addTemplate(Summit $summit, Member $creator, array $payload);
+interface IRSVPTemplateService {
+  /**
+   * @param Summit $summit
+   * @param Member|null $creator
+   * @param array $payload
+   * @return RSVPTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addTemplate(Summit $summit, Member $creator, array $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @param array $payload
-     * @return RSVPTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateTemplate(Summit $summit, $template_id, array $payload);
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @param array $payload
+   * @return RSVPTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateTemplate(Summit $summit, $template_id, array $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteTemplate(Summit $summit, $template_id);
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteTemplate(Summit $summit, $template_id);
 
-    /**
-     * @param Summit $summit
-     * @param $template_id
-     * @param array $payload
-     * @return RSVPQuestionTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addQuestion(Summit $summit, $template_id, array $payload);
+  /**
+   * @param Summit $summit
+   * @param $template_id
+   * @param array $payload
+   * @return RSVPQuestionTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addQuestion(Summit $summit, $template_id, array $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @param int $question_id
-     * @param array $payload
-     * @return RSVPQuestionTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateQuestion(Summit $summit, $template_id, $question_id, array $payload);
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @param int $question_id
+   * @param array $payload
+   * @return RSVPQuestionTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateQuestion(Summit $summit, $template_id, $question_id, array $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @param int $question_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteQuestion(Summit $summit, $template_id, $question_id);
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @param int $question_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteQuestion(Summit $summit, $template_id, $question_id);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @param int $question_id
-     * @param array $payload
-     * @return RSVPQuestionValueTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addQuestionValue($summit, $template_id, $question_id, $payload);
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @param int $question_id
+   * @param array $payload
+   * @return RSVPQuestionValueTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addQuestionValue($summit, $template_id, $question_id, $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @param int $question_id
-     * @param int $value_id
-     * @param array $payload
-     * @return RSVPQuestionValueTemplate
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateQuestionValue($summit, $template_id, $question_id, $value_id, $payload);
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @param int $question_id
+   * @param int $value_id
+   * @param array $payload
+   * @return RSVPQuestionValueTemplate
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateQuestionValue($summit, $template_id, $question_id, $value_id, $payload);
 
-    /**
-     * @param Summit $summit
-     * @param int $template_id
-     * @param int $question_id
-     * @param int $value_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deleteQuestionValue($summit, $template_id, $question_id, $value_id);
-
+  /**
+   * @param Summit $summit
+   * @param int $template_id
+   * @param int $question_id
+   * @param int $value_id
+   * @return void
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function deleteQuestionValue($summit, $template_id, $question_id, $value_id);
 }

@@ -16,33 +16,28 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class SponsorSocialNetworkValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorSocialNetworkValidationRulesFactory
-    extends AbstractValidationRulesFactory
-{
+final class SponsorSocialNetworkValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "link" => "required|url|max:255",
+      "icon_css_class" => "required|string|max:255",
+      "is_enabled" => "required|boolean",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'link' => 'required|url|max:255',
-            'icon_css_class' => 'required|string|max:255',
-            'is_enabled' => 'required|boolean',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'link' => 'sometimes|url|max:255',
-            'icon_css_class' => 'sometimes|string|max:255',
-            'is_enabled' => 'sometimes|boolean',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "link" => "sometimes|url|max:255",
+      "icon_css_class" => "sometimes|string|max:255",
+      "is_enabled" => "sometimes|boolean",
+    ];
+  }
 }

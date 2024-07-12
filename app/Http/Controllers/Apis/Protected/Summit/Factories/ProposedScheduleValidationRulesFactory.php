@@ -16,31 +16,27 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class ProposedScheduleValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class ProposedScheduleValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class ProposedScheduleValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "start_date" => "required|date_format:U",
+      "end_date" => "required|required_with:start_date|date_format:U|after:start_date",
+      "duration" => "sometimes|integer",
+      "location_id" => "required|integer",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'start_date'    => 'required|date_format:U',
-            'end_date'      => 'required|required_with:start_date|date_format:U|after:start_date',
-            'duration'      => 'sometimes|integer',
-            'location_id'   => 'required|integer',
-        ];
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'event_ids'  => 'sometimes|int_array',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "event_ids" => "sometimes|int_array",
+    ];
+  }
 }

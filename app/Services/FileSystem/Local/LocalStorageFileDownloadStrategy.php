@@ -17,12 +17,10 @@ use App\Services\FileSystem\AbstractFileDownloadStrategy;
  * Class LocalStorageFileDownloadStrategy
  * @package App\Services\FileSystem\Local
  */
-final class LocalStorageFileDownloadStrategy  extends AbstractFileDownloadStrategy
-{
-    const Driver = 'local';
+final class LocalStorageFileDownloadStrategy extends AbstractFileDownloadStrategy {
+  const Driver = "local";
 
-    public function getDriver(): string
-    {
-        return self::Driver;
-    }
+  public function getDriver(): string {
+    return self::Driver;
+  }
 }

@@ -23,52 +23,47 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitProposedScheduleAllowedDayRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitProposedScheduleAllowedDayRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitProposedScheduleAllowedDayRepository {
+  protected function getBaseEntity() {
+    return SummitProposedScheduleAllowedDay::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitProposedScheduleAllowedDay::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @param Filter|null $filter
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    return $query
+      ->innerJoin("e.allowed_location", "al")
+      ->innerJoin("al.location", "l")
+      ->innerJoin("al.track", "t");
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        return $query->innerJoin('e.allowed_location', 'al')
-            ->innerJoin('al.location', 'l')
-            ->innerJoin('al.track', 't');
-    }
+  protected function getFilterMappings() {
+    return [
+      "allowed_location_id" => "al.id:json_int",
+      "track_id" => "t.id:json_int",
+      "location_id" => "l.id:json_int",
+      "day" => "e.day:json_int",
+      "opening_hour" => "e.opening_hour:json_int",
+      "closing_hour" => "e.closing_hour:json_int",
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'allowed_location_id' => 'al.id:json_int',
-            'track_id'    => 't.id:json_int',
-            'location_id' => 'l.id:json_int',
-            'day'  => 'e.day:json_int',
-            'opening_hour'  => 'e.opening_hour:json_int',
-            'closing_hour'   => 'e.closing_hour:json_int',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings(): array
-    {
-        return [
-            'id' => 'e.id',
-            'day'  => 'e.day',
-            'opening_hour' => 'e.opening_hour',
-            'closing_hour'  => 'e.closing_hour',
-            'allowed_location_id' => 'al.id',
-            'location_id' => 'l.id',
-            'track_id' => 't.id'
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings(): array {
+    return [
+      "id" => "e.id",
+      "day" => "e.day",
+      "opening_hour" => "e.opening_hour",
+      "closing_hour" => "e.closing_hour",
+      "allowed_location_id" => "al.id",
+      "location_id" => "l.id",
+      "track_id" => "t.id",
+    ];
+  }
 }

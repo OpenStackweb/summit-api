@@ -20,60 +20,68 @@ use models\summit\SummitScheduleFilterElementConfig;
 /**
  *
  */
-interface ISummitScheduleSettingsService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitScheduleConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function add(Summit $summit, array $payload):?SummitScheduleConfig;
+interface ISummitScheduleSettingsService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitScheduleConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function add(Summit $summit, array $payload): ?SummitScheduleConfig;
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @param array $payload
-     * @return SummitScheduleConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(Summit $summit, int $config_id, array $payload):?SummitScheduleConfig;
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @param array $payload
+   * @return SummitScheduleConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(Summit $summit, int $config_id, array $payload): ?SummitScheduleConfig;
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(Summit $summit, int $config_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(Summit $summit, int $config_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @param array $payload
-     * @return SummitScheduleFilterElementConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addFilter(Summit $summit, int $config_id, array $payload):?SummitScheduleFilterElementConfig;
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @param array $payload
+   * @return SummitScheduleFilterElementConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function addFilter(
+    Summit $summit,
+    int $config_id,
+    array $payload,
+  ): ?SummitScheduleFilterElementConfig;
 
-    /**
-     * @param Summit $summit
-     * @param int $config_id
-     * @param int $filter_id
-     * @param array $payload
-     * @return SummitScheduleFilterElementConfig|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateFilter(Summit $summit, int $config_id, int $filter_id, array $payload):?SummitScheduleFilterElementConfig;
+  /**
+   * @param Summit $summit
+   * @param int $config_id
+   * @param int $filter_id
+   * @param array $payload
+   * @return SummitScheduleFilterElementConfig|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateFilter(
+    Summit $summit,
+    int $config_id,
+    int $filter_id,
+    array $payload,
+  ): ?SummitScheduleFilterElementConfig;
 
-    /**
-     * @param Summit $summit
-     * @return array|SummitScheduleConfig[]
-     * @throws \Exception
-     */
-    public function seedDefaults(Summit $summit):array;
+  /**
+   * @param Summit $summit
+   * @return array|SummitScheduleConfig[]
+   * @throws \Exception
+   */
+  public function seedDefaults(Summit $summit): array;
 }

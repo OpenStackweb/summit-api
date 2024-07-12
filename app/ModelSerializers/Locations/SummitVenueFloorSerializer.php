@@ -20,43 +20,47 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitVenueFloorSerializer
  * @package ModelSerializers\Locations
  */
-final class SummitVenueFloorSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings =
-    [
-        'Name'        => 'name:json_string',
-        'Description' => 'description:json_string',
-        'Number'      => 'number:json_int',
-        'VenueId'     => 'venue_id:json_int',
-        'ImageUrl'    => 'image:json_url',
-    ];
+final class SummitVenueFloorSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "Number" => "number:json_int",
+    "VenueId" => "venue_id:json_int",
+    "ImageUrl" => "image:json_url",
+  ];
 
-    protected static $expand_mappings = [
-        'venue' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'venue_id',
-            'getter' => 'getVenue',
-            'has' => 'hasVenue'
-        ],
-        'rooms' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getRooms',
-        ],
-    ];
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $floor  = $this->object;
+  protected static $expand_mappings = [
+    "venue" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "venue_id",
+      "getter" => "getVenue",
+      "has" => "hasVenue",
+    ],
+    "rooms" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getRooms",
+    ],
+  ];
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $floor = $this->object;
 
-        if(!$floor instanceof SummitVenueFloor) return [];
-
-        return $values;
+    if (!$floor instanceof SummitVenueFloor) {
+      return [];
     }
+
+    return $values;
+  }
 }

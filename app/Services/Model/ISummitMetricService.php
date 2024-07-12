@@ -21,46 +21,49 @@ use models\summit\SummitMetric;
  * Interface ISummitMetricService
  * @package App\Services\Model
  */
-interface ISummitMetricService
-{
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param array $payload
-     * @return SummitMetric
-     */
-    public function enter(Summit $summit, Member $current_member, array $payload):SummitMetric;
+interface ISummitMetricService {
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param array $payload
+   * @return SummitMetric
+   */
+  public function enter(Summit $summit, Member $current_member, array $payload): SummitMetric;
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param array $payload
-     * @return SummitMetric
-     */
-    public function leave(Summit $summit, Member $current_member, array $payload):SummitMetric;
+  /**
+   * @param Summit $summit
+   * @param Member $current_member
+   * @param array $payload
+   * @return SummitMetric
+   */
+  public function leave(Summit $summit, Member $current_member, array $payload): SummitMetric;
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param array $payload
-     * @return SummitMetric
-     */
-    public function onSiteEnter(Summit $summit, Member $current_user, array $payload):SummitMetric;
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param array $payload
+   * @return SummitMetric
+   */
+  public function onSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric;
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param array $payload
-     * @return SummitMetric
-     */
-    public function onSiteLeave(Summit $summit, Member $current_user, array $payload):SummitMetric;
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param array $payload
+   * @return SummitMetric
+   */
+  public function onSiteLeave(Summit $summit, Member $current_user, array $payload): SummitMetric;
 
-    /**
-     * @param Summit $summit
-     * @param Member $current_user
-     * @param array $payload
-     * @throws EntityNotFoundException
-     * @return SummitMetric
-     */
-    public function checkOnSiteEnter(Summit $summit, Member $current_user, array $payload):SummitMetric;
+  /**
+   * @param Summit $summit
+   * @param Member $current_user
+   * @param array $payload
+   * @throws EntityNotFoundException
+   * @return SummitMetric
+   */
+  public function checkOnSiteEnter(
+    Summit $summit,
+    Member $current_user,
+    array $payload,
+  ): SummitMetric;
 }

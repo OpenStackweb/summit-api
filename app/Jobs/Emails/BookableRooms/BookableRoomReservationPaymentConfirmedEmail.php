@@ -12,20 +12,17 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class BookableRoomReservationPaymentConfirmedEmail
  * @package App\Jobs\Emails\BookableRooms
  */
-class BookableRoomReservationPaymentConfirmedEmail extends AbstractBookableRoomReservationEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class BookableRoomReservationPaymentConfirmedEmail extends AbstractBookableRoomReservationEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_PAYMENT_CONFIRMED';
-    const EVENT_NAME = 'SUMMIT_BOOKABLE_ROOMS_RESERVATION_PAYMENT_CONFIRMED';
-    const DEFAULT_TEMPLATE = 'BOOKABLE_ROOMS_RESERVATION_PAYMENT_CONFIRMED';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_PAYMENT_CONFIRMED";
+  const EVENT_NAME = "SUMMIT_BOOKABLE_ROOMS_RESERVATION_PAYMENT_CONFIRMED";
+  const DEFAULT_TEMPLATE = "BOOKABLE_ROOMS_RESERVATION_PAYMENT_CONFIRMED";
 }

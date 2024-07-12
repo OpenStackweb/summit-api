@@ -20,32 +20,37 @@ use ModelSerializers\SerializerRegistry;
  * Class SummitBookableVenueRoomSerializer
  * @package App\ModelSerializers\Locations
  */
-class SummitBookableVenueRoomSerializer extends SummitVenueRoomSerializer
-{
-    protected static $array_mappings = [
-        'TimeSlotCost' => 'time_slot_cost:json_int',
-        'Currency'     => 'currency:json_string',
-    ];
+class SummitBookableVenueRoomSerializer extends SummitVenueRoomSerializer {
+  protected static $array_mappings = [
+    "TimeSlotCost" => "time_slot_cost:json_int",
+    "Currency" => "currency:json_string",
+  ];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $room   = $this->object;
-        if(!$room instanceof SummitBookableVenueRoom)
-            return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $attributes = [];
-        foreach ($room->getAttributes() as $attribute){
-            $attributes[] = SerializerRegistry::getInstance()->getSerializer($attribute)->serialize
-            (
-                AbstractSerializer::filterExpandByPrefix($expand, 'attributes'),
-                AbstractSerializer::filterFieldsByPrefix($fields, 'attributes'),
-                AbstractSerializer::filterFieldsByPrefix($relations, 'attributes'),
-                $params
-            );
-        }
-        $values['attributes'] = $attributes;
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $room = $this->object;
+    if (!$room instanceof SummitBookableVenueRoom) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    $attributes = [];
+    foreach ($room->getAttributes() as $attribute) {
+      $attributes[] = SerializerRegistry::getInstance()
+        ->getSerializer($attribute)
+        ->serialize(
+          AbstractSerializer::filterExpandByPrefix($expand, "attributes"),
+          AbstractSerializer::filterFieldsByPrefix($fields, "attributes"),
+          AbstractSerializer::filterFieldsByPrefix($relations, "attributes"),
+          $params,
+        );
+    }
+    $values["attributes"] = $attributes;
+    return $values;
+  }
 }

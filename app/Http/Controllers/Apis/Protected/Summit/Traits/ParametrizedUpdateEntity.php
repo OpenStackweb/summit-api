@@ -20,41 +20,48 @@ use ModelSerializers\SerializerRegistry;
  * Trait ParametrizedUpdateEntity
  * @package App\Http\Controllers
  */
-trait ParametrizedUpdateEntity
-{
-    use BaseAPI;
+trait ParametrizedUpdateEntity {
+  use BaseAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    use GetAndValidateJsonPayload;
+  use GetAndValidateJsonPayload;
 
-    /**
-     * @param int $id
-     * @param callable $getUpdateValidationRulesFn
-     * @param callable $updateEntityFn
-     * @param mixed ...$args
-     * @return mixed
-     */
-    public function _update(
-        int      $id,
-        callable $getUpdateValidationRulesFn,
-        callable $updateEntityFn,
-                 ...$args)
-    {
+  /**
+   * @param int $id
+   * @param callable $getUpdateValidationRulesFn
+   * @param callable $updateEntityFn
+   * @param mixed ...$args
+   * @return mixed
+   */
+  public function _update(
+    int $id,
+    callable $getUpdateValidationRulesFn,
+    callable $updateEntityFn,
+    ...$args,
+  ) {
+    return $this->processRequest(function () use (
+      $id,
+      $getUpdateValidationRulesFn,
+      $updateEntityFn,
+      $args,
+    ) {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $data = Request::json();
+      $payload = $this->getJsonPayload($getUpdateValidationRulesFn($data->all()));
+      $entity = $updateEntityFn($id, $payload, ...$args);
 
-        return $this->processRequest(function () use ($id, $getUpdateValidationRulesFn, $updateEntityFn, $args) {
-
-            if (!Request::isJson()) return $this->error400();
-            $data = Request::json();
-            $payload = $this->getJsonPayload($getUpdateValidationRulesFn($data->all()));
-            $entity = $updateEntityFn($id, $payload, ...$args);
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($entity)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        });
-    }
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($entity)
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 }

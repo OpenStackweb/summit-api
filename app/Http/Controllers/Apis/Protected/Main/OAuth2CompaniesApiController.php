@@ -24,207 +24,184 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2CompaniesApiController
  * @package App\Http\Controllers
  */
-final class OAuth2CompaniesApiController extends OAuth2ProtectedController
-{
+final class OAuth2CompaniesApiController extends OAuth2ProtectedController {
+  use ParametrizedGetAll;
 
-    use ParametrizedGetAll;
+  use AddEntity;
 
-    use AddEntity;
+  use UpdateEntity;
 
-    use UpdateEntity;
+  use DeleteEntity;
 
-    use DeleteEntity;
+  use GetEntity;
 
-    use GetEntity;
+  /**
+   * @var ICompanyService
+   */
+  private $service;
 
-    /**
-     * @var ICompanyService
-     */
-    private $service;
+  /**
+   * OAuth2CompaniesApiController constructor.
+   * @param ICompanyRepository $company_repository
+   * @param IResourceServerContext $resource_server_context
+   * @param ICompanyService $service
+   */
+  public function __construct(
+    ICompanyRepository $company_repository,
+    IResourceServerContext $resource_server_context,
+    ICompanyService $service,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $company_repository;
+    $this->service = $service;
+  }
 
-    /**
-     * OAuth2CompaniesApiController constructor.
-     * @param ICompanyRepository $company_repository
-     * @param IResourceServerContext $resource_server_context
-     * @param ICompanyService $service
-     */
-    public function __construct
-    (
-        ICompanyRepository     $company_repository,
-        IResourceServerContext $resource_server_context,
-        ICompanyService        $service
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $company_repository;
-        $this->service = $service;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getAllCompanies()
-    {
-
-        return $this->_getAll(
-            function () {
-                return [
-                    'name' => ['=@', '==', '@@'],
-                ];
-            },
-            function () {
-                return [
-                    'name' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'name',
-                    'id',
-                ];
-            },
-            function ($filter) {
-                return $filter;
-            },
-            function () {
-              return $this->getEntitySerializerType();
-            }
-        );
-    }
-
-    /**
-     * @param array $payload
-     * @return array
-     */
-    function getAddValidationRules(array $payload): array
-    {
-        return CompanyValidationRulesFactory::build($payload);
-    }
-
-    /**
-     * @param array $payload
-     * @return IEntity
-     * @throws ValidationException
-     */
-    protected function addEntity(array $payload): IEntity
-    {
-        return $this->service->addCompany($payload);
-    }
-
-    protected function addEntitySerializerType(){
+  /**
+   * @return mixed
+   */
+  public function getAllCompanies() {
+    return $this->_getAll(
+      function () {
+        return [
+          "name" => ["=@", "==", "@@"],
+        ];
+      },
+      function () {
+        return [
+          "name" => "sometimes|string",
+        ];
+      },
+      function () {
+        return ["name", "id"];
+      },
+      function ($filter) {
+        return $filter;
+      },
+      function () {
         return $this->getEntitySerializerType();
-    }
+      },
+    );
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function deleteEntity(int $id): void
-    {
-        $this->service->deleteCompany($id);
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  function getAddValidationRules(array $payload): array {
+    return CompanyValidationRulesFactory::build($payload);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getEntity(int $id): IEntity
-    {
-        return $this->repository->getById($id);
-    }
+  /**
+   * @param array $payload
+   * @return IEntity
+   * @throws ValidationException
+   */
+  protected function addEntity(array $payload): IEntity {
+    return $this->service->addCompany($payload);
+  }
 
+  protected function addEntitySerializerType() {
+    return $this->getEntitySerializerType();
+  }
 
-    protected function getEntitySerializerType()
-    {
-        $currentUser = $this->resource_server_context->getCurrentUser();
-        return !is_null($currentUser) ? SerializerRegistry::SerializerType_Private :
-            SerializerRegistry::SerializerType_Public;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function deleteEntity(int $id): void {
+    $this->service->deleteCompany($id);
+  }
 
-    protected function updateEntitySerializerType(){
-        return $this->getEntitySerializerType();
-    }
-    /**
-     * @inheritDoc
-     */
-    function getUpdateValidationRules(array $payload): array
-    {
-        return CompanyValidationRulesFactory::build($payload, true);
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getEntity(int $id): IEntity {
+    return $this->repository->getById($id);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function updateEntity($id, array $payload): IEntity
-    {
-        return $this->service->updateCompany($id, $payload);
-    }
+  protected function getEntitySerializerType() {
+    $currentUser = $this->resource_server_context->getCurrentUser();
+    return !is_null($currentUser)
+      ? SerializerRegistry::SerializerType_Private
+      : SerializerRegistry::SerializerType_Public;
+  }
 
-    use RequestProcessor;
+  protected function updateEntitySerializerType() {
+    return $this->getEntitySerializerType();
+  }
+  /**
+   * @inheritDoc
+   */
+  function getUpdateValidationRules(array $payload): array {
+    return CompanyValidationRulesFactory::build($payload, true);
+  }
 
-    // Logos
+  /**
+   * @inheritDoc
+   */
+  protected function updateEntity($id, array $payload): IEntity {
+    return $this->service->updateCompany($id, $payload);
+  }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $speaker_id
-     * @return mixed
-     */
-    public function addCompanyLogo(LaravelRequest $request, $company_id)
-    {
-        return $this->processRequest(function () use ($request, $company_id) {
+  use RequestProcessor;
 
-            $file = $request->file('file');
-            if (is_null($file)) {
-                return $this->error412(array('file param not set!'));
-            }
+  // Logos
 
-            $logo = $this->service->addCompanyLogo(intval($company_id), $file);
+  /**
+   * @param LaravelRequest $request
+   * @param $speaker_id
+   * @return mixed
+   */
+  public function addCompanyLogo(LaravelRequest $request, $company_id) {
+    return $this->processRequest(function () use ($request, $company_id) {
+      $file = $request->file("file");
+      if (is_null($file)) {
+        return $this->error412(["file param not set!"]);
+      }
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
-        });
-    }
+      $logo = $this->service->addCompanyLogo(intval($company_id), $file);
 
-    /**
-     * @param $company_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function deleteCompanyLogo($company_id)
-    {
-        return $this->processRequest(function () use ($company_id) {
+      return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
+    });
+  }
 
-            $this->service->deleteCompanyLogo(intval($company_id));
+  /**
+   * @param $company_id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function deleteCompanyLogo($company_id) {
+    return $this->processRequest(function () use ($company_id) {
+      $this->service->deleteCompanyLogo(intval($company_id));
 
-            return $this->deleted();
+      return $this->deleted();
+    });
+  }
 
-        });
-    }
+  /**
+   * @param LaravelRequest $request
+   * @param $speaker_id
+   * @return mixed
+   */
+  public function addCompanyBigLogo(LaravelRequest $request, $company_id) {
+    return $this->processRequest(function () use ($request, $company_id) {
+      $file = $request->file("file");
+      if (is_null($file)) {
+        return $this->error412(["file param not set!"]);
+      }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $speaker_id
-     * @return mixed
-     */
-    public function addCompanyBigLogo(LaravelRequest $request, $company_id)
-    {
-        return $this->processRequest(function () use ($request, $company_id) {
-            $file = $request->file('file');
-            if (is_null($file)) {
-                return $this->error412(array('file param not set!'));
-            }
+      $logo = $this->service->addCompanyBigLogo(intval($company_id), $file);
 
-            $logo = $this->service->addCompanyBigLogo(intval($company_id), $file);
+      return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
+    });
+  }
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
-        });
-    }
-
-    /**
-     * @param $company_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function deleteCompanyBigLogo($company_id)
-    {
-        return $this->processRequest(function () use ($company_id) {
-            $this->service->deleteCompanyBigLogo(intval($company_id));
-            return $this->deleted();
-        });
-    }
+  /**
+   * @param $company_id
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function deleteCompanyBigLogo($company_id) {
+    return $this->processRequest(function () use ($company_id) {
+      $this->service->deleteCompanyBigLogo(intval($company_id));
+      return $this->deleted();
+    });
+  }
 }

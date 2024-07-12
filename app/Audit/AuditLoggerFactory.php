@@ -23,21 +23,28 @@ use ReflectionClass;
  * @package App\Audit\ConcreteFormatters\ChildEntityFormatter
  */
 class AuditLoggerFactory {
-
-    public static function build($entity): ?ILogger {
-        try {
-            $class_name = (new ReflectionClass($entity))->getShortName();
-            if(in_array($class_name, ['SummitEvent', 'Presentation','SummitGroupEvent','SummitEventWithFile']))
-                $class_name = 'SummitEvent';
-            $class_name = "App\\Audit\\Loggers\\{$class_name}AuditLogger";
-            if(class_exists($class_name)) {
-                return new $class_name();
-            }
-            Log::warning(sprintf("AuditLoggerFactory::build %s not found", $class_name));
-            return null;
-        } catch (\ReflectionException $e) {
-            Log::error($e);
-            return null;
-        }
+  public static function build($entity): ?ILogger {
+    try {
+      $class_name = (new ReflectionClass($entity))->getShortName();
+      if (
+        in_array($class_name, [
+          "SummitEvent",
+          "Presentation",
+          "SummitGroupEvent",
+          "SummitEventWithFile",
+        ])
+      ) {
+        $class_name = "SummitEvent";
+      }
+      $class_name = "App\\Audit\\Loggers\\{$class_name}AuditLogger";
+      if (class_exists($class_name)) {
+        return new $class_name();
+      }
+      Log::warning(sprintf("AuditLoggerFactory::build %s not found", $class_name));
+      return null;
+    } catch (\ReflectionException $e) {
+      Log::error($e);
+      return null;
     }
+  }
 }

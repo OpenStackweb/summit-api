@@ -23,88 +23,81 @@ use Illuminate\Support\Facades\Log;
  * Class CreateVideosFromMUXAssetsForSummitJob
  * @package App\Jobs
  */
-class CreateVideosFromMUXAssetsForSummitJob implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+class CreateVideosFromMUXAssetsForSummitJob implements ShouldQueue {
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 2;
-    /**
-     * @var int
-     */
-    private $summit_id;
+  public $tries = 2;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @var string|null
-     */
-    private $email_to;
+  /**
+   * @var string|null
+   */
+  private $email_to;
 
-    /**
-     * @var string
-     */
-    private $mux_token_id;
+  /**
+   * @var string
+   */
+  private $mux_token_id;
 
-    /**
-     * @var string
-     */
-    private $mux_token_secret;
+  /**
+   * @var string
+   */
+  private $mux_token_secret;
 
-    /**
-     * CreateVideosFromMUXAssetsForSummit constructor.
-     * @param int $summit_id
-     * @param string $mux_token_id
-     * @param string $mux_token_secret
-     * @param string|null $email_to
-     */
-    public function __construct(int $summit_id, string $mux_token_id, string $mux_token_secret, ?string $email_to)
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "CreateVideosFromMUXAssetsForSummitJob::__construct summit %s token id %s token secret %s mail_to %s",
-                $summit_id,
-                $mux_token_id,
-                $mux_token_secret,
-                $email_to
-            )
-        );
+  /**
+   * CreateVideosFromMUXAssetsForSummit constructor.
+   * @param int $summit_id
+   * @param string $mux_token_id
+   * @param string $mux_token_secret
+   * @param string|null $email_to
+   */
+  public function __construct(
+    int $summit_id,
+    string $mux_token_id,
+    string $mux_token_secret,
+    ?string $email_to,
+  ) {
+    Log::debug(
+      sprintf(
+        "CreateVideosFromMUXAssetsForSummitJob::__construct summit %s token id %s token secret %s mail_to %s",
+        $summit_id,
+        $mux_token_id,
+        $mux_token_secret,
+        $email_to,
+      ),
+    );
 
-        $this->summit_id = $summit_id;
-        $this->mux_token_id = $mux_token_id;
-        $this->mux_token_secret = $mux_token_secret;
-        $this->email_to = $email_to;
+    $this->summit_id = $summit_id;
+    $this->mux_token_id = $mux_token_id;
+    $this->mux_token_secret = $mux_token_secret;
+    $this->email_to = $email_to;
+  }
+
+  /**
+   * @param IPresentationVideoMediaUploadProcessor $service
+   */
+  public function handle(IPresentationVideoMediaUploadProcessor $service) {
+    Log::debug(
+      sprintf(
+        "CreateVideosFromMUXAssetsForSummit::handle summit %s token id %s token secret %s mail_to %s",
+        $this->summit_id,
+        $this->mux_token_id,
+        $this->mux_token_secret,
+        $this->email_to,
+      ),
+    );
+
+    try {
+      $service->createVideosFromMUXAssets(
+        $this->summit_id,
+        new MuxCredentials($this->mux_token_id, $this->mux_token_secret),
+        $this->email_to,
+      );
+    } catch (\Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * @param IPresentationVideoMediaUploadProcessor $service
-     */
-    public function handle(IPresentationVideoMediaUploadProcessor $service){
-
-        Log::debug
-        (
-            sprintf
-            (
-                "CreateVideosFromMUXAssetsForSummit::handle summit %s token id %s token secret %s mail_to %s",
-                $this->summit_id,
-                $this->mux_token_id,
-                $this->mux_token_secret,
-                $this->email_to
-            )
-        );
-
-        try {
-            $service->createVideosFromMUXAssets
-            (
-                $this->summit_id,
-                new MuxCredentials(
-                    $this->mux_token_id,
-                    $this->mux_token_secret
-                ),
-                $this->email_to
-            );
-        }
-        catch (\Exception $ex){
-            Log::error($ex);
-        }
-    }
+  }
 }

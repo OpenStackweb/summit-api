@@ -16,15 +16,13 @@ use ModelSerializers\SilverStripeSerializer;
  * Class PaymentGatewayProfileSerializer
  * @package App\ModelSerializers\Summit
  */
-class PaymentGatewayProfileSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Active'          => 'active:json_boolean',
-        'Provider'        => 'provider:json_string',
-        'ApplicationType' => 'application_type:json_string',
-        'TestModeEnabled'     => 'test_mode_enabled:json_boolean',
-        'LivePublishableKey'  => 'live_publishable_key:json_string',
-        'TestPublishableKey'  => 'test_publishable_key:json_string',
-    ];
-
+class PaymentGatewayProfileSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Active" => "active:json_boolean",
+    "Provider" => "provider:json_string",
+    "ApplicationType" => "application_type:json_string",
+    "TestModeEnabled" => "test_mode_enabled:json_boolean",
+    "LivePublishableKey" => "live_publishable_key:json_string",
+    "TestPublishableKey" => "test_publishable_key:json_string",
+  ];
 }

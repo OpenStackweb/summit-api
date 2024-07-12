@@ -16,15 +16,13 @@
  * Class SummitOrderRefundAccepted
  * @package App\Jobs\Emails\Registration\Refunds
  */
-class SummitOrderRefundAccepted extends SummitOrderRefundRequestOwner
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class SummitOrderRefundAccepted extends SummitOrderRefundRequestOwner {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ACCEPTED';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ACCEPTED';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_ORDER_REFUND_ACCEPTED';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ACCEPTED";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_ORDER_REFUND_REQUEST_ACCEPTED";
+  const DEFAULT_TEMPLATE = "REGISTRATION_ORDER_REFUND_ACCEPTED";
 }

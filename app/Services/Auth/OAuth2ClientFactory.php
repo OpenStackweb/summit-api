@@ -21,45 +21,46 @@ use GuzzleRetry\GuzzleRetryMiddleware;
  * Class OAuth2ClientFactory
  * @package App\Services\Auth
  */
-final class OAuth2ClientFactory
-{
-    public static function build(array $idpConfig, array $appConfig, string $redirectUri = ''):GenericProvider{
+final class OAuth2ClientFactory {
+  public static function build(
+    array $idpConfig,
+    array $appConfig,
+    string $redirectUri = "",
+  ): GenericProvider {
+    $client_id = $appConfig["client_id"] ?? "";
+    $client_secret = $appConfig["client_secret"] ?? "";
+    $scopes = $appConfig["scopes"] ?? "";
 
-        $client_id     = $appConfig['client_id'] ?? '';
-        $client_secret = $appConfig['client_secret'] ?? '';
-        $scopes        = $appConfig['scopes'] ?? '';
+    Log::debug(
+      sprintf(
+        "OAuth2ClientFactory::build client_id %s client_secret %s scopes %s",
+        $client_id,
+        $client_secret,
+        $scopes,
+      ),
+    );
 
-        Log::debug
-        (
-            sprintf(
-                "OAuth2ClientFactory::build client_id %s client_secret %s scopes %s",
-                $client_id,
-                $client_secret,
-                $scopes
-            )
-        );
+    $provider = new GenericProvider([
+      "clientId" => $client_id,
+      "clientSecret" => $client_secret,
+      "redirectUri" => $redirectUri,
+      "urlAuthorize" => $idpConfig["authorization_endpoint"] ?? "",
+      "urlAccessToken" => $idpConfig["token_endpoint"] ?? "",
+      "urlResourceOwnerDetails" => "",
+      "scopes" => $scopes,
+    ]);
 
-        $provider =  new GenericProvider([
-            'clientId'                => $client_id,
-            'clientSecret'            => $client_secret,
-            'redirectUri'             => $redirectUri,
-            'urlAuthorize'            => $idpConfig['authorization_endpoint'] ?? '',
-            'urlAccessToken'          => $idpConfig['token_endpoint'] ?? '',
-            'urlResourceOwnerDetails' => "",
-            'scopes'                  => $scopes,
-        ]);
+    $stack = HandlerStack::create();
+    $stack->push(GuzzleRetryMiddleware::factory());
 
-        $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
-
-        $provider->setHttpClient(
-            new Client([
-                'handler'         => $stack,
-                'timeout'         => Config::get('curl.timeout', 60),
-                'allow_redirects' => Config::get('curl.allow_redirects', false),
-                'verify'          => Config::get('curl.verify_ssl_cert', true),
-            ])
-        );
-        return $provider;
-    }
+    $provider->setHttpClient(
+      new Client([
+        "handler" => $stack,
+        "timeout" => Config::get("curl.timeout", 60),
+        "allow_redirects" => Config::get("curl.allow_redirects", false),
+        "verify" => Config::get("curl.verify_ssl_cert", true),
+      ]),
+    );
+    return $provider;
+  }
 }

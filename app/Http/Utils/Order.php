@@ -19,118 +19,118 @@ use Doctrine\ORM\QueryBuilder;
  * Class Order
  * @package utils
  */
-final class Order
-{
-    /**
-     * @var array
-     */
-    private $ordering;
+final class Order {
+  /**
+   * @var array
+   */
+  private $ordering;
 
-    public function __construct(array $ordering = [])
-    {
-        $this->ordering = $ordering;
+  public function __construct(array $ordering = []) {
+    $this->ordering = $ordering;
+  }
+
+  /**
+   * @param string $field
+   * @return bool
+   */
+  public function hasOrder(string $field): bool {
+    foreach ($this->ordering as $order) {
+      if ($order instanceof OrderElement && $order->getField() == $field) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    /**
-     * @param string $field
-     * @return bool
-     */
-    public function hasOrder(string $field):bool{
-        foreach ($this->ordering as $order){
-            if ($order instanceof OrderElement && $order->getField() == $field) {
-                return true;
+  /**
+   * @param string $field
+   * @return bool
+   */
+  public function removeOrder(string $field): bool {
+    foreach ($this->ordering as $index => $order) {
+      if ($order instanceof OrderElement && $order->getField() == $field) {
+        unset($this->ordering[$index]);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @param QueryBuilder $query
+   * @param array $mappings
+   * @return $this
+   */
+  public function apply2Query(QueryBuilder $query, array $mappings) {
+    $hidden_ord_idx = 0;
+    foreach ($this->ordering as $order) {
+      if ($order instanceof OrderElement) {
+        if (isset($mappings[$order->getField()])) {
+          $mapping = $mappings[$order->getField()];
+          $orders[$mapping] = $order->getDirection();
+          // @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/reference/dql-doctrine-query-language.html#select-expressions
+          if (
+            str_contains(strtoupper($mapping), "CASE WHEN") ||
+            str_contains(strtoupper($mapping), "COALESCE")
+          ) {
+            $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
+            $mapping = "ORD_{$hidden_ord_idx}";
+            ++$hidden_ord_idx;
+          }
+          if (str_contains(strtoupper($mapping), "COUNT(")) {
+            $selects = $query->getDQLPart("select");
+            $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
+            $mapping = "ORD_{$hidden_ord_idx}";
+            // add original selects to grouping
+            foreach ($selects as $s) {
+              foreach ($s->getParts() as $p) {
+                $query->addGroupBy($p);
+              }
             }
+            ++$hidden_ord_idx;
+          }
+          $query->addOrderBy($mapping, $order->getDirection());
         }
-        return false;
+      }
     }
+    return $this;
+  }
 
-    /**
-     * @param string $field
-     * @return bool
-     */
-    public function removeOrder(string $field):bool{
-        foreach ($this->ordering as $index => $order){
-            if ($order instanceof OrderElement && $order->getField() == $field) {
-                unset($this->ordering[$index]);
-                return true;
-            }
+  /**
+   * @param Criteria $criteria
+   * @param array $mappings
+   * @return $this
+   */
+  public function apply2Criteria(Criteria $criteria, array $mappings) {
+    $orders = [];
+    foreach ($this->ordering as $order) {
+      if ($order instanceof OrderElement) {
+        if (isset($mappings[$order->getField()])) {
+          $mapping = $mappings[$order->getField()];
+          $orders[$mapping] = $order->getDirection();
         }
-        return false;
+      }
     }
+    if (count($orders) > 0) {
+      $criteria->orderBy($orders);
+    }
+    return $this;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @param array $mappings
-     * @return $this
-     */
-    public function apply2Query(QueryBuilder $query, array $mappings)
-    {
-        $hidden_ord_idx = 0;
-        foreach ($this->ordering as $order) {
-            if ($order instanceof OrderElement) {
-                if (isset($mappings[$order->getField()])) {
-                    $mapping = $mappings[$order->getField()];
-                    $orders[$mapping] = $order->getDirection();
-                    // @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/reference/dql-doctrine-query-language.html#select-expressions
-                    if(str_contains(strtoupper($mapping),"CASE WHEN") || str_contains(strtoupper($mapping),"COALESCE")){
-                        $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
-                        $mapping = "ORD_{$hidden_ord_idx}";
-                        ++$hidden_ord_idx;
-                    }
-                    if(str_contains(strtoupper($mapping),"COUNT(")){
-                        $selects = $query->getDQLPart("select");
-                        $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
-                        $mapping = "ORD_{$hidden_ord_idx}";
-                        // add original selects to grouping
-                        foreach($selects as $s)
-                            foreach($s->getParts() as $p)
-                                $query->addGroupBy($p);
-                        ++$hidden_ord_idx;
-                    }
-                    $query->addOrderBy($mapping, $order->getDirection());
-                }
-            }
+  /**
+   * @param array $mappings
+   * @return string
+   */
+  public function toRawSQL(array $mappings) {
+    $sql = " ORDER BY ";
+    foreach ($this->ordering as $order) {
+      if ($order instanceof OrderElement) {
+        if (isset($mappings[$order->getField()])) {
+          $mapping = $mappings[$order->getField()];
+          $sql .= sprintf("%s %s, ", $mapping, $order->getDirection());
         }
-        return $this;
+      }
     }
-
-    /**
-     * @param Criteria $criteria
-     * @param array $mappings
-     * @return $this
-     */
-    public function apply2Criteria(Criteria $criteria, array $mappings)
-    {
-        $orders = [];
-        foreach ($this->ordering as $order) {
-            if ($order instanceof OrderElement) {
-                if (isset($mappings[$order->getField()])) {
-                    $mapping = $mappings[$order->getField()];
-                    $orders[$mapping] = $order->getDirection();
-                }
-            }
-        }
-        if(count($orders) > 0)
-            $criteria->orderBy($orders);
-        return $this;
-    }
-
-
-    /**
-     * @param array $mappings
-     * @return string
-     */
-    public function toRawSQL(array $mappings)
-    {
-        $sql = ' ORDER BY ';
-        foreach ($this->ordering as $order) {
-            if ($order instanceof OrderElement) {
-                if (isset($mappings[$order->getField()])) {
-                    $mapping = $mappings[$order->getField()];
-                    $sql .= sprintf('%s %s, ', $mapping, $order->getDirection());
-                }
-            }
-        }
-        return substr($sql, 0 , strlen($sql) - 2);
-    }
+    return substr($sql, 0, strlen($sql) - 2);
+  }
 }

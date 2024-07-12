@@ -24,76 +24,74 @@ use models\summit\SummitMediaFileType;
  * Class SummitMediaFileTypeService
  * @package App\Services\Model\Imp
  */
-final class SummitMediaFileTypeService
-extends AbstractModelService
-    implements ISummitMediaFileTypeService
-{
+final class SummitMediaFileTypeService extends AbstractModelService implements
+  ISummitMediaFileTypeService {
+  /**
+   * @var ISummitMediaFileTypeRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISummitMediaFileTypeRepository
-     */
-    private $repository;
+  public function __construct(
+    ISummitMediaFileTypeRepository $repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->repository = $repository;
+  }
 
-    public function __construct
-    (
-        ISummitMediaFileTypeRepository $repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->repository = $repository;
-    }
+  /**
+   * @inheritDoc
+   */
+  public function add(array $payload): SummitMediaFileType {
+    return $this->tx_service->transaction(function () use ($payload) {
+      $type = $this->repository->getByName(trim($payload["name"]));
+      if (!is_null($type)) {
+        throw new ValidationException(sprintf("Name %s already exists.", $payload["name"]));
+      }
+      $type = SummitMediaFileTypeFactory::build($payload);
+      $this->repository->add($type);
+      return $type;
+    });
+  }
 
-    /**
-     * @inheritDoc
-     */
-    public function add(array $payload): SummitMediaFileType
-    {
-        return $this->tx_service->transaction(function() use($payload){
-            $type = $this->repository->getByName(trim($payload['name']));
-            if(!is_null($type))
-                throw new ValidationException(sprintf("Name %s already exists.", $payload['name']));
-            $type = SummitMediaFileTypeFactory::build($payload);
-            $this->repository->add($type);
-            return $type;
-        });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function update(int $id, array $payload): SummitMediaFileType {
+    return $this->tx_service->transaction(function () use ($id, $payload) {
+      $type = $this->repository->getById($id);
+      if (is_null($type)) {
+        throw new EntityNotFoundException();
+      }
+      if ($type->IsSystemDefined()) {
+        throw new ValidationException("You can not modify a system defined type.");
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function update(int $id, array $payload): SummitMediaFileType
-    {
-        return $this->tx_service->transaction(function() use($id, $payload){
-            $type = $this->repository->getById($id);
-            if(is_null($type))
-                throw new EntityNotFoundException();
-            if($type->IsSystemDefined())
-                throw new ValidationException("You can not modify a system defined type.");
+      if (isset($payload["name"])) {
+        $type = $this->repository->getByName(trim($payload["name"]));
+        if (!is_null($type) && $type->getId() != $id) {
+          throw new ValidationException(sprintf("Name %s already exists.", $payload["name"]));
+        }
+      }
 
-            if(isset($payload['name'])){
-                $type = $this->repository->getByName(trim($payload['name']));
-                if(!is_null($type) && $type->getId() != $id)
-                    throw new ValidationException(sprintf("Name %s already exists.", $payload['name']));
-            }
+      return SummitMediaFileTypeFactory::populate($type, $payload);
+    });
+  }
 
-            return SummitMediaFileTypeFactory::populate($type, $payload);
-        });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function delete(int $id): void {
+    $this->tx_service->transaction(function () use ($id) {
+      $type = $this->repository->getById($id);
+      if (is_null($type)) {
+        throw new EntityNotFoundException();
+      }
+      if ($type->IsSystemDefined()) {
+        throw new ValidationException("You can not delete a system defined type.");
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function delete(int $id): void
-    {
-        $this->tx_service->transaction(function() use($id){
-            $type = $this->repository->getById($id);
-            if(is_null($type))
-                throw new EntityNotFoundException();
-            if($type->IsSystemDefined())
-                throw new ValidationException("You can not delete a system defined type.");
-
-            $this->repository->delete($type);
-        });
-    }
+      $this->repository->delete($type);
+    });
+  }
 }

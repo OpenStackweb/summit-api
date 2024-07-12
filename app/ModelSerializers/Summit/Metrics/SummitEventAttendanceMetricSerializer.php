@@ -16,13 +16,12 @@
  * Class SummitEventAttendanceMetricSerializer
  * @package ModelSerializers
  */
-final class SummitEventAttendanceMetricSerializer extends SummitMetricSerializer
-{
-    protected static $array_mappings = [
-        'EventId' => 'event_id:json_int',
-        'RoomId' => 'room_id:json_int',
-        'SubType' => 'sub_type:json_string',
-        'AttendeeId' => 'attendee_id:json_int',
-        'CreatedById' => 'created_by_id:json_int',
-    ];
+final class SummitEventAttendanceMetricSerializer extends SummitMetricSerializer {
+  protected static $array_mappings = [
+    "EventId" => "event_id:json_int",
+    "RoomId" => "room_id:json_int",
+    "SubType" => "sub_type:json_string",
+    "AttendeeId" => "attendee_id:json_int",
+    "CreatedById" => "created_by_id:json_int",
+  ];
 }

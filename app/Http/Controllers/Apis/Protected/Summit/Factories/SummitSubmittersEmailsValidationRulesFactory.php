@@ -24,36 +24,35 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitt
  * Class SummitSubmittersEmailsValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitSubmittersEmailsValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'email_flow_event' => 'required|string|in:' . join(',', [
-                    PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
-                    PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
-                    PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
-                    PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
-                    PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
-                    PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG
-                ]),
-            'submitter_ids'             => 'sometimes|int_array',
-            'excluded_submitter_ids'    => 'sometimes|int_array',
-            'test_email_recipient'      => 'sometimes|email',
-            'outcome_email_recipient'   => 'sometimes|email',
-        ];
-    }
+final class SummitSubmittersEmailsValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "email_flow_event" =>
+        "required|string|in:" .
+        join(",", [
+          PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
+          PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
+          PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
+          PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
+          PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
+          PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG,
+        ]),
+      "submitter_ids" => "sometimes|int_array",
+      "excluded_submitter_ids" => "sometimes|int_array",
+      "test_email_recipient" => "sometimes|email",
+      "outcome_email_recipient" => "sometimes|email",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return self::buildForAdd($payload);
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return self::buildForAdd($payload);
+  }
 }

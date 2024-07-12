@@ -14,7 +14,7 @@
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PresentationMaterial")
@@ -27,191 +27,174 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class PresentationMaterial
  * @package models\summit
  */
-abstract class PresentationMaterial
-    extends SilverstripeBaseModel implements IOrderable
-{
+abstract class PresentationMaterial extends SilverstripeBaseModel implements IOrderable {
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return "PresentationMaterial";
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return 'PresentationMaterial';
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="materials")
+   * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Presentation
+   */
+  protected $presentation;
+
+  /**
+   * @return Presentation
+   */
+  public function getPresentation() {
+    return $this->presentation;
+  }
+
+  /**
+   * @param Presentation $presentation
+   */
+  public function setPresentation(Presentation $presentation) {
+    $this->presentation = $presentation;
+  }
+
+  public function unsetPresentation() {
+    $this->presentation = null;
+  }
+
+  /**
+   * @return int
+   */
+  public function getPresentationId() {
+    try {
+      return $this->presentation->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-    * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="materials")
-    * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
-    * @var Presentation
-    */
-    protected $presentation;
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return Presentation
-     */
-    public function getPresentation(){
-        return $this->presentation;
-    }
+  /**
+   * @param string $name
+   */
+  public function setName($name) {
+    $this->name = $name;
+  }
 
-    /**
-     * @param Presentation $presentation
-     */
-    public function setPresentation(Presentation $presentation){
-        $this->presentation = $presentation;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription() {
+    return $this->description;
+  }
 
+  /**
+   * @param string $description
+   */
+  public function setDescription($description) {
+    $this->description = $description;
+  }
 
-    public function unsetPresentation(){
-        $this->presentation = null;
-    }
+  /**
+   * @return string
+   */
+  public function getDisplayOnSite() {
+    return $this->display_on_site;
+  }
 
-    /**
-     * @return int
-     */
-    public function getPresentationId(){
-        try {
-            return $this->presentation->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @param string $display_on_site
+   */
+  public function setDisplayOnSite($display_on_site) {
+    $this->display_on_site = $display_on_site;
+  }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getFeatured() {
+    return $this->featured;
+  }
 
-    /**
-     * @param string $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
+  /**
+   * @param string $featured
+   */
+  public function setFeatured($featured) {
+    $this->featured = $featured;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  protected $name;
 
-    /**
-     * @param string $description
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  protected $description;
 
-    /**
-     * @return string
-     */
-    public function getDisplayOnSite()
-    {
-        return $this->display_on_site;
-    }
+  /**
+   * @ORM\Column(name="DisplayOnSite", type="boolean")
+   * @var string
+   */
+  protected $display_on_site;
 
-    /**
-     * @param string $display_on_site
-     */
-    public function setDisplayOnSite($display_on_site)
-    {
-        $this->display_on_site = $display_on_site;
-    }
+  /**
+   * @ORM\Column(name="`Order`", type="integer")
+   * @var int
+   */
+  protected $order;
 
-    /**
-     * @return string
-     */
-    public function getFeatured()
-    {
-        return $this->featured;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder() {
+    return $this->order;
+  }
 
-    /**
-     * @param string $featured
-     */
-    public function setFeatured($featured)
-    {
-        $this->featured = $featured;
-    }
+  /**
+   * @param int $order
+   */
+  public function setOrder($order) {
+    $this->order = $order;
+  }
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    protected $name;
+  /**
+   * @ORM\Column(name="Featured", type="boolean")
+   * @var string
+   */
+  protected $featured;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    protected $description;
+  public function __construct() {
+    parent::__construct();
+    $this->featured = false;
+    $this->display_on_site = false;
+    $this->order = 0;
+  }
 
-    /**
-     * @ORM\Column(name="DisplayOnSite", type="boolean")
-     * @var string
-     */
-    protected $display_on_site;
+  public function clearPresentation() {
+    $this->presentation = null;
+  }
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     * @var int
-     */
-    protected $order;
+  use ScheduleEntity;
 
-    /**
-     * @return int
-     */
-    public function getOrder()
-    {
-        return $this->order;
-    }
+  // factory method
+  abstract protected function createInstance(): PresentationMaterial;
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order)
-    {
-        $this->order = $order;
-    }
-
-    /**
-     * @ORM\Column(name="Featured", type="boolean")
-     * @var string
-     */
-    protected $featured;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->featured        = false;
-        $this->display_on_site = false;
-        $this->order           = 0;
-    }
-
-
-    public function clearPresentation(){
-        $this->presentation = null;
-    }
-
-    use ScheduleEntity;
-
-    // factory method
-    protected abstract function createInstance():PresentationMaterial;
-
-    public function clone(): PresentationMaterial{
-        $clone = $this->createInstance();
-        $clone->setName($this->getName());
-        $clone->setDescription($this->getDescription());
-        $clone->setFeatured($this->getFeatured());
-        $clone->setDisplayOnSite($this->getDisplayOnSite());
-        $clone->setPresentation($this->getPresentation());
-        $clone->setOrder($this->getOrder());
-        return $clone;
-    }
+  public function clone(): PresentationMaterial {
+    $clone = $this->createInstance();
+    $clone->setName($this->getName());
+    $clone->setDescription($this->getDescription());
+    $clone->setFeatured($this->getFeatured());
+    $clone->setDisplayOnSite($this->getDisplayOnSite());
+    $clone->setPresentation($this->getPresentation());
+    $clone->setOrder($this->getOrder());
+    return $clone;
+  }
 }

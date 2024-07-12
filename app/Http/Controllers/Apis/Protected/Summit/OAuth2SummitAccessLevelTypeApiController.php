@@ -24,158 +24,140 @@ use models\utils\IEntity;
  * Class OAuth2SummitAccessLevelTypeApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SummitAccessLevelTypeApiController
-    extends OAuth2ProtectedController
-{
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+final class OAuth2SummitAccessLevelTypeApiController extends OAuth2ProtectedController {
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * @var ISummitAccessLevelTypeService
-     */
-    private $service;
+  /**
+   * @var ISummitAccessLevelTypeService
+   */
+  private $service;
 
-    use GetAllBySummit;
+  use GetAllBySummit;
 
-    use GetSummitChildElementById;
+  use GetSummitChildElementById;
 
-    use AddSummitChildElement;
+  use AddSummitChildElement;
 
-    use UpdateSummitChildElement;
+  use UpdateSummitChildElement;
 
-    use DeleteSummitChildElement;
+  use DeleteSummitChildElement;
 
-    /**
-     * @return array
-     */
-    protected function getFilterRules():array
-    {
-        return [
-            'name'        => ['=@', '==', '@@'],
-            'is_default'  => [ '=='],
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterRules(): array {
+    return [
+      "name" => ["=@", "==", "@@"],
+      "is_default" => ["=="],
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterValidatorRules():array{
-        return [
-            'name'       => 'sometimes|required|string',
-            'is_default' => 'sometimes|required|boolean',
-        ];
-    }
-    /**
-     * @return array
-     */
-    protected function getOrderRules():array{
-        return [
-            'id',
-            'name',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterValidatorRules(): array {
+    return [
+      "name" => "sometimes|required|string",
+      "is_default" => "sometimes|required|boolean",
+    ];
+  }
+  /**
+   * @return array
+   */
+  protected function getOrderRules(): array {
+    return ["id", "name"];
+  }
 
-    public function __construct
-    (
-        ISummitAccessLevelTypeRepository $repository,
-        ISummitRepository $summit_repository,
-        ISummitAccessLevelTypeService $service,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-        $this->summit_repository = $summit_repository;
-        $this->service = $service;
-    }
+  public function __construct(
+    ISummitAccessLevelTypeRepository $repository,
+    ISummitRepository $summit_repository,
+    ISummitAccessLevelTypeService $service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+    $this->summit_repository = $summit_repository;
+    $this->service = $service;
+  }
 
+  /**
+   * @return ISummitRepository
+   */
+  protected function getSummitRepository(): ISummitRepository {
+    return $this->summit_repository;
+  }
 
-    /**
-     * @return ISummitRepository
-     */
-    protected function getSummitRepository(): ISummitRepository
-    {
-       return $this->summit_repository;
-    }
+  /**
+   * @return IResourceServerContext
+   */
+  protected function getResourceServerContext(): IResourceServerContext {
+    return $this->resource_server_context;
+  }
 
-    /**
-     * @return IResourceServerContext
-     */
-    protected function getResourceServerContext(): IResourceServerContext
-    {
-       return $this->resource_server_context;
-    }
+  /**
+   * @return IBaseRepository
+   */
+  protected function getRepository(): IBaseRepository {
+    return $this->repository;
+  }
 
-    /**
-     * @return IBaseRepository
-     */
-    protected function getRepository(): IBaseRepository
-    {
-       return $this->repository;
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  protected function getAddValidationRules(array $payload): array {
+    return AccessLevelTypeValidationRulesFactory::build($payload);
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    protected function getAddValidationRules(array $payload): array
-    {
-        return AccessLevelTypeValidationRulesFactory::build($payload);
-    }
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return IEntity
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  protected function addChild(Summit $summit, array $payload): IEntity {
+    return $this->service->addAccessLevelType($summit, $payload);
+  }
 
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return IEntity
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    protected function addChild(Summit $summit, array $payload): IEntity
-    {
-        return $this->service->addAccessLevelType($summit, $payload);
-    }
+  /**
+   * @param Summit $summit
+   * @param $child_id
+   * @return IEntity|null
+   */
+  protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity {
+    return $summit->getBadgeAccessLevelTypeById($child_id);
+  }
 
-    /**
-     * @param Summit $summit
-     * @param $child_id
-     * @return IEntity|null
-     */
-    protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
-    {
-        return $summit->getBadgeAccessLevelTypeById($child_id);
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  function getUpdateValidationRules(array $payload): array {
+    return AccessLevelTypeValidationRulesFactory::build($payload, true);
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    function getUpdateValidationRules(array $payload): array
-    {
-        return AccessLevelTypeValidationRulesFactory::build($payload, true);
-    }
+  /**
+   * @param Summit $summit
+   * @param int $child_id
+   * @param array $payload
+   * @return IEntity
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity {
+    return $this->service->updateAccessLevelType($summit, $child_id, $payload);
+  }
 
-    /**
-     * @param Summit $summit
-     * @param int $child_id
-     * @param array $payload
-     * @return IEntity
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
-    {
-        return $this->service->updateAccessLevelType($summit, $child_id, $payload);
-    }
-
-    /**
-     * @param Summit $summit
-     * @param $child_id
-     * @throws EntityNotFoundException
-     */
-    protected function deleteChild(Summit $summit, $child_id): void
-    {
-       $this->service->deleteAccessLevelType($summit, $child_id);
-    }
+  /**
+   * @param Summit $summit
+   * @param $child_id
+   * @throws EntityNotFoundException
+   */
+  protected function deleteChild(Summit $summit, $child_id): void {
+    $this->service->deleteAccessLevelType($summit, $child_id);
+  }
 }

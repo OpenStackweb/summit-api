@@ -16,20 +16,17 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitAttendeeTicketSerializer
  * @package ModelSerializers
  */
-class SummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer
-{
+class SummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer {
+  protected static $array_mappings = [
+    "BadgePrintsCount" => "badge_prints_count:json_int",
+  ];
 
-    protected static $array_mappings = [
-        'BadgePrintsCount' => 'badge_prints_count:json_int',
-    ];
-
-    protected static $expand_mappings = [
-        'order' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'order_id',
-            'getter' => 'getOrder',
-            'has' => 'hasOrder'
-        ],
-    ];
-
+  protected static $expand_mappings = [
+    "order" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "order_id",
+      "getter" => "getOrder",
+      "has" => "hasOrder",
+    ],
+  ];
 }

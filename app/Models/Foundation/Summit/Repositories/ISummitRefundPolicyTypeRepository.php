@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitRefundPolicyTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitRefundPolicyTypeRepository extends IBaseRepository
-{
-
+interface ISummitRefundPolicyTypeRepository extends IBaseRepository {
 }

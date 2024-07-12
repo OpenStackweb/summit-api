@@ -11,22 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrinePrivateCloudServiceRepository")
  * @ORM\Table(name="PrivateCloudService")
  * Class PrivateCloudService
  * @package App\Models\Foundation\Marketplace
  */
-class PrivateCloudService extends CloudService
-{
-    const ClassName = 'PrivateCloudService';
+class PrivateCloudService extends CloudService {
+  const ClassName = "PrivateCloudService";
 
-    /**
-     * @return string
-     */
-    public function getClassName():string
-    {
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 }

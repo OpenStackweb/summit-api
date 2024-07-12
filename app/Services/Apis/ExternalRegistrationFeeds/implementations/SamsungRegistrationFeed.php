@@ -29,113 +29,122 @@ use models\summit\Summit;
  * Class SamsungRegistrationFeed
  * @package App\Services\Apis\ExternalRegistrationFeeds\implementations
  */
-final class SamsungRegistrationFeed
-    extends AbstractExternalFeed
-    implements IExternalRegistrationFeed
-{
+final class SamsungRegistrationFeed extends AbstractExternalFeed implements
+  IExternalRegistrationFeed {
+  /**
+   * @var ISamsungRegistrationAPI
+   */
+  private $api;
+  /**
+   * @param Summit $summit
+   * @param ISamsungRegistrationAPI $api
+   * @param ClientInterface $client
+   */
+  public function __construct(
+    Summit $summit,
+    ISamsungRegistrationAPI $api,
+    ClientInterface $client,
+  ) {
+    parent::__construct($summit, $client);
+    $this->api = $api;
+  }
 
-    /**
-     * @var ISamsungRegistrationAPI
-     */
-    private $api;
-    /**
-     * @param Summit $summit
-     * @param ISamsungRegistrationAPI $api
-     * @param ClientInterface $client
-     */
-    public function __construct(Summit $summit, ISamsungRegistrationAPI $api, ClientInterface $client)
-    {
-        parent::__construct($summit, $client);
-        $this->api = $api;
+  public function getAttendees(
+    int $page = 1,
+    ?DateTime $changed_since = null,
+  ): ?IExternalRegistrationFeedResponse {
+    try {
+      $apiFeedKey = $this->summit->getExternalRegistrationFeedApiKey();
+      $eventId = $this->summit->getExternalSummitId();
+
+      if (empty($apiFeedKey)) {
+        Log::warning(
+          sprintf(
+            "external_registration_feed_api_key is empty for summit %s",
+            $this->summit->getId(),
+          ),
+        );
+        return null;
+      }
+
+      if (empty($eventId)) {
+        Log::warning(sprintf("external_summit_id is empty for summit %s", $this->summit->getId()));
+        return null;
+      }
+
+      return $this->api->userList($this->summit);
+    } catch (InvalidResponse $ex) {
+      Log::warning($ex->getMessage());
+      throw $ex;
+    } catch (EmptyResponse $ex) {
+      Log::warning($ex->getMessage());
+      throw $ex;
+    } catch (RequestException $ex) {
+      Log::warning($ex->getMessage());
+      throw $ex;
+    }
+  }
+
+  public function isValidQRCode(string $qr_code_content): bool {
+    $qr_json = json_decode($qr_code_content, true);
+    if (!$qr_json) {
+      return false;
+    }
+    if (!isset($qr_json[PayloadParamNames::UserId])) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * @param string $qr_code_content
+   * @return array|mixed
+   */
+  public function getAttendeeByQRCode(string $qr_code_content) {
+    $qr_json = json_decode($qr_code_content, true);
+    if (!$qr_json) {
+      return [];
+    }
+    if (!isset($qr_json[PayloadParamNames::UserId])) {
+      return [];
     }
 
-    public function getAttendees(int $page = 1, ?DateTime $changed_since = null): ?IExternalRegistrationFeedResponse
-    {
-        try {
-            $apiFeedKey = $this->summit->getExternalRegistrationFeedApiKey();
-            $eventId    = $this->summit->getExternalSummitId();
+    return $this->api->checkUser($this->summit, $qr_json[PayloadParamNames::UserId]);
+  }
 
-            if (empty($apiFeedKey)) {
-                Log::warning(sprintf("external_registration_feed_api_key is empty for summit %s", $this->summit->getId()));
-                return null;
-            }
-
-            if (empty($eventId)) {
-                Log::warning(sprintf("external_summit_id is empty for summit %s", $this->summit->getId()));
-                return null;
-            }
-
-            return $this->api->userList($this->summit);
-        }
-        catch(InvalidResponse $ex){
-            Log::warning($ex->getMessage());
-            throw $ex;
-        }
-        catch (EmptyResponse $ex){
-            Log::warning($ex->getMessage());
-            throw $ex;
-        }
-        catch(RequestException $ex){
-            Log::warning($ex->getMessage());
-            throw $ex;
-        }
+  /**
+   * @param string $email
+   * @return mixed
+   */
+  public function getAttendeeByEmail(string $email) {
+    $email = trim($email);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      return [];
     }
+    return $this->api->checkEmail($this->summit, $email);
+  }
 
-    public function isValidQRCode(string $qr_code_content): bool
-    {
-        $qr_json = json_decode($qr_code_content, true);
-        if(!$qr_json) return false;
-        if(!isset($qr_json[PayloadParamNames::UserId])) return false;
-        return true;
+  /**
+   * @param string $qr_code_content
+   * @return string|null
+   */
+  public function getExternalUserIdFromQRCode(string $qr_code_content): ?string {
+    $qr_json = json_decode($qr_code_content, true);
+    if (!$qr_json) {
+      return null;
     }
+    return $qr_json[PayloadParamNames::UserId] ?? null;
+  }
 
-    /**
-     * @param string $qr_code_content
-     * @return array|mixed
-     */
-    public function getAttendeeByQRCode(string $qr_code_content)
-    {
-        $qr_json = json_decode($qr_code_content, true);
-        if(!$qr_json) return [];
-        if(!isset($qr_json[PayloadParamNames::UserId])) return [];
+  public function shouldCreateExtraQuestions(): bool {
+    return true;
+  }
 
-        return $this->api->checkUser($this->summit, $qr_json[PayloadParamNames::UserId]);
-    }
+  public function checkAttendee(string $external_id): void {
+    $this->api->checkUser($this->summit, $external_id);
+  }
 
-    /**
-     * @param string $email
-     * @return mixed
-     */
-    public function getAttendeeByEmail(string $email)
-    {
-        $email = trim($email);
-        if(!filter_var($email, FILTER_VALIDATE_EMAIL)) return [];
-        return $this->api->checkEmail($this->summit, $email);
-    }
-
-    /**
-     * @param string $qr_code_content
-     * @return string|null
-     */
-    public function getExternalUserIdFromQRCode(string $qr_code_content): ?string
-    {
-        $qr_json = json_decode($qr_code_content, true);
-        if(!$qr_json) return null;
-        return $qr_json[PayloadParamNames::UserId] ?? null;
-    }
-
-    public function shouldCreateExtraQuestions(): bool
-    {
-        return true;
-    }
-
-    public function checkAttendee(string $external_id): void
-    {
-        $this->api->checkUser($this->summit, $external_id);
-    }
-
-    public function unCheckAttendee(string $external_id): void
-    {
-        $this->api->uncheckUser($this->summit, $external_id);
-    }
+  public function unCheckAttendee(string $external_id): void {
+    $this->api->uncheckUser($this->summit, $external_id);
+  }
 }

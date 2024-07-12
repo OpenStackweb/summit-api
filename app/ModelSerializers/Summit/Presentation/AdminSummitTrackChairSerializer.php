@@ -16,9 +16,8 @@
  * Class AdminSummitTrackChairSerializer
  * @package ModelSerializers
  */
-class AdminSummitTrackChairSerializer extends SummitTrackChairSerializer
-{
-    protected function getMemberSerializerType():string{
-        return SerializerRegistry::SerializerType_Private;
-    }
+class AdminSummitTrackChairSerializer extends SummitTrackChairSerializer {
+  protected function getMemberSerializerType(): string {
+    return SerializerRegistry::SerializerType_Private;
+  }
 }

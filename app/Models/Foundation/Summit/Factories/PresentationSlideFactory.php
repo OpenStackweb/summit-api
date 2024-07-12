@@ -16,27 +16,26 @@ use models\summit\PresentationSlide;
  * Class PresentationSlideFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class PresentationSlideFactory
-{
-    /**
-     * @param array $data
-     * @return PresentationSlide
-     */
-    public static function build(array $data){
-        return self::populate(new PresentationSlide, $data);
+final class PresentationSlideFactory {
+  /**
+   * @param array $data
+   * @return PresentationSlide
+   */
+  public static function build(array $data) {
+    return self::populate(new PresentationSlide(), $data);
+  }
+
+  /**
+   * @param PresentationSlide $slide
+   * @param array $data
+   * @return PresentationSlide
+   */
+  public static function populate(PresentationSlide $slide, array $data) {
+    PresentationMaterialFactory::populate($slide, $data);
+    if (isset($data["link"])) {
+      $slide->setLink(trim($data["link"]));
     }
 
-    /**
-     * @param PresentationSlide $slide
-     * @param array $data
-     * @return PresentationSlide
-     */
-    public static function populate(PresentationSlide $slide, array $data){
-
-        PresentationMaterialFactory::populate($slide, $data);
-        if(isset($data['link']))
-            $slide->setLink(trim($data['link']));
-
-        return $slide;
-    }
+    return $slide;
+  }
 }

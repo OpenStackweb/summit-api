@@ -13,7 +13,7 @@
  **/
 use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="Tag")
@@ -21,49 +21,43 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class Tag
  * @package models\main
  */
-class Tag extends SilverstripeBaseModel
-{
+class Tag extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Tag", type="string")
+   * @var string
+   */
+  private $tag;
 
-    /**
-     * @ORM\Column(name="Tag", type="string")
-     * @var string
-     */
-    private $tag;
+  /**
+   * @ORM\ManyToMany(targetEntity="models\summit\SummitEvent", mappedBy="tags")
+   */
+  private $events;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitEvent", mappedBy="tags")
-     */
-    private $events;
+  /**
+   * @return string
+   */
+  public function getTag() {
+    return $this->tag;
+  }
 
-    /**
-     * @return string
-     */
-    public function getTag()
-    {
-        return $this->tag;
-    }
+  /**
+   * @param string $tag
+   */
+  public function setTag($tag) {
+    $this->tag = $tag;
+  }
 
-    /**
-     * @param string $tag
-     */
-    public function setTag($tag)
-    {
-        $this->tag = $tag;
-    }
+  /**
+   * Tag constructor.
+   * @param string $tag
+   */
+  public function __construct($tag) {
+    parent::__construct();
+    $this->tag = $tag;
+    $this->events = new ArrayCollection();
+  }
 
-    /**
-     * Tag constructor.
-     * @param string $tag
-     */
-    public function __construct($tag)
-    {
-        parent::__construct();
-        $this->tag = $tag;
-        $this->events = new ArrayCollection();
-    }
-
-    public function getEvents(){
-        return $this->events;
-    }
-
+  public function getEvents() {
+    return $this->events;
+  }
 }

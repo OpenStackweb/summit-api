@@ -16,7 +16,5 @@
  * Class CreatedSummitRegistrationOrder
  * @package App\Events
  */
-final class CreatedSummitRegistrationOrder extends SummitRegistrationOrderAction
-{
-
+final class CreatedSummitRegistrationOrder extends SummitRegistrationOrderAction {
 }

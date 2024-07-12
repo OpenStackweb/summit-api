@@ -18,39 +18,40 @@ use Illuminate\Support\Facades\Log;
  * Class ParseMultipartFormDataInputForNonPostRequests
  * @package App\Http\Middleware
  */
-final class ParseMultipartFormDataInputForNonPostRequests
-{
-    /*
-    * Content-Type: multipart/form-data - only works for POST requests. All others fail, this is a bug in PHP since 2011.
-    * See comments here: https://github.com/laravel/framework/issues/13457
-    *
-    * This middleware converts all multi-part/form-data for NON-POST requests, into a properly formatted
-    * request variable for Laravel 5.6. It uses the ParseInputStream class, found here:
-    * https://gist.github.com/devmycloud/df28012101fbc55d8de1737762b70348
-    */
-    public function handle($request, Closure $next)
-    {
-        if ($request->method() == 'POST' || $request->method() == 'GET') {
-            return $next($request);
-        }
-
-        if (preg_match('/multipart\/form-data/', $request->headers->get('Content-Type')) or
-            preg_match('/multipart\/form-data/', $request->headers->get('content-type'))
-        ) {
-            $parser  = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
-            $params = $parser->getInput();
-            $data   = $params['parameters'];
-            $files  = $params['files'];
-            if (count($files) > 0) {
-                Log::debug("ParseMultipartFormDataInputForNonPostRequests: files ".json_encode($files));
-                $request->files->add($files);
-            }
-
-            if (count($data) > 0) {
-                Log::debug("ParseMultipartFormDataInputForNonPostRequests: parameters ".json_encode($data));
-                $request->request->add($data);
-            }
-        }
-        return $next($request);
+final class ParseMultipartFormDataInputForNonPostRequests {
+  /*
+   * Content-Type: multipart/form-data - only works for POST requests. All others fail, this is a bug in PHP since 2011.
+   * See comments here: https://github.com/laravel/framework/issues/13457
+   *
+   * This middleware converts all multi-part/form-data for NON-POST requests, into a properly formatted
+   * request variable for Laravel 5.6. It uses the ParseInputStream class, found here:
+   * https://gist.github.com/devmycloud/df28012101fbc55d8de1737762b70348
+   */
+  public function handle($request, Closure $next) {
+    if ($request->method() == "POST" || $request->method() == "GET") {
+      return $next($request);
     }
+
+    if (
+      preg_match("/multipart\/form-data/", $request->headers->get("Content-Type")) or
+      preg_match("/multipart\/form-data/", $request->headers->get("content-type"))
+    ) {
+      $parser = new ParseMultiPartFormDataInputStream(file_get_contents("php://input"));
+      $params = $parser->getInput();
+      $data = $params["parameters"];
+      $files = $params["files"];
+      if (count($files) > 0) {
+        Log::debug("ParseMultipartFormDataInputForNonPostRequests: files " . json_encode($files));
+        $request->files->add($files);
+      }
+
+      if (count($data) > 0) {
+        Log::debug(
+          "ParseMultipartFormDataInputForNonPostRequests: parameters " . json_encode($data),
+        );
+        $request->request->add($data);
+      }
+    }
+    return $next($request);
+  }
 }

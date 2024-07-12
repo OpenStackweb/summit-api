@@ -16,7 +16,7 @@ use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\BaseEntity;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
@@ -24,117 +24,105 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class AssignedSelectionPlanExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
-class AssignedSelectionPlanExtraQuestionType
-    extends BaseEntity
-    implements IOrderable
-{
+class AssignedSelectionPlanExtraQuestionType extends BaseEntity implements IOrderable {
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", inversedBy="assigned_selection_plans")
+   * @ORM\JoinColumn(name="SummitSelectionPlanExtraQuestionTypeID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var SummitSelectionPlanExtraQuestionType
+   */
+  private $question_type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", inversedBy="assigned_selection_plans")
-     * @ORM\JoinColumn(name="SummitSelectionPlanExtraQuestionTypeID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitSelectionPlanExtraQuestionType
-     */
-    private $question_type;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="extra_questions")
+   * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var SelectionPlan
+   */
+  private $selection_plan;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="extra_questions")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SelectionPlan
-     */
-    private $selection_plan;
+  /**
+   * @ORM\Column(name="`CustomOrder`", type="integer")
+   * @var int
+   */
+  private $order;
 
-    /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
-     * @var int
-     */
-    private $order;
+  /**
+   * @ORM\Column(name="`IsEditable`", type="boolean")
+   * @var bool
+   */
+  private $is_editable;
 
-    /**
-     * @ORM\Column(name="`IsEditable`", type="boolean")
-     * @var bool
-     */
-    private $is_editable;
+  /**
+   * @return SelectionPlan
+   */
+  public function getSelectionPlan(): SelectionPlan {
+    return $this->selection_plan;
+  }
 
-    /**
-     * @return SelectionPlan
-     */
-    public function getSelectionPlan(): SelectionPlan
-    {
-        return $this->selection_plan;
-    }
+  /**
+   * @return SummitSelectionPlanExtraQuestionType
+   */
+  public function getQuestionType(): SummitSelectionPlanExtraQuestionType {
+    return $this->question_type;
+  }
 
-    /**
-     * @return SummitSelectionPlanExtraQuestionType
-     */
-    public function getQuestionType():SummitSelectionPlanExtraQuestionType{
-        return $this->question_type;
-    }
+  public function setQuestionType(SummitSelectionPlanExtraQuestionType $question): void {
+    $this->question_type = $question;
+  }
 
-    public function setQuestionType(SummitSelectionPlanExtraQuestionType $question):void{
-        $this->question_type = $question;
-    }
+  /**
+   * @param SelectionPlan $selection_plan
+   */
+  public function setSelectionPlan(SelectionPlan $selection_plan): void {
+    $this->selection_plan = $selection_plan;
+  }
 
-    /**
-     * @param SelectionPlan $selection_plan
-     */
-    public function setSelectionPlan(SelectionPlan $selection_plan): void
-    {
-        $this->selection_plan = $selection_plan;
-    }
+  use One2ManyPropertyTrait;
 
-    use One2ManyPropertyTrait;
+  protected $getIdMappings = [
+    "getSelectionPlanId" => "selection_plan",
+    "getQuestionTypeId" => "question_type",
+  ];
 
-    protected $getIdMappings = [
-        'getSelectionPlanId' => 'selection_plan',
-        'getQuestionTypeId' => 'question_type'
-    ];
+  protected $hasPropertyMappings = [
+    "hasSelectionPlan" => "selection_plan",
+    "hasQuestionType" => "question_type",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasSelectionPlan' => 'selection_plan',
-        'hasQuestionType' => 'question_type',
-    ];
+  public function clearSelectionPlan(): void {
+    $this->selection_plan = null;
+    $this->question_type = null;
+  }
 
-    public function clearSelectionPlan():void{
-        $this->selection_plan = null;
-        $this->question_type = null;
-    }
+  public function __construct() {
+    $this->order = 1;
+    $this->is_editable = true;
+  }
 
-    public function __construct()
-    {
-        $this->order = 1;
-        $this->is_editable = true;
-    }
+  /**
+   * @return int
+   */
+  public function getOrder(): int {
+    return $this->order;
+  }
 
-    /**
-     * @return int
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
-    }
+  /**
+   * @param int $order
+   */
+  public function setOrder($order): void {
+    $this->order = $order;
+  }
 
-    /**
-     * @param int $order
-     */
-    public function setOrder($order): void
-    {
-        $this->order = $order;
-    }
+  /**
+   * @return bool
+   */
+  public function isEditable(): bool {
+    return $this->is_editable;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isEditable(): bool
-    {
-        return $this->is_editable;
-    }
-
-    /**
-     * @param bool $is_editable
-     */
-    public function setIsEditable(bool $is_editable): void
-    {
-        $this->is_editable = $is_editable;
-    }
-
+  /**
+   * @param bool $is_editable
+   */
+  public function setIsEditable(bool $is_editable): void {
+    $this->is_editable = $is_editable;
+  }
 }

@@ -18,109 +18,97 @@ use Illuminate\Support\Facades\Log;
  * Class MemberUpdated
  * @package App\Events
  */
-final class MemberUpdated
-{
-    use SerializesModels;
+final class MemberUpdated {
+  use SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $member_id;
+  /**
+   * @var int
+   */
+  private $member_id;
 
-    /**
-     * @var string
-     */
-    private $email;
+  /**
+   * @var string
+   */
+  private $email;
 
-    /**
-     * @var string
-     */
-    private $first_name;
+  /**
+   * @var string
+   */
+  private $first_name;
 
-    /**
-     * @var string
-     */
-    private $last_name;
+  /**
+   * @var string
+   */
+  private $last_name;
 
-    /**
-     * @var string
-     */
-    private $company;
+  /**
+   * @var string
+   */
+  private $company;
 
-    /**
-     * @param int $member_id
-     * @param string $email
-     * @param string $first_name
-     * @param string $last_name
-     * @param string $company
-     */
-    public function __construct
-    (
-        int $member_id,
-        string $email,
-        ?string $first_name,
-        ?string $last_name,
-        ?string $company
-    )
-    {
-        $this->member_id = $member_id;
-        $this->email = $email;
-        $this->first_name = $first_name;
-        $this->last_name = $last_name;
-        $this->company = $company;
-        Log::debug
-        (
-            sprintf
-            (
-                "MemberUpdated::construct member_id %s email %s first_name %s last_name %s company %s",
-                $member_id,
-                $email,
-                $first_name,
-                $last_name,
-                $company
-            )
-        );
-    }
+  /**
+   * @param int $member_id
+   * @param string $email
+   * @param string $first_name
+   * @param string $last_name
+   * @param string $company
+   */
+  public function __construct(
+    int $member_id,
+    string $email,
+    ?string $first_name,
+    ?string $last_name,
+    ?string $company,
+  ) {
+    $this->member_id = $member_id;
+    $this->email = $email;
+    $this->first_name = $first_name;
+    $this->last_name = $last_name;
+    $this->company = $company;
+    Log::debug(
+      sprintf(
+        "MemberUpdated::construct member_id %s email %s first_name %s last_name %s company %s",
+        $member_id,
+        $email,
+        $first_name,
+        $last_name,
+        $company,
+      ),
+    );
+  }
 
+  /**
+   * @return int
+   */
+  public function getMemberId(): int {
+    return $this->member_id;
+  }
 
-    /**
-     * @return int
-     */
-    public function getMemberId(): int
-    {
-        return $this->member_id;
-    }
+  /**
+   * @return string
+   */
+  public function getFirstName(): ?string {
+    return $this->first_name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getFirstName(): ?string
-    {
-        return $this->first_name;
-    }
+  /**
+   * @return string
+   */
+  public function getLastName(): ?string {
+    return $this->last_name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getLastName(): ?string
-    {
-        return $this->last_name;
-    }
+  /**
+   * @return string
+   */
+  public function getCompany(): ?string {
+    return $this->company;
+  }
 
-    /**
-     * @return string
-     */
-    public function getCompany(): ?string
-    {
-        return $this->company;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
+  /**
+   * @return string
+   */
+  public function getEmail(): string {
+    return $this->email;
+  }
 }

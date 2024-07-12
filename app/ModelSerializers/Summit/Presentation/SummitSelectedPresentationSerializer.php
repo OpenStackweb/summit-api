@@ -17,77 +17,73 @@ use models\summit\SummitSelectedPresentation;
  * Class SummitSelectedPresentationSerializer
  * @package ModelSerializers
  */
-class SummitSelectedPresentationSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Collection'     => 'type:json_string',
-        'Order'          => 'order:json_int',
-        'ListId'         => 'list_id:json_int',
-        'PresentationId' => 'presentation_id:json_int',
-    ];
+class SummitSelectedPresentationSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Collection" => "type:json_string",
+    "Order" => "order:json_int",
+    "ListId" => "list_id:json_int",
+    "PresentationId" => "presentation_id:json_int",
+  ];
 
-    protected static $allowed_fields = [
-        'type',
-        'category_id',
-        'presentation_id',
-        'order',
-        'list_id',
-    ];
+  protected static $allowed_fields = ["type", "category_id", "presentation_id", "order", "list_id"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $selected_presentation = $this->object;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $selected_presentation = $this->object;
 
-        if (!$selected_presentation instanceof SummitSelectedPresentation) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'presentation':
-                    {
-                        if ($selected_presentation->getPresentationId() > 0) {
-                            unset($values['presentation_id']);
-                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $selected_presentation->getPresentation(),
-                                IPresentationSerializerTypes::TrackChairs
-                            )->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                    }
-                    break;
-                    case 'list':
-                    {
-                        if ($selected_presentation->getListId() > 0) {
-                            unset($values['list_id']);
-                            $values['list'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getList())->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+    if (!$selected_presentation instanceof SummitSelectedPresentation) {
+      return [];
     }
+
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      foreach (explode(",", $expand) as $relation) {
+        $relation = trim($relation);
+        switch ($relation) {
+          case "presentation":
+            if ($selected_presentation->getPresentationId() > 0) {
+              unset($values["presentation_id"]);
+              $values["presentation"] = SerializerRegistry::getInstance()
+                ->getSerializer(
+                  $selected_presentation->getPresentation(),
+                  IPresentationSerializerTypes::TrackChairs,
+                )
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+          case "list":
+            if ($selected_presentation->getListId() > 0) {
+              unset($values["list_id"]);
+              $values["list"] = SerializerRegistry::getInstance()
+                ->getSerializer($selected_presentation->getList())
+                ->serialize(
+                  AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                  AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                  $params,
+                );
+            }
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

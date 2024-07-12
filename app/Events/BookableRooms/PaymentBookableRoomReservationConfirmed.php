@@ -16,7 +16,5 @@
  * Class PaymentBookableRoomReservationConfirmed
  * @package App\Events
  */
-final class PaymentBookableRoomReservationConfirmed extends BookableRoomReservationAction
-{
-
+final class PaymentBookableRoomReservationConfirmed extends BookableRoomReservationAction {
 }

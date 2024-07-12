@@ -21,37 +21,32 @@ use utils\DoctrineLeftJoinFilterMapping;
  * @package App\Repositories\Summit
  */
 final class DoctrinePaymentGatewayProfileRepository
-    extends SilverStripeDoctrineRepository
-    implements IPaymentGatewayProfileRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements IPaymentGatewayProfileRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return PaymentGatewayProfile::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return PaymentGatewayProfile::class;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "application_type" => "e.application_type:json_string",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'application_type' => 'e.application_type:json_string',
-            'summit_id'        => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'               => 'e.id',
-            'application_type' => 'e.application_type',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "application_type" => "e.application_type",
+    ];
+  }
 }

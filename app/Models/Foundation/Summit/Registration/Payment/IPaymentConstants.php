@@ -16,21 +16,17 @@
  * Interface IPaymentConstants
  * @package models\summit
  */
-interface IPaymentConstants
-{
-    const ApplicationTypeRegistration  = 'Registration';
-    const ApplicationTypeBookableRooms = 'BookableRooms';
+interface IPaymentConstants {
+  const ApplicationTypeRegistration = "Registration";
+  const ApplicationTypeBookableRooms = "BookableRooms";
 
-    const ValidApplicationTypes       = [
-        self::ApplicationTypeRegistration,
-        self::ApplicationTypeBookableRooms
-    ];
+  const ValidApplicationTypes = [
+    self::ApplicationTypeRegistration,
+    self::ApplicationTypeBookableRooms,
+  ];
 
-    const ProviderStripe = 'Stripe';
-    const ProviderLawPay = 'LawPay';
+  const ProviderStripe = "Stripe";
+  const ProviderLawPay = "LawPay";
 
-    const ValidProviderTypes = [
-        self::ProviderStripe,
-        self::ProviderLawPay,
-    ];
+  const ValidProviderTypes = [self::ProviderStripe, self::ProviderLawPay];
 }

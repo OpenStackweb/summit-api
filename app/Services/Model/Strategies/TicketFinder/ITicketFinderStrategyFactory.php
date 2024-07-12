@@ -17,16 +17,11 @@ use models\summit\Summit;
  * Interface ITicketFinderStrategyFactory
  * @package App\Services\Model\Strategies\TicketFinder
  */
-interface ITicketFinderStrategyFactory
-{
-    /**
-     * @param Summit $summit
-     * @param $ticket_criteria
-     * @return ITicketFinderStrategy|null
-     */
-    public function build
-    (
-        Summit $summit,
-        $ticket_criteria
-    ):?ITicketFinderStrategy;
+interface ITicketFinderStrategyFactory {
+  /**
+   * @param Summit $summit
+   * @param $ticket_criteria
+   * @return ITicketFinderStrategy|null
+   */
+  public function build(Summit $summit, $ticket_criteria): ?ITicketFinderStrategy;
 }

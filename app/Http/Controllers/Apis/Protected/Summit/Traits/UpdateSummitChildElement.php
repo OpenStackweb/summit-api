@@ -23,74 +23,71 @@ use ModelSerializers\SerializerRegistry;
  * Trait UpdateSummitChildElement
  * @package App\Http\Controllers
  */
-trait UpdateSummitChildElement
-{
-    use BaseSummitAPI;
+trait UpdateSummitChildElement {
+  use BaseSummitAPI;
 
-    use RequestProcessor;
+  use RequestProcessor;
 
-    protected function updateSerializerType(): string
-    {
-        return SerializerRegistry::SerializerType_Admin;
-    }
+  protected function updateSerializerType(): string {
+    return SerializerRegistry::SerializerType_Admin;
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    abstract function getUpdateValidationRules(array $payload): array;
+  /**
+   * @param array $payload
+   * @return array
+   */
+  abstract function getUpdateValidationRules(array $payload): array;
 
-    /**
-     * @param Summit $summit
-     * @param int $child_id
-     * @param array $payload
-     * @return IEntity
-     */
-    abstract protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity;
+  /**
+   * @param Summit $summit
+   * @param int $child_id
+   * @param array $payload
+   * @return IEntity
+   */
+  abstract protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity;
 
-    /**
-     * @param $summit_id
-     * @param $child_id
-     * @return mixed
-     */
-    public function update($summit_id, $child_id)
-    {
-        return $this->processRequest(function () use ($summit_id, $child_id) {
-            if (!Request::isJson())
-                return $this->error400();
-            $data = Request::json();
+  /**
+   * @param $summit_id
+   * @param $child_id
+   * @return mixed
+   */
+  public function update($summit_id, $child_id) {
+    return $this->processRequest(function () use ($summit_id, $child_id) {
+      if (!Request::isJson()) {
+        return $this->error400();
+      }
+      $data = Request::json();
 
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+      $summit = SummitFinderStrategyFactory::build(
+        $this->getSummitRepository(),
+        $this->getResourceServerContext(),
+      )->find($summit_id);
+      if (is_null($summit)) {
+        return $this->error404();
+      }
 
-            $payload = $data->all();
+      $payload = $data->all();
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $this->getUpdateValidationRules($payload));
+      // Creates a Validator instance and validates the data.
+      $validation = Validator::make($payload, $this->getUpdateValidationRules($payload));
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+      if ($validation->fails()) {
+        $messages = $validation->messages()->toArray();
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+        return $this->error412($messages);
+      }
 
-            $child = $this->updateChild($summit, $child_id, $payload);
+      $child = $this->updateChild($summit, $child_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer
-            (
-                $child,
-                $this->updateSerializerType()
-            )->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        }
-        );
-    }
-
+      return $this->updated(
+        SerializerRegistry::getInstance()
+          ->getSerializer($child, $this->updateSerializerType())
+          ->serialize(
+            SerializerUtils::getExpand(),
+            SerializerUtils::getFields(),
+            SerializerUtils::getRelations(),
+          ),
+      );
+    });
+  }
 }

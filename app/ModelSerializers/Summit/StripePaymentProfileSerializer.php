@@ -16,9 +16,8 @@
  * Class StripePaymentProfileSerializer
  * @package App\ModelSerializers\Summit
  */
-class StripePaymentProfileSerializer extends PaymentGatewayProfileSerializer
-{
-    protected static $array_mappings = [
-        'SendEmailReceipt'    => 'send_email_receipt:json_boolean',
-    ];
+class StripePaymentProfileSerializer extends PaymentGatewayProfileSerializer {
+  protected static $array_mappings = [
+    "SendEmailReceipt" => "send_email_receipt:json_boolean",
+  ];
 }

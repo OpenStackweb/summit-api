@@ -16,7 +16,5 @@
  * Class ApplianceSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class ApplianceSerializer extends OpenStackImplementationSerializer
-{
-
+final class ApplianceSerializer extends OpenStackImplementationSerializer {
 }

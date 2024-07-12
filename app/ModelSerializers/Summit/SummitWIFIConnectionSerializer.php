@@ -16,29 +16,29 @@
  * Class SummitWIFIConnectionSerializer
  * @package ModelSerializers
  */
-class SummitWIFIConnectionSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = array
-    (
-        'SSID'        => 'ssid:json_string',
-        'Password'    => 'password:json_string',
-        'Description' => 'description:json_string',
-        'SummitId'    => 'summit_id:json_int',
-    );
+class SummitWIFIConnectionSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "SSID" => "ssid:json_string",
+    "Password" => "password:json_string",
+    "Description" => "description:json_string",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $values          = parent::serialize($expand, $fields, $relations, $params);
-        $wifi_connection = $this->object;
-        return $values;
-    }
-
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    $wifi_connection = $this->object;
+    return $values;
+  }
 }

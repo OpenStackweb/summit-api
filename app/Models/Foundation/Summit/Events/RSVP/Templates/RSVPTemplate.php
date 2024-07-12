@@ -18,7 +18,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPTemplate")
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineRSVPTemplateRepository")
@@ -31,178 +31,167 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class RSVPTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPTemplate extends SilverstripeBaseModel
-{
-    use SummitOwned;
+class RSVPTemplate extends SilverstripeBaseModel {
+  use SummitOwned;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     * @var string
-     */
-    private $title;
+  /**
+   * @ORM\Column(name="Title", type="string")
+   * @var string
+   */
+  private $title;
 
-    /**
-     * @ORM\Column(name="Enabled", type="boolean")
-     * @var bool
-     */
-    private $is_enabled;
+  /**
+   * @ORM\Column(name="Enabled", type="boolean")
+   * @var bool
+   */
+  private $is_enabled;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID")
-     * @var Member
-     */
-    private $created_by;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="LAZY")
+   * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID")
+   * @var Member
+   */
+  private $created_by;
 
-    /**
-     * @ORM\OneToMany(targetEntity="RSVPQuestionTemplate", mappedBy="template", cascade={"persist"}, orphanRemoval=true)
-     * @var RSVPQuestionTemplate[]
-     */
-    private $questions;
+  /**
+   * @ORM\OneToMany(targetEntity="RSVPQuestionTemplate", mappedBy="template", cascade={"persist"}, orphanRemoval=true)
+   * @var RSVPQuestionTemplate[]
+   */
+  private $questions;
 
-    /**
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->title;
+  /**
+   * @return string
+   */
+  public function getTitle() {
+    return $this->title;
+  }
+
+  /**
+   * @param string $title
+   */
+  public function setTitle($title) {
+    $this->title = $title;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isEnabled() {
+    return $this->is_enabled;
+  }
+
+  /**
+   * @param bool $is_enabled
+   */
+  public function setIsEnabled($is_enabled) {
+    $this->is_enabled = $is_enabled;
+  }
+
+  /**
+   * @return Member
+   */
+  public function getCreatedBy() {
+    return $this->created_by;
+  }
+
+  /**
+   * @param Member $created_by
+   */
+  public function setCreatedBy(Member $created_by) {
+    $this->created_by = $created_by;
+  }
+
+  /**
+   * @return int
+   */
+  public function getCreatedById() {
+    try {
+      return is_null($this->created_by) ? 0 : $this->created_by->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param string $title
-     */
-    public function setTitle($title)
-    {
-        $this->title = $title;
-    }
+  /**
+   * @return bool
+   */
+  public function hasCreatedBy() {
+    return $this->getCreatedById() > 0;
+  }
 
-    /**
-     * @return bool
-     */
-    public function isEnabled()
-    {
-        return $this->is_enabled;
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->questions = new ArrayCollection();
+  }
 
-    /**
-     * @param bool $is_enabled
-     */
-    public function setIsEnabled($is_enabled)
-    {
-        $this->is_enabled = $is_enabled;
-    }
+  /**
+   * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+   */
+  public function getQuestions() {
+    $criteria = Criteria::create();
+    $criteria->orderBy(["order" => "ASC"]);
+    return $this->questions->matching($criteria);
+  }
 
-    /**
-     * @return Member
-     */
-    public function getCreatedBy()
-    {
-        return $this->created_by;
-    }
+  /**
+   * @param mixed $questions
+   */
+  public function setQuestions($questions) {
+    $this->questions = $questions;
+  }
 
-    /**
-     * @param Member $created_by
-     */
-    public function setCreatedBy(Member $created_by)
-    {
-        $this->created_by = $created_by;
-    }
+  /**
+   * @param string $name
+   * @return RSVPQuestionTemplate|null
+   */
+  public function getQuestionByName($name) {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("name", trim($name)));
+    $res = $this->questions->matching($criteria)->first();
+    return $res ? $res : null;
+  }
 
-    /**
-     * @return int
-     */
-    public function getCreatedById(){
-        try{
-            return is_null($this->created_by) ? 0 : $this->created_by->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @param int $id
+   * @return RSVPQuestionTemplate|null
+   */
+  public function getQuestionById($id) {
+    $criteria = Criteria::create();
+    $criteria->where(Criteria::expr()->eq("id", intval($id)));
+    $res = $this->questions->matching($criteria)->first();
+    return $res ? $res : null;
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasCreatedBy(){
-        return $this->getCreatedById() > 0;
-    }
+  /**
+   * @param RSVPQuestionTemplate $question
+   * @return $this
+   */
+  public function addQuestion(RSVPQuestionTemplate $question) {
+    $questions = $this->getQuestions();
+    $this->questions->add($question);
+    $question->setTemplate($this);
+    $question->setOrder(count($questions) + 1);
+    return $this;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->questions = new ArrayCollection;
-    }
+  use OrderableChilds;
 
-    /**
-     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
-     */
-    public function getQuestions()
-    {
-        $criteria = Criteria::create();
-        $criteria->orderBy(['order'=> 'ASC']);
-        return $this->questions->matching($criteria);
-    }
+  /**
+   * @param RSVPQuestionTemplate $question
+   * @param int $new_order
+   * @throws ValidationException
+   */
+  public function recalculateQuestionOrder(RSVPQuestionTemplate $question, $new_order) {
+    self::recalculateOrderForSelectable($this->questions, $question, $new_order);
+  }
 
-    /**
-     * @param mixed $questions
-     */
-    public function setQuestions($questions)
-    {
-        $this->questions = $questions;
-    }
-
-    /**
-     * @param string $name
-     * @return RSVPQuestionTemplate|null
-     */
-    public function getQuestionByName($name){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('name', trim($name)));
-        $res = $this->questions->matching($criteria)->first();
-        return $res ? $res : null;
-    }
-
-    /**
-     * @param int $id
-     * @return RSVPQuestionTemplate|null
-     */
-    public function getQuestionById($id){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($id)));
-        $res = $this->questions->matching($criteria)->first();
-        return $res ? $res : null;
-    }
-
-    /**
-     * @param RSVPQuestionTemplate $question
-     * @return $this
-     */
-    public function addQuestion(RSVPQuestionTemplate $question){
-        $questions = $this->getQuestions();
-        $this->questions->add($question);
-        $question->setTemplate($this);
-        $question->setOrder(count($questions) + 1);
-        return $this;
-    }
-
-    use OrderableChilds;
-
-    /**
-     * @param RSVPQuestionTemplate $question
-     * @param int $new_order
-     * @throws ValidationException
-     */
-    public function recalculateQuestionOrder(RSVPQuestionTemplate $question, $new_order){
-        self::recalculateOrderForSelectable($this->questions, $question, $new_order);
-    }
-
-    /**
-     * @param RSVPQuestionTemplate $question
-     * @return $this
-     */
-    public function removeQuestion(RSVPQuestionTemplate $question){
-        $this->questions->removeElement($question);
-        $question->clearTemplate();
-        return $this;
-    }
+  /**
+   * @param RSVPQuestionTemplate $question
+   * @return $this
+   */
+  public function removeQuestion(RSVPQuestionTemplate $question) {
+    $this->questions->removeElement($question);
+    $question->clearTemplate();
+    return $this;
+  }
 }

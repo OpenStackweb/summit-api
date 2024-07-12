@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,117 +19,114 @@ use models\utils\SilverstripeBaseModel;
  * Class OpenStackReleaseSupportedApiVersion
  * @package App\Models\Foundation\Software
  */
-class OpenStackReleaseSupportedApiVersion extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="ReleaseVersion", type="string")
-     * @var string
-     */
-    private $version;
+class OpenStackReleaseSupportedApiVersion extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="ReleaseVersion", type="string")
+   * @var string
+   */
+  private $version;
 
-    /**
-     * @ORM\Column(name="Status", type="string")
-     * @var string
-     */
-    private $status;
+  /**
+   * @ORM\Column(name="Status", type="string")
+   * @var string
+   */
+  private $status;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackComponent", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
-     * @var OpenStackComponent
-     */
-    private $component;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackComponent", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
+   * @var OpenStackComponent
+   */
+  private $component;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackApiVersion", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ApiVersionID", referencedColumnName="ID")
-     * @var OpenStackApiVersion
-     */
-    private $api_version;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackApiVersion", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="ApiVersionID", referencedColumnName="ID")
+   * @var OpenStackApiVersion
+   */
+  private $api_version;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackRelease", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ReleaseID", referencedColumnName="ID")
-     * @var OpenStackRelease
-     */
-    private $release;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackRelease", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="ReleaseID", referencedColumnName="ID")
+   * @var OpenStackRelease
+   */
+  private $release;
 
-    /**
-     * @return string
-     */
-    public function getVersion()
-    {
-        return $this->version;
+  /**
+   * @return string
+   */
+  public function getVersion() {
+    return $this->version;
+  }
+
+  /**
+   * @return string
+   */
+  public function getStatus() {
+    return $this->status;
+  }
+
+  /**
+   * @return OpenStackComponent
+   */
+  public function getComponent() {
+    return $this->component;
+  }
+
+  /**
+   * @return OpenStackApiVersion
+   */
+  public function getApiVersion() {
+    return $this->api_version;
+  }
+
+  /**
+   * @return OpenStackRelease
+   */
+  public function getRelease() {
+    return $this->release;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasApiVersion() {
+    try {
+      if (is_null($this->api_version)) {
+        return false;
+      }
+      return $this->api_version->getId() > 0;
+    } catch (\Exception $ex) {
+      return false;
     }
+  }
 
-    /**
-     * @return string
-     */
-    public function getStatus()
-    {
-        return $this->status;
+  /**
+   * @return bool
+   */
+  public function hasComponent() {
+    try {
+      if (is_null($this->component)) {
+        return false;
+      }
+      return $this->component->getId() > 0;
+    } catch (\Exception $ex) {
+      return false;
     }
+  }
 
-    /**
-     * @return OpenStackComponent
-     */
-    public function getComponent()
-    {
-        return $this->component;
+  /**
+   * @return bool
+   */
+  public function hasRelease() {
+    try {
+      if (is_null($this->release)) {
+        return false;
+      }
+      return $this->release->getId() > 0;
+    } catch (\Exception $ex) {
+      return false;
     }
-
-    /**
-     * @return OpenStackApiVersion
-     */
-    public function getApiVersion()
-    {
-        return $this->api_version;
-    }
-
-    /**
-     * @return OpenStackRelease
-     */
-    public function getRelease()
-    {
-        return $this->release;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasApiVersion(){
-        try{
-            if(is_null($this->api_version)) return false;
-            return $this->api_version->getId() > 0 ;
-        }
-        catch (\Exception $ex){
-            return false;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasComponent(){
-        try{
-            if(is_null($this->component)) return false;
-            return $this->component->getId() > 0 ;
-        }
-        catch (\Exception $ex){
-            return false;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasRelease(){
-        try{
-            if(is_null($this->release)) return false;
-            return $this->release->getId() > 0 ;
-        }
-        catch (\Exception $ex){
-            return false;
-        }
-    }
+  }
 }

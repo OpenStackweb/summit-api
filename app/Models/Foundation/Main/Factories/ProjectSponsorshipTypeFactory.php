@@ -16,24 +16,27 @@ use models\main\ProjectSponsorshipType;
  * Class ProjectSponsorshipTypeFactory
  * @package App\Models\Foundation\Main\Factories
  */
-final class ProjectSponsorshipTypeFactory
-{
-    public static function build(array $payload):ProjectSponsorshipType
-    {
-        return self::populate(new ProjectSponsorshipType, $payload);
+final class ProjectSponsorshipTypeFactory {
+  public static function build(array $payload): ProjectSponsorshipType {
+    return self::populate(new ProjectSponsorshipType(), $payload);
+  }
+
+  public static function populate(
+    ProjectSponsorshipType $projectSponsorshipType,
+    array $payload,
+  ): ProjectSponsorshipType {
+    if (isset($payload["name"])) {
+      $projectSponsorshipType->setName(trim($payload["name"]));
     }
 
-    public static function populate(ProjectSponsorshipType $projectSponsorshipType, array $payload):ProjectSponsorshipType {
-
-        if(isset($payload['name']))
-            $projectSponsorshipType->setName(trim($payload['name']));
-
-        if(isset($payload['description']))
-            $projectSponsorshipType->setDescription(trim($payload['description']));
-
-        if(isset($payload['is_active']))
-            $projectSponsorshipType->setIsActive(boolval($payload['is_active']));
-
-        return $projectSponsorshipType;
+    if (isset($payload["description"])) {
+      $projectSponsorshipType->setDescription(trim($payload["description"]));
     }
+
+    if (isset($payload["is_active"])) {
+      $projectSponsorshipType->setIsActive(boolval($payload["is_active"]));
+    }
+
+    return $projectSponsorshipType;
+  }
 }

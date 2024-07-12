@@ -14,83 +14,79 @@
 use models\main\Group;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeBadgePrintRuleRepository")
  * @ORM\Table(name="SummitAttendeeBadgePrintRule")
  * Class SummitAttendeeBadgePrintRule
  * @package models\summit
  */
-class SummitAttendeeBadgePrintRule extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SummitAttendeeBadgePrintRule extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getGroupId' => 'group',
-    ];
+  protected $getIdMappings = [
+    "getGroupId" => "group",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasGroup' => 'group',
-    ];
+  protected $hasPropertyMappings = [
+    "hasGroup" => "group",
+  ];
 
-    /**
-     * @ORM\Column(name="MaxPrintTimes", type="integer")
-     * @var int
-     */
-    private $max_print_times;
+  /**
+   * @ORM\Column(name="MaxPrintTimes", type="integer")
+   * @var int
+   */
+  private $max_print_times;
 
-    /**
-     * @ORM\OneToOne(targetEntity="models\main\Group")
-     * @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
-     * @var Group
-     */
-    private $group;
+  /**
+   * @ORM\OneToOne(targetEntity="models\main\Group")
+   * @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
+   * @var Group
+   */
+  private $group;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->max_print_times = 0;
+  public function __construct() {
+    parent::__construct();
+    $this->max_print_times = 0;
+  }
+
+  /**
+   * @return int
+   */
+  public function getMaxPrintTimes(): int {
+    return $this->max_print_times;
+  }
+
+  /**
+   * @param int $max_print_times
+   */
+  public function setMaxPrintTimes(int $max_print_times): void {
+    $this->max_print_times = $max_print_times;
+  }
+
+  /**
+   * @return Group
+   */
+  public function getGroup(): Group {
+    return $this->group;
+  }
+
+  /**
+   * @param Group $group
+   */
+  public function setGroup(Group $group): void {
+    $this->group = $group;
+  }
+
+  /**
+   * @param SummitAttendeeBadge $badge
+   * @return bool
+   */
+  public function canPrintBadge(SummitAttendeeBadge $badge): bool {
+    if ($this->max_print_times == 0) {
+      return true;
     }
-
-    /**
-     * @return int
-     */
-    public function getMaxPrintTimes(): int
-    {
-        return $this->max_print_times;
-    }
-
-    /**
-     * @param int $max_print_times
-     */
-    public function setMaxPrintTimes(int $max_print_times): void
-    {
-        $this->max_print_times = $max_print_times;
-    }
-
-    /**
-     * @return Group
-     */
-    public function getGroup(): Group
-    {
-        return $this->group;
-    }
-
-    /**
-     * @param Group $group
-     */
-    public function setGroup(Group $group): void
-    {
-        $this->group = $group;
-    }
-
-    /**
-     * @param SummitAttendeeBadge $badge
-     * @return bool
-     */
-    public function canPrintBadge(SummitAttendeeBadge $badge):bool{
-        if($this->max_print_times == 0) return true;
-        $count = $badge->getPrintCountPerGroup($this->group);
-        return $count < $this->max_print_times;
-    }
+    $count = $badge->getPrintCountPerGroup($this->group);
+    return $count < $this->max_print_times;
+  }
 }

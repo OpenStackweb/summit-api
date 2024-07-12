@@ -21,24 +21,22 @@ use models\summit\Summit;
  * Interface ISummitPresentationActionService
  * @package App\Services\Model
  */
-interface ISummitPresentationActionService
-{
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $presentation_id
-     * @param int $presentation_action_type_id
-     * @param bool $isCompleted
-     * @return PresentationAction|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function updateAction
-    (
-        Summit $summit,
-        int $selection_plan_id,
-        int $presentation_id,
-        int $presentation_action_type_id,
-        bool $isCompleted
-    ):?PresentationAction;
+interface ISummitPresentationActionService {
+  /**
+   * @param Summit $summit
+   * @param int $selection_plan_id
+   * @param int $presentation_id
+   * @param int $presentation_action_type_id
+   * @param bool $isCompleted
+   * @return PresentationAction|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function updateAction(
+    Summit $summit,
+    int $selection_plan_id,
+    int $presentation_id,
+    int $presentation_action_type_id,
+    bool $isCompleted,
+  ): ?PresentationAction;
 }

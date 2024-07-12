@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use DateTime;
 /**
  * @ORM\Entity
@@ -19,108 +19,95 @@ use DateTime;
  * Class ScheduledSummitLocationBanner
  * @package App\Models\Foundation\Summit\Locations\Banners
  */
-class ScheduledSummitLocationBanner extends SummitLocationBanner
-{
-    const ClassName = 'ScheduledSummitLocationBanner';
+class ScheduledSummitLocationBanner extends SummitLocationBanner {
+  const ClassName = "ScheduledSummitLocationBanner";
 
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return ScheduledSummitLocationBanner::ClassName;
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return ScheduledSummitLocationBanner::ClassName;
+  }
+
+  /**
+   * @ORM\Column(name="StartDate", type="datetime")
+   * @var DateTime
+   */
+  protected $start_date;
+
+  /**
+   * @ORM\Column(name="EndDate", type="datetime")
+   * @var DateTime
+   */
+  protected $end_date;
+
+  /**
+   * @param DateTime $value
+   * @return $this
+   */
+  public function setStartDate(DateTime $value) {
+    $summit = $this->getLocation()->getSummit();
+    if (!is_null($summit)) {
+      $value = $summit->convertDateFromTimeZone2UTC($value);
     }
+    $this->start_date = $value;
+    return $this;
+  }
 
-    /**
-     * @ORM\Column(name="StartDate", type="datetime")
-     * @var DateTime
-     */
-    protected $start_date;
-
-    /**
-     * @ORM\Column(name="EndDate", type="datetime")
-     * @var DateTime
-     */
-    protected $end_date;
-
-    /**
-     * @param DateTime $value
-     * @return $this
-     */
-    public function setStartDate(DateTime $value)
-    {
-        $summit = $this->getLocation()->getSummit();
-        if(!is_null($summit))
-        {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $this->start_date = $value;
-        return $this;
+  /**
+   * @return DateTime|null
+   */
+  public function getLocalStartDate() {
+    $res = null;
+    if (!empty($this->start_date)) {
+      $value = clone $this->start_date;
+      $summit = $this->getLocation()->getSummit();
+      if (!is_null($summit)) {
+        $res = $summit->convertDateFromUTC2TimeZone($value);
+      }
     }
+    return $res;
+  }
 
-    /**
-     * @return DateTime|null
-     */
-    public function getLocalStartDate()
-    {
-        $res = null;
-        if(!empty($this->start_date)) {
-            $value  = clone $this->start_date;
-            $summit = $this->getLocation()->getSummit();
-            if(!is_null($summit))
-            {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-        }
-        return $res;
+  /**
+   * @return \DateTime|null
+   */
+  public function getStartDate() {
+    return $this->start_date;
+  }
+
+  /**
+   * @param DateTime $value
+   * @return $this
+   */
+  public function setEndDate(DateTime $value) {
+    $summit = $this->getLocation()->getSummit();
+    if (!is_null($summit)) {
+      $value = $summit->convertDateFromTimeZone2UTC($value);
     }
+    $this->end_date = $value;
+    return $this;
+  }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getStartDate()
-    {
-        return $this->start_date;
+  /**
+   * @return DateTime|null
+   */
+  public function getLocalEndDate() {
+    $res = null;
+    if (!empty($this->end_date)) {
+      $value = clone $this->end_date;
+      $summit = $this->getLocation()->getSummit();
+      if (!is_null($summit)) {
+        $res = $summit->convertDateFromUTC2TimeZone($value);
+      }
     }
+    return $res;
+  }
 
-    /**
-     * @param DateTime $value
-     * @return $this
-     */
-    public function setEndDate(DateTime $value)
-    {
-        $summit = $this->getLocation()->getSummit();
-        if(!is_null($summit))
-        {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $this->end_date = $value;
-        return $this;
-    }
-
-    /**
-     * @return DateTime|null
-     */
-    public function getLocalEndDate()
-    {
-        $res = null;
-        if(!empty($this->end_date)) {
-            $value  = clone $this->end_date;
-            $summit = $this->getLocation()->getSummit();
-            if(!is_null($summit))
-            {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-        }
-        return $res;
-    }
-
-    /**
-     * @return \DateTime|null
-     */
-    public function getEndDate()
-    {
-        return $this->end_date;
-    }
-
-
+  /**
+   * @return \DateTime|null
+   */
+  public function getEndDate() {
+    return $this->end_date;
+  }
 }

@@ -16,26 +16,24 @@
  * Class SummitRefundPolicyTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRefundPolicyTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'name'                             => 'sometimes|string',
-                'refund_rate'                      => 'sometimes|numeric|min:0|max:100',
-                'until_x_days_before_event_starts' => 'sometimes|integer|min:1',
-            ];
-        }
-        return [
-            'name'                             => 'required|string',
-            'refund_rate'                      => 'required|numeric|min:0|max:100',
-            'until_x_days_before_event_starts' => 'required|integer|min:1',
-        ];
+final class SummitRefundPolicyTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string",
+        "refund_rate" => "sometimes|numeric|min:0|max:100",
+        "until_x_days_before_event_starts" => "sometimes|integer|min:1",
+      ];
     }
+    return [
+      "name" => "required|string",
+      "refund_rate" => "required|numeric|min:0|max:100",
+      "until_x_days_before_event_starts" => "required|integer|min:1",
+    ];
+  }
 }

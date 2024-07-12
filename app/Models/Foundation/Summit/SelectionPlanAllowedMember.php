@@ -23,71 +23,69 @@ use models\utils\One2ManyPropertyTrait;
  * Class SelectionPlanAllowedMember
  * @package App\Models\Foundation\Summit
  */
-class SelectionPlanAllowedMember extends BaseEntity
-{
-    use One2ManyPropertyTrait;
+class SelectionPlanAllowedMember extends BaseEntity {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getMemberId' => 'member',
-    ];
+  protected $getIdMappings = [
+    "getMemberId" => "member",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasMember' => 'member',
-    ];
+  protected $hasPropertyMappings = [
+    "hasMember" => "member",
+  ];
 
-    /**
-     * @ORM\Column(name="Email", type="string")
-     * @var String
-     */
-    private $email;
+  /**
+   * @ORM\Column(name="Email", type="string")
+   * @var String
+   */
+  private $email;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $member;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
+   * @var Member
+   */
+  private $member;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_members", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
-     * @var SelectionPlan
-     */
-    private $selection_plan;
+  /**
+   * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_members", fetch="EXTRA_LAZY")
+   * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
+   * @var SelectionPlan
+   */
+  private $selection_plan;
 
-    /**
-     * @return string
-     */
-    public function getEmail():string{
-        $email = $this->email;
-        if(empty($email) && $this->hasMember()){
-            $email = $this->member->getEmail();
-        }
-        return strtolower(trim($email));
+  /**
+   * @return string
+   */
+  public function getEmail(): string {
+    $email = $this->email;
+    if (empty($email) && $this->hasMember()) {
+      $email = $this->member->getEmail();
     }
+    return strtolower(trim($email));
+  }
 
-    public function setEmail(string $email):void{
-        $this->email = strtolower(trim($email));
-    }
+  public function setEmail(string $email): void {
+    $this->email = strtolower(trim($email));
+  }
 
-    /**
-     * @param SelectionPlan $selection_plan
-     * @param string $email
-     */
-    public function __construct(SelectionPlan $selection_plan, string $email){
-        $this->selection_plan = $selection_plan;
-        $this->email = strtolower(trim($email));
-    }
+  /**
+   * @param SelectionPlan $selection_plan
+   * @param string $email
+   */
+  public function __construct(SelectionPlan $selection_plan, string $email) {
+    $this->selection_plan = $selection_plan;
+    $this->email = strtolower(trim($email));
+  }
 
-    /**
-     * @return SelectionPlan
-     */
-    public function getSelectionPlan(): SelectionPlan
-    {
-        return $this->selection_plan;
-    }
+  /**
+   * @return SelectionPlan
+   */
+  public function getSelectionPlan(): SelectionPlan {
+    return $this->selection_plan;
+  }
 
-    public function clearSelectionPlan():void{
-        $this->selection_plan = null;
-    }
+  public function clearSelectionPlan(): void {
+    $this->selection_plan = null;
+  }
 }

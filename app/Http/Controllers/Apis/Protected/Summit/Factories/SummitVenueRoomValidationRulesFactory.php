@@ -16,21 +16,22 @@
  * Class SummitVenueRoomValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitVenueRoomValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
+final class SummitVenueRoomValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    $rules = SummitAbstractLocationValidationRulesFactory::build($data, $update);
 
-        $rules = SummitAbstractLocationValidationRulesFactory::build($data, $update);
-
-        return array_merge([
-            'capacity'           => 'sometimes|integer:min:0',
-            'override_blackouts' => 'sometimes|boolean',
-            'floor_id'           => 'sometimes|integer',
-        ], $rules);
-    }
+    return array_merge(
+      [
+        "capacity" => "sometimes|integer:min:0",
+        "override_blackouts" => "sometimes|boolean",
+        "floor_id" => "sometimes|integer",
+      ],
+      $rules,
+    );
+  }
 }

@@ -16,15 +16,10 @@
  * Interface ISummitExternalScheduleFeedType
  * @package App\Models\Foundation\Summit
  */
-interface ISummitExternalScheduleFeedType
-{
-    const NoneType       = '';
-    const VanderpoelType = 'Vanderpoel';
-    const SchedType      = 'Sched';
+interface ISummitExternalScheduleFeedType {
+  const NoneType = "";
+  const VanderpoelType = "Vanderpoel";
+  const SchedType = "Sched";
 
-    const ValidFeedTypes = [
-        self::NoneType,
-        self::SchedType,
-        self::VanderpoelType
-    ];
+  const ValidFeedTypes = [self::NoneType, self::SchedType, self::VanderpoelType];
 }

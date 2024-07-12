@@ -16,9 +16,8 @@ use Exception;
  * Class EntityNotFoundException
  * @package models\exceptions
  */
-class EntityNotFoundException extends Exception
-{
-    public function __construct($message = "Entity Not Found."){
-        parent::__construct($message);
-    }
+class EntityNotFoundException extends Exception {
+  public function __construct($message = "Entity Not Found.") {
+    parent::__construct($message);
+  }
 }

@@ -21,51 +21,47 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitSponsorshipTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitSponsorshipTypeRepository
-{
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->innerJoin("e.type", "t");
-        $query = $query->innerJoin("e.summit", "s");
-        return $query;
-    }
+  extends SilverStripeDoctrineRepository
+  implements ISummitSponsorshipTypeRepository {
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->innerJoin("e.type", "t");
+    $query = $query->innerJoin("e.summit", "s");
+    return $query;
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'  => 't.name:json_string',
-            'label' => 't.label:json_string',
-            'size'  => 't.size:json_string',
-            'summit_id' => 's.id',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "t.name:json_string",
+      "label" => "t.label:json_string",
+      "size" => "t.size:json_string",
+      "summit_id" => "s.id",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-            'name'  => 't.name',
-            'label' => 't.label',
-            'size'  => 't.size',
-            'order' => 'e.order',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "name" => "t.name",
+      "label" => "t.label",
+      "size" => "t.size",
+      "order" => "e.order",
+    ];
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitSponsorshipType::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitSponsorshipType::class;
+  }
 }

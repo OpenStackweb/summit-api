@@ -19,61 +19,61 @@ use Illuminate\Support\Facades\Config;
  * Class PresentationCategoryChangeRequestCreatedEmail
  * @package App\Jobs\Emails\PresentationSelections
  */
-class PresentationCategoryChangeRequestCreatedEmail extends AbstractSummitEmailJob
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
+class PresentationCategoryChangeRequestCreatedEmail extends AbstractSummitEmailJob {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
+
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SELECTIONS_PRESENTATION_CATEGORY_CHANGE_REQUEST_CREATED";
+  const EVENT_NAME = "SUMMIT_SELECTIONS_PRESENTATION_CATEGORY_CHANGE_REQUEST_CREATED";
+  const DEFAULT_TEMPLATE = "SUMMIT_SELECTIONS_PRESENTATION_CATEGORY_CHANGE_REQUEST_CREATED";
+
+  public function __construct(SummitCategoryChange $request) {
+    $to_emails = [];
+    $presentation = $request->getPresentation();
+    $requester = $request->getRequester();
+    $old_category = $request->getOldCategory();
+    $new_category = $request->getNewCategory();
+
+    foreach ($new_category->getTrackChairs() as $chair) {
+      $to_emails[] = $chair->getMember()->getEmail();
     }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SELECTIONS_PRESENTATION_CATEGORY_CHANGE_REQUEST_CREATED';
-    const EVENT_NAME = 'SUMMIT_SELECTIONS_PRESENTATION_CATEGORY_CHANGE_REQUEST_CREATED';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SELECTIONS_PRESENTATION_CATEGORY_CHANGE_REQUEST_CREATED';
+    $summit = $presentation->getSummit();
 
-    public function __construct(SummitCategoryChange $request)
-    {
-        $to_emails = [];
-        $presentation = $request->getPresentation();
-        $requester = $request->getRequester();
-        $old_category = $request->getOldCategory();
-        $new_category = $request->getNewCategory();
+    $payload = [];
+    $payload[IMailTemplatesConstants::requester_fullname] = $requester->getFullName();
+    $payload[IMailTemplatesConstants::requester_email] = $requester->getEmail();
+    $payload[IMailTemplatesConstants::old_category] = $old_category->getTitle();
+    $payload[IMailTemplatesConstants::new_category] = $new_category->getTitle();
+    $payload[IMailTemplatesConstants::status] = $request->getNiceStatus();
+    $payload[IMailTemplatesConstants::presentation_title] = $presentation->getTitle();
+    $payload[IMailTemplatesConstants::presentation_id] = $presentation->getId();
+    $payload[IMailTemplatesConstants::review_link] = sprintf(
+      Config::get("track_chairs.review_link"),
+      $summit->getRawSlug(),
+      $presentation->getSelectionPlanId(),
+    );
+    $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        foreach($new_category->getTrackChairs() as $chair){
-            $to_emails[] = $chair->getMember()->getEmail();
-        }
+    parent::__construct($summit, $payload, $template_identifier, implode(",", $to_emails));
+  }
 
-        $summit = $presentation->getSummit();
+  /**
+   * @return array
+   */
+  public static function getEmailTemplateSchema(): array {
+    $payload = parent::getEmailTemplateSchema();
 
-        $payload = [];
-        $payload[IMailTemplatesConstants::requester_fullname] = $requester->getFullName();
-        $payload[IMailTemplatesConstants::requester_email] = $requester->getEmail();
-        $payload[IMailTemplatesConstants::old_category] = $old_category->getTitle();
-        $payload[IMailTemplatesConstants::new_category] = $new_category->getTitle();
-        $payload[IMailTemplatesConstants::status] = $request->getNiceStatus();
-        $payload[IMailTemplatesConstants::presentation_title] = $presentation->getTitle();
-        $payload[IMailTemplatesConstants::presentation_id] = $presentation->getId();
-        $payload[IMailTemplatesConstants::review_link] = sprintf(Config::get("track_chairs.review_link"), $summit->getRawSlug(), $presentation->getSelectionPlanId());
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+    $payload[IMailTemplatesConstants::requester_email]["type"] = "string";
+    $payload[IMailTemplatesConstants::old_category]["type"] = "string";
+    $payload[IMailTemplatesConstants::new_category]["type"] = "string";
+    $payload[IMailTemplatesConstants::status]["type"] = "string";
+    $payload[IMailTemplatesConstants::presentation_title]["type"] = "string";
+    $payload[IMailTemplatesConstants::presentation_id]["type"] = "int";
+    $payload[IMailTemplatesConstants::review_link]["type"] = "string";
 
-        parent::__construct($summit, $payload, $template_identifier, implode(",", $to_emails));
-    }
-
-    /**
-     * @return array
-     */
-    public static function getEmailTemplateSchema(): array{
-
-        $payload = parent::getEmailTemplateSchema();
-
-        $payload[IMailTemplatesConstants::requester_email]['type'] = 'string';
-        $payload[IMailTemplatesConstants::old_category]['type'] = 'string';
-        $payload[IMailTemplatesConstants::new_category]['type'] = 'string';
-        $payload[IMailTemplatesConstants::status]['type'] = 'string';
-        $payload[IMailTemplatesConstants::presentation_title]['type'] = 'string';
-        $payload[IMailTemplatesConstants::presentation_id]['type'] = 'int';
-        $payload[IMailTemplatesConstants::review_link]['type'] = 'string';
-
-        return $payload;
-    }
+    return $payload;
+  }
 }

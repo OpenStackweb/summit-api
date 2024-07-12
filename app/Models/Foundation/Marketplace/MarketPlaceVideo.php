@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -19,77 +19,71 @@ use models\utils\SilverstripeBaseModel;
  * Class MarketPlaceVideo
  * @package App\Models\Foundation\Marketplace
  */
-class MarketPlaceVideo extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class MarketPlaceVideo extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     * @var string
-     */
-    private $description;
+  /**
+   * @ORM\Column(name="Description", type="string")
+   * @var string
+   */
+  private $description;
 
-    /**
-     * @ORM\Column(name="YouTubeID", type="string")
-     * @var string
-     */
-    private $youtube_id;
+  /**
+   * @ORM\Column(name="YouTubeID", type="string")
+   * @var string
+   */
+  private $youtube_id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="MarketPlaceVideoType", fetch="LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
-     * @var MarketPlaceVideoType
-     */
-    private $type;
+  /**
+   * @ORM\ManyToOne(targetEntity="MarketPlaceVideoType", fetch="LAZY")
+   * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
+   * @var MarketPlaceVideoType
+   */
+  private $type;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="videos", fetch="LAZY")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
-     * @var CompanyService
-     */
-    private $company_service;
+  /**
+   * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="videos", fetch="LAZY")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
+   * @var CompanyService
+   */
+  private $company_service;
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 
-    /**
-     * @return string
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
+  /**
+   * @return string
+   */
+  public function getDescription() {
+    return $this->description;
+  }
 
-    /**
-     * @return string
-     */
-    public function getYoutubeId()
-    {
-        return $this->youtube_id;
-    }
+  /**
+   * @return string
+   */
+  public function getYoutubeId() {
+    return $this->youtube_id;
+  }
 
-    /**
-     * @return MarketPlaceVideoType
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
+  /**
+   * @return MarketPlaceVideoType
+   */
+  public function getType() {
+    return $this->type;
+  }
 
-    /**
-     * @return CompanyService
-     */
-    public function getCompanyService()
-    {
-        return $this->company_service;
-    }
+  /**
+   * @return CompanyService
+   */
+  public function getCompanyService() {
+    return $this->company_service;
+  }
 }

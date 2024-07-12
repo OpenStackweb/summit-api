@@ -17,7 +17,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitEmailEventFlowRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitEmailEventFlowRepository extends IBaseRepository
-{
-
+interface ISummitEmailEventFlowRepository extends IBaseRepository {
 }

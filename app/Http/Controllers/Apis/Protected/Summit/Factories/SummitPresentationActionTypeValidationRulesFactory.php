@@ -16,24 +16,21 @@
  * Class SummitPresentationActionTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitPresentationActionTypeValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false)
-    {
-
-        if ($update) {
-            return [
-                'label' => 'sometimes|string|max:255',
-            ];
-        }
-
-        return [
-            'label' => 'required|string|max:255',
-        ];
+final class SummitPresentationActionTypeValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   */
+  public static function build(array $data, $update = false) {
+    if ($update) {
+      return [
+        "label" => "sometimes|string|max:255",
+      ];
     }
+
+    return [
+      "label" => "required|string|max:255",
+    ];
+  }
 }

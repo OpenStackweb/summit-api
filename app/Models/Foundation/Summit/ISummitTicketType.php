@@ -15,150 +15,149 @@ use models\utils\IEntity;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-interface ISummitTicketType extends IEntity
-{
-    /**
-     * @return int
-     */
-    public function getId();
+interface ISummitTicketType extends IEntity {
+  /**
+   * @return int
+   */
+  public function getId();
 
-    /**
-     * @return int
-     */
-    public function getIdentifier();
+  /**
+   * @return int
+   */
+  public function getIdentifier();
 
-    /**
-     * @return string
-     */
-    public function getName();
+  /**
+   * @return string
+   */
+  public function getName();
 
-    /**
-     * @return string
-     */
-    public function getDescription();
+  /**
+   * @return string
+   */
+  public function getDescription();
 
-    /**
-     * @return string
-     */
-    public function getExternalId(): ?string;
+  /**
+   * @return string
+   */
+  public function getExternalId(): ?string;
 
-    /**
-     * @return float
-     */
-    public function getCost(): float;
+  /**
+   * @return float
+   */
+  public function getCost(): float;
 
-    /**
-     * @return bool
-     */
-    public function canSell(): bool;
+  /**
+   * @return bool
+   */
+  public function canSell(): bool;
 
-    /**
-     * @return string
-     */
-    public function getCurrency(): ?string;
+  /**
+   * @return string
+   */
+  public function getCurrency(): ?string;
 
-    /**
-     * @return string
-     */
-    public function getCurrencySymbol(): ?string;
+  /**
+   * @return string
+   */
+  public function getCurrencySymbol(): ?string;
 
-    /**
-     * @return float
-     */
-    public function getFinalAmount(): float;
+  /**
+   * @return float
+   */
+  public function getFinalAmount(): float;
 
-    /**
-     * @return bool
-     */
-    public function isSoldOut(): bool;
+  /**
+   * @return bool
+   */
+  public function isSoldOut(): bool;
 
-    /**
-     * @return bool
-     */
-    public function isLive();
+  /**
+   * @return bool
+   */
+  public function isLive();
 
-    /**
-     * @return int
-     */
-    public function getBadgeTypeId();
+  /**
+   * @return int
+   */
+  public function getBadgeTypeId();
 
-    /**
-     * @return SummitBadgeType
-     */
-    public function getBadgeType(): ?SummitBadgeType;
+  /**
+   * @return SummitBadgeType
+   */
+  public function getBadgeType(): ?SummitBadgeType;
 
-    /**
-     * @return bool
-     */
-    public function hasBadgeType(): bool;
+  /**
+   * @return bool
+   */
+  public function hasBadgeType(): bool;
 
-    /**
-     * @return string
-     */
-    public function getAudience(): string;
+  /**
+   * @return string
+   */
+  public function getAudience(): string;
 
-    /**
-     * @return bool
-     */
-    public function isFree(): bool;
+  /**
+   * @return bool
+   */
+  public function isFree(): bool;
 
-    /**
-     * @return string
-     */
-    public function getSubType(): string;
+  /**
+   * @return string
+   */
+  public function getSubType(): string;
 
-    /**
-     * @return Summit|null
-     */
-    public function getSummit(): ?Summit;
+  /**
+   * @return Summit|null
+   */
+  public function getSummit(): ?Summit;
 
-    /**
-     * @return int
-     */
-    public function getSummitId(): int;
+  /**
+   * @return int
+   */
+  public function getSummitId(): int;
 
-    /**
-     * @return bool
-     */
-    public function hasSummit(): bool;
+  /**
+   * @return bool
+   */
+  public function hasSummit(): bool;
 
-    /**
-     * @return \DateTime
-     */
-    public function getCreated();
+  /**
+   * @return \DateTime
+   */
+  public function getCreated();
 
-    /**
-     * @return \DateTime
-     */
-    public function getLastEdited();
+  /**
+   * @return \DateTime
+   */
+  public function getLastEdited();
 
-    /**
-     * @return int
-     */
-    public function getQuantity2Sell(): int;
+  /**
+   * @return int
+   */
+  public function getQuantity2Sell(): int;
 
-    /**
-     * @return int
-     */
-    public function getMaxQuantityPerOrder(): int;
+  /**
+   * @return int
+   */
+  public function getMaxQuantityPerOrder(): int;
 
-    /**
-     * @return int
-     */
-    public function getQuantitySold(): int;
+  /**
+   * @return int
+   */
+  public function getQuantitySold(): int;
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getSalesStartDate(): ?\DateTime;
+  /**
+   * @return \DateTime|null
+   */
+  public function getSalesStartDate(): ?\DateTime;
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getSalesEndDate(): ?\DateTime;
+  /**
+   * @return \DateTime|null
+   */
+  public function getSalesEndDate(): ?\DateTime;
 
-    /**
-     * @return ArrayCollection|SummitTaxType[]
-     */
-    public function getAppliedTaxes();
+  /**
+   * @return ArrayCollection|SummitTaxType[]
+   */
+  public function getAppliedTaxes();
 }

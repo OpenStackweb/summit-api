@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\main\File;
 
 /**
@@ -21,54 +21,50 @@ use models\main\File;
  * @ORM\Table(name="SummitEventWithFile")
  * @package models\summit
  */
-class SummitEventWithFile extends SummitEvent
-{
-    /**
-     * @return string
-     */
-    public function getClassName():string{
-        return "SummitEventWithFile";
-    }
+class SummitEventWithFile extends SummitEvent {
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return "SummitEventWithFile";
+  }
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
-     * @ORM\JoinColumn(name="AttachmentID", referencedColumnName="ID")
-     * @var File
-     */
-    private $attachment;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
+   * @ORM\JoinColumn(name="AttachmentID", referencedColumnName="ID")
+   * @var File
+   */
+  private $attachment;
 
-    /**
-     * @return File
-     */
-    public function getAttachment()
-    {
-        return $this->attachment;
-    }
+  /**
+   * @return File
+   */
+  public function getAttachment() {
+    return $this->attachment;
+  }
 
-    /**
-     * @param File $attachment
-     */
-    public function setAttachment($attachment)
-    {
-        $this->attachment = $attachment;
-    }
+  /**
+   * @param File $attachment
+   */
+  public function setAttachment($attachment) {
+    $this->attachment = $attachment;
+  }
 
-    /**
-     * @return bool
-     */
-    public function hasAttachment(){
-        return $this->getAttachmentId() > 0;
-    }
+  /**
+   * @return bool
+   */
+  public function hasAttachment() {
+    return $this->getAttachmentId() > 0;
+  }
 
-    /**
-     * @return int
-     */
-    public function getAttachmentId(){
-        try{
-            return !is_null($this->attachment)?$this->attachment->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getAttachmentId() {
+    try {
+      return !is_null($this->attachment) ? $this->attachment->getId() : 0;
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 }

@@ -19,26 +19,25 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitLeadReportSettingSerializer
  * @package ModelSerializers
  */
-class SummitLeadReportSettingSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Columns'                          => 'columns:json_string',
-        'SponsorId'                        => 'sponsor_id:json_int',
-        'SummitId'                         => 'summit_id:json_int',
-    ];
+class SummitLeadReportSettingSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Columns" => "columns:json_string",
+    "SponsorId" => "sponsor_id:json_int",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'sponsor' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'sponsor_id',
-            'getter' => 'getSponsor',
-            'has' => 'hasSponsor'
-        ],
-        'summit' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'summit_id',
-            'getter' => 'getSummit',
-            'has' => 'hasSummit'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "sponsor" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "sponsor_id",
+      "getter" => "getSponsor",
+      "has" => "hasSponsor",
+    ],
+    "summit" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "summit_id",
+      "getter" => "getSummit",
+      "has" => "hasSummit",
+    ],
+  ];
 }

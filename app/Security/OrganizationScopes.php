@@ -16,8 +16,7 @@
  * Class OrganizationScopes
  * @package App\Security
  */
-final class OrganizationScopes
-{
-    const ReadOrganizationData     = '%s/organizations/read';
-    const WriteOrganizationData     = '%s/organizations/write';
+final class OrganizationScopes {
+  const ReadOrganizationData = "%s/organizations/read";
+  const WriteOrganizationData = "%s/organizations/write";
 }

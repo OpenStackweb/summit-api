@@ -18,52 +18,54 @@ use ModelSerializers\SerializerRegistry;
  * Class TrackTagGroupAllowedTagSerializer
  * @package App\ModelSerializers\Summit\TrackTagGroups
  */
-final class TrackTagGroupAllowedTagSerializer extends AbstractSerializer
-{
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Default' => 'is_default:json_boolean',
-        'TrackTagGroupId' => 'track_tag_group_id:json_int',
-        'TagId' => 'tag_id:json_int',
-        'SummitId' => 'summit_id:json_int',
-    ];
+final class TrackTagGroupAllowedTagSerializer extends AbstractSerializer {
+  protected static $array_mappings = [
+    "Id" => "id:json_int",
+    "Default" => "is_default:json_boolean",
+    "TrackTagGroupId" => "track_tag_group_id:json_int",
+    "TagId" => "tag_id:json_int",
+    "SummitId" => "summit_id:json_int",
+  ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $allowed_tag = $this->object;
-        if (!$allowed_tag instanceof TrackTagGroupAllowedTag) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (!empty($expand)) {
-            $relations = explode(',', $expand);
-            foreach ($relations as $relation) {
-                switch (trim($relation)) {
-
-                    case 'track_tag_group':{
-                        unset($values['track_tag_group_id']);
-                        $values['track_tag_group'] = SerializerRegistry::getInstance()
-                            ->getSerializer($allowed_tag->getTrackTagGroup())
-                            ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                    }
-                    break;
-                    case 'tag':{
-                        unset($values['tag_id']);
-                        $values['tag'] = SerializerRegistry::getInstance()
-                            ->getSerializer($allowed_tag->getTag())
-                            ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                    }
-                    break;
-                }
-            }
-        }
-
-        return $values;
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $allowed_tag = $this->object;
+    if (!$allowed_tag instanceof TrackTagGroupAllowedTag) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+
+    if (!empty($expand)) {
+      $relations = explode(",", $expand);
+      foreach ($relations as $relation) {
+        switch (trim($relation)) {
+          case "track_tag_group":
+            unset($values["track_tag_group_id"]);
+            $values["track_tag_group"] = SerializerRegistry::getInstance()
+              ->getSerializer($allowed_tag->getTrackTagGroup())
+              ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            break;
+          case "tag":
+            unset($values["tag_id"]);
+            $values["tag"] = SerializerRegistry::getInstance()
+              ->getSerializer($allowed_tag->getTag())
+              ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+            break;
+        }
+      }
+    }
+
+    return $values;
+  }
 }

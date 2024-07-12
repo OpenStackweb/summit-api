@@ -26,94 +26,101 @@ use models\exceptions\ValidationException;
  * Class SummitRSVPTemplateQuestionValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitRSVPTemplateQuestionValidationRulesFactory
-{
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     * @throws ValidationException
-     */
-    public static function build(array $data, $update = false){
-
-        if(!isset($data['class_name']))
-            throw new ValidationException('class_name is required');
-
-        $base_rules = [
-            'class_name' => sprintf('required|in:%s',  implode(",", SummitRSVPTemplateQuestionConstants::$valid_class_names))
-        ];
-
-        if($update){
-            $base_rules = array_merge($base_rules, [
-                'name'          => 'sometimes|alpha_dash|max:255',
-                'label'         => 'sometimes|string',
-                'is_mandatory'  => 'sometimes|boolean',
-                'order'         => 'sometimes|integer|min:1',
-                'is_read_only;' => 'sometimes|boolean',
-            ]);
-        }
-        else
-        {
-           $base_rules = array_merge($base_rules, [
-               'name'          => 'required|alpha_dash|max:255',
-               'label'         => 'required|string',
-               'is_mandatory'  => 'sometimes|boolean',
-               'is_read_only;' => 'sometimes|boolean',
-           ]);
-        }
-
-        switch($data['class_name']){
-            case RSVPMemberEmailQuestionTemplate::ClassName: {
-               return $base_rules;
-            }
-                break;
-            case RSVPMemberFirstNameQuestionTemplate::ClassName: {
-                return $base_rules;
-            }
-            break;
-            case RSVPMemberLastNameQuestionTemplate::ClassName: {
-                return $base_rules;
-            }
-            break;
-            case RSVPTextBoxQuestionTemplate::ClassName: {
-                return array_merge($base_rules, ['initial_value' => 'string|sometimes']);
-            }
-            break;
-            case RSVPTextAreaQuestionTemplate::ClassName: {
-                return array_merge($base_rules, ['initial_value' => 'string|sometimes']);
-            }
-            break;
-            case RSVPCheckBoxListQuestionTemplate::ClassName: {
-                return array_merge($base_rules, SummitRSVPMultiValueQuestionTemplateValidationRulesFactory::build($data, $update));
-            }
-              break;
-            case RSVPRadioButtonListQuestionTemplate::ClassName: {
-                return array_merge($base_rules, SummitRSVPMultiValueQuestionTemplateValidationRulesFactory::build($data, $update));
-            }
-            break;
-            case RSVPDropDownQuestionTemplate::ClassName: {
-                return array_merge
-                (
-                    $base_rules,
-                    SummitRSVPMultiValueQuestionTemplateValidationRulesFactory::build($data, $update),
-                    [
-                        'is_multiselect'      => 'sometimes|boolean',
-                        'is_country_selector' => 'sometimes|boolean',
-                        'use_chosen_plugin'   => 'sometimes|boolean',
-                    ]
-                );
-            }
-            break;
-            case RSVPLiteralContentQuestionTemplate::ClassName: {
-                return array_merge($base_rules, SummitRSVPLiteralContentQuestionTemplateValidationRulesFactory::build($data, $update));
-            }
-            break;
-            default:{
-                throw new ValidationException(sprintf('invalid class_name param (%s)', implode(",", SummitRSVPTemplateQuestionConstants::$valid_class_names)));
-            }
-            break;
-        }
-
-        return [];
+final class SummitRSVPTemplateQuestionValidationRulesFactory {
+  /**
+   * @param array $data
+   * @param bool $update
+   * @return array
+   * @throws ValidationException
+   */
+  public static function build(array $data, $update = false) {
+    if (!isset($data["class_name"])) {
+      throw new ValidationException("class_name is required");
     }
+
+    $base_rules = [
+      "class_name" => sprintf(
+        "required|in:%s",
+        implode(",", SummitRSVPTemplateQuestionConstants::$valid_class_names),
+      ),
+    ];
+
+    if ($update) {
+      $base_rules = array_merge($base_rules, [
+        "name" => "sometimes|alpha_dash|max:255",
+        "label" => "sometimes|string",
+        "is_mandatory" => "sometimes|boolean",
+        "order" => "sometimes|integer|min:1",
+        "is_read_only;" => "sometimes|boolean",
+      ]);
+    } else {
+      $base_rules = array_merge($base_rules, [
+        "name" => "required|alpha_dash|max:255",
+        "label" => "required|string",
+        "is_mandatory" => "sometimes|boolean",
+        "is_read_only;" => "sometimes|boolean",
+      ]);
+    }
+
+    switch ($data["class_name"]) {
+      case RSVPMemberEmailQuestionTemplate::ClassName:
+        return $base_rules;
+        break;
+      case RSVPMemberFirstNameQuestionTemplate::ClassName:
+        return $base_rules;
+        break;
+      case RSVPMemberLastNameQuestionTemplate::ClassName:
+        return $base_rules;
+        break;
+      case RSVPTextBoxQuestionTemplate::ClassName:
+        return array_merge($base_rules, [
+          "initial_value" => "string|sometimes",
+        ]);
+        break;
+      case RSVPTextAreaQuestionTemplate::ClassName:
+        return array_merge($base_rules, [
+          "initial_value" => "string|sometimes",
+        ]);
+        break;
+      case RSVPCheckBoxListQuestionTemplate::ClassName:
+        return array_merge(
+          $base_rules,
+          SummitRSVPMultiValueQuestionTemplateValidationRulesFactory::build($data, $update),
+        );
+        break;
+      case RSVPRadioButtonListQuestionTemplate::ClassName:
+        return array_merge(
+          $base_rules,
+          SummitRSVPMultiValueQuestionTemplateValidationRulesFactory::build($data, $update),
+        );
+        break;
+      case RSVPDropDownQuestionTemplate::ClassName:
+        return array_merge(
+          $base_rules,
+          SummitRSVPMultiValueQuestionTemplateValidationRulesFactory::build($data, $update),
+          [
+            "is_multiselect" => "sometimes|boolean",
+            "is_country_selector" => "sometimes|boolean",
+            "use_chosen_plugin" => "sometimes|boolean",
+          ],
+        );
+        break;
+      case RSVPLiteralContentQuestionTemplate::ClassName:
+        return array_merge(
+          $base_rules,
+          SummitRSVPLiteralContentQuestionTemplateValidationRulesFactory::build($data, $update),
+        );
+        break;
+      default:
+        throw new ValidationException(
+          sprintf(
+            "invalid class_name param (%s)",
+            implode(",", SummitRSVPTemplateQuestionConstants::$valid_class_names),
+          ),
+        );
+        break;
+    }
+
+    return [];
+  }
 }

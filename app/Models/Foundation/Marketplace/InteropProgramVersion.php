@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -20,49 +20,42 @@ use models\utils\SilverstripeBaseModel;
  * Class InteropProgramVersion
  * @package App\Models\Foundation\Marketplace
  */
-class InteropProgramVersion extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="Name", type="string")
-     * @var string
-     */
-    private $name;
+class InteropProgramVersion extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="Name", type="string")
+   * @var string
+   */
+  private $name;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="InteropCapability", cascade={"persist"})
-     * @ORM\JoinTable(name="InteropProgramVersion_Capabilities",
-     *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="InteropCapabilityID", referencedColumnName="ID")}
-     *      )
-     * @var SupportChannelType[]
-     */
-    private $capabilities;
+  /**
+   * @ORM\ManyToMany(targetEntity="InteropCapability", cascade={"persist"})
+   * @ORM\JoinTable(name="InteropProgramVersion_Capabilities",
+   *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="InteropCapabilityID", referencedColumnName="ID")}
+   *      )
+   * @var SupportChannelType[]
+   */
+  private $capabilities;
 
+  /**
+   * @ORM\ManyToMany(targetEntity="InteropDesignatedSection", cascade={"persist"})
+   * @ORM\JoinTable(name="InteropProgramVersion_DesignatedSections",
+   *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
+   *      inverseJoinColumns={@ORM\JoinColumn(name="InteropDesignatedSectionID", referencedColumnName="ID")}
+   *      )
+   * @var InteropDesignatedSection[]
+   */
+  private $designated_sections;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="InteropDesignatedSection", cascade={"persist"})
-     * @ORM\JoinTable(name="InteropProgramVersion_DesignatedSections",
-     *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="InteropDesignatedSectionID", referencedColumnName="ID")}
-     *      )
-     * @var InteropDesignatedSection[]
-     */
-    private $designated_sections;
+  public function __construct() {
+    $this->capabilities = new ArrayCollection();
+    $this->designated_sections = new ArrayCollection();
+  }
 
-    public function __construct()
-    {
-        $this->capabilities        = new ArrayCollection();
-        $this->designated_sections = new ArrayCollection();
-    }
-
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-
-
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->name;
+  }
 }

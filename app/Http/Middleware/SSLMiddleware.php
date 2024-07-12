@@ -21,13 +21,11 @@ use Illuminate\Support\Facades\Request;
  * Class SSLMiddleware
  * @package App\Http\Middleware
  */
-final class SSLMiddleware
-{
-    public function handle($request, Closure $next)
-    {
-        if (!Request::secure() && Config::get("server.ssl_enabled", false)) {
-            return Redirect::secure(Request::getRequestUri());
-        }
-        return $next($request);
+final class SSLMiddleware {
+  public function handle($request, Closure $next) {
+    if (!Request::secure() && Config::get("server.ssl_enabled", false)) {
+      return Redirect::secure(Request::getRequestUri());
     }
+    return $next($request);
+  }
 }

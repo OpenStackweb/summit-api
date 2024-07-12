@@ -17,40 +17,44 @@ use Illuminate\Support\Facades\Request;
  * Trait ValidateEventUri
  * @package App\Http\Controllers
  */
-trait ValidateEventUri
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    private function validateEventUri(array $payload){
-
-        if(!isset($payload['event_uri']) || empty($payload['event_uri'])){
-            Log::debug("validateEventUri: event uri not set , trying to get from Referer");
-            $payload['event_uri'] = Request::instance()->header('Referer', null);
-        }
-
-        if(isset($payload['event_uri']) && !empty($payload['event_uri'])){
-            $allowed_return_uris = $this->resource_server_context->getAllowedReturnUris();
-            if(!empty($allowed_return_uris)){
-                Log::debug(sprintf("validateEventUri: event_uri %s allowed_return_uris %s", $payload['event_uri'], $allowed_return_uris));
-                // validate the event_uri against the allowed returned uris of the current client
-                // check using host name
-                $test_host         = parse_url($payload['event_uri'], PHP_URL_HOST);
-                $valid_event_uri  = false;
-                foreach(explode(",", $allowed_return_uris) as $allowed_uri){
-                    if($test_host == parse_url($allowed_uri, PHP_URL_HOST)){
-                        $valid_event_uri = true;
-                        Log::debug(sprintf("validateEventUri: valid host %s", $test_host));
-                        break;
-                    }
-                }
-                if(!$valid_event_uri){
-                    unset($payload['event_uri'] );
-                }
-            }
-        }
-
-        return $payload;
+trait ValidateEventUri {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  private function validateEventUri(array $payload) {
+    if (!isset($payload["event_uri"]) || empty($payload["event_uri"])) {
+      Log::debug("validateEventUri: event uri not set , trying to get from Referer");
+      $payload["event_uri"] = Request::instance()->header("Referer", null);
     }
+
+    if (isset($payload["event_uri"]) && !empty($payload["event_uri"])) {
+      $allowed_return_uris = $this->resource_server_context->getAllowedReturnUris();
+      if (!empty($allowed_return_uris)) {
+        Log::debug(
+          sprintf(
+            "validateEventUri: event_uri %s allowed_return_uris %s",
+            $payload["event_uri"],
+            $allowed_return_uris,
+          ),
+        );
+        // validate the event_uri against the allowed returned uris of the current client
+        // check using host name
+        $test_host = parse_url($payload["event_uri"], PHP_URL_HOST);
+        $valid_event_uri = false;
+        foreach (explode(",", $allowed_return_uris) as $allowed_uri) {
+          if ($test_host == parse_url($allowed_uri, PHP_URL_HOST)) {
+            $valid_event_uri = true;
+            Log::debug(sprintf("validateEventUri: valid host %s", $test_host));
+            break;
+          }
+        }
+        if (!$valid_event_uri) {
+          unset($payload["event_uri"]);
+        }
+      }
+    }
+
+    return $payload;
+  }
 }

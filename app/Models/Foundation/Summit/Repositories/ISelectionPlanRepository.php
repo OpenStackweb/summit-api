@@ -22,13 +22,16 @@ use utils\PagingResponse;
  * Interface ISelectionPlanRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISelectionPlanRepository extends IBaseRepository
-{
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllAllowedMembersByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse;
+interface ISelectionPlanRepository extends IBaseRepository {
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getAllAllowedMembersByPage(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse;
 }

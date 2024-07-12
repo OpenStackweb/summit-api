@@ -19,23 +19,20 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * @package App\Repositories\Summit
  */
 final class DoctrineDefaultSummitEventTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements IDefaultSummitEventTypeRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements IDefaultSummitEventTypeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return DefaultSummitEventType::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return DefaultSummitEventType::class;
-    }
-
-    /**
-     * @param string $type
-     * @return null|DefaultSummitEventType
-     */
-    public function getByType($type){
-        return $this->findOneBy(['type' => $type]);
-    }
+  /**
+   * @param string $type
+   * @return null|DefaultSummitEventType
+   */
+  public function getByType($type) {
+    return $this->findOneBy(["type" => $type]);
+  }
 }

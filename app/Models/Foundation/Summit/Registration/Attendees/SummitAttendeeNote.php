@@ -23,121 +23,111 @@ use Doctrine\ORM\Mapping as ORM;
  * Class SummitAttendeeNote
  * @package models\summit
  */
-class SummitAttendeeNote extends SilverstripeBaseModel
-{
-    use One2ManyPropertyTrait;
+class SummitAttendeeNote extends SilverstripeBaseModel {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getAuthorId' => 'author',
-        'getOwnerId'  => 'owner',
-        'getTicketId' => 'ticket',
-    ];
+  protected $getIdMappings = [
+    "getAuthorId" => "author",
+    "getOwnerId" => "owner",
+    "getTicketId" => "ticket",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasAuthor' => 'author',
-        'hasOwner'  => 'owner',
-        'hasTicket' => 'ticket',
-    ];
+  protected $hasPropertyMappings = [
+    "hasAuthor" => "author",
+    "hasOwner" => "owner",
+    "hasTicket" => "ticket",
+  ];
 
-    /**
-     * @ORM\Column(name="Content", type="string")
-     * @var string
-     */
-    private $content;
+  /**
+   * @ORM\Column(name="Content", type="string")
+   * @var string
+   */
+  private $content;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="AuthorID", referencedColumnName="ID", nullable=true)
-     * @var Member
-     */
-    private $author;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="AuthorID", referencedColumnName="ID", nullable=true)
+   * @var Member
+   */
+  private $author;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendee", inversedBy="notes")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=false)
-     * @var SummitAttendee
-     */
-    private $owner;
+  /**
+   * @ORM\ManyToOne(targetEntity="SummitAttendee", inversedBy="notes")
+   * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=false)
+   * @var SummitAttendee
+   */
+  private $owner;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="notes")
-     * @ORM\JoinColumn(name="TicketID", referencedColumnName="ID", nullable=true)
-     * @var SummitAttendeeTicket
-     */
-    private $ticket;
+  /**
+   * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="notes")
+   * @ORM\JoinColumn(name="TicketID", referencedColumnName="ID", nullable=true)
+   * @var SummitAttendeeTicket
+   */
+  private $ticket;
 
-    /**
-     * @param string $content
-     * @param SummitAttendee $owner
-     */
-    public function __construct(string $content, SummitAttendee $owner)
-    {
-        parent::__construct();
-        $this->content = trim($content);
-        $this->owner = $owner;
-    }
+  /**
+   * @param string $content
+   * @param SummitAttendee $owner
+   */
+  public function __construct(string $content, SummitAttendee $owner) {
+    parent::__construct();
+    $this->content = trim($content);
+    $this->owner = $owner;
+  }
 
-    /**
-     * @param string $content
-     */
-    public function setContent(string $content): void
-    {
-        $this->content = $content;
-    }
+  /**
+   * @param string $content
+   */
+  public function setContent(string $content): void {
+    $this->content = $content;
+  }
 
-    /**
-     * @return string
-     */
-    public function getContent(): string
-    {
-        return $this->content;
-    }
+  /**
+   * @return string
+   */
+  public function getContent(): string {
+    return $this->content;
+  }
 
-    /**
-     * @return Member|null
-     */
-    public function getAuthor(): ?Member
-    {
-        return $this->author;
-    }
+  /**
+   * @return Member|null
+   */
+  public function getAuthor(): ?Member {
+    return $this->author;
+  }
 
-    /**
-     * @param Member|null $author
-     */
-    public function setAuthor(?Member $author): void
-    {
-        $this->author = $author;
-    }
+  /**
+   * @param Member|null $author
+   */
+  public function setAuthor(?Member $author): void {
+    $this->author = $author;
+  }
 
-    /**
-     * @return SummitAttendee
-     */
-    public function getOwner(): SummitAttendee
-    {
-        return $this->owner;
-    }
+  /**
+   * @return SummitAttendee
+   */
+  public function getOwner(): SummitAttendee {
+    return $this->owner;
+  }
 
-    /**
-     * @param SummitAttendee $owner
-     */
-    public function setOwner(SummitAttendee $owner): void
-    {
-        $this->owner = $owner;
-    }
+  /**
+   * @param SummitAttendee $owner
+   */
+  public function setOwner(SummitAttendee $owner): void {
+    $this->owner = $owner;
+  }
 
-    /**
-     * @return SummitAttendeeTicket|null
-     */
-    public function getTicket(): ?SummitAttendeeTicket
-    {
-        return $this->ticket;
-    }
+  /**
+   * @return SummitAttendeeTicket|null
+   */
+  public function getTicket(): ?SummitAttendeeTicket {
+    return $this->ticket;
+  }
 
-    /**
-     * @param SummitAttendeeTicket|null $ticket
-     */
-    public function setTicket(?SummitAttendeeTicket $ticket): void
-    {
-        $this->ticket = $ticket;
-    }
+  /**
+   * @param SummitAttendeeTicket|null $ticket
+   */
+  public function setTicket(?SummitAttendeeTicket $ticket): void {
+    $this->ticket = $ticket;
+  }
 }

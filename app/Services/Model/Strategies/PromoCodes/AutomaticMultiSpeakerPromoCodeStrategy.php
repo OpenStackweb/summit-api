@@ -27,77 +27,81 @@ use services\model\ISummitPromoCodeService;
  * Class AutomaticMultiSpeakerPromoCodeStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
-{
-    /**
-     * @var IPromoCodeGenerator
-     */
-    protected $code_generator;
+final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy {
+  /**
+   * @var IPromoCodeGenerator
+   */
+  protected $code_generator;
 
-    /**
-     * @var Summit
-     */
-    private $summit;
+  /**
+   * @var Summit
+   */
+  private $summit;
 
-    /**
-     * @var ISummitPromoCodeService
-     */
-    private $service;
+  /**
+   * @var ISummitPromoCodeService
+   */
+  private $service;
 
-    /**
-     * @var ISummitRegistrationPromoCodeRepository
-     */
-    private $repository;
+  /**
+   * @var ISummitRegistrationPromoCodeRepository
+   */
+  private $repository;
 
-    /**
-     * @var array
-     */
-    private $data;
+  /**
+   * @var array
+   */
+  private $data;
 
-    /**
-     * PromoCodeStrategy constructor.
-     * @param Summit $summit
-     * @param ISummitPromoCodeService $service
-     * @param ISummitRegistrationPromoCodeRepository $repository
-     * @param IPromoCodeGenerator $code_generator
-     * @param array $data
-     */
-    public function __construct(Summit $summit,
-                                ISummitPromoCodeService $service,
-                                ISummitRegistrationPromoCodeRepository $repository,
-                                IPromoCodeGenerator $code_generator,
-                                array $data)
-    {
-        $this->summit = $summit;
-        $this->service = $service;
-        $this->repository = $repository;
-        $this->code_generator = $code_generator;
-        $this->data = $data;
+  /**
+   * PromoCodeStrategy constructor.
+   * @param Summit $summit
+   * @param ISummitPromoCodeService $service
+   * @param ISummitRegistrationPromoCodeRepository $repository
+   * @param IPromoCodeGenerator $code_generator
+   * @param array $data
+   */
+  public function __construct(
+    Summit $summit,
+    ISummitPromoCodeService $service,
+    ISummitRegistrationPromoCodeRepository $repository,
+    IPromoCodeGenerator $code_generator,
+    array $data,
+  ) {
+    $this->summit = $summit;
+    $this->service = $service;
+    $this->repository = $repository;
+    $this->code_generator = $code_generator;
+    $this->data = $data;
+  }
+
+  /**
+   * @param PresentationSpeaker $speaker
+   * @return SummitRegistrationPromoCode|null
+   * @throws EntityNotFoundException
+   * @throws ValidationException|\Exception
+   */
+  public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
+    Log::debug(
+      sprintf("AutomaticMultiSpeakerPromoCodeStrategy::getPromoCode speaker %s", $speaker->getId()),
+    );
+    $code = null;
+    do {
+      $code = $this->code_generator->generate($this->summit);
+    } while ($this->repository->getByCode($code) != null);
+
+    $promo_code_spec = $this->data["promo_code_spec"];
+    $promo_code_spec["code"] = $code;
+    $promo_code_spec["speaker_ids"] = [$speaker->getId()];
+
+    $promo_code = $this->service->addPromoCode($this->summit, $promo_code_spec);
+
+    if (is_null($promo_code)) {
+      throw new ValidationException(
+        "Cannot build a valid promo code with the given specification.",
+      );
     }
 
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return SummitRegistrationPromoCode|null
-     * @throws EntityNotFoundException
-     * @throws ValidationException|\Exception
-     */
-    public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
-        Log::debug(sprintf("AutomaticMultiSpeakerPromoCodeStrategy::getPromoCode speaker %s", $speaker->getId()));
-        $code = null;
-        do {
-            $code = $this->code_generator->generate($this->summit);
-        } while($this->repository->getByCode($code) != null);
-
-        $promo_code_spec = $this->data["promo_code_spec"];
-        $promo_code_spec["code"] = $code;
-        $promo_code_spec["speaker_ids"] = [$speaker->getId()];
-
-        $promo_code = $this->service->addPromoCode($this->summit, $promo_code_spec);
-
-        if (is_null($promo_code)) {
-            throw new ValidationException('Cannot build a valid promo code with the given specification.');
-        }
-
-        return $promo_code;
-    }
+    return $promo_code;
+  }
 }

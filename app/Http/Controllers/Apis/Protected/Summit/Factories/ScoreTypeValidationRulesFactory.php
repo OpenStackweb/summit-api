@@ -16,30 +16,27 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class ScoreTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class ScoreTypeValidationRulesFactory extends AbstractValidationRulesFactory
-{
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'name'          => 'required|string',
-            'description'   => 'required|string',
-        ];
-    }
+final class ScoreTypeValidationRulesFactory extends AbstractValidationRulesFactory {
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "name" => "required|string",
+      "description" => "required|string",
+    ];
+  }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'score'         => 'sometimes|integer|min:1',
-            'name'          => 'sometimes|string',
-            'description'   => 'sometimes|string',
-        ];
-    }
+  /**
+   * @param array $payload
+   * @return array
+   */
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "score" => "sometimes|integer|min:1",
+      "name" => "sometimes|string",
+      "description" => "sometimes|string",
+    ];
+  }
 }

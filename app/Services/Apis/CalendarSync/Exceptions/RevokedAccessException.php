@@ -17,7 +17,5 @@ use Exception;
  * Class RevokedAccessException
  * @package App\Services\Apis\CalendarSync\Exceptions
  */
-final class RevokedAccessException extends Exception
-{
-
+final class RevokedAccessException extends Exception {
 }

@@ -29,85 +29,88 @@ use utils\PagingResponse;
  * Class RetrieveSummitEventsBySummitStrategy
  * @package App\Http\Controllers
  */
-class RetrieveAllSummitEventsBySummitStrategy extends RetrieveSummitEventsStrategy
-{
-    /**
-     * @var ISummitRepository
-     */
-    protected $summit_repository;
+class RetrieveAllSummitEventsBySummitStrategy extends RetrieveSummitEventsStrategy {
+  /**
+   * @var ISummitRepository
+   */
+  protected $summit_repository;
 
-    /**
-     * @var Summit
-     */
-    protected $summit;
+  /**
+   * @var Summit
+   */
+  protected $summit;
 
-    /**
-     * @var IResourceServerContext
-     */
-    protected $resource_server_context;
+  /**
+   * @var IResourceServerContext
+   */
+  protected $resource_server_context;
 
-    /**
-     * @var ISummitEventRepository
-     */
-    protected $events_repository;
+  /**
+   * @var ISummitEventRepository
+   */
+  protected $events_repository;
 
-    /**
-     * RetrieveAllSummitEventsBySummitStrategy constructor.
-     * @param ISummitRepository $summit_repository
-     * @param ISummitEventRepository $events_repository
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        ISummitRepository $summit_repository,
-        ISummitEventRepository $events_repository,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        $this->events_repository       = $events_repository;
-        $this->summit_repository       = $summit_repository;
-        $this->resource_server_context = $resource_server_context;
+  /**
+   * RetrieveAllSummitEventsBySummitStrategy constructor.
+   * @param ISummitRepository $summit_repository
+   * @param ISummitEventRepository $events_repository
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    ISummitRepository $summit_repository,
+    ISummitEventRepository $events_repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    $this->events_repository = $events_repository;
+    $this->summit_repository = $summit_repository;
+    $this->resource_server_context = $resource_server_context;
+  }
+
+  /**
+   * @param array $params
+   * @return PagingResponse
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function getEvents(array $params = []) {
+    $summit_id = isset($params["summit_id"]) ? $params["summit_id"] : 0;
+    $this->summit = SummitFinderStrategyFactory::build(
+      $this->summit_repository,
+      $this->resource_server_context,
+    )->find($summit_id);
+    if (is_null($this->summit)) {
+      throw new EntityNotFoundException("summit not found!");
     }
 
-    /**
-     * @param array $params
-     * @return PagingResponse
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function getEvents(array $params = [])
-    {
-        $summit_id    = isset($params['summit_id'])? $params['summit_id'] : 0;
-        $this->summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($this->summit)) throw new EntityNotFoundException('summit not found!');
+    return parent::getEvents($params);
+  }
 
-        return parent::getEvents($params);
+  /**
+   * @return null|Filter
+   */
+  protected function buildFilter() {
+    $filter = parent::buildFilter();
+
+    if (is_null($filter)) {
+      $filter = new Filter([]);
     }
+    $filter->addFilterCondition(
+      FilterParser::buildFilter("summit_id", "==", $this->summit->getId()),
+    );
+    return $filter;
+  }
 
-    /**
-     * @return null|Filter
-     */
-    protected function buildFilter(){
-        $filter = parent::buildFilter();
-
-        if(is_null($filter))
-        {
-            $filter = new Filter([]);
-        }
-        $filter->addFilterCondition(FilterParser::buildFilter('summit_id','==',$this->summit->getId()));
-        return $filter;
-    }
-
-
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
-    {
-        return $this->events_repository->getAllByPage($paging_info, $filter, $order);
-    }
-
+  /**
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function retrieveEventsFromSource(
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ): PagingResponse {
+    return $this->events_repository->getAllByPage($paging_info, $filter, $order);
+  }
 }

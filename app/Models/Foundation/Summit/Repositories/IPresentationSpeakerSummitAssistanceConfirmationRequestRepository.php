@@ -24,28 +24,37 @@ use utils\PagingResponse;
  * Interface IPresentationSpeakerSummitAssistanceConfirmationRequestRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface IPresentationSpeakerSummitAssistanceConfirmationRequestRepository
-    extends IBaseRepository
-{
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+interface IPresentationSpeakerSummitAssistanceConfirmationRequestRepository extends
+  IBaseRepository {
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param Summit $summit
-     * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
-     */
-    public function getBySpeaker(PresentationSpeaker $speaker, Summit $summit):?PresentationSpeakerSummitAssistanceConfirmationRequest;
+  /**
+   * @param PresentationSpeaker $speaker
+   * @param Summit $summit
+   * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
+   */
+  public function getBySpeaker(
+    PresentationSpeaker $speaker,
+    Summit $summit,
+  ): ?PresentationSpeakerSummitAssistanceConfirmationRequest;
 
-    /**
-     * @param PresentationSpeakerSummitAssistanceConfirmationRequest $request
-     * @return bool
-     */
-    public function existByHash(PresentationSpeakerSummitAssistanceConfirmationRequest $request):bool;
+  /**
+   * @param PresentationSpeakerSummitAssistanceConfirmationRequest $request
+   * @return bool
+   */
+  public function existByHash(
+    PresentationSpeakerSummitAssistanceConfirmationRequest $request,
+  ): bool;
 }

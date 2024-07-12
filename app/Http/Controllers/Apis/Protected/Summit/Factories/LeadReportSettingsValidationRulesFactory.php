@@ -16,20 +16,16 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * Class LeadReportSettingsValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class LeadReportSettingsValidationRulesFactory extends AbstractValidationRulesFactory
-{
+final class LeadReportSettingsValidationRulesFactory extends AbstractValidationRulesFactory {
+  public static function buildForAdd(array $payload = []): array {
+    return [
+      "allowed_columns" => "required|lead_report_settings_dto_array",
+    ];
+  }
 
-    public static function buildForAdd(array $payload = []): array
-    {
-        return [
-            'allowed_columns' => 'required|lead_report_settings_dto_array',
-        ];
-    }
-
-    public static function buildForUpdate(array $payload = []): array
-    {
-        return [
-            'allowed_columns' => 'required|lead_report_settings_dto_array',
-        ];
-    }
+  public static function buildForUpdate(array $payload = []): array {
+    return [
+      "allowed_columns" => "required|lead_report_settings_dto_array",
+    ];
+  }
 }

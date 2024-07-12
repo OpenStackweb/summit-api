@@ -16,15 +16,14 @@ use models\utils\IBaseRepository;
  * Interface IChatTeamInvitationRepository
  * @package models\main
  */
-interface IChatTeamInvitationRepository extends IBaseRepository
-{
-    /**
-     * @param int $invitee_id
-     * @return ChatTeamInvitation[]
-     */
-    function getInvitationsByInvitee($invitee_id);
+interface IChatTeamInvitationRepository extends IBaseRepository {
+  /**
+   * @param int $invitee_id
+   * @return ChatTeamInvitation[]
+   */
+  function getInvitationsByInvitee($invitee_id);
 
-    function getPendingInvitationsByInvitee($invitee_id);
+  function getPendingInvitationsByInvitee($invitee_id);
 
-    function getAcceptedInvitationsByInvitee($invitee_id);
+  function getAcceptedInvitationsByInvitee($invitee_id);
 }

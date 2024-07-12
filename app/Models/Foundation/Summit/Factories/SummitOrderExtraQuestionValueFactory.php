@@ -16,32 +16,36 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
  * Class ExtraQuestionTypeValueFactory
  * @package App\Models\Foundation\Factories
  */
-final class ExtraQuestionTypeValueFactory
-{
-    /**
-     * @param array $data
-     * @return ExtraQuestionTypeValue
-     */
-    public static function build(array $data):ExtraQuestionTypeValue{
-        return self::populate(new ExtraQuestionTypeValue, $data);
+final class ExtraQuestionTypeValueFactory {
+  /**
+   * @param array $data
+   * @return ExtraQuestionTypeValue
+   */
+  public static function build(array $data): ExtraQuestionTypeValue {
+    return self::populate(new ExtraQuestionTypeValue(), $data);
+  }
+
+  /**
+   * @param ExtraQuestionTypeValue $value
+   * @param array $data
+   * @return ExtraQuestionTypeValue
+   */
+  public static function populate(
+    ExtraQuestionTypeValue $value,
+    array $data,
+  ): ExtraQuestionTypeValue {
+    if (isset($data["label"])) {
+      $value->setLabel(trim($data["label"]));
     }
 
-    /**
-     * @param ExtraQuestionTypeValue $value
-     * @param array $data
-     * @return ExtraQuestionTypeValue
-     */
-    public static function populate(ExtraQuestionTypeValue $value, array $data):ExtraQuestionTypeValue{
-
-        if(isset($data['label']))
-            $value->setLabel(trim($data['label']));
-
-        if(isset($data['value']))
-            $value->setValue(trim($data['value']));
-
-        if(isset($data['is_default']))
-            $value->setIsDefault(boolval($data['is_default']));
-
-        return $value;
+    if (isset($data["value"])) {
+      $value->setValue(trim($data["value"]));
     }
+
+    if (isset($data["is_default"])) {
+      $value->setIsDefault(boolval($data["is_default"]));
+    }
+
+    return $value;
+  }
 }

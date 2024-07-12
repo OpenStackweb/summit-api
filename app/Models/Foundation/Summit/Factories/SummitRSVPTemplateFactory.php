@@ -16,29 +16,29 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
  * Class SummitRSVPTemplateFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitRSVPTemplateFactory
-{
-    /**
-     * @param array $data
-     * @return RSVPTemplate
-     */
-    public static function build(array $data){
-        return self::populate(new RSVPTemplate, $data);
+final class SummitRSVPTemplateFactory {
+  /**
+   * @param array $data
+   * @return RSVPTemplate
+   */
+  public static function build(array $data) {
+    return self::populate(new RSVPTemplate(), $data);
+  }
+
+  /**
+   * @param RSVPTemplate $template
+   * @param array $data
+   * @return RSVPTemplate
+   */
+  public static function populate(RSVPTemplate $template, array $data) {
+    if (isset($data["title"])) {
+      $template->setTitle(trim($data["title"]));
     }
 
-    /**
-     * @param RSVPTemplate $template
-     * @param array $data
-     * @return RSVPTemplate
-     */
-    public static function populate(RSVPTemplate $template, array $data){
-
-        if(isset($data['title']))
-            $template->setTitle(trim($data['title']));
-
-        if(isset($data['is_enabled']))
-            $template->setIsEnabled(boolval($data['is_enabled']));
-
-        return $template;
+    if (isset($data["is_enabled"])) {
+      $template->setIsEnabled(boolval($data["is_enabled"]));
     }
+
+    return $template;
+  }
 }

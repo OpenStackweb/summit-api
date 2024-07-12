@@ -16,32 +16,33 @@
  * Class SummitBadgeViewTypeFactory
  * @package models\summit
  */
-final class SummitBadgeViewTypeFactory
-{
-    /**
-     * @param array $payload
-     * @return SummitBadgeViewType
-     */
-    public static function build(array $payload):SummitBadgeViewType{
-        return self::populate(new SummitBadgeViewType, $payload);
+final class SummitBadgeViewTypeFactory {
+  /**
+   * @param array $payload
+   * @return SummitBadgeViewType
+   */
+  public static function build(array $payload): SummitBadgeViewType {
+    return self::populate(new SummitBadgeViewType(), $payload);
+  }
+
+  /**
+   * @param SummitBadgeViewType $type
+   * @param array $payload
+   * @return SummitBadgeViewType
+   */
+  public static function populate(SummitBadgeViewType $type, array $payload): SummitBadgeViewType {
+    if (isset($payload["name"])) {
+      $type->setName(trim($payload["name"]));
     }
 
-    /**
-     * @param SummitBadgeViewType $type
-     * @param array $payload
-     * @return SummitBadgeViewType
-     */
-    public static function populate(SummitBadgeViewType $type, array $payload):SummitBadgeViewType{
-
-        if(isset($payload['name']))
-            $type->setName(trim($payload['name']));
-
-        if(isset($payload['description']))
-            $type->setDescription(trim($payload['description']));
-
-        if(isset($payload['is_default']))
-            $type->setDefault(boolval($payload['is_default']));
-
-        return $type;
+    if (isset($payload["description"])) {
+      $type->setDescription(trim($payload["description"]));
     }
+
+    if (isset($payload["is_default"])) {
+      $type->setDefault(boolval($payload["is_default"]));
+    }
+
+    return $type;
+  }
 }

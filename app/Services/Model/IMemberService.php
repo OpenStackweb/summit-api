@@ -22,137 +22,151 @@ use models\main\Member;
  * Interface IMemberService
  * @package App\Services\Model
  */
-interface IMemberService
-{
+interface IMemberService {
+  /**
+   * @param Member $member
+   * @param array $data
+   * @return Affiliation
+   */
+  public function addAffiliation(Member $member, array $data);
 
-    /**
-     * @param Member $member
-     * @param array $data
-     * @return Affiliation
-     */
-    public function addAffiliation(Member $member, array $data);
+  /**
+   * @param Member $member
+   * @param int $affiliation_id
+   * @param array $data
+   * @return Affiliation
+   */
+  public function updateAffiliation(Member $member, $affiliation_id, array $data);
 
-    /**
-     * @param Member $member
-     * @param int $affiliation_id
-     * @param array $data
-     * @return Affiliation
-     */
-    public function updateAffiliation(Member $member, $affiliation_id, array $data);
+  /**
+   * @param Member $member
+   * @param int $affiliation_id
+   * @return void
+   */
+  public function deleteAffiliation(Member $member, $affiliation_id);
 
-    /**
-     * @param Member $member
-     * @param int $affiliation_id
-     * @return void
-     */
-    public function deleteAffiliation(Member $member, $affiliation_id);
+  /**
+   * @param Member $member
+   * @param int $rsvp_id
+   * @return void
+   */
+  public function deleteRSVP(Member $member, $rsvp_id);
 
-    /**
-     * @param Member $member
-     * @param int $rsvp_id
-     * @return void
-     */
-    public function deleteRSVP(Member $member, $rsvp_id);
+  /**
+   * @param ExternalUserDTO $userDTO
+   * @return Member
+   */
+  public function registerExternalUser(ExternalUserDTO $userDTO): Member;
 
-    /**
-     * @param ExternalUserDTO $userDTO
-     * @return Member
-     */
-    public function registerExternalUser(ExternalUserDTO $userDTO):Member;
+  /**
+   * @param $user_external_id
+   * @return Member
+   * @throw EntityNotFoundException
+   */
+  public function registerExternalUserById($user_external_id): Member;
 
-    /**
-     * @param $user_external_id
-     * @return Member
-     * @throw EntityNotFoundException
-     */
-    public function registerExternalUserById($user_external_id):Member;
+  /**
+   * @param mixed $user_external_id
+   * @throws EntityNotFoundException
+   */
+  public function deleteExternalUserById($user_external_id): void;
 
-    /**
-     * @param mixed $user_external_id
-     * @throws EntityNotFoundException
-     */
-    public function deleteExternalUserById($user_external_id):void;
+  /**
+   * @param Member $member
+   * @param array $groups
+   * @return Member
+   */
+  public function synchronizeGroups(Member $member, array $groups): Member;
 
-    /**
-     * @param Member $member
-     * @param array $groups
-     * @return Member
-     */
-    public function synchronizeGroups(Member $member, array $groups):Member;
+  /**
+   * @param string $email
+   * @return array|null
+   * @throws \Exception
+   */
+  public function checkExternalUser(string $email);
 
-    /**
-     * @param string $email
-     * @return array|null
-     * @throws \Exception
-     */
-    public function checkExternalUser(string $email);
+  /**
+   * @param string $email
+   * @param string $first_name
+   * @param string $last_name
+   * @param string $company
+   * @return array
+   * @throws \Exception
+   */
+  public function emitRegistrationRequest(
+    string $email,
+    string $first_name,
+    string $last_name,
+    string $company = "",
+  ): array;
 
-    /**
-     * @param string $email
-     * @param string $first_name
-     * @param string $last_name
-     * @param string $company
-     * @return array
-     * @throws \Exception
-     */
-    public function emitRegistrationRequest(string $email, string $first_name, string $last_name, string $company = ''):array;
+  /**
+   * @param Member $member
+   * @return Member
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function signFoundationMembership(Member $member): Member;
 
-    /**
-     * @param Member $member
-     * @return Member
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function signFoundationMembership(Member $member):Member;
+  /**
+   * @param Member $member
+   * @return Member
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function signCommunityMembership(Member $member): Member;
 
-    /**
-     * @param Member $member
-     * @return Member
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function signCommunityMembership(Member $member):Member;
+  /**
+   * @param Member $member
+   * @return void
+   */
+  public function resignMembership(Member $member);
 
-    /**
-     * @param Member $member
-     * @return void
-     */
-    public function resignMembership(Member $member);
+  /**
+   * @param int $member_id
+   */
+  public function assocSummitOrders(int $member_id): void;
 
-    /**
-     * @param int $member_id
-     */
-    public function assocSummitOrders(int $member_id):void;
+  /**
+   * @description Updates user's profile information in the IDP
+   * @param int $member_id
+   * @param string|null $first_name
+   * @param string|null $last_name
+   * @param string|null $company_name
+   * @return void
+   * @throws \Exception
+   */
+  public function updateExternalUser(
+    int $member_id,
+    ?string $first_name,
+    ?string $last_name,
+    ?string $company_name,
+  ): void;
 
-    /**
-     * @description Updates user's profile information in the IDP
-     * @param int $member_id
-     * @param string|null $first_name
-     * @param string|null $last_name
-     * @param string|null $company_name
-     * @return void
-     * @throws \Exception
-     */
-    public function updateExternalUser(int $member_id, ?string $first_name, ?string $last_name, ?string $company_name):void;
+  /**
+   * @description Updates an existing pending registration request in the IDP
+   * @param string $email
+   * @param bool $is_redeemed
+   * @param string|null $first_name
+   * @param string|null $last_name
+   * @param string|null $company_name
+   * @param string|null $country
+   * @return void
+   * @throws \Exception
+   */
+  public function updatePendingRegistrationRequest(
+    string $email,
+    bool $is_redeemed,
+    ?string $first_name,
+    ?string $last_name,
+    ?string $company_name,
+    ?string $country,
+  ): void;
 
-    /**
-     * @description Updates an existing pending registration request in the IDP
-     * @param string $email
-     * @param bool $is_redeemed
-     * @param string|null $first_name
-     * @param string|null $last_name
-     * @param string|null $company_name
-     * @param string|null $country
-     * @return void
-     * @throws \Exception
-     */
-    public function updatePendingRegistrationRequest(string $email, bool $is_redeemed, ?string $first_name, ?string $last_name,
-                                                     ?string $company_name, ?string $country):void;
-
-    /**
-     * @param Member $me
-     * @param array $payload
-     * @return Member|null
-     */
-    public function updateMyMember(Member $me, array $payload):?Member;
+  /**
+   * @param Member $me
+   * @param array $payload
+   * @return Member|null
+   */
+  public function updateMyMember(Member $me, array $payload): ?Member;
 }

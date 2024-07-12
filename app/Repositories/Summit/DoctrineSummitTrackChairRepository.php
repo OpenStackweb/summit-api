@@ -21,57 +21,46 @@ use utils\Filter;
  * Class DoctrineSummitTrackChairRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitTrackChairRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitTrackChairRepository
-{
+final class DoctrineSummitTrackChairRepository extends SilverStripeDoctrineRepository implements
+  ISummitTrackChairRepository {
+  /**
+   * @inheritDoc
+   */
+  protected function getBaseEntity() {
+    return SummitTrackChair::class;
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getBaseEntity()
-    {
-        return SummitTrackChair::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query->join("e.summit", "s")->leftJoin("e.member", "m")->leftJoin("e.categories", "cat");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query
-            ->join('e.summit', 's')
-            ->leftJoin('e.member', 'm')
-            ->leftJoin('e.categories', 'cat');
-        return $query;
-    }
+  protected function getFilterMappings() {
+    return [
+      "summit_id" => "s.id",
+      "member_id" => "m.id",
+      "track_id" => "cat.id",
+      "member_first_name" => "m.first_name :operator :value",
+      "member_last_name" => "m.last_name :operator :value",
+      "member_full_name" => "concat(m.first_name, ' ', m.last_name) :operator :value",
+      "member_email" => "m.email :operator :value",
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'summit_id' => 's.id',
-            'member_id' => 'm.id',
-            'track_id' => 'cat.id',
-            'member_first_name' => "m.first_name :operator :value",
-            'member_last_name' => "m.last_name :operator :value",
-            'member_full_name' => "concat(m.first_name, ' ', m.last_name) :operator :value",
-            'member_email' => "m.email :operator :value"
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id' => 'e.id',
-            'track_id' => 'cat.id',
-            "member_full_name" => "LOWER(CONCAT(m.first_name, ' ', m.last_name))",
-            'member_first_name' => 'm.first_name',
-            'member_last_name' => 'm.last_name',
-        ];
-    }
-
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "track_id" => "cat.id",
+      "member_full_name" => "LOWER(CONCAT(m.first_name, ' ', m.last_name))",
+      "member_first_name" => "m.first_name",
+      "member_last_name" => "m.last_name",
+    ];
+  }
 }

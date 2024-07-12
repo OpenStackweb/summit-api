@@ -18,7 +18,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitSignRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitSignRepository extends IBaseRepository
-{
-
+interface ISummitSignRepository extends IBaseRepository {
 }

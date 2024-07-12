@@ -14,32 +14,29 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuesti
  * limitations under the License.
  **/
 
+final class TrackQuestionValueTemplateFactory {
+  /**
+   * @param array $data
+   * @return TrackQuestionValueTemplate
+   */
+  public static function build(array $data) {
+    return self::populate(new TrackQuestionValueTemplate(), $data);
+  }
 
-
-
-final class TrackQuestionValueTemplateFactory
-{
-    /**
-     * @param array $data
-     * @return TrackQuestionValueTemplate
-     */
-    public static function build(array $data){
-        return self::populate(new TrackQuestionValueTemplate, $data);
+  /**
+   * @param TrackQuestionValueTemplate $value
+   * @param array $data
+   * @return TrackQuestionValueTemplate
+   */
+  public static function populate(TrackQuestionValueTemplate $value, array $data) {
+    if (isset($data["value"])) {
+      $value->setValue(trim($data["value"]));
     }
 
-    /**
-     * @param TrackQuestionValueTemplate $value
-     * @param array $data
-     * @return TrackQuestionValueTemplate
-     */
-    public static function populate(TrackQuestionValueTemplate $value, array $data){
-
-        if(isset($data['value']))
-            $value->setValue(trim($data['value']));
-
-        if(isset($data['label']))
-            $value->setLabel(trim($data['label']));
-
-        return $value;
+    if (isset($data["label"])) {
+      $value->setLabel(trim($data["label"]));
     }
+
+    return $value;
+  }
 }

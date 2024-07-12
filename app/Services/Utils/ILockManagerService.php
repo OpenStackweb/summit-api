@@ -17,27 +17,26 @@ use Closure;
  * Interface ILockManagerService
  * @package App\Services\Utils
  */
-interface ILockManagerService
-{
-    const DefaultLifetime = 3600;
-    /**
-     * @param string $name
-     * @param int $lifetime
-     * @throws UnacquiredLockException
-     * @return mixed
-     */
-    public function acquireLock(string $name,int $lifetime = self::DefaultLifetime);
-    /**
-     * @param  string $name
-     * @return mixed
-     */
-    public function releaseLock(string $name);
+interface ILockManagerService {
+  const DefaultLifetime = 3600;
+  /**
+   * @param string $name
+   * @param int $lifetime
+   * @throws UnacquiredLockException
+   * @return mixed
+   */
+  public function acquireLock(string $name, int $lifetime = self::DefaultLifetime);
+  /**
+   * @param  string $name
+   * @return mixed
+   */
+  public function releaseLock(string $name);
 
-    /**
-     * @param string $name
-     * @param Closure $callback
-     * @param int $lifetime
-     * @return mixed
-     */
-    public function lock(string $name, Closure $callback, int $lifetime = self::DefaultLifetime);
+  /**
+   * @param string $name
+   * @param Closure $callback
+   * @param int $lifetime
+   * @return mixed
+   */
+  public function lock(string $name, Closure $callback, int $lifetime = self::DefaultLifetime);
 }

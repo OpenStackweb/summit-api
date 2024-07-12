@@ -27,134 +27,108 @@ use utils\PagingResponse;
  * Class DoctrineSummitTrackRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitTrackRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitTrackRepository
-{
+final class DoctrineSummitTrackRepository extends SilverStripeDoctrineRepository implements
+  ISummitTrackRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PresentationCategory::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PresentationCategory::class;
+  protected function getFilterMappings() {
+    return [
+      "name" => "t.title:json_string",
+      "description" => "t.description:json_string",
+      "code" => "t.code:json_string",
+      "group_name" => new DoctrineFilterMapping("(g.name :operator :value)"),
+      "voting_visible" => "t.voting_visible",
+      "chair_visible" => "t.chair_visible",
+      "has_proposed_schedule_allowed_locations" => new DoctrineSwitchFilterMapping([
+        "true" => new DoctrineCaseFilterMapping(
+          "true",
+          "SIZE(t.proposed_schedule_allowed_locations) > 0",
+        ),
+        "false" => new DoctrineCaseFilterMapping(
+          "false",
+          "SIZE(t.proposed_schedule_allowed_locations) = 0",
+        ),
+      ]),
+      "has_parent" => new DoctrineSwitchFilterMapping([
+        "true" => new DoctrineCaseFilterMapping("true", "t.parent is not null"),
+        "false" => new DoctrineCaseFilterMapping("false", "t.parent is null"),
+      ]),
+      "has_subtracks" => new DoctrineSwitchFilterMapping([
+        "true" => new DoctrineCaseFilterMapping("true", "SIZE(t.children) > 0"),
+        "false" => new DoctrineCaseFilterMapping("false", "SIZE(t.children) = 0"),
+      ]),
+    ];
+  }
+
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "code" => "t.code",
+      "name" => "t.title",
+      "id" => "t.id",
+      "order" => "t.order",
+    ];
+  }
+
+  /**
+   * @param Summit $summit
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getBySummit(
+    Summit $summit,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  ) {
+    $query = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("t")
+      ->from(PresentationCategory::class, "t")
+      ->leftJoin("t.groups", "g")
+      ->leftJoin("t.summit", "s")
+      ->where("s.id = :summit_id");
+
+    $query->setParameter("summit_id", $summit->getId());
+
+    if (!is_null($filter)) {
+      $filter->apply2Query($query, $this->getFilterMappings());
     }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'name'        => 't.title:json_string',
-            'description' => 't.description:json_string',
-            'code'        => 't.code:json_string',
-            'group_name'  => new DoctrineFilterMapping
-            (
-                "(g.name :operator :value)"
-            ),
-            'voting_visible' => 't.voting_visible',
-            'chair_visible' => 't.chair_visible',
-            'has_proposed_schedule_allowed_locations'=>  new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                     "SIZE(t.proposed_schedule_allowed_locations) > 0",
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "SIZE(t.proposed_schedule_allowed_locations) = 0"
-                    ),
-                ]
-            ),
-            'has_parent'=>  new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        "t.parent is not null",
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "t.parent is null"
-                    ),
-                ]
-            ),
-            'has_subtracks'=>  new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        "SIZE(t.children) > 0",
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "SIZE(t.children) = 0"
-                    ),
-                ]
-            ),
-        ];
+    if (!is_null($order)) {
+      $order->apply2Query($query, $this->getOrderMappings());
+    } else {
+      //default order
+      $query = $query->addOrderBy("t.code", "ASC");
     }
 
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'code'  => 't.code',
-            'name'  => 't.title',
-            'id'    => 't.id',
-            'order' => 't.order',
-        ];
+    $query = $query
+      ->setFirstResult($paging_info->getOffset())
+      ->setMaxResults($paging_info->getPerPage());
+
+    $paginator = new Paginator($query, ($fetchJoinCollection = true));
+    $total = $paginator->count();
+    $data = [];
+
+    foreach ($paginator as $entity) {
+      $data[] = $entity;
     }
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getBySummit
-    (
-        Summit $summit,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    )
-    {
-        $query  =   $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("t")
-            ->from(PresentationCategory::class, "t")
-            ->leftJoin('t.groups', 'g')
-            ->leftJoin('t.summit', 's')
-            ->where("s.id = :summit_id");
-
-        $query->setParameter("summit_id", $summit->getId());
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
-        }
-
-        if (!is_null($order)) {
-            $order->apply2Query($query, $this->getOrderMappings());
-        } else {
-            //default order
-            $query = $query->addOrderBy("t.code",'ASC');
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
-
-        foreach($paginator as $entity)
-            $data[] = $entity;
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
-    }
+    return new PagingResponse(
+      $total,
+      $paging_info->getPerPage(),
+      $paging_info->getCurrentPage(),
+      $paging_info->getLastPage($total),
+      $data,
+    );
+  }
 }

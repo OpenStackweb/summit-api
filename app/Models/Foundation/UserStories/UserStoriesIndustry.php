@@ -13,7 +13,7 @@
  **/
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 
 /**
@@ -22,81 +22,74 @@ use models\utils\SilverstripeBaseModel;
  * Class File
  * @package App\Models\Foundation\UserStories
  */
-class UserStoriesIndustry extends SilverstripeBaseModel
-{
-    /**
-     * @ORM\Column(name="IndustryName", type="string")
-     */
-    private $name;
+class UserStoriesIndustry extends SilverstripeBaseModel {
+  /**
+   * @ORM\Column(name="IndustryName", type="string")
+   */
+  private $name;
 
-    /**
-     * @ORM\Column(name="Active", type="boolean")
-     * @var bool
-     */
-    private $is_active;
+  /**
+   * @ORM\Column(name="Active", type="boolean")
+   * @var bool
+   */
+  private $is_active;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\UserStories\UserStory", mappedBy="industry", cascade={"persist","remove"}, orphanRemoval=true)
-     */
-    private $user_stories;
+  /**
+   * @ORM\OneToMany(targetEntity="App\Models\Foundation\UserStories\UserStory", mappedBy="industry", cascade={"persist","remove"}, orphanRemoval=true)
+   */
+  private $user_stories;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->user_stories = new ArrayCollection();
+  public function __construct() {
+    parent::__construct();
+    $this->user_stories = new ArrayCollection();
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getName() {
+    return $this->name;
+  }
+
+  /**
+   * @param mixed $name
+   */
+  public function setName($name): void {
+    $this->name = $name;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isActive(): bool {
+    return $this->is_active;
+  }
+
+  /**
+   * @param bool $is_active
+   */
+  public function setIsActive(bool $is_active): void {
+    $this->is_active = $is_active;
+  }
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getUserStories(): ArrayCollection {
+    return $this->user_stories;
+  }
+
+  /**
+   * @param UserStory $user_story
+   */
+  public function addUserStory(UserStory $user_story) {
+    if ($this->user_stories->contains($user_story)) {
+      return;
     }
+    $this->user_stories->add($user_story);
+  }
 
-    /**
-     * @return mixed
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * @param mixed $name
-     */
-    public function setName($name): void
-    {
-        $this->name = $name;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->is_active;
-    }
-
-    /**
-     * @param bool $is_active
-     */
-    public function setIsActive(bool $is_active): void
-    {
-        $this->is_active = $is_active;
-    }
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getUserStories(): ArrayCollection
-    {
-        return $this->user_stories;
-    }
-
-    /**
-     * @param UserStory $user_story
-     */
-    public function addUserStory(UserStory $user_story)
-    {
-        if ($this->user_stories->contains($user_story)) return;
-        $this->user_stories->add($user_story);
-    }
-
-    public function clearUserStories()
-    {
-        $this->user_stories->clear();
-    }
+  public function clearUserStories() {
+    $this->user_stories->clear();
+  }
 }

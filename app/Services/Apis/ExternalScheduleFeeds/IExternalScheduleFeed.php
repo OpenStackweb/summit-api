@@ -16,9 +16,8 @@
  * Interface IExternalScheduleFeed
  * @package App\Services\Apis\ExternalScheduleFeeds
  */
-interface IExternalScheduleFeed
-{
-    public function getEvents():array;
+interface IExternalScheduleFeed {
+  public function getEvents(): array;
 
-    public function getSpeakers():array;
+  public function getSpeakers(): array;
 }

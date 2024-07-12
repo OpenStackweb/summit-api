@@ -24,82 +24,77 @@ use utils\FilterParser;
  * Class ProcessSpeakersEmailRequestJob
  * @package App\Jobs\Emails
  */
-final class ProcessSpeakersEmailRequestJob implements ShouldQueue
-{
-    public $timeout = 0;
+final class ProcessSpeakersEmailRequestJob implements ShouldQueue {
+  public $timeout = 0;
 
-    public $tries = 1;
+  public $tries = 1;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @var int
-     */
-    private $summit_id;
+  /**
+   * @var int
+   */
+  private $summit_id;
 
-    /**
-     * @var array
-     */
-    private $payload;
+  /**
+   * @var array
+   */
+  private $payload;
 
-    /**
-     * @var mixed
-     */
-    private $filter;
+  /**
+   * @var mixed
+   */
+  private $filter;
 
-    /**
-     * ProcessSpeakersEmailRequestJob constructor.
-     * @param int $summit_id
-     * @param array $payload
-     * @param $filter
-     */
-    public function __construct(int $summit_id, array $payload, $filter)
-    {
-        $this->summit_id = $summit_id;
-        $this->payload = $payload;
-        $this->filter = $filter;
-    }
+  /**
+   * ProcessSpeakersEmailRequestJob constructor.
+   * @param int $summit_id
+   * @param array $payload
+   * @param $filter
+   */
+  public function __construct(int $summit_id, array $payload, $filter) {
+    $this->summit_id = $summit_id;
+    $this->payload = $payload;
+    $this->filter = $filter;
+  }
 
-    /**
-     * @param ISummitRepository $summit_repository
-     * @param ISpeakerService $service
-     * @throws \utils\FilterParserException
-     */
-    public function handle
-    (
-        ISpeakerService $service
-    ){
-        Log::debug
-        (
-            sprintf
-            (
-                "ProcessSpeakersEmailRequestJob::handle summit id %s payload %s",
-                $this->summit_id,
-                json_encode($this->payload)
-            )
-        );
+  /**
+   * @param ISummitRepository $summit_repository
+   * @param ISpeakerService $service
+   * @throws \utils\FilterParserException
+   */
+  public function handle(ISpeakerService $service) {
+    Log::debug(
+      sprintf(
+        "ProcessSpeakersEmailRequestJob::handle summit id %s payload %s",
+        $this->summit_id,
+        json_encode($this->payload),
+      ),
+    );
 
-        $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'id' => ['=='],
-            'not_id' => ['=='],
-            'first_name' => ['=@', '@@', '=='],
-            'last_name' => ['=@', '@@', '=='],
-            'email' => ['=@', '@@', '=='],
-            'full_name' => ['=@', '@@', '=='],
-            'has_accepted_presentations' => ['=='],
-            'has_alternate_presentations' => ['=='],
-            'has_rejected_presentations' => ['=='],
-            'presentations_track_id' => ['=='],
-            'presentations_selection_plan_id' => ['=='],
-            'presentations_type_id' => ['=='],
-            'presentations_title' => ['=@', '@@', '=='],
-            'presentations_abstract' => ['=@', '@@', '=='],
-            'presentations_submitter_full_name' => ['=@', '@@', '=='],
-            'presentations_submitter_email' => ['=@', '@@', '=='],
-            'has_media_upload_with_type' => ['=='],
-            'has_not_media_upload_with_type' => ['=='],
-        ]) : null;
+    $filter = !is_null($this->filter)
+      ? FilterParser::parse($this->filter, [
+        "id" => ["=="],
+        "not_id" => ["=="],
+        "first_name" => ["=@", "@@", "=="],
+        "last_name" => ["=@", "@@", "=="],
+        "email" => ["=@", "@@", "=="],
+        "full_name" => ["=@", "@@", "=="],
+        "has_accepted_presentations" => ["=="],
+        "has_alternate_presentations" => ["=="],
+        "has_rejected_presentations" => ["=="],
+        "presentations_track_id" => ["=="],
+        "presentations_selection_plan_id" => ["=="],
+        "presentations_type_id" => ["=="],
+        "presentations_title" => ["=@", "@@", "=="],
+        "presentations_abstract" => ["=@", "@@", "=="],
+        "presentations_submitter_full_name" => ["=@", "@@", "=="],
+        "presentations_submitter_email" => ["=@", "@@", "=="],
+        "has_media_upload_with_type" => ["=="],
+        "has_not_media_upload_with_type" => ["=="],
+      ])
+      : null;
 
-        $service->sendEmails($this->summit_id, $this->payload, $filter);
-    }
+    $service->sendEmails($this->summit_id, $this->payload, $filter);
+  }
 }

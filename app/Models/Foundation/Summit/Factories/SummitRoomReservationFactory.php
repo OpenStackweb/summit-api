@@ -17,42 +17,47 @@ use models\summit\SummitRoomReservation;
  * Class SummitRoomReservationFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitRoomReservationFactory
-{
-    /**
-     * @param Summit $summit
-     * @param array $data
-     * @return SummitRoomReservation
-     */
-    public static function build(Summit $summit, array $data):SummitRoomReservation{
-        return self::populate(new SummitRoomReservation, $summit, $data);
+final class SummitRoomReservationFactory {
+  /**
+   * @param Summit $summit
+   * @param array $data
+   * @return SummitRoomReservation
+   */
+  public static function build(Summit $summit, array $data): SummitRoomReservation {
+    return self::populate(new SummitRoomReservation(), $summit, $data);
+  }
+
+  public static function populate(
+    SummitRoomReservation $reservation,
+    Summit $summit,
+    array $data,
+  ): SummitRoomReservation {
+    if (isset($data["owner"])) {
+      $reservation->setOwner($data["owner"]);
+    }
+    if (isset($data["currency"])) {
+      $reservation->setCurrency(trim($data["currency"]));
+    }
+    if (isset($data["amount"])) {
+      $reservation->setAmount(intval($data["amount"]));
     }
 
-    public static function populate(SummitRoomReservation $reservation, Summit $summit, array $data):SummitRoomReservation{
-        if(isset($data['owner']))
-            $reservation->setOwner($data['owner']);
-        if(isset($data['currency']))
-            $reservation->setCurrency(trim($data['currency']));
-        if(isset($data['amount']))
-            $reservation->setAmount(intval($data['amount']));
-
-        // dates ( they came on local time epoch , so must be converted to utc using
-        // summit timezonefloatval
-        if(isset($data['start_datetime'])) {
-            $val = intval($data['start_datetime']);
-            $val = new \DateTime("@$val");
-            $val->setTimezone($summit->getTimeZone());
-            $reservation->setStartDatetime($summit->convertDateFromTimeZone2UTC($val));
-        }
-
-        if(isset($data['end_datetime'])){
-            $val = intval($data['end_datetime']);
-            $val = new \DateTime("@$val");
-            $val->setTimezone($summit->getTimeZone());
-            $reservation->setEndDatetime($summit->convertDateFromTimeZone2UTC($val));
-        }
-
-        return $reservation;
+    // dates ( they came on local time epoch , so must be converted to utc using
+    // summit timezonefloatval
+    if (isset($data["start_datetime"])) {
+      $val = intval($data["start_datetime"]);
+      $val = new \DateTime("@$val");
+      $val->setTimezone($summit->getTimeZone());
+      $reservation->setStartDatetime($summit->convertDateFromTimeZone2UTC($val));
     }
 
+    if (isset($data["end_datetime"])) {
+      $val = intval($data["end_datetime"]);
+      $val = new \DateTime("@$val");
+      $val->setTimezone($summit->getTimeZone());
+      $reservation->setEndDatetime($summit->convertDateFromTimeZone2UTC($val));
+    }
+
+    return $reservation;
+  }
 }

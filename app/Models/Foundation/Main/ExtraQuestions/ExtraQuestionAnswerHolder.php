@@ -23,157 +23,171 @@ use models\summit\SummitOrderExtraQuestionType;
  * Trait ExtraQuestionAnswerHolder
  * @package App\Models\Foundation\Main\ExtraQuestions
  */
-trait ExtraQuestionAnswerHolder
-{
-    /**
-     * @return ExtraQuestionAnswer[] | ArrayCollection
-     */
-    public abstract function getExtraQuestionAnswers();
+trait ExtraQuestionAnswerHolder {
+  /**
+   * @return ExtraQuestionAnswer[] | ArrayCollection
+   */
+  abstract public function getExtraQuestionAnswers();
 
-    /**
-     * @return ExtraQuestionType[] | ArrayCollection
-     */
-    public abstract function getExtraQuestions(): array;
+  /**
+   * @return ExtraQuestionType[] | ArrayCollection
+   */
+  abstract public function getExtraQuestions(): array;
 
-    /**
-     * @param int $questionId
-     * @return ExtraQuestionType|null
-     */
-    public abstract function getQuestionById(int $questionId):?ExtraQuestionType;
+  /**
+   * @param int $questionId
+   * @return ExtraQuestionType|null
+   */
+  abstract public function getQuestionById(int $questionId): ?ExtraQuestionType;
 
-    /**
-     * @param ExtraQuestionType $q
-     * @return bool
-     */
-    public abstract function canChangeAnswerValue(ExtraQuestionType $q):bool;
+  /**
+   * @param ExtraQuestionType $q
+   * @return bool
+   */
+  abstract public function canChangeAnswerValue(ExtraQuestionType $q): bool;
 
-    public abstract function clearExtraQuestionAnswers():void;
+  abstract public function clearExtraQuestionAnswers(): void;
 
-    public abstract function buildExtraQuestionAnswer():ExtraQuestionAnswer;
+  abstract public function buildExtraQuestionAnswer(): ExtraQuestionAnswer;
 
-    /**
-     * @param ExtraQuestionAnswer $answer
-     */
-    public abstract function addExtraQuestionAnswer(ExtraQuestionAnswer $answer):void;
+  /**
+   * @param ExtraQuestionAnswer $answer
+   */
+  abstract public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer): void;
 
-    /**
-     * @param ExtraQuestionType $q
-     * @return bool
-     */
-    public abstract function isAllowedQuestion(ExtraQuestionType $q): bool;
+  /**
+   * @param ExtraQuestionType $q
+   * @return bool
+   */
+  abstract public function isAllowedQuestion(ExtraQuestionType $q): bool;
 
-    /**
-     * @return ExtraQuestionAnswerSet
-     */
-    public function getExtraAnswerSnapshot():ExtraQuestionAnswerSet{
-        return new ExtraQuestionAnswerSet($this->getExtraQuestionAnswers());
+  /**
+   * @return ExtraQuestionAnswerSet
+   */
+  public function getExtraAnswerSnapshot(): ExtraQuestionAnswerSet {
+    return new ExtraQuestionAnswerSet($this->getExtraQuestionAnswers());
+  }
+
+  /**
+   * @param ExtraQuestionAnswer|null $formerAnswer
+   * @param ExtraQuestionAnswer|null $currentAnswer
+   * @return bool
+   */
+  private function answerChanged(
+    ?ExtraQuestionAnswer $formerAnswer,
+    ?ExtraQuestionAnswer $currentAnswer,
+  ): bool {
+    $formerAnswerValue = !is_null($formerAnswer) ? $formerAnswer->getValue() : "";
+    $currentAnswerValue = !is_null($currentAnswer) ? $currentAnswer->getValue() : "";
+    if (empty($formerAnswerValue)) {
+      // was not answered yet
+      return false;
+    }
+    return $formerAnswerValue != $currentAnswerValue;
+  }
+
+  /**
+   * @param ExtraQuestionType $q
+   * @param ExtraQuestionAnswerSet $formerAnswers
+   * @param ExtraQuestionAnswerSet $answers
+   * @return bool
+   * @throws ValidationException
+   */
+  private function checkQuestion(
+    ExtraQuestionType $q,
+    ExtraQuestionAnswerSet $formerAnswers,
+    ExtraQuestionAnswerSet $answers,
+  ): bool {
+    //Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s former answers %s current answers %s", $q->getId(), json_encode($formerAnswers->serialize()), json_encode($answers->serialize())));
+    $formerAnswer = $formerAnswers->getAnswerFor($q);
+    $currentAnswer = $answers->getAnswerFor($q);
+    // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
+    if (!$this->canChangeAnswerValue($q) && $this->answerChanged($formerAnswer, $currentAnswer)) {
+      throw new ValidationException(
+        sprintf(
+          "Answer can not be changed by this time. Original answer is %s.",
+          $formerAnswer->getQuestion()->getNiceValue($formerAnswer->getValue()),
+        ),
+      );
+    }
+    $res = $q->isAnswered($answers);
+
+    // check sub-questions ...
+    foreach ($q->getSubQuestionRules() as $rule) {
+      $sq = $rule->getSubQuestion();
+      if ($this->isAllowedQuestion($sq)) {
+        $res &= $this->checkQuestion($sq, $formerAnswers, $answers);
+      }
+    }
+    return $res;
+  }
+
+  /**
+   * @param array|null $answers
+   * @return bool
+   * @throws ValidationException
+   */
+  public function hadCompletedExtraQuestions(?array $answers = null): bool {
+    $res = true;
+    $formerAnswers = $this->getExtraAnswerSnapshot();
+    Log::debug(
+      sprintf(
+        "ExtraQuestionAnswerHolder::hadCompletedExtraQuestions formerAnswers %s",
+        json_encode($formerAnswers->serialize()),
+      ),
+    );
+    if (!is_null($answers)) {
+      // if we provide new answers
+      Log::debug(
+        sprintf(
+          "ExtraQuestionAnswerHolder::hadCompletedExtraQuestions provided new answers %s",
+          json_encode($answers),
+        ),
+      );
+
+      $this->clearExtraQuestionAnswers();
+
+      // create structure for current answers ...
+      foreach ($answers as $answer) {
+        $questionId = $answer["question_id"] ?? 0;
+        $question = $this->getQuestionById(intval($questionId));
+        if (is_null($question)) {
+          Log::warning(sprintf("Question %s does not exists.", $questionId));
+          continue;
+        }
+
+        $value = trim($answer["answer"] ?? "");
+        $answer = $this->buildExtraQuestionAnswer();
+        $answer->setQuestion($question);
+        $answer->setValue($value);
+        $this->addExtraQuestionAnswer($answer);
+      }
     }
 
-    /**
-     * @param ExtraQuestionAnswer|null $formerAnswer
-     * @param ExtraQuestionAnswer|null $currentAnswer
-     * @return bool
-     */
-    private function answerChanged(?ExtraQuestionAnswer $formerAnswer, ?ExtraQuestionAnswer $currentAnswer):bool{
-        $formerAnswerValue = !is_null($formerAnswer) ? $formerAnswer->getValue() : "";
-        $currentAnswerValue = !is_null($currentAnswer) ? $currentAnswer->getValue() : "";
-        if(empty($formerAnswerValue)){
-            // was not answered yet
-            return false;
-        }
-        return $formerAnswerValue != $currentAnswerValue;
+    $currentAnswers = $this->getExtraAnswerSnapshot();
+
+    foreach ($this->getExtraQuestions() as $q) {
+      $res &= $this->checkQuestion($q, $formerAnswers, $currentAnswers);
     }
 
-    /**
-     * @param ExtraQuestionType $q
-     * @param ExtraQuestionAnswerSet $formerAnswers
-     * @param ExtraQuestionAnswerSet $answers
-     * @return bool
-     * @throws ValidationException
-     */
-    private function checkQuestion(ExtraQuestionType $q, ExtraQuestionAnswerSet $formerAnswers, ExtraQuestionAnswerSet $answers):bool{
-        //Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s former answers %s current answers %s", $q->getId(), json_encode($formerAnswers->serialize()), json_encode($answers->serialize())));
-        $formerAnswer = $formerAnswers->getAnswerFor($q);
-        $currentAnswer = $answers->getAnswerFor($q);
-        // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
-        if(!$this->canChangeAnswerValue($q) && $this->answerChanged($formerAnswer, $currentAnswer)){
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "Answer can not be changed by this time. Original answer is %s.",
-                    $formerAnswer->getQuestion()->getNiceValue($formerAnswer->getValue())
-                )
-            );
-        }
-        $res = $q->isAnswered($answers);
+    $answersToDelete = $currentAnswers->getAnswersToDelete();
+    if (count($answersToDelete) > 0) {
+      Log::debug(
+        sprintf("ExtraQuestionAnswerHolder::hadCompletedExtraQuestions we have answers to delete."),
+      );
+      foreach ($answersToDelete as $a) {
+        Log::debug(
+          sprintf(
+            "ExtraQuestionAnswerHolder::hadCompletedExtraQuestions deleting answer %s for question %s.",
+            $a->getValue(),
+            $a->getQuestionId(),
+          ),
+        );
 
-        // check sub-questions ...
-        foreach ($q->getSubQuestionRules() as $rule){
-            $sq = $rule->getSubQuestion();
-            if ($this->isAllowedQuestion($sq)) {
-                $res &= $this->checkQuestion($sq, $formerAnswers, $answers);
-            }
-        }
-        return $res;
+        $this->removeExtraQuestionAnswer($a);
+      }
     }
 
-    /**
-     * @param array|null $answers
-     * @return bool
-     * @throws ValidationException
-     */
-    public function hadCompletedExtraQuestions(?array $answers = null): bool
-    {
-        $res = true;
-        $formerAnswers = $this->getExtraAnswerSnapshot();
-        Log::debug(sprintf("ExtraQuestionAnswerHolder::hadCompletedExtraQuestions formerAnswers %s", json_encode($formerAnswers->serialize())));
-        if (!is_null($answers)) { // if we provide new answers
-            Log::debug(sprintf("ExtraQuestionAnswerHolder::hadCompletedExtraQuestions provided new answers %s", json_encode($answers)));
-
-            $this->clearExtraQuestionAnswers();
-
-            // create structure for current answers ...
-            foreach ($answers as $answer) {
-                $questionId = $answer['question_id'] ?? 0;
-                $question = $this->getQuestionById(intval($questionId));
-                if (is_null($question)) {
-                    Log::warning(sprintf("Question %s does not exists.", $questionId));
-                    continue;
-                }
-
-                $value = trim($answer['answer'] ?? '');
-                $answer = $this->buildExtraQuestionAnswer();
-                $answer->setQuestion($question);
-                $answer->setValue($value);
-                $this->addExtraQuestionAnswer($answer);
-            }
-        }
-
-        $currentAnswers = $this->getExtraAnswerSnapshot();
-
-        foreach($this->getExtraQuestions() as $q) {
-            $res &= $this->checkQuestion($q, $formerAnswers, $currentAnswers);
-        }
-
-        $answersToDelete = $currentAnswers->getAnswersToDelete();
-        if(count($answersToDelete) > 0){
-            Log::debug(sprintf("ExtraQuestionAnswerHolder::hadCompletedExtraQuestions we have answers to delete."));
-            foreach ($answersToDelete as $a) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "ExtraQuestionAnswerHolder::hadCompletedExtraQuestions deleting answer %s for question %s.",
-                        $a->getValue(),
-                        $a->getQuestionId()
-                    )
-                );
-
-                $this->removeExtraQuestionAnswer($a);
-            }
-        }
-
-        return $res;
-    }
+    return $res;
+  }
 }

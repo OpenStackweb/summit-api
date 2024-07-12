@@ -19,52 +19,48 @@ use Illuminate\Support\Facades\Log;
  * @package App\Console\Commands
  */
 final class ExternalScheduleFeedIngestionCommand extends Command {
+  /**
+   * @var IScheduleIngestionService
+   */
+  private $service;
 
-    /**
-     * @var IScheduleIngestionService
-     */
-    private $service;
+  /**
+   * ExternalScheduleFeedIngestionCommand constructor.
+   * @param IScheduleIngestionService $service
+   */
+  public function __construct(IScheduleIngestionService $service) {
+    parent::__construct();
+    $this->service = $service;
+  }
 
-    /**
-     * ExternalScheduleFeedIngestionCommand constructor.
-     * @param IScheduleIngestionService $service
-     */
-    public function __construct(IScheduleIngestionService $service)
-    {
-        parent::__construct();
-        $this->service = $service;
-    }
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:external-schedule-feed-ingestion-process";
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:external-schedule-feed-ingestion-process';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Process External Schedule Feed for summits";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Process External Schedule Feed for summits';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:external-schedule-feed-ingestion-process";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:external-schedule-feed-ingestion-process';
-
-
-    public function handle()
-    {
-        $this->info("starting summits external ingestion");
-        $start  = time();
-        $this->service->ingestAllSummits();
-        $end   = time();
-        $delta = $end - $start;
-        $this->info(sprintf("execution call %s seconds", $delta));
-        log::info(sprintf("execution call %s seconds", $delta));
-    }
+  public function handle() {
+    $this->info("starting summits external ingestion");
+    $start = time();
+    $this->service->ingestAllSummits();
+    $end = time();
+    $delta = $end - $start;
+    $this->info(sprintf("execution call %s seconds", $delta));
+    log::info(sprintf("execution call %s seconds", $delta));
+  }
 }

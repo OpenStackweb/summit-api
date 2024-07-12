@@ -18,28 +18,27 @@ use models\summit\SummitMediaFileType;
  * Interface ISummitMediaFileTypeService
  * @package App\Services\Model
  */
-interface ISummitMediaFileTypeService
-{
-    /**
-     * @param array $payload
-     * @return SummitMediaFileType
-     * @throws ValidationException
-     */
-    public function add(array $payload):SummitMediaFileType;
+interface ISummitMediaFileTypeService {
+  /**
+   * @param array $payload
+   * @return SummitMediaFileType
+   * @throws ValidationException
+   */
+  public function add(array $payload): SummitMediaFileType;
 
-    /**
-     * @param int $id
-     * @param array $payload
-     * @return SummitMediaFileType
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function update(int $id, array $payload):SummitMediaFileType;
+  /**
+   * @param int $id
+   * @param array $payload
+   * @return SummitMediaFileType
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function update(int $id, array $payload): SummitMediaFileType;
 
-    /**
-     * @param int $id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function delete(int $id):void;
+  /**
+   * @param int $id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   */
+  public function delete(int $id): void;
 }

@@ -16,22 +16,19 @@
  * Class PresentationVideoValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class PresentationVideoValidationRulesFactory
-{
-    public static function build(array $data, $update = false)
-    {
-
-        $former_rules = PresentationMaterialValidationRulesFactory::build($data,$update);
-        if ($update) {
-            return array_merge($former_rules, [
-                'youtube_id'      => 'required_without:external_url|alpha_dash',
-                'external_url'    => 'required_without:youtube_id|string:512|url',
-            ]);
-        }
-
-        return array_merge($former_rules, [
-            'youtube_id'      => 'required_without:external_url|alpha_dash',
-            'external_url'    => 'required_without:youtube_id|string:512|url',
-        ]);
+final class PresentationVideoValidationRulesFactory {
+  public static function build(array $data, $update = false) {
+    $former_rules = PresentationMaterialValidationRulesFactory::build($data, $update);
+    if ($update) {
+      return array_merge($former_rules, [
+        "youtube_id" => "required_without:external_url|alpha_dash",
+        "external_url" => "required_without:youtube_id|string:512|url",
+      ]);
     }
+
+    return array_merge($former_rules, [
+      "youtube_id" => "required_without:external_url|alpha_dash",
+      "external_url" => "required_without:youtube_id|string:512|url",
+    ]);
+  }
 }

@@ -18,20 +18,18 @@ use Illuminate\Support\Facades\Request;
  * Class SerializerUtils
  * @package App\ModelSerializers
  */
-final class SerializerUtils
-{
-    public static function getExpand(){
-        return Request::input('expand', '');
-    }
+final class SerializerUtils {
+  public static function getExpand() {
+    return Request::input("expand", "");
+  }
 
-    public static function getRelations(){
-        $relations = Request::input('relations', '');
-        return !empty($relations) ? explode(',', $relations) : [];
-    }
+  public static function getRelations() {
+    $relations = Request::input("relations", "");
+    return !empty($relations) ? explode(",", $relations) : [];
+  }
 
-    public static function getFields(){
-        $fields    = Request::input('fields', '');
-        return !empty($fields) ? explode(',', $fields) : [];
-    }
-
+  public static function getFields() {
+    $fields = Request::input("fields", "");
+    return !empty($fields) ? explode(",", $fields) : [];
+  }
 }

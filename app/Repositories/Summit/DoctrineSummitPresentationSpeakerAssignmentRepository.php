@@ -19,14 +19,12 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitPresentationSpeakerAssignmentRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitPresentationSpeakerAssignmentRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PresentationSpeakerAssignment::class;
-    }
+  extends SilverStripeDoctrineRepository
+  implements ISummitPresentationSpeakerAssignmentRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PresentationSpeakerAssignment::class;
+  }
 }

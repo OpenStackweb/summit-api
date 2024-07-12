@@ -17,18 +17,17 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
  * Class SummitSponsorExtraQuestionTypeSerializer
  * @package ModelSerializers
  */
-class SummitSponsorExtraQuestionTypeSerializer extends ExtraQuestionTypeSerializer
-{
-    protected static $array_mappings = [
-        'SponsorId' => 'sponsor_id:json_int',
-    ];
+class SummitSponsorExtraQuestionTypeSerializer extends ExtraQuestionTypeSerializer {
+  protected static $array_mappings = [
+    "SponsorId" => "sponsor_id:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'sponsor' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'sponsor_id',
-            'getter' => 'getSponsor',
-            'has' => 'hasSponsor'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "sponsor" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "sponsor_id",
+      "getter" => "getSponsor",
+      "has" => "hasSponsor",
+    ],
+  ];
 }

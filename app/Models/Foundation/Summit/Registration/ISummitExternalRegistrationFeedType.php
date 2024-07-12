@@ -12,21 +12,15 @@
  * limitations under the License.
  **/
 
-
 /**
  * Interface ISummitExternalRegistrationFeedType
  * @package App\Models\Foundation\Summit\Registration
  */
-interface ISummitExternalRegistrationFeedType
-{
-    const NoneType   = '';
-    const Eventbrite = 'Eventbrite';
+interface ISummitExternalRegistrationFeedType {
+  const NoneType = "";
+  const Eventbrite = "Eventbrite";
 
-    const Samsung = 'SAMSUNG';
+  const Samsung = "SAMSUNG";
 
-    const ValidFeedTypes = [
-        self::NoneType,
-        self::Eventbrite,
-        self::Samsung,
-    ];
+  const ValidFeedTypes = [self::NoneType, self::Eventbrite, self::Samsung];
 }

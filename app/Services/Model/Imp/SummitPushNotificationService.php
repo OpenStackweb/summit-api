@@ -27,246 +27,223 @@ use models\summit\SummitPushNotificationChannel;
  * Class SummitPushNotificationService
  * @package App\Services\Model
  */
-final class SummitPushNotificationService
-    extends AbstractService
-    implements ISummitPushNotificationService
-{
+final class SummitPushNotificationService extends AbstractService implements
+  ISummitPushNotificationService {
+  /**
+   * @var IGroupRepository
+   */
+  private $group_repository;
 
-    /**
-     * @var IGroupRepository
-     */
-    private $group_repository;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  /**
+   * SummitPushNotificationService constructor.
+   * @param IGroupRepository $group_repository
+   * @param IMemberRepository $member_repository
+   * @param ITransactionService $tx_service
+   */
+  public function __construct(
+    IGroupRepository $group_repository,
+    IMemberRepository $member_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->group_repository = $group_repository;
+    $this->member_repository = $member_repository;
+  }
 
-    /**
-     * SummitPushNotificationService constructor.
-     * @param IGroupRepository $group_repository
-     * @param IMemberRepository $member_repository
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        IGroupRepository $group_repository,
-        IMemberRepository $member_repository,
-        ITransactionService $tx_service
+  /**
+   * @param Summit $summit
+   * @param Member|null $current_member
+   * @param array $data
+   * @return SummitPushNotification
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function addPushNotification(Summit $summit, Member $current_member, array $data) {
+    return $this->tx_service->transaction(function () use ($summit, $current_member, $data) {
+      $params = [];
+      if (!is_null($current_member)) {
+        $params["owner"] = $current_member;
+      }
 
-    )
-    {
-        parent::__construct($tx_service);
-        $this->group_repository = $group_repository;
-        $this->member_repository = $member_repository;
-    }
+      if (isset($data["event_id"])) {
+        $event = $summit->getScheduleEvent(intval($data["event_id"]));
+        if (is_null($event)) {
+          throw new EntityNotFoundException(
+            trans(
+              "not_found_errors.SummitPushNotificationService.addPushNotification.EventNotFound",
+              [
+                "summit_id" => $summit->getId(),
+                "event_id" => $data["event_id"],
+              ],
+            ),
+          );
+        }
+        $params["event"] = $event;
+      }
 
-    /**
-     * @param Summit $summit
-     * @param Member|null $current_member
-     * @param array $data
-     * @return SummitPushNotification
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addPushNotification(Summit $summit, Member $current_member, array $data)
-    {
-        return $this->tx_service->transaction(function () use ($summit, $current_member, $data) {
-            $params = [];
-            if (!is_null($current_member))
-                $params['owner'] = $current_member;
+      if (isset($data["group_id"])) {
+        $group = $this->group_repository->getById(intval($data["group_id"]));
+        if (is_null($group)) {
+          throw new EntityNotFoundException(
+            trans(
+              "not_found_errors.SummitPushNotificationService.addPushNotification.GroupNotFound",
+              [
+                "summit_id" => $summit->getId(),
+                "group_id" => $data["group_id"],
+              ],
+            ),
+          );
+        }
+        $params["group"] = $group;
+      }
 
-            if (isset($data['event_id'])) {
-                $event = $summit->getScheduleEvent(intval($data['event_id']));
-                if (is_null($event)) {
-                    throw new EntityNotFoundException
-                    (
-                        trans
-                        (
-                            'not_found_errors.SummitPushNotificationService.addPushNotification.EventNotFound',
-                            [
-                                'summit_id' => $summit->getId(),
-                                'event_id'  => $data['event_id']
-                            ]
-                        )
-                    );
-                }
-                $params['event'] = $event;
-            }
+      if (isset($data["recipient_ids"])) {
+        $recipients = [];
+        foreach ($data["recipient_ids"] as $recipient_id) {
+          $recipient = $this->member_repository->getById(intval($recipient_id));
 
-            if (isset($data['group_id'])) {
-                $group = $this->group_repository->getById(intval($data['group_id']));
-                if (is_null($group)) {
-                    throw new EntityNotFoundException
-                    (
-                        trans
-                        (
-                            'not_found_errors.SummitPushNotificationService.addPushNotification.GroupNotFound',
-                            [
-                                'summit_id' => $summit->getId(),
-                                'group_id'  => $data['group_id']
-                            ]
-                        )
-                    );
-                }
-                $params['group'] = $group;
-            }
+          if (is_null($recipient)) {
+            throw new EntityNotFoundException(
+              "not_found_errors.SummitPushNotificationService.addPushNotification.MemberNotFound",
+              [
+                "summit_id" => $summit->getId(),
+                "member_id" => $recipient_id,
+              ],
+            );
+          }
 
-            if (isset($data['recipient_ids'])) {
+          if (!$recipient->isActive()) {
+            throw new ValidationException(
+              trans(
+                "validation_errors.SummitPushNotificationService.addPushNotification.MemberNotActive",
+                [
+                  "summit_id" => $summit->getId(),
+                  "member_id" => $recipient_id,
+                ],
+              ),
+            );
+          }
+          $recipients[] = $recipient;
+        }
 
-                $recipients = [];
-                foreach ($data['recipient_ids'] as $recipient_id) {
-                    $recipient = $this->member_repository->getById(intval($recipient_id));
+        $params["recipients"] = $recipients;
+      }
 
-                    if (is_null($recipient)) {
-                        throw new EntityNotFoundException
-                        (
-                            'not_found_errors.SummitPushNotificationService.addPushNotification.MemberNotFound',
-                            [
-                                'summit_id' => $summit->getId(),
-                                'member_id' => $recipient_id
-                            ]
-                        );
-                    }
+      $notification = SummitPushNotificationFactory::build($summit, $data, $params);
 
-                    if(!$recipient->isActive()){
-                        throw new ValidationException
-                        (
-                            trans
-                            (
-                                'validation_errors.SummitPushNotificationService.addPushNotification.MemberNotActive',
-                                [
-                                    'summit_id' => $summit->getId(),
-                                    'member_id' => $recipient_id
-                                ]
-                            )
-                        );
-                    }
-                    $recipients[] = $recipient;
-                }
+      if ($notification->getChannel() == SummitPushNotificationChannel::Members) {
+        // auto approve for members
+        $notification->approve($current_member);
+      }
 
-                $params['recipients'] = $recipients;
+      $summit->addNotification($notification);
 
-            }
+      return $notification;
+    });
+  }
 
-            $notification = SummitPushNotificationFactory::build($summit, $data, $params);
+  /**
+   * @param Summit $summit
+   * @param Member|null $current_member
+   * @param int $notification_id
+   * @return SummitPushNotification
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function approveNotification(Summit $summit, Member $current_member, $notification_id) {
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $current_member,
+      $notification_id,
+    ) {
+      $notification = $summit->getNotificationById($notification_id);
+      if (is_null($notification)) {
+        throw new EntityNotFoundException(
+          trans(
+            "not_found_errors.SummitPushNotificationService.approveNotification.NotificationNotFound",
+            [
+              "summit_id" => $summit->getId(),
+              "notification_id" => $notification_id,
+            ],
+          ),
+        );
+      }
 
-            if($notification->getChannel() == SummitPushNotificationChannel::Members){
-                // auto approve for members
-               $notification->approve($current_member);
-            }
+      return $notification->approve($current_member);
+    });
+  }
 
-            $summit->addNotification($notification);
+  /**
+   * @param Summit $summit
+   * @param Member|null $current_member
+   * @param int $notification_id
+   * @return SummitPushNotification
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function unApproveNotification(Summit $summit, Member $current_member, $notification_id) {
+    return $this->tx_service->transaction(function () use (
+      $summit,
+      $current_member,
+      $notification_id,
+    ) {
+      $notification = $summit->getNotificationById($notification_id);
+      if (is_null($notification)) {
+        throw new EntityNotFoundException(
+          trans(
+            "not_found_errors.SummitPushNotificationService.unApproveNotification.NotificationNotFound",
+            [
+              "summit_id" => $summit->getId(),
+              "notification_id" => $notification_id,
+            ],
+          ),
+        );
+      }
 
-            return $notification;
+      return $notification->unApprove();
+    });
+  }
 
-        });
-    }
+  /**
+   * @param Summit $summit
+   * @param int $notification_id
+   * @return void
+   * @throws ValidationException
+   * @throws EntityNotFoundException
+   */
+  public function deleteNotification(Summit $summit, $notification_id) {
+    return $this->tx_service->transaction(function () use ($summit, $notification_id) {
+      $notification = $summit->getNotificationById($notification_id);
+      if (is_null($notification)) {
+        throw new EntityNotFoundException(
+          trans(
+            "not_found_errors.SummitPushNotificationService.deleteNotification.NotificationNotFound",
+            [
+              "summit_id" => $summit->getId(),
+              "notification_id" => $notification_id,
+            ],
+          ),
+        );
+      }
 
+      if ($notification->isSent()) {
+        throw new ValidationException(
+          trans(
+            "validation_errors.SummitPushNotificationService.deleteNotification.NotificationAlreadySent",
+            [
+              "summit_id" => $summit->getId(),
+              "notification_id" => $notification_id,
+            ],
+          ),
+        );
+      }
 
-    /**
-     * @param Summit $summit
-     * @param Member|null $current_member
-     * @param int $notification_id
-     * @return SummitPushNotification
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function approveNotification(Summit $summit, Member $current_member, $notification_id)
-    {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $notification_id){
-            $notification = $summit->getNotificationById($notification_id);
-            if(is_null($notification)){
-                throw new EntityNotFoundException
-                (
-                    trans
-                    (
-                        "not_found_errors.SummitPushNotificationService.approveNotification.NotificationNotFound",
-                        [
-                            'summit_id' => $summit->getId(),
-                            'notification_id' => $notification_id
-                        ]
-                    )
-
-                );
-            }
-
-            return $notification->approve($current_member);
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param Member|null $current_member
-     * @param int $notification_id
-     * @return SummitPushNotification
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function unApproveNotification(Summit $summit, Member $current_member, $notification_id)
-    {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $notification_id){
-            $notification = $summit->getNotificationById($notification_id);
-            if(is_null($notification)){
-                throw new EntityNotFoundException
-                (
-                    trans
-                    (
-                        "not_found_errors.SummitPushNotificationService.unApproveNotification.NotificationNotFound",
-                        [
-                            'summit_id' => $summit->getId(),
-                            'notification_id' => $notification_id
-                        ]
-                    )
-
-                );
-            }
-
-            return $notification->unApprove();
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $notification_id
-     * @return void
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function deleteNotification(Summit $summit, $notification_id)
-    {
-        return $this->tx_service->transaction(function() use($summit, $notification_id){
-            $notification = $summit->getNotificationById($notification_id);
-            if(is_null($notification)){
-                throw new EntityNotFoundException
-                (
-                    trans
-                    (
-                        "not_found_errors.SummitPushNotificationService.deleteNotification.NotificationNotFound",
-                        [
-                            'summit_id'       => $summit->getId(),
-                            'notification_id' => $notification_id
-                        ]
-                    )
-
-                );
-            }
-
-            if($notification->isSent()){
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.SummitPushNotificationService.deleteNotification.NotificationAlreadySent',
-                        [
-                            'summit_id'       => $summit->getId(),
-                            'notification_id' => $notification_id
-                        ]
-                    )
-                );
-            }
-
-            $summit->removeNotification($notification);
-        });
-    }
+      $summit->removeNotification($notification);
+    });
+  }
 }

@@ -21,51 +21,38 @@ use Illuminate\Support\Facades\Request;
  * Class LanguagesApiController
  * @package App\Http\Controllers
  */
-final class LanguagesApiController extends JsonController
-{
-    /**
-     * @var ILanguageRepository
-     */
-    private $language_repository;
+final class LanguagesApiController extends JsonController {
+  /**
+   * @var ILanguageRepository
+   */
+  private $language_repository;
 
-    /**
-     * LanguagesApiController constructor.
-     * @param ILanguageRepository $language_repository
-     */
-    public function __construct(ILanguageRepository $language_repository)
-    {
-        $this->language_repository = $language_repository;
+  /**
+   * LanguagesApiController constructor.
+   * @param ILanguageRepository $language_repository
+   */
+  public function __construct(ILanguageRepository $language_repository) {
+    $this->language_repository = $language_repository;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getAll() {
+    try {
+      $languages = $this->language_repository->getAll();
+      $response = new PagingResponse(count($languages), count($languages), 1, 1, $languages);
+
+      return $this->ok($response->toArray($expand = Request::input("expand", "")));
+    } catch (ValidationException $ex1) {
+      Log::warning($ex1);
+      return $this->error412([$ex1->getMessage()]);
+    } catch (EntityNotFoundException $ex2) {
+      Log::warning($ex2);
+      return $this->error404(["message" => $ex2->getMessage()]);
+    } catch (\Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
-
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        try {
-            $languages   = $this->language_repository->getAll();
-            $response    = new PagingResponse
-            (
-                count($languages),
-                count($languages),
-                1,
-                1,
-                $languages
-            );
-
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
+  }
 }

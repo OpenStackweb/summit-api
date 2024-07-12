@@ -16,11 +16,10 @@ use models\summit\Summit;
  * Interface IExternalRegistrationFeedFactory
  * @package App\Services\Apis\ExternalRegistrationFeeds
  */
-interface IExternalRegistrationFeedFactory
-{
-    /**
-     * @param Summit $summit
-     * @return IExternalRegistrationFeed|null
-     */
-    public function build(Summit $summit): ?IExternalRegistrationFeed;
+interface IExternalRegistrationFeedFactory {
+  /**
+   * @param Summit $summit
+   * @return IExternalRegistrationFeed|null
+   */
+  public function build(Summit $summit): ?IExternalRegistrationFeed;
 }

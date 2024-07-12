@@ -14,96 +14,94 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitOrderExtraQuestionAnswer")
  * Class SummitOrderExtraQuestionAnswer
  * @package models\summit
  */
-class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
-{
-    use One2ManyPropertyTrait;
+class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer {
+  use One2ManyPropertyTrait;
 
-    protected $getIdMappings = [
-        'getOrderId'    => 'order',
-        'getAttendeeId' => 'attendee',
-        'getQuestionId' => 'question',
-    ];
+  protected $getIdMappings = [
+    "getOrderId" => "order",
+    "getAttendeeId" => "attendee",
+    "getQuestionId" => "question",
+  ];
 
-    protected $hasPropertyMappings = [
-        'hasOrder'    => 'order',
-        'hasAttendee' => 'attendee',
-        'hasQuestion' => 'question',
-    ];
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitOrder", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="OrderID", referencedColumnName="ID")
-     * @var SummitOrder
-     */
-    private $order;
+  protected $hasPropertyMappings = [
+    "hasOrder" => "order",
+    "hasAttendee" => "attendee",
+    "hasQuestion" => "question",
+  ];
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitOrder", inversedBy="extra_question_answers")
+   * @ORM\JoinColumn(name="OrderID", referencedColumnName="ID")
+   * @var SummitOrder
+   */
+  private $order;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID")
-     * @var SummitAttendee
-     */
-    private $attendee;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="extra_question_answers")
+   * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID")
+   * @var SummitAttendee
+   */
+  private $attendee;
 
-    /**
-     * @return SummitOrder
-     */
-    public function getOrder(): ?SummitOrder
-    {
-        return $this->order;
+  /**
+   * @return SummitOrder
+   */
+  public function getOrder(): ?SummitOrder {
+    return $this->order;
+  }
+
+  /**
+   * @param SummitOrder $order
+   */
+  public function setOrder(SummitOrder $order): void {
+    $this->order = $order;
+  }
+
+  /**
+   * @return SummitAttendee
+   */
+  public function getAttendee(): ?SummitAttendee {
+    return $this->attendee;
+  }
+
+  /**
+   * @param SummitAttendee $attendee
+   */
+  public function setAttendee(SummitAttendee $attendee): void {
+    $this->attendee = $attendee;
+  }
+
+  public function clearOrder() {
+    $this->order = null;
+  }
+
+  public function clearAttendee() {
+    $this->attendee = null;
+  }
+
+  /**
+   * @param string|array $value
+   * @throws ValidationException
+   */
+  public function setValue($value): void {
+    parent::setValue($value);
+    if (!is_null($this->attendee)) {
+      $this->attendee->updateLastEdited();
     }
+  }
 
-    /**
-     * @param SummitOrder $order
-     */
-    public function setOrder(SummitOrder $order): void
-    {
-        $this->order = $order;
-    }
-
-    /**
-     * @return SummitAttendee
-     */
-    public function getAttendee(): ?SummitAttendee
-    {
-        return $this->attendee;
-    }
-
-    /**
-     * @param SummitAttendee $attendee
-     */
-    public function setAttendee(SummitAttendee $attendee): void
-    {
-        $this->attendee = $attendee;
-    }
-
-
-    public function clearOrder(){
-        $this->order = null;
-    }
-
-    public function clearAttendee(){
-        $this->attendee = null;
-    }
-
-    /**
-     * @param string|array $value
-     * @throws ValidationException
-     */
-    public function setValue($value): void
-    {
-        parent::setValue($value);
-        if(!is_null($this->attendee))
-            $this->attendee->updateLastEdited();
-    }
-
-    public function __toString():string
-    {
-        return sprintf("SummitOrderExtraQuestionAnswer attendee %s question %s value %s", $this->attendee->getId(), $this->question->getId(), $this->value);
-    }
+  public function __toString(): string {
+    return sprintf(
+      "SummitOrderExtraQuestionAnswer attendee %s question %s value %s",
+      $this->attendee->getId(),
+      $this->question->getId(),
+      $this->value,
+    );
+  }
 }

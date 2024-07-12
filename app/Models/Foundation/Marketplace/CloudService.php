@@ -12,58 +12,53 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="CloudService")
  * Class CloudService
  * @package App\Models\Foundation\Marketplace
  */
-class CloudService extends OpenStackImplementation
-{
-    const ClassName = 'CloudService';
+class CloudService extends OpenStackImplementation {
+  const ClassName = "CloudService";
 
-    /**
-     * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
-     * @var DataCenterLocation[]
-     */
-    protected $data_centers;
+  /**
+   * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
+   * @var DataCenterLocation[]
+   */
+  protected $data_centers;
 
-    /**
-     * @ORM\OneToMany(targetEntity="DataCenterRegion", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
-     * @var DataCenterRegion[]
-     */
-    protected $data_center_regions;
+  /**
+   * @ORM\OneToMany(targetEntity="DataCenterRegion", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
+   * @var DataCenterRegion[]
+   */
+  protected $data_center_regions;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->data_centers         = new ArrayCollection();
-        $this->capabilities_offered = new ArrayCollection();
-        $this->data_center_regions  = new ArrayCollection();
-    }
+  public function __construct() {
+    parent::__construct();
+    $this->data_centers = new ArrayCollection();
+    $this->capabilities_offered = new ArrayCollection();
+    $this->data_center_regions = new ArrayCollection();
+  }
 
-    /**
-     * @return string
-     */
-    public function getClassName():string
-    {
-        return self::ClassName;
-    }
+  /**
+   * @return string
+   */
+  public function getClassName(): string {
+    return self::ClassName;
+  }
 
-    /**
-     * @return DataCenterLocation[]
-     */
-    public function getDataCenters()
-    {
-        return $this->data_centers->toArray();
-    }
+  /**
+   * @return DataCenterLocation[]
+   */
+  public function getDataCenters() {
+    return $this->data_centers->toArray();
+  }
 
-    /**
-     * @return DataCenterRegion[]
-     */
-    public function getDataCenterRegions()
-    {
-        return $this->data_center_regions->toArray();
-    }
+  /**
+   * @return DataCenterRegion[]
+   */
+  public function getDataCenterRegions() {
+    return $this->data_center_regions->toArray();
+  }
 }

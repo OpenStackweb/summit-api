@@ -16,11 +16,10 @@
  * Interface IAdminActionsCalendarSyncProcessingService
  * @package App\Services\Model
  */
-interface IAdminActionsCalendarSyncProcessingService
-{
-    /**
-     * @param int $batch_size
-     * @return int
-     */
-    public function processActions($batch_size = 100);
+interface IAdminActionsCalendarSyncProcessingService {
+  /**
+   * @param int $batch_size
+   * @return int
+   */
+  public function processActions($batch_size = 100);
 }

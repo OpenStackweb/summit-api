@@ -20,20 +20,18 @@ use utils\PagingResponse;
  * Interface ISummitLocationBannerRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitLocationBannerRepository extends ISummitOwnedEntityRepository
-{
-    /**
-     * @param SummitAbstractLocation $location
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getBySummitLocation
-    (
-        SummitAbstractLocation $location,
-        PagingInfo $paging_info,
-        Filter $filter = null,
-        Order $order = null
-    );
+interface ISummitLocationBannerRepository extends ISummitOwnedEntityRepository {
+  /**
+   * @param SummitAbstractLocation $location
+   * @param PagingInfo $paging_info
+   * @param Filter|null $filter
+   * @param Order|null $order
+   * @return PagingResponse
+   */
+  public function getBySummitLocation(
+    SummitAbstractLocation $location,
+    PagingInfo $paging_info,
+    Filter $filter = null,
+    Order $order = null,
+  );
 }

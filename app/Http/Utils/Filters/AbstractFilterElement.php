@@ -12,30 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-abstract class AbstractFilterElement
-{
-    /**
-     * @var string
-     */
-    protected $operator;
+abstract class AbstractFilterElement {
+  /**
+   * @var string
+   */
+  protected $operator;
 
-    const OperatorMappings = [
-        'start_like' => 'like'
-    ];
+  const OperatorMappings = [
+    "start_like" => "like",
+  ];
 
-    /**
-     * @param string $operator
-     */
-    protected function __construct($operator)
-    {
-        $this->operator = $operator;
+  /**
+   * @param string $operator
+   */
+  protected function __construct($operator) {
+    $this->operator = $operator;
+  }
+
+  /**
+   * @return string|array
+   */
+  public function getOperator() {
+    if (is_array($this->operator)) {
+      return $this->operator;
     }
-
-    /**
-     * @return string|array
-     */
-    public function getOperator(){
-        if(is_array($this->operator)) return $this->operator;
-        return isset(self::OperatorMappings[$this->operator]) ? self::OperatorMappings[$this->operator] : $this->operator;
-    }
+    return isset(self::OperatorMappings[$this->operator])
+      ? self::OperatorMappings[$this->operator]
+      : $this->operator;
+  }
 }

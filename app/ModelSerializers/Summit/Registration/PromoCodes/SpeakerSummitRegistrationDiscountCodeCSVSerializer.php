@@ -12,34 +12,37 @@
  * limitations under the License.
  **/
 
-
 use models\summit\SpeakerSummitRegistrationDiscountCode;
 
 /**
  * Class SpeakerSummitRegistrationDiscountCodeCSVSerializer
  * @package ModelSerializers
  */
-class SpeakerSummitRegistrationDiscountCodeCSVSerializer
-    extends SummitRegistrationDiscountCodeSerializer
-{
-    use SummitRegistrationDiscountCodeCSVSerializerTrait;
+class SpeakerSummitRegistrationDiscountCodeCSVSerializer extends
+  SummitRegistrationDiscountCodeSerializer {
+  use SummitRegistrationDiscountCodeCSVSerializerTrait;
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $code = $this->object;
-        if (!$code instanceof SpeakerSummitRegistrationDiscountCode) return [];
-
-        return self::serializeFields2CSV
-        (
-            $code,
-            parent::serialize($expand, $fields, $relations, $params)
-        );
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $code = $this->object;
+    if (!$code instanceof SpeakerSummitRegistrationDiscountCode) {
+      return [];
     }
+
+    return self::serializeFields2CSV(
+      $code,
+      parent::serialize($expand, $fields, $relations, $params),
+    );
+  }
 }

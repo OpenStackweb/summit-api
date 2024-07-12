@@ -26,196 +26,217 @@ use models\summit\Summit;
  * Class SummitAdministratorPermissionGroupService
  * @package App\Services\Model\Imp
  */
-final class SummitAdministratorPermissionGroupService
-    extends AbstractService
-    implements ISummitAdministratorPermissionGroupService
-{
+final class SummitAdministratorPermissionGroupService extends AbstractService implements
+  ISummitAdministratorPermissionGroupService {
+  /**
+   * @var ISummitAdministratorPermissionGroupRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISummitAdministratorPermissionGroupRepository
-     */
-    private $repository;
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+  /**
+   * @var IMemberRepository
+   */
+  private $member_repository;
 
-    /**
-     * @var IMemberRepository
-     */
-    private $member_repository;
+  public function __construct(
+    ISummitAdministratorPermissionGroupRepository $repository,
+    ISummitRepository $summit_repository,
+    IMemberRepository $member_repository,
+    ITransactionService $tx_service,
+  ) {
+    parent::__construct($tx_service);
+    $this->repository = $repository;
+    $this->summit_repository = $summit_repository;
+    $this->member_repository = $member_repository;
+  }
 
+  /**
+   * @inheritDoc
+   */
+  public function create(array $payload): SummitAdministratorPermissionGroup {
+    return $this->tx_service->transaction(function () use ($payload) {
+      $group = $this->repository->getByTitle($payload["title"]);
 
-    public function __construct
-    (
-        ISummitAdministratorPermissionGroupRepository $repository,
-        ISummitRepository $summit_repository,
-        IMemberRepository $member_repository,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->repository = $repository;
-        $this->summit_repository = $summit_repository;
-        $this->member_repository = $member_repository;
-    }
+      if (!is_null($group)) {
+        throw new ValidationException(sprintf("Group %s already exists.", $group->getTitle()));
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function create(array $payload): SummitAdministratorPermissionGroup
-    {
-        return $this->tx_service->transaction(function () use($payload){
+      $group = new SummitAdministratorPermissionGroup();
 
-            $group = $this->repository->getByTitle($payload['title']);
+      $group->setTitle(trim($payload["title"]));
 
-            if(!is_null($group)){
-                throw new ValidationException(sprintf("Group %s already exists.", $group->getTitle()));
-            }
+      foreach ($payload["summits"] as $summit_id) {
+        $summit = $this->summit_repository->getById(intval($summit_id));
+        if (is_null($summit)) {
+          continue;
+        }
+        if (!$summit instanceof Summit) {
+          continue;
+        }
+        $group->addSummit($summit);
+      }
 
-            $group = new SummitAdministratorPermissionGroup();
+      foreach ($payload["members"] as $member_id) {
+        $member = $this->member_repository->getById(intval($member_id));
+        if (is_null($member)) {
+          continue;
+        }
+        if (!$member instanceof Member) {
+          continue;
+        }
+        $group->addMember($member);
+      }
 
-            $group->setTitle(trim($payload['title']));
+      $this->repository->add($group);
 
-            foreach ($payload['summits'] as $summit_id){
-                $summit = $this->summit_repository->getById(intval($summit_id));
-                if(is_null($summit)) continue;
-                if(!$summit instanceof Summit) continue;
-                $group->addSummit($summit);
-            }
+      return $group;
+    });
+  }
 
-            foreach ($payload['members'] as $member_id){
-                $member = $this->member_repository->getById(intval($member_id));
-                if(is_null($member)) continue;
-                if(!$member instanceof Member) continue;
-                $group->addMember($member);
-            }
+  /**
+   * @inheritDoc
+   */
+  public function update(int $id, array $payload): SummitAdministratorPermissionGroup {
+    return $this->tx_service->transaction(function () use ($id, $payload) {
+      if (isset($payload["title"])) {
+        $former_group = $this->repository->getByTitle($payload["title"]);
 
-            $this->repository->add($group);
+        if (!is_null($former_group) && $former_group->getId() != $id) {
+          throw new ValidationException(
+            sprintf("Group %s already exists.", $former_group->getTitle()),
+          );
+        }
+      }
 
-            return $group;
-        });
-    }
+      $group = $this->repository->getById($id);
 
-    /**
-     * @inheritDoc
-     */
-    public function update(int $id, array $payload): SummitAdministratorPermissionGroup
-    {
-        return $this->tx_service->transaction(function () use($id, $payload){
+      if (is_null($group)) {
+        throw new EntityNotFoundException();
+      }
 
-            if(isset($payload['title'])) {
-                $former_group = $this->repository->getByTitle($payload['title']);
+      if (isset($payload["title"])) {
+        $group->setTitle(trim($payload["title"]));
+      }
 
-                if (!is_null($former_group) && $former_group->getId() != $id) {
-                    throw new ValidationException(sprintf("Group %s already exists.", $former_group->getTitle()));
-                }
-            }
+      if (isset($payload["summits"])) {
+        $group->clearSummits();
+        foreach ($payload["summits"] as $summit_id) {
+          $summit = $this->summit_repository->getById(intval($summit_id));
+          if (is_null($summit)) {
+            continue;
+          }
+          if (!$summit instanceof Summit) {
+            continue;
+          }
+          $group->addSummit($summit);
+        }
+      }
 
-            $group = $this->repository->getById($id);
+      if (isset($payload["members"])) {
+        $group->clearMembers();
+        foreach ($payload["members"] as $member_id) {
+          $member = $this->member_repository->getById(intval($member_id));
+          if (is_null($member)) {
+            continue;
+          }
+          if (!$member instanceof Member) {
+            continue;
+          }
+          $group->addMember($member);
+        }
+      }
 
-            if(is_null($group))
-                throw new EntityNotFoundException();
+      return $group;
+    });
+  }
 
-            if(isset($payload['title'])) {
-                $group->setTitle(trim($payload['title']));
-            }
+  /**
+   * @inheritDoc
+   */
+  public function delete(int $id): void {
+    $this->tx_service->transaction(function () use ($id) {
+      $group = $this->repository->getById($id);
 
-            if(isset($payload['summits'])) {
-                $group->clearSummits();
-                foreach ($payload['summits'] as $summit_id) {
-                    $summit = $this->summit_repository->getById(intval($summit_id));
-                    if (is_null($summit)) continue;
-                    if (!$summit instanceof Summit) continue;
-                    $group->addSummit($summit);
-                }
-            }
+      if (is_null($group)) {
+        throw new EntityNotFoundException();
+      }
 
-            if(isset($payload['members'])) {
-                $group->clearMembers();
-                foreach ($payload['members'] as $member_id) {
-                    $member = $this->member_repository->getById(intval($member_id));
-                    if (is_null($member)) continue;
-                    if (!$member instanceof Member) continue;
-                    $group->addMember($member);
-                }
-            }
+      $this->repository->delete($group);
+    });
+  }
 
-            return $group;
-        });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function addMemberTo(
+    SummitAdministratorPermissionGroup $group,
+    int $member_id,
+  ): SummitAdministratorPermissionGroup {
+    return $this->tx_service->transaction(function () use ($group, $member_id) {
+      $member = $this->member_repository->getById($member_id);
 
-    /**
-     * @inheritDoc
-     */
-    public function delete(int $id): void
-    {
-        $this->tx_service->transaction(function () use($id){
-            $group = $this->repository->getById($id);
+      if (is_null($member) || !$member instanceof Member) {
+        throw new EntityNotFoundException();
+      }
 
-            if(is_null($group))
-                throw new EntityNotFoundException();
+      $group->addMember($member);
+    });
+  }
 
-            $this->repository->delete($group);
-        });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function removeMemberFrom(
+    SummitAdministratorPermissionGroup $group,
+    int $member_id,
+  ): SummitAdministratorPermissionGroup {
+    return $this->tx_service->transaction(function () use ($group, $member_id) {
+      $member = $this->member_repository->getById($member_id);
 
-    /**
-     * @inheritDoc
-     */
-    public function addMemberTo(SummitAdministratorPermissionGroup $group, int $member_id): SummitAdministratorPermissionGroup
-    {
-        return $this->tx_service->transaction(function () use($group, $member_id){
-            $member = $this->member_repository->getById($member_id);
+      if (is_null($member) || !$member instanceof Member) {
+        throw new EntityNotFoundException();
+      }
 
-            if(is_null($member) || !$member instanceof Member)
-                throw new EntityNotFoundException();
+      $group->removeMember($member);
+    });
+  }
 
-            $group->addMember($member);
-        });
-    }
+  /**
+   * @inheritDoc
+   */
+  public function addSummitTo(
+    SummitAdministratorPermissionGroup $group,
+    int $summit_id,
+  ): SummitAdministratorPermissionGroup {
+    return $this->tx_service->transaction(function () use ($group, $summit_id) {
+      $summit = $this->summit_repository->getById($summit_id);
+      if (is_null($summit) || !$summit instanceof Summit) {
+        throw new EntityNotFoundException();
+      }
 
-    /**
-     * @inheritDoc
-     */
-    public function removeMemberFrom(SummitAdministratorPermissionGroup $group, int $member_id): SummitAdministratorPermissionGroup
-    {
-        return $this->tx_service->transaction(function () use($group, $member_id){
-            $member = $this->member_repository->getById($member_id);
+      $group->addSummit($summit);
+    });
+  }
 
-            if(is_null($member) || !$member instanceof Member)
-                throw new EntityNotFoundException();
+  /**
+   * @inheritDoc
+   */
+  public function removeSummitFrom(
+    SummitAdministratorPermissionGroup $group,
+    int $summit_id,
+  ): SummitAdministratorPermissionGroup {
+    return $this->tx_service->transaction(function () use ($group, $summit_id) {
+      $summit = $this->summit_repository->getById($summit_id);
+      if (is_null($summit) || !$summit instanceof Summit) {
+        throw new EntityNotFoundException();
+      }
 
-            $group->removeMember($member);
-        });
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function addSummitTo(SummitAdministratorPermissionGroup $group, int $summit_id): SummitAdministratorPermissionGroup
-    {
-        return $this->tx_service->transaction(function () use($group, $summit_id){
-            $summit = $this->summit_repository->getById($summit_id);
-            if(is_null($summit) || !$summit instanceof Summit)
-                throw new EntityNotFoundException();
-
-            $group->addSummit($summit);
-        });
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function removeSummitFrom(SummitAdministratorPermissionGroup $group, int $summit_id): SummitAdministratorPermissionGroup
-    {
-        return $this->tx_service->transaction(function () use($group, $summit_id){
-            $summit = $this->summit_repository->getById($summit_id);
-            if(is_null($summit) || !$summit instanceof Summit)
-                throw new EntityNotFoundException();
-
-            $group->removeSummit($summit);
-        });
-    }
+      $group->removeSummit($summit);
+    });
+  }
 }

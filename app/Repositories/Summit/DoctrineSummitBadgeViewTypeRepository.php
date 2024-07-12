@@ -22,40 +22,33 @@ use utils\DoctrineLeftJoinFilterMapping;
  * Class DoctrineSummitBadgeViewTypeRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitBadgeViewTypeRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitBadgeViewTypeRepository
-{
+final class DoctrineSummitBadgeViewTypeRepository extends SilverStripeDoctrineRepository implements
+  ISummitBadgeViewTypeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitBadgeViewType::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitBadgeViewType::class;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "name" => "e.name:json_string",
+      "is_default" => "e.is_default|json_boolean",
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'name'        => 'e.name:json_string',
-            'is_default'  => 'e.is_default|json_boolean',
-            'summit_id'   => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'name' => 'e.name',
-            'id' => 'e.id'
-        ];
-    }
-
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "name" => "e.name",
+      "id" => "e.id",
+    ];
+  }
 }

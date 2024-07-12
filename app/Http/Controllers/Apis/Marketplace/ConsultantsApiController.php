@@ -18,20 +18,19 @@ use models\oauth2\IResourceServerContext;
  * Class ConsultantsApiController
  * @package App\Http\Controllers
  */
-final class ConsultantsApiController extends AbstractCompanyServiceApiController
-{
+final class ConsultantsApiController extends AbstractCompanyServiceApiController {
+  /**
+   * ConsultansApiController constructor.
+   * @param IConsultantRepository $repository
+   */
+  public function __construct(
+    IConsultantRepository $repository,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($repository, $resource_server_context);
+  }
 
-    /**
-     * ConsultansApiController constructor.
-     * @param IConsultantRepository $repository
-     */
-    public function __construct(IConsultantRepository $repository, IResourceServerContext $resource_server_context)
-    {
-        parent::__construct($repository, $resource_server_context);
-    }
-
-    public function getAll()
-    {
-        return parent::getAll();
-    }
+  public function getAll() {
+    return parent::getAll();
+  }
 }

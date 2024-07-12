@@ -22,33 +22,27 @@ use utils\DoctrineLeftJoinFilterMapping;
  * Class DoctrineSponsorSocialNetworkRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSponsorSocialNetworkRepository
-    extends SilverStripeDoctrineRepository
-    implements ISponsorSocialNetworkRepository
-{
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'    => 'e.id',
-        ];
-    }
+final class DoctrineSponsorSocialNetworkRepository extends SilverStripeDoctrineRepository implements
+  ISponsorSocialNetworkRepository {
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+    ];
+  }
 
-    protected function getFilterMappings()
-    {
-        return [
-            'sponsor_id' =>
-                new DoctrineLeftJoinFilterMapping("e.sponsor", "s" ,"s.id :operator :value"),
-        ];
-    }
+  protected function getFilterMappings() {
+    return [
+      "sponsor_id" => new DoctrineLeftJoinFilterMapping("e.sponsor", "s", "s.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SponsorSocialNetwork::class;
-    }
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SponsorSocialNetwork::class;
+  }
 }

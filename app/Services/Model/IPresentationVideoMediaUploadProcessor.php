@@ -17,52 +17,60 @@ use App\Services\Apis\MuxCredentials;
  * Interface IPresentationVideoMediaUploadProcessor
  * @package App\Services\Model
  */
-interface IPresentationVideoMediaUploadProcessor
-{
-    /**
-     * @param int $summit_id
-     * @param MuxCredentials $credentials
-     * @param string|null $mountingFolder
-     * @return int
-     */
-    public function processPublishedPresentationFor(int $summit_id, MuxCredentials $credentials, ?string $mountingFolder = null):int;
+interface IPresentationVideoMediaUploadProcessor {
+  /**
+   * @param int $summit_id
+   * @param MuxCredentials $credentials
+   * @param string|null $mountingFolder
+   * @return int
+   */
+  public function processPublishedPresentationFor(
+    int $summit_id,
+    MuxCredentials $credentials,
+    ?string $mountingFolder = null,
+  ): int;
 
-    /**
-     * @param int $event_id
-     * @param string|null $mountingFolder
-     * @param MuxCredentials|null $credentials
-     * @return bool
-     */
-    public function processEvent(int $event_id, ?string $mountingFolder, ?MuxCredentials $credentials = null):bool;
+  /**
+   * @param int $event_id
+   * @param string|null $mountingFolder
+   * @param MuxCredentials|null $credentials
+   * @return bool
+   */
+  public function processEvent(
+    int $event_id,
+    ?string $mountingFolder,
+    ?MuxCredentials $credentials = null,
+  ): bool;
 
-    /**
-     * @param int $event_id
-     * @param MuxCredentials|null $credentials
-     */
-    public function enableMP4Support(int $event_id, ?MuxCredentials $credentials = null):void;
+  /**
+   * @param int $event_id
+   * @param MuxCredentials|null $credentials
+   */
+  public function enableMP4Support(int $event_id, ?MuxCredentials $credentials = null): void;
 
-    /**
-     * @param int $summit_id
-     * @param MuxCredentials $credentials
-     * @param string|null $mail_to
-     * @return int
-     * @throws \Exception
-     */
-    public function processSummitEventsStreamURLs
-    (
-        int $summit_id,
-        MuxCredentials $credentials,
-        ?string $mail_to
-    ):int;
+  /**
+   * @param int $summit_id
+   * @param MuxCredentials $credentials
+   * @param string|null $mail_to
+   * @return int
+   * @throws \Exception
+   */
+  public function processSummitEventsStreamURLs(
+    int $summit_id,
+    MuxCredentials $credentials,
+    ?string $mail_to,
+  ): int;
 
-    /**
-     * @param int $summit_id
-     * @param MuxCredentials $credentials
-     * @param string|null $mail_to
-     * @return int
-     * @throws \Exception
-     */
-    public function createVideosFromMUXAssets(int $summit_id,
-                                              MuxCredentials $credentials,
-                                              ?string $mail_to):int;
+  /**
+   * @param int $summit_id
+   * @param MuxCredentials $credentials
+   * @param string|null $mail_to
+   * @return int
+   * @throws \Exception
+   */
+  public function createVideosFromMUXAssets(
+    int $summit_id,
+    MuxCredentials $credentials,
+    ?string $mail_to,
+  ): int;
 }

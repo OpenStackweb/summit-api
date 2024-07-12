@@ -20,51 +20,62 @@ use models\summit\SummitTrackChair;
  * Interface ITrackChairService
  * @package App\Services\Model
  */
-interface ITrackChairService
-{
-    /**
-     * @param Summit $summit
-     * @param array $payload
-     * @return SummitTrackChair
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function addTrackChair(Summit $summit, array $payload):SummitTrackChair;
+interface ITrackChairService {
+  /**
+   * @param Summit $summit
+   * @param array $payload
+   * @return SummitTrackChair
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function addTrackChair(Summit $summit, array $payload): SummitTrackChair;
 
-    /**
-     * @param Summit $summit
-     * @param int $track_chair_id
-     * @param array $payload
-     * @return SummitTrackChair
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function updateTrackChair(Summit $summit, int $track_chair_id, array $payload): SummitTrackChair;
+  /**
+   * @param Summit $summit
+   * @param int $track_chair_id
+   * @param array $payload
+   * @return SummitTrackChair
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function updateTrackChair(
+    Summit $summit,
+    int $track_chair_id,
+    array $payload,
+  ): SummitTrackChair;
 
-    /**
-     * @param Summit $summit
-     * @param int $track_chair_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     * @throws AuthzException
-     */
-    public function deleteTrackChair(Summit $summit, int $track_chair_id):void;
+  /**
+   * @param Summit $summit
+   * @param int $track_chair_id
+   * @throws EntityNotFoundException
+   * @throws ValidationException
+   * @throws AuthzException
+   */
+  public function deleteTrackChair(Summit $summit, int $track_chair_id): void;
 
-    /**
-     * @param Summit $summit
-     * @param int $track_chair_id
-     * @param int $track_id
-     * @return SummitTrackChair
-     */
-    public function addTrack2TrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair;
+  /**
+   * @param Summit $summit
+   * @param int $track_chair_id
+   * @param int $track_id
+   * @return SummitTrackChair
+   */
+  public function addTrack2TrackChair(
+    Summit $summit,
+    int $track_chair_id,
+    int $track_id,
+  ): SummitTrackChair;
 
-    /**
-     * @param Summit $summit
-     * @param int $track_chair_id
-     * @param int $track_id
-     * @return SummitTrackChair
-     */
-    public function removeFromTrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair;
+  /**
+   * @param Summit $summit
+   * @param int $track_chair_id
+   * @param int $track_id
+   * @return SummitTrackChair
+   */
+  public function removeFromTrackChair(
+    Summit $summit,
+    int $track_chair_id,
+    int $track_id,
+  ): SummitTrackChair;
 }

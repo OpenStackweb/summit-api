@@ -17,15 +17,12 @@ use App\Models\Foundation\Marketplace\IConsultantRepository;
  * Class DoctrineConsultantRepository
  * @package App\Repositories\Marketplace
  */
-final class DoctrineConsultantRepository
-    extends DoctrineCompanyServiceRepository
-    implements IConsultantRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return Consultant::class;
-    }
+final class DoctrineConsultantRepository extends DoctrineCompanyServiceRepository implements
+  IConsultantRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Consultant::class;
+  }
 }

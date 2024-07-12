@@ -24,106 +24,103 @@ use Illuminate\Support\Facades\Config;
  * @package App\Console\Commands
  */
 final class SummitListJsonGenerator extends Command {
+  /**
+   * @var ISummitService
+   */
+  private $service;
 
-    /**
-     * @var ISummitService
-     */
-    private $service;
+  /**
+   * @var ISummitRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $repository;
+  /**
+   * @var ICacheService
+   */
+  private $cache_service;
 
-    /**
-     * @var ICacheService
-     */
-    private $cache_service;
+  /**
+   * SummitJsonGenerator constructor.
+   * @param ISummitRepository $repository
+   * @param ISummitService $service
+   * @param ICacheService $cache_service
+   */
+  public function __construct(
+    ISummitRepository $repository,
+    ISummitService $service,
+    ICacheService $cache_service,
+  ) {
+    parent::__construct();
+    $this->repository = $repository;
+    $this->service = $service;
+    $this->cache_service = $cache_service;
+  }
 
-    /**
-     * SummitJsonGenerator constructor.
-     * @param ISummitRepository $repository
-     * @param ISummitService $service
-     * @param ICacheService $cache_service
-     */
-    public function __construct(
-        ISummitRepository $repository,
-        ISummitService $service,
-        ICacheService $cache_service
-    )
-    {
-        parent::__construct();
-        $this->repository    = $repository;
-        $this->service       = $service;
-        $this->cache_service = $cache_service;
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit-list:json-generator";
+
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit-list:json-generator";
+
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Regenerates Summit List Json";
+
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    try {
+      $this->info("processing summits");
+      $start = time();
+      $summits = $this->repository->getAvailables();
+
+      $response = new PagingResponse(count($summits), count($summits), 1, 1, $summits);
+
+      $data = $response->toArray();
+      $key_id = "/api/v1/summits";
+      $key_id_public = "/api/public/v1/summits";
+
+      $cache_lifetime = intval(Config::get("server.response_cache_lifetime", 300));
+      $current_time = time();
+      Log::info(sprintf("writing cached response for %s", $key_id));
+      $this->info(sprintf("writing cached response for %s", $key_id));
+      $this->cache_service->setSingleValue(
+        $key_id,
+        gzdeflate(json_encode($data), 9),
+        $cache_lifetime,
+      );
+      $this->cache_service->setSingleValue($key_id . ".generated", $current_time, $cache_lifetime);
+      Log::info(sprintf("writing cached response for %s", $key_id_public));
+      $this->info(sprintf("writing cached response for %s", $key_id_public));
+      $this->cache_service->setSingleValue(
+        $key_id_public,
+        gzdeflate(json_encode($data), 9),
+        $cache_lifetime,
+      );
+      $this->cache_service->setSingleValue(
+        $key_id_public . ".generated",
+        $current_time,
+        $cache_lifetime,
+      );
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
-
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit-list:json-generator';
-
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit-list:json-generator';
-
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Regenerates Summit List Json';
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-
-        try {
-
-            $this->info("processing summits");
-            $start   = time();
-            $summits = $this->repository->getAvailables();
-
-            $response = new PagingResponse
-            (
-                count($summits),
-                count($summits),
-                1,
-                1,
-                $summits
-            );
-
-            $data           = $response->toArray();
-            $key_id         = "/api/v1/summits";
-            $key_id_public  = "/api/public/v1/summits";
-
-            $cache_lifetime = intval(Config::get('server.response_cache_lifetime', 300));
-            $current_time   = time();
-            Log::info(sprintf("writing cached response for %s", $key_id));
-            $this->info(sprintf("writing cached response for %s", $key_id));
-            $this->cache_service->setSingleValue($key_id, gzdeflate(json_encode($data), 9), $cache_lifetime);
-            $this->cache_service->setSingleValue($key_id.".generated", $current_time, $cache_lifetime);
-            Log::info(sprintf("writing cached response for %s", $key_id_public));
-            $this->info(sprintf("writing cached response for %s", $key_id_public));
-            $this->cache_service->setSingleValue($key_id_public, gzdeflate(json_encode($data), 9), $cache_lifetime);
-            $this->cache_service->setSingleValue($key_id_public.".generated", $current_time, $cache_lifetime);
-            $end   = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-        }
-    }
-
+  }
 }

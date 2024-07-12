@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ISummitRefundRequestRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitRefundRequestRepository extends IBaseRepository
-{
-
+interface ISummitRefundRequestRepository extends IBaseRepository {
 }

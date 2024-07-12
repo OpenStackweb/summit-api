@@ -16,7 +16,5 @@
  * Class MyFavoritesRemove
  * @package App\Events
  */
-class MyFavoritesRemove extends MyFavoritesAdd
-{
-
+class MyFavoritesRemove extends MyFavoritesAdd {
 }

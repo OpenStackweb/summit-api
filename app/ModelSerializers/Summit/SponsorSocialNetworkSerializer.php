@@ -18,12 +18,11 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SponsorSocialNetworkSerializer
  * @package App\ModelSerializers\Summit
  */
-final class SponsorSocialNetworkSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'SponsorId' => 'sponsor_id:json_int',
-        'Link' => 'link:json_string',
-        'IconCssClass' => 'icon_css_class:json_string',
-        'Enabled' => 'is_enabled:json_boolean',
-    ];
+final class SponsorSocialNetworkSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "SponsorId" => "sponsor_id:json_int",
+    "Link" => "link:json_string",
+    "IconCssClass" => "icon_css_class:json_string",
+    "Enabled" => "is_enabled:json_boolean",
+  ];
 }

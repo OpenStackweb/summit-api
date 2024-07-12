@@ -18,19 +18,18 @@ use ModelSerializers\SilverStripeSerializer;
  * Class OfficeSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class OfficeSerializer extends SilverStripeSerializer
-{
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Address'  => 'address:json_string',
-        'Address2' => 'address2:json_string',
-        'State'    => 'state:json_string',
-        'ZipCode'  => 'zip_code:json_string',
-        'City'     => 'city:json_string',
-        'Country'  => 'country:json_string',
-        'Lat'      => 'lat:json_float',
-        'Lng'      => 'lng:json_float',
-    ];
+final class OfficeSerializer extends SilverStripeSerializer {
+  /**
+   * @var array
+   */
+  protected static $array_mappings = [
+    "Address" => "address:json_string",
+    "Address2" => "address2:json_string",
+    "State" => "state:json_string",
+    "ZipCode" => "zip_code:json_string",
+    "City" => "city:json_string",
+    "Country" => "country:json_string",
+    "Lat" => "lat:json_float",
+    "Lng" => "lng:json_float",
+  ];
 }

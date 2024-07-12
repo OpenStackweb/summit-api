@@ -16,40 +16,41 @@ use models\summit\SummitLocationImage;
  * Class SummitLocationImageFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitLocationImageFactory
-{
-    /**
-     * @param array $data
-     * @return SummitLocationImage
-     */
-    public static function buildMap(array $data){
-        $image = new SummitLocationImage();
-        $image->setClassName(SummitLocationImage::TypeMap);
-        return self::populate($image, $data);
+final class SummitLocationImageFactory {
+  /**
+   * @param array $data
+   * @return SummitLocationImage
+   */
+  public static function buildMap(array $data) {
+    $image = new SummitLocationImage();
+    $image->setClassName(SummitLocationImage::TypeMap);
+    return self::populate($image, $data);
+  }
+
+  /**
+   * @param array $data
+   * @return SummitLocationImage
+   */
+  public static function buildImage(array $data) {
+    $image = new SummitLocationImage();
+    $image->setClassName(SummitLocationImage::TypeImage);
+    return self::populate($image, $data);
+  }
+
+  /**
+   * @param SummitLocationImage $image
+   * @param array $data
+   * @return SummitLocationImage
+   */
+  public static function populate(SummitLocationImage $image, array $data) {
+    if (isset($data["name"])) {
+      $image->setName(trim($data["name"]));
     }
 
-    /**
-     * @param array $data
-     * @return SummitLocationImage
-     */
-    public static function buildImage(array $data){
-        $image = new SummitLocationImage();
-        $image->setClassName(SummitLocationImage::TypeImage);
-        return self::populate($image, $data);
+    if (isset($data["description"])) {
+      $image->setDescription(trim($data["description"]));
     }
 
-    /**
-     * @param SummitLocationImage $image
-     * @param array $data
-     * @return SummitLocationImage
-     */
-    public static function populate(SummitLocationImage $image, array $data){
-        if(isset($data['name']))
-            $image->setName(trim($data['name']));
-
-        if(isset($data['description']))
-            $image->setDescription(trim($data['description']));
-
-        return $image;
-    }
+    return $image;
+  }
 }

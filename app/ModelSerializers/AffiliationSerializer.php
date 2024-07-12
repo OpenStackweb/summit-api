@@ -19,37 +19,42 @@ use models\main\Affiliation;
  * Class AffiliationSerializer
  * @package ModelSerializers
  */
-final class AffiliationSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'StartDate'       => 'start_date:datetime_epoch',
-        'EndDate'         => 'end_date:datetime_epoch',
-        'JobTitle'        => 'job_title:json_string',
-        'OwnerId'         => 'owner_id:json_int',
-        'IsCurrent'       => 'is_current:json_boolean',
-        'OrganizationId'  => 'organization_id:json_int'
-    ];
+final class AffiliationSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "StartDate" => "start_date:datetime_epoch",
+    "EndDate" => "end_date:datetime_epoch",
+    "JobTitle" => "job_title:json_string",
+    "OwnerId" => "owner_id:json_int",
+    "IsCurrent" => "is_current:json_boolean",
+    "OrganizationId" => "organization_id:json_int",
+  ];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $affiliation = $this->object;
-        if (!$affiliation instanceof Affiliation) return [];
-        $values      = parent::serialize($expand, $fields, $relations, $params);
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'organization':
-                    {
-                        if($affiliation->hasOrganization()) {
-                            unset($values['organization_id']);
-                            $values['organization'] = SerializerRegistry::getInstance()->getSerializer($affiliation->getOrganization())->serialize($expand, [], ['none']);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $affiliation = $this->object;
+    if (!$affiliation instanceof Affiliation) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "organization":
+            if ($affiliation->hasOrganization()) {
+              unset($values["organization_id"]);
+              $values["organization"] = SerializerRegistry::getInstance()
+                ->getSerializer($affiliation->getOrganization())
+                ->serialize($expand, [], ["none"]);
+            }
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

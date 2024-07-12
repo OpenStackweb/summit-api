@@ -23,149 +23,134 @@ use ModelSerializers\SerializerRegistry;
  * Class OAuth2PaymentGatewayProfileApiController
  * @package App\Http\Controller
  */
-final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedController
-{
+final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedController {
+  /**
+   * @var IPaymentGatewayProfileService
+   */
+  private $service;
 
-    /**
-     * @var IPaymentGatewayProfileService
-     */
-    private $service;
+  /**
+   * @var ISummitRepository
+   */
+  private $summit_repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
+  /**
+   * OAuth2PaymentGatewayProfileApiController constructor.
+   * @param IPaymentGatewayProfileRepository $repository
+   * @param ISummitRepository $summit_repository
+   * @param IPaymentGatewayProfileService $service
+   * @param IResourceServerContext $resource_server_context
+   */
+  public function __construct(
+    IPaymentGatewayProfileRepository $repository,
+    ISummitRepository $summit_repository,
+    IPaymentGatewayProfileService $service,
+    IResourceServerContext $resource_server_context,
+  ) {
+    parent::__construct($resource_server_context);
+    $this->repository = $repository;
+    $this->summit_repository = $summit_repository;
+    $this->service = $service;
+  }
 
-    /**
-     * OAuth2PaymentGatewayProfileApiController constructor.
-     * @param IPaymentGatewayProfileRepository $repository
-     * @param ISummitRepository $summit_repository
-     * @param IPaymentGatewayProfileService $service
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct
-    (
-        IPaymentGatewayProfileRepository $repository,
-        ISummitRepository $summit_repository,
-        IPaymentGatewayProfileService $service,
-        IResourceServerContext $resource_server_context
-    )
-    {
-        parent::__construct($resource_server_context);
-        $this->repository = $repository;
-        $this->summit_repository = $summit_repository;
-        $this->service = $service;
-    }
+  use GetAllBySummit;
 
-    use GetAllBySummit;
+  use GetSummitChildElementById;
 
-    use GetSummitChildElementById;
+  use AddSummitChildElement;
 
-    use AddSummitChildElement;
+  use UpdateSummitChildElement;
 
-    use UpdateSummitChildElement;
+  use DeleteSummitChildElement;
 
-    use DeleteSummitChildElement;
+  /**
+   * @return ISummitRepository
+   */
+  protected function getSummitRepository(): ISummitRepository {
+    return $this->summit_repository;
+  }
 
-    /**
-     * @return ISummitRepository
-     */
-    protected function getSummitRepository(): ISummitRepository
-    {
-        return $this->summit_repository;
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function addChild(Summit $summit, array $payload): IEntity {
+    return $this->service->addPaymentProfile($summit, $payload);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function addChild(Summit $summit, array $payload): IEntity
-    {
-        return $this->service->addPaymentProfile($summit, $payload);
-    }
+  /**
+   * @inheritDoc
+   */
+  function getAddValidationRules(array $payload): array {
+    return PaymentGatewayProfileValidationRulesFactory::build($payload, false);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    function getAddValidationRules(array $payload): array
-    {
-        return PaymentGatewayProfileValidationRulesFactory::build($payload, false);
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function deleteChild(Summit $summit, $child_id): void {
+    $this->service->deletePaymentProfile($summit, $child_id);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function deleteChild(Summit $summit, $child_id): void
-    {
-        $this->service->deletePaymentProfile($summit, $child_id);
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity {
+    return $summit->getPaymentProfileById($child_id);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
-    {
-        return $summit->getPaymentProfileById($child_id);
-    }
+  /**
+   * @inheritDoc
+   */
+  function getUpdateValidationRules(array $payload): array {
+    return PaymentGatewayProfileValidationRulesFactory::build($payload, true);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    function getUpdateValidationRules(array $payload): array
-    {
-        return PaymentGatewayProfileValidationRulesFactory::build($payload, true);
-    }
+  /**
+   * @inheritDoc
+   */
+  protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity {
+    return $this->service->updatePaymentProfile($summit, $child_id, $payload);
+  }
 
-    /**
-     * @inheritDoc
-     */
-    protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
-    {
-        return $this->service->updatePaymentProfile($summit, $child_id, $payload);
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterRules(): array {
+    return [
+      "application_type" => ["=@", "=="],
+      "active" => ["=="],
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterRules():array
-    {
-        return [
-            'application_type' => ['=@', '=='],
-            'active'           => ['=='],
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterValidatorRules(): array {
+    return [
+      "application_type" => "sometimes|required|string",
+      "active" => "sometimes|required|boolean",
+    ];
+  }
+  /**
+   * @return array
+   */
+  protected function getOrderRules(): array {
+    return ["id", "application_type"];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterValidatorRules():array{
-        return [
-            'application_type' => 'sometimes|required|string',
-            'active'           => 'sometimes|required|boolean',
-        ];
-    }
-    /**
-     * @return array
-     */
-    protected function getOrderRules():array{
-        return [
-            'id',
-            'application_type',
-        ];
-    }
+  protected function serializerType(): string {
+    return SerializerRegistry::SerializerType_Private;
+  }
 
-    protected function serializerType():string{
-        return SerializerRegistry::SerializerType_Private;
-    }
+  protected function addSerializerType(): string {
+    return SerializerRegistry::SerializerType_Private;
+  }
 
-    protected function addSerializerType():string{
-        return SerializerRegistry::SerializerType_Private;
-    }
+  protected function updateSerializerType(): string {
+    return SerializerRegistry::SerializerType_Private;
+  }
 
-    protected function updateSerializerType():string{
-        return SerializerRegistry::SerializerType_Private;
-    }
-
-    public function getChildSerializer(){
-        return SerializerRegistry::SerializerType_Private;
-    }
+  public function getChildSerializer() {
+    return SerializerRegistry::SerializerType_Private;
+  }
 }

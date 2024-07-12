@@ -19,48 +19,42 @@ use Exception;
  * Class SummitEmailFlowTypeSeederCommand
  * @package App\Console\Commands
  */
-class SummitEmailFlowTypeSeederCommand extends Command
-{
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'summit:seed-email-flow-types';
+class SummitEmailFlowTypeSeederCommand extends Command {
+  /**
+   * The console command name.
+   *
+   * @var string
+   */
+  protected $name = "summit:seed-email-flow-types";
 
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'summit:seed-email-flow-types';
+  /**
+   * The name and signature of the console command.
+   *
+   * @var string
+   */
+  protected $signature = "summit:seed-email-flow-types";
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Seed Email Flow Types';
+  /**
+   * The console command description.
+   *
+   * @var string
+   */
+  protected $description = "Seed Email Flow Types";
 
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        try {
-
-            $start   = time();
-            SummitEmailFlowTypeSeeder::seed();
-            $end   = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-        }
+  /**
+   * Execute the console command.
+   *
+   * @return mixed
+   */
+  public function handle() {
+    try {
+      $start = time();
+      SummitEmailFlowTypeSeeder::seed();
+      $end = time();
+      $delta = $end - $start;
+      $this->info(sprintf("execution call %s seconds", $delta));
+    } catch (Exception $ex) {
+      Log::error($ex);
     }
-
+  }
 }

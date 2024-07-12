@@ -21,33 +21,35 @@ use utils\Filter;
  * Class PresentationSubmitterSelectionProcessAlternateOnlyEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
  */
-class PresentationSubmitterSelectionProcessAlternateOnlyEmail extends PresentationSubmitterSelectionProcessEmail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class PresentationSubmitterSelectionProcessAlternateOnlyEmail extends
+  PresentationSubmitterSelectionProcessEmail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ALTERNATE_ONLY';
-    const EVENT_NAME = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ALTERNATE_ONLY';
-    const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ALTERNATE_ONLY';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ALTERNATE_ONLY";
+  const EVENT_NAME = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ALTERNATE_ONLY";
+  const DEFAULT_TEMPLATE = "SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ALTERNATE_ONLY";
 
-    /**
-     * @param Summit $summit
-     * @param Member $submitter
-     * @param string|null $test_email_recipient
-     * @param Filter|null $filter
-     */
-    public function __construct
-    (
-        Summit  $summit,
-        Member  $submitter,
-        ?string $test_email_recipient,
-        ?Filter $filter = null
-    )
-    {
-        parent::__construct($summit, $submitter, $test_email_recipient, $filter);
-        Log::debug(sprintf("PresentationSubmitterSelectionProcessAlternateOnlyEmail::__construct payload %s", json_encode($this->payload)));
-    }
+  /**
+   * @param Summit $summit
+   * @param Member $submitter
+   * @param string|null $test_email_recipient
+   * @param Filter|null $filter
+   */
+  public function __construct(
+    Summit $summit,
+    Member $submitter,
+    ?string $test_email_recipient,
+    ?Filter $filter = null,
+  ) {
+    parent::__construct($summit, $submitter, $test_email_recipient, $filter);
+    Log::debug(
+      sprintf(
+        "PresentationSubmitterSelectionProcessAlternateOnlyEmail::__construct payload %s",
+        json_encode($this->payload),
+      ),
+    );
+  }
 }

@@ -16,7 +16,5 @@ use models\utils\IBaseRepository;
  * Interface ILanguageRepository
  * @package App\Models\Foundation\Main\Repositories
  */
-interface ILanguageRepository extends IBaseRepository
-{
-
+interface ILanguageRepository extends IBaseRepository {
 }

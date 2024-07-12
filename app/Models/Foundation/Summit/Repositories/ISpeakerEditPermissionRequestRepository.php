@@ -19,18 +19,20 @@ use models\utils\IBaseRepository;
  * Interface ISpeakerEditPermissionRequestRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISpeakerEditPermissionRequestRepository  extends IBaseRepository
-{
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param Member $requestor
-     * @return ?SpeakerEditPermissionRequest
-     */
-    public function getBySpeakerAndRequestor(PresentationSpeaker $speaker, Member $requestor): ?SpeakerEditPermissionRequest;
+interface ISpeakerEditPermissionRequestRepository extends IBaseRepository {
+  /**
+   * @param PresentationSpeaker $speaker
+   * @param Member $requestor
+   * @return ?SpeakerEditPermissionRequest
+   */
+  public function getBySpeakerAndRequestor(
+    PresentationSpeaker $speaker,
+    Member $requestor,
+  ): ?SpeakerEditPermissionRequest;
 
-    /**
-     * @param string $token
-     * @return ?SpeakerEditPermissionRequest
-     */
-    public function getByToken(string $token):?SpeakerEditPermissionRequest;
+  /**
+   * @param string $token
+   * @return ?SpeakerEditPermissionRequest
+   */
+  public function getByToken(string $token): ?SpeakerEditPermissionRequest;
 }

@@ -16,13 +16,10 @@
  * Class AdminSummitEventWithFileSerializer
  * @package ModelSerializers
  */
-class AdminSummitEventWithFileSerializer extends SummitEventWithFileSerializer
-{
-    protected static $array_mappings = [
-        'Occupancy' => 'occupancy:json_string',
-    ];
+class AdminSummitEventWithFileSerializer extends SummitEventWithFileSerializer {
+  protected static $array_mappings = [
+    "Occupancy" => "occupancy:json_string",
+  ];
 
-    protected static $allowed_fields = [
-        'occupancy',
-    ];
+  protected static $allowed_fields = ["occupancy"];
 }

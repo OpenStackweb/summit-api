@@ -28,68 +28,52 @@ use utils\Filter;
  * @package App\Repositories\Summit
  */
 final class DoctrineSummitSubmissionInvitationRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitSubmissionInvitationRepository
-{
+  extends SilverStripeDoctrineRepository
+  implements ISummitSubmissionInvitationRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SummitSubmissionInvitation::class;
+  }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitSubmissionInvitation::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->join("e.summit", "s");
+    return $query;
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->join('e.summit', 's');
-        return $query;
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "id" => new DoctrineInFilterMapping("e.id"),
+      "not_id" => new DoctrineNotInFilterMapping("e.id"),
+      "email" => "e.email:json_string",
+      "first_name" => "e.first_name:json_string",
+      "last_name" => "e.last_name:json_string",
+      "is_sent" => new DoctrineSwitchFilterMapping([
+        "true" => new DoctrineCaseFilterMapping("true", "e.sent_date is not null"),
+        "false" => new DoctrineCaseFilterMapping("false", "e.sent_date is null"),
+      ]),
+      "summit_id" => new DoctrineLeftJoinFilterMapping("e.summit", "s", "s.id :operator :value"),
+      "tags" => new DoctrineLeftJoinFilterMapping("e.tags", "t", "t.tag :operator :value"),
+      "tags_id" => new DoctrineLeftJoinFilterMapping("e.tags", "t", "t.id :operator :value"),
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'id' => new DoctrineInFilterMapping('e.id'),
-            'not_id' => new DoctrineNotInFilterMapping('e.id'),
-            'email' => 'e.email:json_string',
-            'first_name' => 'e.first_name:json_string',
-            'last_name' => 'e.last_name:json_string',
-            'is_sent' => new DoctrineSwitchFilterMapping([
-                    'true' => new DoctrineCaseFilterMapping(
-                        'true',
-                        "e.sent_date is not null"
-                    ),
-                    'false' => new DoctrineCaseFilterMapping(
-                        'false',
-                        "e.sent_date is null"
-                    ),
-                ]
-            ),
-            'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
-            'tags' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.tag :operator :value"),
-            'tags_id' => new DoctrineLeftJoinFilterMapping("e.tags", "t","t.id :operator :value"),
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'email' => 'e.email',
-            'sent_date' => 'e.sent_date',
-        ];
-    }
-
-
-
-
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "email" => "e.email",
+      "sent_date" => "e.sent_date",
+    ];
+  }
 }

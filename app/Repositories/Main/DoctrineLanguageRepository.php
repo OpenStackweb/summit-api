@@ -18,16 +18,12 @@ use App\Repositories\SilverStripeDoctrineRepository;
  * Class DoctrineLanguageRepository
  * @package App\Repositories\Main
  */
-final class DoctrineLanguageRepository
-    extends SilverStripeDoctrineRepository
-    implements ILanguageRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return Language::class;
-    }
+final class DoctrineLanguageRepository extends SilverStripeDoctrineRepository implements
+  ILanguageRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return Language::class;
+  }
 }

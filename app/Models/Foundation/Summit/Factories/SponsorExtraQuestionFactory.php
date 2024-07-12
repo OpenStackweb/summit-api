@@ -20,30 +20,29 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
  * Class SponsorSocialNetworkFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SponsorExtraQuestionFactory extends ExtraQuestionTypeFactory
-{
-    /**
-     * @param array $data
-     * @return ExtraQuestionType
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function build(array $data): ExtraQuestionType
-    {
-        return self::populate(self::getNewEntity(), $data);
-    }
+final class SponsorExtraQuestionFactory extends ExtraQuestionTypeFactory {
+  /**
+   * @param array $data
+   * @return ExtraQuestionType
+   * @throws \models\exceptions\ValidationException
+   */
+  public static function build(array $data): ExtraQuestionType {
+    return self::populate(self::getNewEntity(), $data);
+  }
 
-    /**
-     * @param ExtraQuestionType $extra_question
-     * @param array $data
-     * @return ExtraQuestionType
-     */
-    public static function populate(ExtraQuestionType $extra_question, array $data): ExtraQuestionType
-    {
-        return parent::populate($extra_question, $data);
-    }
+  /**
+   * @param ExtraQuestionType $extra_question
+   * @param array $data
+   * @return ExtraQuestionType
+   */
+  public static function populate(
+    ExtraQuestionType $extra_question,
+    array $data,
+  ): ExtraQuestionType {
+    return parent::populate($extra_question, $data);
+  }
 
-    protected static function getNewEntity(): ExtraQuestionType
-    {
-        return new SummitSponsorExtraQuestionType;
-    }
+  protected static function getNewEntity(): ExtraQuestionType {
+    return new SummitSponsorExtraQuestionType();
+  }
 }

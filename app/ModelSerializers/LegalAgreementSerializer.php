@@ -18,32 +18,37 @@ use models\main\LegalAgreement;
  * Class LegalAgreementSerializer
  * @package ModelSerializers
  */
-final class LegalAgreementSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'OwnerId' => 'owner_id:json_int',
-        'DocumentId' => 'document_id:json_int',
-    ];
+final class LegalAgreementSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "OwnerId" => "owner_id:json_int",
+    "DocumentId" => "document_id:json_int",
+  ];
 
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $legal_agreement = $this->object;
-        if (!$legal_agreement instanceof LegalAgreement) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'document':
-                        {
-                          $document = App::make(ILegalDocumentRepository::class)->getById($values['document_id']);
-                          unset($values['document_id']);
-                          $values['document'] = SerializerRegistry::getInstance()->getSerializer($document)->serialize($expand, [], ['none']);
-                        }
-                        break;
-                }
-            }
-        }
-        return $values;
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $legal_agreement = $this->object;
+    if (!$legal_agreement instanceof LegalAgreement) {
+      return [];
     }
+    $values = parent::serialize($expand, $fields, $relations, $params);
+    if (!empty($expand)) {
+      $exp_expand = explode(",", $expand);
+      foreach ($exp_expand as $relation) {
+        switch (trim($relation)) {
+          case "document":
+            $document = App::make(ILegalDocumentRepository::class)->getById($values["document_id"]);
+            unset($values["document_id"]);
+            $values["document"] = SerializerRegistry::getInstance()
+              ->getSerializer($document)
+              ->serialize($expand, [], ["none"]);
+            break;
+        }
+      }
+    }
+    return $values;
+  }
 }

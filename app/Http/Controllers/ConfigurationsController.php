@@ -22,58 +22,57 @@ use Exception;
  * Class ConfigurationsController
  * @package App\Http\Controllers
  */
-final class ConfigurationsController extends JsonController
-{
-    /**
-     * @var IApiRepository
-     */
-    private $repository;
+final class ConfigurationsController extends JsonController {
+  /**
+   * @var IApiRepository
+   */
+  private $repository;
 
-    /**
-     * ConfigurationsController constructor.
-     * @param IApiRepository $repository
-     */
-    public function __construct(IApiRepository $repository)
-    {
-        parent::__construct();
-        $this->repository = $repository;
-    }
+  /**
+   * ConfigurationsController constructor.
+   * @param IApiRepository $repository
+   */
+  public function __construct(IApiRepository $repository) {
+    parent::__construct();
+    $this->repository = $repository;
+  }
 
-    /**
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function getEndpointsDefinitions(){
-        try {
-            $items = [];
-            foreach ($this->repository->getAll() as $i) {
-                if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i, SerializerRegistry::SerializerType_Public)->serialize(Request::input('expand', ''));
-                }
-                $items[] = $i;
-            }
-
-            $routeCollection = Route::getRoutes();
-
-            $public_endpoints = [];
-            foreach ($routeCollection as $value) {
-                $uri =  $value->uri;
-                if(!str_contains($uri, 'api/public/v1')) continue;
-                $public_endpoints[] = [
-                    'route' => $uri,
-                    'http_methods' =>  $value->methods,
-                ];
-            }
-
-            return $this->ok(
-                [
-                    'oauth2_endpoints' => $items,
-                    'public_endpoints' => $public_endpoints,
-                ]
-            );
+  /**
+   * @return \Illuminate\Http\JsonResponse|mixed
+   */
+  public function getEndpointsDefinitions() {
+    try {
+      $items = [];
+      foreach ($this->repository->getAll() as $i) {
+        if ($i instanceof IEntity) {
+          $i = SerializerRegistry::getInstance()
+            ->getSerializer($i, SerializerRegistry::SerializerType_Public)
+            ->serialize(Request::input("expand", ""));
         }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
+        $items[] = $i;
+      }
+
+      $routeCollection = Route::getRoutes();
+
+      $public_endpoints = [];
+      foreach ($routeCollection as $value) {
+        $uri = $value->uri;
+        if (!str_contains($uri, "api/public/v1")) {
+          continue;
         }
+        $public_endpoints[] = [
+          "route" => $uri,
+          "http_methods" => $value->methods,
+        ];
+      }
+
+      return $this->ok([
+        "oauth2_endpoints" => $items,
+        "public_endpoints" => $public_endpoints,
+      ]);
+    } catch (Exception $ex) {
+      Log::error($ex);
+      return $this->error500($ex);
     }
+  }
 }

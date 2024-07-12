@@ -16,23 +16,22 @@
  * Class SummitLocationImageValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitLocationImageValidationRulesFactory
-{
-    /**
-     * @param bool $update
-     * @return array
-     */
-    public static function build($update = false){
-        if($update){
-            return [
-                'name'        => 'sometimes|string|max:255',
-                'description' => 'sometimes|string',
-                'order'       => 'sometimes|integer|min:1',
-            ];
-        }
-        return [
-            'name'        => 'required|string|max:255',
-            'description' => 'sometimes|string',
-        ];
+final class SummitLocationImageValidationRulesFactory {
+  /**
+   * @param bool $update
+   * @return array
+   */
+  public static function build($update = false) {
+    if ($update) {
+      return [
+        "name" => "sometimes|string|max:255",
+        "description" => "sometimes|string",
+        "order" => "sometimes|integer|min:1",
+      ];
     }
+    return [
+      "name" => "required|string|max:255",
+      "description" => "sometimes|string",
+    ];
+  }
 }

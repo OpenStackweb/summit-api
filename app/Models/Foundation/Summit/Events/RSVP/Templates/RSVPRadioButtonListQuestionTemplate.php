@@ -11,44 +11,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Table(name="RSVPRadioButtonListQuestionTemplate")
  * @ORM\Entity
  * Class RSVPRadioButtonListQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
-class RSVPRadioButtonListQuestionTemplate extends RSVPMultiValueQuestionTemplate
-{
-    const ClassName = 'RSVPRadioButtonListQuestionTemplate';
-    /**
-     * @return string
-     */
-    public function getClassName(){
-        return self::ClassName;
-    }
+class RSVPRadioButtonListQuestionTemplate extends RSVPMultiValueQuestionTemplate {
+  const ClassName = "RSVPRadioButtonListQuestionTemplate";
+  /**
+   * @return string
+   */
+  public function getClassName() {
+    return self::ClassName;
+  }
 
-    public static $metadata = [
-        'class_name'  => self::ClassName,
-    ];
+  public static $metadata = [
+    "class_name" => self::ClassName,
+  ];
 
-    /**
-     * @return array
-     */
-    public static function getMetadata(){
-        return array_merge(RSVPMultiValueQuestionTemplate::getMetadata(), self::$metadata);
-    }
+  /**
+   * @return array
+   */
+  public static function getMetadata() {
+    return array_merge(RSVPMultiValueQuestionTemplate::getMetadata(), self::$metadata);
+  }
 
-    /**
-     * @param array|string $value
-     * @return bool
-     */
-    public function isValidValue($value): bool
-    {
-        if(!is_string($value)) return false;
-        $valId = intval($value);
-        $val   = $this->getValueById($valId);
-        if(is_null($val)) return false;
-        return true;
+  /**
+   * @param array|string $value
+   * @return bool
+   */
+  public function isValidValue($value): bool {
+    if (!is_string($value)) {
+      return false;
     }
+    $valId = intval($value);
+    $val = $this->getValueById($valId);
+    if (is_null($val)) {
+      return false;
+    }
+    return true;
+  }
 }

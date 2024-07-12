@@ -16,42 +16,38 @@
  * Class DoctrineCaseFilterMapping
  * @package utils
  */
-class DoctrineCaseFilterMapping
-{
-    /**
-     * @var string
-     */
-    private $value;
+class DoctrineCaseFilterMapping {
+  /**
+   * @var string
+   */
+  private $value;
 
-    /**
-     * @var string
-     */
-    private $condition;
+  /**
+   * @var string
+   */
+  private $condition;
 
-    /**
-     * DoctrineCaseFilterMapping constructor.
-     * @param string $value
-     * @param string $condition
-     */
-    public function __construct($value, $condition)
-    {
-        $this->value = $value;
-        $this->condition = $condition;
-    }
+  /**
+   * DoctrineCaseFilterMapping constructor.
+   * @param string $value
+   * @param string $condition
+   */
+  public function __construct($value, $condition) {
+    $this->value = $value;
+    $this->condition = $condition;
+  }
 
-    /**
-     * @return string
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
+  /**
+   * @return string
+   */
+  public function getValue() {
+    return $this->value;
+  }
 
-    /**
-     * @return string
-     */
-    public function getCondition()
-    {
-        return $this->condition;
-    }
+  /**
+   * @return string
+   */
+  public function getCondition() {
+    return $this->condition;
+  }
 }

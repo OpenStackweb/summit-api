@@ -16,11 +16,10 @@ use models\utils\IBaseRepository;
  * Interface IOrganizationRepository
  * @package models\main
  */
-interface IOrganizationRepository extends IBaseRepository
-{
-    /**
-     * @param string $name
-     * @return Organization|null
-     */
-    public function getByName($name);
+interface IOrganizationRepository extends IBaseRepository {
+  /**
+   * @param string $name
+   * @return Organization|null
+   */
+  public function getByName($name);
 }

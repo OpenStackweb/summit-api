@@ -21,40 +21,50 @@ use models\summit\CalendarSync\WorkQueue\MemberEventScheduleSummitActionSyncWork
  * Interface ICalendarSyncRemoteFacade
  * @package services\apis\CalendarSync
  */
-interface ICalendarSyncRemoteFacade
-{
+interface ICalendarSyncRemoteFacade {
+  /**
+   * @param MemberEventScheduleSummitActionSyncWorkRequest $request
+   * @return ScheduleCalendarSyncInfo
+   */
+  public function addEvent(MemberEventScheduleSummitActionSyncWorkRequest $request);
 
-    /**
-     * @param MemberEventScheduleSummitActionSyncWorkRequest $request
-     * @return ScheduleCalendarSyncInfo
-     */
-    public function addEvent(MemberEventScheduleSummitActionSyncWorkRequest $request);
+  /**
+   * @param MemberEventScheduleSummitActionSyncWorkRequest $request
+   * @param ScheduleCalendarSyncInfo $schedule_sync_info
+   * @return bool
+   */
+  public function deleteEvent(
+    MemberEventScheduleSummitActionSyncWorkRequest $request,
+    ScheduleCalendarSyncInfo $schedule_sync_info,
+  );
 
-    /**
-     * @param MemberEventScheduleSummitActionSyncWorkRequest $request
-     * @param ScheduleCalendarSyncInfo $schedule_sync_info
-     * @return bool
-     */
-    public function deleteEvent(MemberEventScheduleSummitActionSyncWorkRequest $request, ScheduleCalendarSyncInfo $schedule_sync_info);
+  /**
+   * @param MemberEventScheduleSummitActionSyncWorkRequest $request
+   * @param ScheduleCalendarSyncInfo $schedule_sync_info
+   * @return bool
+   */
+  public function updateEvent(
+    MemberEventScheduleSummitActionSyncWorkRequest $request,
+    ScheduleCalendarSyncInfo $schedule_sync_info,
+  );
 
-    /**
-     * @param MemberEventScheduleSummitActionSyncWorkRequest $request
-     * @param ScheduleCalendarSyncInfo $schedule_sync_info
-     * @return bool
-     */
-    public function updateEvent(MemberEventScheduleSummitActionSyncWorkRequest $request, ScheduleCalendarSyncInfo $schedule_sync_info);
+  /**
+   * @param MemberCalendarScheduleSummitActionSyncWorkRequest $request
+   * @param CalendarSyncInfo $calendar_sync_info
+   * @return bool
+   */
+  public function createCalendar(
+    MemberCalendarScheduleSummitActionSyncWorkRequest $request,
+    CalendarSyncInfo $calendar_sync_info,
+  );
 
-    /**
-     * @param MemberCalendarScheduleSummitActionSyncWorkRequest $request
-     * @param CalendarSyncInfo $calendar_sync_info
-     * @return bool
-     */
-    public function createCalendar(MemberCalendarScheduleSummitActionSyncWorkRequest $request, CalendarSyncInfo $calendar_sync_info);
-
-    /**
-     * @param MemberCalendarScheduleSummitActionSyncWorkRequest $request
-     * @param CalendarSyncInfo $calendar_sync_info
-     * @return bool
-     */
-    public function deleteCalendar(MemberCalendarScheduleSummitActionSyncWorkRequest $request, CalendarSyncInfo $calendar_sync_info);
+  /**
+   * @param MemberCalendarScheduleSummitActionSyncWorkRequest $request
+   * @param CalendarSyncInfo $calendar_sync_info
+   * @return bool
+   */
+  public function deleteCalendar(
+    MemberCalendarScheduleSummitActionSyncWorkRequest $request,
+    CalendarSyncInfo $calendar_sync_info,
+  );
 }

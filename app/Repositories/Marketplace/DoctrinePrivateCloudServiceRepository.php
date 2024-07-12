@@ -19,15 +19,12 @@ use App\Models\Foundation\Marketplace\PrivateCloudService;
  * @package App\Repositories\Marketplace
  */
 final class DoctrinePrivateCloudServiceRepository
-    extends DoctrineCompanyServiceRepository
-    implements IPrivateCloudServiceRepository
-{
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return PrivateCloudService::class;
-    }
+  extends DoctrineCompanyServiceRepository
+  implements IPrivateCloudServiceRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return PrivateCloudService::class;
+  }
 }

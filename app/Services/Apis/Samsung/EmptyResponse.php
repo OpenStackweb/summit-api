@@ -13,12 +13,9 @@
 
  **/
 
-
 /**
  * Class EmptyResponse
  * @package App\Services\Apis\Samsung
  */
-final class EmptyResponse extends \Exception
-{
-
+final class EmptyResponse extends \Exception {
 }

@@ -19,43 +19,40 @@ use utils\FilterMapping;
  * Class SQLInFilterMapping
  * @package App\Http\Utils\Filters\SQL
  */
-class SQLInFilterMapping extends FilterMapping
-{
-    protected $main_operator;
+class SQLInFilterMapping extends FilterMapping {
+  protected $main_operator;
 
-    protected $operator;
+  protected $operator;
 
-    /**
-     * DoctrineFilterMapping constructor.
-     * @param string $alias
-     */
-    public function __construct(string $alias)
-    {
-        $this->main_operator = Filter::MainOperatorAnd;
-        $this->operator = 'IN';
-        parent::__construct($alias, '');
+  /**
+   * DoctrineFilterMapping constructor.
+   * @param string $alias
+   */
+  public function __construct(string $alias) {
+    $this->main_operator = Filter::MainOperatorAnd;
+    $this->operator = "IN";
+    parent::__construct($alias, "");
+  }
+
+  /**
+   * @param FilterElement $filter
+   * @param array $bindings
+   * @return string
+   */
+  public function toRawSQL(FilterElement $filter, array $bindings = []): string {
+    $value = $filter->getValue();
+    if (!is_array($value)) {
+      $value = [$value];
+    }
+    // construct named params one by one bc raw sql does not support array binding
+    $named_params = [];
+    $param_idx = count($bindings) + 1;
+    foreach ($value as $v) {
+      $named_params[] = ":" . sprintf(Filter::ParamPrefix, $param_idx);
+      $this->bindings[sprintf(Filter::ParamPrefix, $param_idx)] = $v;
+      $param_idx++;
     }
 
-    /**
-     * @param FilterElement $filter
-     * @param array $bindings
-     * @return string
-     */
-    public function toRawSQL(FilterElement $filter, array $bindings = []):string
-    {
-        $value = $filter->getValue();
-        if (!is_array($value)) {
-            $value = [$value];
-        }
-        // construct named params one by one bc raw sql does not support array binding
-        $named_params = [];
-        $param_idx = count($bindings) + 1;
-        foreach($value as $v){
-            $named_params[] = ":".sprintf(Filter::ParamPrefix, $param_idx);
-            $this->bindings[sprintf(Filter::ParamPrefix, $param_idx)] = $v;
-            $param_idx++;
-        }
-
-        return sprintf("%s %s (%s)", $this->table, $this->operator, implode(',', $named_params));
-    }
+    return sprintf("%s %s (%s)", $this->table, $this->operator, implode(",", $named_params));
+  }
 }

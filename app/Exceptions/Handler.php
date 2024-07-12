@@ -25,47 +25,44 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
  * Class Handler
  * @package App\Exceptions
  */
-class Handler extends ExceptionHandler
-{
-    /**
-     * A list of the exception types that should not be reported.
-     *
-     * @var array
-     */
-    protected $dontReport = [
-        AuthorizationException::class,
-        HttpException::class,
-        ModelNotFoundException::class,
-        ValidationException::class,
-        RedisConnectionException::class,
-        NotFoundHttpException::class
-    ];
+class Handler extends ExceptionHandler {
+  /**
+   * A list of the exception types that should not be reported.
+   *
+   * @var array
+   */
+  protected $dontReport = [
+    AuthorizationException::class,
+    HttpException::class,
+    ModelNotFoundException::class,
+    ValidationException::class,
+    RedisConnectionException::class,
+    NotFoundHttpException::class,
+  ];
 
-    /**
-     * Report or log an exception.
-     *
-     * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
-     *
-     * @param  Throwable  $e
-     * @return void
-     */
-    public function report(Throwable $e)
-    {
-        parent::report($e);
-    }
+  /**
+   * Report or log an exception.
+   *
+   * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
+   *
+   * @param  Throwable  $e
+   * @return void
+   */
+  public function report(Throwable $e) {
+    parent::report($e);
+  }
 
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $e
-     * @return \Illuminate\Http\Response
-     */
-    public function render($request, Throwable $e)
-    {
-        if (config('app.debug')) {
-            return parent::render($request, $e);
-        }
-        return response()->view('errors.404', [], 200);
+  /**
+   * Render an exception into an HTTP response.
+   *
+   * @param  \Illuminate\Http\Request  $request
+   * @param  \Throwable  $e
+   * @return \Illuminate\Http\Response
+   */
+  public function render($request, Throwable $e) {
+    if (config("app.debug")) {
+      return parent::render($request, $e);
     }
+    return response()->view("errors.404", [], 200);
+  }
 }

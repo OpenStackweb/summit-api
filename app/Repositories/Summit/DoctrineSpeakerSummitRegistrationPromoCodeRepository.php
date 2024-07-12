@@ -23,125 +23,122 @@ use models\summit\SummitRegistrationPromoCode;
  * @package App\Repositories\Summit
  */
 final class DoctrineSpeakerSummitRegistrationPromoCodeRepository
-    extends DoctrineSummitRegistrationPromoCodeRepository
-    implements ISpeakerSummitRegistrationPromoCodeRepository
-{
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SpeakerSummitRegistrationPromoCode::class;
+  extends DoctrineSummitRegistrationPromoCodeRepository
+  implements ISpeakerSummitRegistrationPromoCodeRepository {
+  /**
+   * @return string
+   */
+  protected function getBaseEntity() {
+    return SpeakerSummitRegistrationPromoCode::class;
+  }
+
+  /**
+   * @param PresentationSpeaker $speaker
+   * @param Summit $summit
+   * @return SpeakerSummitRegistrationPromoCode
+   */
+  public function getBySpeakerAndSummit(PresentationSpeaker $speaker, Summit $summit) {
+    if ($speaker->getId() == 0) {
+      return null;
     }
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("c")
+      ->from(SpeakerSummitRegistrationPromoCode::class, "c")
+      ->where("c.speaker = :speaker")
+      ->andWhere("c.summit = :summit")
+      ->setParameter("speaker", $speaker)
+      ->setParameter("summit", $summit)
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
 
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
-     */
-    public function getBySpeakerAndSummit(PresentationSpeaker $speaker, Summit $summit)
-    {
-        if($speaker->getId() == 0) return null;
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("c")
-            ->from(SpeakerSummitRegistrationPromoCode::class, "c")
-            ->where("c.speaker = :speaker")
-            ->andWhere("c.summit = :summit")
-            ->setParameter("speaker", $speaker)
-            ->setParameter("summit", $summit)
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+  /**
+   * @param string $code
+   * @param Summit $summit
+   * @return bool
+   */
+  public function isAssignedCode($code, Summit $summit) {
+    return $this->getAssignedCode($code, $summit) != null;
+  }
+
+  /**
+   * @param string $code
+   * @param Summit $summit
+   * @return SpeakerSummitRegistrationPromoCode
+   */
+  public function getAssignedCode($code, Summit $summit) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("c")
+      ->from(SpeakerSummitRegistrationPromoCode::class, "c")
+      ->where("c.speaker is not null")
+      ->andWhere("c.summit = :summit")
+      ->andWhere("c.code = :code")
+      ->setParameter("summit", $summit)
+      ->setParameter("code", trim($code))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
+
+  /**
+   * @param string $code
+   * @param Summit $summit
+   * @return SpeakerSummitRegistrationPromoCode
+   */
+  public function getNotAssignedCode($code, Summit $summit) {
+    return $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("c")
+      ->from(SpeakerSummitRegistrationPromoCode::class, "c")
+      ->where("c.speaker is null")
+      ->andWhere("c.summit = :summit")
+      ->andWhere("c.code = :code")
+      ->setParameter("summit", $summit)
+      ->setParameter("code", trim($code))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
+
+  /**
+   * @param Summit $summit
+   * @param string $type
+   * @return SummitRegistrationPromoCode
+   */
+  public function getNextAvailableByType(
+    Summit $summit,
+    string $type,
+  ): ?SummitRegistrationPromoCode {
+    $res = $this->getEntityManager()
+      ->createQueryBuilder()
+      ->select("e")
+      ->from(SpeakerSummitRegistrationPromoCode::class, "e")
+      ->where("e.speaker is null")
+      ->andWhere("e.summit = :summit")
+      ->andWhere("e.type = :type")
+      ->setParameter("summit", $summit)
+      ->setParameter("type", trim($type))
+      ->setMaxResults(1)
+      ->getQuery()
+      ->getOneOrNullResult();
+
+    if (is_null($res)) {
+      $res = $this->getEntityManager()
+        ->createQueryBuilder()
+        ->select("e")
+        ->from(SpeakerSummitRegistrationDiscountCode::class, "e")
+        ->where("e.speaker is null")
+        ->andWhere("e.summit = :summit")
+        ->andWhere("e.type = :type")
+        ->setParameter("summit", $summit)
+        ->setParameter("type", trim($type))
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getOneOrNullResult();
     }
-
-    /**
-     * @param string $code
-     * @param Summit $summit
-     * @return bool
-     */
-    public function isAssignedCode($code, Summit $summit)
-    {
-       return $this->getAssignedCode($code, $summit) != null;
-    }
-
-    /**
-     * @param string $code
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
-     */
-    public function getAssignedCode($code, Summit $summit)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("c")
-            ->from(SpeakerSummitRegistrationPromoCode::class, "c")
-            ->where("c.speaker is not null")
-            ->andWhere("c.summit = :summit")
-            ->andWhere("c.code = :code")
-            ->setParameter("summit", $summit)
-            ->setParameter("code", trim($code))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    /**
-     * @param string $code
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
-     */
-    public function getNotAssignedCode($code, Summit $summit)
-    {
-        return $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("c")
-            ->from(SpeakerSummitRegistrationPromoCode::class, "c")
-            ->where("c.speaker is null")
-            ->andWhere("c.summit = :summit")
-            ->andWhere("c.code = :code")
-            ->setParameter("summit", $summit)
-            ->setParameter("code", trim($code))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-    }
-
-    /**
-     * @param Summit $summit
-     * @param string $type
-     * @return SummitRegistrationPromoCode
-     */
-    public function getNextAvailableByType(Summit $summit, string $type):?SummitRegistrationPromoCode
-    {
-        $res =  $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from(SpeakerSummitRegistrationPromoCode::class, "e")
-            ->where("e.speaker is null")
-            ->andWhere("e.summit = :summit")
-            ->andWhere("e.type = :type")
-            ->setParameter("summit", $summit)
-            ->setParameter("type", trim($type))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-
-        if(is_null($res)){
-             $res =  $this->getEntityManager()
-                 ->createQueryBuilder()
-                 ->select("e")
-                 ->from(SpeakerSummitRegistrationDiscountCode::class, "e")
-                 ->where("e.speaker is null")
-                 ->andWhere("e.summit = :summit")
-                 ->andWhere("e.type = :type")
-                 ->setParameter("summit", $summit)
-                 ->setParameter("type", trim($type))
-                 ->setMaxResults(1)
-                 ->getQuery()
-                 ->getOneOrNullResult();
-
-        }
-        return $res;
-    }
+    return $res;
+  }
 }

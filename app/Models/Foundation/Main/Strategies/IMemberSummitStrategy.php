@@ -14,16 +14,15 @@ use models\summit\Summit;
  * limitations under the License.
  **/
 
-interface IMemberSummitStrategy
-{
-    /**
-     * @return array
-     */
-    public function getAllAllowedSummitIds(): array;
+interface IMemberSummitStrategy {
+  /**
+   * @return array
+   */
+  public function getAllAllowedSummitIds(): array;
 
-    /**
-     * @param Summit $summit
-     * @return bool
-     */
-    public function isSummitAllowed(Summit $summit): bool;
+  /**
+   * @param Summit $summit
+   * @return bool
+   */
+  public function isSummitAllowed(Summit $summit): bool;
 }

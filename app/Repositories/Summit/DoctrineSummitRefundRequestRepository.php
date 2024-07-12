@@ -24,58 +24,53 @@ use utils\Filter;
  * Class DoctrineSummitRefundRequestRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSummitRefundRequestRepository
-    extends SilverStripeDoctrineRepository
-    implements ISummitRefundRequestRepository
-{
+final class DoctrineSummitRefundRequestRepository extends SilverStripeDoctrineRepository implements
+  ISummitRefundRequestRepository {
+  protected function getBaseEntity() {
+    return SummitRefundRequest::class;
+  }
 
-    protected function getBaseEntity()
-    {
-        return SummitRefundRequest::class;
-    }
+  /**
+   * @param QueryBuilder $query
+   * @return QueryBuilder
+   */
+  protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null) {
+    $query = $query->leftJoin(
+      SummitAttendeeTicketRefundRequest::class,
+      "e2",
+      "WITH",
+      "e.id = e2.id",
+    );
+    $query = $query->leftJoin("e2.ticket", "t");
+    $query = $query->leftJoin("t.order", "o");
+    return $query->leftJoin("o.summit", "s");
+  }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
-    {
-        $query = $query->leftJoin(SummitAttendeeTicketRefundRequest::class, 'e2', 'WITH', 'e.id = e2.id');
-        $query = $query->leftJoin("e2.ticket", "t");
-        $query = $query->leftJoin("t.order", "o");
-        return $query->leftJoin("o.summit", "s");
-    }
+  /**
+   * @return array
+   */
+  protected function getFilterMappings() {
+    return [
+      "class_name" => new DoctrineInstanceOfFilterMapping("e", [
+        SummitRefundRequest::ClassName => SummitRefundRequest::class,
+        SummitAttendeeTicketRefundRequest::ClassName => SummitAttendeeTicketRefundRequest::class,
+      ]),
+      "status" => "e.status",
+      "order_id" => "o.id",
+      "ticket_id" => "t.id",
+      "summit_id" => "s.id",
+    ];
+  }
 
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        return [
-            'class_name'     => new DoctrineInstanceOfFilterMapping(
-                "e",
-                [
-                    SummitRefundRequest::ClassName => SummitRefundRequest::class,
-                    SummitAttendeeTicketRefundRequest::ClassName => SummitAttendeeTicketRefundRequest::class,
-                ]
-            ),
-            'status' => 'e.status',
-            'order_id' => 'o.id',
-            'ticket_id' => 't.id',
-            'summit_id' => 's.id',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'   => 'e.id',
-            'created' => 'e.created',
-            'action_date' => 'e.action_date',
-            'ticket_id' => 't.id',
-        ];
-    }
+  /**
+   * @return array
+   */
+  protected function getOrderMappings() {
+    return [
+      "id" => "e.id",
+      "created" => "e.created",
+      "action_date" => "e.action_date",
+      "ticket_id" => "t.id",
+    ];
+  }
 }

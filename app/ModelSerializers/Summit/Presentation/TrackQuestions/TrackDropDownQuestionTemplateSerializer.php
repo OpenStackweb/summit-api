@@ -12,15 +12,13 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class TrackDropDownQuestionTemplateSerializer
  * @package App\ModelSerializers\Summit\Presentation\TrackQuestions
  */
-class TrackDropDownQuestionTemplateSerializer extends TrackMultiValueQuestionTemplateSerializer
-{
-    protected static $array_mappings = [
-        'isCountrySelector'  => 'is_country_selector:json_boolean',
-        'isMultiSelect' => 'is_multi_select:json_boolean',
-    ];
+class TrackDropDownQuestionTemplateSerializer extends TrackMultiValueQuestionTemplateSerializer {
+  protected static $array_mappings = [
+    "isCountrySelector" => "is_country_selector:json_boolean",
+    "isMultiSelect" => "is_multi_select:json_boolean",
+  ];
 }

@@ -18,27 +18,26 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitTaxRefundSerializer
  * @package App\ModelSerializers\Summit\Registration\Refunds
  */
-final class SummitTaxRefundSerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'TaxId' => 'tax_id:json_int',
-        'RefundRequestId' => 'refund_request_id:json_int',
-        'RefundedAmount' => 'refunded_amount:json_money:10',
-        'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
-    ];
+final class SummitTaxRefundSerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "TaxId" => "tax_id:json_int",
+    "RefundRequestId" => "refund_request_id:json_int",
+    "RefundedAmount" => "refunded_amount:json_money:10",
+    "RefundedAmountInCents" => "refunded_amount_in_cents:json_int",
+  ];
 
-    protected static $expand_mappings = [
-        'refund_request' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'refund_request_id',
-            'getter' => 'getRefundRequest',
-            'has' => 'hasRefundRequest'
-        ],
-        'tax' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'tax_id',
-            'getter' => 'getTax',
-            'has' => 'hasTax'
-        ],
-    ];
+  protected static $expand_mappings = [
+    "refund_request" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "refund_request_id",
+      "getter" => "getRefundRequest",
+      "has" => "hasRefundRequest",
+    ],
+    "tax" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "tax_id",
+      "getter" => "getTax",
+      "has" => "hasTax",
+    ],
+  ];
 }

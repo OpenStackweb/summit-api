@@ -16,22 +16,20 @@
  * Class PresentationVideoSerializer
  * @package ModelSerializers
  */
-final class PresentationVideoSerializer extends PresentationMaterialSerializer
-{
-    protected static $array_mappings =
-    [
-        'YouTubeID'    => 'youtube_id:json_text',
-        'ExternalUrl'  => 'external_url:json_url',
-        'DateUploaded' => 'data_uploaded:datetime_epoch',
-        'Highlighted'  => 'highlighted:json_boolean',
-        'Views'        => 'views:json_int',
-    ];
+final class PresentationVideoSerializer extends PresentationMaterialSerializer {
+  protected static $array_mappings = [
+    "YouTubeID" => "youtube_id:json_text",
+    "ExternalUrl" => "external_url:json_url",
+    "DateUploaded" => "data_uploaded:datetime_epoch",
+    "Highlighted" => "highlighted:json_boolean",
+    "Views" => "views:json_int",
+  ];
 
-    protected static $allowed_fields = [
-        'youtube_id',
-        'external_url',
-        'data_uploaded',
-        'highlighted',
-        'views',
-    ];
+  protected static $allowed_fields = [
+    "youtube_id",
+    "external_url",
+    "data_uploaded",
+    "highlighted",
+    "views",
+  ];
 }

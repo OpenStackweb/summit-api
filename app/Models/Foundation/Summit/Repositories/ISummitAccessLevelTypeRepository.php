@@ -17,7 +17,6 @@ use models\utils\IBaseRepository;
  * Interface ISummitAccessLevelTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitAccessLevelTypeRepository extends IBaseRepository
-{
-    public function getByName(string $name):?SummitAccessLevelType;
+interface ISummitAccessLevelTypeRepository extends IBaseRepository {
+  public function getByName(string $name): ?SummitAccessLevelType;
 }

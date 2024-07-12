@@ -15,34 +15,31 @@
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SerializerRegistry;
 
-
 /**
  * Class AdminSummitAttendeeNoteSerializer
  * @package App\ModelSerializers\Summit\Registration
  */
-class AdminSummitAttendeeNoteSerializer extends SummitAttendeeNoteSerializer
-{
-
-    protected static $expand_mappings = [
-        'author' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'author_id',
-            'getter' => 'getAuthor',
-            'has' => 'hasAuthor',
-            'serializer_type' => SerializerRegistry::SerializerType_Private,
-        ],
-        'owner' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'owner_id',
-            'getter' => 'getOwner',
-            'has' => 'hasOwner',
-            'serializer_type' => SerializerRegistry::SerializerType_Private,
-        ],
-        'ticket' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'ticket_id',
-            'getter' => 'getTicket',
-            'has' => 'hasTicket'
-        ],
-    ];
+class AdminSummitAttendeeNoteSerializer extends SummitAttendeeNoteSerializer {
+  protected static $expand_mappings = [
+    "author" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "author_id",
+      "getter" => "getAuthor",
+      "has" => "hasAuthor",
+      "serializer_type" => SerializerRegistry::SerializerType_Private,
+    ],
+    "owner" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "owner_id",
+      "getter" => "getOwner",
+      "has" => "hasOwner",
+      "serializer_type" => SerializerRegistry::SerializerType_Private,
+    ],
+    "ticket" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "ticket_id",
+      "getter" => "getTicket",
+      "has" => "hasTicket",
+    ],
+  ];
 }

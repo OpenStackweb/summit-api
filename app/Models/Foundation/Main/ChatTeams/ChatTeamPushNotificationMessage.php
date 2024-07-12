@@ -19,41 +19,37 @@ use Doctrine\ORM\Mapping as ORM;
  * Class ChatTeamPushNotificationMessage
  * @package models\summit
  */
-class ChatTeamPushNotificationMessage extends PushNotificationMessage
-{
-    const PushType = 'TEAM_MESSAGE';
+class ChatTeamPushNotificationMessage extends PushNotificationMessage {
+  const PushType = "TEAM_MESSAGE";
 
-    /**
-     * @return ChatTeam
-     */
-    public function getTeam()
-    {
-        return $this->team;
-    }
+  /**
+   * @return ChatTeam
+   */
+  public function getTeam() {
+    return $this->team;
+  }
 
-    /**
-     * @return int
-     */
-    public function getTeamId(){
-        try{
-            return $this->team->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
+  /**
+   * @return int
+   */
+  public function getTeamId() {
+    try {
+      return $this->team->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param ChatTeam $team
-     */
-    public function setTeam($team)
-    {
-        $this->team = $team;
-    }
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="messages")
-     * @ORM\JoinColumn(name="ChatTeamID", referencedColumnName="ID")
-     * @var ChatTeam
-     */
-    private $team;
+  /**
+   * @param ChatTeam $team
+   */
+  public function setTeam($team) {
+    $this->team = $team;
+  }
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="messages")
+   * @ORM\JoinColumn(name="ChatTeamID", referencedColumnName="ID")
+   * @var ChatTeam
+   */
+  private $team;
 }

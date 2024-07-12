@@ -22,196 +22,178 @@ use Doctrine\ORM\Mapping as ORM;
  * Class ChatTeamInvitation
  * @package models\main
  */
-class ChatTeamInvitation extends SilverstripeBaseModel
-{
+class ChatTeamInvitation extends SilverstripeBaseModel {
+  public function __construct() {
+    parent::__construct();
+    $this->is_accepted = false;
+  }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->is_accepted = false;
+  /**
+   * @ORM\Column(name="Permission", type="string")
+   * @var string
+   */
+  private $permission;
+
+  /**
+   * @return string
+   */
+  public function getPermission() {
+    return $this->permission;
+  }
+
+  /**
+   * @param string $permission
+   */
+  public function setPermission($permission) {
+    $this->permission = $permission;
+  }
+
+  /**
+   * @return ChatTeam
+   */
+  public function getTeam() {
+    return $this->team;
+  }
+
+  /**
+   * @return int
+   */
+  public function getTeamId() {
+    try {
+      return $this->team->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @ORM\Column(name="Permission", type="string")
-     * @var string
-     */
-    private $permission;
+  /**
+   * @param ChatTeam $team
+   */
+  public function setTeam($team) {
+    $this->team = $team;
+  }
 
-    /**
-     * @return string
-     */
-    public function getPermission()
-    {
-        return $this->permission;
+  /**
+   * @return Member
+   */
+  public function getInvitee() {
+    return $this->invitee;
+  }
+
+  /**
+   * @return int
+   */
+  public function getInviteeId() {
+    try {
+      return $this->invitee->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @param string $permission
-     */
-    public function setPermission($permission)
-    {
-        $this->permission = $permission;
+  /**
+   * @param Member $invitee
+   */
+  public function setInvitee($invitee) {
+    $this->invitee = $invitee;
+  }
+
+  /**
+   * @return Member
+   */
+  public function getInviter() {
+    return $this->inviter;
+  }
+
+  /**
+   * @return int
+   */
+  public function getInviterId() {
+    try {
+      return $this->inviter->getId();
+    } catch (\Exception $ex) {
+      return 0;
     }
+  }
 
-    /**
-     * @return ChatTeam
-     */
-    public function getTeam()
-    {
-        return $this->team;
-    }
+  /**
+   * @param Member $inviter
+   */
+  public function setInviter($inviter) {
+    $this->inviter = $inviter;
+  }
 
-    /**
-     * @return int
-     */
-    public function getTeamId(){
-        try{
-            return $this->team->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @ORM\Column(name="Accepted", type="boolean")
+   * @var bool
+   */
+  private $is_accepted;
 
-    /**
-     * @param ChatTeam $team
-     */
-    public function setTeam($team)
-    {
-        $this->team = $team;
-    }
+  /**
+   * @ORM\Column(name="AcceptedDate", type="datetime")
+   * @var \DateTime
+   */
+  private $accepted_date;
 
-    /**
-     * @return Member
-     */
-    public function getInvitee()
-    {
-        return $this->invitee;
-    }
+  /**
+   * @return bool
+   */
+  public function getIsAccepted() {
+    return $this->is_accepted;
+  }
 
-    /**
-     * @return int
-     */
-    public function getInviteeId(){
-        try{
-            return $this->invitee->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @return bool
+   */
+  public function isAccepted() {
+    return $this->getIsAccepted();
+  }
 
-    /**
-     * @param Member $invitee
-     */
-    public function setInvitee($invitee)
-    {
-        $this->invitee = $invitee;
-    }
+  /**
+   * @return bool
+   */
+  public function isPending() {
+    return !$this->getIsAccepted();
+  }
 
-    /**
-     * @return Member
-     */
-    public function getInviter()
-    {
-        return $this->inviter;
-    }
+  public function accept() {
+    $this->is_accepted = true;
+    $now = new \DateTime("now", new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+    $this->accepted_date = $now;
+  }
 
-    /**
-     * @return int
-     */
-    public function getInviterId(){
-        try{
-            return $this->inviter->getId();
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
-    }
+  /**
+   * @return \DateTime
+   */
+  public function getAcceptedDate() {
+    return $this->accepted_date;
+  }
 
-    /**
-     * @param Member $inviter
-     */
-    public function setInviter($inviter)
-    {
-        $this->inviter = $inviter;
-    }
+  /**
+   * @param \DateTime $accepted_date
+   */
+  public function setAcceptedDate($accepted_date) {
+    $this->accepted_date = $accepted_date;
+  }
 
-    /**
-     * @ORM\Column(name="Accepted", type="boolean")
-     * @var bool
-     */
-    private $is_accepted;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="invitations")
+   * @ORM\JoinColumn(name="TeamID", referencedColumnName="ID")
+   * @var ChatTeam
+   */
+  private $team;
 
-    /**
-     * @ORM\Column(name="AcceptedDate", type="datetime")
-     * @var \DateTime
-     */
-    private $accepted_date;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="InviteeID", referencedColumnName="ID")
+   * @var Member
+   */
+  private $invitee;
 
-    /**
-     * @return bool
-     */
-    public function getIsAccepted()
-    {
-        return $this->is_accepted;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isAccepted(){
-        return $this->getIsAccepted();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPending(){
-        return !$this->getIsAccepted();
-    }
-
-    public function accept()
-    {
-        $this->is_accepted   = true;
-        $now                 = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
-        $this->accepted_date = $now;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getAcceptedDate()
-    {
-        return $this->accepted_date;
-    }
-
-    /**
-     * @param \DateTime $accepted_date
-     */
-    public function setAcceptedDate($accepted_date)
-    {
-        $this->accepted_date = $accepted_date;
-    }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="invitations")
-     * @ORM\JoinColumn(name="TeamID", referencedColumnName="ID")
-     * @var ChatTeam
-     */
-    private $team;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="InviteeID", referencedColumnName="ID")
-     * @var Member
-     */
-    private $invitee;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="InviterID", referencedColumnName="ID")
-     * @var Member
-     */
-    private $inviter;
+  /**
+   * @ORM\ManyToOne(targetEntity="models\main\Member")
+   * @ORM\JoinColumn(name="InviterID", referencedColumnName="ID")
+   * @var Member
+   */
+  private $inviter;
 }

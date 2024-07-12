@@ -21,77 +21,80 @@ use ModelSerializers\SilverStripeSerializer;
  * Class UserStorySerializer
  * @package App\ModelSerializers
  */
-class UserStorySerializer extends SilverStripeSerializer
-{
-    protected static $array_mappings = [
-        'Name'              => 'name:json_string',
-        'Description'       => 'description:json_string',
-        'ShortDescription'  => 'short_description:json_string',
-        'Link'              => 'link:json_string',
-        'Active'            => 'active:json_boolean',
-        'MillionCoreClub'   => 'is_million_core_club:json_boolean',
-        'OrganizationId'    => 'organization_id:json_int',
-        'IndustryId'        => 'industry_id:json_int',
-        'LocationId'        => 'location_id:json_int',
-        'ImageId'           => 'image_id:json_int',
-    ];
+class UserStorySerializer extends SilverStripeSerializer {
+  protected static $array_mappings = [
+    "Name" => "name:json_string",
+    "Description" => "description:json_string",
+    "ShortDescription" => "short_description:json_string",
+    "Link" => "link:json_string",
+    "Active" => "active:json_boolean",
+    "MillionCoreClub" => "is_million_core_club:json_boolean",
+    "OrganizationId" => "organization_id:json_int",
+    "IndustryId" => "industry_id:json_int",
+    "LocationId" => "location_id:json_int",
+    "ImageId" => "image_id:json_int",
+  ];
 
-    protected static $allowed_relations = [
-        'tags'
-    ];
+  protected static $allowed_relations = ["tags"];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $user_story = $this->object;
-        if(!$user_story instanceof UserStory) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+  /**
+   * @param null $expand
+   * @param array $fields
+   * @param array $relations
+   * @param array $params
+   * @return array
+   */
+  public function serialize(
+    $expand = null,
+    array $fields = [],
+    array $relations = [],
+    array $params = [],
+  ) {
+    $user_story = $this->object;
+    if (!$user_story instanceof UserStory) {
+      return [];
+    }
+    $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('tags', $relations) && !isset($values['tags'])) {
-            $tags = [];
-            foreach ($user_story->getTags() as $tag) {
-                $tags[] = $tag->getId();
-            }
-            $values['tags'] = $tags;
-        }
-
-        return $values;
+    if (in_array("tags", $relations) && !isset($values["tags"])) {
+      $tags = [];
+      foreach ($user_story->getTags() as $tag) {
+        $tags[] = $tag->getId();
+      }
+      $values["tags"] = $tags;
     }
 
-    protected static $expand_mappings = [
-        'organization' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'organization_id',
-            'getter' => 'getOrganization',
-            'has' => 'hasOrganization'
-        ],
-        'industry' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'industry_id',
-            'getter' => 'getIndustry',
-            'has' => 'hasIndustry'
-        ],
-        'location' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'location_id',
-            'getter' => 'getLocation',
-            'has' => 'hasLocation'
-        ],
-        'image' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'image_id',
-            'getter' => 'getImage',
-            'has' => 'hasImage'
-        ],
-        'tags' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getTags',
-        ],
-    ];
+    return $values;
+  }
+
+  protected static $expand_mappings = [
+    "organization" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "organization_id",
+      "getter" => "getOrganization",
+      "has" => "hasOrganization",
+    ],
+    "industry" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "industry_id",
+      "getter" => "getIndustry",
+      "has" => "hasIndustry",
+    ],
+    "location" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "location_id",
+      "getter" => "getLocation",
+      "has" => "hasLocation",
+    ],
+    "image" => [
+      "type" => One2ManyExpandSerializer::class,
+      "original_attribute" => "image_id",
+      "getter" => "getImage",
+      "has" => "hasImage",
+    ],
+    "tags" => [
+      "type" => Many2OneExpandSerializer::class,
+      "getter" => "getTags",
+    ],
+  ];
 }

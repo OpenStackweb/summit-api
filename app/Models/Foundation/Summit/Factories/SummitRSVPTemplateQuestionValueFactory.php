@@ -16,29 +16,29 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionValueTemplate;
  * Class SummitRSVPTemplateQuestionValueFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitRSVPTemplateQuestionValueFactory
-{
-    /**
-     * @param array $data
-     * @return RSVPQuestionValueTemplate
-     */
-    public static function build(array $data){
-        return self::populate(new RSVPQuestionValueTemplate, $data);
+final class SummitRSVPTemplateQuestionValueFactory {
+  /**
+   * @param array $data
+   * @return RSVPQuestionValueTemplate
+   */
+  public static function build(array $data) {
+    return self::populate(new RSVPQuestionValueTemplate(), $data);
+  }
+
+  /**
+   * @param RSVPQuestionValueTemplate $value
+   * @param array $data
+   * @return RSVPQuestionValueTemplate
+   */
+  public static function populate(RSVPQuestionValueTemplate $value, array $data) {
+    if (isset($data["value"])) {
+      $value->setValue(trim($data["value"]));
     }
 
-    /**
-     * @param RSVPQuestionValueTemplate $value
-     * @param array $data
-     * @return RSVPQuestionValueTemplate
-     */
-    public static function populate(RSVPQuestionValueTemplate $value, array $data){
-
-        if(isset($data['value']))
-            $value->setValue(trim($data['value']));
-
-        if(isset($data['label']))
-            $value->setLabel(trim($data['label']));
-
-        return $value;
+    if (isset($data["label"])) {
+      $value->setLabel(trim($data["label"]));
     }
+
+    return $value;
+  }
 }

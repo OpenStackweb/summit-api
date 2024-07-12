@@ -20,43 +20,42 @@ use models\summit\Summit;
  * Class CurrentSummitFinderStrategy
  * @package App\Http\Controllers
  */
-class CurrentSummitFinderStrategy implements ISummitFinderStrategy
-{
+class CurrentSummitFinderStrategy implements ISummitFinderStrategy {
+  /**
+   * @var ISummitRepository
+   */
+  private $repository;
 
-    /**
-     * @var ISummitRepository
-     */
-    private $repository;
+  /**
+   * @var IResourceServerContext
+   */
+  private $resource_server_ctx;
 
-    /**
-     * @var IResourceServerContext
-     */
-    private $resource_server_ctx;
+  /**
+   * CurrentSummitFinderStrategy constructor.
+   * @param ISummitRepository $repository
+   * @param IResourceServerContext $resource_server_ctx
+   */
+  public function __construct(
+    ISummitRepository $repository,
+    IResourceServerContext $resource_server_ctx,
+  ) {
+    $this->resource_server_ctx = $resource_server_ctx;
+    $this->repository = $repository;
+  }
 
-    /**
-     * CurrentSummitFinderStrategy constructor.
-     * @param ISummitRepository $repository
-     * @param IResourceServerContext $resource_server_ctx
-     */
-    public function __construct
-    (
-        ISummitRepository $repository,
-        IResourceServerContext $resource_server_ctx
-    )
-    {
-        $this->resource_server_ctx = $resource_server_ctx;
-        $this->repository          = $repository;
+  /**
+   * @param mixed $summit_id
+   * @return null|Summit
+   */
+  public function find($summit_id) {
+    $summit =
+      $summit_id === "current"
+        ? $this->repository->getCurrent()
+        : $this->repository->getById(intval($summit_id));
+    if (is_null($summit)) {
+      $summit = $this->repository->getBySlug(strval($summit_id));
     }
-
-    /**
-     * @param mixed $summit_id
-     * @return null|Summit
-     */
-    public function find($summit_id)
-    {
-        $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-        if(is_null($summit))
-            $summit = $this->repository->getBySlug(strval($summit_id));
-        return $summit;
-    }
+    return $summit;
+  }
 }

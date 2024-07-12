@@ -21,19 +21,15 @@ use models\summit\SummitRegistrationPromoCode;
  * Class PrePaidTicketTypePromoCodeValidationStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
-final class PrePaidTicketTypePromoCodeValidationStrategy implements IPromoCodeValidationStrategy
-{
-    public function isValid(SummitRegistrationPromoCode $promo_code): bool
-    {
-        Log::debug
-        (
-            sprintf
-            (
-                "PrePaidTicketTypePromoCodeValidationStrategy::isValid promo code %s",
-                $promo_code->getId()
-            )
-        );
+final class PrePaidTicketTypePromoCodeValidationStrategy implements IPromoCodeValidationStrategy {
+  public function isValid(SummitRegistrationPromoCode $promo_code): bool {
+    Log::debug(
+      sprintf(
+        "PrePaidTicketTypePromoCodeValidationStrategy::isValid promo code %s",
+        $promo_code->getId(),
+      ),
+    );
 
-        return PromoCodesUtils::isPrePaidPromoCode($promo_code);
-    }
+    return PromoCodesUtils::isPrePaidPromoCode($promo_code);
+  }
 }

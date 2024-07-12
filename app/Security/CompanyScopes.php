@@ -16,8 +16,7 @@
  * Class CompanyScopes
  * @package App\Security
  */
-final class CompanyScopes
-{
-    const Read = '%s/companies/read';
-    const Write = '%s/companies/write';
+final class CompanyScopes {
+  const Read = "%s/companies/read";
+  const Write = "%s/companies/write";
 }

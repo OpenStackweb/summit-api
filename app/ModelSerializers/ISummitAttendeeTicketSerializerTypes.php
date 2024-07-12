@@ -16,9 +16,8 @@
  * Interface ISummitAttendeeTicketSerializerTypes
  * @package App\ModelSerializers
  */
-interface ISummitAttendeeTicketSerializerTypes
-{
-    const PublicEdition = 'PUBLIC_EDITION';
-    const AdminType     = 'ADMIN';
-    const GuestEdition  = 'GUEST_EDITION';
+interface ISummitAttendeeTicketSerializerTypes {
+  const PublicEdition = "PUBLIC_EDITION";
+  const AdminType = "ADMIN";
+  const GuestEdition = "GUEST_EDITION";
 }

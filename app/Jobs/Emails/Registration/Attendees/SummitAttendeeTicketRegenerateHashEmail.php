@@ -12,20 +12,17 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class SummitAttendeeTicketRegenerateHashEmail
  * @package App\Jobs\Emails
  */
-class SummitAttendeeTicketRegenerateHashEmail extends InviteAttendeeTicketEditionMail
-{
-    protected function getEmailEventSlug(): string
-    {
-        return self::EVENT_SLUG;
-    }
+class SummitAttendeeTicketRegenerateHashEmail extends InviteAttendeeTicketEditionMail {
+  protected function getEmailEventSlug(): string {
+    return self::EVENT_SLUG;
+  }
 
-    // metadata
-    const EVENT_SLUG = 'SUMMIT_REGISTRATION__ATTENDEE_TICKET_REGENERATE_HASH';
-    const EVENT_NAME = 'SUMMIT_REGISTRATION_ATTENDEE_TICKET_REGENERATE_HASH';
-    const DEFAULT_TEMPLATE = 'REGISTRATION_REGENERATION_INVITE_ATTENDEE_TICKET_EDITION';
+  // metadata
+  const EVENT_SLUG = "SUMMIT_REGISTRATION__ATTENDEE_TICKET_REGENERATE_HASH";
+  const EVENT_NAME = "SUMMIT_REGISTRATION_ATTENDEE_TICKET_REGENERATE_HASH";
+  const DEFAULT_TEMPLATE = "REGISTRATION_REGENERATION_INVITE_ATTENDEE_TICKET_EDITION";
 }

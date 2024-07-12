@@ -17,152 +17,145 @@ use services\model\ISummitService;
  * limitations under the License.
  **/
 
-final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+  }
 
-    protected function tearDown(): void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    public function testGetCurrentSummitCompanies()
-    {
-        $summitId = self::$summit->getId();
-        $companyId = 1;
+  public function testGetCurrentSummitCompanies() {
+    $summitId = self::$summit->getId();
+    $companyId = 1;
 
-        $service = App::make(ISummitService::class);
-        $company = $service->addCompany($summitId, $companyId);
+    $service = App::make(ISummitService::class);
+    $company = $service->addCompany($summitId, $companyId);
 
-        $service->addCompany($summitId, 2);
-        $service->addCompany(self::$summit2->getId(), 3);
+    $service->addCompany($summitId, 2);
+    $service->addCompany(self::$summit2->getId(), 3);
 
-        $params = [
-            'id' => $summitId,
-            'page' => 1,
-            'per_page' => 15,
-            'filter' => ['name=@' . $company->getName()],
-        ];
+    $params = [
+      "id" => $summitId,
+      "page" => 1,
+      "per_page" => 15,
+      "filter" => ["name=@" . $company->getName()],
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitRegistrationCompaniesApiController@getAllBySummit",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitRegistrationCompaniesApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $data = json_decode($content);
+    $this->assertTrue(!is_null($data));
+  }
 
-    public function testAddCompanyToSummit($summitId = null, $companyId = 1)
-    {
-        $params = array(
-            'id' => $summitId ?? self::$summit->getId(),
-            'company_id' => $companyId,
-        );
+  public function testAddCompanyToSummit($summitId = null, $companyId = 1) {
+    $params = [
+      "id" => $summitId ?? self::$summit->getId(),
+      "company_id" => $companyId,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitRegistrationCompaniesApiController@add",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-    }
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitRegistrationCompaniesApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+  }
 
-    public function testRemoveCompanyFromSummit($companyId = 1)
-    {
-        $summitId = $summitId ?? self::$summit->getId();
+  public function testRemoveCompanyFromSummit($companyId = 1) {
+    $summitId = $summitId ?? self::$summit->getId();
 
-        $service = App::make(ISummitService::class);
-        $service->addCompany($summitId, $companyId);
+    $service = App::make(ISummitService::class);
+    $service->addCompany($summitId, $companyId);
 
-        $params = array(
-            'id' => $summitId,
-            'company_id' => $companyId,
-        );
+    $params = [
+      "id" => $summitId,
+      "company_id" => $companyId,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitRegistrationCompaniesApiController@delete",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitRegistrationCompaniesApiController@delete",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 
-    public function testIngestRegistrationCompanies()
-    {
-        $csv_content = <<<CSV
-name,
-Testco,
-Testco 2,
-Testco 3,
-Testco 4,
-CSV;
-        $path = "/tmp/registration_companies.csv";
+  public function testIngestRegistrationCompanies() {
+    $csv_content = <<<CSV
+    name,
+    Testco,
+    Testco 2,
+    Testco 3,
+    Testco 4,
+    CSV;
+    $path = "/tmp/registration_companies.csv";
 
-        file_put_contents($path, $csv_content);
+    file_put_contents($path, $csv_content);
 
-        $file = new UploadedFile($path, "registration_companies.csv", 'text/csv', null, true);
+    $file = new UploadedFile($path, "registration_companies.csv", "text/csv", null, true);
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitRegistrationCompaniesApiController@import",
-            $params,
-            [],
-            [],
-            [
-                'file' => $file
-            ],
-            $headers
-        );
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitRegistrationCompaniesApiController@import",
+      $params,
+      [],
+      [],
+      [
+        "file" => $file,
+      ],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+  }
 }

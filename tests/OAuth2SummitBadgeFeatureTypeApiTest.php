@@ -16,294 +16,284 @@ use Mockery;
 /**
  * Class OAuth2SummitBadgeFeatureTypeApiTest
  */
-final class OAuth2SummitBadgeFeatureTypeApiTest extends ProtectedApiTestCase
-{
+final class OAuth2SummitBadgeFeatureTypeApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertSummitTestData;
+  public function createApplication() {
+    $app = parent::createApplication();
 
-    public function createApplication()
-    {
-        $app = parent::createApplication();
+    $fileUploaderMock = Mockery::mock(\App\Http\Utils\IFileUploader::class)->shouldIgnoreMissing();
 
-        $fileUploaderMock = Mockery::mock(\App\Http\Utils\IFileUploader::class)
-            ->shouldIgnoreMissing();
+    $fileUploaderMock->shouldReceive("build")->andReturn(new \models\main\File());
 
-        $fileUploaderMock->shouldReceive('build')->andReturn(new \models\main\File());
+    $app->instance(\App\Http\Utils\IFileUploader::class, $fileUploaderMock);
 
-        $app->instance(\App\Http\Utils\IFileUploader::class, $fileUploaderMock);
+    return $app;
+  }
 
-        return $app;
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+  }
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  public function testAddBadgeFeatureType() {
+    return $this->_testAddBadgeFeatureType();
+  }
 
-    public function testAddBadgeFeatureType(){
-        return $this->_testAddBadgeFeatureType();
-    }
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  protected function _testAddBadgeFeatureType() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    protected function _testAddBadgeFeatureType(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $name = str_random(16) . "_feature_type";
+    $template = <<<HTML
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <svg
+       xmlns:dc="http://purl.org/dc/elements/1.1/"
+       xmlns:cc="http://creativecommons.org/ns#"
+       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+       xmlns:svg="http://www.w3.org/2000/svg"
+       xmlns="http://www.w3.org/2000/svg"
+       version="1.0"
+       width="340pt"
+       height="362pt"
+       viewBox="0 0 340 362"
+       id="svg3120">
+      <defs
+         id="defs3130" />
+      <metadata
+         id="metadata3122">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+    </metadata>
+      <g
+         transform="matrix(0.1,0,0,-0.1,0,362)"
+         id="g3124"
+         style="fill:#000000;stroke:none">
+        <path
+           d="m 3190,3550 c -80,-21 -249,-59 -375,-84 -321,-63 -372,-82 -515,-188 -203,-151 -345,-443 -344,-708 1,-101 16,-173 33,-154 4,5 18,34 30,64 61,147 238,371 389,492 77,62 232,123 232,91 0,-11 -53,-77 -116,-143 -59,-63 -79,-89 -190,-250 -115,-169 -265,-471 -366,-740 -98,-261 -170,-469 -218,-625 -81,-267 -154,-478 -167,-482 -16,-6 -60,137 -152,492 -143,556 -204,747 -350,1095 -100,237 -232,427 -500,718 -147,161 -356,315 -482,357 -82,28 -89,14 -27,-55 292,-329 461,-573 640,-920 151,-295 255,-588 444,-1260 48,-172 154,-610 188,-780 38,-189 80,-374 91,-403 4,-9 19,-21 34,-25 34,-9 198,-9 233,0 52,15 62,56 134,528 48,319 89,510 171,795 139,486 287,842 377,900 13,8 77,24 144,35 260,43 469,158 617,341 99,122 125,212 150,512 13,159 21,204 51,299 19,62 32,118 30,125 -7,18 -23,16 -186,-27 z"
+           id="path3126"
+           style="fill:#017f00;fill-opacity:1" />
+      </g>
+    </svg>
+    HTML;
 
-        $name        = str_random(16).'_feature_type';
-        $template = <<<HTML
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   version="1.0"
-   width="340pt"
-   height="362pt"
-   viewBox="0 0 340 362"
-   id="svg3120">
-  <defs
-     id="defs3130" />
-  <metadata
-     id="metadata3122">
-<rdf:RDF>
-  <cc:Work
-     rdf:about="">
-    <dc:format>image/svg+xml</dc:format>
-    <dc:type
-       rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-    <dc:title></dc:title>
-  </cc:Work>
-</rdf:RDF>
-</metadata>
-  <g
-     transform="matrix(0.1,0,0,-0.1,0,362)"
-     id="g3124"
-     style="fill:#000000;stroke:none">
-    <path
-       d="m 3190,3550 c -80,-21 -249,-59 -375,-84 -321,-63 -372,-82 -515,-188 -203,-151 -345,-443 -344,-708 1,-101 16,-173 33,-154 4,5 18,34 30,64 61,147 238,371 389,492 77,62 232,123 232,91 0,-11 -53,-77 -116,-143 -59,-63 -79,-89 -190,-250 -115,-169 -265,-471 -366,-740 -98,-261 -170,-469 -218,-625 -81,-267 -154,-478 -167,-482 -16,-6 -60,137 -152,492 -143,556 -204,747 -350,1095 -100,237 -232,427 -500,718 -147,161 -356,315 -482,357 -82,28 -89,14 -27,-55 292,-329 461,-573 640,-920 151,-295 255,-588 444,-1260 48,-172 154,-610 188,-780 38,-189 80,-374 91,-403 4,-9 19,-21 34,-25 34,-9 198,-9 233,0 52,15 62,56 134,528 48,319 89,510 171,795 139,486 287,842 377,900 13,8 77,24 144,35 260,43 469,158 617,341 99,122 125,212 150,512 13,159 21,204 51,299 19,62 32,118 30,125 -7,18 -23,16 -186,-27 z"
-       id="path3126"
-       style="fill:#017f00;fill-opacity:1" />
-  </g>
-</svg>
-HTML;
+    $data = [
+      "name" => $name,
+      "description" => "this is a description",
+      "template_content" => $template,
+      "tag_name" => "vegan",
+    ];
 
-        $data = [
-            'name'             => $name,
-            'description'      => "this is a description",
-            'template_content' => $template,
-            'tag_name'         => "vegan",
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitBadgeFeatureTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitBadgeFeatureTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $feature = json_decode($content);
+    $this->assertTrue(!is_null($feature));
+    $this->assertTrue($feature->name == $name);
+    return $feature;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $feature = json_decode($content);
-        $this->assertTrue(!is_null($feature));
-        $this->assertTrue($feature->name == $name);
-        return $feature;
-    }
+  public function testUpdateBadgeFeatureType() {
+    $feature_old = $this->_testAddBadgeFeatureType();
+    $params = [
+      "id" => self::$summit->getId(),
+      "feature_id" => $feature_old->id,
+    ];
 
-    public function testUpdateBadgeFeatureType(){
+    $data = [
+      "description" => "this is a description update",
+      "is_default" => false,
+    ];
 
-        $feature_old = $this->_testAddBadgeFeatureType();
-        $params = [
-            'id' => self::$summit->getId(),
-            "feature_id" => $feature_old->id
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'description'      => "this is a description update",
-            'is_default'       => false,
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitBadgeFeatureTypeApiController@update",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $feature = json_decode($content);
+    $this->assertTrue(!is_null($feature));
+    $this->assertTrue($feature->name == $feature_old->name);
+    return $feature;
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitBadgeFeatureTypeApiController@update",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testGetAllBySummit() {
+    $this->_testAddBadgeFeatureType();
+    $this->_testAddBadgeFeatureType();
+    $this->_testAddBadgeFeatureType();
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $feature = json_decode($content);
-        $this->assertTrue(!is_null($feature));
-        $this->assertTrue($feature->name == $feature_old->name);
-        return $feature;
-    }
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-    public function testGetAllBySummit(){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $this->_testAddBadgeFeatureType();
-        $this->_testAddBadgeFeatureType();
-        $this->_testAddBadgeFeatureType();
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitBadgeFeatureTypeApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $data = json_decode($content);
+    $this->assertTrue(!is_null($data));
+    $this->assertTrue($data->total == 3);
+    return $data;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  /**
+   * @param int $summit_id
+   */
+  public function testDeleteFeature() {
+    $feature_old = $this->_testAddBadgeFeatureType();
+    $params = [
+      "id" => self::$summit->getId(),
+      "feature_id" => $feature_old->id,
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitBadgeFeatureTypeApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
-        $this->assertTrue($data->total == 3);
-        return $data;
-    }
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitBadgeFeatureTypeApiController@delete",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-    /**
-     * @param int $summit_id
-     */
-    public function testDeleteFeature(){
-        $feature_old = $this->_testAddBadgeFeatureType();
-        $params = [
-            'id' => self::$summit->getId(),
-            "feature_id" => $feature_old->id
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testAddFeatureImage() {
+    $feature_old = $this->_testAddBadgeFeatureType();
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitBadgeFeatureTypeApiController@delete",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $params = [
+      "id" => self::$summit->getId(),
+      "feature_id" => $feature_old->id,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testAddFeatureImage(){
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
+      $params,
+      [],
+      [],
+      [
+        "file" => UploadedFile::fake()->image("feat.svg"),
+      ],
+      $headers,
+    );
 
-        $feature_old = $this->_testAddBadgeFeatureType();
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $file = json_decode($content);
+    $this->assertTrue(!is_null($file));
+  }
 
-        $params = [
-            'id' => self::$summit->getId(),
-            "feature_id" => $feature_old->id
-        ];
+  public function testDeleteFeatureImage() {
+    $feature_old = $this->_testAddBadgeFeatureType();
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $params = [
+      "id" => self::$summit->getId(),
+      "feature_id" => $feature_old->id,
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
-            $params,
-            [],
-            [],
-            [
-                'file' => UploadedFile::fake()->image('feat.svg'),
-            ],
-            $headers
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $file = json_decode($content);
-        $this->assertTrue(!is_null($file));
-    }
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
+      $params,
+      [],
+      [],
+      [
+        "file" => UploadedFile::fake()->image("feat.svg"),
+      ],
+      $headers,
+    );
 
-    public function testDeleteFeatureImage(){
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $file = json_decode($content);
+    $this->assertTrue(!is_null($file));
 
-        $feature_old = $this->_testAddBadgeFeatureType();
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitBadgeFeatureTypeApiController@deleteFeatureImage",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id' => self::$summit->getId(),
-            "feature_id" => $feature_old->id
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
-            $params,
-            [],
-            [],
-            [
-                'file' => UploadedFile::fake()->image('feat.svg'),
-            ],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $file = json_decode($content);
-        $this->assertTrue(!is_null($file));
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitBadgeFeatureTypeApiController@deleteFeatureImage",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

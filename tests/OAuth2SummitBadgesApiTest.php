@@ -12,66 +12,63 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class OAuth2SummitBadgesApiTest
  */
-class OAuth2SummitBadgesApiTest extends ProtectedApiTestCase
-{
+class OAuth2SummitBadgesApiTest extends ProtectedApiTestCase {
+  public function testGetAllBySummit($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "expand" => "ticket,ticket.order,type,type.access_levels,features",
+    ];
 
-    public function testGetAllBySummit($summit_id=27){
-        $params = [
-            'id' => $summit_id,
-            'expand' => 'ticket,ticket.order,type,type.access_levels,features'
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitBadgesApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitBadgesApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $data = json_decode($content);
+    $this->assertTrue(!is_null($data));
+    return $data;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
-        return $data;
-    }
+  public function testGetAllBySummitCSV($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "expand" => "ticket,ticket.order,type,type.access_levels,features",
+    ];
 
-    public function testGetAllBySummitCSV($summit_id=27){
-        $params = [
-            'id' => $summit_id,
-            'expand' => 'ticket,ticket.order,type,type.access_levels,features'
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitBadgesApiController@getAllBySummitCSV",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitBadgesApiController@getAllBySummitCSV",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
-        return $data;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $data = json_decode($content);
+    $this->assertTrue(!is_null($data));
+    return $data;
+  }
 }

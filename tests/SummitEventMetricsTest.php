@@ -23,83 +23,75 @@ use Mockery;
 /**
  * Class SummitEventMetricsTest
  */
-class SummitEventMetricsTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+class SummitEventMetricsTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    /**
-     * @var SummitEvent
-     */
-    static $event1;
+  /**
+   * @var SummitEvent
+   */
+  static $event1;
 
-    /**
-     * @var SummitEvent
-     */
-    static $event2;
+  /**
+   * @var SummitEvent
+   */
+  static $event2;
 
-    /**
-     * @var ObjectRepository
-     */
-    static $event_repository;
+  /**
+   * @var ObjectRepository
+   */
+  static $event_repository;
 
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+    DB::setDefaultConnection("model");
+    DB::table("Presentation")->delete();
+    DB::table("SummitEvent")->delete();
+    self::$event_repository = EntityManager::getRepository(SummitEvent::class);
+    $time_zone = new DateTimeZone("America/Chicago");
+    $now = new DateTime("now", $time_zone);
+    self::$event1 = new Presentation();
+    self::$event1->setTitle("PRESENTATION 1");
+    self::$event1->setStartDate((clone $now)->add(new DateInterval("P1D")));
+    self::$event1->setEndDate((clone $now)->add(new DateInterval("P2D")));
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-        DB::setDefaultConnection("model");
-        DB::table("Presentation")->delete();
-        DB::table("SummitEvent")->delete();
-        self::$event_repository = EntityManager::getRepository(SummitEvent::class);
-        $time_zone = new DateTimeZone("America/Chicago");
-        $now = new DateTime("now", $time_zone);
-        self::$event1 = new Presentation();
-        self::$event1->setTitle("PRESENTATION 1");
-        self::$event1->setStartDate((clone $now)->add(new DateInterval("P1D")));
-        self::$event1->setEndDate((clone $now)->add(new DateInterval("P2D")));
+    self::$summit->addEvent(self::$event1);
+    self::$event1->publish();
+    self::$em->persist(self::$event1);
+    self::$em->flush();
+  }
 
-        self::$summit->addEvent(self::$event1);
-        self::$event1->publish();
-        self::$em->persist(self::$event1);
-        self::$em->flush();
-    }
+  public function tearDown(): void {
+    self::clearSummitTestData();
+    Mockery::close();
+  }
 
-    public function tearDown():void
-    {
-        self::clearSummitTestData();
-        Mockery::close();
-    }
+  public function testEventEnter() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "member_id" => "me",
+      "event_id" => self::$event1->getId(),
+    ];
 
-    public function testEventEnter(){
+    $data = [];
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'member_id' => 'me',
-            'event_id' => self::$event1->getId()
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMembersApiController@enterToEvent",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMembersApiController@enterToEvent",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-    }
-
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+  }
 }

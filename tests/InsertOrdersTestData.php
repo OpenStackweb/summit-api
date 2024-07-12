@@ -23,120 +23,117 @@ use Exception;
 /**
  * Trait InsertOrdersTestData
  */
-trait InsertOrdersTestData
-{
+trait InsertOrdersTestData {
+  /**
+   * @var SummitTicketType
+   */
+  static $default_ticket_type;
 
-    /**
-     * @var SummitTicketType
-     */
-    static $default_ticket_type;
+  /**
+   * @var SummitBadgeType
+   */
+  static $default_badge_type;
 
-    /**
-     * @var SummitBadgeType
-     */
-    static $default_badge_type;
+  /**
+   * @var SummitBadgeType
+   */
+  static $badge_type_2;
 
-    /**
-     * @var SummitBadgeType
-     */
-    static $badge_type_2;
+  /**
+   * @var SummitOrder[]
+   */
+  static $summit_orders = [];
 
-    /**
-     * @var SummitOrder[]
-     */
-    static $summit_orders = [];
+  /**
+   * @var SummitBadgeFeatureType[]
+   */
+  static $badge_features = [];
 
-    /**
-     * @var SummitBadgeFeatureType[]
-     */
-    static $badge_features = [];
+  static $taxes = [];
+  /**
+   * @throws Exception
+   */
+  protected static function InsertOrdersTestData() {
+    DB::setDefaultConnection("model");
 
-    static $taxes = [];
-    /**
-     * @throws Exception
-     */
-    protected static function InsertOrdersTestData()
-    {
-        DB::setDefaultConnection("model");
+    // taxes
 
-        // taxes
+    $tax1 = new SummitTaxType();
+    $tax1->setName("TAX 1");
+    $tax1->setRate(10.5);
+    self::$summit->addTaxType($tax1);
+    $tax2 = new SummitTaxType();
+    $tax2->setName("TAX 2");
+    $tax2->setRate(1.5);
+    self::$summit->addTaxType($tax2);
 
-        $tax1 = new SummitTaxType();
-        $tax1->setName("TAX 1");
-        $tax1->setRate(10.5);
-        self::$summit->addTaxType($tax1);
-        $tax2 = new SummitTaxType();
-        $tax2->setName("TAX 2");
-        $tax2->setRate(1.5);
-        self::$summit->addTaxType($tax2);
+    self::$default_badge_type = new SummitBadgeType();
+    self::$default_badge_type->setName("BADGE TYPE1");
+    self::$default_badge_type->setIsDefault(true);
+    self::$default_badge_type->setDescription("BADGE TYPE1 DESCRIPTION");
+    self::$summit->addBadgeType(self::$default_badge_type);
 
-        self::$default_badge_type = new SummitBadgeType();
-        self::$default_badge_type->setName("BADGE TYPE1");
-        self::$default_badge_type->setIsDefault(true);
-        self::$default_badge_type->setDescription("BADGE TYPE1 DESCRIPTION");
-        self::$summit->addBadgeType(self::$default_badge_type);
+    self::$badge_type_2 = new SummitBadgeType();
+    self::$badge_type_2->setName("BADGE TYPE2");
+    self::$badge_type_2->setIsDefault(false);
+    self::$badge_type_2->setDescription("BADGE TYPE2 DESCRIPTION");
+    self::$summit->addBadgeType(self::$badge_type_2);
 
-        self::$badge_type_2 = new SummitBadgeType();
-        self::$badge_type_2->setName("BADGE TYPE2");
-        self::$badge_type_2->setIsDefault(false);
-        self::$badge_type_2->setDescription("BADGE TYPE2 DESCRIPTION");
-        self::$summit->addBadgeType(self::$badge_type_2);
-
-        // features
-        self::$badge_features = [];
-        for($i = 1 ; $i <= 10; $i++) {
-            $f = new SummitBadgeFeatureType();
-            $f->setName(sprintf("FEATURE %s", $i));
-            $f->setDescription(sprintf("FEATURE %s", $i));
-            self::$summit->addFeatureType($f);
-            self::$badge_features[] = $f;
-        }
-
-        self::$default_ticket_type = new SummitTicketType();
-        self::$default_ticket_type->setCost(100);
-        self::$default_ticket_type->setCurrency("USD");
-        self::$default_ticket_type->setName("TICKET TYPE 1");
-        self::$default_ticket_type->setQuantity2Sell(100);
-        self::$default_ticket_type->setBadgeType(self::$default_badge_type);
-
-        self::$summit->addTicketType(self::$default_ticket_type);
-        $tax1->addTicketType(self::$default_ticket_type);
-        $tax2->addTicketType(self::$default_ticket_type);
-
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-
-        self::$summit_orders = [];
-
-        for($i = 1 ; $i <= 10; $i++) {
-            $order = new SummitOrder();
-            $order->setBillingAddress1(sprintf( "ADDRESS %s", $i));
-            $order->setBillingAddress2(sprintf("ADDRESS 2 %s", $i));
-            $order->setNumber(sprintf("ORDER NBR %s", $i));
-            $order->setOwnerCompanyName(sprintf("COMPANY %s", $i));
-            $order->setOwnerFirstName(sprintf("FNAME %s", $i));
-            $order->setOwnerSurname(sprintf("LNAME %s", $i));
-            $order->setOwnerEmail(sprintf("test+%s@test.com", $i));
-            $order->setPaymentMethodOffline();
-            $order->setExternalId(sprintf("EXTERNAL_ID_%s", $i));
-            self::$summit->addOrder($order);
-            $order->generateNumber();
-            $ticket = new SummitAttendeeTicket();
-            $ticket->setOrder($order);
-            $ticket->setTicketType(self::$default_ticket_type);
-            $ticket->generateNumber();
-            self::$default_ticket_type->sell(1);
-            $ticket->generateHash();
-            $ticket->generateQRCode();
-            $ticket->applyTaxes(self::$summit->getTaxTypes()->toArray());
-            $order->generateHash();
-            $order->generateQRCode();
-            $order->addTicket($ticket);
-            $order->setPaid();
-            self::$summit_orders[] = $order;
-        }
-
-        self::$em->persist(self::$summit);
-        self::$em->flush();
+    // features
+    self::$badge_features = [];
+    for ($i = 1; $i <= 10; $i++) {
+      $f = new SummitBadgeFeatureType();
+      $f->setName(sprintf("FEATURE %s", $i));
+      $f->setDescription(sprintf("FEATURE %s", $i));
+      self::$summit->addFeatureType($f);
+      self::$badge_features[] = $f;
     }
+
+    self::$default_ticket_type = new SummitTicketType();
+    self::$default_ticket_type->setCost(100);
+    self::$default_ticket_type->setCurrency("USD");
+    self::$default_ticket_type->setName("TICKET TYPE 1");
+    self::$default_ticket_type->setQuantity2Sell(100);
+    self::$default_ticket_type->setBadgeType(self::$default_badge_type);
+
+    self::$summit->addTicketType(self::$default_ticket_type);
+    $tax1->addTicketType(self::$default_ticket_type);
+    $tax2->addTicketType(self::$default_ticket_type);
+
+    self::$em->persist(self::$summit);
+    self::$em->flush();
+
+    self::$summit_orders = [];
+
+    for ($i = 1; $i <= 10; $i++) {
+      $order = new SummitOrder();
+      $order->setBillingAddress1(sprintf("ADDRESS %s", $i));
+      $order->setBillingAddress2(sprintf("ADDRESS 2 %s", $i));
+      $order->setNumber(sprintf("ORDER NBR %s", $i));
+      $order->setOwnerCompanyName(sprintf("COMPANY %s", $i));
+      $order->setOwnerFirstName(sprintf("FNAME %s", $i));
+      $order->setOwnerSurname(sprintf("LNAME %s", $i));
+      $order->setOwnerEmail(sprintf("test+%s@test.com", $i));
+      $order->setPaymentMethodOffline();
+      $order->setExternalId(sprintf("EXTERNAL_ID_%s", $i));
+      self::$summit->addOrder($order);
+      $order->generateNumber();
+      $ticket = new SummitAttendeeTicket();
+      $ticket->setOrder($order);
+      $ticket->setTicketType(self::$default_ticket_type);
+      $ticket->generateNumber();
+      self::$default_ticket_type->sell(1);
+      $ticket->generateHash();
+      $ticket->generateQRCode();
+      $ticket->applyTaxes(self::$summit->getTaxTypes()->toArray());
+      $order->generateHash();
+      $order->generateQRCode();
+      $order->addTicket($ticket);
+      $order->setPaid();
+      self::$summit_orders[] = $order;
+    }
+
+    self::$em->persist(self::$summit);
+    self::$em->flush();
+  }
 }

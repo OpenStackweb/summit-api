@@ -12,32 +12,29 @@
  * limitations under the License.
  **/
 
-final class OAuth2SpeakerOrganizationalRoleApiTest extends ProtectedApiTestCase
-{
+final class OAuth2SpeakerOrganizationalRoleApiTest extends ProtectedApiTestCase {
+  public function testGelAll() {
+    $params = [];
 
-    public function testGelAll(){
-        $params = [
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SpeakerOrganizationalRoleApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SpeakerOrganizationalRoleApiController@getAll",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $roles = json_decode($content);
-        $this->assertTrue(!is_null($roles));
-        return $roles;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $roles = json_decode($content);
+    $this->assertTrue(!is_null($roles));
+    return $roles;
+  }
 }

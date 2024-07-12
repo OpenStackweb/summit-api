@@ -15,46 +15,41 @@
 use App\Models\Foundation\Main\IGroup;
 use models\main\SummitAdministratorPermissionGroup;
 
-
 /**
  * Class MemberModelTest
  * @package Tests
  */
-final class MemberModelTest  extends TestCase
-{
-    use InsertSummitTestData;
+final class MemberModelTest extends TestCase {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    use InsertOrdersTestData;
+  use InsertOrdersTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertMemberTestData(IGroup::SummitAdministrators);
-        self::insertSummitTestData();
-        self::InsertOrdersTestData();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertMemberTestData(IGroup::SummitAdministrators);
+    self::insertSummitTestData();
+    self::InsertOrdersTestData();
+  }
 
-    public function tearDown():void
-    {
-        self::clearSummitTestData();
-        self::clearMemberTestData();
-        parent::tearDown();
-    }
+  public function tearDown(): void {
+    self::clearSummitTestData();
+    self::clearMemberTestData();
+    parent::tearDown();
+  }
 
-    public function testSummitAdministratrPermissionGroup(){
-        $group = new SummitAdministratorPermissionGroup();
-        $group->setTitle("TEST_GROUP_".str_random(16));
-        $group->addMember(self::$member);
-        $group->addMember(self::$member2);
-        $group->addSummit(self::$summit);
+  public function testSummitAdministratrPermissionGroup() {
+    $group = new SummitAdministratorPermissionGroup();
+    $group->setTitle("TEST_GROUP_" . str_random(16));
+    $group->addMember(self::$member);
+    $group->addMember(self::$member2);
+    $group->addSummit(self::$summit);
 
-        self::$em->persist($group);
-        self::$em->flush();
+    self::$em->persist($group);
+    self::$em->flush();
 
-        $members_id = $group->getMembersIds();
-        $this->assertTrue(count($members_id) == 2);
-    }
-
+    $members_id = $group->getMembersIds();
+    $this->assertTrue(count($members_id) == 2);
+  }
 }

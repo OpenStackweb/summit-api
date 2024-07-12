@@ -23,150 +23,146 @@ use LaravelDoctrine\ORM\Facades\Registry;
 /**
  * Class ApisTableSeeder
  */
-final class ApiSeeder extends Seeder
-{
+final class ApiSeeder extends Seeder {
+  public function run() {
+    DB::setDefaultConnection("config");
 
-    public function run()
-    {
-        DB::setDefaultConnection("config");
+    $api = new Api();
+    $api->setName("summits");
+    $api->setActive(true);
+    $api->setDescription("Summit API");
 
-        $api = new Api();
-        $api->setName('summits');
-        $api->setActive(true);
-        $api->setDescription('Summit API');
+    EntityManager::persist($api);
 
-        EntityManager::persist($api);
+    EntityManager::flush();
 
-        EntityManager::flush();
+    // members
 
-        // members
+    $api = new Api();
+    $api->setName("members");
+    $api->setActive(true);
+    $api->setDescription("Members API");
 
-        $api = new Api();
-        $api->setName('members');
-        $api->setActive(true);
-        $api->setDescription('Members API');
+    EntityManager::persist($api);
 
-        EntityManager::persist($api);
+    EntityManager::flush();
 
-        EntityManager::flush();
+    //tags
 
-        //tags
+    $api = new Api();
+    $api->setName("tags");
+    $api->setActive(true);
+    $api->setDescription("tags API");
 
-        $api = new Api();
-        $api->setName('tags');
-        $api->setActive(true);
-        $api->setDescription('tags API');
+    EntityManager::persist($api);
 
-        EntityManager::persist($api);
+    EntityManager::flush();
 
-        EntityManager::flush();
+    //companies
 
-        //companies
+    $api = new Api();
+    $api->setName("companies");
+    $api->setActive(true);
+    $api->setDescription("companies API");
 
-        $api = new Api();
-        $api->setName('companies');
-        $api->setActive(true);
-        $api->setDescription('companies API');
+    EntityManager::persist($api);
 
-        EntityManager::persist($api);
+    EntityManager::flush();
 
-        EntityManager::flush();
+    // sponsored projects
+    $api = new Api();
+    $api->setName("sponsored-projects");
+    $api->setActive(true);
+    $api->setDescription("Sponsored Projects API");
 
-        // sponsored projects
-        $api = new Api();
-        $api->setName('sponsored-projects');
-        $api->setActive(true);
-        $api->setDescription('Sponsored Projects API');
+    EntityManager::persist($api);
 
-        EntityManager::persist($api);
+    EntityManager::flush();
 
-        EntityManager::flush();
+    //groups
 
-        //groups
+    $api = new Api();
+    $api->setName("groups");
+    $api->setActive(true);
+    $api->setDescription("groups API");
 
-        $api = new Api();
-        $api->setName('groups');
-        $api->setActive(true);
-        $api->setDescription('groups API');
+    EntityManager::persist($api);
 
-        EntityManager::persist($api);
+    EntityManager::flush();
 
-        EntityManager::flush();
+    // teams
 
+    $api = new Api();
+    $api->setName("teams");
+    $api->setActive(true);
+    $api->setDescription("Teams API");
 
-        // teams
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('teams');
-        $api->setActive(true);
-        $api->setDescription('Teams API');
+    EntityManager::flush();
 
-        EntityManager::persist($api);
+    // organizations
 
-        EntityManager::flush();
+    $api = new Api();
+    $api->setName("organizations");
+    $api->setActive(true);
+    $api->setDescription("Organizations API");
 
-        // organizations
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('organizations');
-        $api->setActive(true);
-        $api->setDescription('Organizations API');
+    EntityManager::flush();
 
-        EntityManager::persist($api);
+    // track question templates
 
-        EntityManager::flush();
+    $api = new Api();
+    $api->setName("track-question-templates");
+    $api->setActive(true);
+    $api->setDescription("Track Question Templates API");
 
-        // track question templates
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('track-question-templates');
-        $api->setActive(true);
-        $api->setDescription('Track Question Templates API');
+    EntityManager::flush();
 
-        EntityManager::persist($api);
+    // summit administrator groups
 
-        EntityManager::flush();
+    $api = new Api();
+    $api->setName("summit-administrator-groups");
+    $api->setActive(true);
+    $api->setDescription("Summit Administrator Groups API");
 
-        // summit administrator groups
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('summit-administrator-groups');
-        $api->setActive(true);
-        $api->setDescription('Summit Administrator Groups API');
+    // summit-media-file-types
 
-        EntityManager::persist($api);
+    $api = new Api();
+    $api->setName("summit-media-file-types");
+    $api->setActive(true);
+    $api->setDescription("Summit Media File Types API");
 
-        // summit-media-file-types
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('summit-media-file-types');
-        $api->setActive(true);
-        $api->setDescription('Summit Media File Types API');
+    EntityManager::flush();
 
-        EntityManager::persist($api);
+    // Elections
 
-        EntityManager::flush();
+    $api = new Api();
+    $api->setName("elections");
+    $api->setActive(true);
+    $api->setDescription("Elections API");
 
-        // Elections
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('elections');
-        $api->setActive(true);
-        $api->setDescription('Elections API');
+    EntityManager::flush();
 
-        EntityManager::persist($api);
+    //audit logs
 
-        EntityManager::flush();
+    $api = new Api();
+    $api->setName("audit-logs");
+    $api->setActive(true);
+    $api->setDescription("Audit logs API");
 
-        //audit logs
+    EntityManager::persist($api);
 
-        $api = new Api();
-        $api->setName('audit-logs');
-        $api->setActive(true);
-        $api->setDescription('Audit logs API');
-
-        EntityManager::persist($api);
-
-        EntityManager::flush();
-    }
+    EntityManager::flush();
+  }
 }

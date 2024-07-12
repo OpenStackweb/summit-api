@@ -17,75 +17,72 @@ use models\summit\PresentationActionType;
  * Class OAuth2SummitPresentationActionApiTest
  * @package Tests
  */
-final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    static $action1 = null;
-    static $action2 = null;
+  static $action1 = null;
+  static $action2 = null;
 
-    protected function setUp():void
-    {
-        $this->setCurrentGroup(IGroup::TrackChairs);
-        parent::setUp();
-        self::insertSummitTestData();
-        self::$summit_permission_group->addMember(self::$member);
-        self::$em->persist(self::$summit);
-        self::$em->persist(self::$summit_permission_group);
-        self::$em->flush();
-        $track_chair = self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
+  protected function setUp(): void {
+    $this->setCurrentGroup(IGroup::TrackChairs);
+    parent::setUp();
+    self::insertSummitTestData();
+    self::$summit_permission_group->addMember(self::$member);
+    self::$em->persist(self::$summit);
+    self::$em->persist(self::$summit_permission_group);
+    self::$em->flush();
+    $track_chair = self::$summit->addTrackChair(self::$member, [self::$defaultTrack]);
 
-        self::$action1 = new PresentationActionType();
-        self::$action1->setLabel("ACTION1");
-        self::$action1->setOrder(1);
-        self::$summit->addPresentationActionType(self::$action1);
+    self::$action1 = new PresentationActionType();
+    self::$action1->setLabel("ACTION1");
+    self::$action1->setOrder(1);
+    self::$summit->addPresentationActionType(self::$action1);
 
-        self::$action2 = new PresentationActionType();
-        self::$action2->setLabel("ACTION2");
-        self::$action2->setOrder(2);
-        self::$summit->addPresentationActionType(self::$action2);
+    self::$action2 = new PresentationActionType();
+    self::$action2->setLabel("ACTION2");
+    self::$action2->setOrder(2);
+    self::$summit->addPresentationActionType(self::$action2);
 
-        //self::$summit->synchAllPresentationActions();
+    //self::$summit->synchAllPresentationActions();
 
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-    }
+    self::$em->persist(self::$summit);
+    self::$em->flush();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    public function testCompleteAction(){
-        $params = [
-            'id' => self::$summit->getId(),
-            'selection_plan_id' => self::$default_selection_plan->getId(),
-            'presentation_id' => self::$presentations[0]->getId(),
-            'action_type_id' => self::$action1->getId(),
-            'expand' => 'type,presentation,created_by,updated_by'
-        ];
+  public function testCompleteAction() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "selection_plan_id" => self::$default_selection_plan->getId(),
+      "presentation_id" => self::$presentations[0]->getId(),
+      "action_type_id" => self::$action1->getId(),
+      "expand" => "type,presentation,created_by,updated_by",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitPresentationActionApiController@complete",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitPresentationActionApiController@complete",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $action = json_decode($content);
-        $this->assertTrue(!is_null($action));
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $action = json_decode($content);
+    $this->assertTrue(!is_null($action));
+  }
 }

@@ -15,140 +15,134 @@
 /**
  * Class OAuth2OAuth2SponsorshipTypeApiTest
  */
-final class OAuth2OAuth2SponsorshipTypeApiTest extends ProtectedApiTestCase
-{
+final class OAuth2OAuth2SponsorshipTypeApiTest extends ProtectedApiTestCase {
+  /**
+   * @return mixed
+   */
+  public function testAddSponsorShipType() {
+    $params = [];
 
-    /**
-     * @return mixed
-     */
-    public function testAddSponsorShipType(){
-        $params = [
+    $name = str_random(16) . "_sponsorship";
 
-        ];
+    $data = [
+      "name" => $name,
+      "label" => $name,
+      "size" => \models\summit\ISponsorshipTypeConstants::BigSize,
+    ];
 
-        $name = str_random(16).'_sponsorship';
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'name'  => $name,
-            'label' => $name,
-            'size'  => \models\summit\ISponsorshipTypeConstants::BigSize,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SponsorshipTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $sponsorship_type = json_decode($content);
+    $this->assertTrue(!is_null($sponsorship_type));
+    $this->assertTrue($sponsorship_type->name == $name);
+    return $sponsorship_type;
+  }
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SponsorshipTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testGetAllSponsorShipTypes() {
+    $params = [
+      "filter" => "size==Big",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $sponsorship_type = json_decode($content);
-        $this->assertTrue(!is_null($sponsorship_type));
-        $this->assertTrue($sponsorship_type->name == $name);
-        return $sponsorship_type;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testGetAllSponsorShipTypes(){
-        $params = [
-            'filter' => 'size==Big'
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SponsorshipTypeApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $page = json_decode($content);
+    $this->assertTrue(!is_null($page));
+    return $page;
+  }
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SponsorshipTypeApiController@getAll",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  /**
+   * @return mixed
+   */
+  public function testUpdateSponsorShipType() {
+    $sponsorship_type = $this->testAddSponsorShipType();
+    $params = [
+      "id" => $sponsorship_type->id,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $page = json_decode($content);
-        $this->assertTrue(!is_null($page));
-        return $page;
-    }
+    $data = [
+      "order" => 1,
+    ];
 
-    /**
-     * @return mixed
-     */
-    public function testUpdateSponsorShipType(){
-        $sponsorship_type = $this->testAddSponsorShipType();
-        $params = [
-            'id' => $sponsorship_type->id
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'order' => 1
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SponsorshipTypeApiController@update",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $sponsorship_type = json_decode($content);
+    $this->assertTrue(!is_null($sponsorship_type));
+    return $sponsorship_type;
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SponsorshipTypeApiController@update",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  /**
+   * @return mixed
+   */
+  public function testDeleteSponsorShipType() {
+    $sponsorship_type = $this->testAddSponsorShipType();
+    $params = [
+      "id" => $sponsorship_type->id,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $sponsorship_type = json_decode($content);
-        $this->assertTrue(!is_null($sponsorship_type));
-        return $sponsorship_type;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    /**
-     * @return mixed
-     */
-    public function testDeleteSponsorShipType(){
-        $sponsorship_type = $this->testAddSponsorShipType();
-        $params = [
-            'id' => $sponsorship_type->id
-        ];
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SponsorshipTypeApiController@delete",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SponsorshipTypeApiController@delete",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-        $this->assertTrue(empty($content));
-
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+    $this->assertTrue(empty($content));
+  }
 }

@@ -12,143 +12,132 @@
  * limitations under the License.
  **/
 
-
-
 use App\Models\Foundation\Main\IGroup;
 
 /**
  * Class OAuth2SummitSignApiTest
  * @package Tests
  */
-final class OAuth2SummitSignApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+final class OAuth2SummitSignApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::$defaultMember2 = self::$member2;
-        self::insertSummitTestData();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertMemberTestData(IGroup::TrackChairs);
+    self::$defaultMember = self::$member;
+    self::$defaultMember2 = self::$member2;
+    self::insertSummitTestData();
+  }
 
-    protected function tearDown(): void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    public function testAddSign(){
+  public function testAddSign() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $data = [
+      "template" => "template1.html",
+      "location_id" => self::$summit->getLocations()[0]->getId(),
+    ];
 
-        $data = [
-           'template' => "template1.html",
-            'location_id' => self::$summit->getLocations()[0]->getId(),
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitSignApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action
-        (
-            "POST",
-            "OAuth2SummitSignApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $sign = json_decode($content);
+    $this->assertTrue($sign->id > 0);
+    return $sign;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $sign = json_decode($content);
-        $this->assertTrue($sign->id > 0);
-        return $sign;
-    }
+  public function testGetAllSignsByLocationAndSummit() {
+    $this->testAddSign();
+    $location_id = self::$summit->getLocations()[0]->getId();
+    $params = [
+      "id" => self::$summit->getId(),
+      "page" => 1,
+      "per_page" => 10,
+      "filter" => ["location_id==" . $location_id],
+      "order" => "+id",
+    ];
 
-    public function testGetAllSignsByLocationAndSummit(){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $this->testAddSign();
-        $location_id = self::$summit->getLocations()[0]->getId();
-        $params = [
-            'id' => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 10,
-            'filter'   => [
-                'location_id=='.$location_id,
-            ],
-            'order'    => '+id'
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitSignApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $res = json_decode($content);
+    $this->assertTrue(!is_null($res));
+    $this->assertTrue($res->total > 0);
+    $this->assertTrue($res->data[0]->location_id == $location_id);
+    $this->assertTrue($res->data[0]->summit_id == self::$summit->getId());
+  }
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSignApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testUpdateSign() {
+    $sign = $this->testAddSign();
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $res = json_decode($content);
-        $this->assertTrue(!is_null($res));
-        $this->assertTrue($res->total > 0);
-        $this->assertTrue($res->data[0]->location_id == $location_id);
-        $this->assertTrue($res->data[0]->summit_id == self::$summit->getId());
-    }
+    $params = [
+      "id" => self::$summit->getId(),
+      "sign_id" => $sign->id,
+    ];
 
-    public function testUpdateSign(){
-        $sign = $this->testAddSign();
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'sign_id' => $sign->id,
-        ];
+    $data = [
+      "template" => "template2.html",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitSignApiController@update",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $data = [
-            'template' => "template2.html",
-        ];
-
-        $response = $this->action
-        (
-            "PUT",
-            "OAuth2SummitSignApiController@update",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $updatedSign = json_decode($content);
-        $this->assertTrue($updatedSign->id == $sign->id);
-        $this->assertTrue($updatedSign->template != $sign->template);
-        $this->assertTrue($updatedSign->template == "template2.html");
-        return $sign;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $updatedSign = json_decode($content);
+    $this->assertTrue($updatedSign->id == $sign->id);
+    $this->assertTrue($updatedSign->template != $sign->template);
+    $this->assertTrue($updatedSign->template == "template2.html");
+    return $sign;
+  }
 }

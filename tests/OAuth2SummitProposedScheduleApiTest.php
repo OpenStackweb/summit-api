@@ -18,262 +18,255 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitProposedScheduleApiTest
  * @package Tests
  */
-final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    protected function setUp():void
-    {
-        $this->setCurrentGroup(IGroup::TrackChairs);
-        parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::$defaultMember2 = self::$member2;
-        self::insertSummitTestData();
-        self::$summit_permission_group->addMember(self::$member);
-        self::$em->persist(self::$summit);
-        self::$em->persist(self::$summit_permission_group);
-        self::$em->flush();
-    }
+  protected function setUp(): void {
+    $this->setCurrentGroup(IGroup::TrackChairs);
+    parent::setUp();
+    self::insertMemberTestData(IGroup::TrackChairs);
+    self::$defaultMember = self::$member;
+    self::$defaultMember2 = self::$member2;
+    self::insertSummitTestData();
+    self::$summit_permission_group->addMember(self::$member);
+    self::$em->persist(self::$summit);
+    self::$em->persist(self::$summit_permission_group);
+    self::$em->flush();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        self::clearMemberTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    self::clearMemberTestData();
+    parent::tearDown();
+  }
 
-    public function testGetProposedScheduleEvents(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'source'   => 'track-chairs',
-            'page'     => 1,
-            'per_page' => 10,
-            'filter'   => 'presentation_title=@Presentation Title',
-            'order'    => '-track_id',
-            'expand'   => 'created_by,location'
-        ];
+  public function testGetProposedScheduleEvents() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "source" => "track-chairs",
+      "page" => 1,
+      "per_page" => 10,
+      "filter" => "presentation_title=@Presentation Title",
+      "order" => "-track_id",
+      "expand" => "created_by,location",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitProposedScheduleApiController@getProposedScheduleEvents",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitProposedScheduleApiController@getProposedScheduleEvents",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $page = json_decode($content);
-        $this->assertTrue(!is_null($page));
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $page = json_decode($content);
+    $this->assertTrue(!is_null($page));
+  }
 
-    public function testPublishScheduleEvent(){
-        $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
-        $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
+  public function testPublishScheduleEvent() {
+    $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
+    $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
 
-        $presentation = self::$presentations[22];
+    $presentation = self::$presentations[22];
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'source' => 'track-chairs',
-            'presentation_id' => $presentation->getId(),
-            'expand'   => 'schedule'
-        ];
+    $params = [
+      "id" => self::$summit->getId(),
+      "source" => "track-chairs",
+      "presentation_id" => $presentation->getId(),
+      "expand" => "schedule",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $payload = [
-            'location_id' => $presentation->getLocation()->getId(),
-            'start_date' => $start_date->getTimestamp(),
-            'end_date' => $end_date->getTimestamp(),
-        ];
+    $payload = [
+      "location_id" => $presentation->getLocation()->getId(),
+      "start_date" => $start_date->getTimestamp(),
+      "end_date" => $end_date->getTimestamp(),
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitProposedScheduleApiController@publish",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitProposedScheduleApiController@publish",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $scheduled_event = json_decode($content);
-        $this->assertTrue(!is_null($scheduled_event));
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $scheduled_event = json_decode($content);
+    $this->assertTrue(!is_null($scheduled_event));
 
-        return $scheduled_event;
-    }
+    return $scheduled_event;
+  }
 
-    public function testUnPublishScheduleEvent(){
+  public function testUnPublishScheduleEvent() {
+    $scheduled_event = $this->testPublishScheduleEvent();
 
-        $scheduled_event = $this->testPublishScheduleEvent();
+    $params = [
+      "id" => $scheduled_event->schedule->summit_id,
+      "source" => $scheduled_event->schedule->source,
+      "presentation_id" => $scheduled_event->summit_event_id,
+    ];
 
-        $params = [
-            'id' => $scheduled_event->schedule->summit_id,
-            'source' => $scheduled_event->schedule->source,
-            'presentation_id' => $scheduled_event->summit_event_id,
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitProposedScheduleApiController@unpublish",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitProposedScheduleApiController@unpublish",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $this->assertResponseStatus(204);
+  }
 
-        $this->assertResponseStatus(204);
-    }
+  public function testPublishAll() {
+    $scheduled_event = $this->testPublishScheduleEvent();
 
-    public function testPublishAll(){
+    $params = [
+      "id" => $scheduled_event->schedule->summit_id,
+      "source" => "track-chairs",
+      "filter" => ["track_id==" . self::$defaultTrack->getId()],
+    ];
 
-        $scheduled_event = $this->testPublishScheduleEvent();
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id' => $scheduled_event->schedule->summit_id,
-            'source' => 'track-chairs',
-            'filter' => [
-                'track_id=='.self::$defaultTrack->getId()
-            ]
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitProposedScheduleApiController@publishAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $scheduled_event = json_decode($content);
+    $this->assertTrue(!is_null($scheduled_event));
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitProposedScheduleApiController@publishAll",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testAddScheduleReview() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "source" => "track-chairs",
+      "track_id" => self::$summit->getPresentationCategories()[0]->getId(),
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $scheduled_event = json_decode($content);
-        $this->assertTrue(!is_null($scheduled_event));
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testAddScheduleReview(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'source'   => 'track-chairs',
-            'track_id' => self::$summit->getPresentationCategories()[0]->getId()
-        ];
+    $payload = [
+      "message" => "TEST REVIEW",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitProposedScheduleApiController@send2Review",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $payload = [
-            'message' => 'TEST REVIEW',
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $scheduled_event = json_decode($content);
+    $this->assertTrue(!is_null($scheduled_event));
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitProposedScheduleApiController@send2Review",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    return $scheduled_event;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $scheduled_event = json_decode($content);
-        $this->assertTrue(!is_null($scheduled_event));
+  public function testRemoveScheduleReview() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "source" => "track-chairs",
+      "track_id" => self::$summit->getPresentationCategories()[0]->getId(),
+    ];
 
-        return $scheduled_event;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testRemoveScheduleReview(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'source'   => 'track-chairs',
-            'track_id' => self::$summit->getPresentationCategories()[0]->getId()
-        ];
+    $payload = [
+      "message" => "NOT APPROVED",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitProposedScheduleApiController@removeReview",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $payload = [
-            'message' => 'NOT APPROVED',
-        ];
+    $this->assertResponseStatus(204);
+  }
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitProposedScheduleApiController@removeReview",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+  public function testGetProposedScheduleReviewSubmissions() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "source" => "track-chairs",
+      "page" => 1,
+      "per_page" => 10,
+      "filter" => "track_id==" . self::$summit->getPresentationCategories()[0]->getId(),
+      "expand" => "created_by,track",
+    ];
 
-        $this->assertResponseStatus(204);
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testGetProposedScheduleReviewSubmissions(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'source'   => 'track-chairs',
-            'page'     => 1,
-            'per_page' => 10,
-            'filter'   => 'track_id==' . self::$summit->getPresentationCategories()[0]->getId(),
-            'expand'   => 'created_by,track'
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitProposedScheduleApiController@getProposedScheduleReviewSubmissions",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitProposedScheduleApiController@getProposedScheduleReviewSubmissions",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $page = json_decode($content);
-        $this->assertTrue(!is_null($page));
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $page = json_decode($content);
+    $this->assertTrue(!is_null($page));
+  }
 }

@@ -16,221 +16,216 @@ use models\summit\SummitAttendee;
  * limitations under the License.
  **/
 
-class OAuth2SummitAttendeeNotesApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+class OAuth2SummitAttendeeNotesApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::insertSummitTestData();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertMemberTestData(IGroup::TrackChairs);
+    self::$defaultMember = self::$member;
+    self::insertSummitTestData();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        self::clearMemberTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    self::clearMemberTestData();
+    parent::tearDown();
+  }
 
-    public function testGetAllAttendeeNotes(){
+  public function testGetAllAttendeeNotes() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "expand" => "owner,author",
+      "order" => "+owner_fullname",
+    ];
 
-        $params = [
-            'id'     => self::$summit->getId(),
-            'expand' => 'owner,author',
-            'order'  => '+owner_fullname'
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitAttendeeNotesApiController@getAllAttendeeNotes",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitAttendeeNotesApiController@getAllAttendeeNotes",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $attendee_notes = json_decode($content);
+    $this->assertTrue(!is_null($attendee_notes));
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $attendee_notes = json_decode($content);
-        $this->assertTrue(!is_null($attendee_notes));
-    }
+  public function testGetAttendeeNotes() {
+    $attendee = self::$summit->getAttendees()[0];
+    $notes_count = count($attendee->getNotes());
 
-    public function testGetAttendeeNotes(){
+    $params = [
+      "id" => self::$summit->getId(),
+      "attendee_id" => $attendee->getId(),
+      "expand" => "owner,author",
+    ];
 
-        $attendee = self::$summit->getAttendees()[0];
-        $notes_count = count($attendee->getNotes());
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id'          => self::$summit->getId(),
-            'attendee_id' => $attendee->getId(),
-            'expand'      => 'owner,author',
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitAttendeeNotesApiController@getAttendeeNotes",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $attendee_notes = json_decode($content);
+    $this->assertTrue(!is_null($attendee_notes));
+    $this->assertTrue(count($attendee_notes->data) == $notes_count);
+  }
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitAttendeeNotesApiController@getAttendeeNotes",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testGetAttendeeNote() {
+    $attendee = self::$summit->getAttendees()[0];
+    $attendee_note = $attendee->getNotes()[0];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $attendee_notes = json_decode($content);
-        $this->assertTrue(!is_null($attendee_notes));
-        $this->assertTrue(count($attendee_notes->data) == $notes_count);
-    }
+    $params = [
+      "id" => self::$summit->getId(),
+      "attendee_id" => $attendee->getId(),
+      "note_id" => $attendee_note->getId(),
+      "expand" => "owner,author",
+    ];
 
-    public function testGetAttendeeNote() {
-        $attendee = self::$summit->getAttendees()[0];
-        $attendee_note = $attendee->getNotes()[0];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id'          => self::$summit->getId(),
-            'attendee_id' => $attendee->getId(),
-            'note_id'     => $attendee_note->getId(),
-            'expand'      => 'owner,author'
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitAttendeeNotesApiController@getAttendeeNote",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $attendee_note = json_decode($content);
+    $this->assertTrue(!is_null($attendee_note));
+  }
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitAttendeeNotesApiController@getAttendeeNote",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testAddAttendeeNote() {
+    $attendee = self::$summit->getAttendees()[0];
+    $attendee_ticket = $attendee->getTickets()[0];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $attendee_note = json_decode($content);
-        $this->assertTrue(!is_null($attendee_note));
-    }
+    $params = [
+      "id" => self::$summit->getId(),
+      "attendee_id" => $attendee->getId(),
+    ];
 
-    public function testAddAttendeeNote() {
-        $attendee = self::$summit->getAttendees()[0];
-        $attendee_ticket = $attendee->getTickets()[0];
+    $data = [
+      "content" => "Test attendee note 2",
+      "ticket_id" => $attendee_ticket->getId(),
+    ];
 
-        $params = [
-            'id'          => self::$summit->getId(),
-            'attendee_id' => $attendee->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'content'   => 'Test attendee note 2',
-            'ticket_id' => $attendee_ticket->getId()
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitAttendeeNotesApiController@addAttendeeNote",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $attendee_note = json_decode($content);
+    $this->assertTrue(!is_null($attendee_note));
+  }
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitAttendeeNotesApiController@addAttendeeNote",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testUpdateAttendeeNote() {
+    $attendee = self::$summit->getAttendees()[0];
+    $attendee_note = $attendee->getNotes()[0];
+    $new_content = "Test attendee note update";
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $attendee_note = json_decode($content);
-        $this->assertTrue(!is_null($attendee_note));
-    }
+    $params = [
+      "id" => self::$summit->getId(),
+      "attendee_id" => self::$summit->getAttendees()[0]->getId(),
+      "note_id" => $attendee_note->getId(),
+    ];
 
-    public function testUpdateAttendeeNote() {
-        $attendee = self::$summit->getAttendees()[0];
-        $attendee_note = $attendee->getNotes()[0];
-        $new_content = 'Test attendee note update';
+    $data = [
+      "content" => $new_content,
+    ];
 
-        $params = [
-            'id'          => self::$summit->getId(),
-            'attendee_id' => self::$summit->getAttendees()[0]->getId(),
-            'note_id'     => $attendee_note->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'content' => $new_content,
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitAttendeeNotesApiController@updateAttendeeNote",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $attendee_note = json_decode($content);
+    $this->assertTrue(!is_null($attendee_note));
+    $this->assertEquals($attendee_note->content, $new_content);
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitAttendeeNotesApiController@updateAttendeeNote",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testDeleteAttendeeNote() {
+    $attendee = self::$summit->getAttendees()[0];
+    $attendee_note = $attendee->getNotes()[0];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $attendee_note = json_decode($content);
-        $this->assertTrue(!is_null($attendee_note));
-        $this->assertEquals($attendee_note->content, $new_content);
-    }
+    $params = [
+      "id" => self::$summit->getId(),
+      "attendee_id" => self::$summit->getAttendees()[0]->getId(),
+      "note_id" => $attendee_note->getId(),
+    ];
 
-    public function testDeleteAttendeeNote() {
-        $attendee = self::$summit->getAttendees()[0];
-        $attendee_note = $attendee->getNotes()[0];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id'          => self::$summit->getId(),
-            'attendee_id' => self::$summit->getAttendees()[0]->getId(),
-            'note_id'     => $attendee_note->getId(),
-        ];
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitAttendeeNotesApiController@deleteAttendeeNote",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitAttendeeNotesApiController@deleteAttendeeNote",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

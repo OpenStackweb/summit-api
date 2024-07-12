@@ -25,55 +25,62 @@ use utils\PagingInfo;
 /**
  * Class AuditModelTest
  */
-class SubmitterRepositoryTest extends ProtectedApiTestCase
-{
-    public function testGetSubmittersBySummit(){
+class SubmitterRepositoryTest extends ProtectedApiTestCase {
+  public function testGetSubmittersBySummit() {
+    $submitter_repository = EntityManager::getRepository(Member::class);
+    $summit_repository = EntityManager::getRepository(Summit::class);
 
-        $submitter_repository = EntityManager::getRepository(Member::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
+    $summit = $summit_repository->find(3401);
 
-        $summit = $summit_repository->find(3401);
+    $filter = FilterParser::parse(["filter" => "is_speaker==false"], ["is_speaker" => ["=="]]);
 
-        $filter = FilterParser::parse(
-            ["filter" => "is_speaker==false"],
-            ["is_speaker" => ['==']]
+    $order = new Order([OrderElement::buildDescFor("id")]);
+
+    $page = $submitter_repository->getSubmittersBySummit(
+      $summit,
+      new PagingInfo(1, 5),
+      $filter,
+      $order,
+    );
+
+    $params = [
+      "summit" => $summit,
+    ];
+
+    foreach ($page->getItems() as $submitter) {
+      $sm = SerializerRegistry::getInstance()
+        ->getSerializer($submitter, IMemberSerializerTypes::Submitter)
+        ->serialize(
+          "accepted_presentations,alternate_presentations,rejected_presentations",
+          [],
+          [],
+          $params,
         );
-
-        $order = new Order([
-            OrderElement::buildDescFor("id"),
-        ]);
-
-        $page = $submitter_repository->getSubmittersBySummit($summit, new PagingInfo(1, 5), $filter, $order);
-
-        $params = [
-            "summit" => $summit
-        ];
-
-        foreach ($page->getItems() as $submitter) {
-            $sm = SerializerRegistry::getInstance()->getSerializer($submitter, IMemberSerializerTypes::Submitter)
-                ->serialize('accepted_presentations,alternate_presentations,rejected_presentations', [], [], $params);
-        }
-
-        self::assertNotNull($page);
     }
 
-    public function testGetSubmittersIdsBySummit(){
-        $submitter_repository = EntityManager::getRepository(Member::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
+    self::assertNotNull($page);
+  }
 
-        $summit = $summit_repository->find(3363);
+  public function testGetSubmittersIdsBySummit() {
+    $submitter_repository = EntityManager::getRepository(Member::class);
+    $summit_repository = EntityManager::getRepository(Summit::class);
 
-        $filter = FilterParser::parse(
-            ["filter" => "has_rejected_presentations==false"],
-            ["has_rejected_presentations" => ['==']]
-        );
+    $summit = $summit_repository->find(3363);
 
-        $order = new Order([
-            OrderElement::buildDescFor("id"),
-        ]);
+    $filter = FilterParser::parse(
+      ["filter" => "has_rejected_presentations==false"],
+      ["has_rejected_presentations" => ["=="]],
+    );
 
-        $submitterIds = $submitter_repository->getSubmittersIdsBySummit($summit, new PagingInfo(1, 5), $filter, $order);
+    $order = new Order([OrderElement::buildDescFor("id")]);
 
-        self::assertNotEmpty($submitterIds);
-    }
+    $submitterIds = $submitter_repository->getSubmittersIdsBySummit(
+      $summit,
+      new PagingInfo(1, 5),
+      $filter,
+      $order,
+    );
+
+    self::assertNotEmpty($submitterIds);
+  }
 }

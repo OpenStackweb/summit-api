@@ -12,59 +12,55 @@
  * limitations under the License.
  **/
 
-class OAuth2SummitMediaFileTypeApiControllerTest
-    extends ProtectedApiTestCase
-{
+class OAuth2SummitMediaFileTypeApiControllerTest extends ProtectedApiTestCase {
+  public function testAdd() {
+    $payload = [
+      "name" => str_random(16) . "summit_media_file_type",
+      "allowed_extensions" => ["PDF", "SVG"],
+    ];
 
-    public function testAdd(){
-        $payload = [
-            'name' => str_random(16).'summit_media_file_type',
-            'allowed_extensions' => ['PDF', 'SVG']
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitMediaFileTypeApiController@add",
+      [],
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitMediaFileTypeApiController@add",
-            [],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    $content = $response->getContent();
+    $response = json_decode($content, true);
+    $this->assertResponseStatus(201);
+    $this->assertTrue(isset($response["id"]));
+  }
 
-        $content = $response->getContent();
-        $response = json_decode($content, true);
-        $this->assertResponseStatus(201);
-        $this->assertTrue(isset($response['id']));
-    }
+  public function testGetAll() {
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testGetAll(){
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitMediaFileTypeApiController@getAll",
+      [],
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitMediaFileTypeApiController@getAll",
-            [],
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $response = json_decode($content, true);
-        $this->assertTrue(isset($response['total']));
-        $this->assertTrue(intval($response['total']) > 0);
-    }
-
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $response = json_decode($content, true);
+    $this->assertTrue(isset($response["total"]));
+    $this->assertTrue(intval($response["total"]) > 0);
+  }
 }

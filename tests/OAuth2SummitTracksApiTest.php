@@ -16,148 +16,142 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitTracksApiTest
  * @package Tests
  */
-class OAuth2SummitTracksApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+class OAuth2SummitTracksApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertMemberTestData;
+  use InsertMemberTestData;
 
-    protected function setUp():void
-    {
-        $this->setCurrentGroup(IGroup::TrackChairs);
-        parent::setUp();
-        self::insertSummitTestData();
-    }
+  protected function setUp(): void {
+    $this->setCurrentGroup(IGroup::TrackChairs);
+    parent::setUp();
+    self::insertSummitTestData();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    public function testGetAllTracksPerSummit(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 10,
-            'order'    => '+id',
-            'expand'   => 'subtracks'
-        ];
+  public function testGetAllTracksPerSummit() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "page" => 1,
+      "per_page" => 10,
+      "order" => "+id",
+      "expand" => "subtracks",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitTracksApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitTracksApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $tracks = json_decode($content);
-        $this->assertTrue(!is_null($tracks));
-        $this->assertTrue($tracks->total == 1);
-        return $tracks;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $tracks = json_decode($content);
+    $this->assertTrue(!is_null($tracks));
+    $this->assertTrue($tracks->total == 1);
+    return $tracks;
+  }
 
-    public function testUpdateProposedScheduleTransitionTime(){
+  public function testUpdateProposedScheduleTransitionTime() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_id" => self::$defaultTrack->getId(),
+    ];
 
-        $params = [
-            'id'       => self::$summit->getId(),
-            'track_id' => self::$defaultTrack->getId()
-        ];
+    $data = [
+      "proposed_schedule_transition_time" => 5,
+    ];
 
-        $data = [
-            'proposed_schedule_transition_time' => 5,
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitTracksApiController@updateTrackBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitTracksApiController@updateTrackBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $track = json_decode($content);
+    $this->assertTrue(!is_null($track));
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $track = json_decode($content);
-        $this->assertTrue(!is_null($track));
-    }
+  public function testAddSubTrack() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_id" => self::$defaultTrack->getId(),
+      "child_track_id" => self::$defaultTrack->getId(),
+    ];
 
-    public function testAddSubTrack(){
+    $data = [
+      "order" => 1,
+    ];
 
-        $params = [
-            'id'       => self::$summit->getId(),
-            'track_id' => self::$defaultTrack->getId(),
-            'child_track_id' => self::$defaultTrack->getId()
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'order' => 1,
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitTracksApiController@addSubTrack",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $track = json_decode($content);
+    $this->assertTrue(!is_null($track));
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitTracksApiController@addSubTrack",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testRemoveSubTrack() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_id" => self::$defaultTrack->getId(),
+      "child_track_id" => self::$defaultTrack->getId(),
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $track = json_decode($content);
-        $this->assertTrue(!is_null($track));
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testRemoveSubTrack(){
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitTracksApiController@removeSubTrack",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id'       => self::$summit->getId(),
-            'track_id' => self::$defaultTrack->getId(),
-            'child_track_id' => self::$defaultTrack->getId()
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitTracksApiController@removeSubTrack",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

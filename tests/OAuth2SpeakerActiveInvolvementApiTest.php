@@ -15,32 +15,29 @@
 /**
  * Class OAuth2SpeakerActiveInvolvementApiTest
  */
-final class OAuth2SpeakerActiveInvolvementApiTest extends ProtectedApiTestCase
-{
+final class OAuth2SpeakerActiveInvolvementApiTest extends ProtectedApiTestCase {
+  public function testGelAll() {
+    $params = [];
 
-    public function testGelAll(){
-        $params = [
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SpeakerActiveInvolvementApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SpeakerActiveInvolvementApiController@getAll",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $involvements = json_decode($content);
-        $this->assertTrue(!is_null($involvements));
-        return $involvements;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $involvements = json_decode($content);
+    $this->assertTrue(!is_null($involvements));
+    return $involvements;
+  }
 }

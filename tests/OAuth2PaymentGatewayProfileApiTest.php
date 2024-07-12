@@ -18,315 +18,307 @@ use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 /**
  * Class OAuth2PaymentGatewayProfileApiTest
  */
-final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
-{
-    /**
-    * @var string
-     */
-    protected static $test_secret_key;
+final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase {
+  /**
+   * @var string
+   */
+  protected static $test_secret_key;
 
-    /**
-     * @var string
-     */
-    protected static $test_public_key;
+  /**
+   * @var string
+   */
+  protected static $test_public_key;
 
-    /**
-     * @var string
-     */
-    protected static $live_secret_key;
+  /**
+   * @var string
+   */
+  protected static $live_secret_key;
 
-    /**
-     * @var string
-     */
-    protected static $live_public_key;
+  /**
+   * @var string
+   */
+  protected static $live_public_key;
 
-    use InsertSummitTestData;
+  use InsertSummitTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
-        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
-        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
-        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
-        self::insertSummitTestData();
-        // build payment profile and attach to summit
-        $profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
-            'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
-            'is_test_mode'         => true,
-            'test_publishable_key' => self::$test_public_key,
-            'test_secret_key'      => self::$test_secret_key,
-            'is_active'            => false,
-        ]);
+  protected function setUp(): void {
+    parent::setUp();
+    self::$test_secret_key = env("TEST_STRIPE_SECRET_KEY");
+    self::$test_public_key = env("TEST_STRIPE_PUBLISHABLE_KEY");
+    self::$live_secret_key = env("LIVE_STRIPE_SECRET_KEY");
+    self::$live_public_key = env("LIVE_STRIPE_PUBLISHABLE_KEY");
+    self::insertSummitTestData();
+    // build payment profile and attach to summit
+    $profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
+      "application_type" => IPaymentConstants::ApplicationTypeRegistration,
+      "is_test_mode" => true,
+      "test_publishable_key" => self::$test_public_key,
+      "test_secret_key" => self::$test_secret_key,
+      "is_active" => false,
+    ]);
 
-        // build default badge type
+    // build default badge type
 
-        $defaultBadge = SummitBadgeTypeFactory::build([
-            'name' => 'DEFAULT',
-            'is_default' => true,
-        ]);
+    $defaultBadge = SummitBadgeTypeFactory::build([
+      "name" => "DEFAULT",
+      "is_default" => true,
+    ]);
 
-        // build ticket type
+    // build ticket type
 
-        $ticketType = SummitTicketTypeFactory::build(self::$summit, [
-            'name'            => 'TICKET_1',
-            'cost'            => 100,
-            'quantity_2_sell' => 1000,
-        ]);
+    $ticketType = SummitTicketTypeFactory::build(self::$summit, [
+      "name" => "TICKET_1",
+      "cost" => 100,
+      "quantity_2_sell" => 1000,
+    ]);
 
-        self::$summit->addPaymentProfile($profile);
-        self::$summit->addBadgeType($defaultBadge);
-        self::$summit->addTicketType($ticketType);
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-    }
+    self::$summit->addPaymentProfile($profile);
+    self::$summit->addBadgeType($defaultBadge);
+    self::$summit->addTicketType($ticketType);
+    self::$em->persist(self::$summit);
+    self::$em->flush();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testGetPaymentProfiles(){
-        $params = [
+  /**
+   * @param int $summit_id
+   */
+  public function testGetPaymentProfiles() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "page" => 1,
+      "per_page" => 10,
+      //'filter'   => 'code=@DISCOUNT_',
+      "order" => "-id",
+    ];
 
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 10,
-            //'filter'   => 'code=@DISCOUNT_',
-            'order'    => '-id'
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2PaymentGatewayProfileApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2PaymentGatewayProfileApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $profiles = json_decode($content);
+    $this->assertTrue(!is_null($profiles));
+    $this->assertTrue($profiles->total >= 1);
+    $aProfile = $profiles->data[0];
+    $this->assertTrue(property_exists($aProfile, "live_secret_key"));
+    $this->assertTrue(property_exists($aProfile, "test_secret_key"));
+    return $profiles;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $profiles = json_decode($content);
-        $this->assertTrue(!is_null($profiles));
-        $this->assertTrue($profiles->total >= 1);
-        $aProfile = $profiles->data[0];
-        $this->assertTrue(property_exists($aProfile, 'live_secret_key'));
-        $this->assertTrue(property_exists($aProfile, 'test_secret_key'));
-        return $profiles;
-    }
+  public function testAddProfileFail() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-    public function testAddProfileFail(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $data = [
+      "active" => false,
+      "application_type" => "test",
+      "provider" => "test",
+    ];
 
-        $data = [
-            'active' => false,
-            'application_type' => 'test',
-            'provider' => 'test',
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2PaymentGatewayProfileApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2PaymentGatewayProfileApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(412);
+    $errors = json_decode($content);
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(412);
-        $errors = json_decode($content);
-    }
+  public function testAddProfileOK() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
+    $data = [
+      "active" => false,
+      "application_type" => IPaymentConstants::ApplicationTypeRegistration,
+      "provider" => IPaymentConstants::ProviderStripe,
+      "test_mode_enabled" => true,
+      "test_secret_key" => self::$test_secret_key,
+      "test_publishable_key" => self::$test_public_key,
+    ];
 
-    public function testAddProfileOK(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'active'               => false,
-            'application_type'     =>  IPaymentConstants::ApplicationTypeRegistration,
-            'provider'             => IPaymentConstants::ProviderStripe,
-            'test_mode_enabled'    => true,
-            'test_secret_key'      => self::$test_secret_key,
-            'test_publishable_key' => self::$test_public_key,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2PaymentGatewayProfileApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $profile = json_decode($content);
+    $this->assertTrue(!is_null($profile));
+    $this->assertTrue($profile->test_secret_key == self::$test_secret_key);
+    $this->assertTrue($profile->test_publishable_key == self::$test_public_key);
+    return $profile;
+  }
 
-        $response = $this->action(
-            "POST",
-            "OAuth2PaymentGatewayProfileApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testUpdateOK() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $profile = json_decode($content);
-        $this->assertTrue(!is_null($profile));
-        $this->assertTrue($profile->test_secret_key ==  self::$test_secret_key);
-        $this->assertTrue($profile->test_publishable_key ==  self::$test_public_key);
-        return $profile;
-    }
+    $data = [
+      "active" => false,
+      "application_type" => IPaymentConstants::ApplicationTypeRegistration,
+      "provider" => IPaymentConstants::ProviderStripe,
+      "test_mode_enabled" => true,
+      "test_secret_key" => self::$test_secret_key,
+      "test_publishable_key" => self::$test_public_key,
+    ];
 
-    public function testUpdateOK(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'active'               => false,
-            'application_type'     =>  IPaymentConstants::ApplicationTypeRegistration,
-            'provider'             => IPaymentConstants::ProviderStripe,
-            'test_mode_enabled'    => true,
-            'test_secret_key'      => self::$test_secret_key,
-            'test_publishable_key' => self::$test_public_key,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2PaymentGatewayProfileApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $profile = json_decode($content);
 
-        $response = $this->action(
-            "POST",
-            "OAuth2PaymentGatewayProfileApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $params = [
+      "id" => self::$summit->getId(),
+      "payment_profile_id" => $profile->id,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $profile = json_decode($content);
+    $data = [
+      "active" => true,
+      "provider" => IPaymentConstants::ProviderStripe,
+      "test_mode_enabled" => true,
+      "live_secret_key" => self::$live_secret_key,
+      "live_publishable_key" => self::$live_public_key,
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'payment_profile_id' => $profile->id,
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'active'               => true,
-            'provider'             => IPaymentConstants::ProviderStripe,
-            'test_mode_enabled'    => true,
-            'live_secret_key'      => self::$live_secret_key,
-            'live_publishable_key' => self::$live_public_key,
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2PaymentGatewayProfileApiController@update",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $profile = json_decode($content);
+    $this->assertTrue(!is_null($profile));
+    $this->assertTrue($profile->live_publishable_key == self::$live_public_key);
+    return $profile;
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2PaymentGatewayProfileApiController@update",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testDelete() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $profile = json_decode($content);
-        $this->assertTrue(!is_null($profile));
-        $this->assertTrue($profile->live_publishable_key ==  self::$live_public_key);
-        return $profile;
-    }
+    $data = [
+      "active" => false,
+      "application_type" => IPaymentConstants::ApplicationTypeRegistration,
+      "provider" => IPaymentConstants::ProviderStripe,
+      "test_mode_enabled" => true,
+      "test_secret_key" => self::$test_secret_key,
+      "test_publishable_key" => self::$test_public_key,
+    ];
 
-    public function testDelete(){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2PaymentGatewayProfileApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $data = [
-            'active'               => false,
-            'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
-            'provider'             => IPaymentConstants::ProviderStripe,
-            'test_mode_enabled'    => true,
-            'test_secret_key'      => self::$test_secret_key,
-            'test_publishable_key' => self::$test_public_key,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $profile = json_decode($content);
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $params = [
+      "id" => self::$summit->getId(),
+      "payment_profile_id" => $profile->id,
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2PaymentGatewayProfileApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $profile = json_decode($content);
+    $response = $this->action(
+      "DELETE",
+      "OAuth2PaymentGatewayProfileApiController@delete",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'payment_profile_id' => $profile->id,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2PaymentGatewayProfileApiController@delete",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
-
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

@@ -17,363 +17,354 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackDropDo
 /**
  * Class OAuth2TrackQuestionsTemplateTest
  */
-final class OAuth2TrackQuestionsTemplateTest
-    extends ProtectedApiTestCase
-{
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetTrackQuestionTemplateByClassName()
-    {
+final class OAuth2TrackQuestionsTemplateTest extends ProtectedApiTestCase {
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testGetTrackQuestionTemplateByClassName() {
+    $params = [
+      "expand" => "tracks",
+      "filter" => "class_name==TrackTextBoxQuestionTemplate",
+    ];
 
-        $params = [
-            'expand' => 'tracks',
-            'filter' => 'class_name==TrackTextBoxQuestionTemplate',
-        ];
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2TrackQuestionsTemplateApiController@getTrackQuestionTemplates",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2TrackQuestionsTemplateApiController@getTrackQuestionTemplates",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $track_question_templates = json_decode($content);
+    $this->assertTrue(!is_null($track_question_templates));
+    $this->assertResponseStatus(200);
+    return $track_question_templates;
+  }
 
-        $content = $response->getContent();
-        $track_question_templates = json_decode($content);
-        $this->assertTrue(!is_null($track_question_templates));
-        $this->assertResponseStatus(200);
-        return $track_question_templates;
+  /**
+   * @param string $class_name
+   * @return mixed
+   */
+  public function testAddTrackQuestionTemplate(
+    $class_name = TrackTextBoxQuestionTemplate::ClassName,
+    $extra_data = [],
+  ) {
+    $params = [
+      "expand" => "tracks",
+    ];
+
+    $name = str_random(16) . "_track_question_template_name";
+    $label = str_random(16) . "_track_question_template_label";
+    $initial_value = str_random(16) . "_initial_value";
+
+    $data = [
+      "name" => $name,
+      "label" => $label,
+      "class_name" => $class_name,
+      "initial_value" => $initial_value,
+      "is_mandatory" => true,
+      "is_read_only" => true,
+      "tracks" => [1, 2, 3],
+    ];
+
+    if (count($extra_data) > 0) {
+      $data = array_merge($data, $extra_data);
     }
 
-    /**
-     * @param string $class_name
-     * @return mixed
-     */
-    public function testAddTrackQuestionTemplate(
-        $class_name = TrackTextBoxQuestionTemplate::ClassName, $extra_data = []){
-        $params = [
-            'expand' => 'tracks'
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $name  = str_random(16).'_track_question_template_name';
-        $label = str_random(16).'_track_question_template_label';
-        $initial_value = str_random(16).'_initial_value';
+    $response = $this->action(
+      "POST",
+      "OAuth2TrackQuestionsTemplateApiController@addTrackQuestionTemplate",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $data = [
-            'name' => $name,
-            'label' => $label,
-            'class_name' => $class_name,
-            'initial_value' => $initial_value,
-            'is_mandatory' => true,
-            'is_read_only' => true,
-            'tracks' => [1, 2 , 3]
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
 
-        if(count($extra_data) > 0){
-            $data = array_merge($data, $extra_data);
-        }
+    $track_question_template = json_decode($content);
+    $this->assertTrue(!is_null($track_question_template));
+    $this->assertTrue($track_question_template->name == $name);
+    $this->assertTrue($track_question_template->label == $label);
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    return $track_question_template;
+  }
 
-        $response = $this->action(
-            "POST",
-            "OAuth2TrackQuestionsTemplateApiController@addTrackQuestionTemplate",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  /**
+   * @return mixed
+   */
+  public function testUpdateTrackQuestionTemplate() {
+    $new_track_question_template = $this->testAddTrackQuestionTemplate();
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
+    $params = [
+      "track_question_template_id" => $new_track_question_template->id,
+      "expand" => "tracks",
+    ];
 
-        $track_question_template = json_decode($content);
-        $this->assertTrue(!is_null($track_question_template));
-        $this->assertTrue($track_question_template->name == $name);
-        $this->assertTrue($track_question_template->label == $label);
+    $name = str_random(16) . "_track_question_template_name_update";
+    $label = str_random(16) . "_track_question_template_label_update";
+    $initial_value = str_random(16) . "_initial_value_update";
 
-        return $track_question_template;
-    }
+    $data = [
+      "name" => $name,
+      "label" => $label,
+      "class_name" =>
+        \App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackTextBoxQuestionTemplate::ClassName,
+      "initial_value" => $initial_value,
+      "is_mandatory" => false,
+      "is_read_only" => false,
+      "tracks" => [1, 3],
+    ];
 
-    /**
-     * @return mixed
-     */
-    public function testUpdateTrackQuestionTemplate(){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $new_track_question_template = $this->testAddTrackQuestionTemplate();
+    $response = $this->action(
+      "PUT",
+      "OAuth2TrackQuestionsTemplateApiController@updateTrackQuestionTemplate",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $params = [
-            'track_question_template_id' => $new_track_question_template->id,
-            'expand' => 'tracks'
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
 
-        $name       = str_random(16).'_track_question_template_name_update';
-        $label       = str_random(16).'_track_question_template_label_update';
-        $initial_value = str_random(16).'_initial_value_update';
+    $track_question_template = json_decode($content);
+    $this->assertTrue(!is_null($track_question_template));
+    $this->assertTrue($track_question_template->name == $name);
+    $this->assertTrue($track_question_template->label == $label);
 
-        $data        = [
-            'name' => $name,
-            'label' => $label,
-            'class_name' => \App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackTextBoxQuestionTemplate::ClassName,
-            'initial_value' => $initial_value,
-            'is_mandatory' => false,
-            'is_read_only' => false,
-            'tracks' => [1,  3]
-        ];
+    return $track_question_template;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testAddTrackExtraQuestion() {
+    $new_track_extra_question = $this->testAddTrackQuestionTemplate();
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2TrackQuestionsTemplateApiController@updateTrackQuestionTemplate",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $params = [
+      "summit_id" => 25,
+      "track_id" => 246,
+      "question_id" => $new_track_extra_question->id,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitTracksApiController@addTrackExtraQuestion",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $track_question_template = json_decode($content);
-        $this->assertTrue(!is_null($track_question_template));
-        $this->assertTrue($track_question_template->name == $name);
-        $this->assertTrue($track_question_template->label == $label);
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    return $new_track_extra_question;
+  }
 
-        return $track_question_template;
-    }
+  public function testRemoveTrackExtraQuestion() {
+    $new_track_extra_question = $this->testAddTrackExtraQuestion();
 
-    public function testAddTrackExtraQuestion(){
-        $new_track_extra_question = $this->testAddTrackQuestionTemplate();
+    $params = [
+      "summit_id" => 25,
+      "track_id" => 246,
+      "question_id" => $new_track_extra_question->id,
+    ];
 
-        $params = [
-            'summit_id' => 25,
-            'track_id' => 246,
-            'question_id' => $new_track_extra_question->id,
-        ];
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitTracksApiController@removeTrackExtraQuestion",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitTracksApiController@addTrackExtraQuestion",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        return $new_track_extra_question;
-    }
+  public function testDeleteTrackQuestionTemplate() {
+    $new_track_question_template = $this->testAddTrackQuestionTemplate();
 
-    public function testRemoveTrackExtraQuestion(){
-        $new_track_extra_question = $this->testAddTrackExtraQuestion();
+    $params = [
+      "track_question_template_id" => $new_track_question_template->id,
+    ];
 
-        $params = [
-            'summit_id' => 25,
-            'track_id' => 246,
-            'question_id' => $new_track_extra_question->id,
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitTracksApiController@removeTrackExtraQuestion",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "DELETE",
+      "OAuth2TrackQuestionsTemplateApiController@deleteTrackQuestionTemplate",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 
-    public function testDeleteTrackQuestionTemplate(){
-        $new_track_question_template = $this->testAddTrackQuestionTemplate();
+  public function testGetTrackQuestionTemplateMetadata() {
+    $params = [];
 
-        $params = [
-            'track_question_template_id' => $new_track_question_template->id,
-        ];
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2TrackQuestionsTemplateApiController@getTrackQuestionTemplateMetadata",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
+    $content = $response->getContent();
+    $metadata = json_decode($content);
+    $this->assertTrue(!is_null($metadata));
+    $this->assertResponseStatus(200);
+    return $metadata;
+  }
 
-        $response = $this->action
-        (
-            "DELETE",
-            "OAuth2TrackQuestionsTemplateApiController@deleteTrackQuestionTemplate",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testAddTrackQuestionTemplateValue() {
+    $new_track_question_template = $this->testAddTrackQuestionTemplate(
+      TrackDropDownQuestionTemplate::ClassName,
+      [
+        "empty_string" => "-- select a value --",
+      ],
+    );
+    $params = [
+      "expand" => "tracks",
+      "track_question_template_id" => $new_track_question_template->id,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $value = str_random(16) . "_track_question_template_value_value";
+    $label = str_random(16) . "_track_question_template_value_label";
+    $data = [
+      "value" => $value,
+      "label" => $label,
+    ];
 
-    public function testGetTrackQuestionTemplateMetadata(){
-        $params = [
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2TrackQuestionsTemplateApiController@getTrackQuestionTemplateMetadata",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "POST",
+      "OAuth2TrackQuestionsTemplateApiController@addTrackQuestionTemplateValue",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $content = $response->getContent();
-        $metadata = json_decode($content);
-        $this->assertTrue(!is_null($metadata));
-        $this->assertResponseStatus(200);
-        return $metadata;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
 
-    public function testAddTrackQuestionTemplateValue(){
+    $track_question_template_value = json_decode($content);
+    $this->assertTrue(!is_null($track_question_template_value));
+    $this->assertTrue($track_question_template_value->value == $value);
+    $this->assertTrue($track_question_template_value->label == $label);
 
-        $new_track_question_template = $this->testAddTrackQuestionTemplate(
-            TrackDropDownQuestionTemplate::ClassName,
-            [
-                'empty_string' => '-- select a value --'
-            ]
-        );
-        $params = [
-            'expand' => 'tracks',
-            'track_question_template_id' => $new_track_question_template->id
-        ];
+    return $track_question_template_value;
+  }
 
-        $value = str_random(16).'_track_question_template_value_value';
-        $label = str_random(16).'_track_question_template_value_label';
-        $data = [
-            'value' => $value,
-            'label' => $label,
-        ];
+  public function testUpdateTrackQuestionTemplateValue() {
+    $new_track_question_template_value = $this->testAddTrackQuestionTemplateValue();
+    $params = [
+      "expand" => "tracks",
+      "track_question_template_id" => $new_track_question_template_value->owner_id,
+      "track_question_template_value_id" => $new_track_question_template_value->id,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $value = str_random(16) . "_track_question_template_value_value_update";
+    $label = str_random(16) . "_track_question_template_value_label_update";
+    $data = [
+      "value" => $value,
+      "label" => $label,
+      "order" => 1,
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2TrackQuestionsTemplateApiController@addTrackQuestionTemplateValue",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
+    $response = $this->action(
+      "PUT",
+      "OAuth2TrackQuestionsTemplateApiController@updateTrackQuestionTemplateValue",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $track_question_template_value = json_decode($content);
-        $this->assertTrue(!is_null($track_question_template_value));
-        $this->assertTrue($track_question_template_value->value == $value);
-        $this->assertTrue($track_question_template_value->label == $label);
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
 
-        return $track_question_template_value;
-    }
+    $track_question_template_value = json_decode($content);
+    $this->assertTrue(!is_null($track_question_template_value));
+    $this->assertTrue($track_question_template_value->value == $value);
+    $this->assertTrue($track_question_template_value->label == $label);
 
-    public function testUpdateTrackQuestionTemplateValue(){
+    return $track_question_template_value;
+  }
 
-        $new_track_question_template_value = $this->testAddTrackQuestionTemplateValue();
-        $params = [
-            'expand' => 'tracks',
-            'track_question_template_id' => $new_track_question_template_value->owner_id,
-            'track_question_template_value_id' => $new_track_question_template_value->id
-        ];
+  public function testDeleteTrackQuestionTemplateValue() {
+    $new_track_question_template_value = $this->testAddTrackQuestionTemplateValue();
 
-        $value = str_random(16).'_track_question_template_value_value_update';
-        $label = str_random(16).'_track_question_template_value_label_update';
-        $data = [
-            'value' => $value,
-            'label' => $label,
-            'order' => 1
-        ];
+    $params = [
+      "track_question_template_id" => $new_track_question_template_value->owner_id,
+      "track_question_template_value_id" => $new_track_question_template_value->id,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2TrackQuestionsTemplateApiController@updateTrackQuestionTemplateValue",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $response = $this->action(
+      "DELETE",
+      "OAuth2TrackQuestionsTemplateApiController@deleteTrackQuestionTemplateValue",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-
-        $track_question_template_value = json_decode($content);
-        $this->assertTrue(!is_null($track_question_template_value));
-        $this->assertTrue($track_question_template_value->value == $value);
-        $this->assertTrue($track_question_template_value->label == $label);
-
-        return $track_question_template_value;
-    }
-
-    public function testDeleteTrackQuestionTemplateValue(){
-        $new_track_question_template_value = $this->testAddTrackQuestionTemplateValue();
-
-        $params = [
-            'track_question_template_id' => $new_track_question_template_value->owner_id,
-            'track_question_template_value_id' => $new_track_question_template_value->id
-        ];
-
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
-        $response = $this->action
-        (
-            "DELETE",
-            "OAuth2TrackQuestionsTemplateApiController@deleteTrackQuestionTemplateValue",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

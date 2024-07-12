@@ -19,259 +19,249 @@ use models\utils\SilverstripeBaseModel;
 /**
  * Class OAuth2SummitMediaUploadTypeApiControllerTest
  */
-final class OAuth2SummitMediaUploadTypeApiControllerTest
-    extends ProtectedApiTestCase
-{
+final class OAuth2SummitMediaUploadTypeApiControllerTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
+  /**
+   * @var ObjectRepository
+   */
+  static $media_file_type_repository;
 
-    use InsertSummitTestData;
-    /**
-     * @var ObjectRepository
-     */
-    static $media_file_type_repository;
+  protected function setUp(): void {
+    parent::setUp();
+    self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
+    self::insertSummitTestData();
+    self::$em->persist(self::$summit);
+    self::$em->flush();
+  }
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
-        self::insertSummitTestData();
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  public function testAddGet() {
+    $types = self::$media_file_type_repository->findAll();
+    $params = [
+      "id" => self::$summit->getId(),
+      "expand" => "type,presentation_types",
+    ];
 
-    public function testAddGet(){
+    $event_types = self::$summit->getEventTypes();
 
-        $types = self::$media_file_type_repository->findAll();
-        $params = [
-             'id' => self::$summit->getId(),
-            'expand' => 'type,presentation_types'
-        ];
+    $payload = [
+      "name" => str_random(16) . "media_upload_type",
+      "type_id" => $types[0]->getId(),
+      "description" => "this is a description",
+      "max_size" => 2048,
+      "is_mandatory" => false,
+      "private_storage_type" => \App\Models\Utils\IStorageTypesConstants::DropBox,
+      "public_storage_type" => \App\Models\Utils\IStorageTypesConstants::Swift,
+      "presentation_types" => [$event_types[0]->getId()],
+      "min_uploads_qty" => 1,
+      "max_uploads_qty" => 55,
+    ];
 
-        $event_types = self::$summit->getEventTypes();
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $payload = [
-            'name' => str_random(16).'media_upload_type',
-            'type_id' => $types[0]->getId(),
-            'description' => 'this is a description',
-            'max_size' => 2048,
-            'is_mandatory' => false,
-            'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
-            'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
-            'presentation_types' => [$event_types[0]->getId()],
-            'min_uploads_qty' => 1,
-            'max_uploads_qty' => 55,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitMediaUploadTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $response = json_decode($content, true);
+    $this->assertResponseStatus(201);
+    $this->assertTrue(isset($response["id"]));
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitMediaUploadTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitMediaUploadTypeApiController@getAllBySummit",
+      [
+        "id" => self::$summit->getId(),
+      ],
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $content = $response->getContent();
-        $response = json_decode($content, true);
-        $this->assertResponseStatus(201);
-        $this->assertTrue(isset($response['id']));
+    $content = $response->getContent();
+    $response = json_decode($content, true);
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitMediaUploadTypeApiController@getAllBySummit",
-            [
-                'id' => self::$summit->getId(),
-            ],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    $this->assertResponseStatus(200);
+  }
 
-        $content = $response->getContent();
-        $response = json_decode($content, true);
+  public function testAddAndDeleteCascade() {
+    $types = self::$media_file_type_repository->findAll();
+    $params = [
+      "id" => self::$summit->getId(),
+      "expand" => "type,presentation_types",
+    ];
 
-        $this->assertResponseStatus(200);
+    $event_types = self::$summit->getEventTypes();
 
-    }
+    $payload = [
+      "name" => str_random(16) . "media_upload_type",
+      "type_id" => $types[0]->getId(),
+      "description" => "this is a description",
+      "max_size" => 2048,
+      "is_mandatory" => false,
+      "private_storage_type" => \App\Models\Utils\IStorageTypesConstants::DropBox,
+      "public_storage_type" => \App\Models\Utils\IStorageTypesConstants::Swift,
+      "presentation_types" => [$event_types[0]->getId()],
+    ];
 
-    public function testAddAndDeleteCascade(){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $types = self::$media_file_type_repository->findAll();
-        $params = [
-            'id' => self::$summit->getId(),
-            'expand' => 'type,presentation_types'
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitMediaUploadTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $event_types = self::$summit->getEventTypes();
+    $content = $response->getContent();
+    $response = json_decode($content, true);
+    $this->assertResponseStatus(201);
+    $this->assertTrue(isset($response["id"]));
 
-        $payload = [
-            'name' => str_random(16).'media_upload_type',
-            'type_id' => $types[0]->getId(),
-            'description' => 'this is a description',
-            'max_size' => 2048,
-            'is_mandatory' => false,
-            'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
-            'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
-            'presentation_types' => [$event_types[0]->getId()]
-        ];
+    self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+    $type = self::$media_file_type_repository->find($types[0]->getId());
+    self::$em->remove($type);
+    self::$em->flush();
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testAddDelete() {
+    $types = self::$media_file_type_repository->findAll();
+    $params = [
+      "id" => self::$summit->getId(),
+      "expand" => "type,presentation_types",
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitMediaUploadTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    $event_types = self::$summit->getEventTypes();
 
-        $content = $response->getContent();
-        $response = json_decode($content, true);
-        $this->assertResponseStatus(201);
-        $this->assertTrue(isset($response['id']));
+    $payload = [
+      "name" => str_random(16) . "media_upload_type",
+      "type_id" => $types[0]->getId(),
+      "description" => "this is a description",
+      "max_size" => 2048,
+      "is_mandatory" => false,
+      "private_storage_type" => \App\Models\Utils\IStorageTypesConstants::DropBox,
+      "public_storage_type" => \App\Models\Utils\IStorageTypesConstants::Swift,
+      "presentation_types" => [$event_types[0]->getId()],
+    ];
 
-        self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
-        $type = self::$media_file_type_repository->find($types[0]->getId());
-        self::$em->remove($type);
-        self::$em->flush();
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testAddDelete(){
-        $types = self::$media_file_type_repository->findAll();
-        $params = [
-            'id' => self::$summit->getId(),
-            'expand' => 'type,presentation_types'
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitMediaUploadTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $event_types = self::$summit->getEventTypes();
+    $content = $response->getContent();
+    $response = json_decode($content, true);
+    $this->assertResponseStatus(201);
+    $this->assertTrue(isset($response["id"]));
 
-        $payload = [
-            'name' => str_random(16).'media_upload_type',
-            'type_id' => $types[0]->getId(),
-            'description' => 'this is a description',
-            'max_size' => 2048,
-            'is_mandatory' => false,
-            'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
-            'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
-            'presentation_types' => [ $event_types[0]->getId() ]
-        ];
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitMediaUploadTypeApiController@delete",
+      [
+        "id" => self::$summit->getId(),
+        "type_id" => intval($response["id"]),
+      ],
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
+    $this->assertResponseStatus(204);
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testAddAddPresentationType() {
+    $types = self::$media_file_type_repository->findAll();
+    $params = [
+      "id" => self::$summit->getId(),
+      "expand" => "type,presentation_types",
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitMediaUploadTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
+    $event_types = self::$summit->getEventTypes();
 
-        $content = $response->getContent();
-        $response = json_decode($content, true);
-        $this->assertResponseStatus(201);
-        $this->assertTrue(isset($response['id']));
+    $payload = [
+      "name" => str_random(16) . "media_upload_type",
+      "type_id" => $types[0]->getId(),
+      "description" => "this is a description",
+      "max_size" => 2048,
+      "is_mandatory" => false,
+      "private_storage_type" => \App\Models\Utils\IStorageTypesConstants::DropBox,
+      "public_storage_type" => \App\Models\Utils\IStorageTypesConstants::Swift,
+    ];
 
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitMediaUploadTypeApiController@delete",
-            [
-                'id' => self::$summit->getId(),
-                'type_id' => intval($response['id'])
-            ],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
-        $this->assertResponseStatus(204);
-    }
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitMediaUploadTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-    public function testAddAddPresentationType(){
+    $content = $response->getContent();
+    $response = json_decode($content, true);
+    $this->assertResponseStatus(201);
+    $this->assertTrue(isset($response["id"]));
 
-        $types = self::$media_file_type_repository->findAll();
-        $params = [
-            'id' => self::$summit->getId(),
-            'expand' => 'type,presentation_types'
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMediaUploadTypeApiController@addToPresentationType",
+      [
+        "id" => self::$summit->getId(),
+        "type_id" => intval($response["id"]),
+        "presentation_type_id" => $event_types[0]->getId(),
+      ],
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($payload),
+    );
 
-        $event_types = self::$summit->getEventTypes();
-
-        $payload = [
-            'name' => str_random(16).'media_upload_type',
-            'type_id' => $types[0]->getId(),
-            'description' => 'this is a description',
-            'max_size' => 2048,
-            'is_mandatory' => false,
-            'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
-            'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitMediaUploadTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
-
-        $content = $response->getContent();
-        $response = json_decode($content, true);
-        $this->assertResponseStatus(201);
-        $this->assertTrue(isset($response['id']));
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMediaUploadTypeApiController@addToPresentationType",
-            [
-                'id' => self::$summit->getId(),
-                'type_id' => intval($response['id']),
-                'presentation_type_id' => $event_types[0]->getId()
-            ],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($payload)
-        );
-
-        $content = $response->getContent();
-        $response = json_decode($content, true);
-        $this->assertResponseStatus(201);
-    }
+    $content = $response->getContent();
+    $response = json_decode($content, true);
+    $this->assertResponseStatus(201);
+  }
 }

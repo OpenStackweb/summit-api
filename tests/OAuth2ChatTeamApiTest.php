@@ -12,378 +12,366 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2ChatTeamApiTest extends ProtectedApiTestCase
-{
-    public function testAddTeam()
-    {
+final class OAuth2ChatTeamApiTest extends ProtectedApiTestCase {
+  public function testAddTeam() {
+    $params = [];
 
-        $params = [];
+    $data = [
+      "name" => "team test #1",
+    ];
 
-        $data = [
-           'name' => 'team test #1',
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2TeamsApiController@addTeam",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2TeamsApiController@addTeam",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $team = json_decode($content);
+    $this->assertTrue(!is_null($team));
+    $this->assertResponseStatus(201);
+    return $team;
+  }
 
-        $content = $response->getContent();
-        $team    = json_decode($content);
-        $this->assertTrue(!is_null($team));
-        $this->assertResponseStatus(201);
-        return $team;
+  public function testUpdateTeam() {
+    $team = $this->testAddTeam();
+
+    $params = ["team_id" => $team->id];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $data = [
+      "name" => "team test #1 update",
+    ];
+
+    $response = $this->action(
+      "PUT",
+      "OAuth2TeamsApiController@updateTeam",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
+    $this->assertResponseStatus(204);
+  }
+
+  public function testDeleteMyTeam() {
+    $team = $this->testAddTeam();
+
+    $params = ["team_id" => $team->id];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
+
+    $response = $this->action(
+      "DELETE",
+      "OAuth2TeamsApiController@deleteTeam",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $this->assertResponseStatus(204);
+  }
+
+  public function testGetMyTeams() {
+    $params = ["expand" => "owner, member, groups"];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
+
+    $response = $this->action(
+      "GET",
+      "OAuth2TeamsApiController@getMyTeams",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $teams = json_decode($content);
+    $this->assertTrue(!is_null($teams));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testGetMyTeam($team_id = null, $expected_http_response = 200) {
+    if ($team_id == null) {
+      $team = $this->testAddTeam();
+      $team_id = $team->id;
     }
 
-    public function testUpdateTeam(){
-        $team = $this->testAddTeam();
+    $params = ["team_id" => $team_id, "expand" => "owner,members,member"];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $params  = ['team_id' => $team->id];
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2TeamsApiController@getMyTeam",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $data = [
-            'name' => 'team test #1 update',
-        ];
+    $content = $response->getContent();
+    $team = json_decode($content);
+    $this->assertTrue(!is_null($team));
+    $this->assertResponseStatus($expected_http_response);
+    return $team;
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2TeamsApiController@updateTeam",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers,
-            json_encode($data)
-        );
-        $this->assertResponseStatus(204);
+  public function testAddMemberToTeam() {
+    $team = $this->testAddTeam();
+
+    $params = [
+      "member_id" => 11624,
+      "team_id" => $team->id,
+    ];
+
+    $data = [
+      "permission" => \models\main\ChatTeamPermission::Read,
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "POST",
+      "OAuth2TeamsApiController@addMember2MyTeam",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
+
+    $content = $response->getContent();
+    $invitation = json_decode($content);
+    $this->assertTrue(!is_null($invitation));
+    $this->assertResponseStatus(201);
+    return $invitation;
+  }
+
+  public function testGetMyTeamWithInvitations() {
+    $invitation = $this->testAddMemberToTeam();
+
+    $team = $this->testGetMyTeam($invitation->team->id);
+  }
+
+  public function testAcceptInvitation() {
+    $invitation = $this->testAddMemberToTeam();
+
+    $params = [
+      "invitation_id" => $invitation->id,
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
+
+    $response = $this->action(
+      "PATCH",
+      "OAuth2TeamInvitationsApiController@acceptInvitation",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $team_member = json_decode($content);
+    $this->assertTrue(!is_null($team_member));
+    $this->assertResponseStatus(201);
+    return $team_member;
+  }
+
+  public function testPostMessage($team = null) {
+    if (is_null($team)) {
+      $team = $this->testAddTeam();
     }
 
-    public function testDeleteMyTeam(){
-        $team = $this->testAddTeam();
+    $params = [
+      "team_id" => $team->id,
+    ];
 
-        $params = ['team_id' => $team->id];
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $data = [
+      "body" => "test message",
+    ];
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2TeamsApiController@deleteTeam",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $this->assertResponseStatus(204);
-    }
+    $response = $this->action(
+      "POST",
+      "OAuth2TeamsApiController@postTeamMessage",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-    public function testGetMyTeams(){
-        $params = ['expand' => 'owner, member, groups'];
+    $content = $response->getContent();
+    $message = json_decode($content);
+    $this->assertTrue(!is_null($message));
+    $this->assertResponseStatus(201);
+    return $message;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+  public function testGetMessagesFromTeam() {
+    $team = $this->testAddTeam();
+    $message = $this->testPostMessage($team);
 
-        $response = $this->action(
-            "GET",
-            "OAuth2TeamsApiController@getMyTeams",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $content = $response->getContent();
-        $teams = json_decode($content);
-        $this->assertTrue(!is_null($teams));
-        $this->assertResponseStatus(200);
-    }
+    $params = [
+      "team_id" => $team->id,
+      "expand" => "team,owner",
+    ];
 
-    public function testGetMyTeam($team_id = null, $expected_http_response = 200){
+    $response = $this->action(
+      "GET",
+      "OAuth2TeamsApiController@getMyTeamMessages",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        if($team_id == null) {
-            $team    = $this->testAddTeam();
-            $team_id = $team->id;
-        }
+    $content = $response->getContent();
+    $messages = json_decode($content);
+    $this->assertTrue(!is_null($messages));
+    $this->assertResponseStatus(200);
+    return $messages;
+  }
 
-        $params  = ['team_id' => $team_id, 'expand' =>'owner,members,member'];
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+  public function testRemoveMemberFromTeam() {
+    $team = $this->testAddTeam();
 
-        $response = $this->action(
-            "GET",
-            "OAuth2TeamsApiController@getMyTeam",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $params = [
+      "team_id" => $team->id,
+      "member_id" => $team->owner->id,
+    ];
 
-        $content = $response->getContent();
-        $team    = json_decode($content);
-        $this->assertTrue(!is_null($team));
-        $this->assertResponseStatus($expected_http_response);
-        return $team;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-    public function testAddMemberToTeam(){
+    $response = $this->action(
+      "DELETE",
+      "OAuth2TeamsApiController@removedMemberFromMyTeam",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $team = $this->testAddTeam();
+    $this->assertResponseStatus(204);
+    // try to get team again, we are not longer members , so will return 404
+    $this->testGetMyTeam($team->id, 404);
+  }
 
-        $params = [
-            'member_id' => 11624,
-            'team_id'   => $team->id,
-        ];
+  public function testGetMyInvitations() {
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $data = [
-            'permission' => \models\main\ChatTeamPermission::Read,
-        ];
+    $params = [];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2TeamInvitationsApiController@getMyInvitations",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2TeamsApiController@addMember2MyTeam",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $invitations = json_decode($content);
+    $this->assertTrue(!is_null($invitations));
+    $this->assertResponseStatus(200);
+    return $invitations;
+  }
 
-        $content = $response->getContent();
-        $invitation = json_decode($content);
-        $this->assertTrue(!is_null($invitation));
-        $this->assertResponseStatus(201);
-        return $invitation;
-    }
+  public function testGetMyPendingInvitations() {
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-    public function testGetMyTeamWithInvitations(){
-        $invitation = $this->testAddMemberToTeam();
+    $params = [];
 
-        $team = $this->testGetMyTeam($invitation->team->id);
-    }
+    $response = $this->action(
+      "GET",
+      "OAuth2TeamInvitationsApiController@getMyPendingInvitations",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-    public function testAcceptInvitation(){
-        $invitation = $this->testAddMemberToTeam();
+    $content = $response->getContent();
+    $invitations = json_decode($content);
+    $this->assertTrue(!is_null($invitations));
+    $this->assertResponseStatus(200);
+    return $invitations;
+  }
 
-        $params = [
-            'invitation_id' => $invitation->id,
-        ];
+  public function testGetMyAcceptedInvitations() {
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $params = [];
 
-        $response = $this->action(
-            "PATCH",
-            "OAuth2TeamInvitationsApiController@acceptInvitation",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2TeamInvitationsApiController@getMyAcceptedInvitations",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $team_member = json_decode($content);
-        $this->assertTrue(!is_null($team_member));
-        $this->assertResponseStatus(201);
-        return $team_member;
-    }
-
-    public function testPostMessage($team = null){
-
-        if(is_null($team))
-            $team = $this->testAddTeam();
-
-        $params = [
-            'team_id'   => $team->id,
-        ];
-
-        $data = [
-            'body' => 'test message',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2TeamsApiController@postTeamMessage",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $message = json_decode($content);
-        $this->assertTrue(!is_null($message));
-        $this->assertResponseStatus(201);
-        return $message;
-    }
-
-    public function testGetMessagesFromTeam(){
-
-        $team    = $this->testAddTeam();
-        $message = $this->testPostMessage($team);
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
-
-        $params = [
-            'team_id' => $team->id,
-            'expand'  => 'team,owner',
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2TeamsApiController@getMyTeamMessages",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content  = $response->getContent();
-        $messages = json_decode($content);
-        $this->assertTrue(!is_null($messages));
-        $this->assertResponseStatus(200);
-        return $messages;
-    }
-
-    public function testRemoveMemberFromTeam(){
-        $team = $this->testAddTeam();
-
-        $params = [
-            'team_id'   => $team->id,
-            'member_id' => $team->owner->id,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2TeamsApiController@removedMemberFromMyTeam",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $this->assertResponseStatus(204);
-        // try to get team again, we are not longer members , so will return 404
-        $this->testGetMyTeam($team->id, 404);
-    }
-
-    public function testGetMyInvitations(){
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
-
-        $params = [
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2TeamInvitationsApiController@getMyInvitations",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content  = $response->getContent();
-        $invitations = json_decode($content);
-        $this->assertTrue(!is_null($invitations));
-        $this->assertResponseStatus(200);
-        return $invitations;
-    }
-
-    public function testGetMyPendingInvitations(){
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
-
-        $params = [
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2TeamInvitationsApiController@getMyPendingInvitations",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content  = $response->getContent();
-        $invitations = json_decode($content);
-        $this->assertTrue(!is_null($invitations));
-        $this->assertResponseStatus(200);
-        return $invitations;
-    }
-
-    public function testGetMyAcceptedInvitations(){
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
-
-        $params = [
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2TeamInvitationsApiController@getMyAcceptedInvitations",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content  = $response->getContent();
-        $invitations = json_decode($content);
-        $this->assertTrue(!is_null($invitations));
-        $this->assertResponseStatus(200);
-        return $invitations;
-    }
+    $content = $response->getContent();
+    $invitations = json_decode($content);
+    $this->assertTrue(!is_null($invitations));
+    $this->assertResponseStatus(200);
+    return $invitations;
+  }
 }

@@ -12,63 +12,57 @@
  * limitations under the License.
  **/
 
-class OAuth2OrganizationsApiTest extends ProtectedApiTestCase
-{
+class OAuth2OrganizationsApiTest extends ProtectedApiTestCase {
+  public function testGetOrganizations() {
+    $params = [
+      //AND FILTER
+      "filter" => ["name=@tip"],
+      "order" => "-id",
+    ];
 
-    public function testGetOrganizations()
-    {
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2OrganizationsApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            //AND FILTER
-            'filter' => ['name=@tip'],
-            'order'  => '-id'
-        ];
+    $content = $response->getContent();
+    $organizations = json_decode($content);
+    $this->assertTrue(!is_null($organizations));
+    $this->assertResponseStatus(200);
+  }
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2OrganizationsApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+  public function testAddOrganization() {
+    $name = str_random(16) . "_org_name";
+    $data = [
+      "name" => $name,
+    ];
 
-        $content = $response->getContent();
-        $organizations = json_decode($content);
-        $this->assertTrue(!is_null($organizations));
-        $this->assertResponseStatus(200);
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testAddOrganization(){
+    $response = $this->action(
+      "POST",
+      "OAuth2OrganizationsApiController@addOrganization",
+      [],
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $name = str_random(16).'_org_name';
-        $data = [
-            'name'  => $name,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2OrganizationsApiController@addOrganization",
-            [],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $org = json_decode($content);
-        $this->assertTrue(!is_null($org));
-        return $org;
-    }
-
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $org = json_decode($content);
+    $this->assertTrue(!is_null($org));
+    return $org;
+  }
 }

@@ -15,248 +15,234 @@
 /**
  * Class OAuth2SummitNotificationsApiControllerTest
  */
-final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestCase
-{
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetApprovedSummitNotifications($summit_id = 27)
-    {
-        $params = [
-            'id' => $summit_id,
-            'page' => 1,
-            'per_page' => 15,
-            'order' => '+sent_date',
-            'expand' => 'owner,approved_by',
-            'filter' => [
-                'approved==1'
-            ],
-        ];
+final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestCase {
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testGetApprovedSummitNotifications($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "page" => 1,
+      "per_page" => 15,
+      "order" => "+sent_date",
+      "expand" => "owner,approved_by",
+      "filter" => ["approved==1"],
+    ];
 
-        $headers = [
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitNotificationsApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitNotificationsApiController@getAll",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
+    $notifications = json_decode($content);
+    $this->assertTrue(!is_null($notifications));
 
-        $notifications = json_decode($content);
-        $this->assertTrue(!is_null($notifications));
+    return $notifications;
+  }
 
-        return $notifications;
-    }
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testGetSentSummitNotifications($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "page" => 1,
+      "per_page" => 15,
+      "order" => "+sent_date",
+      //   'filter'   => 'message=@Shanghai',
+      //'expand'   => 'owner,approved_by',
+    ];
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetSentSummitNotifications($summit_id = 27)
-    {
-        $params = [
-            'id'       => $summit_id,
-            'page'     => 1,
-            'per_page' => 15,
-            'order'    => '+sent_date',
-         //   'filter'   => 'message=@Shanghai',
-            //'expand'   => 'owner,approved_by',
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitNotificationsApiController@getAllApprovedByUser",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitNotificationsApiController@getAllApprovedByUser",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $notifications = json_decode($content);
+    $this->assertTrue(!is_null($notifications));
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
+    return $notifications;
+  }
 
-        $notifications = json_decode($content);
-        $this->assertTrue(!is_null($notifications));
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testGetPushNotificationById($summit_id = 24) {
+    $notifications_response = $this->testGetApprovedSummitNotifications($summit_id);
 
-        return $notifications;
-    }
+    $params = [
+      "id" => $summit_id,
+      "notification_id" => $notifications_response->data[0]->id,
+    ];
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetPushNotificationById($summit_id = 24){
-        $notifications_response = $this->testGetApprovedSummitNotifications($summit_id);
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id' => $summit_id,
-            'notification_id' => $notifications_response->data[0]->id
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitNotificationsApiController@getById",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $notification = json_decode($content);
+    $this->assertTrue(!is_null($notification));
 
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitNotificationsApiController@getById",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    return $notification;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testAddPushNotificationEveryone($summit_id = 24) {
+    $params = [
+      "id" => $summit_id,
+    ];
 
-        $notification = json_decode($content);
-        $this->assertTrue(!is_null($notification));
+    $message = str_random(16) . "_message";
 
-        return $notification;
-    }
+    $data = [
+      "message" => $message,
+      "channel" => \models\summit\SummitPushNotificationChannel::Everyone,
+      "platform" => \models\summit\SummitPushNotification::PlatformMobile,
+    ];
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddPushNotificationEveryone($summit_id = 24){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $params = [
-            'id' => $summit_id,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitNotificationsApiController@addPushNotification",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $message = str_random(16).'_message';
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $notification = json_decode($content);
+    $this->assertTrue(!is_null($notification));
+    return $notification;
+  }
 
-        $data = [
-            'message'  => $message,
-            'channel' => \models\summit\SummitPushNotificationChannel::Everyone,
-            'platform'   => \models\summit\SummitPushNotification::PlatformMobile,
-        ];
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testAddPushNotificationMembersFail($summit_id = 24) {
+    $params = [
+      "id" => $summit_id,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $message = str_random(16) . "_message";
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitNotificationsApiController@addPushNotification",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $data = [
+      "message" => $message,
+      "channel" => \models\summit\SummitPushNotificationChannel::Members,
+      "platform" => \models\summit\SummitPushNotification::PlatformMobile,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $notification = json_decode($content);
-        $this->assertTrue(!is_null($notification));
-        return $notification;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddPushNotificationMembersFail($summit_id = 24){
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitNotificationsApiController@addPushNotification",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $params = [
-            'id' => $summit_id,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(412);
+  }
 
-        $message = str_random(16).'_message';
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testAddPushNotificationMembers($summit_id = 24) {
+    $params = [
+      "id" => $summit_id,
+    ];
 
-        $data = [
-            'message'  => $message,
-            'channel' => \models\summit\SummitPushNotificationChannel::Members,
-            'platform'   => \models\summit\SummitPushNotification::PlatformMobile,
-        ];
+    $message = str_random(16) . "_message";
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
+    $data = [
+      "message" => $message,
+      "channel" => \models\summit\SummitPushNotificationChannel::Members,
+      "platform" => \models\summit\SummitPushNotification::PlatformMobile,
+      "recipient_ids" => [13867],
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitNotificationsApiController@addPushNotification",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(412);
-    }
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitNotificationsApiController@addPushNotification",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddPushNotificationMembers($summit_id = 24){
-
-        $params = [
-            'id' => $summit_id,
-        ];
-
-        $message = str_random(16).'_message';
-
-        $data = [
-            'message'  => $message,
-            'channel' => \models\summit\SummitPushNotificationChannel::Members,
-            'platform'   => \models\summit\SummitPushNotification::PlatformMobile,
-            'recipient_ids' => [13867]
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitNotificationsApiController@addPushNotification",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $notification = json_decode($content);
-        $this->assertTrue(!is_null($notification));
-        return $notification;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $notification = json_decode($content);
+    $this->assertTrue(!is_null($notification));
+    return $notification;
+  }
 }

@@ -12,100 +12,98 @@
  * limitations under the License.
  **/
 
-final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase
-{
-    /**
-     * @param int $summit_id
-     * @param int $until_x_days_before_event_starts
-     */
-    public function testAddPolicy($summit_id = 27, $until_x_days_before_event_starts = 20)
-    {
-        $params = [
-            'id' => $summit_id,
-        ];
+final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase {
+  /**
+   * @param int $summit_id
+   * @param int $until_x_days_before_event_starts
+   */
+  public function testAddPolicy($summit_id = 27, $until_x_days_before_event_starts = 20) {
+    $params = [
+      "id" => $summit_id,
+    ];
 
-        $name = str_random(16) . '_policy';
-        $data = [
-            'name'                             => $name,
-            'until_x_days_before_event_starts' => $until_x_days_before_event_starts,
-            'refund_rate'                      => 90.50
-        ];
+    $name = str_random(16) . "_policy";
+    $data = [
+      "name" => $name,
+      "until_x_days_before_event_starts" => $until_x_days_before_event_starts,
+      "refund_rate" => 90.5,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitRefundPolicyTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitRefundPolicyTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $policy = json_decode($content);
-        $this->assertTrue(!is_null($policy));
-        $this->assertTrue($policy->name == $name);
-        return $policy;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $policy = json_decode($content);
+    $this->assertTrue(!is_null($policy));
+    $this->assertTrue($policy->name == $name);
+    return $policy;
+  }
 
-    public function testGetAllPoliciesBySummit($summit_id=27){
-        $params = [
-            'id' => $summit_id,
-            'filter' => 'until_x_days_before_event_starts<=15'
-        ];
+  public function testGetAllPoliciesBySummit($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "filter" => "until_x_days_before_event_starts<=15",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitRefundPolicyTypeApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitRefundPolicyTypeApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $data = json_decode($content);
+    $this->assertTrue(!is_null($data));
+  }
 
-    public function testDeletePolicy($summit_id=27){
-        $policy = $this->testAddPolicy($summit_id, 2);
+  public function testDeletePolicy($summit_id = 27) {
+    $policy = $this->testAddPolicy($summit_id, 2);
 
-        $params = [
-            'id' => $summit_id,
-            'policy_id' => $policy->id
-        ];
+    $params = [
+      "id" => $summit_id,
+      "policy_id" => $policy->id,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitRefundPolicyTypeApiController@delete",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "DELETE",
+      "OAuth2SummitRefundPolicyTypeApiController@delete",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

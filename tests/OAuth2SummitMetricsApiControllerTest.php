@@ -14,187 +14,181 @@ use App\Models\Foundation\Main\IGroup;
  * limitations under the License.
  **/
 
-class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
-{
+class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertSummitTestData;
+  use InsertMemberTestData;
 
-    use InsertMemberTestData;
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertMemberTestData(IGroup::TrackChairs);
+    self::$defaultMember = self::$member;
+    self::insertSummitTestData();
+  }
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::insertSummitTestData();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    self::clearMemberTestData();
+    parent::tearDown();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        self::clearMemberTestData();
-        parent::tearDown();
-    }
+  public function testEnter() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-    public function testEnter(){
+    $data = [
+      "type" => \models\summit\ISummitMetricType::General,
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+      "REMOTE_ADDR" => "10.1.0.1",
+      "HTTP_REFERER" => "https://www.test.com",
+    ];
 
-        $data = [
-            'type' => \models\summit\ISummitMetricType::General,
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMetricsApiController@enter",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization"  => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json",
-            'REMOTE_ADDR'         => '10.1.0.1',
-            'HTTP_REFERER'        => 'https://www.test.com'
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $metric = json_decode($content);
+    $this->assertTrue(!is_null($metric));
+    return $metric;
+  }
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMetricsApiController@enter",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+  public function testEnterEvent() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "event_id" => self::$presentations[0]->getId(),
+      "member_id" => "me",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $metric = json_decode($content);
-        $this->assertTrue(!is_null($metric));
-        return $metric;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+      "REMOTE_ADDR" => "10.1.0.1",
+      "HTTP_REFERER" => "https://www.test.com",
+    ];
 
-    public function testEnterEvent(){
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMetricsApiController@enterToEvent",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'event_id' => self::$presentations[0]->getId(),
-            'member_id' => 'me'
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $metric = json_decode($content);
+    $this->assertTrue(!is_null($metric));
+    return $metric;
+  }
 
-        $headers = [
-            "HTTP_Authorization"  => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json",
-            'REMOTE_ADDR'         => '10.1.0.1',
-            'HTTP_REFERER'        => 'https://www.test.com'
-        ];
+  public function testEnterOnSite() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMetricsApiController@enterToEvent",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+      "REMOTE_ADDR" => "10.1.0.1",
+      "HTTP_REFERER" => "https://www.test.com",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $metric = json_decode($content);
-        $this->assertTrue(!is_null($metric));
-        return $metric;
-    }
+    $attendees = self::$summit->getAttendees();
+    $rooms = self::$venue_rooms;
+    $access_levels = self::$summit->getBadgeAccessLevelTypes();
+    $data = [
+      "attendee_id" => $attendees[0]->getId(),
+      "room_id" => $rooms[0]->getId(),
+      "required_access_levels" => [$access_levels[0]->getId()],
+    ];
 
-    public function testEnterOnSite(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMetricsApiController@onSiteEnter",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization"  => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json",
-            'REMOTE_ADDR'         => '10.1.0.1',
-            'HTTP_REFERER'        => 'https://www.test.com'
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $metric = json_decode($content);
+    $this->assertTrue(!is_null($metric));
+    return $metric;
+  }
 
-        $attendees =  self::$summit->getAttendees();
-        $rooms =  self::$venue_rooms;
-        $access_levels = self::$summit->getBadgeAccessLevelTypes();
-        $data = [
-            'attendee_id' => $attendees[0]->getId(),
-            'room_id' => $rooms[0]->getId(),
-            'required_access_levels' => [$access_levels[0]->getId()]
-        ];
+  public function testEnterOnSiteTwice() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMetricsApiController@onSiteEnter",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+      "REMOTE_ADDR" => "10.1.0.1",
+      "HTTP_REFERER" => "https://www.test.com",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $metric = json_decode($content);
-        $this->assertTrue(!is_null($metric));
-        return $metric;
-    }
+    $attendees = self::$summit->getAttendees();
+    $rooms = self::$venue_rooms;
+    $access_levels = self::$summit->getBadgeAccessLevelTypes();
+    $data = [
+      "attendee_id" => $attendees[0]->getId(),
+      "room_id" => $rooms[0]->getId(),
+      "required_access_levels" => [$access_levels[0]->getId()],
+    ];
 
-    public function testEnterOnSiteTwice(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMetricsApiController@onSiteEnter",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
-            "HTTP_Authorization"  => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json",
-            'REMOTE_ADDR'         => '10.1.0.1',
-            'HTTP_REFERER'        => 'https://www.test.com'
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $metric = json_decode($content);
+    $this->assertTrue(!is_null($metric));
 
-        $attendees =  self::$summit->getAttendees();
-        $rooms =  self::$venue_rooms;
-        $access_levels = self::$summit->getBadgeAccessLevelTypes();
-        $data = [
-            'attendee_id' => $attendees[0]->getId(),
-            'room_id' => $rooms[0]->getId(),
-            'required_access_levels' => [$access_levels[0]->getId()]
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitMetricsApiController@onSiteEnter",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMetricsApiController@onSiteEnter",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $metric = json_decode($content);
+    $this->assertTrue(!is_null($metric));
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $metric = json_decode($content);
-        $this->assertTrue(!is_null($metric));
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitMetricsApiController@onSiteEnter",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $metric = json_decode($content);
-        $this->assertTrue(!is_null($metric));
-
-        return $metric;
-    }
+    return $metric;
+  }
 }

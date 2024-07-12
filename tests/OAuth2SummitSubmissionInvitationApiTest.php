@@ -18,245 +18,236 @@ use models\summit\SummitTicketType;
  * Class OAuth2SummitSubmissionInvitationApiTest
  * @package Tests
  */
-final class OAuth2SummitSubmissionInvitationApiTest extends ProtectedApiTestCase
-{
+final class OAuth2SummitSubmissionInvitationApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    use InsertSummitTestData;
+  public function setUp(): void {
+    parent::setUp();
 
-    public function setUp():void
-    {
-        parent::setUp();
+    self::insertSummitTestData();
+    self::$summit->seedDefaultEmailFlowEvents();
+  }
 
-        self::insertSummitTestData();
-        self::$summit->seedDefaultEmailFlowEvents();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  public function testIngestInvitationsAndGet() {
+    $csv_content = <<<CSV
+    email,first_name,last_name,tags
+    cespin+3@gmail.com,Jason,Cirrus,tag1|tag2
+    cespin+4@gmail.com,Allen,Altostratus,tag6|tag1
+    CSV;
+    $path = "/tmp/invitations.csv";
 
-    public function testIngestInvitationsAndGet(){
-        $csv_content = <<<CSV
-email,first_name,last_name,tags
-cespin+3@gmail.com,Jason,Cirrus,tag1|tag2
-cespin+4@gmail.com,Allen,Altostratus,tag6|tag1
-CSV;
-        $path = "/tmp/invitations.csv";
+    file_put_contents($path, $csv_content);
 
-        file_put_contents($path, $csv_content);
+    $file = new UploadedFile($path, "invitations.csv", "text/csv", null, true);
 
-        $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
+      $params,
+      [],
+      [],
+      [
+        "file" => $file,
+      ],
+      $headers,
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
-            $params,
-            [],
-            [],
-            [
-                'file' => $file
-            ],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
+    $params = [
+      "id" => self::$summit->getId(),
+      "filter" => "tags==tag6",
+      "expand" => "tags",
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'filter'=> 'tags==tag6',
-            'expand' => 'tags',
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitSubmissionInvitationApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSubmissionInvitationApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [
-            ],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $invitations = json_decode($content);
+    $this->assertTrue(!is_null($invitations));
+    $this->assertTrue(count($invitations->data) == 1);
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $invitations = json_decode($content);
-        $this->assertTrue(!is_null($invitations));
-        $this->assertTrue(count($invitations->data) == 1);
-    }
+  public function testIngestInvitationsAndGetCSV() {
+    $csv_content = <<<CSV
+    email,first_name,last_name
+    smarcet@gmail.com,Sebastian,Marcet
+    smarcet+pepe@gmail.com,Pepe,Marcet
+    CSV;
+    $path = "/tmp/invitations.csv";
 
-    public function testIngestInvitationsAndGetCSV(){
-        $csv_content = <<<CSV
-email,first_name,last_name
-smarcet@gmail.com,Sebastian,Marcet
-smarcet+pepe@gmail.com,Pepe,Marcet
-CSV;
-        $path = "/tmp/invitations.csv";
+    file_put_contents($path, $csv_content);
 
-        file_put_contents($path, $csv_content);
+    $file = new UploadedFile($path, "invitations.csv", "text/csv", null, true);
 
-        $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
+      $params,
+      [],
+      [],
+      [
+        "file" => $file,
+      ],
+      $headers,
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
-            $params,
-            [],
-            [],
-            [
-                'file' => $file
-            ],
-            $headers
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
+    $params = [
+      "id" => self::$summit->getId(),
+      "filter" => "is_sent==false",
+    ];
 
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $params = [
-            'id' => self::$summit->getId(),
-            'filter'=> 'is_sent==false'
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitSubmissionInvitationApiController@getAllBySummitCSV",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $this->assertTrue(!empty($content));
+  }
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSubmissionInvitationApiController@getAllBySummitCSV",
-            $params,
-            [],
-            [],
-            [
-            ],
-            $headers
-        );
+  public function testIngestInvitationsAndResend() {
+    $csv_content = <<<CSV
+    email,first_name,last_name
+    smarcet@gmail.com,Sebastian,Marcet
+    smarcet+pepe@gmail.com,Pepe,Marcet
+    CSV;
+    $path = "/tmp/invitations.csv";
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $this->assertTrue(!empty($content));
-    }
+    file_put_contents($path, $csv_content);
 
-    public function testIngestInvitationsAndResend(){
-        $csv_content = <<<CSV
-email,first_name,last_name
-smarcet@gmail.com,Sebastian,Marcet
-smarcet+pepe@gmail.com,Pepe,Marcet
-CSV;
-        $path = "/tmp/invitations.csv";
+    $file = new UploadedFile($path, "invitations.csv", "text/csv", null, true);
 
-        file_put_contents($path, $csv_content);
+    $params = [
+      "summit_id" => self::$summit->getId(),
+    ];
 
-        $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        $params = [
-            'summit_id' => self::$summit->getId(),
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
+      $params,
+      [],
+      [],
+      [
+        "file" => $file,
+      ],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
-            $params,
-            [],
-            [],
-            [
-                'file' => $file
-            ],
-            $headers
-        );
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitSubmissionInvitationApiController@resendNonAccepted",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+  }
 
+  public function testIngestExistingInvitations() {
+    $csv_content = <<<CSV
+    email,first_name,last_name
+    cespin+3@gmail.com,Jason,Cirrus
+    CSV;
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitSubmissionInvitationApiController@resendNonAccepted",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $path = "/tmp/invitations.csv";
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-    }
+    file_put_contents($path, $csv_content);
 
-    public function testIngestExistingInvitations(){
+    $file = new UploadedFile($path, "invitations.csv", "text/csv", null, true);
 
-        $csv_content = <<<CSV
-email,first_name,last_name
-cespin+3@gmail.com,Jason,Cirrus
-CSV;
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-        $path = "/tmp/invitations.csv";
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+    ];
 
-        file_put_contents($path, $csv_content);
+    $this->action(
+      "POST",
+      "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
+      $params,
+      [],
+      [],
+      [
+        "file" => $file,
+      ],
+      $headers,
+    );
 
-        $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
+      $params,
+      [],
+      [],
+      [
+        "file" => $file,
+      ],
+      $headers,
+    );
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-        ];
-
-        $this->action(
-            "POST",
-            "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
-            $params,
-            [],
-            [],
-            [
-                'file' => $file
-            ],
-            $headers
-        );
-
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitSubmissionInvitationApiController@ingestInvitations",
-            $params,
-            [],
-            [],
-            [
-                'file' => $file
-            ],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+  }
 }

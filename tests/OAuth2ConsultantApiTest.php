@@ -1,153 +1,137 @@
 <?php namespace Tests;
 /**
-* Copyright 2015 OpenStack Foundation
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-**/
-
+ * Copyright 2015 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 
 /**
-* Class OAuth2ConsultantApiTest
-*/
-class OAuth2ConsultantApiTest extends ProtectedApiTestCase
-{
+ * Class OAuth2ConsultantApiTest
+ */
+class OAuth2ConsultantApiTest extends ProtectedApiTestCase {
+  public function testGetConsultants() {
+    $params = [
+      "page" => 1,
+      "per_page" => 10,
+      "status" => "active",
+    ];
 
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2ConsultantsApiController@getConsultants",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-	public function testGetConsultants()
-	{
+    $content = $response->getContent();
+    $consultants = json_decode($content);
 
-		$params  = array(
-			'page'     => 1 ,
-			'per_page' => 10,
-			'status'   => "active",
-		);
+    $this->assertResponseStatus(200);
+  }
 
-		$headers = array("HTTP_Authorization" => " Bearer " .$this->access_token);
-		$response = $this->action(
-						"GET",
-						"OAuth2ConsultantsApiController@getConsultants",
-						$params,
-						array(),
-						array(),
-						array(),
-						$headers
-		);
+  public function testGetConsultantsCORS() {
+    $params = [
+      "page" => 1,
+      "per_page" => 10,
+      "status" => "active",
+    ];
 
-		$content     = $response->getContent();
-		$consultants  = json_decode($content);
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "HTTP_Origin" => ["www.test.com"],
+      "HTTP_Access-Control-Request-Method" => "GET",
+    ];
 
-		$this->assertResponseStatus(200);
-	}
+    $response = $this->action(
+      "OPTIONS",
+      "OAuth2ConsultantsApiController@getConsultants",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-	public function testGetConsultantsCORS()
-	{
+    $content = $response->getContent();
+    $consultants = json_decode($content);
 
-		$params  = array(
-			'page'     => 1 ,
-			'per_page' => 10,
-			'status'   => "active",
-		);
+    $this->assertResponseStatus(403);
+  }
 
-		$headers = array(
-			"HTTP_Authorization" => " Bearer " .$this->access_token,
-			'HTTP_Origin' => array('www.test.com'),
-			'HTTP_Access-Control-Request-Method'=>'GET',
-			);
+  public function testGetConsultantNotFound() {
+    $params = [
+      "id" => 0,
+    ];
 
-		$response = $this->action(
-						"OPTIONS",
-						"OAuth2ConsultantsApiController@getConsultants",
-						$params,
-						array(),
-						array(),
-						array(),
-						$headers
-		);
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2ConsultantsApiController@getConsultant",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
+    $content = $response->getContent();
+    $res = json_decode($content);
 
-		$content     = $response->getContent();
-		$consultants  = json_decode($content);
+    $this->assertResponseStatus(404);
+  }
 
-		$this->assertResponseStatus(403);
-	}
+  public function testGetConsultantFound() {
+    $params = [
+      "id" => 18,
+    ];
 
-	public function testGetConsultantNotFound()
-	{
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2ConsultantsApiController@getConsultant",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-		$params  = array(
-			'id' => 0
-		);
+    $content = $response->getContent();
+    $res = json_decode($content);
 
-		$headers = array("HTTP_Authorization" => " Bearer " .$this->access_token);
-		$response = $this->action(
-						"GET",
-						"OAuth2ConsultantsApiController@getConsultant",
-						$params,
-						array(),
-						array(),
-						array(),
-						$headers
-		);
+    $this->assertResponseStatus(200);
+  }
 
-		$content = $response->getContent();
-		$res     = json_decode($content);
+  public function testGetOffices() {
+    $params = [
+      "id" => 19,
+    ];
 
-		$this->assertResponseStatus(404);
-	}
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2ConsultantsApiController@getOffices",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-	public function testGetConsultantFound()
-	{
+    $content = $response->getContent();
+    $res = json_decode($content);
 
-		$params  = array(
-			'id' => 18
-		);
-
-		$headers = array("HTTP_Authorization" => " Bearer " .$this->access_token);
-		$response = $this->action(
-						"GET",
-						"OAuth2ConsultantsApiController@getConsultant",
-						$params,
-						array(),
-						array(),
-						array(),
-						$headers
-		);
-
-		$content = $response->getContent();
-		$res     = json_decode($content);
-
-		$this->assertResponseStatus(200);
-	}
-
-	public function testGetOffices()
-	{
-
-		$params  = array(
-			'id' => 19
-		);
-
-		$headers = array("HTTP_Authorization" => " Bearer " .$this->access_token);
-		$response = $this->action(
-						"GET",
-						"OAuth2ConsultantsApiController@getOffices",
-						$params,
-						array(),
-						array(),
-						array(),
-						$headers
-		);
-
-		$content = $response->getContent();
-		$res     = json_decode($content);
-
-		$this->assertResponseStatus(200);
-
-	}
+    $this->assertResponseStatus(200);
+  }
 }

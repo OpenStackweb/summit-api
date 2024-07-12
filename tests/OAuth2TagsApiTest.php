@@ -12,149 +12,134 @@
  * limitations under the License.
  **/
 
-class OAuth2TagsApiTest extends ProtectedApiTestCase
-{
+class OAuth2TagsApiTest extends ProtectedApiTestCase {
+  public function testGetTags() {
+    $params = [
+      //AND FILTER
+      "filter" => ["tag=@test"],
+      "order" => "+id",
+    ];
 
-    public function testGetTags()
-    {
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2TagsApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            //AND FILTER
-            'filter' => ['tag=@test'],
-            'order'  => '+id'
-        ];
+    $content = $response->getContent();
+    $tags = json_decode($content);
+    $this->assertTrue(!is_null($tags));
+    $this->assertResponseStatus(200);
+  }
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2TagsApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+  public function testGetTag($tag_id = 1) {
+    $params = [
+      "id" => $tag_id,
+    ];
 
-        $content = $response->getContent();
-        $tags = json_decode($content);
-        $this->assertTrue(!is_null($tags));
-        $this->assertResponseStatus(200);
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testGetTag($tag_id = 1)
-    {
-        $params = [
-            'id' => $tag_id,
-        ];
+    $response = $this->action(
+      "GET",
+      "OAuth2TagsApiController@getTag",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $content = $response->getContent();
+    $tag = json_decode($content);
+    $this->assertTrue(!is_null($tag));
+    $this->assertResponseStatus(200);
+  }
 
-        $response = $this->action(
-            "GET",
-            "OAuth2TagsApiController@getTag",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testAddTag() {
+    $params = [];
 
-        $content = $response->getContent();
-        $tag = json_decode($content);
-        $this->assertTrue(!is_null($tag));
-        $this->assertResponseStatus(200);
-    }
+    $tag = str_random(16) . "_tag";
+    $data = [
+      "tag" => $tag,
+    ];
 
-    public function testAddTag(){
-        $params = [
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2TagsApiController@addTag",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $tag  = str_random(16).'_tag';
-        $data = [
-            'tag' => $tag,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $tag = json_decode($content);
+    $this->assertTrue(!is_null($tag));
+    return $tag;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testUpdateTag($tag_id = 3) {
+    $params = [
+      "id" => $tag_id,
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2TagsApiController@addTag",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $tag = "Business";
+    $data = [
+      "tag" => $tag,
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $tag = json_decode($content);
-        $this->assertTrue(!is_null($tag));
-        return $tag;
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testUpdateTag($tag_id = 3){
-        $params = [
-            'id' => $tag_id,
-        ];
+    $response = $this->action(
+      "PUT",
+      "OAuth2TagsApiController@updateTag",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $tag  = 'Business';
-        $data = [
-            'tag' => $tag,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $updated_tag = json_decode($content);
+    $this->assertTrue(!is_null($updated_tag));
+    $this->assertTrue($updated_tag->tag == $tag);
+    return $tag;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testDeleteTag($tag_id = 503) {
+    $params = [
+      "id" => $tag_id,
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2TagsApiController@updateTag",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $updated_tag = json_decode($content);
-        $this->assertTrue(!is_null($updated_tag));
-        $this->assertTrue($updated_tag->tag == $tag);
-        return $tag;
-    }
+    $this->action("DELETE", "OAuth2TagsApiController@deleteTag", $params, [], [], [], $headers);
 
-    public function testDeleteTag($tag_id = 503){
-        $params = [
-            'id' => $tag_id,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $this->action(
-            "DELETE",
-            "OAuth2TagsApiController@deleteTag",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $this->assertResponseStatus(204);
-    }
+    $this->assertResponseStatus(204);
+  }
 }

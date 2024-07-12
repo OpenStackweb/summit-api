@@ -18,436 +18,417 @@ use DateTime;
  * Class OAuth2MembersApiTest
  * @package Tests
  */
-final class OAuth2MembersApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
-
-    protected function setUp():void
-    {
-        $this->setCurrentGroup(IGroup::TrackChairs);
-        parent::setUp();
-        self::insertSummitTestData();
-        self::$summit_permission_group->addMember(self::$member);
-        self::$summit_permission_group->addMember(self::$member2);
-        self::$em->persist(self::$summit);
-        self::$em->persist(self::$summit_permission_group);
-        self::$em->flush();
-        self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
-        self::$em->persist(self::$summit);
-        self::$em->flush();
-    }
-
-    public function tearDown():void
-    {
-        self::clearSummitTestData();
-        Mockery::close();
-    }
-
-    public function testGetMembers()
-    {
-
-        $params = [
-            //AND FILTER
-            'filter' => ['first_name=@Seba', 'last_name=@Marcet'],
-            'order'  => '+first_name,-last_name'
-        ];
-
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $members = json_decode($content);
-        $this->assertTrue(!is_null($members));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testGetMemberByFullName()
-    {
-
-        $params = [
-            //AND FILTER
-            'filter' => ['full_name=@Seba'],
-            'order'  => '+first_name,-last_name'
-        ];
-
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $members = json_decode($content);
-        $this->assertTrue(!is_null($members));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testGetMembersEmpty()
-    {
-
-        $params = [
-            'filter' => ['first_name=@', 'last_name=@'],
-            //AND FILTER
-            'order'  => '+first_name,-last_name'
-        ];
-
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAll",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(412);
-    }
-
-    public function testGetMembersByEmail()
-    {
-        $params = [
-            'filter' => 'email=@sebastian@tipit.net',
-            'order'  => '+first_name,-last_name',
-            'expand' => 'groups'
-        ];
-
-        $headers  = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $members = json_decode($content);
-
-        $this->assertTrue(!is_null($members));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testGetMembersByEmail2()
-    {
-        $params = [
-            'filter' => ['email==sean.mcginnis@gmail.com', "email_verified==0"],
-        ];
-
-        $headers  = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $members = json_decode($content);
-        $this->assertTrue(!is_null($members));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testGetMyMember()
-    {
-        $params = [
-            'expand' => 'groups,track_chairs,sponsor_memberships.extra_questions'
-        ];
-
-        $headers  = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getMyMember",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $member = json_decode($content);
-        $this->assertTrue(!is_null($member));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testGetMembersByGitHubUser()
-    {
-        $params = [
-            'filter' => 'github_user=@smarcet',
-            'order'  => '+first_name,-last_name',
-            'expand' => 'groups, ccla_teams'
-        ];
-
-        $headers  = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $members = json_decode($content);
-        $this->assertTrue(!is_null($members));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testAddMemberAffiliation($member_id = 11624){
-        $params = [
-            'member_id'      => $member_id,
-        ];
-
-        $start_datetime      = new DateTime( "2018-11-10 00:00:00");
-        $start_datetime_unix = $start_datetime->getTimestamp();
-
-        $data = [
-            'is_current' => true,
-            'start_date' => $start_datetime_unix,
-            'job_title'  => 'test affiliation',
-            'end_date'   => null,
-            'organization_id' => 1
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2MembersApiController@addAffiliation",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $affiliation = json_decode($content);
-        $this->assertTrue(!is_null($affiliation));
-        return $affiliation;
-    }
-
-    public function testAddMyMemberAffiliation(){
-        $params = [
-
-        ];
-
-        $start_datetime      = new DateTime( "2018-11-10 00:00:00");
-        $start_datetime_unix = $start_datetime->getTimestamp();
-
-        $data = [
-            'is_current' => true,
-            'start_date' => $start_datetime_unix,
-            'job_title'  => 'test affiliation',
-            'end_date'   => null,
-            'organization_name' => 'test new organization'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2MembersApiController@addMyAffiliation",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $affiliation = json_decode($content);
-        $this->assertTrue(!is_null($affiliation));
-        return $affiliation;
-    }
-
-    public function testUpdateMemberAffiliation($member_id = 11624){
-
-        $new_affiliation = $this->testAddMemberAffiliation($member_id);
-        $params = [
-            'member_id'      => $member_id,
-            'affiliation_id' => $new_affiliation->id,
-        ];
-
-        $data = [
-            'job_title'  => 'job title update'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2MembersApiController@updateAffiliation",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $affiliation = json_decode($content);
-        $this->assertTrue(!is_null($affiliation));
-        return $affiliation;
-    }
-
-    public function testDeleteMemberAffiliation($member_id = 11624){
-
-        $new_affiliation = $this->testAddMemberAffiliation($member_id);
-        $params = [
-            'member_id'      => $member_id,
-            'affiliation_id' => $new_affiliation->id,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2MembersApiController@deleteAffiliation",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
-
-    public function testGetMemberAffiliation($member_id = 11624)
-    {
-
-        $params = [
-            //AND FILTER
-            'member_id' => $member_id
-        ];
-
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getMemberAffiliations",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $affiliations = json_decode($content);
-        $this->assertTrue(!is_null($affiliations));
-        $this->assertResponseStatus(200);
-    }
-
-    public function testSignFoundationMembership(){
-        $params = [
-            'member_id'      => 'me',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2MembersApiController@signFoundationMembership",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            ""
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $member = json_decode($content);
-        $this->assertTrue(!is_null($member));
-        return $member;
-    }
-
-    public function testSignResignFoundationMembership(){
-        $params = [
-            'member_id' => 'me',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2MembersApiController@signFoundationMembership",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            ""
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $member = json_decode($content);
-        $this->assertTrue(!is_null($member));
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2MembersApiController@resignMembership",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            ""
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-        return $member;
-    }
+final class OAuth2MembersApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
+
+  protected function setUp(): void {
+    $this->setCurrentGroup(IGroup::TrackChairs);
+    parent::setUp();
+    self::insertSummitTestData();
+    self::$summit_permission_group->addMember(self::$member);
+    self::$summit_permission_group->addMember(self::$member2);
+    self::$em->persist(self::$summit);
+    self::$em->persist(self::$summit_permission_group);
+    self::$em->flush();
+    self::$summit->addTrackChair(self::$member, [self::$defaultTrack]);
+    self::$em->persist(self::$summit);
+    self::$em->flush();
+  }
+
+  public function tearDown(): void {
+    self::clearSummitTestData();
+    Mockery::close();
+  }
+
+  public function testGetMembers() {
+    $params = [
+      //AND FILTER
+      "filter" => ["first_name=@Seba", "last_name=@Marcet"],
+      "order" => "+first_name,-last_name",
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $members = json_decode($content);
+    $this->assertTrue(!is_null($members));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testGetMemberByFullName() {
+    $params = [
+      //AND FILTER
+      "filter" => ["full_name=@Seba"],
+      "order" => "+first_name,-last_name",
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $members = json_decode($content);
+    $this->assertTrue(!is_null($members));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testGetMembersEmpty() {
+    $params = [
+      "filter" => ["first_name=@", "last_name=@"],
+      //AND FILTER
+      "order" => "+first_name,-last_name",
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(412);
+  }
+
+  public function testGetMembersByEmail() {
+    $params = [
+      "filter" => "email=@sebastian@tipit.net",
+      "order" => "+first_name,-last_name",
+      "expand" => "groups",
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $members = json_decode($content);
+
+    $this->assertTrue(!is_null($members));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testGetMembersByEmail2() {
+    $params = [
+      "filter" => ["email==sean.mcginnis@gmail.com", "email_verified==0"],
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $members = json_decode($content);
+    $this->assertTrue(!is_null($members));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testGetMyMember() {
+    $params = [
+      "expand" => "groups,track_chairs,sponsor_memberships.extra_questions",
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getMyMember",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $member = json_decode($content);
+    $this->assertTrue(!is_null($member));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testGetMembersByGitHubUser() {
+    $params = [
+      "filter" => "github_user=@smarcet",
+      "order" => "+first_name,-last_name",
+      "expand" => "groups, ccla_teams",
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $members = json_decode($content);
+    $this->assertTrue(!is_null($members));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testAddMemberAffiliation($member_id = 11624) {
+    $params = [
+      "member_id" => $member_id,
+    ];
+
+    $start_datetime = new DateTime("2018-11-10 00:00:00");
+    $start_datetime_unix = $start_datetime->getTimestamp();
+
+    $data = [
+      "is_current" => true,
+      "start_date" => $start_datetime_unix,
+      "job_title" => "test affiliation",
+      "end_date" => null,
+      "organization_id" => 1,
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "POST",
+      "OAuth2MembersApiController@addAffiliation",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $affiliation = json_decode($content);
+    $this->assertTrue(!is_null($affiliation));
+    return $affiliation;
+  }
+
+  public function testAddMyMemberAffiliation() {
+    $params = [];
+
+    $start_datetime = new DateTime("2018-11-10 00:00:00");
+    $start_datetime_unix = $start_datetime->getTimestamp();
+
+    $data = [
+      "is_current" => true,
+      "start_date" => $start_datetime_unix,
+      "job_title" => "test affiliation",
+      "end_date" => null,
+      "organization_name" => "test new organization",
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "POST",
+      "OAuth2MembersApiController@addMyAffiliation",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $affiliation = json_decode($content);
+    $this->assertTrue(!is_null($affiliation));
+    return $affiliation;
+  }
+
+  public function testUpdateMemberAffiliation($member_id = 11624) {
+    $new_affiliation = $this->testAddMemberAffiliation($member_id);
+    $params = [
+      "member_id" => $member_id,
+      "affiliation_id" => $new_affiliation->id,
+    ];
+
+    $data = [
+      "job_title" => "job title update",
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "PUT",
+      "OAuth2MembersApiController@updateAffiliation",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $affiliation = json_decode($content);
+    $this->assertTrue(!is_null($affiliation));
+    return $affiliation;
+  }
+
+  public function testDeleteMemberAffiliation($member_id = 11624) {
+    $new_affiliation = $this->testAddMemberAffiliation($member_id);
+    $params = [
+      "member_id" => $member_id,
+      "affiliation_id" => $new_affiliation->id,
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "DELETE",
+      "OAuth2MembersApiController@deleteAffiliation",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
+
+  public function testGetMemberAffiliation($member_id = 11624) {
+    $params = [
+      //AND FILTER
+      "member_id" => $member_id,
+    ];
+
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2MembersApiController@getMemberAffiliations",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
+
+    $content = $response->getContent();
+    $affiliations = json_decode($content);
+    $this->assertTrue(!is_null($affiliations));
+    $this->assertResponseStatus(200);
+  }
+
+  public function testSignFoundationMembership() {
+    $params = [
+      "member_id" => "me",
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "PUT",
+      "OAuth2MembersApiController@signFoundationMembership",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      "",
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $member = json_decode($content);
+    $this->assertTrue(!is_null($member));
+    return $member;
+  }
+
+  public function testSignResignFoundationMembership() {
+    $params = [
+      "member_id" => "me",
+    ];
+
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
+
+    $response = $this->action(
+      "PUT",
+      "OAuth2MembersApiController@signFoundationMembership",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      "",
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $member = json_decode($content);
+    $this->assertTrue(!is_null($member));
+
+    $response = $this->action(
+      "DELETE",
+      "OAuth2MembersApiController@resignMembership",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      "",
+    );
+
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+    return $member;
+  }
 }

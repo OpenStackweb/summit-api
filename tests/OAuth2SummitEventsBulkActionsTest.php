@@ -12,84 +12,71 @@
  * limitations under the License.
  **/
 
-class OAuth2SummitEventsBulkActionsTest extends ProtectedApiTestCase
-{
-    public function testUpdateEvents()
-    {
-        $params = [
-            'id' => 23,
-        ];
+class OAuth2SummitEventsBulkActionsTest extends ProtectedApiTestCase {
+  public function testUpdateEvents() {
+    $params = [
+      "id" => 23,
+    ];
 
-        $data = [
+    $data = [
+      "events" => [
+        [
+          "id" => 20420,
+          "title" => "Making OpenContrail an ubiquitous SDN for OpenStack and Kubernetes!",
+        ],
+        [
+          "id" => 20421,
+          "title" =>
+            "OpenContrail - from A to B, front to back, top to bottom, past to present, soup to nuts!",
+        ],
+      ],
+    ];
 
-           'events' => [
-               [
-                   'id' => 20420,
-                   'title' => 'Making OpenContrail an ubiquitous SDN for OpenStack and Kubernetes!'
-               ],
-               [
-                   'id' => 20421,
-                   'title' => 'OpenContrail - from A to B, front to back, top to bottom, past to present, soup to nuts!'
-               ]
-           ]
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitEventsApiController@updateEvents",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $headers = [
+    $this->assertResponseStatus(204);
+    $content = $response->getContent();
+  }
 
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
+  public function testGetEventByIdOR() {
+    $params = [
+      "id" => 23,
+      "filter" => ["id==20420,id==20421,id==20427,id==20428"],
+    ];
 
-        $response = $this->action
-        (
-            "PUT",
-            "OAuth2SummitEventsApiController@updateEvents",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $this->assertResponseStatus(204);
-        $content = $response->getContent();
-    }
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitEventsApiController@getEvents",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-    public function testGetEventByIdOR()
-    {
-        $params = [
-            'id' => 23,
-            'filter' => [
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
 
-                'id==20420,id==20421,id==20427,id==20428',
-            ]
-        ];
-
-        $headers = [
-
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitEventsApiController@getEvents",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $events = json_decode($content);
-        $this->assertTrue(!is_null($events));
-    }
-
-
+    $events = json_decode($content);
+    $this->assertTrue(!is_null($events));
+  }
 }

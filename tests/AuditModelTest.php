@@ -26,72 +26,69 @@ use utils\PagingInfo;
 /**
  * Class AuditModelTest
  */
-class AuditModelTest extends ProtectedApiTestCase
-{
-    public function testAuditSummitChange(){
-        $audit_repository = EntityManager::getRepository(AuditLog::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
+class AuditModelTest extends ProtectedApiTestCase {
+  public function testAuditSummitChange() {
+    $audit_repository = EntityManager::getRepository(AuditLog::class);
+    $summit_repository = EntityManager::getRepository(Summit::class);
 
-        $user = 'test_user';
-        $summit = $summit_repository->find(3315);
+    $user = "test_user";
+    $summit = $summit_repository->find(3315);
 
-        $summit_audit = new SummitAuditLog(
-            $user,
-            'from Summit [SNAPSHOT N] to Summit [SNAPSHOT N + 1]',
-            $summit
-        );
+    $summit_audit = new SummitAuditLog(
+      $user,
+      "from Summit [SNAPSHOT N] to Summit [SNAPSHOT N + 1]",
+      $summit,
+    );
 
-        self::$em->persist($summit_audit);
-        self::$em->flush();
+    self::$em->persist($summit_audit);
+    self::$em->flush();
 
-        $filter = FilterParser::parse(
-            ["filter" => "class_name==" . SummitAuditLog::ClassName],
-            ["class_name" => ['=@', '==']]
-        );
+    $filter = FilterParser::parse(
+      ["filter" => "class_name==" . SummitAuditLog::ClassName],
+      ["class_name" => ["=@", "=="]],
+    );
 
-        $order = new Order([
-            OrderElement::buildDescFor("id"),
-        ]);
+    $order = new Order([OrderElement::buildDescFor("id")]);
 
-        $retrieved_summit_audit =
-            $audit_repository->getAllByPage(new PagingInfo(1, 5), $filter, $order)->getItems()[0];
-        self::assertNotEmpty($retrieved_summit_audit->getAction());
-        self::assertEquals(SummitAuditLog::ClassName, $retrieved_summit_audit->getClassName());
-        self::assertEquals($retrieved_summit_audit->getUser(), $user);
-        self::assertEquals($retrieved_summit_audit->getSummit()->getId(), $summit->getId());
-    }
+    $retrieved_summit_audit = $audit_repository
+      ->getAllByPage(new PagingInfo(1, 5), $filter, $order)
+      ->getItems()[0];
+    self::assertNotEmpty($retrieved_summit_audit->getAction());
+    self::assertEquals(SummitAuditLog::ClassName, $retrieved_summit_audit->getClassName());
+    self::assertEquals($retrieved_summit_audit->getUser(), $user);
+    self::assertEquals($retrieved_summit_audit->getSummit()->getId(), $summit->getId());
+  }
 
-    public function testAuditSummitEventChange(){
-        $audit_repository = EntityManager::getRepository(AuditLog::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
+  public function testAuditSummitEventChange() {
+    $audit_repository = EntityManager::getRepository(AuditLog::class);
+    $summit_repository = EntityManager::getRepository(Summit::class);
 
-        $user = 'test_user';
-        $summit = $summit_repository->find(3315);
-        $summit_event = $summit->getEvents()[0];
+    $user = "test_user";
+    $summit = $summit_repository->find(3315);
+    $summit_event = $summit->getEvents()[0];
 
-        $summit_audit = new SummitEventAuditLog(
-            $user,
-            'from SummitEvent [SNAPSHOT N] to SummitEvent [SNAPSHOT N + 1]',
-            $summit,
-            $summit_event
-        );
+    $summit_audit = new SummitEventAuditLog(
+      $user,
+      "from SummitEvent [SNAPSHOT N] to SummitEvent [SNAPSHOT N + 1]",
+      $summit,
+      $summit_event,
+    );
 
-        self::$em->persist($summit_audit);
-        self::$em->flush();
+    self::$em->persist($summit_audit);
+    self::$em->flush();
 
-        $filter = FilterParser::parse(
-            ["filter" => "class_name==" . SummitEventAuditLog::ClassName],
-            ["class_name" => ['=@', '==']]
-        );
+    $filter = FilterParser::parse(
+      ["filter" => "class_name==" . SummitEventAuditLog::ClassName],
+      ["class_name" => ["=@", "=="]],
+    );
 
-        $order = new Order([
-            OrderElement::buildDescFor("id"),
-        ]);
+    $order = new Order([OrderElement::buildDescFor("id")]);
 
-        $retrieved_summit_audit =
-            $audit_repository->getAllByPage(new PagingInfo(1, 5), $filter, $order)->getItems()[0];
-        self::assertNotEmpty($retrieved_summit_audit->getAction());
-        self::assertEquals(SummitEventAuditLog::ClassName, $retrieved_summit_audit->getClassName());
-        self::assertEquals($retrieved_summit_audit->getUser(), $user);
-    }
+    $retrieved_summit_audit = $audit_repository
+      ->getAllByPage(new PagingInfo(1, 5), $filter, $order)
+      ->getItems()[0];
+    self::assertNotEmpty($retrieved_summit_audit->getAction());
+    self::assertEquals(SummitEventAuditLog::ClassName, $retrieved_summit_audit->getClassName());
+    self::assertEquals($retrieved_summit_audit->getUser(), $user);
+  }
 }

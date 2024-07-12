@@ -15,71 +15,62 @@
 /**
  * Class OAuth2PersonalCalendarShareInfoApiTest
  */
-class OAuth2PersonalCalendarShareInfoApiTest extends ProtectedApiTestCase
-{
-    public function testCreateShareableLink($summit_id = 27){
+class OAuth2PersonalCalendarShareInfoApiTest extends ProtectedApiTestCase {
+  public function testCreateShareableLink($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "member_id" => "me",
+    ];
 
-        $params = array
-        (
-            'id' => $summit_id,
-            'member_id' => 'me',
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json",
-        );
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitMembersApiController@createScheduleShareableLink",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $response = $this->action
-        (
-            "POST",
-            "OAuth2SummitMembersApiController@createScheduleShareableLink",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
 
-        $content = $response->getContent();
+    $this->assertResponseStatus(201);
 
-        $this->assertResponseStatus(201);
+    $link = json_decode($content);
 
-        $link = json_decode($content);
+    return $link;
+  }
 
-        return $link;
-    }
+  public function testGetICS($summit_id = 27) {
+    $link = $this->testCreateShareableLink($summit_id);
+    $params = [
+      "id" => $summit_id,
+      "cid" => $link->cid,
+    ];
 
-    public function testGetICS($summit_id = 27){
+    $headers = [
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $link = $this->testCreateShareableLink($summit_id);
-        $params = array
-        (
-            'id' => $summit_id,
-            'cid' => $link->cid,
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitMembersApiController@getCalendarFeedICS",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = array
-        (
-            "CONTENT_TYPE"       => "application/json",
-        );
+    $ics = $response->getContent();
 
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitMembersApiController@getCalendarFeedICS",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $this->assertResponseStatus(200);
 
-        $ics = $response->getContent();
-
-        $this->assertResponseStatus(200);
-
-        return $ics;
-    }
+    return $ics;
+  }
 }

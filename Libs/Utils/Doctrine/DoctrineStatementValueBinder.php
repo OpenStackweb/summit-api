@@ -17,32 +17,37 @@ use Doctrine\DBAL\Statement;
  * Class DoctrineStatementValueBinder
  * @package Libs\Utils\Doctrine
  */
-final class DoctrineStatementValueBinder
-{
-    /**
-     * @param $param
-     * @return int
-     */
-    public static function inferParamType($param):int
-    {
-        if(is_int($param)) return ParameterType::INTEGER;
-        if(is_bool($param)) return ParameterType::BOOLEAN;
-        if(is_string($param)) return ParameterType::STRING;
-        if(is_array($param)) return ParameterType::INTEGER;
-        return ParameterType::STRING;
+final class DoctrineStatementValueBinder {
+  /**
+   * @param $param
+   * @return int
+   */
+  public static function inferParamType($param): int {
+    if (is_int($param)) {
+      return ParameterType::INTEGER;
     }
+    if (is_bool($param)) {
+      return ParameterType::BOOLEAN;
+    }
+    if (is_string($param)) {
+      return ParameterType::STRING;
+    }
+    if (is_array($param)) {
+      return ParameterType::INTEGER;
+    }
+    return ParameterType::STRING;
+  }
 
-    /**
-     * @param Statement $stmt
-     * @param array $params
-     * @return Statement
-     * @throws \Doctrine\DBAL\Exception
-     */
-    public static function bind(Statement $stmt, array $params):Statement
-    {
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, self::inferParamType($value));
-        }
-        return $stmt;
+  /**
+   * @param Statement $stmt
+   * @param array $params
+   * @return Statement
+   * @throws \Doctrine\DBAL\Exception
+   */
+  public static function bind(Statement $stmt, array $params): Statement {
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value, self::inferParamType($value));
     }
+    return $stmt;
+  }
 }

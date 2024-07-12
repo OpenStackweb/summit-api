@@ -12,109 +12,97 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class OAuth2PublicCloudApiTest
  */
-class OAuth2PublicCloudApiTest extends ProtectedApiTestCase
-{
+class OAuth2PublicCloudApiTest extends ProtectedApiTestCase {
+  public function testGetPublicClouds() {
+    $params = [
+      "page" => 1,
+      "per_page" => 10,
+      "status" => "active",
+    ];
 
-    public function testGetPublicClouds()
-    {
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
 
-        $params = array(
-            'page' => 1,
-            'per_page' => 10,
-            'status' => 'active',
-        );
+    $response = $this->action(
+      "GET",
+      "PublicCloudsApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+    $content = $response->getContent();
+    $clouds = json_decode($content);
 
-        $response = $this->action(
-            "GET",
-            "PublicCloudsApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $this->assertResponseStatus(200);
+  }
 
-        $content = $response->getContent();
-        $clouds = json_decode($content);
+  public function testGetPublicCloudNotFound() {
+    $params = [
+      "id" => 0,
+    ];
 
-        $this->assertResponseStatus(200);
-    }
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "PublicCloudsApiController@get",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-    public function testGetPublicCloudNotFound()
-    {
+    $content = $response->getContent();
+    $res = json_decode($content);
 
-        $params = array(
-            'id' => 0
-        );
+    $this->assertResponseStatus(404);
+  }
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "PublicCloudsApiController@get",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+  public function testGetPublicCloudFound() {
+    $params = [
+      "id" => 17,
+    ];
 
-        $content = $response->getContent();
-        $res = json_decode($content);
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "PublicCloudsApiController@getCloud",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $this->assertResponseStatus(404);
-    }
+    $content = $response->getContent();
+    $res = json_decode($content);
 
-    public function testGetPublicCloudFound()
-    {
+    $this->assertResponseStatus(200);
+  }
 
-        $params = array(
-            'id' => 17
-        );
+  public function testGetDataCenterRegions() {
+    $params = [
+      "id" => 53,
+    ];
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "PublicCloudsApiController@getCloud",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "PublicCloudsApiController@getCloudDataCenters",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $res = json_decode($content);
-
-        $this->assertResponseStatus(200);
-    }
-
-    public function testGetDataCenterRegions()
-    {
-
-        $params = array(
-            'id' => 53
-        );
-
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "PublicCloudsApiController@getCloudDataCenters",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $res = json_decode($content);
-        $this->assertResponseStatus(200);
-
-    }
+    $content = $response->getContent();
+    $res = json_decode($content);
+    $this->assertResponseStatus(200);
+  }
 }

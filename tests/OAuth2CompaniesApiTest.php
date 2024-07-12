@@ -12,67 +12,60 @@
  * limitations under the License.
  **/
 
-class OAuth2CompaniesApiTest extends ProtectedApiTestCase
-{
+class OAuth2CompaniesApiTest extends ProtectedApiTestCase {
+  public function testGetCompanies() {
+    $params = [
+      //AND FILTER
+      "filter" => ["name=@Dell\,"],
+      "order" => "-id",
+    ];
 
-    public function testGetCompanies()
-    {
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2CompaniesApiController@getAllCompanies",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            //AND FILTER
-            'filter' => ['name=@Dell\,'],
-            'order'  => '-id'
-        ];
+    $content = $response->getContent();
+    $companies = json_decode($content);
+    $this->assertTrue(!is_null($companies));
+    $this->assertResponseStatus(200);
+  }
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2CompaniesApiController@getAllCompanies",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+  public function testAddCompany() {
+    $data = [
+      "name" => str_random(16) . "_company",
+      "description" => str_random(16) . "_description",
+    ];
 
-        $content = $response->getContent();
-        $companies = json_decode($content);
-        $this->assertTrue(!is_null($companies));
-        $this->assertResponseStatus(200);
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testAddCompany(){
+    $response = $this->action(
+      "POST",
+      "OAuth2CompaniesApiController@add",
+      [],
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $data = [
-            'name' => str_random(16).'_company',
-            'description' => str_random(16).'_description',
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $company = json_decode($content);
+    $this->assertTrue(!is_null($company));
+    return $company;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2CompaniesApiController@add",
-            [],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $company = json_decode($content);
-        $this->assertTrue(!is_null($company));
-        return $company;
-    }
-
-    public function testAddCompanyBigLogo(){
-
-    }
-
+  public function testAddCompanyBigLogo() {
+  }
 }

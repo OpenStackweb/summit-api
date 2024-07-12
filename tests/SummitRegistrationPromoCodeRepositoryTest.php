@@ -23,88 +23,84 @@ use utils\PagingInfo;
 /**
  * Class SummitRegistrationPromoCodeRepositoryTest
  */
-class SummitRegistrationPromoCodeRepositoryTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+class SummitRegistrationPromoCodeRepositoryTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+  }
 
-    protected function tearDown(): void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    public function testGetBySummitAndOrFilters(){
+  public function testGetBySummitAndOrFilters() {
+    $repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
 
-        $repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
+    $term = "test";
 
-        $term = "test";
+    $filter = FilterParser::parse(
+      [
+        "code=@{$term},creator=@{$term},creator_email=@{$term},owner=@{$term},owner_email=@{$term},speaker=@{$term},speaker_email=@{$term},sponsor=@{$term}",
+      ],
+      [
+        "code" => ["=@"],
+        "creator" => ["=@"],
+        "creator_email" => ["=@"],
+        "owner" => ["=@"],
+        "owner_email" => ["=@"],
+        "speaker" => ["=@"],
+        "speaker_email" => ["=@"],
+        "sponsor" => ["=@"],
+      ],
+    );
 
-        $filter = FilterParser::parse(
-            [
-                "code=@{$term},creator=@{$term},creator_email=@{$term},owner=@{$term},owner_email=@{$term},speaker=@{$term},speaker_email=@{$term},sponsor=@{$term}"
-            ],
-            [
-                "code"          => ['=@'],
-                "creator"       => ['=@'],
-                "creator_email" => ['=@'],
-                "owner"         => ['=@'],
-                "owner_email"   => ['=@'],
-                "speaker"       => ['=@'],
-                "speaker_email" => ['=@'],
-                "sponsor"       => ['=@'],
-            ]
-        );
+    $order = new Order([OrderElement::buildDescFor("id")]);
 
-        $order = new Order([
-            OrderElement::buildDescFor("id"),
-        ]);
+    $page = $repository->getBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
 
-        $page = $repository->getBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
+    self::assertNotNull($page);
+    self::assertNotEmpty($page->getItems());
+  }
 
-        self::assertNotNull($page);
-        self::assertNotEmpty($page->getItems());
-    }
+  public function testGetBySummitAndClassNameFilter() {
+    $repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
 
-    public function testGetBySummitAndClassNameFilter(){
-        $repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
+    $term = "test";
 
-        $term = "test";
+    $filter = FilterParser::parse(
+      [
+        sprintf(
+          "or(class_name==%s||%s)",
+          SummitRegistrationPromoCode::ClassName,
+          SummitRegistrationDiscountCode::ClassName,
+        ),
+        "or(code=@{$term})",
+      ],
+      [
+        "code" => ["@@", "=@", "=="],
+        "description" => ["@@", "=@"],
+        "creator" => ["@@", "=@", "=="],
+        "creator_email" => ["@@", "=@", "=="],
+        "owner" => ["@@", "=@", "=="],
+        "owner_email" => ["@@", "=@", "=="],
+        "speaker" => ["@@", "=@", "=="],
+        "speaker_email" => ["@@", "=@", "=="],
+        "sponsor" => ["@@", "=@", "=="],
+        "class_name" => ["=="],
+        "type" => ["=="],
+        "tag" => ["@@", "=@", "=="],
+        "tag_id" => ["=="],
+      ],
+    );
 
-        $filter = FilterParser::parse(
-            [
-                sprintf("or(class_name==%s||%s)", SummitRegistrationPromoCode::ClassName, SummitRegistrationDiscountCode::ClassName),
-                "or(code=@{$term})",
-            ],
-            [
-                'code' => ['@@', '=@', '=='],
-                'description' => ['@@', '=@'],
-                'creator' => ['@@', '=@', '=='],
-                'creator_email' => ['@@', '=@', '=='],
-                'owner' => ['@@', '=@', '=='],
-                'owner_email' => ['@@', '=@', '=='],
-                'speaker' => ['@@', '=@', '=='],
-                'speaker_email' => ['@@', '=@', '=='],
-                'sponsor' => ['@@', '=@', '=='],
-                'class_name' => ['=='],
-                'type' => ['=='],
-                'tag' => ['@@','=@', '=='],
-                'tag_id' => ['=='],
-            ]
-        );
+    $order = new Order([OrderElement::buildDescFor("id")]);
 
-        $order = new Order([
-            OrderElement::buildDescFor("id"),
-        ]);
+    $page = $repository->getBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
 
-        $page = $repository->getBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
-
-        self::assertNotNull($page);
-        self::assertNotEmpty($page->getItems());
-    }
+    self::assertNotNull($page);
+    self::assertNotEmpty($page->getItems());
+  }
 }

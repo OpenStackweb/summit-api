@@ -15,119 +15,115 @@
 /**
  * Class OAuth2SummitEmailEventFlowApiControllerTest
  */
-class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-        self::$summit->seedDefaultEmailFlowEvents();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+    self::$summit->seedDefaultEmailFlowEvents();
+  }
 
-    protected function tearDown():void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testGetAllEmailEvents(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 10,
-            'order'    => '-id',
-            'filter'   => 'flow_name==Schedule'
-        ];
+  /**
+   * @param int $summit_id
+   */
+  public function testGetAllEmailEvents() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "page" => 1,
+      "per_page" => 10,
+      "order" => "-id",
+      "filter" => "flow_name==Schedule",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitEmailEventFlowApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitEmailEventFlowApiController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $email_events = json_decode($content);
-        $this->assertTrue(!is_null($email_events));
-        $this->assertTrue($email_events->total >= 1);
-        return $email_events;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $email_events = json_decode($content);
+    $this->assertTrue(!is_null($email_events));
+    $this->assertTrue($email_events->total >= 1);
+    return $email_events;
+  }
 
-    public function testGetEmailEventById(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'event_id' => 12286
-        ];
+  public function testGetEmailEventById() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "event_id" => 12286,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitEmailEventFlowApiController@get",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitEmailEventFlowApiController@get",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $email_events = json_decode($content);
-        $this->assertTrue(!is_null($email_events));
-        $this->assertTrue($email_events->total >= 1);
-        return $email_events;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(200);
+    $email_events = json_decode($content);
+    $this->assertTrue(!is_null($email_events));
+    $this->assertTrue($email_events->total >= 1);
+    return $email_events;
+  }
 
-    public function testUpdateEmailEvent(){
-        $email_events = $this->testGetAllEmailEvents();
+  public function testUpdateEmailEvent() {
+    $email_events = $this->testGetAllEmailEvents();
 
-        $params = [
-            'id'       => self::$summit->getId(),
-            'event_id' => $email_events->data[0]->id
-        ];
+    $params = [
+      "id" => self::$summit->getId(),
+      "event_id" => $email_events->data[0]->id,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $data = [
-            'email_template_identifier' => "PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW",
-            'recipient' => "test@nomail.com"
-        ];
+    $data = [
+      "email_template_identifier" => "PROPOSED_SCHEDULE_SUBMIT_FOR_REVIEW",
+      "recipient" => "test@nomail.com",
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitEmailEventFlowApiController@update",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitEmailEventFlowApiController@update",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $email_event = json_decode($content);
-
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $email_event = json_decode($content);
+  }
 }

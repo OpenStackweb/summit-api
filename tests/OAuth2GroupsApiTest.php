@@ -12,33 +12,28 @@
  * limitations under the License.
  **/
 
-class OAuth2GroupsApiTest extends ProtectedApiTestCase
-{
+class OAuth2GroupsApiTest extends ProtectedApiTestCase {
+  public function testGetGroups() {
+    $params = [
+      //AND FILTER
+      "filter" => ["code=@adm"],
+      "order" => "-id",
+    ];
 
-    public function testGetGroups()
-    {
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2GroupsApiController@getAll",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            //AND FILTER
-            'filter' => ['code=@adm'],
-            'order'  => '-id'
-        ];
-
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2GroupsApiController@getAll",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-
-        $content = $response->getContent();
-        $groups = json_decode($content);
-        $this->assertTrue(!is_null($groups));
-        $this->assertResponseStatus(200);
-    }
-
+    $content = $response->getContent();
+    $groups = json_decode($content);
+    $this->assertTrue(!is_null($groups));
+    $this->assertResponseStatus(200);
+  }
 }

@@ -12,119 +12,117 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class OAuth2SummitTaxTypeApiTest
  */
-class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase
-{
-    private $ticket_type;
+class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase {
+  private $ticket_type;
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function addTicketType($summit_id = 27){
-        $params = [
-            'id' => $summit_id,
-        ];
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function addTicketType($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+    ];
 
-        $name = str_random(16).'_ticket_type';
+    $name = str_random(16) . "_ticket_type";
 
-        $data = [
-            'name' => $name,
-            'cost' => 250.25,
-            'currency' => 'USD',
-        ];
+    $data = [
+      "name" => $name,
+      "cost" => 250.25,
+      "currency" => "USD",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitsTicketTypesApiController@addTicketTypeBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitsTicketTypesApiController@addTicketTypeBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $ticket_type = json_decode($content);
-        $this->assertTrue(!is_null($ticket_type));
-        $this->assertTrue($ticket_type->name == $name);
-        return $ticket_type;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $ticket_type = json_decode($content);
+    $this->assertTrue(!is_null($ticket_type));
+    $this->assertTrue($ticket_type->name == $name);
+    return $ticket_type;
+  }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddTaxType($summit_id = 27){
-        $this->ticket_type = $this->addTicketType($summit_id);
+  /**
+   * @param int $summit_id
+   * @return mixed
+   */
+  public function testAddTaxType($summit_id = 27) {
+    $this->ticket_type = $this->addTicketType($summit_id);
 
-        $params = [
-            'id' => $summit_id,
-        ];
+    $params = [
+      "id" => $summit_id,
+    ];
 
-        $name        = str_random(16).'_iva';
-        $data = [
-            'name' => $name,
-            'rate' => 21.0
-        ];
+    $name = str_random(16) . "_iva";
+    $data = [
+      "name" => $name,
+      "rate" => 21.0,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitTaxTypeApiController@add",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitTaxTypeApiController@add",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $tax_type = json_decode($content);
-        $this->assertTrue(!is_null($tax_type));
-        $this->assertTrue($tax_type->name == $name);
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $tax_type = json_decode($content);
+    $this->assertTrue(!is_null($tax_type));
+    $this->assertTrue($tax_type->name == $name);
 
-        $params = [
-            'id' => $summit_id,
-            'tax_id' => $tax_type->id,
-            'ticket_type_id' =>    $this->ticket_type->id
-        ];
+    $params = [
+      "id" => $summit_id,
+      "tax_id" => $tax_type->id,
+      "ticket_type_id" => $this->ticket_type->id,
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitTaxTypeApiController@addTaxToTicketType",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $response = $this->action(
+      "PUT",
+      "OAuth2SummitTaxTypeApiController@addTaxToTicketType",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $tax_type = json_decode($content);
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $tax_type = json_decode($content);
 
-        return $tax_type;
-    }
+    return $tax_type;
+  }
 }

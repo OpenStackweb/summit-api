@@ -16,102 +16,100 @@
  * Class OAuth2BookableRoomAttributeTypesApiTest
  * @package Tests
  */
-final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTestCase
-{
-    public function testGetBookableAttributeTypesBySummit($summit_id = 27){
-        $params  = [
-            'id'  => $summit_id,
-            'page'     => 1 ,
-            'per_page' => 10,
-            'expand' => 'values'
-        ];
+final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTestCase {
+  public function testGetBookableAttributeTypesBySummit($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+      "page" => 1,
+      "per_page" => 10,
+      "expand" => "values",
+    ];
 
-        $headers = array("HTTP_Authorization" => " Bearer " .$this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitBookableRoomsAttributeTypeApiController@getAllBookableRoomAttributeTypes",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2SummitBookableRoomsAttributeTypeApiController@getAllBookableRoomAttributeTypes",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content     = $response->getContent();
-        $attributes  = json_decode($content);
+    $content = $response->getContent();
+    $attributes = json_decode($content);
 
-        $this->assertResponseStatus(200);
-        $this->assertTrue(count($attributes->data) > 0);
-    }
+    $this->assertResponseStatus(200);
+    $this->assertTrue(count($attributes->data) > 0);
+  }
 
+  public function testAddAttributeType($summit_id = 27) {
+    $params = [
+      "id" => $summit_id,
+    ];
 
-    public function testAddAttributeType($summit_id = 27){
-        $params = [
-            'id'  => $summit_id,
-        ];
+    $type = str_random(16) . "_attribute_type";
 
-        $type  = str_random(16).'_attribute_type';
+    $data = [
+      "type" => $type,
+    ];
 
-        $data = [
-            'type' => $type
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitBookableRoomsAttributeTypeApiController@addBookableRoomAttributeType",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitBookableRoomsAttributeTypeApiController@addBookableRoomAttributeType",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $attribute_type = json_decode($content);
+    $this->assertTrue(!is_null($attribute_type));
+    return $attribute_type;
+  }
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $attribute_type = json_decode($content);
-        $this->assertTrue(!is_null($attribute_type));
-        return $attribute_type;
-    }
+  public function testAddAttributeValue($summit_id = 27) {
+    $type = $this->testAddAttributeType($summit_id);
+    $params = [
+      "id" => $summit_id,
+      "type_id" => $type->id,
+    ];
 
-    public function testAddAttributeValue($summit_id = 27){
-        $type = $this->testAddAttributeType($summit_id);
-        $params = [
-            'id'  => $summit_id,
-            'type_id' => $type->id,
-        ];
+    $val = str_random(16) . "_attribute_value";
 
-        $val  = str_random(16).'_attribute_value';
+    $data = [
+      "value" => $val,
+    ];
 
-        $data = [
-            'value' => $val
-        ];
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $response = $this->action(
+      "POST",
+      "OAuth2SummitBookableRoomsAttributeTypeApiController@addBookableRoomAttributeValue",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitBookableRoomsAttributeTypeApiController@addBookableRoomAttributeValue",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $attribute_value = json_decode($content);
-        $this->assertTrue(!is_null($attribute_value));
-        return $attribute_value;
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $attribute_value = json_decode($content);
+    $this->assertTrue(!is_null($attribute_value));
+    return $attribute_value;
+  }
 }

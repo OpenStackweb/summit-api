@@ -12,31 +12,29 @@
  * limitations under the License.
  **/
 
-class OAuth2UserStoriesApiTest extends ProtectedApiTestCase
-{
-    public function testGetUserStories()
-    {
-        $params = [
-            //AND FILTER
-            'filter' => ['name=@Test US'],
-            'order'  => '-id',
-            'expand' => 'industry, organization, location, image, tags'
-        ];
+class OAuth2UserStoriesApiTest extends ProtectedApiTestCase {
+  public function testGetUserStories() {
+    $params = [
+      //AND FILTER
+      "filter" => ["name=@Test US"],
+      "order" => "-id",
+      "expand" => "industry, organization, location, image, tags",
+    ];
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "GET",
-            "OAuth2UserStoriesApiController@getAllUserStories",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2UserStoriesApiController@getAllUserStories",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $this->assertResponseStatus(200);
-        $content = $response->getContent();
-        $user_stories = json_decode($content);
-        $this->assertTrue(!is_null($user_stories));
-    }
+    $this->assertResponseStatus(200);
+    $content = $response->getContent();
+    $user_stories = json_decode($content);
+    $this->assertTrue(!is_null($user_stories));
+  }
 }

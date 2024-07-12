@@ -23,58 +23,54 @@ use Mockery;
 /**
  * Class SummitEventModelTest
  */
-class SummitEventModelTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+class SummitEventModelTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    /**
-     * @var SummitEvent
-     */
-    static $event1;
+  /**
+   * @var SummitEvent
+   */
+  static $event1;
 
-    /**
-     * @var ObjectRepository
-     */
-    static $event_repository;
+  /**
+   * @var ObjectRepository
+   */
+  static $event_repository;
 
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+  }
 
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-    }
+  public function tearDown(): void {
+    self::clearSummitTestData();
+    Mockery::close();
+  }
 
-    public function tearDown():void
-    {
-        self::clearSummitTestData();
-        Mockery::close();
-    }
+  public function testChangeEventDuration() {
+    $presentation = self::$presentations[0];
+    $old_end_date = $presentation->getEndDate();
+    $presentation->setDuration(864000);
+    $new_end_date = $presentation->getEndDate();
+    $this->assertTrue($old_end_date < $new_end_date);
+  }
 
-    public function testChangeEventDuration(){
-        $presentation = self::$presentations[0];
-        $old_end_date = $presentation->getEndDate();
-        $presentation->setDuration(864000);
-        $new_end_date = $presentation->getEndDate();
-        $this->assertTrue($old_end_date < $new_end_date);
-    }
+  public function testChangingStartDateShouldRecalculateDuration() {
+    $presentation = self::$presentations[0];
+    $start_date = (clone $presentation->getStartDate())->sub(new DateInterval("P1D"));
 
-    public function testChangingStartDateShouldRecalculateDuration(){
-        $presentation = self::$presentations[0];
-        $start_date = (clone $presentation->getStartDate())->sub(new DateInterval("P1D"));
+    $old_duration = $presentation->getDuration();
+    $presentation->setStartDate($start_date);
+    $new_duration = $presentation->getDuration();
+    $this->assertTrue($old_duration < $new_duration);
+  }
 
-        $old_duration = $presentation->getDuration();
-        $presentation->setStartDate($start_date);
-        $new_duration = $presentation->getDuration();
-        $this->assertTrue($old_duration < $new_duration);
-    }
+  public function testChangingEndDateShouldRecalculateDuration() {
+    $presentation = self::$presentations[0];
+    $end_date = (clone $presentation->getEndDate())->add(new DateInterval("PT1H"));
 
-    public function testChangingEndDateShouldRecalculateDuration(){
-        $presentation = self::$presentations[0];
-        $end_date = (clone $presentation->getEndDate())->add(new DateInterval("PT1H"));
-
-        $old_duration = $presentation->getDuration();
-        $presentation->setEndDate($end_date);
-        $new_duration = $presentation->getDuration();
-        $this->assertTrue($old_duration < $new_duration);
-    }
+    $old_duration = $presentation->getDuration();
+    $presentation->setEndDate($end_date);
+    $new_duration = $presentation->getDuration();
+    $this->assertTrue($old_duration < $new_duration);
+  }
 }

@@ -11,309 +11,293 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
-{
-    use InsertSummitTestData;
+final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase {
+  use InsertSummitTestData;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        self::insertSummitTestData();
-    }
+  protected function setUp(): void {
+    parent::setUp();
+    self::insertSummitTestData();
+  }
 
-    protected function tearDown(): void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+  protected function tearDown(): void {
+    self::clearSummitTestData();
+    parent::tearDown();
+  }
 
-    public function testGetTrackGroups()
-    {
+  public function testGetTrackGroups() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "expand" => "tracks",
+    ];
 
-        $params = [
-            'id'      => self::$summit->getId(),
-            'expand' => 'tracks',
-        ];
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2PresentationCategoryGroupController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2PresentationCategoryGroupController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $content = $response->getContent();
+    $track_groups = json_decode($content);
+    $this->assertTrue(!is_null($track_groups));
+    $this->assertResponseStatus(200);
+    return $track_groups;
+  }
 
-        $content = $response->getContent();
-        $track_groups = json_decode($content);
-        $this->assertTrue(!is_null($track_groups));
-        $this->assertResponseStatus(200);
-        return $track_groups;
-    }
+  public function testGetTrackGroupsMetadata() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
 
-    public function testGetTrackGroupsMetadata()
-    {
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2PresentationCategoryGroupController@getMetadata",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id'      => self::$summit->getId(),
-        ];
+    $content = $response->getContent();
+    $metadata = json_decode($content);
+    $this->assertTrue(!is_null($metadata));
+    $this->assertResponseStatus(200);
+    return $metadata;
+  }
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2PresentationCategoryGroupController@getMetadata",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  public function testGetTrackGroupById() {
+    $track_groups_response = $this->testGetTrackGroups();
 
-        $content = $response->getContent();
-        $metadata = json_decode($content);
-        $this->assertTrue(!is_null($metadata));
-        $this->assertResponseStatus(200);
-        return $metadata;
-    }
+    $track_groups = $track_groups_response->data;
 
-    public function testGetTrackGroupById(){
-        $track_groups_response = $this->testGetTrackGroups();
+    $track_group = $track_groups[0];
 
-        $track_groups = $track_groups_response->data;
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_group_id" => $track_group->id,
+      "expand" => "tracks,allowed_groups",
+    ];
 
-        $track_group  = $track_groups[0];
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2PresentationCategoryGroupController@getTrackGroupBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $params = [
-            'id'             => self::$summit->getId(),
-            'track_group_id' => $track_group->id,
-            'expand'         => 'tracks,allowed_groups',
-        ];
+    $content = $response->getContent();
+    $track_group = json_decode($content);
+    $this->assertTrue(!is_null($track_group));
+    $this->assertResponseStatus(200);
+  }
 
-        $headers  = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2PresentationCategoryGroupController@getTrackGroupBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+  /**
+   * @param int $summit_id
+   */
+  public function testGetTrackGroupsPrivate($summit_id = 23) {
+    $params = [
+      "id" => $summit_id,
+      "expand" => "tracks",
+      "filter" => ["class_name==" . \models\summit\PrivatePresentationCategoryGroup::ClassName],
+      "order" => "+title",
+    ];
 
-        $content     = $response->getContent();
-        $track_group = json_decode($content);
-        $this->assertTrue(!is_null($track_group));
-        $this->assertResponseStatus(200);
-    }
+    $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+    $response = $this->action(
+      "GET",
+      "OAuth2PresentationCategoryGroupController@getAllBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-    /**
-     * @param int $summit_id
-     */
-    public function testGetTrackGroupsPrivate($summit_id = 23)
-    {
+    $content = $response->getContent();
+    $track_groups = json_decode($content);
+    $this->assertTrue(!is_null($track_groups));
+    $this->assertResponseStatus(200);
+  }
 
-        $params = [
-            'id'     => $summit_id,
-            'expand' => 'tracks',
-            'filter' => ['class_name=='.\models\summit\PrivatePresentationCategoryGroup::ClassName],
-            'order'  => '+title',
-        ];
+  public function testAddTrackGroup() {
+    $params = [
+      "id" => self::$summit->getId(),
+    ];
+    $start_date = clone self::$summit->getBeginDate();
+    $end_date = clone $start_date;
+    $end_date = $end_date->add(new \DateInterval("P1D"));
 
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2PresentationCategoryGroupController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
+    $name = str_random(16) . "_track_group";
+    $data = [
+      "name" => $name,
+      "description" => "test desc track group",
+      "class_name" => \models\summit\PresentationCategoryGroup::ClassName,
+      "begin_attendee_voting_period_date" => $start_date->getTimestamp(),
+      "end_attendee_voting_period_date" => $end_date->getTimestamp(),
+      "max_attendee_votes" => 10,
+    ];
 
-        $content = $response->getContent();
-        $track_groups = json_decode($content);
-        $this->assertTrue(!is_null($track_groups));
-        $this->assertResponseStatus(200);
-    }
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-    public function testAddTrackGroup(){
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
-        $start_date  = clone(self::$summit->getBeginDate());
-        $end_date    = clone($start_date);
-        $end_date =    $end_date->add(new \DateInterval("P1D"));
+    $response = $this->action(
+      "POST",
+      "OAuth2PresentationCategoryGroupController@addTrackGroupBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $name       = str_random(16).'_track_group';
-        $data = [
-            'name'        => $name,
-            'description' => 'test desc track group',
-            'class_name'  => \models\summit\PresentationCategoryGroup::ClassName,
-            "begin_attendee_voting_period_date" => $start_date->getTimestamp(),
-            "end_attendee_voting_period_date" => $end_date->getTimestamp(),
-            "max_attendee_votes" => 10,
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $track_group = json_decode($content);
+    $this->assertTrue(!is_null($track_group));
+    $this->assertTrue($track_group->max_attendee_votes == 10);
+    $this->assertTrue(
+      $track_group->begin_attendee_voting_period_date == $start_date->getTimestamp(),
+    );
+    $this->assertTrue($track_group->end_attendee_voting_period_date == $end_date->getTimestamp());
+    return $track_group;
+  }
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+  public function testUpdateTrackGroup() {
+    $track_groups_response = $this->testGetTrackGroups();
 
-        $response = $this->action(
-            "POST",
-            "OAuth2PresentationCategoryGroupController@addTrackGroupBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $track_groups = $track_groups_response->data;
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $track_group = json_decode($content);
-        $this->assertTrue(!is_null($track_group));
-        $this->assertTrue($track_group->max_attendee_votes == 10);
-        $this->assertTrue($track_group->begin_attendee_voting_period_date == $start_date->getTimestamp());
-        $this->assertTrue($track_group->end_attendee_voting_period_date == $end_date->getTimestamp());
-        return $track_group;
-    }
+    $track_group = $track_groups[0];
 
-    public function testUpdateTrackGroup(){
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_group_id" => $track_group->id,
+    ];
 
-        $track_groups_response = $this->testGetTrackGroups();
+    $data = [
+      "description" => "test desc track group update",
+      "class_name" => \models\summit\PresentationCategoryGroup::ClassName,
+    ];
 
-        $track_groups = $track_groups_response->data;
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $track_group  = $track_groups[0];
+    $response = $this->action(
+      "PUT",
+      "OAuth2PresentationCategoryGroupController@updateTrackGroupBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+      json_encode($data),
+    );
 
-        $params = [
-            'id'             => self::$summit->getId(),
-            'track_group_id' => $track_group->id
-        ];
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+    $track_group = json_decode($content);
+    $this->assertTrue(!is_null($track_group));
+    $this->assertTrue($track_group->description == "test desc track group update");
+    return $track_group;
+  }
 
-        $data = [
-            'description' => 'test desc track group update',
-            'class_name'  => \models\summit\PresentationCategoryGroup::ClassName
-        ];
+  public function testAssociateTrack2TrackGroup412($summit_id = 24) {
+    $track_group = $this->testAddTrackGroup($summit_id);
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $params = [
+      "id" => $summit_id,
+      "track_group_id" => $track_group->id,
+      "track_id" => 1,
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2PresentationCategoryGroupController@updateTrackGroupBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $track_group = json_decode($content);
-        $this->assertTrue(!is_null($track_group));
-        $this->assertTrue($track_group->description == 'test desc track group update');
-        return $track_group;
-    }
+    $response = $this->action(
+      "PUT",
+      "OAuth2PresentationCategoryGroupController@associateTrack2TrackGroup",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-    public function testAssociateTrack2TrackGroup412($summit_id = 24){
+    $content = $response->getContent();
+    $this->assertResponseStatus(412);
+  }
 
-        $track_group = $this->testAddTrackGroup($summit_id);
+  public function testAssociateTrack2TrackGroup() {
+    $track_groups_response = $this->testGetTrackGroups();
 
-        $params = [
-            'id'             => $summit_id,
-            'track_group_id' => $track_group->id,
-            'track_id'       => 1
-        ];
+    $track_groups = $track_groups_response->data;
 
+    $track_group = $track_groups[0];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_group_id" => $track_group->id,
+      "track_id" => self::$defaultTrack->getId(),
+    ];
 
-        $response = $this->action(
-            "PUT",
-            "OAuth2PresentationCategoryGroupController@associateTrack2TrackGroup",
-            $params,
-            [],
-            [],
-            [],
-            $headers
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        );
+    $response = $this->action(
+      "PUT",
+      "OAuth2PresentationCategoryGroupController@associateTrack2TrackGroup",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(412);
+    $content = $response->getContent();
+    $this->assertResponseStatus(201);
+  }
 
-    }
+  public function testDeleteExistentTrackGroup() {
+    $params = [
+      "id" => self::$summit->getId(),
+      "track_group_id" => self::$defaultTrackGroup->getId(),
+    ];
 
-    public function testAssociateTrack2TrackGroup(){
+    $headers = [
+      "HTTP_Authorization" => " Bearer " . $this->access_token,
+      "CONTENT_TYPE" => "application/json",
+    ];
 
-        $track_groups_response = $this->testGetTrackGroups();
+    $response = $this->action(
+      "DELETE",
+      "OAuth2PresentationCategoryGroupController@deleteTrackGroupBySummit",
+      $params,
+      [],
+      [],
+      [],
+      $headers,
+    );
 
-        $track_groups = $track_groups_response->data;
-
-        $track_group  = $track_groups[0];
-
-        $params = [
-            'id'             => self::$summit->getId(),
-            'track_group_id' => $track_group->id,
-            'track_id'       => self::$defaultTrack->getId()
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2PresentationCategoryGroupController@associateTrack2TrackGroup",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-    }
-
-
-    public function testDeleteExistentTrackGroup(){
-
-        $params = [
-            'id'             => self::$summit->getId(),
-            'track_group_id' => self::$defaultTrackGroup->getId()
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2PresentationCategoryGroupController@deleteTrackGroupBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
+    $content = $response->getContent();
+    $this->assertResponseStatus(204);
+  }
 }

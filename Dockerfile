@@ -8,6 +8,8 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
 ENV PHP_DIR /usr/local/etc/php
 
+ARG NVM_VERSION="v0.39.7"
+ARG NODE_VERSION="18.20.2"
 # base packages
 RUN apt-get update
 RUN apt-get install -y \
@@ -28,6 +30,20 @@ RUN apt-get install -y \
     gpg \
     gettext \
     libmagickwand-dev
+
+# node / npm
+RUN apt install -y nodejs npm
+
+# nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
+RUN  \. ~/.nvm/nvm.sh && nvm install $NODE_VERSION
+
+# yarn
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN  apt update && apt install -y yarn
+
+ENV NVM_DIR=/root/.nvm
 
 RUN apt clean && rm -rf /var/lib/apt/lists/*
 

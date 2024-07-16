@@ -71,7 +71,16 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         callable $onSuccess = null
     ){
 
-        Log::debug(sprintf("PresentationSpeakerSelectionProcessEmailFactory::send speaker %s type %s", $speaker->getEmail(), $type));
+        Log::debug
+        (
+            sprintf
+            (
+                "PresentationSpeakerSelectionProcessEmailFactory::send speaker %s type %s filter %s",
+                $speaker->getEmail(),
+                $type,
+                is_null($filter) ? "NOT SET" : $filter->__toString()
+            )
+        );
 
         switch ($type){
             case SpeakerAnnouncementSummitEmail::TypeAccepted:

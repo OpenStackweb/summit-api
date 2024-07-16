@@ -55,6 +55,7 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SpeakerTravelPreference;
 use models\summit\Summit;
 use utils\Filter;
+use utils\FilterParser;
 
 /**
  * Class SpeakerService
@@ -1263,7 +1264,7 @@ final class SpeakerService
                     ) {
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
-                        Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
+                        Log::debug(sprintf("SpeakerService::send processing speaker id %s payload %s", $speaker_id, json_encode($payload)));
 
                         $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
 
@@ -1285,12 +1286,53 @@ final class SpeakerService
                         // try to get a speaker assistance
                         $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);
 
+                        $original_filter = $payload["original_filter"] ?? null;
+                        if(!is_null($original_filter) && is_array($original_filter) && count($original_filter) > 0){
+                            // in case that we are sending the original filter on the payload
+                            try {
+
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "SpeakerService::send replacing current filter by original filter %s",
+                                        json_encode($original_filter)
+                                    )
+                                );
+
+                                $original_filter = FilterParser::parse($original_filter, [
+                                    'id' => ['=='],
+                                    'not_id' => ['=='],
+                                    'first_name' => ['=@', '@@', '=='],
+                                    'last_name' => ['=@', '@@', '=='],
+                                    'email' => ['=@', '@@', '=='],
+                                    'full_name' => ['=@', '@@', '=='],
+                                    'has_accepted_presentations' => ['=='],
+                                    'has_alternate_presentations' => ['=='],
+                                    'has_rejected_presentations' => ['=='],
+                                    'presentations_track_id' => ['=='],
+                                    'presentations_selection_plan_id' => ['=='],
+                                    'presentations_type_id' => ['=='],
+                                    'presentations_title' => ['=@', '@@', '=='],
+                                    'presentations_abstract' => ['=@', '@@', '=='],
+                                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                                    'presentations_submitter_email' => ['=@', '@@', '=='],
+                                    'has_media_upload_with_type' => ['=='],
+                                    'has_not_media_upload_with_type' => ['=='],
+                                ]) ;
+                            }
+                            catch (\Exception $ex){
+                                Log::warning($ex);
+                                $original_filter = null;
+                            }
+                        }
+
                         $email_strategy->process
                         (
                             $speaker,
                             $test_email_recipient,
                             $speaker_announcement_email_config,
-                            $filter,
+                            !is_null($original_filter) ? $original_filter : $filter,
                             $promo_code,
                             $assistance,
                             $onDispatchSuccess,

@@ -62,7 +62,7 @@ trait ParametrizedSendEmails
                 $caller,
                 $summit_id,
                 json_encode($payload),
-                is_null($filter) ? "" : $filter->__toString()
+                is_null($filter) ? "NOT SET" : $filter->__toString()
             )
         );
 

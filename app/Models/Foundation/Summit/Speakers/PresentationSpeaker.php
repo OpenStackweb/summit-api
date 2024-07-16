@@ -913,6 +913,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
             $query = $query->setParameter('exclude_tracks', $excluded_tracks);
         }
 
+        Log::debug
+        (
+            sprintf
+            (
+                "Speaker::getAcceptedPresentations id %s role %s query %s",
+                $this->id,
+                $role,
+                $query->getDQL()
+            )
+        );
+
         return $query->getResult();
     }
 
@@ -1100,6 +1111,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
                     $alternate_presentations[] = $speaker_presentation;
             }
         }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Speaker::getAlternatePresentations id %s role %s query %s",
+                $this->id,
+                $role,
+                $query->getDQL()
+            )
+        );
 
         return $alternate_presentations;
     }
@@ -1344,6 +1366,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 $unaccepted_presentations[] = $p;
             }
         }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Speaker::getUnacceptedPresentations id %s role %s query %s",
+                $this->id,
+                $role,
+                $query->getDQL()
+            )
+        );
 
         return $unaccepted_presentations;
     }

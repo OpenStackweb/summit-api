@@ -82,7 +82,16 @@ final class SpeakerActionsEmailStrategy
         try {
             $type = null;
 
-            Log::debug("SpeakerActionsEmailStrategy::send processing speaker {$speaker->getEmail()} - original flow event {$this->flow_event}");
+            Log::debug
+            (
+                sprintf
+                (
+                    "SpeakerActionsEmailStrategy::send processing speaker %s - original flow event %s filter %s",
+                    $speaker->getEmail(),
+                    $this->flow_event,
+                    is_null($filter) ? "NOT SET" : $filter->__toString()
+                )
+            );
 
             $has_accepted_presentations =
                 $speaker->hasAcceptedPresentations(

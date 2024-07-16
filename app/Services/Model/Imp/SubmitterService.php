@@ -26,6 +26,7 @@ use models\main\Member;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use utils\Filter;
+use utils\FilterParser;
 
 /**
  * Class SubmitterService
@@ -115,14 +116,56 @@ final class SubmitterService
                         $submitter = $this->member_repository->getByIdExclusiveLock(intval($submitter_id));
 
                         if (!$submitter instanceof Member) {
-                            throw new EntityNotFoundException('submitter not found!');
+                            throw new EntityNotFoundException('Submitter not found!');
+                        }
+
+                        $original_filter = $payload["original_filter"] ?? null;
+                        if(!is_null($original_filter) && is_array($original_filter) && count($original_filter) > 0){
+                            // in case that we are sending the original filter on the payload
+                            try {
+
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "SubmitterService::send replacing current filter by original filter %s",
+                                        json_encode($original_filter)
+                                    )
+                                );
+
+                                $original_filter = FilterParser::parse($original_filter, [
+                                    'id' => ['=='],
+                                    'not_id' => ['=='],
+                                    'first_name' => ['=@', '@@', '=='],
+                                    'last_name' => ['=@', '@@', '=='],
+                                    'email' => ['=@', '@@', '=='],
+                                    'full_name' => ['=@', '@@', '=='],
+                                    'member_id' => ['=='],
+                                    'member_user_external_id' => ['=='],
+                                    'has_accepted_presentations' => ['=='],
+                                    'has_alternate_presentations' => ['=='],
+                                    'has_rejected_presentations' => ['=='],
+                                    'presentations_track_id' => ['=='],
+                                    'presentations_selection_plan_id' => ['=='],
+                                    'presentations_type_id' => ['=='],
+                                    'presentations_title' => ['=@', '@@', '=='],
+                                    'presentations_abstract' => ['=@', '@@', '=='],
+                                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                                    'presentations_submitter_email' => ['=@', '@@', '=='],
+                                    'is_speaker' => ['=='],
+                                ]) ;
+                            }
+                            catch (\Exception $ex){
+                                Log::warning($ex);
+                                $original_filter = null;
+                            }
                         }
 
                         $email_strategy->process
                         (
                             $submitter,
                             $test_email_recipient,
-                            $filter,
+                            !is_null($original_filter) ? $original_filter : $filter,
                             $onDispatchSuccess,
                             $onDispatchInfo,
                             $onDispatchError

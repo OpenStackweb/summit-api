@@ -49,8 +49,21 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
         ?Filter $filter = null
     ){
 
-        if(!is_null($filter))
+        if(!is_null($filter)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "PresentationSpeakerSelectionProcessEmail::__construct summit %s speaker %s (%s) filter %s",
+                    $summit->getId(),
+                    $speaker->getId(),
+                    $speaker->getEmail(),
+                    $filter->__toString()
+                )
+            );
             $this->filter = $filter->getOriginalExp();
+        }
+
         $payload  = [];
         $cc_email = [];
         $shouldSendCopy2Submitter = $speaker_announcement_email_config->shouldSendCopy2Submitter();
@@ -104,7 +117,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
         }
 
         $payload[IMailTemplatesConstants::rejected_moderated_presentations] = [];
-        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator, false, [] , $filter) as $p){
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator, false, [], $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 

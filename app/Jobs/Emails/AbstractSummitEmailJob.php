@@ -76,6 +76,10 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::registration_link] = $summit->getRegistrationLink();
         $payload[IMailTemplatesConstants::virtual_event_site_link] = $summit->getVirtualSiteUrl();
 
+        if (empty($payload[IMailTemplatesConstants::support_email])){
+            $payload[IMailTemplatesConstants::support_email] = $summit->getSupportEmail();
+        }
+
         $payload = array_merge($payload, self::getMarketingVariables($summit));
         parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
     }
@@ -148,7 +152,7 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::summit_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
-
+        $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
         return $payload;
     }
 }

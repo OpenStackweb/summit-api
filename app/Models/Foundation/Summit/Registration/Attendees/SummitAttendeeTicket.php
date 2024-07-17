@@ -1260,6 +1260,10 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     {
         if ($member->isAdmin()) return true;
         if ($member->isOnGroup(IGroup::BadgePrinters)) return true;
+        if($this->hasOrder()) {
+            $summit = $this->getOrder()->getSummit();
+            if ($summit->isSummitAdmin($member)) return true;
+        }
         // i am ticket owner
         if ($this->hasOwner() && $this->owner->getEmail() == $member->getEmail()) return true;
         // i am order owner

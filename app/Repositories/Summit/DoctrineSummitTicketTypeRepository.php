@@ -16,6 +16,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitTicketType;
+use models\utils\SilverstripeBaseModel;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -39,10 +40,16 @@ final class DoctrineSummitTicketTypeRepository
     protected function getFilterMappings()
     {
         return [
-            'name'        => 'tt.name:json_string',
-            'description' => 'tt.description:json_string',
-            'external_id' => 'tt.external_id:json_string',
-            'audience'    => 'tt.audience:json_string',
+            'id' => 'e.id',
+            'badge_type_id' => 'bt.id',
+            'name'        => 'e.name:json_string',
+            'description' => 'e.description:json_string',
+            'external_id' => 'e.external_id:json_string',
+            'audience'    => 'e.audience:json_string',
+            'sales_start_date' => 'e.sales_start_date:datetime_epoch',
+            'sales_end_date' => 'e.sales_end_date:datetime_epoch',
+            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
         ];
     }
 
@@ -52,10 +59,11 @@ final class DoctrineSummitTicketTypeRepository
     protected function getOrderMappings()
     {
         return [
-            'name'        => 'tt.name',
-            'id'          => 'tt.id',
-            'external_id' => 'tt.external_id',
-            'audience'    => 'tt.audience',
+            'created'     => 'e.created',
+            'name'        => 'e.name',
+            'id'          => 'e.id',
+            'external_id' => 'e.external_id',
+            'audience'    => 'e.audience',
         ];
     }
 
@@ -76,9 +84,10 @@ final class DoctrineSummitTicketTypeRepository
     {
         $query  =   $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("tt")
-            ->from(SummitTicketType::class, "tt")
-            ->leftJoin('tt.summit', 's')
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin('e.summit', 's')
+            ->leftJoin('e.badge_type', 'bt')
             ->where("s.id = :summit_id");
 
         $query->setParameter("summit_id", $summit->getId());
@@ -91,7 +100,7 @@ final class DoctrineSummitTicketTypeRepository
             $order->apply2Query($query, $this->getOrderMappings());
         } else {
             //default order
-            $query = $query->addOrderBy("tt.id",'ASC');
+            $query = $query->addOrderBy("e.id",'ASC');
         }
 
         $query = $query
@@ -125,7 +134,7 @@ final class DoctrineSummitTicketTypeRepository
         $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
-            ->from(SummitTicketType::class, "e")
+            ->from($this->getBaseEntity(), "e")
             ->leftJoin('e.summit', 's')
             ->where("s.id = :summit_id")
             ->andWhere("e.id in (:ticket_ids)");
@@ -148,7 +157,7 @@ final class DoctrineSummitTicketTypeRepository
         $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
-            ->from(SummitTicketType::class, "e")
+            ->from($this->getBaseEntity(), "e")
             ->leftJoin('e.summit', 's')
             ->where("s.id = :summit_id")
             ->andWhere("e.name = :type");

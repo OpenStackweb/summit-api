@@ -15,7 +15,6 @@ use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTicketTypeService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -24,7 +23,6 @@ use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
-use utils\FilterParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
 
@@ -84,23 +82,36 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->_getAll(
             function () {
                 return [
+                    'id' => [ '=='],
+                    'badge_type_id' => ['=='],
                     'name' => ['=@', '@@', '=='],
                     'description' => ['=@', '@@', '=='],
                     'external_id' => ['=@', '@@', '=='],
                     'audience' => ['=@', '@@', '=='],
+                    'sales_start_date'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'created'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
                 ];
             },
             function () {
                 return [
+                    'id' =>'sometimes|integer',
+                    'badge_type_id' =>'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
                     'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
+                    'sales_start_date' => 'sometimes|required|date_format:U',
+                    'sales_end_date' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U',
+                    'last_edited' => 'sometimes|required|date_format:U',
                 ];
             },
             function () {
                 return [
                     'id',
+                    'created',
                     'name',
                     'external_id',
                     'audience'
@@ -141,23 +152,36 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->_getAllCSV(
             function () {
                 return [
+                    'id' => [ '=='],
+                    'badge_type_id' => ['=='],
                     'name' => ['=@', '@@', '=='],
                     'description' => ['=@', '@@', '=='],
                     'external_id' => ['=@', '@@', '=='],
                     'audience' => ['=@', '@@', '=='],
+                    'sales_start_date'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'created'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
                 ];
             },
             function () {
                 return [
+                    'id' =>'sometimes|integer',
+                    'badge_type_id' =>'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
                     'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
+                    'sales_start_date' => 'sometimes|required|date_format:U',
+                    'sales_end_date' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U',
+                    'last_edited' => 'sometimes|required|date_format:U',
                 ];
             },
             function () {
                 return [
                     'id',
+                    'created',
                     'name',
                     'external_id',
                     'audience'
@@ -203,23 +227,36 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->_getAll(
             function () {
                 return [
+                    'id' => [ '=='],
+                    'badge_type_id' => ['=='],
                     'name' => ['=@', '@@', '=='],
                     'description' => ['=@', '@@', '=='],
                     'external_id' => ['=@', '@@', '=='],
                     'audience' => ['=@', '@@', '=='],
+                    'sales_start_date'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'created'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
                 ];
             },
             function () {
                 return [
+                    'id' =>'sometimes|integer',
+                    'badge_type_id' =>'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
                     'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
+                    'sales_start_date' => 'sometimes|required|date_format:U',
+                    'sales_end_date' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U',
+                    'last_edited' => 'sometimes|required|date_format:U',
                 ];
             },
             function () {
                 return [
                     'id',
+                    'created',
                     'name',
                     'external_id',
                     'audience'

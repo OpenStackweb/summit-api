@@ -20,7 +20,6 @@ use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
-use Illuminate\Routing\ResourceRegistrar;
 use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
@@ -663,13 +662,14 @@ final class OAuth2SummitOrdersApiController
             $current_user = $this->resource_server_context->getCurrentUser();
             if (is_null($current_user))
                 return $this->error403();
+
             $ticket = $this->ticket_repository->getById(intval($ticket_id));
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
 
             if (!$ticket->canEditTicket($current_user)) {
-                return $this->error403();
+                return $this->error403("User can edit ticket.");
             }
 
             $payload = $this->getJsonPayload(['message' => 'sometimes|string|max:1024'], true);

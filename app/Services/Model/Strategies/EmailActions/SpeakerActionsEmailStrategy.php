@@ -96,36 +96,40 @@ final class SpeakerActionsEmailStrategy
             $accepted_count =
                 $speaker->getAcceptedPresentationsCount(
                     $this->summit,
-                    PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations(),
+                    PresentationSpeaker::RoleModerator, false,
+                    [],
                     $filter
                 ) +
                 $speaker->getAcceptedPresentationsCount(
-                    $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations(), $filter
+                    $this->summit, PresentationSpeaker::RoleSpeaker, false,
+                    [],
+                    $filter
                 );
 
             $alternate_count =
                 $speaker->getAlternatePresentationsCount(
-                    $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForAlternatePresentations(),
+                    $this->summit, PresentationSpeaker::RoleModerator, false,
+                    [],
+                    false,
                     $filter
                 ) +
                 $speaker->getAlternatePresentationsCount(
-                    $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForAlternatePresentations(),
+                    $this->summit, PresentationSpeaker::RoleSpeaker,
+                    false,
+                    [],
+                    false,
                     $filter
                 );
 
             $rejected_count =
                 $speaker->getRejectedPresentationsCount(
-                    $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForRejectedPresentations(),
+                    $this->summit, PresentationSpeaker::RoleModerator, false,
+                    [],
                     $filter
                 ) +
                 $speaker->getRejectedPresentationsCount(
-                    $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForRejectedPresentations(),
+                    $this->summit, PresentationSpeaker::RoleSpeaker, false,
+                    [],
                     $filter
                 );
 

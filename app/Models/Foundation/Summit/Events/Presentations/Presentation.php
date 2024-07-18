@@ -2192,6 +2192,9 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             // then we need to clear up all selections ( individual / team)
             $this->selected_presentations->clear();
         }
+        if($this->hasSelectionPlan() && !$this->selection_plan->hasTrack($category)){
+            $this->clearSelectionPlan();
+        }
         return parent::setCategory($category);
     }
 

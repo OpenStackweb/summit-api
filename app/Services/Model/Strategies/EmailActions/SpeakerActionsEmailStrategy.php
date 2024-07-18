@@ -93,37 +93,37 @@ final class SpeakerActionsEmailStrategy
                 )
             );
 
-            $has_accepted_presentations =
-                $speaker->hasAcceptedPresentations(
+            $accepted_count =
+                $speaker->getAcceptedPresentationsCount(
                     $this->summit,
                     PresentationSpeaker::RoleModerator, true,
                     $this->summit->getExcludedCategoriesForAcceptedPresentations(),
                     $filter
-                ) ||
-                $speaker->hasAcceptedPresentations(
+                ) +
+                $speaker->getAcceptedPresentationsCount(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
                     $this->summit->getExcludedCategoriesForAcceptedPresentations(), $filter
                 );
 
-            $has_alternate_presentations =
-                $speaker->hasAlternatePresentations(
+            $alternate_count =
+                $speaker->getAlternatePresentationsCount(
                     $this->summit, PresentationSpeaker::RoleModerator, true,
                     $this->summit->getExcludedCategoriesForAlternatePresentations(),
                     $filter
-                ) ||
-                $speaker->hasAlternatePresentations(
+                ) +
+                $speaker->getAlternatePresentationsCount(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
                     $this->summit->getExcludedCategoriesForAlternatePresentations(),
                     $filter
                 );
 
-            $has_rejected_presentations =
-                $speaker->hasRejectedPresentations(
+            $rejected_count =
+                $speaker->getRejectedPresentationsCount(
                     $this->summit, PresentationSpeaker::RoleModerator, true,
                     $this->summit->getExcludedCategoriesForRejectedPresentations(),
                     $filter
-                ) ||
-                $speaker->hasRejectedPresentations(
+                ) +
+                $speaker->getRejectedPresentationsCount(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
                     $this->summit->getExcludedCategoriesForRejectedPresentations(),
                     $filter
@@ -136,11 +136,11 @@ final class SpeakerActionsEmailStrategy
             (
                 sprintf
                 (
-                    "SpeakerActionsEmailStrategy::send speaker %s accepted %b alternates %b rejected %b has_promo_code %b has_summit_assistance %b.",
+                    "SpeakerActionsEmailStrategy::send speaker %s accepted %s alternates %s rejected %s has_promo_code %b has_summit_assistance %b.",
                     $speaker->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations,
+                    $accepted_count,
+                    $alternate_count,
+                    $rejected_count,
                     $has_promo_code,
                     $has_assistance
                 )
@@ -150,12 +150,12 @@ final class SpeakerActionsEmailStrategy
                 $onInfo(
                     sprintf
                     (
-                        "Trying to send email %s to speaker %s accepted %b alternate %b rejected %b.",
+                        "Trying to send email %s to speaker %s accepted %s alternate %s rejected %s.",
                         $this->flow_event,
                         $speaker->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations
+                        $accepted_count,
+                        $alternate_count,
+                        $rejected_count,
                     )
                 );
 
@@ -199,11 +199,11 @@ final class SpeakerActionsEmailStrategy
                         (
                             sprintf
                             (
-                                "Speaker %s accepted %b alternate %b rejected %b already has an email of type %s.",
+                                "Speaker %s accepted %s alternate %s rejected %s already has an email of type %s.",
                                 $speaker->getEmail(),
-                                $has_accepted_presentations,
-                                $has_alternate_presentations,
-                                $has_rejected_presentations,
+                                $accepted_count,
+                                $alternate_count,
+                                $rejected_count,
                                 $this->flow_event
                             )
                         );
@@ -251,11 +251,11 @@ final class SpeakerActionsEmailStrategy
                 (
                     sprintf
                     (
-                        "Excluded speaker %s accepted %b alternate %b rejected %b for original email %s.",
+                        "Excluded speaker %s accepted %s alternate %s rejected %s for original email %s.",
                         $speaker->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations,
+                        $accepted_count,
+                        $alternate_count,
+                        $rejected_count,
                         $this->flow_event
                     )
                 );

@@ -740,9 +740,27 @@ class PresentationSpeaker extends SilverstripeBaseModel
         bool    $exclude_privates_tracks = true,
         array   $excluded_tracks = [],
         ?Filter $filter = null
-    )
+    ):bool
     {
         return count($this->getAcceptedPresentations($summit, $role, $exclude_privates_tracks, $excluded_tracks, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $role
+     * @param bool $exclude_privates_tracks
+     * @param array $excluded_tracks
+     * @param Filter|null $filter
+     * @return int
+     */
+    public function getAcceptedPresentationsCount(
+        Summit  $summit,
+        string  $role = PresentationSpeaker::RoleSpeaker,
+        bool    $exclude_privates_tracks = true,
+        array   $excluded_tracks = [],
+        ?Filter $filter = null
+    ):int{
+        return count($this->getAcceptedPresentations($summit, $role, $exclude_privates_tracks, $excluded_tracks, $filter));
     }
 
     /**
@@ -969,9 +987,31 @@ class PresentationSpeaker extends SilverstripeBaseModel
         array $excluded_tracks = [],
         $published_ones = false,
         ?Filter $filter = null
-    )
+    ):bool
     {
         return count($this->getAlternatePresentations($summit, $role, $include_sub_roles, $excluded_tracks, $published_ones, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $role
+     * @param false $include_sub_roles
+     * @param array $excluded_tracks
+     * @param false $published_ones
+     * @param Filter|null $filter
+     * @return int
+     */
+    public function getAlternatePresentationsCount
+    (
+        Summit $summit,
+               $role                  = PresentationSpeaker::RoleSpeaker,
+               $include_sub_roles     = false,
+        array $excluded_tracks = [],
+               $published_ones = false,
+        ?Filter $filter = null
+    ):int
+    {
+        return count($this->getAlternatePresentations($summit, $role, $include_sub_roles, $excluded_tracks, $published_ones, $filter));
     }
 
     /**
@@ -1168,9 +1208,29 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $include_sub_roles = false,
         array $excluded_tracks = [],
         ?Filter $filter = null
-    )
+    ):bool
     {
         return count($this->getRejectedPresentations($summit, $role, $include_sub_roles, $excluded_tracks, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $role
+     * @param bool $include_sub_roles
+     * @param array $excluded_tracks
+     * @param Filter $filter
+     * @return int
+     */
+    public function getRejectedPresentationsCount
+    (
+        Summit $summit,
+               $role = PresentationSpeaker::RoleSpeaker,
+               $include_sub_roles = false,
+        array $excluded_tracks = [],
+        ?Filter $filter = null
+    ):int
+    {
+        return count($this->getRejectedPresentations($summit, $role, $include_sub_roles, $excluded_tracks, $filter));
     }
 
     /**

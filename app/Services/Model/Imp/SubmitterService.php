@@ -97,7 +97,7 @@ final class SubmitterService
                 $onDispatchSuccess,
                 $onDispatchError,
                 $onDispatchInfo
-            ) {
+            ) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use (
                         $flow_event,
@@ -107,7 +107,8 @@ final class SubmitterService
                         $test_email_recipient,
                         $onDispatchSuccess,
                         $onDispatchError,
-                        $onDispatchInfo
+                        $onDispatchInfo,
+                        $payload
                     ) {
                         $email_strategy = new SubmitterActionsEmailStrategy($summit, $flow_event);
 

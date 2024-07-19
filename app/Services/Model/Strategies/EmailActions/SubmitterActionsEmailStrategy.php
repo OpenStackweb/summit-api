@@ -72,23 +72,31 @@ final class SubmitterActionsEmailStrategy
         try {
             $type = null;
 
-            Log::debug("SubmitterActionsEmailStrategy::send processing submitter {$submitter->getEmail()} - original flow event {$this->flow_event}");
+            Log::debug
+            (
+                sprintf(
+                    "SubmitterActionsEmailStrategy::send processing submitter %s original flow event %s filter %s",
+                    $submitter->getEmail(),
+                    $this->flow_event,
+                    is_null($filter) ? "NOT SET" : $filter->__toString()
+                )
+            );
 
-            $has_accepted_presentations = $submitter->hasAcceptedPresentations($this->summit, $filter);
+            $accepted_presentations_count = $submitter->getAcceptedPresentationsCount($this->summit, $filter);
 
-            $has_alternate_presentations = $submitter->hasAlternatePresentations($this->summit, $filter);
+            $alternate_presentations_count = $submitter->getAlternatePresentationsCount($this->summit, $filter);
 
-            $has_rejected_presentations = $submitter->hasRejectedPresentations($this->summit, $filter);
+            $rejected_presentations_count = $submitter->getRejectedPresentationsCount($this->summit, $filter);
 
             Log::debug
             (
                 sprintf
                 (
-                    "SubmitterActionsEmailStrategy::send submitter %s accepted %b alternates %b rejected %b.",
+                    "SubmitterActionsEmailStrategy::send submitter %s accepted %s alternates %s rejected %s.",
                     $submitter->getEmail(),
-                    $has_accepted_presentations,
-                    $has_alternate_presentations,
-                    $has_rejected_presentations
+                    $accepted_presentations_count,
+                    $alternate_presentations_count,
+                    $rejected_presentations_count
                 )
             );
 
@@ -96,12 +104,12 @@ final class SubmitterActionsEmailStrategy
                 $onInfo(
                     sprintf
                     (
-                        "Trying to send email %s to submitter %s accepted %b alternate %b rejected %b.",
+                        "Trying to send email %s to submitter %s accepted %s alternate %s rejected %s.",
                         $this->flow_event,
                         $submitter->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations
+                        $accepted_presentations_count,
+                        $alternate_presentations_count,
+                        $rejected_presentations_count
                     )
                 );
 
@@ -133,11 +141,11 @@ final class SubmitterActionsEmailStrategy
                     $onInfo(
                         sprintf
                         (
-                            "Submitter %s accepted %b alternate %b rejected %b already has an email of type %s.",
+                            "Submitter %s accepted %s alternate %s rejected %s already has an email of type %s.",
                             $submitter->getEmail(),
-                            $has_accepted_presentations,
-                            $has_alternate_presentations,
-                            $has_rejected_presentations,
+                            $accepted_presentations_count,
+                            $alternate_presentations_count,
+                            $rejected_presentations_count,
                             $this->flow_event
                         )
                     );
@@ -158,11 +166,11 @@ final class SubmitterActionsEmailStrategy
                 $onInfo(
                     sprintf
                     (
-                        "Excluded submitter %s accepted %b alternate %b rejected %b for original email %s.",
+                        "Excluded submitter %s accepted %b alternate %s rejected %s for original email %s.",
                         $submitter->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations,
+                        $accepted_presentations_count,
+                        $alternate_presentations_count,
+                        $rejected_presentations_count,
                         $this->flow_event
                     )
                 );

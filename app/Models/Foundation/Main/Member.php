@@ -2656,16 +2656,26 @@ SQL;
             {
                 $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
             }
+            if($filter->hasFilter("is_speaker")){
+                $value = to_boolean($filter->getValue("is_speaker")[0]);
+                if($value)
+                    $extraWhere .= " AND spk.member = :member_id";
+                else
+                    $extraWhere .= " AND spk.member <> :member_id";
+            }
         }
-        $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
-            JOIN p.summit s
-            JOIN p.created_by cb
-            LEFT JOIN p.selection_plan sel_p
-            LEFT JOIN p.materials m
-            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
+        $query = $this->createQuery(sprintf("
+            SELECT p from models\summit\Presentation p 
+            JOIN p.summit s 
+            LEFT JOIN p.speakers a_spk 
+            LEFT JOIN a_spk.speaker spk 
+            JOIN p.created_by cb 
+            LEFT JOIN p.selection_plan sel_p  
+            LEFT JOIN p.materials m 
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id 
             LEFT JOIN pmu.media_upload_type mut
             JOIN p.type t
-            JOIN p.category cat
+            JOIN p.category cat 
             LEFT JOIN p.selected_presentations ssp 
             LEFT JOIN ssp.list sspl 
             WHERE s.id = :summit_id 
@@ -2713,7 +2723,21 @@ SQL;
                 $v = $filter->getValue("has_not_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
+            if($filter->hasFilter("is_speaker")){
+               $query->setParameter("member_id", $this->id);
+            }
         }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Member::getAcceptedPresentations id %s query %s",
+                $this->id,
+                $query->getDQL()
+            )
+        );
+
         return $query->getResult();
     }
 
@@ -2745,10 +2769,25 @@ SQL;
     (
         Summit  $summit,
         ?Filter $filter = null
-    )
+    ):bool
     {
         return count($this->getAcceptedPresentations($summit, $filter)) > 0;
     }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     */
+    public function getAcceptedPresentationsCount
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    ):int
+    {
+        return count($this->getAcceptedPresentations($summit, $filter));
+    }
+
 
     /**
      * @param Summit $summit
@@ -2759,9 +2798,24 @@ SQL;
     (
         Summit  $summit,
         ?Filter $filter = null
-    )
+    ):bool
     {
         return count($this->getAlternatePresentations($summit, $filter)) > 0;
+    }
+
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     */
+    public function getAlternatePresentationsCount
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    ):int
+    {
+        return count($this->getAlternatePresentations($summit, $filter));
     }
 
     /**
@@ -2796,19 +2850,29 @@ SQL;
             {
                 $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
             }
+            if($filter->hasFilter("is_speaker")){
+                $value = to_boolean($filter->getValue("is_speaker")[0]);
+                if($value)
+                    $extraWhere .= " AND spk.member = :member_id";
+                else
+                    $extraWhere .= " AND spk.member <> :member_id";
+            }
         }
 
-        $query = $this->createQuery("SELECT p from models\summit\Presentation p 
-            JOIN p.summit s
-            JOIN p.created_by cb
-            LEFT JOIN p.selection_plan sel_p
-            LEFT JOIN p.materials m
-            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
-            LEFT JOIN pmu.media_upload_type mut
-            JOIN p.type t
-            JOIN p.category cat
-            WHERE s.id = :summit_id 
-            AND cb.id = :submitter_id" . $extraWhere);
+        $query = $this->createQuery("
+        SELECT p from models\summit\Presentation p 
+        JOIN p.summit s 
+        LEFT JOIN p.speakers a_spk 
+        LEFT JOIN a_spk.speaker spk 
+        JOIN p.created_by cb 
+        JOIN p.selection_plan sel_p 
+        LEFT JOIN p.materials m 
+        LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id 
+        LEFT JOIN pmu.media_upload_type mut 
+        JOIN p.type t 
+        JOIN p.category cat 
+        WHERE s.id = :summit_id 
+        AND cb.id = :submitter_id" . $extraWhere);
 
         $query
             ->setParameter('summit_id', $summit->getId())
@@ -2837,9 +2901,22 @@ SQL;
                 $v = $filter->getValue("has_not_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
+            if($filter->hasFilter("is_speaker")){
+                $query->setParameter("member_id", $this->id);
+            }
         }
 
         $presentations = $query->getResult();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Member::getAlternatePresentations id %s query %s",
+                $this->id,
+                $query->getDQL()
+            )
+        );
 
         foreach ($presentations as $p) {
             if ($p->getSelectionStatus() == Presentation::SelectionStatus_Alternate) {
@@ -2878,9 +2955,23 @@ SQL;
     (
         Summit  $summit,
         ?Filter $filter = null
-    )
+    ):bool
     {
         return count($this->getRejectedPresentations($summit, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit ,
+     * @param Filter|null $filter
+     * @return int
+     */
+    public function getRejectedPresentationsCount
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    ):int
+    {
+        return count($this->getRejectedPresentations($summit, $filter));
     }
 
     /**
@@ -2915,20 +3006,29 @@ SQL;
             {
                 $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
             }
+            if($filter->hasFilter("is_speaker")){
+                $value = to_boolean($filter->getValue("is_speaker")[0]);
+                if($value)
+                    $extraWhere .= " AND spk.member = :member_id";
+                else
+                    $extraWhere .= " AND spk.member <> :member_id";
+            }
         }
 
         $query = $this->createQuery("SELECT p from models\summit\Presentation p 
-            JOIN p.summit s
-            LEFT JOIN p.selection_plan sel_p
-            LEFT JOIN p.materials m
-            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
-            LEFT JOIN pmu.media_upload_type mut
-            JOIN p.type t
-            JOIN p.category cat
+            JOIN p.summit s 
+            LEFT JOIN p.speakers a_spk 
+            LEFT JOIN a_spk.speaker spk 
+            LEFT JOIN p.materials m 
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id 
+            LEFT JOIN pmu.media_upload_type mut 
+            LEFT JOIN p.selection_plan sel_p 
+            JOIN p.type t 
+            JOIN p.category cat 
             JOIN p.created_by cb 
             WHERE s.id = :summit_id 
-            AND p.published = 0
-            AND cb.id = :submitter_id" . $extraWhere);
+            AND p.published = 0 
+            AND cb.id = :submitter_id " . $extraWhere);
 
         $query
             ->setParameter('summit_id', $summit->getId())
@@ -2957,9 +3057,22 @@ SQL;
                 $v = $filter->getValue("has_not_media_upload_with_type");
                 $query = $query->setParameter("media_upload_type_id", $v);
             }
+            if($filter->hasFilter("is_speaker")){
+                $query->setParameter("member_id", $this->id);
+            }
         }
 
         $presentations = $query->getResult();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Member::getRejectedPresentations id %s query %s",
+                $this->id,
+                $query->getDQL()
+            )
+        );
 
         foreach ($presentations as $p) {
             if ($p->getSelectionStatus() == Presentation::SelectionStatus_Unaccepted) {

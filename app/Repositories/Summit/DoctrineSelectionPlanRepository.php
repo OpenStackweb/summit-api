@@ -83,7 +83,7 @@ final class DoctrineSelectionPlanRepository
                     ),
                 ]
             ),
-            'allowed_member_email' => 'SIZE(e.allowed_members) = 0 OR am.email',
+            'allowed_member_email' => 'e.is_hidden = true OR (e.is_hidden = false AND SIZE(e.allowed_members) = 0 ) OR am.email',
             'is_enabled' => 'e.is_enabled',
             'is_hidden' => 'e.is_hidden',
         ];

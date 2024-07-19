@@ -23,6 +23,7 @@ use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISummitSelectionPlanService;
 use Illuminate\Http\Request as LaravelRequest;
 use libs\utils\HTMLCleaner;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
@@ -1670,7 +1671,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             $filter->addFilterCondition(FilterParser::buildFilter('is_enabled','==',true));
             $filter->addFilterCondition(FilterParser::buildFilter('allowed_member_email','==', $current_member->getEmail()));
 
-            $page = $this->repository->getAllByPage(new PagingInfo(1,1000), $filter);
+            $page = $this->repository->getAllByPage(new PagingInfo(1,PaginationValidationRules::PerPageMax), $filter);
 
             return $this->ok($page->toArray(
                 SerializerUtils::getExpand(),

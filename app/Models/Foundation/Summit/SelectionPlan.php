@@ -432,6 +432,10 @@ class SelectionPlan extends SilverstripeBaseModel
     public function setIsHidden(bool $is_hidden)
     {
         $this->is_hidden = $is_hidden;
+        if($this->is_hidden){
+            // clear allowed members on hidden
+            $this->allowed_members->clear();
+        }
     }
 
     /**

@@ -318,6 +318,54 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             }
         }
 
+        // permissions check
+
+        if(!$speaker->isPublicProfileShowBio())
+        {
+            unset($values['bio']);
+            unset($values['gender']);
+            unset($values['company']);
+            unset($values['state']);
+            unset($values['country']);
+            unset($values['title']);
+            unset($values['affiliations']);
+            unset($values['languages']);
+            unset($values['other_presentation_links']);
+            unset($values['areas_of_expertise']);
+            unset($values['travel_preferences']);
+            unset($values['active_involvements']);
+            unset($values['organizational_roles']);
+            unset($values['badge_features']);
+        }
+
+        if(!$speaker->isPublicProfileShowEmail())
+        {
+            unset($values['email']);
+        }
+
+        if(!$speaker->isPublicProfileShowSocialMediaInfo())
+        {
+            unset($values['irc']);
+            unset($values['twitter']);
+        }
+
+        if(!$speaker->isPublicProfileShowPhoto())
+        {
+            unset($values['pic']);
+            unset($values['big_pic']);
+        }
+
+        if(!$speaker->isPublicProfileShowFullname())
+        {
+            unset($values['first_name']);
+            unset($values['last_name']);
+        }
+
+        if(!$speaker->isPublicProfileShowTelephoneNumber())
+        {
+            unset($values['phone_number']);
+        }
+
         return $values;
     }
 }

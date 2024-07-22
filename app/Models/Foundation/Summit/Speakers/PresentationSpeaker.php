@@ -2478,4 +2478,48 @@ SQL;
     }
 
     use ScheduleEntity;
+
+    // profile data permissions
+
+    public function isPublicProfileShowPhoto(): bool
+    {
+        if(!$this->hasMember()) return false;
+
+        return $this->member->isPublicProfileShowPhoto();
+    }
+
+    public function isPublicProfileShowFullname(): bool
+    {
+        if(!$this->hasMember()) return false;
+
+        return $this->member->isPublicProfileShowFullname();
+    }
+
+    public function isPublicProfileShowEmail(): bool
+    {
+        if(!$this->hasMember()) return false;
+
+        return $this->member->isPublicProfileShowEmail();
+    }
+
+    public function isPublicProfileShowSocialMediaInfo(): bool
+    {
+        if(!$this->hasMember()) return false;
+
+        return $this->member->isPublicProfileShowSocialMediaInfo();
+    }
+
+    public function isPublicProfileShowBio(): bool
+    {
+        if(!$this->hasMember()) return false;
+
+        return $this->member->isPublicProfileShowBio();
+    }
+
+    public function isPublicProfileShowTelephoneNumber(): bool
+    {
+        if(!$this->hasMember()) return false;
+
+        return $this->member->isPublicProfileShowTelephoneNumber();
+    }
 }

@@ -25,9 +25,9 @@ class AbstractMemberSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'FirstName'       => 'first_name:json_string',
         'LastName'        => 'last_name:json_string',
+        'Bio'             => 'bio:json_string',
         'Gender'          => 'gender:json_string',
         'GitHubUser'      => 'github_user:json_string',
-        'Bio'             => 'bio:json_string',
         'LinkedInProfile' => 'linked_in:json_string',
         'IrcHandle'       => 'irc:json_string',
         'TwitterHandle'   => 'twitter:json_string',

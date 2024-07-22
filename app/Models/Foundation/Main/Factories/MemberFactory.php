@@ -12,10 +12,13 @@
  * limitations under the License.
  **/
 
-
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
 
+/**
+ * Class MemberFactory
+ * @package App\Models\Foundation\Main\Factories
+ */
 final class MemberFactory
 {
     public static function populate(Member $member, array $payload):Member{
@@ -77,6 +80,14 @@ final class MemberFactory
         $member->setIrcHandle($payload['irc'] ?? '');
         $member->setGender($payload['gender'] ?? '');
         $member->setTwitterHandle($payload['twitter_name'] ?? '');
+        // permissions
+        $member->setPublicProfileShowPhoto(to_boolean($payload['public_profile_show_photo']) ?? false);
+        $member->setPublicProfileShowFullname(to_boolean($payload['public_profile_show_fullname']) ?? false);
+        $member->setPublicProfileShowEmail(to_boolean($payload['public_profile_show_email']) ?? false);
+        $member->setPublicProfileShowTelephoneNumber(to_boolean($payload['public_profile_show_telephone_number']) ?? false);
+        $member->setPublicProfileShowBio(to_boolean($payload['public_profile_show_bio']) ?? false);
+        $member->setPublicProfileShowSocialMediaInfo(to_boolean($payload['public_profile_show_social_media_info']) ?? false);
+        $member->setPublicProfileAllowChatWithMe(to_boolean($payload['public_profile_allow_chat_with_me']) ?? false);
 
         if(isset($payload['pic']))
             $member->setExternalPic($payload['pic']);
@@ -91,7 +102,6 @@ final class MemberFactory
      * @return Member
      */
     public static function createFromExternalProfile(int $user_external_id, array $payload):Member{
-
         return self::populateFromExternalProfile(new Member(), $user_external_id, $payload);
     }
 }

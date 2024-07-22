@@ -11,12 +11,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\main\Member;
 /**
  * Class PublicMemberSerializer
  * @package ModelSerializers
  */
 final class PublicMemberSerializer extends AbstractMemberSerializer
 {
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        $member  = $this->object;
+        if(!$member instanceof Member) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
+        // permissions check
+
+        if(!$member->isPublicProfileShowBio())
+        {
+            unset($values['bio']);
+            unset($values['gender']);
+            unset($values['company']);
+            unset($values['state']);
+            unset($values['country']);
+        }
+
+        if(!$member->isPublicProfileShowSocialMediaInfo())
+        {
+            unset($values['github_user']);
+            unset($values['linked_in']);
+            unset($values['irc']);
+            unset($values['twitter']);
+        }
+
+        if(!$member->isPublicProfileShowPhoto())
+        {
+            unset($values['pic']);
+        }
+
+        if(!$member->isPublicProfileShowFullname())
+        {
+            unset($values['first_name']);
+            unset($values['last_name']);
+        }
+
+        return $values;
+    }
 }

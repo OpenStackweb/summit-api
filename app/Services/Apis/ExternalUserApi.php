@@ -185,7 +185,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
                 ]
             );
 
-            return json_decode($response->getBody()->getContents(), true);
+            $res =  json_decode($response->getBody()->getContents(), true);
+
+            Log::debug(sprintf("ExternalUserApi::getUserById id %s res %s", $id, json_encode($res)));
+
+            return $res;
         }
         catch (RequestException $ex){
             $this->cleanAccessToken();
@@ -238,7 +242,9 @@ final class ExternalUserApi extends AbstractOAuth2Api
                 ]
             );
 
-            return json_decode($response->getBody()->getContents(), true);
+            $res = json_decode($response->getBody()->getContents(), true);
+            Log::debug(sprintf("ExternalUserApi::updateUser id %s res %s", $id, json_encode($res)));
+            return $res;
         }
         catch(RequestException $ex){
             $this->cleanAccessToken();

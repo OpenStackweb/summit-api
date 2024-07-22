@@ -255,6 +255,48 @@ class Member extends SilverstripeBaseModel
     private $external_pic;
 
     /**
+     * @ORM\Column(name="PublicProfileShowPhoto", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_show_photo;
+
+    /**
+     * @ORM\Column(name="PublicProfileShowFullName", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_show_fullname;
+
+    /**
+     * @ORM\Column(name="PublicProfileShowEmail", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_show_email;
+
+    /**
+     * @ORM\Column(name="PublicProfileAllowChatWithMe", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_allow_chat_with_me;
+
+    /**
+     * @ORM\Column(name="PublicProfileShowSocialMediaInfo", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_show_social_media_info;
+
+    /**
+     * @ORM\Column(name="PublicProfileShowBio", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_show_bio;
+
+    /**
+     * @ORM\Column(name="PublicProfileShowTelephoneNumber", options={"default":0}, type="boolean")
+     * @var bool
+     */
+    private $public_profile_show_telephone_number;
+
+    /**
      * @ORM\OneToMany(targetEntity="SummitMemberSchedule", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMemberSchedule[]
      */
@@ -422,6 +464,15 @@ class Member extends SilverstripeBaseModel
         $this->subscribed_to_newsletter = false;
         $this->display_on_site = false;
         $this->created_presentations = new ArrayCollection();
+
+        // user profile settings
+        $this->public_profile_show_photo = false;
+        $this->public_profile_show_email = false;
+        $this->public_profile_show_fullname = true;
+        $this->public_profile_allow_chat_with_me = false;
+        $this->public_profile_show_social_media_info = false;
+        $this->public_profile_show_bio = true;
+        $this->public_profile_show_telephone_number = false;
     }
 
     /**
@@ -3124,4 +3175,75 @@ SQL;
             return true;
         return false;
     }
+
+    public function isPublicProfileShowPhoto(): bool
+    {
+        return $this->public_profile_show_photo;
+    }
+
+    public function setPublicProfileShowPhoto(bool $public_profile_show_photo): void
+    {
+        $this->public_profile_show_photo = $public_profile_show_photo;
+    }
+
+    public function isPublicProfileShowFullname(): bool
+    {
+        return $this->public_profile_show_fullname;
+    }
+
+    public function setPublicProfileShowFullname(bool $public_profile_show_fullname): void
+    {
+        $this->public_profile_show_fullname = $public_profile_show_fullname;
+    }
+
+    public function isPublicProfileShowEmail(): bool
+    {
+        return $this->public_profile_show_email;
+    }
+
+    public function setPublicProfileShowEmail(bool $public_profile_show_email): void
+    {
+        $this->public_profile_show_email = $public_profile_show_email;
+    }
+
+    public function isPublicProfileAllowChatWithMe(): bool
+    {
+        return $this->public_profile_allow_chat_with_me;
+    }
+
+    public function setPublicProfileAllowChatWithMe(bool $public_profile_allow_chat_with_me): void
+    {
+        $this->public_profile_allow_chat_with_me = $public_profile_allow_chat_with_me;
+    }
+
+    public function isPublicProfileShowSocialMediaInfo(): bool
+    {
+        return $this->public_profile_show_social_media_info;
+    }
+
+    public function setPublicProfileShowSocialMediaInfo(bool $public_profile_show_social_media_info): void
+    {
+        $this->public_profile_show_social_media_info = $public_profile_show_social_media_info;
+    }
+
+    public function isPublicProfileShowBio(): bool
+    {
+        return $this->public_profile_show_bio;
+    }
+
+    public function setPublicProfileShowBio(bool $public_profile_show_bio): void
+    {
+        $this->public_profile_show_bio = $public_profile_show_bio;
+    }
+
+    public function isPublicProfileShowTelephoneNumber(): bool
+    {
+        return $this->public_profile_show_telephone_number;
+    }
+
+    public function setPublicProfileShowTelephoneNumber(bool $public_profile_show_telephone_number): void
+    {
+        $this->public_profile_show_telephone_number = $public_profile_show_telephone_number;
+    }
+
 }

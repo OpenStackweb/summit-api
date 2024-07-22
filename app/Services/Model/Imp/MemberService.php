@@ -352,7 +352,6 @@ final class MemberService
             $is_new = false;
             if(is_null($member)) {
                 Log::debug(sprintf("MemberService::registerExternalUserById %s does not exists , creating it ...", $email));
-
                 $member = MemberFactory::createFromExternalProfile($user_external_id, $user_data);
                 $this->member_repository->add($member, true);
                 $is_new = true;

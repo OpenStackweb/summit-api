@@ -259,16 +259,19 @@ final class OAuth2SummitOrdersApiController
         return $this->_getAll(
             function () {
                 return [
-                    'number' => ['=@', '=='],
-                    'owner_name' => ['=@', '=='],
-                    'owner_email' => ['=@', '=='],
-                    'owner_company' => ['=@', '=='],
-                    'ticket_owner_name' => ['=@', '=='],
-                    'ticket_owner_email' => ['=@', '=='],
-                    'ticket_number' => ['=@', '=='],
+                    'number' => ['=@', '==','@@'],
+                    'owner_name' => ['=@', '==','@@'],
+                    'owner_email' => ['=@', '==','@@'],
+                    'owner_company' => ['=@', '==','@@'],
+                    'ticket_owner_name' => ['=@', '==','@@'],
+                    'ticket_owner_email' => ['=@', '==','@@'],
+                    'ticket_number' => ['=@', '==','@@'],
                     'summit_id' => ['=='],
                     'owner_id' => ['=='],
                     'status' => ['==', '<>'],
+                    'created' => ['>', '<', '<=', '>=', '==','[]'],
+                    'amount' => ['==', '<>', '>=', '>'],
+                    'payment_method' => ['==']
                 ];
             },
             function () {
@@ -283,7 +286,9 @@ final class OAuth2SummitOrdersApiController
                     'ticket_number' => 'sometimes|string',
                     'summit_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|integer',
-
+                    'created' => 'sometimes|required|date_format:U',
+                    'amount' => 'sometimes|numeric',
+                    'payment_method' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidPaymentMethods)),
                 ];
             },
             function () {
@@ -295,6 +300,8 @@ final class OAuth2SummitOrdersApiController
                     'owner_email',
                     'owner_company',
                     'created',
+                    'amount',
+                    'payment_method',
                 ];
             },
             function ($filter) use ($summit) {
@@ -321,16 +328,19 @@ final class OAuth2SummitOrdersApiController
         return $this->_getAllCSV(
             function () {
                 return [
-                    'number' => ['=@', '=='],
-                    'owner_name' => ['=@', '=='],
-                    'owner_email' => ['=@', '=='],
-                    'owner_company' => ['=@', '=='],
+                    'number' => ['=@', '==','@@'],
+                    'owner_name' => ['=@', '==','@@'],
+                    'owner_email' => ['=@', '==','@@'],
+                    'owner_company' => ['=@', '==','@@'],
+                    'ticket_owner_name' => ['=@', '==','@@'],
+                    'ticket_owner_email' => ['=@', '==','@@'],
+                    'ticket_number' => ['=@', '==','@@'],
                     'summit_id' => ['=='],
                     'owner_id' => ['=='],
-                    'status' => ['=='],
-                    'ticket_owner_name' => ['=@', '=='],
-                    'ticket_owner_email' => ['=@', '=='],
-                    'ticket_number' => ['=@', '=='],
+                    'status' => ['==', '<>'],
+                    'created' => ['>', '<', '<=', '>=', '==','[]'],
+                    'amount' => ['==', '<>', '>=', '>'],
+                    'payment_method' => ['==']
                 ];
             },
             function () {
@@ -340,12 +350,14 @@ final class OAuth2SummitOrdersApiController
                     'owner_name' => 'sometimes|string',
                     'owner_email' => 'sometimes|string',
                     'owner_company' => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'owner_id' => 'sometimes|integer',
                     'ticket_owner_name' => 'sometimes|string',
                     'ticket_owner_email' => 'sometimes|string',
                     'ticket_number' => 'sometimes|string',
-
+                    'summit_id' => 'sometimes|integer',
+                    'owner_id' => 'sometimes|integer',
+                    'created' => 'sometimes|required|date_format:U',
+                    'amount' => 'sometimes|numeric',
+                    'payment_method' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidPaymentMethods)),
                 ];
             },
             function () {
@@ -357,6 +369,8 @@ final class OAuth2SummitOrdersApiController
                     'owner_email',
                     'owner_company',
                     'created',
+                    'amount',
+                    'payment_method',
                 ];
             },
             function ($filter) use ($summit) {

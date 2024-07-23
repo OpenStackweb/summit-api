@@ -49,6 +49,10 @@ final class DoctrineSummitOrderRepository
             'ticket_owner_name'  => "COALESCE(LOWER(CONCAT(to.first_name, ' ', to.surname)), LOWER(CONCAT(tom.first_name, ' ', tom.last_name)))",
             'ticket_owner_email' => "COALESCE(LOWER(to.email), LOWER(tom.email))",
             'ticket_number'      =>  new DoctrineFilterMapping("t.number :operator :value"),
+            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'amount'            => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
+            'payment_method'    => 'e.payment_method:json_string',
         ];
     }
 
@@ -88,7 +92,8 @@ SQL,
             'owner_company' => <<<SQL
 COALESCE(LOWER(e.owner_company_name), LOWER(oc.name))
 SQL,
-
+            'amount'   => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
+            'payment_method' => 'e.payment_method'
         ];
     }
 

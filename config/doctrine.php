@@ -185,6 +185,7 @@ return [
         'TIMESTAMPDIFF'     => DoctrineExtensions\Query\Mysql\TimestampDiff::class,
         'UTC_TIMESTAMP'     => DoctrineExtensions\Query\Mysql\UtcTimestamp::class,
         'REVIEW_STATUS'     => \App\Utils\CustomDBFunctions\ReviewStatus::class,
+        'SUMMIT_ORDER_FINAL_AMOUNT' => \App\Utils\CustomDBFunctions\SummitOrderFinalAmount::class,
     ],
     /*
     |--------------------------------------------------------------------------

@@ -185,6 +185,17 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'badge_prints_count' => 'SIZE(prt) :operator :value',
+            'exclude_is_printable_free_unassigned' =>    new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        sprintf("NOT ( ( e.is_active = 1 AND al.name = '%s') AND a is null AND ( (e.raw_cost - e.discount) = 0 ) )", SummitAccessLevelType::IN_PERSON),
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        " "
+                    ),
+                ]
+            ),
         ];
     }
 

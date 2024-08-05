@@ -415,6 +415,7 @@ final class OAuth2SummitOrdersApiController
                     'summit_id' => ['=='],
                     'status' => ['==', '<>'],
                     'owner_id' => ['=='],
+                    'created' => ['>', '<', '<=', '>=', '==','[]'],
                 ];
             },
             function () {
@@ -423,6 +424,7 @@ final class OAuth2SummitOrdersApiController
                     'number' => 'sometimes|string',
                     'summit_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|integer',
+                    'created' => 'sometimes|required|date_format:U',
                 ];
             },
             function () {

@@ -57,14 +57,14 @@ final class SummitLocationBannerValidationRulesFactory
             break;
             case ScheduledSummitLocationBanner::ClassName: {
                 $extended_rules = [
-                    'start_date'  => 'required|date_format:U',
-                    'end_date'    => 'required_with:start_date|date_format:U|after:start_date',
+                    'start_date'  => 'required|date_format:U|epoch_seconds',
+                    'end_date'    => 'required_with:start_date|date_format:U|epoch_seconds|after:start_date',
                 ];
 
                 if($update){
                     $extended_rules = [
-                    'start_date'  => 'sometimes|date_format:U',
-                    'end_date'    => 'required_with:start_date|date_format:U|after:start_date',
+                    'start_date'  => 'sometimes|date_format:U|epoch_seconds',
+                    'end_date'    => 'required_with:start_date|date_format:U|epoch_seconds|after:start_date',
                     ];
                 }
 

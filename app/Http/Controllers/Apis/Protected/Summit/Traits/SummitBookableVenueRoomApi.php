@@ -90,7 +90,7 @@ trait SummitBookableVenueRoomApi
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'capacity' => 'sometimes|integer',
-                    'availability_day' => 'sometimes|date_format:U',
+                    'availability_day' => 'sometimes|date_format:U|epoch_seconds',
                     'attribute' => 'sometimes|string',
                 ];
             },
@@ -161,8 +161,8 @@ trait SummitBookableVenueRoomApi
                     'summit_id' => 'sometimes|integer',
                     'room_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|string',
-                    'start_datetime' => 'sometimes|required|date_format:U',
-                    'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
+                    'start_datetime' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|epoch_seconds|after:start_datetime',
                 ];
             },
             function () {
@@ -233,8 +233,8 @@ trait SummitBookableVenueRoomApi
                     'summit_id' => 'sometimes|integer',
                     'room_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|string',
-                    'start_datetime' => 'sometimes|required|date_format:U',
-                    'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
+                    'start_datetime' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'end_datetime' => 'sometimes|required_with:start_datetime|date_format:U|epoch_seconds|after:start_datetime',
                 ];
             },
             function () {

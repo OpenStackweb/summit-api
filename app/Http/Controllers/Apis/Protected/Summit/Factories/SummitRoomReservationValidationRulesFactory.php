@@ -28,8 +28,8 @@ final class SummitRoomReservationValidationRulesFactory extends AbstractValidati
         return [
             'currency'       => 'required|string|currency_iso',
             'amount'         => 'required|integer|min:0',
-            'start_datetime' => 'required|date_format:U',
-            'end_datetime'   => 'required|date_format:U|after:start_datetime',
+            'start_datetime' => 'required|date_format:U|epoch_seconds',
+            'end_datetime'   => 'required|date_format:U|epoch_seconds|after:start_datetime',
         ];
     }
 
@@ -43,16 +43,16 @@ final class SummitRoomReservationValidationRulesFactory extends AbstractValidati
             'currency'       => 'required|string|currency_iso',
             'owner_id'       => 'required|integer',
             'amount'         => 'required|integer|min:0',
-            'start_datetime' => 'required|date_format:U',
-            'end_datetime'   => 'required|date_format:U|after:start_datetime',
+            'start_datetime' => 'required|date_format:U|epoch_seconds',
+            'end_datetime'   => 'required|date_format:U|epoch_seconds|after:start_datetime',
         ];
     }
 
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'start_datetime' => 'sometimes|date_format:U',
-            'end_datetime'   => 'sometimes|date_format:U|after:start_datetime',
+            'start_datetime' => 'sometimes|date_format:U|epoch_seconds',
+            'end_datetime'   => 'sometimes|date_format:U|epoch_seconds|after:start_datetime',
         ];
     }
 }

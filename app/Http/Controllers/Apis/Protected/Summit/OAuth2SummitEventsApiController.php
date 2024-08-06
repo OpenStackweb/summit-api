@@ -735,9 +735,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $rules = [
                 'location_id' => 'sometimes|required|integer',
-                'start_date' => 'sometimes|required|date_format:U',
+                'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
                 'duration' => 'sometimes|integer|min:0',
-                'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
             ];
 
             // Creates a Validator instance and validates the data.

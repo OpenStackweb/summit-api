@@ -408,8 +408,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'title' => 'sometimes|string',
-                    'start_date' => 'sometimes|date_format:U',
-                    'end_date' => 'sometimes|date_format:U',
+                    'start_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'end_date' => 'sometimes|date_format:U|epoch_seconds',
                     'speaker' => 'sometimes|string',
                     'tags' =>'sometimes|string',
                     'event_type_id' =>  'sometimes|integer',
@@ -1152,8 +1152,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'content' => 'sometimes|string',
                     'type' => sprintf('sometimes|in:%s', implode(',', SummitLocationBannerConstants::$valid_types)),
                     'enabled' => 'sometimes|boolean',
-                    'start_date' => 'sometimes|date_format:U',
-                    'end_date' => 'sometimes|date_format:U',
+                    'start_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'end_date' => 'sometimes|date_format:U|epoch_seconds',
                 ];
             },
             function(){

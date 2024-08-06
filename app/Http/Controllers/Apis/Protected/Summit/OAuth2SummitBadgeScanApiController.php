@@ -90,7 +90,7 @@ final class OAuth2SummitBadgeScanApiController
     {
         return [
             'qr_code'   => 'required|string',
-            'scan_date' => 'required|date_format:U',
+            'scan_date' => 'required|date_format:U|epoch_seconds',
             'notes' => 'sometimes|string|max:1024',
             'extra_questions' => 'sometimes|extra_question_dto_array',
         ];

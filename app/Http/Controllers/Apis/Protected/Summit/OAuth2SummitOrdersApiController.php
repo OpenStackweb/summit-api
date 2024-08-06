@@ -286,7 +286,7 @@ final class OAuth2SummitOrdersApiController
                     'ticket_number' => 'sometimes|string',
                     'summit_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|integer',
-                    'created' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
                     'amount' => 'sometimes|numeric',
                     'payment_method' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidPaymentMethods)),
                 ];
@@ -355,7 +355,7 @@ final class OAuth2SummitOrdersApiController
                     'ticket_number' => 'sometimes|string',
                     'summit_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|integer',
-                    'created' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
                     'amount' => 'sometimes|numeric',
                     'payment_method' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidPaymentMethods)),
                 ];
@@ -424,7 +424,7 @@ final class OAuth2SummitOrdersApiController
                     'number' => 'sometimes|string',
                     'summit_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|integer',
-                    'created' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {

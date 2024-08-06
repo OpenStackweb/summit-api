@@ -106,8 +106,8 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
                     'content' => 'sometimes|string',
                     'author_fullname' => 'sometimes|string',
                     'author_email' => 'sometimes|string',
-                    'created' => 'sometimes|required|date_format:U',
-                    'edited' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -165,8 +165,8 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
                     'content' => 'sometimes|string',
                     'author_fullname' => 'sometimes|string',
                     'author_email' => 'sometimes|string',
-                    'created' => 'sometimes|required|date_format:U',
-                    'edited' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -235,8 +235,8 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
                     'content' => 'sometimes|string',
                     'author_fullname' => 'sometimes|string',
                     'author_email' => 'sometimes|string',
-                    'created' => 'sometimes|required|date_format:U',
-                    'edited' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -293,8 +293,8 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
                     'content' => 'sometimes|string',
                     'author_fullname' => 'sometimes|string',
                     'author_email' => 'sometimes|string',
-                    'created' => 'sometimes|required|date_format:U',
-                    'edited' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {

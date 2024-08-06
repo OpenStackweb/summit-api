@@ -102,10 +102,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
                     'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
-                    'sales_start_date' => 'sometimes|required|date_format:U',
-                    'sales_end_date' => 'sometimes|required|date_format:U',
-                    'created' => 'sometimes|required|date_format:U',
-                    'last_edited' => 'sometimes|required|date_format:U',
+                    'sales_start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'sales_end_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -172,10 +172,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
                     'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
-                    'sales_start_date' => 'sometimes|required|date_format:U',
-                    'sales_end_date' => 'sometimes|required|date_format:U',
-                    'created' => 'sometimes|required|date_format:U',
-                    'last_edited' => 'sometimes|required|date_format:U',
+                    'sales_start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'sales_end_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -247,10 +247,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
                     'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
-                    'sales_start_date' => 'sometimes|required|date_format:U',
-                    'sales_end_date' => 'sometimes|required|date_format:U',
-                    'created' => 'sometimes|required|date_format:U',
-                    'last_edited' => 'sometimes|required|date_format:U',
+                    'sales_start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'sales_end_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {

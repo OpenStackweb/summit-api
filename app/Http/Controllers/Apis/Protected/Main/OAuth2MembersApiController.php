@@ -94,8 +94,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'active' => 'sometimes|required|boolean',
                     'github_user' => 'sometimes|required|string',
                     'full_name' => 'sometimes|required|string',
-                    'created' => 'sometimes|required|date_format:U',
-                    'last_edited' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -282,7 +282,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             $payload = $this->getJsonPayload([
                 'is_current' => 'required|boolean',
-                'start_date' => 'required|date_format:U|valid_epoch',
+                'start_date' => 'required|date_format:U|epoch_seconds|valid_epoch',
                 'end_date' => 'sometimes|after_or_null_epoch:start_date',
                 'organization_id' => 'sometimes|integer|required_without:organization_name',
                 'organization_name' => 'sometimes|string|max:255|required_without:organization_id',
@@ -326,7 +326,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             $payload = $this->getJsonPayload([
                 'is_current' => 'sometimes|boolean',
-                'start_date' => 'sometimes|date_format:U|valid_epoch',
+                'start_date' => 'sometimes|date_format:U|epoch_seconds|valid_epoch',
                 'end_date' => 'sometimes|after_or_null_epoch:start_date',
                 'organization_id' => 'sometimes|integer',
                 'organization_name' => 'sometimes|string|max:255',

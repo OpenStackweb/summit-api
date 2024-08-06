@@ -109,8 +109,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
             },
             function () {
                 return [
-                    'start_date' => 'sometimes|date_format:U',
-                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                    'start_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
                     'duration' => 'sometimes|integer',
                     'presentation_title' => 'sometimes|string',
                     'presentation_id' => 'sometimes|integer',
@@ -212,8 +212,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                 ];
             }, function () {
                 return [
-                    'start_date' => 'sometimes|date_format:U',
-                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                    'start_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
                     'location_id' => 'sometimes|integer',
                     'track_id' => 'sometimes|integer',
                 ];

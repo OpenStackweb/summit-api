@@ -375,8 +375,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'last_name' => 'sometimes|string',
                     'email' => 'sometimes|string',
                     'full_name' => 'sometimes|string',
-                    'event_start_date' => 'sometimes|date_format:U',
-                    'event_end_date' => 'sometimes|date_format:U',
+                    'event_start_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'event_end_date' => 'sometimes|date_format:U|epoch_seconds',
                     'featured' => 'sometimes|required|string|in:true,false',
                 ];
             },

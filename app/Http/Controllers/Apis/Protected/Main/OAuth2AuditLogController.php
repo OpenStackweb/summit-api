@@ -72,7 +72,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'user_email' => 'sometimes|string',
                     'user_full_name' => 'sometimes|string',
                     'action' => 'sometimes|string',
-                    'created' => 'sometimes|date_format:U',
+                    'created' => 'sometimes|date_format:U|epoch_seconds',
                 ];
             },
             function () {

@@ -69,8 +69,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                 return [
                     'id' => 'sometimes|integer',
                     'view_type_id' => 'sometimes|integer',
-                    'created' =>  'sometimes|date_format:U',
-                    'print_date'=>  'sometimes|date_format:U',
+                    'created' =>  'sometimes|date_format:U|epoch_seconds',
+                    'print_date'=>  'sometimes|date_format:U|epoch_seconds',
                     'requestor_full_name' => 'sometimes|string',
                     'requestor_email' => 'sometimes|string',
                 ];
@@ -115,8 +115,8 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                 return [
                     'id' => 'sometimes|integer',
                     'view_type_id' => 'sometimes|integer',
-                    'created' =>  'sometimes|date_format:U',
-                    'print_date'=>  'sometimes|date_format:U',
+                    'created' =>  'sometimes|date_format:U|epoch_seconds',
+                    'print_date'=>  'sometimes|date_format:U|epoch_seconds',
                     'requestor_full_name' => 'sometimes|string',
                     'requestor_email' => 'sometimes|string',
                 ];

@@ -66,8 +66,8 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'name' => 'sometimes|string',
-                    'opens' => 'sometimes|date_format:U',
-                    'closes' => 'sometimes|date_format:U',
+                    'opens' => 'sometimes|date_format:U|epoch_seconds',
+                    'closes' => 'sometimes|date_format:U|epoch_seconds',
                 ];
             },
             function () {

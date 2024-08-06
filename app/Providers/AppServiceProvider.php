@@ -127,9 +127,9 @@ class AppServiceProvider extends ServiceProvider
     static $event_dto_publish_validation_rules = [
         'id' => 'required|integer',
         'location_id' => 'sometimes|required|integer',
-        'start_date' => 'sometimes|required|date_format:U',
+        'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
         'duration' => 'sometimes|integer|min:0',
-        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+        'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
     ];
 
     static $event_dto_validation_rules = [
@@ -141,8 +141,8 @@ class AppServiceProvider extends ServiceProvider
         'head_count' => 'sometimes|integer',
         'social_description' => 'sometimes|string|max:100',
         'location_id' => 'sometimes|integer',
-        'start_date' => 'sometimes|date_format:U',
-        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+        'start_date' => 'sometimes|date_format:U|epoch_seconds',
+        'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
         'allow_feedback' => 'sometimes|boolean',
         'type_id' => 'sometimes|required|integer',
         'track_id' => 'sometimes|required|integer',
@@ -650,6 +650,14 @@ class AppServiceProvider extends ServiceProvider
             });
 
             return is_string($value) && !preg_match('/\s/u', $value);
+        });
+
+        Validator::extend('epoch_seconds', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('epoch_seconds', function ($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be a valid epoch timestamp with 10 digits", $attribute);
+            });
+
+            return is_numeric($value) && intval($value) > - strlen(strval($value)) == 10;
         });
     }
 

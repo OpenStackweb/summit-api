@@ -25,7 +25,7 @@ final class SummitProposedScheduleAllowedDayValidationRulesFactory
     public static function buildForAdd(array $payload = []): array
     {
         return [
-            'day' => 'required|date_format:U',
+            'day' => 'required|date_format:U|epoch_seconds',
             'opening_hour' => 'sometimes|int|min:0|max:2359',
             'closing_hour' => 'sometimes|int|min:0|max:2359|required_with:opening_hour|gt:opening_hour',
         ];
@@ -34,7 +34,7 @@ final class SummitProposedScheduleAllowedDayValidationRulesFactory
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'day' => 'sometimes|date_format:U',
+            'day' => 'sometimes|date_format:U|epoch_seconds',
             'opening_hour' => 'sometimes|int|min:0|max:2359',
             'closing_hour' => 'sometimes|int|min:0|max:2359|required_with:opening_hour|gt:opening_hour',
         ];

@@ -148,10 +148,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'name' => 'sometimes|required|string',
-                    'start_date' => 'sometimes|required|date_format:U',
-                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
-                    'registration_begin_date' => 'sometimes|required|date_format:U',
-                    'registration_end_date' => 'sometimes|required_with:start_date|date_format:U|after:registration_begin_date',
+                    'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
+                    'registration_begin_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'registration_end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:registration_begin_date',
                     'ticket_types_count' => 'sometimes|required|integer'
                 ];
             },
@@ -240,20 +240,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'name' => 'sometimes|required|string',
-                    'start_date' => 'sometimes|required|date_format:U',
-                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
-                    'registration_begin_date' => 'sometimes|required|date_format:U',
-                    'registration_end_date' => 'sometimes|required_with:start_date|date_format:U|after:registration_begin_date',
+                    'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
+                    'registration_begin_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'registration_end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:registration_begin_date',
                     'ticket_types_count' => 'sometimes|required|integer',
-                    'submission_begin_date' => 'sometimes|required|date_format:U',
-                    'submission_end_date' => 'sometimes|required_with:submission_begin_date|date_format:U',
-                    'voting_begin_date' => 'sometimes|required|date_format:U',
-                    'voting_end_date' => 'sometimes|required_with:voting_begin_date|date_format:U',
-                    'selection_begin_date' => 'sometimes|required|date_format:U',
-                    'selection_end_date' => 'sometimes|required_with:selection_begin_date|date_format:U',
+                    'submission_begin_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'submission_end_date' => 'sometimes|required_with:submission_begin_date|date_format:U|epoch_seconds',
+                    'voting_begin_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'voting_end_date' => 'sometimes|required_with:voting_begin_date|date_format:U|epoch_seconds',
+                    'selection_begin_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'selection_end_date' => 'sometimes|required_with:selection_begin_date|date_format:U|epoch_seconds',
                     'selection_plan_enabled' => 'sometimes|required|boolean',
-                    'begin_allow_booking_date' =>'sometimes|required|date_format:U',
-                    'end_allow_booking_date' => 'sometimes|required|date_format:U',
+                    'begin_allow_booking_date' =>'sometimes|required|date_format:U|epoch_seconds',
+                    'end_allow_booking_date' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -436,8 +436,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if (is_null($filter)) $filter = new Filter();
 
             $filter->validate([
-                'start_date' => 'sometimes|required|date_format:U',
-                'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
             ]);
 
             return $this->ok
@@ -488,8 +488,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 },
                 function () {
                     return [
-                        'start_date' => 'sometimes|required|date_format:U',
-                        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                        'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                        'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
                     ];
                 });
 
@@ -534,8 +534,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 },
                 function () {
                     return [
-                        'start_date' => 'sometimes|required|date_format:U',
-                        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                        'start_date' => 'sometimes|required|date_format:U|epoch_seconds',
+                        'end_date' => 'sometimes|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
                     ];
                 });
 

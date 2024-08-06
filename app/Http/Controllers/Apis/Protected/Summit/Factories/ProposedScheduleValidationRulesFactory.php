@@ -26,8 +26,8 @@ final class ProposedScheduleValidationRulesFactory extends AbstractValidationRul
     public static function buildForAdd(array $payload = []): array
     {
         return [
-            'start_date'    => 'required|date_format:U',
-            'end_date'      => 'required|required_with:start_date|date_format:U|after:start_date',
+            'start_date'    => 'required|date_format:U|epoch_seconds',
+            'end_date'      => 'required|required_with:start_date|date_format:U|epoch_seconds|after:start_date',
             'duration'      => 'sometimes|integer',
             'location_id'   => 'required|integer',
         ];

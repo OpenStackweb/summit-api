@@ -102,8 +102,8 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
                 return [
                     'message'   => 'sometimes|string',
                     'channel'   => 'sometimes|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
-                    'sent_date' => 'sometimes|date_format:U',
-                    'created'   => 'sometimes|date_format:U',
+                    'sent_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'created'   => 'sometimes|date_format:U|epoch_seconds',
                     'is_sent'   => 'sometimes|boolean',
                     'approved'  => 'sometimes|boolean',
                     'event_id'  => 'sometimes|integer',
@@ -163,8 +163,8 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             function(){
                 return [
                     'message'   => 'sometimes|string',
-                    'sent_date' => 'sometimes|date_format:U',
-                    'created'   => 'sometimes|date_format:U',
+                    'sent_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'created'   => 'sometimes|date_format:U|epoch_seconds',
                 ];
             },
             function()
@@ -226,8 +226,8 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
                 return [
                     'message'   => 'sometimes|string',
                     'channel'   => 'sometimes|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
-                    'sent_date' => 'sometimes|date_format:U',
-                    'created'   => 'sometimes|date_format:U',
+                    'sent_date' => 'sometimes|date_format:U|epoch_seconds',
+                    'created'   => 'sometimes|date_format:U|epoch_seconds',
                     'is_sent'   => 'sometimes|boolean',
                     'approved'  => 'sometimes|boolean',
                     'event_id'  => 'sometimes|integer',

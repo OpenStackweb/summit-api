@@ -323,8 +323,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                     'active' => 'sometimes|required|boolean',
                     'github_user' => 'sometimes|required|string',
                     'full_name' => 'sometimes|required|string',
-                    'created' => 'sometimes|required|date_format:U',
-                    'last_edited' => 'sometimes|required|date_format:U',
+                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 ];
             },
             function () {
@@ -436,8 +436,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 'active' => 'sometimes|required|boolean',
                 'github_user' => 'sometimes|required|string',
                 'full_name' => 'sometimes|required|string',
-                'created' => 'sometimes|required|date_format:U',
-                'last_edited' => 'sometimes|required|date_format:U',
+                'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
                 'schedule_event_id' => 'sometimes|required|integer',
             ]);
 

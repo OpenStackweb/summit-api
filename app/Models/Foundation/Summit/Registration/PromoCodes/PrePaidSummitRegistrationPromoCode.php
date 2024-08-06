@@ -14,6 +14,9 @@
 
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\ORM\Mapping AS ORM;
+use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="PrePaidSummitRegistrationPromoCode")
@@ -42,5 +45,38 @@ class PrePaidSummitRegistrationPromoCode
      */
     public function getClassName(){
         return self::ClassName;
+    }
+
+    /**
+     * @param string $email
+     * @param null|string $company
+     * @throws ValidationException
+     */
+    public function validate(string $email, ?string $company)
+    {
+        Log::debug(sprintf("PrePaidSummitRegistrationPromoCode::validate - email: %s, company: %s", $email, $company ?? ''));
+
+        $this->checkSubject($email, $company);
+
+        if (!$this->hasQuantityAvailable()) {
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Promo code %s has reached max. usage (%s).",
+                    $this->getCode(),
+                    $this->getQuantityAvailable()
+                )
+            );
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function canUse(): bool
+    {
+        if (!$this->hasQuantityAvailable()) return false;
+        return true;
     }
 }

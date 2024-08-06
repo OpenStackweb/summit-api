@@ -81,10 +81,22 @@ class OAuth2BearerAccessTokenRequestValidator
         $method = $request->getMethod();
         $realm  = $request->getHost();
 
+        Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle url %s method %s", $url, $method));
+
         try {
 
             $route = RequestUtils::getCurrentRoutePath($request);
             if (!$route) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        'OAuth2BearerAccessTokenRequestValidator::handle API endpoint does not exists! (%s:%s)'
+                        , $url,
+                        $method
+                    )
+                );
+
                 throw new OAuth2ResourceServerException(
                     400,
                     OAuth2Protocol::OAuth2Protocol_Error_InvalidRequest,
@@ -111,6 +123,10 @@ class OAuth2BearerAccessTokenRequestValidator
             }
 
             if (is_null($access_token_value) || empty($access_token_value)) {
+                Log::warning
+                (
+                    'OAuth2BearerAccessTokenRequestValidator::handle missing access token'
+                );
                 //if access token value is not set, then error
                 throw new OAuth2ResourceServerException(
                     400,
@@ -123,6 +139,10 @@ class OAuth2BearerAccessTokenRequestValidator
 
             //api endpoint must be registered on db and active
             if (is_null($endpoint) || !$endpoint->isActive()) {
+                Log::warning
+                (
+                    sprintf('OAuth2BearerAccessTokenRequestValidator::handle API endpoint does not exits! (%s:%s)', $route, $method)
+                );
                 throw new OAuth2ResourceServerException(
                     400,
                     OAuth2Protocol::OAuth2Protocol_Error_InvalidRequest,
@@ -140,7 +160,7 @@ class OAuth2BearerAccessTokenRequestValidator
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }
             //check token audience
-            Log::debug('checking token audience ...');
+            Log::debug('OAuth2BearerAccessTokenRequestValidator::handle checking token audience ...');
             $audience = explode(' ', $token_info->getAudience());
             if ((!in_array($realm, $audience))) {
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
@@ -157,17 +177,17 @@ class OAuth2BearerAccessTokenRequestValidator
                 );
             }
             //check scopes
-            Log::debug('checking token scopes ...');
+            Log::debug('OAuth2BearerAccessTokenRequestValidator::handle checking token scopes ...');
             $endpoint_scopes = $endpoint->getScopesNames();
-            Log::debug(sprintf("endpoint scopes %s", implode(' ',$endpoint_scopes)));
-            Log::debug(sprintf("token scopes %s", $token_info->getScope()));
-            $token_scopes    = explode(' ', $token_info->getScope());
+            Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle endpoint scopes %s", implode(' ',$endpoint_scopes)));
+            Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle token scopes %s", $token_info->getScope()));
+            $token_scopes = explode(' ', $token_info->getScope());
 
             //check token available scopes vs. endpoint scopes
             if (count(array_intersect($endpoint_scopes, $token_scopes)) == 0) {
                 Log::warning(
                     sprintf(
-                        'access token scopes (%s) does not allow to access to api url %s , needed scopes %s',
+                        'OAuth2BearerAccessTokenRequestValidator::handle access token scopes (%s) does not allow to access to api url %s , needed scopes %s',
                         $token_info->getScope(),
                         $url,
                         implode(' OR ', $endpoint_scopes)
@@ -181,7 +201,7 @@ class OAuth2BearerAccessTokenRequestValidator
                     implode(' ', $endpoint_scopes)
                 );
             }
-            Log::debug('setting resource server context ...');
+            Log::debug('OAuth2BearerAccessTokenRequestValidator::handle setting resource server context ...');
             //set context for api and continue processing
             $context = [
                 'access_token'        => $access_token_value,

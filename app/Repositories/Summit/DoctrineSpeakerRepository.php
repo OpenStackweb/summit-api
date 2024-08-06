@@ -1048,7 +1048,7 @@ SQL;
 
         $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchOne());
 
         $bindings = array_merge($bindings, array
         (
@@ -1307,7 +1307,7 @@ SQL;
 
         $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchOne());
 
         $bindings = array_merge($bindings, array
         (

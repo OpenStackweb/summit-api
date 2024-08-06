@@ -132,7 +132,7 @@ SQL;
 SELECT ID FROM SummitEntityEvent WHERE SummitID = {$summit->getId()} ORDER BY ID DESC LIMIT 1;
 SQL;
 
-        return intval($this->getEntityManager()->getConnection()->executeQuery($query)->fetchColumn(0));
+        return intval($this->getEntityManager()->getConnection()->executeQuery($query)->fetchOne());
     }
 
     /**

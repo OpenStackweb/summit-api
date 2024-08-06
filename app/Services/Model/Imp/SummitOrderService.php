@@ -252,7 +252,7 @@ final class SagaFactory {
         Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
         return Saga::start()
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($summit, $payload))
+            ->addTask(new PreProcessPrepaidReservationTask($summit, $payload))
             ->addTask(new AutoAssignPrePaidTicketTask(
                 $owner,
                 $summit,
@@ -918,18 +918,18 @@ final class ReserveTicketsTask extends AbstractTask
  * Class PreProcessReservationTask
  * @package App\Services\Model
  */
-final class PreProcessReservationTask extends AbstractTask
+class PreProcessReservationTask extends AbstractTask
 {
 
     /**
      * @var array
      */
-    private $payload;
+    protected $payload;
 
     /**
      * @var Summit
      */
-    private $summit;
+    protected $summit;
     /**
      * @param Summit $summit
      * @param array $payload
@@ -942,6 +942,21 @@ final class PreProcessReservationTask extends AbstractTask
     {
         $this->payload = $payload;
         $this->summit = $summit;
+    }
+
+    /**
+     * @param int $type_id
+     * @return SummitTicketType
+     * @throws ValidationException
+     */
+    protected function getTicketType(int $type_id): SummitTicketType
+    {
+        $ticket_type = $this->summit->getTicketTypeById($type_id);
+
+        if(is_null($ticket_type) || !$ticket_type->isLive())
+            throw new ValidationException(sprintf("Ticket Type %s is not available.", $type_id));
+
+        return $ticket_type;
     }
 
     /**
@@ -964,10 +979,7 @@ final class PreProcessReservationTask extends AbstractTask
 
             $type_id = intval($ticket_dto['type_id']);
 
-            $ticket_type = $this->summit->getTicketTypeById($type_id);
-
-            if(is_null($ticket_type) || !$ticket_type->isLive())
-                throw new ValidationException(sprintf("Ticket Type %s is not available.", $type_id));
+            $ticket_type = $this->getTicketType($type_id);
 
             if (!in_array($type_id, $ticket_types_ids))
                 $ticket_types_ids[] = $type_id;
@@ -980,7 +992,7 @@ final class PreProcessReservationTask extends AbstractTask
             $reservations[$type_id] = $reservations[$type_id] + 1;
 
             if (!empty($promo_code_value)) {
-                $promo_code =$this->summit->getPromoCodeByCode($promo_code_value);
+                $promo_code = $this->summit->getPromoCodeByCode($promo_code_value);
 
                 if(is_null($promo_code))
                     throw new ValidationException("Promo Code is invalid.");
@@ -1029,6 +1041,27 @@ final class PreProcessReservationTask extends AbstractTask
     }
 }
 
+/**
+ * Class PreProcessPrepaidReservationTask
+ * @package App\Services\Model
+ */
+final class PreProcessPrepaidReservationTask extends PreProcessReservationTask
+{
+
+    /**
+     * @param int $type_id
+     * @return SummitTicketType
+     * @throws ValidationException
+     */
+    protected function getTicketType(int $type_id): SummitTicketType
+    {
+        $ticket_type = $this->summit->getTicketTypeById($type_id);
+        if(is_null($ticket_type))
+            throw new ValidationException(sprintf("Ticket Type %s is not available.", $type_id));
+
+        return $ticket_type;
+    }
+}
 /**
  * Class PreOrderValidationTask
  * @package App\Services\Model

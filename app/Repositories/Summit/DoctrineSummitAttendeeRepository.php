@@ -21,7 +21,6 @@ use models\summit\ISummitAttendeeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use App\Repositories\SilverStripeDoctrineRepository;
-use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
@@ -75,9 +74,9 @@ final class DoctrineSummitAttendeeRepository
             $filter->hasFilter('access_levels_ids') ||
             $filter->hasFilter('ticket_type_id')
         ) {
-            $query = $query->leftJoin('t.badge', 'b')
+            $query = $query->leftJoin('t.badge', 'b', 'WITH', sprintf("t.is_active = 1 AND t.status='%s'",  IOrderConstants::PaidStatus))
                 ->leftJoin('b.type', 'bt')
-                ->leftJoin('t.ticket_type', 'tt');
+                ->leftJoin('t.ticket_type', 'tt','WITH', sprintf("t.is_active = 1 AND t.status='%s'",  IOrderConstants::PaidStatus));
         }
 
         if(

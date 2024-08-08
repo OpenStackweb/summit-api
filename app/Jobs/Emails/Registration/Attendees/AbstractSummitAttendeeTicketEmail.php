@@ -86,8 +86,8 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractSummitEmailJob
                     $userRegistrationRequest = $memberService->emitRegistrationRequest
                     (
                         $email,
-                        $this->payload[IMailTemplatesConstants::owner_first_name],
-                        $this->payload[IMailTemplatesConstants::owner_last_name],
+                        $this->payload[IMailTemplatesConstants::owner_first_name] ?? '',
+                        $this->payload[IMailTemplatesConstants::owner_last_name] ?? '',
                         $this->payload[IMailTemplatesConstants::owner_company] ?? ''
                     );
 

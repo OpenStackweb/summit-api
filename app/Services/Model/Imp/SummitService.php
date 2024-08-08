@@ -644,12 +644,22 @@ final class SummitService
 
         return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitService::saveOrUpdateEvent summit %s event_id %s data %s",
+                    $summit->getId() ,
+                        $event_id ?? "NEW",
+                    json_encode($data)
+                )
+            );
+
             $current_member = ResourceServerContext::getCurrentUser(false);
 
             if (!is_null($current_member) && !$this->permissions_manager->canEditFields($current_member, 'SummitEvent', $data)) {
                 throw new ValidationException(sprintf("user %s cant set requested summit event fields", $current_member->getEmail()));
             }
-
 
             $event_type = null;
             if (isset($data['type_id'])) {
@@ -711,10 +721,17 @@ final class SummitService
             if (is_null($event)) {
                 $event = SummitEventFactory::build($event_type, $summit, $data);
                 $event->setCreatedBy($current_member);
+                if (!is_null($track)) {
+                    $event->setCategory($track);
+                }
             } else {
                 $event->setSummit($summit);
                 if (!is_null($event_type))
                     $event->setType($event_type);
+
+                if (!is_null($track)) {
+                    $event->setCategory($track);
+                }
 
                 SummitEventFactory::populate($summit, $event, $data);
             }
@@ -746,10 +763,6 @@ final class SummitService
 
                 $event->setRSVPMaxUserNumber(intval($data['rsvp_max_user_number']));
                 $event->setRSVPMaxUserWaitListNumber(intval($data['rsvp_max_user_wait_list_number']));
-            }
-
-            if (!is_null($track)) {
-                $event->setCategory($track);
             }
 
             if (!is_null($location)) {

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
 use models\summit\PresentationLink;
@@ -22,7 +23,8 @@ use models\summit\PresentationLink;
  */
 final class PresentationFactory
 {
-    public static function build(array $payload):Presentation{
+    public static function build(array $payload): Presentation
+    {
         return self::populate(new Presentation(), $payload);
     }
 
@@ -33,9 +35,59 @@ final class PresentationFactory
      * @return Presentation
      * @throws ValidationException
      */
-    public static function populate(Presentation $presentation, array $payload, $only_presentation_data = false):Presentation{
+    public static function populate(Presentation $presentation, array $payload, $only_presentation_data = false): Presentation
+    {
 
-        if(!$only_presentation_data) {
+        if (isset($payload['selection_plan_id'])) {
+            $selection_plan_id = intval($payload['selection_plan_id']);
+            if ($selection_plan_id > 0) {
+                $selection_plan = $presentation->getSummit()->getSelectionPlanById($selection_plan_id);
+                if (!is_null($selection_plan)) {
+
+                    $track = $presentation->getCategory();
+                    $type = $presentation->getType();
+
+                    if (!is_null($track) && !$selection_plan->hasTrack($track)) {
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Track %s (%s) does not belongs to Selection Plan %s (%s).",
+                                $track->getTitle(),
+                                $track->getId(),
+                                $selection_plan->getName(),
+                                $selection_plan->getId()
+                            )
+                        );
+                    }
+
+                    if (!is_null($type) && !$selection_plan->hasEventType($type)) {
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Type %s (%s) does not belongs to Selection Plan %s (%s).",
+                                $type->getType(),
+                                $type->getId(),
+                                $selection_plan->getName(),
+                                $selection_plan->getId()
+                            )
+                        );
+                    }
+
+                    $presentation->setSelectionPlan($selection_plan);
+                }
+            } else {
+                $presentation->clearSelectionPlan();
+            }
+        }
+
+        $event_selection_plan = $presentation->getSelectionPlan();
+        if (!is_null($event_selection_plan))
+            $payload = $event_selection_plan->curatePayloadByPresentationAllowedQuestions($payload);
+
+
+        if (!$only_presentation_data) {
             if (isset($payload['title']))
                 $presentation->setTitle(html_entity_decode(trim($payload['title'])));
 
@@ -72,11 +124,11 @@ final class PresentationFactory
             }
         }
 
-        if(isset($payload['custom_order'])){
+        if (isset($payload['custom_order'])) {
             $presentation->setCustomOrder(intval($payload['custom_order']));
         }
 
-        if(isset($payload['submission_source'])) {
+        if (isset($payload['submission_source'])) {
             $presentation->setSubmissionSource(trim($payload['submission_source']));
         }
 

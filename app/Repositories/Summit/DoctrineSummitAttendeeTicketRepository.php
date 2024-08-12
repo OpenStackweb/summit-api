@@ -188,7 +188,16 @@ final class DoctrineSummitAttendeeTicketRepository
             'exclude_is_printable_free_unassigned' =>    new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
-                        sprintf("NOT ( ( e.is_active = 1 AND al.name = '%s') AND a is null AND ( (e.raw_cost - e.discount) = 0 ) )", SummitAccessLevelType::IN_PERSON),
+                        sprintf
+                        (
+                            "NOT EXISTS ( select e2 from %s e2 left join e2.owner a2 left join e2.badge b2 ".
+                            " left join b2.type bt2 left join bt2.access_levels al2 ".
+                            " where e2.id = e.id and e2.is_active = 1 and al2.name = '%s' and  a2 is null ".
+                            " and (e2.raw_cost - e2.discount) = 0 )",
+                            $this->getBaseEntity(),
+                            SummitAccessLevelType::IN_PERSON
+                        ),
+
                     ),
                     '0' => new DoctrineCaseFilterMapping(
                         'false',

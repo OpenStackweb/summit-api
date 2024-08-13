@@ -707,7 +707,6 @@ final class SummitService
                 $old_event_type = $event->getType();
 
                 // check event type transition ...
-
                 if (!is_null($event_type) && !$this->canPerformEventTypeTransition($old_event_type, $event_type)) {
                     throw new ValidationException
                     (

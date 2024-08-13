@@ -1516,4 +1516,37 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @param $type_id
+     * @return mixed
+     */
+    public function upgradeEvent($summit_id, $event_id, $type_id)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id, $type_id){
+
+            Log::debug(sprintf("OAuth2SummitEventsApiController::upgradeEvent summit id %s event id %s type id %s", $summit_id, $event_id, $type_id));
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $event = $summit->getEvent($event_id);
+            if (is_null($event))
+                return $this->error404();
+
+            $event = $this->service->upgradeSummitEvent($summit, intval($event_id), intval($type_id));
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                )
+            );
+        });
+    }
 }

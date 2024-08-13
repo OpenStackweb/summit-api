@@ -676,6 +676,12 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEventImage']);
                     Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEventImage']);
                 });
+
+                Route::group(['prefix' => 'type'], function () {
+                    Route::group(['prefix' => '{type_id}'], function () {
+                        Route::put('upgrade', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@upgradeEvent']);
+                    });
+                });
             });
         });
 

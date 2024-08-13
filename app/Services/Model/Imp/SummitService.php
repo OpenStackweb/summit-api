@@ -641,47 +641,6 @@ final class SummitService
      */
     private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null)
     {
-
-
-        // check first if there is an upgrade or not
-
-        $res = $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
-            $event_type = null;
-            if (isset($data['type_id'])) {
-                $event_type = $summit->getEventType(intval($data['type_id']));
-                if (is_null($event_type)) {
-                    throw new EntityNotFoundException(sprintf("event type id %s does not exists!", $data['type_id']));
-                }
-            }
-
-            if (!is_null($event_id) && $event_id > 0) {
-                $event = $this->event_repository->getByIdRefreshed($event_id);
-                if (is_null($event))
-                    throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
-                $old_event_type = $event->getType();
-
-                // check event type transition ...
-
-                if (!is_null($event_type)) {
-
-                    if ($old_event_type->getClassName() != $event_type->getClassName() && $event_type instanceof PresentationType) {
-                        Log::debug(sprintf("SummitService::saveOrUpdateEvent promoting event %s 2 presentation ...", $event_id));
-                        $event->promote2Presentation($event_type);
-                        return $event;
-                    }
-                }
-            }
-            return null;
-        });
-
-        // we performed an upgrade, return the event
-        if(!is_null($res))
-        {
-            return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
-                return $this->event_repository->getByIdRefreshed($event_id);
-            });
-        }
-
         return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
 
             Log::debug
@@ -689,8 +648,8 @@ final class SummitService
                 sprintf
                 (
                     "SummitService::saveOrUpdateEvent summit %s event_id %s data %s",
-                    $summit->getId() ,
-                        $event_id ?? "NEW",
+                    $summit->getId(),
+                    $event_id ?? "NEW",
                     json_encode($data)
                 )
             );
@@ -738,16 +697,16 @@ final class SummitService
                 // check event type transition ...
 
                 if (!is_null($event_type) && !$this->canPerformEventTypeTransition($old_event_type, $event_type)) {
-                        throw new ValidationException
+                    throw new ValidationException
+                    (
+                        sprintf
                         (
-                            sprintf
-                            (
-                                "invalid event type transition for event id %s ( from %s to %s)",
-                                $event_id,
-                                $old_event_type->getType(),
-                                $event_type->getType()
-                            )
-                        );
+                            "invalid event type transition for event id %s ( from %s to %s)",
+                            $event_id,
+                            $old_event_type->getType(),
+                            $event_type->getType()
+                        )
+                    );
                 }
                 if (is_null($event_type)) $event_type = $old_event_type;
             }
@@ -861,7 +820,7 @@ final class SummitService
                 $opening_hour = null;
                 $closing_hour = null;
 
-                if (!is_null($location)){
+                if (!is_null($location)) {
                     $opening_hour = $location->getOpeningHour();
                     $closing_hour = $location->getClosingHour();
                 }
@@ -1013,7 +972,7 @@ final class SummitService
             $opening_hour = null;
             $closing_hour = null;
 
-            if (!is_null($location)){
+            if (!is_null($location)) {
                 $opening_hour = $location->getOpeningHour();
                 $closing_hour = $location->getClosingHour();
             }
@@ -1641,7 +1600,7 @@ final class SummitService
 
                 $old_summit = $this->summit_repository->getBySlug(trim($slug));
                 if (!is_null($old_summit) && $summit_id != $old_summit->getId()) {
-                    throw new ValidationException(sprintf("Slug %s already belongs to another summit (%s)/", $slug,$old_summit->getId()));
+                    throw new ValidationException(sprintf("Slug %s already belongs to another summit (%s)/", $slug, $old_summit->getId()));
                 }
             }
 
@@ -1651,7 +1610,7 @@ final class SummitService
 
                 $old_summit =
                     $this->summit_repository->getByRegistrationSlugPrefix(Summit::formatSlug($registration_slug_prefix));
-                if (!is_null($old_summit) && $summit_id != $old_summit->getId() ) {
+                if (!is_null($old_summit) && $summit_id != $old_summit->getId()) {
                     throw new ValidationException(sprintf(
                         "Registration slug prefix %s already belongs to summit (%s).",
                         $registration_slug_prefix, $old_summit->getId()
@@ -1751,7 +1710,7 @@ final class SummitService
 
             $selection_plan = $presentation->getSelectionPlan();
 
-            if(!is_null($selection_plan) && $selection_plan->isPrivate() && !$selection_plan->containsMember($speaker->getEmail())){
+            if (!is_null($selection_plan) && $selection_plan->isPrivate() && !$selection_plan->containsMember($speaker->getEmail())) {
                 $selection_plan->addAllowedMember($speaker->getEmail());
             }
 
@@ -1853,7 +1812,7 @@ final class SummitService
 
             $selection_plan = $presentation->getSelectionPlan();
 
-            if(!is_null($selection_plan) && $selection_plan->isPrivate() && !$selection_plan->containsMember($speaker->getEmail())){
+            if (!is_null($selection_plan) && $selection_plan->isPrivate() && !$selection_plan->containsMember($speaker->getEmail())) {
                 $selection_plan->addAllowedMember($speaker->getEmail());
             }
 
@@ -3246,11 +3205,11 @@ final class SummitService
                                             'email' => $speaker_email
                                         ];
 
-                                        if(!empty($speaker_first_name) && $speaker_first_name != $speaker_email){
+                                        if (!empty($speaker_first_name) && $speaker_first_name != $speaker_email) {
                                             $payload['first_name'] = $speaker_first_name;
                                         }
 
-                                        if(!empty($speaker_last_name) && $speaker_last_name != $speaker_email){
+                                        if (!empty($speaker_last_name) && $speaker_last_name != $speaker_email) {
                                             $payload['last_name'] = $speaker_last_name;
                                         }
 
@@ -3821,7 +3780,7 @@ final class SummitService
      * @return string
      * @throws ValidationException
      */
-    public function generateQREncKey(Summit $summit):string
+    public function generateQREncKey(Summit $summit): string
     {
         Log::debug(sprintf("SummitService::generateQREncKey summit %s", $summit->getId()));
         $res = $this->tx_service->transaction(function () use ($summit) {
@@ -3850,24 +3809,24 @@ final class SummitService
      * @return void
      * @throws Exception
      */
-    public function regenerateBadgeQRCodes(int $summit_id):void
+    public function regenerateBadgeQRCodes(int $summit_id): void
     {
         Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s", $summit_id));
 
-       $page = 1;
-       $count = 0;
+        $page = 1;
+        $count = 0;
 
-       do {
+        do {
             Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s processing page %s", $summit_id, $page));
             $page_response = $this->summit_attendee_badge_repository->getBadgeIdsBySummit($summit_id, new PagingInfo($page, 500));
-            $has_more      = count($page_response->getItems()) > 0;
+            $has_more = count($page_response->getItems()) > 0;
 
-            if(!$has_more) {
+            if (!$has_more) {
                 Log::debug(sprintf("SummitService::regenerateBadgeQRCodes summit %s no more pages", $summit_id));
                 continue;
             }
 
-            foreach ($page_response->getItems() as $page_response_item){
+            foreach ($page_response->getItems() as $page_response_item) {
 
                 $attendee_badge_id = $page_response_item['id'];
                 $count++;
@@ -3877,14 +3836,13 @@ final class SummitService
                 $this->tx_service->transaction(function () use ($attendee_badge_id) {
                     try {
                         $attendee_badge = $this->summit_attendee_badge_repository->getById(intval($attendee_badge_id));
-                        if(!$attendee_badge instanceof SummitAttendeeBadge){
+                        if (!$attendee_badge instanceof SummitAttendeeBadge) {
                             Log::warning(sprintf("SummitService::regenerateBadgeQRCodes badge %s not found", $attendee_badge_id));
                             return;
                         }
                         $attendee_badge->generateQRCode();
-                    }
-                    catch (Exception $ex){
-                            Log::error($ex);
+                    } catch (Exception $ex) {
+                        Log::error($ex);
                     }
                 });
             }
@@ -3902,7 +3860,7 @@ final class SummitService
      */
     public function generateMUXPrivateKey(int $summit_id): void
     {
-        $this->tx_service->transaction(function() use($summit_id){
+        $this->tx_service->transaction(function () use ($summit_id) {
             try {
                 Log::debug(sprintf("SummitService::generateMUXPrivateKey summit %s", $summit_id));
 
@@ -3922,8 +3880,7 @@ final class SummitService
                 $summit->setMUXPrivateKey($key['private_key']);
 
                 $summit->setMuxPrivateKeyId($key['id']);
-            }
-            catch(Exception $ex){
+            } catch (Exception $ex) {
                 Log::error($ex);
                 throw $ex;
             }
@@ -3937,7 +3894,7 @@ final class SummitService
      */
     public function generateMuxPlaybackRestriction(int $summit_id): void
     {
-        $this->tx_service->transaction(function() use($summit_id) {
+        $this->tx_service->transaction(function () use ($summit_id) {
             try {
                 Log::debug(sprintf("SummitService::generateMuxPlaybackRestriction summit %s", $summit_id));
                 $summit = $this->summit_repository->getById($summit_id);
@@ -3991,8 +3948,9 @@ final class SummitService
      * @return SummitRegistrationFeedMetadata
      * @throws Exception
      */
-    public function addRegistrationFeedMetadata(Summit $summit, array $payload):SummitRegistrationFeedMetadata{
-        return $this->tx_service->transaction(function() use($summit, $payload){
+    public function addRegistrationFeedMetadata(Summit $summit, array $payload): SummitRegistrationFeedMetadata
+    {
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
             return $summit->addRegistrationFeedMetadata($payload['key'], $payload['value']);
         });
     }
@@ -4003,10 +3961,11 @@ final class SummitService
      * @return void
      * @throws Exception
      */
-    public function removeRegistrationFeedMetadata(Summit $summit, int $metadata_id):void{
-        $this->tx_service->transaction(function() use($summit, $metadata_id){
+    public function removeRegistrationFeedMetadata(Summit $summit, int $metadata_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $metadata_id) {
             $metadata = $summit->getRegistrationFeedMetadataById($metadata_id);
-            if(is_null($metadata))
+            if (is_null($metadata))
                 throw new EntityNotFoundException(sprintf("Metadata %s not found,", $metadata_id));
             $summit->removeRegistrationFeedMetadata($metadata);
         });
@@ -4014,21 +3973,21 @@ final class SummitService
 
     public function updateRegistrationFeedMetadata(Summit $summit, int $metadata_id, array $payload): SummitRegistrationFeedMetadata
     {
-        return $this->tx_service->transaction(function() use($summit, $metadata_id, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $metadata_id, $payload) {
             $metadata = $summit->getRegistrationFeedMetadataById($metadata_id);
-            if(is_null($metadata))
+            if (is_null($metadata))
                 throw new EntityNotFoundException(sprintf("Metadata %s not found,", $metadata_id));
 
-            if(isset($payload['key'])) {
+            if (isset($payload['key'])) {
                 $formerMetadata = $summit->getRegistrationFeedMetadataByKey($payload['key']);
-                if(!is_null($formerMetadata) && $formerMetadata->getId() != $metadata->getId())
+                if (!is_null($formerMetadata) && $formerMetadata->getId() != $metadata->getId())
                     throw new ValidationException(sprintf("Metadata with key %s already exists", $payload['key']));
             }
 
 
-            if(isset($payload['value']))
+            if (isset($payload['value']))
                 $metadata->setValue($payload['value']);
-            if(isset($payload['key']))
+            if (isset($payload['key']))
                 $metadata->setKey($payload['key']);
 
             return $metadata;
@@ -4077,6 +4036,40 @@ final class SummitService
             $summit->addLeadReportSetting($lead_report_settings);
 
             return $lead_report_settings;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param int $type_id
+     * @return SummitEvent
+     * @throws Exception
+     */
+    public function upgradeSummitEvent(Summit $summit, int $event_id, int $type_id): SummitEvent
+    {
+        // check first if there is an upgrade or not
+
+        return $this->tx_service->transaction(function () use ($summit, $event_id, $type_id) {
+
+            $event_type = $summit->getEventType($type_id);
+            if (is_null($event_type)) {
+                throw new EntityNotFoundException(sprintf("Event type id %s does not exists.", $type_id));
+            }
+
+            $event = $this->event_repository->getByIdRefreshed($event_id);
+            if (is_null($event))
+                throw new ValidationException(sprintf("Event id %s does not exists,", $event_id));
+
+            $old_event_type = $event->getType();
+
+            if ($old_event_type->getClassName() != $event_type->getClassName() && $event_type instanceof PresentationType) {
+                Log::debug(sprintf("SummitService::upgradeSummitEvent promoting event %s 2 presentation ...", $event_id));
+                $event->promote2Presentation($event_type);
+                return $event;
+            }
+
+            throw new ValidationException("Event type is the same or not a presentation type.");
         });
     }
 }

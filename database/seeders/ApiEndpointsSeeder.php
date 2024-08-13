@@ -4226,6 +4226,17 @@ class ApiEndpointsSeeder extends Seeder
                 ],
 
             ],
+            [
+                'name' => 'upgrade-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/type/{type_id}/upgrade',
+                'http_method' => 'PUT',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // locations
             [
                 'name' => 'get-locations',

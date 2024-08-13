@@ -664,4 +664,13 @@ interface ISummitService
      * @throws \Exception
      */
     public function updateLeadReportSettings(Summit $summit, array $payload): SummitLeadReportSetting;
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param int $type_id
+     * @return SummitEvent
+     * @throws \Exception
+     */
+    public function upgradeSummitEvent(Summit $summit, int $event_id, int $type_id): SummitEvent;
 }

@@ -23,7 +23,6 @@ use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
 use App\Security\CompanyScopes;
 use App\Security\SponsoredProjectScope;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Class ApiEndpointsSeeder

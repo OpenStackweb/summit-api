@@ -699,7 +699,9 @@ final class SummitService
             // existing event
 
             if (!is_null($event_id) && $event_id > 0) {
+
                 $event = $this->event_repository->getByIdRefreshed($event_id);
+
                 if (is_null($event))
                     throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
                 $old_event_type = $event->getType();

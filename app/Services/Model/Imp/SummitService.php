@@ -704,6 +704,7 @@ final class SummitService
 
                 if (is_null($event))
                     throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
+
                 $old_event_type = $event->getType();
 
                 // check event type transition ...

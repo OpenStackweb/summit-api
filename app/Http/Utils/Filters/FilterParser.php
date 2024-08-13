@@ -156,7 +156,7 @@ final class FilterParser
         $op = $matches[0];
         $operands = explode($op, $exp, 2);
         $field = strtolower(trim($operands[0]));
-        $value = $operands[1];
+        $value = urldecode($operands[1]);
         Log::debug(sprintf("FilterParser::filterExpresion field %s op %s value %s", $field, $op, json_encode($value)));
         return [$field, $op, $value];
     }

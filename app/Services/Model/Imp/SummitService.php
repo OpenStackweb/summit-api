@@ -642,6 +642,46 @@ final class SummitService
     private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null)
     {
 
+
+        // check first if there is an upgrade or not
+
+        $res = $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
+            $event_type = null;
+            if (isset($data['type_id'])) {
+                $event_type = $summit->getEventType(intval($data['type_id']));
+                if (is_null($event_type)) {
+                    throw new EntityNotFoundException(sprintf("event type id %s does not exists!", $data['type_id']));
+                }
+            }
+
+            if (!is_null($event_id) && $event_id > 0) {
+                $event = $this->event_repository->getByIdRefreshed($event_id);
+                if (is_null($event))
+                    throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
+                $old_event_type = $event->getType();
+
+                // check event type transition ...
+
+                if (!is_null($event_type)) {
+
+                    if ($old_event_type->getClassName() != $event_type->getClassName() && $event_type instanceof PresentationType) {
+                        Log::debug(sprintf("SummitService::saveOrUpdateEvent promoting event %s 2 presentation ...", $event_id));
+                        $event->promote2Presentation($event_type);
+                        return $event;
+                    }
+                }
+            }
+            return null;
+        });
+
+        // we performed an upgrade, return the event
+        if(!is_null($res))
+        {
+            return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
+                return $this->event_repository->getByIdRefreshed($event_id);
+            });
+        }
+
         return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
 
             Log::debug
@@ -689,8 +729,8 @@ final class SummitService
 
             // existing event
 
-            if (!is_null($event_id) && intval($event_id) > 0) {
-                $event = $this->event_repository->getById($event_id);
+            if (!is_null($event_id) && $event_id > 0) {
+                $event = $this->event_repository->getByIdRefreshed($event_id);
                 if (is_null($event))
                     throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
                 $old_event_type = $event->getType();
@@ -698,16 +738,16 @@ final class SummitService
                 // check event type transition ...
 
                 if (!is_null($event_type) && !$this->canPerformEventTypeTransition($old_event_type, $event_type)) {
-                    throw new ValidationException
-                    (
-                        sprintf
+                        throw new ValidationException
                         (
-                            "invalid event type transition for event id %s ( from %s to %s)",
-                            $event_id,
-                            $old_event_type->getType(),
-                            $event_type->getType()
-                        )
-                    );
+                            sprintf
+                            (
+                                "invalid event type transition for event id %s ( from %s to %s)",
+                                $event_id,
+                                $old_event_type->getType(),
+                                $event_type->getType()
+                            )
+                        );
                 }
                 if (is_null($event_type)) $event_type = $old_event_type;
             }

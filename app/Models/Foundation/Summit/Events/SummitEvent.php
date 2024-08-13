@@ -1673,4 +1673,40 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             throw new ValidationException(sprintf("%s is not a valid submission source.", $submission_source));
         $this->submission_source = $submission_source;
     }
+
+    /**
+     * @param PresentationType $type
+     * @return void
+     */
+    public function promote2Presentation(PresentationType $type):void{
+        try {
+            $sql = <<<SQL
+UPDATE `SummitEvent` SET `ClassName` = 'Presentation', TypeID = :type_id WHERE `SummitEvent`.`ID` = :id;
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'id' => $this->getId(),
+                    'type_id' => $type->getId(),
+                ]
+            );
+
+            $sql = <<<SQL
+INSERT INTO `Presentation` (`ID`, `Status`, `OtherTopic`, `Progress`, `Views`, `BeenEmailed`, `ProblemAddressed`, `AttendeesExpectedLearnt`, `Legacy`, `ToRecord`, `AttendingMedia`, `Slug`, `ModeratorID`, `SelectionPlanID`, `WillAllSpeakersAttend`, `DisclaimerAcceptedDate`, `CustomOrder`) 
+VALUES (:id, NULL, NULL, '0', '0', '0', NULL, NULL, '0', '0', '0', NULL, NULL, NULL, '0', NULL, '0')
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'id' => $this->getId(),
+                ]
+            );
+
+        } catch (\Exception $ex) {
+
+        }
+
+    }
 }

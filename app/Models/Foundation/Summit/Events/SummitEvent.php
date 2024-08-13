@@ -1773,25 +1773,24 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 UPDATE `SummitEvent` SET `ClassName` = 'Presentation', TypeID = :type_id WHERE `SummitEvent`.`ID` = :id;
 SQL;
 
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
-                [
-                    'id' => $this->getId(),
-                    'type_id' => $type->getId(),
-                ]
-            );
+            $stmt = $this->prepareRawSQL($sql,   [
+                'id' => $this->getId(),
+                'type_id' => $type->getId(),
+            ]);
+
+            $stmt->executeQuery();
 
             $sql = <<<SQL
 INSERT INTO `Presentation` (`ID`, `Status`, `OtherTopic`, `Progress`, `Views`, `BeenEmailed`, `ProblemAddressed`, `AttendeesExpectedLearnt`, `Legacy`, `ToRecord`, `AttendingMedia`, `Slug`, `ModeratorID`, `SelectionPlanID`, `WillAllSpeakersAttend`, `DisclaimerAcceptedDate`, `CustomOrder`) 
 VALUES (:id, NULL, NULL, '0', '0', '0', NULL, NULL, '0', '0', '0', NULL, NULL, NULL, '0', NULL, '0')
 SQL;
 
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
+            $stmt = $this->prepareRawSQL($sql,
                 [
                     'id' => $this->getId(),
-                ]
-            );
+                ]);
+            $stmt->executeQuery();
+            $this->getEM()->flush();
 
         } catch (\Exception $ex) {
 

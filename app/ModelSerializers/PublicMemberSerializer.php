@@ -18,21 +18,13 @@ use models\main\Member;
  */
 final class PublicMemberSerializer extends AbstractMemberSerializer
 {
+
     /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
+     * @param Member $member
+     * @param array $values
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
-    {
-        $member  = $this->object;
-        if(!$member instanceof Member) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        // permissions check
-
+    protected function checkDataPermissions(Member $member, array $values):array{
         if(!$member->isPublicProfileShowBio())
         {
             unset($values['bio']);
@@ -61,6 +53,20 @@ final class PublicMemberSerializer extends AbstractMemberSerializer
             unset($values['last_name']);
         }
 
-        return $values;
+    }
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        $member  = $this->object;
+        if(!$member instanceof Member) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        return $this->checkDataPermissions($member, $values);
     }
 }

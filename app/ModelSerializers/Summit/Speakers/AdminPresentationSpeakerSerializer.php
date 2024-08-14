@@ -34,6 +34,11 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
         'summit_assistance',
         'registration_code',
     ];
+    
+    protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
+        return $values;
+    }
+
 
     protected function getMemberSerializerType():string{
         return SerializerRegistry::SerializerType_Admin;

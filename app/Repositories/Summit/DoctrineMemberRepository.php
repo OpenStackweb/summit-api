@@ -397,14 +397,14 @@ final class DoctrineMemberRepository
                                     SELECT __p61.id FROM models\summit\Presentation __p61 
                                     JOIN __p61.created_by __c61 WITH __c61 = e.id 
                                     JOIN __p61.speakers __pspk61
-                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = e.id 
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = e
                                     WHERE __p61.summit = :summit
                                 ) 
                                 AND  
                                 NOT EXISTS (
                                     SELECT __p62.id FROM models\summit\Presentation __p62 
                                     JOIN __p62.created_by __c62 WITH __c62 = e.id 
-                                    JOIN __p62.moderator __md62 WITH __md62.member = e.id 
+                                    JOIN __p62.moderator __md62 WITH __md62.member = e
                                     WHERE __p62.summit = :summit
                                 ))'
                         ),

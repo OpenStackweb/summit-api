@@ -2710,15 +2710,16 @@ SQL;
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);
                 if($value)
-                    $extraWhere .= " AND spk.member = :member_id";
+                    $extraWhere .= " AND ( spk.member = :member_id OR mod.member = :member_id)";
                 else
-                    $extraWhere .= " AND spk.member <> :member_id";
+                    $extraWhere .= " AND ( (spk.member <> :member_id OR spk.member IS NULL) AND (mod.member <> :member_id OR mod.member IS NULL) )";
             }
         }
         $query = $this->createQuery(sprintf("
-            SELECT p from models\summit\Presentation p 
+            SELECT DISTINCT p from models\summit\Presentation p 
             JOIN p.summit s 
             LEFT JOIN p.speakers a_spk 
+            LEFT JOIN p.moderator mod
             LEFT JOIN a_spk.speaker spk 
             JOIN p.created_by cb 
             LEFT JOIN p.selection_plan sel_p  
@@ -2904,15 +2905,16 @@ SQL;
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);
                 if($value)
-                    $extraWhere .= " AND spk.member = :member_id";
+                    $extraWhere .= " AND ( spk.member = :member_id OR mod.member = :member_id)";
                 else
-                    $extraWhere .= " AND spk.member <> :member_id";
+                    $extraWhere .= " AND ( (spk.member <> :member_id OR spk.member IS NULL) AND (mod.member <> :member_id OR mod.member IS NULL) )";
             }
         }
 
         $query = $this->createQuery("
-        SELECT p from models\summit\Presentation p 
+        SELECT DISTINCT p from models\summit\Presentation p 
         JOIN p.summit s 
+        LEFT JOIN p.moderator mod
         LEFT JOIN p.speakers a_spk 
         LEFT JOIN a_spk.speaker spk 
         JOIN p.created_by cb 
@@ -3060,14 +3062,15 @@ SQL;
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);
                 if($value)
-                    $extraWhere .= " AND spk.member = :member_id";
+                    $extraWhere .= " AND ( spk.member = :member_id OR mod.member = :member_id)";
                 else
-                    $extraWhere .= " AND spk.member <> :member_id";
+                    $extraWhere .= " AND ( (spk.member <> :member_id OR spk.member IS NULL) AND (mod.member <> :member_id OR mod.member IS NULL) )";
             }
         }
 
-        $query = $this->createQuery("SELECT p from models\summit\Presentation p 
-            JOIN p.summit s 
+        $query = $this->createQuery("SELECT DISTINCT p from models\summit\Presentation p 
+            JOIN p.summit s
+            LEFT JOIN p.moderator mod 
             LEFT JOIN p.speakers a_spk 
             LEFT JOIN a_spk.speaker spk 
             LEFT JOIN p.materials m 

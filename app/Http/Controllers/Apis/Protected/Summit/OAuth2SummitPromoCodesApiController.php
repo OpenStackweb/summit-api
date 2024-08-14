@@ -198,7 +198,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     call_user_func($applyExtraFilters, $filter),
                     $order
                 );
-            }
+            },
+            ['serializer_type' => SerializerRegistry::SerializerType_Private]
         );
     }
 
@@ -282,7 +283,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     call_user_func($applyExtraFilters, $filter),
                     $order
                 );
-            }
+            },
+            [ 'serializer_type' => SerializerRegistry::SerializerType_Private ],
         );
     }
 
@@ -387,7 +389,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 ];
             },
             'promocodes-',
-            [],
+            [ 'serializer_type' => SerializerRegistry::SerializerType_Private ],
             function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->repository->getBySummit
                 (
@@ -396,7 +398,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     call_user_func($applyExtraFilters, $filter),
                     $order
                 );
-            }
+            },
         );
     }
 
@@ -488,7 +490,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 ];
             },
             'sponsor-promocodes-',
-            [],
+            [ 'serializer_type' => SerializerRegistry::SerializerType_Private ],
             function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->repository->getBySummit
                 (

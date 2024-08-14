@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use models\summit\SponsorSummitRegistrationDiscountCode;
+
 /**
  * Class SponsorSummitRegistrationDiscountCodeCSVSerializer
  * @package ModelSerializers
@@ -31,7 +33,7 @@ extends SponsorSummitRegistrationDiscountCodeSerializer
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $code            = $this->object;
-        if(!$code instanceof SponsorSummitRegistrationDiscountCodeSerializer) return [];
+        if(!$code instanceof SponsorSummitRegistrationDiscountCode) return [];
 
         return self::serializeFields2CSV
         (

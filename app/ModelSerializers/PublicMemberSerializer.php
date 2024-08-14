@@ -52,8 +52,9 @@ final class PublicMemberSerializer extends AbstractMemberSerializer
             unset($values['first_name']);
             unset($values['last_name']);
         }
-
+        return $values;
     }
+
     /**
      * @param null $expand
      * @param array $fields

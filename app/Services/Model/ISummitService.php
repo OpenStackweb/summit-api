@@ -673,4 +673,10 @@ interface ISummitService
      * @throws \Exception
      */
     public function upgradeSummitEvent(Summit $summit, int $event_id, int $type_id): SummitEvent;
+
+    /**
+     * @param int $minutes
+     * @return void
+     */
+    public function publishStreamUpdatesStartInXMinutes(int $minutes): void;
 }

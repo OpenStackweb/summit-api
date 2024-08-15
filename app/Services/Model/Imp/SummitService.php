@@ -27,6 +27,7 @@ use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
+use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -60,6 +61,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use League\Csv\Reader;
+use libs\utils\ICacheService;
 use libs\utils\ICalTimeZoneBuilder;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -238,6 +240,11 @@ final class SummitService
     private $mux_api;
 
     /**
+     * @var ICacheService
+     */
+    private $cache_service;
+
+    /**
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
@@ -262,6 +269,7 @@ final class SummitService
      * @param IFileDownloadStrategy $download_strategy
      * @param IEncryptionAES256KeysGenerator $encryption_key_generator
      * @param IMUXApi $mux_api
+     * @param ICacheService $cache_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -290,6 +298,7 @@ final class SummitService
         IFileDownloadStrategy                      $download_strategy,
         IEncryptionAES256KeysGenerator             $encryption_key_generator,
         IMUXApi                                    $mux_api,
+        ICacheService                              $cache_service,
         ITransactionService                        $tx_service
     )
     {
@@ -318,6 +327,7 @@ final class SummitService
         $this->encryption_key_generator = $encryption_key_generator;
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
+        $this->cache_service = $cache_service;
     }
 
     /**
@@ -4071,5 +4081,80 @@ final class SummitService
 
             throw new ValidationException("Event type is the same or not a presentation type.");
         });
+    }
+
+    /**\
+     * @param int $minutes
+     * @return void
+     * @throws Exception
+     */
+    public function publishStreamUpdatesStartInXMinutes(int $minutes): void
+    {
+        $ongoing_summits = $this->tx_service->transaction(function () {
+            return $this->summit_repository->getOnGoing();
+        });
+
+        foreach ($ongoing_summits as $summit) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitService::publishStreamUpdatesStartInXMinutes processing summit % (%s)",
+                    $summit->getName(),
+                    $summit->getId()
+                )
+            );
+
+            $event_ids = $this->tx_service->transaction(function () use ($summit, $minutes) {
+                return $summit->getScheduleEventsIdsStartingInXMinutesOrLessWithStream($minutes);
+            });
+
+            foreach ($event_ids as $event_id) {
+                $event_id = intval($event_id['id']);
+                $this->tx_service->transaction(function () use ($event_id) {
+                    try {
+                        Log::debug(sprintf("SummitService::publishStreamUpdatesStartInXMinutes processing event %s", $event_id));
+                        $event = $this->event_repository->getByIdRefreshed($event_id);
+                        if (!$event instanceof SummitEvent) {
+                            Log::debug(sprintf("SummitService::publishStreamUpdatesStartInXMinutes event %s not found", $event_id));
+                            return;
+                        }
+
+                        $start_time = $event->getStartDate();
+                        if(is_null($start_time)){
+                            Log::warning(sprintf("SummitService::publishStreamUpdatesStartInXMinutes event %s has no start date", $event_id));
+                            return;
+                        }
+
+                        $now = new DateTime('now', new \DateTimeZone('UTC'));
+                        $diff = $start_time->getTimestamp() - $now->getTimestamp();
+
+                        Log::debug(sprintf("SummitService::publishStreamUpdatesStartInXMinutes event %s diff %s", $event_id, $diff));
+
+                        $processing_key = sprintf("summit_event_stream_update_%s", $event_id);
+                        if($this->cache_service->exists($processing_key)){
+                            Log::warning(sprintf("SummitService::publishStreamUpdatesStartInXMinutes event %s already processed", $event_id));
+                            return;
+                        }
+
+                        ProcessScheduleEntityLifeCycleEvent::dispatch
+                        (
+                            "UPDATE",
+                            $event->getSummitId(),
+                            $event->getId(),
+                            $event->getClassName()
+                        )->delay(now()->addSeconds(abs($diff)));
+
+                        Log::debug(sprintf("SummitService::publishStreamUpdatesStartInXMinutes processed event id %s", $event->getId()));
+
+                        $this->cache_service->addSingleValue($processing_key, $event->getId(), abs($diff));
+
+                    } catch (Exception $ex) {
+                        Log::error($ex);
+                    }
+                });
+            }
+        }
     }
 }

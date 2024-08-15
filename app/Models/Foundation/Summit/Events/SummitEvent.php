@@ -1355,6 +1355,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         }
 
         if ($member->hasPaidTicketOnSummit($this->summit)) {
+
+            // check required access levels
             if ($this->category->getAllowedAccessLevels()->count() > 0) {
                 $eventAccessLevelsIds = $this->category->getAllowedAccessLevelsIds();
                 Log::debug
@@ -1377,7 +1379,23 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                 Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
                 return false;
             }
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.", $member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket with the proper AL.", $member->getId(), $member->getEmail(), $this->id));
+            // check time
+            $now = new DateTime("now", new \DateTimeZone("UTC"));
+            if (!is_null($this->start_date) && $this->start_date > $now) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitEvent::hasAccess member %s (%s) event %s has not started yet (%s UTC).",
+                        $member->getId(),
+                        $member->getEmail(),
+                        $this->id,
+                        $this->start_date->format("Y-m-d H:i:s")
+                    )
+                );
+                return false;
+            }
             return true;
         }
         Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));

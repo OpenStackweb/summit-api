@@ -2710,9 +2710,37 @@ SQL;
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);
                 if($value)
-                    $extraWhere .= " AND ( spk.member = :member_id OR mod.member = :member_id)";
+                    $extraWhere .=  'AND (
+                                 EXISTS (
+                                    SELECT __p61.id FROM models\summit\Presentation __p61 
+                                    JOIN __p61.created_by __c61 WITH __c61 = :member_id 
+                                    JOIN __p61.speakers __pspk61 
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = :member_id 
+                                    WHERE __p61.summit = :summit_id
+                                 ) 
+                                 OR 
+                                 EXISTS (
+                                    SELECT __p62.id FROM models\summit\Presentation __p62 
+                                    JOIN __p62.created_by __c62 WITH __c62 = :member_id
+                                    JOIN __p62.moderator __md62 WITH __md62.member = :member_id 
+                                    WHERE __p62.summit = :summit_id
+                                 ))';
                 else
-                    $extraWhere .= " AND ( (spk.member <> :member_id OR spk.member IS NULL) AND (mod.member <> :member_id OR mod.member IS NULL) )";
+                    $extraWhere .= ' AND (
+                                NOT EXISTS (
+                                    SELECT __p61.id FROM models\summit\Presentation __p61 
+                                    JOIN __p61.created_by __c61 WITH __c61 = :member_id 
+                                    JOIN __p61.speakers __pspk61
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = :member_id 
+                                    WHERE __p61.summit = :summit_id
+                                ) 
+                                AND  
+                                NOT EXISTS (
+                                    SELECT __p62.id FROM models\summit\Presentation __p62 
+                                    JOIN __p62.created_by __c62 WITH __c62 = :member_id 
+                                    JOIN __p62.moderator __md62 WITH __md62.member = :member_id 
+                                    WHERE __p62.summit = :summit_id
+                                ))';
             }
         }
         $query = $this->createQuery(sprintf("

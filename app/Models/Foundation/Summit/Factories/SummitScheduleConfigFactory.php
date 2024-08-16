@@ -58,6 +58,7 @@ final class SummitScheduleConfigFactory
             $config->setHidePastEventsWithShowAlwaysOnSchedule(boolval($payload['hide_past_events_with_show_always_on_schedule']));
         if(isset($payload['time_format']))
             $config->setTimeFormat(trim($payload['time_format']));
+
         if(isset($payload['filters'])){
             $filters_dto = $payload['filters'];
             if(!is_null($repository) && !$config->isNew()){

@@ -167,6 +167,7 @@ final class SummitScheduleSettingsService
                     'color_source' => SummitScheduleConfig::ColorSource_EventType,
                     'filters' => $filters,
                     'pre_filters' => $pre_filters,
+                    'time_format' => SummitScheduleConfig::TimeFormat_12
                 ],
                 [
                     'key' => 'my-schedule-main',
@@ -178,6 +179,7 @@ final class SummitScheduleSettingsService
                     'color_source' => SummitScheduleConfig::ColorSource_EventType,
                     'filters' => $filters,
                     'pre_filters' => $pre_filters,
+                    'time_format' => SummitScheduleConfig::TimeFormat_12
                 ]
             ];
 

@@ -115,6 +115,7 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $this->hide_past_events_with_show_always_on_schedule = false;
         $this->filters = new ArrayCollection();
         $this->pre_filters = new ArrayCollection();
+        $this->time_format = self::TimeFormat_12;
     }
 
     /**

@@ -118,6 +118,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     protected $valid_until_date;
 
     /**
+     * @ORM\Column(name="AllowsToDelegate", type="boolean")
+     * @var bool
+     */
+    protected $allows_to_delegate;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\summit\Summit", inversedBy="promo_codes")
      * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
@@ -289,6 +295,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->quantity_used = 0;
         $this->valid_since_date = null;
         $this->valid_until_date = null;
+        $this->allows_to_delegate = false;
         $this->sent_date = null;
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
@@ -621,6 +628,23 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     public function setValidUntilDate(?\DateTime $valid_until_date): void
     {
         $this->valid_until_date = $valid_until_date;
+    }
+
+    /**
+     * @return void
+     */
+    public function isAllowsToDelegate(): bool
+    {
+        return $this->allows_to_delegate;
+    }
+
+    /**
+     * @param bool $allows_to_delegate
+     * @return void
+     */
+    public function setAllowsToDelegate(bool $allows_to_delegate): void
+    {
+        $this->allows_to_delegate = $allows_to_delegate;
     }
 
     /**

@@ -183,6 +183,13 @@ class SummitAttendee extends SilverstripeBaseModel
     private $admin_notes;
 
     /**
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee")
+     * @ORM\JoinColumn(name="ManagedByID", referencedColumnName="ID", nullable=true)
+     * @var SummitAttendee
+     */
+    private $manager;
+
+    /**
      * @return \DateTime|null
      */
     public function getSummitHallCheckedInDate(): ?\DateTime
@@ -338,6 +345,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->presentation_votes = new ArrayCollection();
         $this->notes = new ArrayCollection();
         $this->tags = new ArrayCollection();
+        $this->manager = null;
     }
 
     public function isVirtualCheckedIn(): bool
@@ -594,6 +602,10 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getEmail(): string
     {
+        if ($this->manager != null) {
+            return $this->manager->getEmail();
+        }
+
         if ($this->hasMember()) {
             return $this->member->getEmail();
         }
@@ -1402,5 +1414,21 @@ SQL;
     public function clearTags()
     {
         return $this->tags->clear();
+    }
+
+    /**
+     * @param SummitAttendee $manager
+     */
+    public function setManager(SummitAttendee $manager): void
+    {
+        $this->manager = $manager;
+    }
+
+    /**
+     * @param SummitAttendee $manager
+     */
+    public function setManagerAndUseManagerEmailAddress(SummitAttendee $manager): void
+    {
+        // TODO: Will be implemented when endpoints are defined.
     }
 }

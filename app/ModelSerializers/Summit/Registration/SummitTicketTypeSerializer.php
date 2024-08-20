@@ -37,6 +37,7 @@ class SummitTicketTypeSerializer extends SilverStripeSerializer
         'BadgeTypeId' => 'badge_type_id:json_int',
         'QuantitySold' => 'quantity_sold:json_int',
         'Audience' => 'audience:json_string',
+        'AllowsToDelegate' => 'allows_to_delegate:json_boolean',
     ];
 
     protected static $allowed_relations = [

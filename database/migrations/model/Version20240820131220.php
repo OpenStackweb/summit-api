@@ -34,7 +34,7 @@ final class Version20240820131220 extends AbstractMigration
             $builder->table("SummitAttendee", function (Table $table) {
                 $table->integer("ManagedByID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("ManagedByID", "ManagedByID");
-                $table->foreign("SummitAttendee", "ManagedByID", "ID", ["onDelete" => "CASCADE"], "FK_ManagedSummitAttendee_SummitAttendee");
+                $table->foreign("SummitAttendee", "ManagedByID", "ID", ["onDelete" => "SET NULL"], "FK_ManagedSummitAttendee_SummitAttendee");
             });
         }
     }

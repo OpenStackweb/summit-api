@@ -484,10 +484,9 @@ final class OAuth2SummitOrdersApiController
             if(!$ticket->hasOwner() && !$isOrderOwner)
                 throw new EntityNotFoundException("Order not found.");
 
-            $ticketOwnerEmail = $ticket->getOwnerEmail();
-
             $isTicketOwner = true;
-            if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail() )
+            $ticketOwnerEmail = $ticket->getOwnerEmail();
+            if((!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail()) || $ticket->getOwner()->isManagedBy($current_user))
                 $isTicketOwner = false;
 
             if(!$isOrderOwner && !$isTicketOwner)
@@ -1256,5 +1255,42 @@ final class OAuth2SummitOrdersApiController
                 );
             },
         );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $order_id
+     * @param $ticket_id
+     * @return mixed
+     */
+    public function delegateTicket($summit_id, $order_id, $ticket_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_user = $this->getResourceServerContext()->getCurrentUser();
+            if (is_null($current_user))
+                return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'attendee_first_name' => 'required|string|max:255',
+                'attendee_last_name' => 'required|string|max:255',
+                'attendee_email' => 'sometimes|string|max:255|email',
+                'attendee_company' => 'nullable|string|max:255',
+                'attendee_company_id' => 'nullable|sometimes|integer',
+                'extra_questions' => 'sometimes|extra_question_dto_array'
+            ]);
+
+            $ticket = $this->service->delegateTicket($summit, intval($order_id), intval($ticket_id), $current_user, $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 }

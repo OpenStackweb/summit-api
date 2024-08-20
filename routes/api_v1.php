@@ -1419,6 +1419,7 @@ Route::group(array('prefix' => 'summits'), function () {
                             Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@deActivateTicket']);
                         });
                         Route::get('pdf', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@getTicketPDFBySummit']);
+                        Route::put('delegate',  'OAuth2SummitOrdersApiController@delegateTicket');
                     });
                 });
             });

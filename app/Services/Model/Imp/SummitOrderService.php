@@ -2710,19 +2710,19 @@ final class SummitOrderService
                 if (is_null($ticket)) {
                     $ticket = $this->ticket_repository->getByFormerHashExclusiveLock(strval($ticket_id));
                     if (is_null($ticket))
-                        throw new ValidationException("ticket hash is not valid");
+                        throw new ValidationException("Ticket hash is not valid.");
                 }
 
                 if (is_null($ticket) || !$ticket->hasOwner())
-                    throw new EntityNotFoundException("ticket not found");
+                    throw new EntityNotFoundException("Ticket not found.");
 
                 if (!$ticket->canPubliclyEdit()) {
                     // check hash lifetime
-                    throw new ValidationException("ticket hash is not valid");
+                    throw new ValidationException("Ticket hash is not valid.");
                 }
             }
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
+            if ( !$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException("ticket not found");
 
             Log::debug(sprintf("SummitOrderService::renderTicketByFormat ticket id %s ticket status %s", $ticket->getId(), $ticket->getStatus()));
@@ -2730,11 +2730,11 @@ final class SummitOrderService
                 throw new EntityNotFoundException("ticket not found");
 
             if (!is_null($order_id) && $ticket->getOrderId() !== $order_id)
-                throw new EntityNotFoundException("ticket not found");
+                throw new EntityNotFoundException("Ticket not found.");
 
 
             if (!$ticket->isPaid())
-                throw new ValidationException("ticket is not paid");
+                throw new ValidationException("Ticket is not paid.");
 
             if (!is_null($current_user)) {
                 // if current user is present
@@ -2746,12 +2746,12 @@ final class SummitOrderService
                     $allow_2_render = true;
                 }
 
-                if ($ticket->hasOwner() && $ticket->getOwnerEmail() == $current_user->getEmail()) {
+                if ($ticket->hasOwner() && ($ticket->getOwnerEmail() == $current_user->getEmail() || $ticket->getOwner()->isManagedBy($current_user))) {
                     $allow_2_render = true;
                 }
 
                 if (!$allow_2_render)
-                    throw new ValidationException("ticket does not belong to member");
+                    throw new ValidationException("Ticket does not belong to member.");
 
             }
 
@@ -3435,7 +3435,7 @@ final class SummitOrderService
             (
                 sprintf
                 (
-                    "SummitOrderService::updateTicketById member %s ticket %s payload %s",
+                    "SummitOrderService::updateTicketById member %s ticket %s payload %s.",
                     $current_user->getEmail(),
                     $ticket_id,
                     json_encode($payload)
@@ -3445,14 +3445,15 @@ final class SummitOrderService
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
             if (!$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
-                throw new EntityNotFoundException("ticket not found");
+                throw new EntityNotFoundException("Ticket not found.");
 
             if (!$ticket->canEditTicket($current_user)) {
-                throw new ValidationException(sprintf("Ticket %s can not be edited by current member", $ticket_id));
+                throw new ValidationException(sprintf("Ticket %s can not be edited by current member.", $ticket_id));
             }
 
             $order = $ticket->getOrder();
             $summit = $order->getSummit();
+
             $first_name = $payload['attendee_first_name'] ?? null;
             $last_name = $payload['attendee_last_name'] ?? null;
             $email = $payload['attendee_email'] ?? null;
@@ -4947,6 +4948,104 @@ final class SummitOrderService
 
             if (!is_null($owner))
                 $owner->sendRevocationTicketEmail($ticket);
+
+            return $ticket;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $order_id
+     * @param int $ticket_id
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitAttendeeTicket
+     * @throws \Exception
+     */
+    public function delegateTicket(Summit $summit, int $order_id, int $ticket_id, Member $current_user, array $payload): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id, $current_user, $payload) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::delegateTicket summit %s order %s ticket %s payload %s",
+                    $summit->getId(),
+                    $order_id,
+                    $ticket_id,
+                    json_encode($payload)
+                )
+            );
+
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+
+            if (!$order instanceof SummitOrder || $order->getSummitId() !== $summit->getId())
+                throw new EntityNotFoundException("Order not found.");
+
+            $ticket = $order->getTicketById($ticket_id);
+
+            if (is_null($ticket))
+                throw new EntityNotFoundException("Ticket not found.");
+
+            if(!$ticket->canBeDelegated())
+                throw new ValidationException("Ticket can not be delegated.");
+
+            $new_attendee_first_name = trim($payload['attendee_first_name']);
+            $new_attendee_last_name = trim($payload['attendee_last_name']);
+            $new_attendee_email = trim($payload['attendee_email'] ?? '');
+            $new_attendee_extra_questions =  $payload['extra_questions'] ?? [];
+            $company = $payload['attendee_company'] ?? null;
+            $company_id = $payload['attendee_company_id'] ?? null;
+            $manager = $ticket->getOwner();
+            if(!$ticket->canEditTicket($current_user)){
+                throw new ValidationException("You can not delegate this ticket.");
+            }
+
+            if(empty($new_attendee_first_name))
+                throw new ValidationException("Attendee first name is mandatory.");
+            if(empty($new_attendee_last_name))
+                throw new ValidationException("Attendee last name is mandatory.");
+
+            if(empty(($new_attendee_email))){
+                // delegate email to manager
+                $attendee = SummitAttendeeFactory::build($summit, [
+                    'first_name' => $new_attendee_first_name,
+                    'last_name' => $new_attendee_last_name,
+                    'company' => $company,
+                    'company_id' => $company_id,
+                    'extra_questions' => $new_attendee_extra_questions,
+                ]);
+                $attendee->setManagerAndUseManagerEmailAddress($manager);
+            }
+            else{
+                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $new_attendee_email);
+                $member = $this->member_repository->getByEmail($new_attendee_email);
+
+                if(is_null($attendee)){
+                    $attendee = SummitAttendeeFactory::build($summit, [
+                        'first_name' => $new_attendee_first_name,
+                        'last_name' => $new_attendee_last_name,
+                        'email' => $new_attendee_email,
+                        'company' => $company,
+                        'company_id' => $company_id,
+                        'extra_questions' => $new_attendee_extra_questions,
+                    ], $member);
+                }
+                else{
+                    $attendee = SummitAttendeeFactory::populate($summit, [
+                        'first_name' => $new_attendee_first_name,
+                        'last_name' => $new_attendee_last_name,
+                        'email' => $new_attendee_email,
+                        'company' => $company,
+                        'company_id' => $company_id,
+                        'extra_questions' => $new_attendee_extra_questions,
+                    ], $member);
+                }
+
+                $manager->addManaged($attendee);
+            }
+
+            $attendee->addTicket($ticket);
 
             return $ticket;
         });

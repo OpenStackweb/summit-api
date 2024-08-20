@@ -99,7 +99,7 @@ trait InsertOrdersTestData
         self::$default_ticket_type->setName("TICKET TYPE 1");
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
-
+        self::$default_ticket_type->setAllowsToDelegate(true);
         self::$summit->addTicketType(self::$default_ticket_type);
         $tax1->addTicketType(self::$default_ticket_type);
         $tax2->addTicketType(self::$default_ticket_type);

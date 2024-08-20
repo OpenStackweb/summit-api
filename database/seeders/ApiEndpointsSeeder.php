@@ -784,6 +784,14 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'delegate-ticket',
+                'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/delegate',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                ]
+            ],
+            [
                 'name' => 'add-ticket-2-order',
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets',
                 'http_method' => 'POST',

@@ -1,7 +1,4 @@
 <?php namespace App\Http\Controllers;
-use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
-use models\summit\SummitTicketType;
-
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +11,8 @@ use models\summit\SummitTicketType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
+use models\summit\SummitTicketType;
 /**
  * Class SummitTicketTypeValidationRulesFactory
  * @package App\Http\Controllers
@@ -39,6 +37,7 @@ final class SummitTicketTypeValidationRulesFactory extends AbstractValidationRul
             'external_id'            => 'sometimes|string|max:255',
             'badge_type_id'          => 'sometimes|integer',
             'audience'               => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
+            'allows_to_delegate'    => 'sometimes|boolean',
         ];
     }
 
@@ -60,6 +59,7 @@ final class SummitTicketTypeValidationRulesFactory extends AbstractValidationRul
             'sales_end_date'          => 'nullable:sales_start_date|date_format:U|epoch_seconds|after:sales_start_date',
             'cost'                    => 'sometimes|numeric|greater_than_or_equal:0',
             'audience'                => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
+            'allows_to_delegate'      => 'sometimes|boolean',
         ];
     }
 }

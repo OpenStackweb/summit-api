@@ -155,6 +155,9 @@ final class SummitPromoCodeFactory
             }
         }
 
+        if(isset($data['allows_to_delegate']))
+            $promo_code->setAllowsToDelegate(boolval($data['allows_to_delegate']));
+
         switch ($data['class_name']){
             case SummitRegistrationDiscountCode::ClassName:
             case PrePaidSummitRegistrationDiscountCode::ClassName:{

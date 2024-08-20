@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\App;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\IPaymentConstants;
@@ -65,9 +66,9 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
         self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
         self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
-
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
-        self::InsertOrdersTestData();
         // build payment profile and attach to summit
         self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
             'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
@@ -929,5 +930,63 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         $order = json_decode($content);
         $this->assertTrue(!is_null($order));
         return $order;
+    }
+
+    public function testDelegateTicket(){
+
+        $order = self::$summit->getOrders()[0];
+        $ticket = $order->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' =>  $ticket->getId(),
+            'expand' => 'owner,owner.manager'
+        ];
+
+        $payload = [
+           'attendee_first_name' => 'Joe',
+           'attendee_last_name' => 'Doe',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@delegateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket->owner->email === $ticket->owner->manager->email);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'owner,owner.manager'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllMyTicketsBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $payload = json_decode($content);
+        // attendees should be different
+        $this->assertTrue($payload->data[0]->owner->id != $payload->data[1]->owner->id);
+        // but same email
+        $this->assertTrue($payload->data[0]->owner->email === $payload->data[1]->owner->email);
+        return $ticket;
     }
 }

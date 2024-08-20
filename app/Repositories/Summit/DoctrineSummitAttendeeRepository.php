@@ -233,6 +233,17 @@ final class DoctrineSummitAttendeeRepository
                     )
                 ]
             ),
+            'has_manager' => new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "e.manager is not null"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.manager is null"
+                    ),
+                ]
+            ),
         ];
     }
 

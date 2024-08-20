@@ -183,16 +183,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $member_id = $data['member_id'] ?? 0;
             $member_id = intval($member_id);
             $email = $data['email'] ?? null;
+            $manager_id = $data['manager_id'] ?? 0;
+
+            if($manager_id == 0 && empty($email) && $member_id == 0){
+                throw new ValidationException("You should define a member_id, an email or a manager_id.");
+            }
 
             if ($member_id > 0 && !empty($email)) {
                 // both are defined
-                throw new ValidationException("you should define a member_id or an email, not both");
+                throw new ValidationException("You should define a member_id or an email, not both.");
             }
 
             if ($member_id > 0) {
 
                 $member = $this->member_repository->getById($member_id);
-                if (is_null($member) || !$member instanceof Member)
+                if (!$member instanceof Member)
                     throw new EntityNotFoundException("member not found");
 
                 $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
@@ -205,7 +210,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             if (!empty($email)) {
                 $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($email));
                 if (!is_null($old_attendee))
-                    throw new ValidationException(sprintf("attendee already exist for summit id %s and email %s", $summit->getId(), trim($data['email'])));
+                    throw new ValidationException(sprintf("Attendee already exist for summit id %s and email %s.", $summit->getId(), trim($data['email'])));
             }
 
             $attendee = SummitAttendeeFactory::build($summit, $data, $member);
@@ -213,6 +218,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             // tags
             if (isset($data['tags'])) {
                 $attendee = $this->populateTags($attendee, $data);
+            }
+
+            if($manager_id > 0){
+                $manager = $this->attendee_repository->getById($manager_id);
+                if(!$manager instanceof SummitAttendee)
+                    throw new EntityNotFoundException("Manager not found.");
+                if(!empty($email))
+                    $attendee->addManaged($manager);
+                else
+                    $attendee->setManagerAndUseManagerEmailAddress($manager);
             }
 
             $this->attendee_repository->add($attendee);

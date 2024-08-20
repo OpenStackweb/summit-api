@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use models\exceptions\ValidationException;
@@ -60,6 +59,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             'valid_until_date'     => 'nullable|required_with:valid_since_date|date_format:U|epoch_seconds|after:valid_since_date',
             'allowed_ticket_types' => 'sometimes|int_array',
             'badge_features'       => 'sometimes|int_array',
+            'allows_to_delegate'    => 'sometimes|boolean',
         ];
 
         $specific_rules = [];
@@ -174,6 +174,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             'badge_features'       => 'sometimes|int_array',
             'badge_features_apply_to_all_tix_retroactively' => 'sometimes|boolean',
             'tags'                 => 'sometimes|string_array',
+            'allows_to_delegate'    => 'sometimes|boolean',
         ];
 
         $specific_rules = [];

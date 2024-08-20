@@ -1265,7 +1265,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             if ($summit->isSummitAdmin($member)) return true;
         }
         // i am ticket owner
-        if ($this->hasOwner() && $this->owner->getEmail() == $member->getEmail()) return true;
+        if ($this->hasOwner() && ($this->owner->getEmail() == $member->getEmail() || $this->owner->isManagedBy($member))) return true;
         // i am order owner
         if ($this->order->getOwnerEmail() == $member->getEmail()) return true;
         return false;
@@ -1331,5 +1331,12 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function getOrderedNotes(){
         $criteria = Criteria::create()->orderBy(["created" => Criteria::ASC]);
         return $this->notes->matching($criteria);
+    }
+
+    /**
+     * @return bool
+     */
+    public function canBeDelegated():bool{
+       return $this->isPaid() && $this->hasOwner() && !$this->owner->hasManager() && ($this->ticket_type->isAllowsToDelegate() || ($this->hasPromoCode() && $this->promo_code->isAllowsToDelegate()));
     }
 }

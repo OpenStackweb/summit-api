@@ -41,6 +41,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
 
         Log::debug("InviteAttendeeTicketEditionMail::__construct");
         $this->ticket_id = $ticket->getId();
+
         $owner = $ticket->getOwner();
         $order = $ticket->getOrder();
         $summit = $order->getSummit();
@@ -113,8 +114,20 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
             throw new \InvalidArgumentException("missing support_email value");
 
         // default value
-        if(!isset($payload[IMailTemplatesConstants::message]))
-            $payload[IMailTemplatesConstants::message] = '';
+
+        $message = $payload[IMailTemplatesConstants::message] ?? '';
+
+        if(!empty($message)){
+            $invite_attendee_ticket_edition_mail_message_key = sprintf
+            (
+                "InviteAttendeeTicketEditionMail_message_%s", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id))
+            );
+            // if message is not empty store it on cache, just in case that SummitAttendeeTicketEmail is emitted in the middle
+            // before the actual dispatching of this email
+            Cache::put($invite_attendee_ticket_edition_mail_message_key, $message);
+        }
+
+        $payload[IMailTemplatesConstants::message] = $message;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
@@ -207,7 +220,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         }
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        Cache::put($invite_attendee_ticket_edition_mail_key, $now->getTimestamp(), $delay);
+        Cache::put($invite_attendee_ticket_edition_mail_key, $now->getTimestamp(), now()->addMinutes($delay));
 
         parent::handle($api);
     }

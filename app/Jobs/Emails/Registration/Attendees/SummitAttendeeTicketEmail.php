@@ -132,8 +132,21 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
             $payload[IMailTemplatesConstants::attachments] = $attachments;
 
         // default value
-        if(!isset($payload[IMailTemplatesConstants::message]))
-            $payload[IMailTemplatesConstants::message] = '';
+
+        $message = $payload[IMailTemplatesConstants::message] ?? '';
+
+        // check if we have a former message in cache
+        $invite_attendee_ticket_edition_mail_message_key = sprintf
+        (
+            "InviteAttendeeTicketEditionMail_message_%s", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id))
+        );
+        if(empty($message) && Cache::has($invite_attendee_ticket_edition_mail_message_key)){
+            $message = Cache::get($invite_attendee_ticket_edition_mail_message_key);
+            Cache::forget($invite_attendee_ticket_edition_mail_message_key);
+        }
+
+        $payload[IMailTemplatesConstants::message] = $message;
+
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("SummitAttendeeTicketEmail::__construct payload %s template %s", json_encode($payload), $template_identifier));
@@ -218,7 +231,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         }
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        Cache::put($summit_attendee_ticket_email_key, $now->getTimestamp(), $delay);
+        Cache::put($summit_attendee_ticket_email_key, $now->getTimestamp(), now()->addMinutes($delay));
         // mark the at least of email of this kind was sent
         if(!Cache::has($summit_attendee_ticket_email_sent_key))
             Cache::forever($summit_attendee_ticket_email_sent_key, $now->getTimestamp());

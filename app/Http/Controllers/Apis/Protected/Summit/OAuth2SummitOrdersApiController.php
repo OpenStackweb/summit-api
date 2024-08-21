@@ -20,6 +20,7 @@ use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
@@ -486,6 +487,16 @@ final class OAuth2SummitOrdersApiController
 
             $isTicketOwner = true;
             $ticketOwnerEmail = $ticket->getOwnerEmail();
+            Log::debug
+            (
+                sprintf
+                (
+                    "OAuth2SummitOrdersApiController::getMyTicketById ticketOwnerEmail %s current email %s",
+                    $ticketOwnerEmail,
+                    $current_user->getEmail()
+                )
+            );
+
             if((!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail()) ||
                 ($ticket->hasOwner() && !$ticket->getOwner()->isManagedBy($current_user)))
                 $isTicketOwner = false;

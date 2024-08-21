@@ -479,7 +479,7 @@ final class OAuth2SummitOrdersApiController
                 $isOrderOwner = false;
 
             $ticket = $order->getTicketById(intval($ticket_id));
-            if (is_null($ticket))
+            if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException("Ticket not found.");
 
             if(!$ticket->hasOwner() && !$isOrderOwner)
@@ -497,9 +497,14 @@ final class OAuth2SummitOrdersApiController
                 )
             );
 
-            if((!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail()) ||
-                ($ticket->hasOwner() && !$ticket->getOwner()->isManagedBy($current_user)))
+            if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail())
                 $isTicketOwner = false;
+
+            if(!$isTicketOwner){
+                // check if we are the manager
+                $isTicketOwner = $ticket->hasOwner() && $ticket->getOwner()->isManagedBy($current_user);
+                Log::debug(sprintf("OAuth2SummitOrdersApiController::getMyTicketById isTicketOwner %b (manager)" , $isTicketOwner));
+            }
 
             if(!$isOrderOwner && !$isTicketOwner)
                 throw new EntityNotFoundException("Ticket not found.");

@@ -489,12 +489,9 @@ class SummitAttendee extends SilverstripeBaseModel
     ):void
     {
 
-        $delay = intval(Config::get("registration.attendee_invitation_email_threshold", 5));
-
         $email = $this->getEmail();
-        $key = md5(sprintf("%s_%s", $email, $ticket->getId()));
 
-        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s delay %s", $email, $ticket->getId(), $delay));
+        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s", $email, $ticket->getId()));
 
         if ($ticket->getOwnerEmail() != $this->getEmail()) return;
 
@@ -514,12 +511,9 @@ class SummitAttendee extends SilverstripeBaseModel
             // regenerate the QR code if the ticket is complete
             $ticket->generateQRCode();
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
-            // adds a threshold of 5 minutes to avoid duplicates emails
-            if (Cache::add(sprintf("%s_emit_ticket", $key), true, now()->addMinutes($delay)) || $delay == 0) {
-                Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending SummitAttendeeTicketEmail", $email, $ticket->getId()));
-                SummitAttendeeTicketEmail::dispatch($ticket, $payload, $test_email_recipient);
-                $ticket->getOwner()->markInvitationEmailSentDate();
-            }
+            Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending SummitAttendeeTicketEmail", $email, $ticket->getId()));
+            SummitAttendeeTicketEmail::dispatch($ticket, $payload, $test_email_recipient);
+            $ticket->getOwner()->markInvitationEmailSentDate();
             return;
         }
 
@@ -530,13 +524,20 @@ class SummitAttendee extends SilverstripeBaseModel
         // receive daily reminder emails. So, I think that makes this email not really needed as the buyer already knows
         // they bought a ticket for themselves.
         if ($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
-            // no delay
-            // adds a threshold of 5 minutes to avoid duplicates emails
-            if (Cache::add(sprintf("%s_edit_ticket", $key), true, now()->addMinutes($delay)) || $delay == 0) {
-                Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket %s sending InviteAttendeeTicketEditionMail", $email, $ticket->getId()));
-                InviteAttendeeTicketEditionMail::dispatch($ticket, $payload, $test_email_recipient);
-                $ticket->getOwner()->markInvitationEmailSentDate();
-            }
+            $delay = intval(Config::get("registration.attendee_invitation_email_delay", 10));
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitAttendee::sendInvitationEmail attendee %s ticket %s sending InviteAttendeeTicketEditionMail with delay of %s minutes",
+                    $email,
+                    $ticket->getId(),
+                    $delay
+                )
+            );
+            // adds an initial delay tp allow user to complete ticket
+            InviteAttendeeTicketEditionMail::dispatch($ticket, $payload, $test_email_recipient)->delay(now()->addMinutes($delay));
+            $ticket->getOwner()->markInvitationEmailSentDate();
         }
     }
 

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
+use App\Services\Apis\IMailApi;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\FormatUtils;
@@ -34,6 +36,11 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
     const DEFAULT_TEMPLATE = 'REGISTRATION_ATTENDEE_TICKET';
 
     /**
+     * @var int
+     */
+    protected $ticket_id;
+
+    /**
      * @param SummitAttendeeTicket $ticket
      * @param array $payload
      * @param string|null $test_email_recipient
@@ -41,7 +48,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
     public function __construct(SummitAttendeeTicket $ticket, array $payload = [], ?string $test_email_recipient = null)
     {
         Log::debug("SummitAttendeeTicketEmail::__construct");
-
+        $this->ticket_id = $ticket->getId();
         $attendee = $ticket->getOwner();
         $summit = $attendee->getSummit();
         $order = $ticket->getOrder();
@@ -189,5 +196,32 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload[IMailTemplatesConstants::attachments]['items'] = $attachment_schema;
 
         return $payload;
+    }
+
+
+    public function handle
+    (
+        IMailApi $api
+    )
+    {
+        Log::debug(sprintf("SummitAttendeeTicketEmail::handle template_identifier %s to_email %s", $this->template_identifier, $this->to_email));
+        // check if we triggered a SummitAttendeeTicketEmail before send it
+        $summit_attendee_ticket_email_key = sprintf("SummitAttendeeTicketEmail_%s", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id)));
+        $summit_attendee_ticket_email_sent_key = sprintf("SummitAttendeeTicketEmail_%s_sent", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id)));
+        $delay = intval(Config::get("registration.attendee_invitation_email_threshold", 5));
+
+        // check if we already sent this same email on the configured threshold
+        if(Cache::has($summit_attendee_ticket_email_key)){
+            $timestamp = Cache::get($summit_attendee_ticket_email_key);
+            Log::warning(sprintf("SummitAttendeeTicketEmail::handle already sent email SummitAttendeeTicketEmail to %s at %s", $this->to_email, $timestamp));
+            return;
+        }
+
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        Cache::put($summit_attendee_ticket_email_key, $now->getTimestamp(), $delay);
+        // mark the at least of email of this kind was sent
+        if(!Cache::has($summit_attendee_ticket_email_sent_key))
+            Cache::forever($summit_attendee_ticket_email_sent_key, $now->getTimestamp());
+        parent::handle($api);
     }
 }

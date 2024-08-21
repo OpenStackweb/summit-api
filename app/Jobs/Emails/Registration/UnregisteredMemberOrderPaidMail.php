@@ -50,7 +50,7 @@ class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
             $summit->getMarketingSiteOAuth2ClientId(),
             urlencode($summit->getMarketingSiteUrl())
         );
-
+        $this->payload[IMailTemplatesConstants::summit_marketing_site_url] = $this->payload[IMailTemplatesConstants::set_password_link_to_registration];
         $this->payload[IMailTemplatesConstants::manage_orders_url] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
 
     }

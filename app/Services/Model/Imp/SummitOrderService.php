@@ -1896,6 +1896,7 @@ final class SummitOrderService
                 throw new EntityNotFoundException("Order not found.");
             }
 
+            // only order owner can assign tickets
             if ($order->getOwner()->getId() != $current_user->getId()) {
                 throw new EntityNotFoundException("Order not found.");
             }
@@ -3511,9 +3512,9 @@ final class SummitOrderService
                         $attendee->getId()
                     )
                 );
-                $emailOverridenByManager =  $attendee->isEmailOverridenByManager();
+                $email_override =  $attendee->isEmailOverridenByManager();
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
-                if($emailOverridenByManager){
+                if($email_override){
                     // recalculate the email placeholder
                     $attendee->setManagerAndUseManagerEmailAddress($attendee->getManager());
                 }

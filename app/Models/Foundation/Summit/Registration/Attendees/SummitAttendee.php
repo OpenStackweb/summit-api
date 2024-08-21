@@ -1472,6 +1472,9 @@ SQL;
         $this->email = $this->calculatePlaceholderEmailFromManager();
     }
 
+    public function isEmailOverridenByManager():bool{
+        return $this->shouldOverrideEmailWithManagerEmail();
+    }
     /**
      * @return string
      * @throws ValidationException

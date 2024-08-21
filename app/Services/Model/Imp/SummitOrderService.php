@@ -3471,7 +3471,7 @@ final class SummitOrderService
             $attendee = $ticket->getOwner();
 
             if (!is_null($attendee)) {
-                if ($attendee->getEmail() != $email)
+                if (!empty($email) && $attendee->getEmail() != $email)
                     throw new ValidationException
                     (
                         "Ticket already had been assigned to another attendee, please revoke it before to assign it again."
@@ -3491,9 +3491,9 @@ final class SummitOrderService
                 $payload['disclaimer_accepted'] = boolval($disclaimer_accepted);
             }
 
-            if (is_null($attendee) && !empty($attendee_email)) {
+            if (is_null($attendee) && !empty($email)) {
                 // try to create it
-                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $email);
                 if (is_null($attendee)) {
                     $attendee = new SummitAttendee();
                 }
@@ -3511,8 +3511,12 @@ final class SummitOrderService
                         $attendee->getId()
                     )
                 );
-
+                $emailOverridenByManager =  $attendee->isEmailOverridenByManager();
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
+                if($emailOverridenByManager){
+                    // recalculate the email placeholder
+                    $attendee->setManagerAndUseManagerEmailAddress($attendee->getManager());
+                }
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
                 if ($summit->isRegistrationSendTicketEmailAutomatically()) {

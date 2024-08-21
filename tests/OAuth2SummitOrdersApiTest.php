@@ -987,6 +987,32 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         $this->assertTrue($payload->data[0]->owner->id != $payload->data[1]->owner->id);
         // but same email
         $this->assertTrue($payload->data[0]->owner->email === $payload->data[1]->owner->email);
+
+
+        $params = [
+            'ticket_id' =>  $ticket->id,
+            'expand' => 'owner,owner.manager'
+        ];
+
+        $payload = [
+            'attendee_first_name' => 'Joe2',
+            'attendee_last_name' => '',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@updateMyTicketById",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
         return $ticket;
     }
 }

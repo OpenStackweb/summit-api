@@ -486,7 +486,8 @@ final class OAuth2SummitOrdersApiController
 
             $isTicketOwner = true;
             $ticketOwnerEmail = $ticket->getOwnerEmail();
-            if((!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail()) || $ticket->getOwner()->isManagedBy($current_user))
+            if((!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail()) ||
+                ($ticket->hasOwner() && !$ticket->getOwner()->isManagedBy($current_user)))
                 $isTicketOwner = false;
 
             if(!$isOrderOwner && !$isTicketOwner)

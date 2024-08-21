@@ -193,7 +193,6 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
     {
         return self::EVENT_SLUG;
     }
-
     public function handle
     (
         IMailApi $api

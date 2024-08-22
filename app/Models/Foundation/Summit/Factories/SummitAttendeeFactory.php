@@ -31,12 +31,13 @@ final class SummitAttendeeFactory
      * @param Summit $summit
      * @param array $payload
      * @param Member|null $member
+     * @param SummitAttendee|null $manager
      * @return SummitAttendee
      * @throws ValidationException
      */
-    public static function build(Summit $summit, array $payload, ?Member $member = null)
+    public static function build(Summit $summit, array $payload, ?Member $member = null, ?SummitAttendee $manager = null)
     {
-        return self::populate($summit, new SummitAttendee, $payload, $member);
+        return self::populate($summit, new SummitAttendee, $payload, $member, true, $manager);
     }
 
     /**
@@ -45,6 +46,7 @@ final class SummitAttendeeFactory
      * @param array $payload
      * @param Member|null $member
      * @param bool $validate_extra_questions
+     * @param SummitAttendee|null $manager
      * @return SummitAttendee
      * @throws ValidationException
      */
@@ -54,7 +56,8 @@ final class SummitAttendeeFactory
         SummitAttendee $attendee,
         array          $payload,
         ?Member        $member = null,
-        bool           $validate_extra_questions = true
+        bool           $validate_extra_questions = true,
+        ?SummitAttendee $manager = null
     )
     {
         Log::debug
@@ -77,20 +80,31 @@ final class SummitAttendeeFactory
         } else {
             $attendee->clearMember();
         }
-
-        if (isset($payload['email']) && !empty($payload['email']))
-            $attendee->setEmail(trim($payload['email']));
-
-        $summit->addAttendee($attendee);
-
-        if (isset($payload['external_id']))
-            $attendee->setExternalId(trim($payload['external_id']));
+        // verify if the email is already overriden by manager
+        $email_override =  $attendee->isEmailOverridenByManager();
 
         if (isset($payload['first_name']))
             $attendee->setFirstName(trim($payload['first_name']));
 
         if (isset($payload['last_name']))
             $attendee->setSurname(trim($payload['last_name']));
+
+        if (isset($payload['email']) && !empty($payload['email']))
+            $attendee->setEmail(trim($payload['email']));
+
+        if(!is_null($manager)){
+            if(empty($attendee->getEmail()) || $email_override){
+                $attendee->setManagerAndUseManagerEmailAddress($manager);
+            }
+            else
+                $attendee->setManager($manager);
+        }
+
+        $summit->addAttendee($attendee);
+
+        if (isset($payload['external_id']))
+            $attendee->setExternalId(trim($payload['external_id']));
+
 
         // company by name
         if (isset($payload['company'])) {
@@ -144,6 +158,11 @@ final class SummitAttendeeFactory
             if (!$res && $validate_extra_questions) {
                 throw new ValidationException("You neglected to fill in all mandatory questions for the attendee.");
             }
+        }
+
+        if($email_override && $attendee->hasManager()){
+            // recalculate the email placeholder bc name could have changed
+            $attendee->setManagerAndUseManagerEmailAddress($attendee->getManager());
         }
 
         return $attendee;

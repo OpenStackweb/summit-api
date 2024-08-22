@@ -3512,12 +3512,7 @@ final class SummitOrderService
                         $attendee->getId()
                     )
                 );
-                $email_override =  $attendee->isEmailOverridenByManager();
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
-                if($email_override){
-                    // recalculate the email placeholder
-                    $attendee->setManagerAndUseManagerEmailAddress($attendee->getManager());
-                }
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
                 if ($summit->isRegistrationSendTicketEmailAutomatically()) {
@@ -5026,8 +5021,7 @@ final class SummitOrderService
                     'company' => $company,
                     'company_id' => $company_id,
                     'extra_questions' => $new_attendee_extra_questions,
-                ]);
-                $attendee->setManagerAndUseManagerEmailAddress($manager);
+                ], null, $manager);
             }
             else{
                 Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to %s", $new_attendee_email));
@@ -5042,7 +5036,7 @@ final class SummitOrderService
                         'company' => $company,
                         'company_id' => $company_id,
                         'extra_questions' => $new_attendee_extra_questions,
-                    ], $member);
+                    ], $member, $manager);
                 }
                 else{
                     $attendee = SummitAttendeeFactory::populate($summit, $attendee, [
@@ -5052,9 +5046,8 @@ final class SummitOrderService
                         'company' => $company,
                         'company_id' => $company_id,
                         'extra_questions' => $new_attendee_extra_questions,
-                    ], $member);
+                    ], $member, true, $manager);
                 }
-                $manager->addManaged($attendee);
             }
             $attendee->updateStatus();
             $attendee->addTicket($ticket);

@@ -615,7 +615,7 @@ class SummitAttendee extends SilverstripeBaseModel
         if ($this->hasMember()) {
             return $this->member->getEmail();
         }
-
+        if(empty($this->email)) return '';
         return PunnyCodeHelper::decodeEmail($this->email);
     }
 

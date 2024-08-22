@@ -228,24 +228,18 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         )
                     );
             }
-
-            $attendee = SummitAttendeeFactory::build($summit, $data, $member);
-
-            // tags
-            if (isset($data['tags'])) {
-                $attendee = $this->populateTags($attendee, $data);
-            }
-
+            $manager = null;
             if($manager_id > 0){
                 $manager = $this->attendee_repository->getById($manager_id);
                 if(!$manager instanceof SummitAttendee)
                     throw new EntityNotFoundException("Manager not found.");
-                // we provide an email ( explicit email or member associated )
-                if(!empty($email) || $member_id > 0)
-                    // so we just associate the manager
-                    $manager->addManaged($manager);
-                else // otherwise we use the manager email
-                    $attendee->setManagerAndUseManagerEmailAddress($manager);
+            }
+
+            $attendee = SummitAttendeeFactory::build($summit, $data, $member, $manager);
+
+            // tags
+            if (isset($data['tags'])) {
+                $attendee = $this->populateTags($attendee, $data);
             }
 
             $this->attendee_repository->add($attendee);
@@ -326,24 +320,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 $attendee = $this->populateTags($attendee, $data);
             }
 
-            $email_override = $attendee->isEmailOverridenByManager();
-            SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false);
-            if($email_override){
-                // recalculate the email placeholder
-                $attendee->setManagerAndUseManagerEmailAddress($attendee->getManager());
-            }
-
+            $manager = null;
             if($manager_id > 0){
                 $manager = $this->attendee_repository->getById($manager_id);
                 if(!$manager instanceof SummitAttendee)
                     throw new EntityNotFoundException("Manager not found.");
-                // we provide an email ( explicit email or member associated )
-                if(!empty($email) || $member_id > 0)
-                    // so we just associate the manager
-                    $manager->addManaged($attendee);
-                else // otherwise we use the manager email
-                    $attendee->setManagerAndUseManagerEmailAddress($manager);
             }
+
+            SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false, $manager);
+
             $attendee->updateStatus();
             return $attendee;
         });

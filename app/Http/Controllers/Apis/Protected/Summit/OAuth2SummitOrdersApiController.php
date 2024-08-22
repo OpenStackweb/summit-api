@@ -1296,7 +1296,8 @@ final class OAuth2SummitOrdersApiController
                 'attendee_email' => 'sometimes|string|max:255|email',
                 'attendee_company' => 'nullable|string|max:255',
                 'attendee_company_id' => 'nullable|sometimes|integer',
-                'extra_questions' => 'sometimes|extra_question_dto_array'
+                'extra_questions' => 'sometimes|extra_question_dto_array',
+                'disclaimer_accepted' => 'nullable|boolean',
             ]);
 
             $ticket = $this->service->delegateTicket($summit, intval($order_id), intval($ticket_id), $current_user, $payload);

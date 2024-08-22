@@ -1468,8 +1468,11 @@ SQL;
      */
     public function setManagerAndUseManagerEmailAddress(SummitAttendee $manager): void
     {
+        Log::debug(sprintf("SummitAttendee::setManagerAndUseManagerEmailAddress attendee %s", $this->id));
         $manager->addManaged($this);
-        $this->email = $this->calculatePlaceholderEmailFromManager();
+        $calculated_email = $this->calculatePlaceholderEmailFromManager();
+        Log::debug(sprintf("SummitAttendee::setManagerAndUseManagerEmailAddress attendee %s calculated email %s", $this->id, $calculated_email));
+        $this->setEmail($calculated_email);
     }
 
     public function isEmailOverridenByManager():bool{
@@ -1482,14 +1485,17 @@ SQL;
     private function calculatePlaceholderEmailFromManager():string{
         if(!$this->hasManager())
             throw new ValidationException("Attendee does not have a manager.");
+
         $manager_email = $this->manager->getEmail();
         if(empty($manager_email))
             throw new ValidationException("Manager does not have an email address.");
+
         $manager_mail_component = explode('@', $manager_email);
         $first_name = $this->getFirstName();
         $last_name = $this->getSurname();
         if(empty($first_name) || empty($last_name))
             throw new ValidationException("Attendee does not have a first name or last name.");
+
         return sprintf("%s+%s@%s", $manager_mail_component[0], md5($first_name.$last_name), $manager_mail_component[1]);
     }
 
@@ -1520,6 +1526,11 @@ SQL;
         return $this->managed_attendees;
     }
 
+    /**
+     * @param SummitAttendee $attendee
+     * @return void
+     * @throws ValidationException
+     */
     public function addManaged(SummitAttendee $attendee):void{
         if($attendee->getId() == $this->getId())
             throw new ValidationException("Attendee cannot be managed by itself.");

@@ -5017,8 +5017,9 @@ final class SummitOrderService
             if(empty($new_attendee_last_name))
                 throw new ValidationException("Attendee last name is mandatory.");
 
-            if(empty(($new_attendee_email))){
+            if(empty($new_attendee_email)){
                 // delegate email to manager
+                Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to manager %s", $manager->getEmail()));
                 $attendee = SummitAttendeeFactory::build($summit, [
                     'first_name' => $new_attendee_first_name,
                     'last_name' => $new_attendee_last_name,
@@ -5029,6 +5030,7 @@ final class SummitOrderService
                 $attendee->setManagerAndUseManagerEmailAddress($manager);
             }
             else{
+                Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to %s", $new_attendee_email));
                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $new_attendee_email);
                 $member = $this->member_repository->getByEmail($new_attendee_email);
 
@@ -5052,10 +5054,9 @@ final class SummitOrderService
                         'extra_questions' => $new_attendee_extra_questions,
                     ], $member);
                 }
-
                 $manager->addManaged($attendee);
             }
-
+            $attendee->updateStatus();
             $attendee->addTicket($ticket);
 
             return $ticket;

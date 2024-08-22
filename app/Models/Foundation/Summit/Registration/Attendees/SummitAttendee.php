@@ -1521,6 +1521,8 @@ SQL;
     }
 
     public function addManaged(SummitAttendee $attendee):void{
+        if($attendee->getId() == $this->getId())
+            throw new ValidationException("Attendee cannot be managed by itself.");
         if($this->managed_attendees->contains($attendee)) return;
         $this->managed_attendees->add($attendee);
         $attendee->setManager($this);

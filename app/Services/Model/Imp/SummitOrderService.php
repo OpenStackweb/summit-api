@@ -5043,7 +5043,7 @@ final class SummitOrderService
                     ], $member);
                 }
                 else{
-                    $attendee = SummitAttendeeFactory::populate($summit, [
+                    $attendee = SummitAttendeeFactory::populate($summit, $attendee, [
                         'first_name' => $new_attendee_first_name,
                         'last_name' => $new_attendee_last_name,
                         'email' => $new_attendee_email,

@@ -5002,6 +5002,12 @@ final class SummitOrderService
             $company = $payload['attendee_company'] ?? null;
             $company_id = $payload['attendee_company_id'] ?? null;
             $manager = $ticket->getOwner();
+
+            // if its the same we are overriding email too
+            if($new_attendee_email == $manager->getEmail()){
+                $new_attendee_email = '';
+            }
+
             if(!$ticket->canEditTicket($current_user)){
                 throw new ValidationException("You can not delegate this ticket.");
             }

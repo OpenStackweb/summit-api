@@ -73,13 +73,6 @@ final class SummitAttendeeFactory
 
         $company_repository = EntityManager::getRepository(Company::class);
 
-        if (!is_null($member)) {
-            Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));
-            $attendee->setEmail($member->getEmail());
-            $attendee->setMember($member);
-        } else {
-            $attendee->clearMember();
-        }
         // verify if the email is already overriden by manager
         $email_override =  $attendee->isEmailOverridenByManager();
 
@@ -89,11 +82,33 @@ final class SummitAttendeeFactory
         if (isset($payload['last_name']))
             $attendee->setSurname(trim($payload['last_name']));
 
-        if (isset($payload['email']) && !empty($payload['email']))
-            $attendee->setEmail(trim($payload['email']));
+        // it has provided an email ... we need to check against the manager first
+        if (isset($payload['email']) && !empty($payload['email'])) {
+            $email = trim($payload['email']);
+            // its using the same email as the manager ( override it )
+            if($attendee->hasManager() && $email == $attendee->getManager()->getEmail()){
+                $attendee->setManagerAndUseManagerEmailAddress($attendee->getManager());
+                $email_override = true;
+            }
+            else {
+                // it has manager , but he is not using the same email as the manager
+                $attendee->setEmail($email);
+                $email_override = false;
+            }
+        }
+
+        if(!$email_override) {
+            if (!is_null($member)) {
+                Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));
+                $attendee->setEmail($member->getEmail());
+                $attendee->setMember($member);
+            } else {
+                $attendee->clearMember();
+            }
+        }
 
         if(!is_null($manager)){
-            if(empty($attendee->getEmail()) || $email_override){
+            if(empty($attendee->getEmail()) || $email_override || $attendee->getEmail() == $manager->getEmail()){
                 $attendee->setManagerAndUseManagerEmailAddress($manager);
             }
             else

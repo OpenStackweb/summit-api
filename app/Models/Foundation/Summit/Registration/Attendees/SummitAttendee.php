@@ -608,7 +608,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getEmail(): string
     {
-        if ($this->hasManager() && $this->shouldOverrideEmailWithManagerEmail()) {
+        if ($this->hasManager() && $this->isEmailOverridenByManager()) {
             return $this->manager->getEmail();
         }
 
@@ -1476,7 +1476,22 @@ SQL;
     }
 
     public function isEmailOverridenByManager():bool{
-        return $this->shouldOverrideEmailWithManagerEmail();
+        if(!$this->hasManager()) return false;
+        if(empty($this->first_name) || empty($this->surname))
+            return false;
+        $calculated_email = $this->calculatePlaceholderEmailFromManager();
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendee::isEmailOverridenByManager attendee %s calculated email %s email %s",
+                $this->id,
+                $calculated_email,
+                $this->email
+            )
+        );
+
+        return $calculated_email == $this->email;
     }
     /**
      * @return string
@@ -1497,29 +1512,6 @@ SQL;
             throw new ValidationException("Attendee does not have a first name or last name.");
 
         return sprintf("%s+%s@%s", $manager_mail_component[0], md5($first_name.$last_name), $manager_mail_component[1]);
-    }
-
-    /**
-     * @return bool
-     * @throws ValidationException
-     */
-    public function shouldOverrideEmailWithManagerEmail():bool{
-       if(!$this->hasManager()) return false;
-       if(empty($this->first_name) || empty($this->surname))
-            return false;
-       $calculated_email = $this->calculatePlaceholderEmailFromManager();
-       Log::debug
-       (
-           sprintf
-           (
-               "SummitAttendee::shouldOverrideEmailWithManagerEmail attendee %s calculated email %s email %s",
-               $this->id,
-               $calculated_email,
-               $this->email
-           )
-       );
-
-       return $calculated_email == $this->email;
     }
 
     public function getManagedAttendees(){

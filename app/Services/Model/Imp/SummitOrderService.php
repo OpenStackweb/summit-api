@@ -3449,7 +3449,14 @@ final class SummitOrderService
                 throw new EntityNotFoundException("Ticket not found.");
 
             if (!$ticket->canEditTicket($current_user)) {
-                throw new ValidationException(sprintf("Ticket %s can not be edited by current member.", $ticket_id));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Ticket %s can not be edited by current member.",
+                        $ticket_id
+                    )
+                );
             }
 
             $order = $ticket->getOrder();
@@ -3512,7 +3519,16 @@ final class SummitOrderService
                         $attendee->getId()
                     )
                 );
-                SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
+
+                SummitAttendeeFactory::populate
+                (
+                    $summit,
+                    $attendee,
+                    $payload,
+                    !empty($email) ?
+                        $this->member_repository->getByEmail($email) : null
+                );
+
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
                 if ($summit->isRegistrationSendTicketEmailAutomatically()) {
@@ -4996,12 +5012,16 @@ final class SummitOrderService
             $new_attendee_extra_questions =  $payload['extra_questions'] ?? [];
             $company = $payload['attendee_company'] ?? null;
             $company_id = $payload['attendee_company_id'] ?? null;
-            $manager = $ticket->getOwner();
+            $disclaimer_accepted = $payload['disclaimer_accepted'] ?? null;
 
-            // if its the same we are overriding email too
-            if($new_attendee_email == $manager->getEmail()){
-                $new_attendee_email = '';
+
+            if ($summit->isRegistrationDisclaimerMandatory()) {
+                $disclaimer_accepted = boolval($payload['disclaimer_accepted'] ?? false);
+                if (!$disclaimer_accepted)
+                    throw new ValidationException("Disclaimer is Mandatory.");
             }
+
+            $manager = $ticket->getOwner();
 
             if(!$ticket->canEditTicket($current_user)){
                 throw new ValidationException("You can not delegate this ticket.");
@@ -5021,6 +5041,7 @@ final class SummitOrderService
                     'company' => $company,
                     'company_id' => $company_id,
                     'extra_questions' => $new_attendee_extra_questions,
+                    'disclaimer_accepted' => $disclaimer_accepted,
                 ], null, $manager);
             }
             else{
@@ -5036,6 +5057,7 @@ final class SummitOrderService
                         'company' => $company,
                         'company_id' => $company_id,
                         'extra_questions' => $new_attendee_extra_questions,
+                        'disclaimer_accepted' => $disclaimer_accepted,
                     ], $member, $manager);
                 }
                 else{
@@ -5046,6 +5068,7 @@ final class SummitOrderService
                         'company' => $company,
                         'company_id' => $company_id,
                         'extra_questions' => $new_attendee_extra_questions,
+                        'disclaimer_accepted' => $disclaimer_accepted,
                     ], $member, true, $manager);
                 }
             }

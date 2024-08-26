@@ -102,7 +102,11 @@ final class DoctrineMemberRepository
             }
             if($filter->hasFilter("has_not_media_upload_with_type")){
                 $v = $filter->getValue("has_not_media_upload_with_type");
-                $extraSelectionStatusFilter .= ' AND __mut%1$s.id NOT IN ('.implode(',', $v).')';
+                $extraSelectionStatusFilter .= ' AND NOT EXISTS (   
+                     SELECT __pm%1$s_%1$s.id FROM models\summit\PresentationMediaUpload __pm%1$s_%1$s 
+                     LEFT JOIN __pm%1$s_%1$s.media_upload_type __mut%1$s_%1$s
+                     WHERE  __pm%1$s_%1$s.presentation = __p%1$s AND  __mut%1$s_%1$s.id IN ('.implode(',', $v).')
+                 ) ';
             }
         }
 

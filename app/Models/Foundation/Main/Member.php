@@ -2701,11 +2701,23 @@ SQL;
             }
             if($filter->hasFilter("has_media_upload_with_type"))
             {
-                $extraWhere .= " AND mut.id IN (:media_upload_type_id)";
+                $extraWhere .= " AND EXISTS (
+                    SELECT pmu_12.id 
+                    FROM models\summit\PresentationMediaUpload pmu_12
+                    JOIN pmu_12.media_upload_type mut_12
+                    JOIN pmu_12.presentation p__12
+                    WHERE p.id = p__12.id AND mut_12.id IN (:media_upload_type_id)
+                )";
             }
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
-                $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
+                $extraWhere .= " AND NOT EXISTS (
+                   SELECT pmu_12.id 
+                    FROM models\summit\PresentationMediaUpload pmu_12
+                    JOIN pmu_12.media_upload_type mut_12
+                    JOIN pmu_12.presentation p__12
+                    WHERE p.id = p__12.id AND mut_12.id IN (:media_upload_type_id)
+                )";
             }
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);
@@ -2924,11 +2936,23 @@ SQL;
             }
             if($filter->hasFilter("has_media_upload_with_type"))
             {
-                $extraWhere .= " AND mut.id IN (:media_upload_type_id)";
+                $extraWhere .= " AND EXISTS (
+                    SELECT pmu_12.id 
+                    FROM models\summit\PresentationMediaUpload pmu_12
+                    JOIN pmu_12.media_upload_type mut_12
+                    JOIN pmu_12.presentation p__12
+                    WHERE p.id = p__12.id AND mut_12.id IN (:media_upload_type_id)
+                )";
             }
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
-                $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
+                $extraWhere .= " AND NOT EXISTS (
+                    SELECT pmu_12.id 
+                    FROM models\summit\PresentationMediaUpload pmu_12
+                    JOIN pmu_12.media_upload_type mut_12
+                    JOIN pmu_12.presentation p__12
+                    WHERE p.id = p__12.id AND mut_12.id IN (:media_upload_type_id)
+                )";
             }
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);
@@ -3081,11 +3105,23 @@ SQL;
             }
             if($filter->hasFilter("has_media_upload_with_type"))
             {
-                $extraWhere .= " AND mut.id IN (:media_upload_type_id)";
+                $extraWhere .= " AND EXISTS (
+                    SELECT pmu_12.id 
+                    FROM models\summit\PresentationMediaUpload pmu_12
+                    JOIN pmu_12.media_upload_type mut_12
+                    JOIN pmu_12.presentation p__12
+                    WHERE p.id = p__12.id AND mut_12.id IN (:media_upload_type_id)
+                )";
             }
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
-                $extraWhere .= " AND mut.id NOT IN (:media_upload_type_id)";
+                $extraWhere .= " AND NOT EXISTS (
+                    SELECT pmu_12.id 
+                    FROM models\summit\PresentationMediaUpload pmu_12
+                    JOIN pmu_12.media_upload_type mut_12
+                    JOIN pmu_12.presentation p__12
+                    WHERE p.id = p__12.id AND mut_12.id IN (:media_upload_type_id)
+                )";
             }
             if($filter->hasFilter("is_speaker")){
                 $value = to_boolean($filter->getValue("is_speaker")[0]);

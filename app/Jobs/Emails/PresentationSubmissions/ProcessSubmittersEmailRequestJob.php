@@ -100,6 +100,8 @@ final class ProcessSubmittersEmailRequestJob implements ShouldQueue
             'presentations_submitter_full_name' => ['=@', '@@', '=='],
             'presentations_submitter_email' => ['=@', '@@', '=='],
             'is_speaker' => ['=='],
+            'has_media_upload_with_type' => ['=='],
+            'has_not_media_upload_with_type' => ['=='],
         ]) : null;
 
         $service->sendEmails($this->summit_id, $this->payload, $filter);

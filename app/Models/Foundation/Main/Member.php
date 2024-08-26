@@ -2712,7 +2712,7 @@ SQL;
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                   SELECT pmu_12.id 
+                    SELECT pmu_12.id 
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12

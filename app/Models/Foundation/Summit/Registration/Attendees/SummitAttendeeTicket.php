@@ -1337,6 +1337,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @return bool
      */
     public function canBeDelegated():bool{
-       return $this->isPaid() && $this->hasOwner() && !$this->owner->hasManager() && ($this->ticket_type->isAllowsToDelegate() || ($this->hasPromoCode() && $this->promo_code->isAllowsToDelegate()));
+       $allow_delegation = ($this->ticket_type->isAllowsToDelegate()
+           || ($this->hasPromoCode() && $this->promo_code->isAllowsToDelegate()));
+       if(!$allow_delegation) return false;
+       return $this->isPaid() && $this->isActive() &&
+              $this->hasOwner() &&
+             !$this->owner->hasManager();
     }
 }

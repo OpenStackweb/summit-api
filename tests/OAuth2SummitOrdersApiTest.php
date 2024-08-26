@@ -932,6 +932,55 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         return $order;
     }
 
+    public function testDoubleDelegate(){
+        $order = self::$summit->getOrders()[0];
+        $ticket = $order->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' =>  $ticket->getId(),
+            'expand' => 'owner,owner.manager'
+        ];
+
+        $payload = [
+            'attendee_first_name' => 'Joe',
+            'attendee_last_name' => 'Doe',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@delegateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket->owner->email === $ticket->owner->manager->email);
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitOrdersApiController@delegateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+    }
+
     public function testDelegateTicket(){
 
         $order = self::$summit->getOrders()[0];
@@ -1014,5 +1063,69 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         $ticket = json_decode($content);
         $this->assertTrue(!is_null($ticket));
         return $ticket;
+    }
+
+    public function testDelegateAndUpdateEmail():void{
+        $order = self::$summit->getOrders()[0];
+        $ticket = $order->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' =>  $ticket->getId(),
+            'expand' => 'owner,owner.manager'
+        ];
+
+        $payload = [
+            'attendee_first_name' => 'Joe',
+            'attendee_last_name' => 'Doe',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@delegateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket->owner->email === $ticket->owner->manager->email);
+
+        // update attendee from admin side
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'attendee_id' => $ticket->owner->id,
+        ];
+
+        $payload = [
+            'email' => 'ihaveemailnowdady@gmail.com',
+            'first_name' => 'Joe',
+            'surname' => 'Doe',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitAttendeesApiController@updateAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $attendee = json_decode($content);
+        $this->assertTrue($attendee->manager_id > 0);
+        $this->assertTrue($attendee->email === 'ihaveemailnowdady@gmail.com');
     }
 }

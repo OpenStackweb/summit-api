@@ -107,12 +107,19 @@ final class SummitAttendeeFactory
             }
         }
 
-        if(!is_null($manager)){
-            if(empty($attendee->getEmail()) || $email_override || $attendee->getEmail() == $manager->getEmail()){
-                $attendee->setManagerAndUseManagerEmailAddress($manager);
+        // manager setting
+        if(isset($payload['manager_id'])){
+            $manager_id = intval($payload['manager_id']);
+            if($manager_id === 0){
+                $attendee->clearManager();
             }
-            else
-                $attendee->setManager($manager);
+            else if(!is_null($manager)){
+                    if(empty($attendee->getEmail()) || $email_override || $attendee->getEmail() == $manager->getEmail()){
+                        $attendee->setManagerAndUseManagerEmailAddress($manager);
+                    }
+                    else
+                        $attendee->setManager($manager);
+            }
         }
 
         $summit->addAttendee($attendee);

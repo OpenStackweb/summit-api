@@ -272,19 +272,20 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     /**
      * @param Summit $summit
      * @param int $attendee_id
-     * @param array $data
+     * @param array $payload
      * @return SummitAttendee
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateAttendee(Summit $summit, $attendee_id, array $data)
+    public function updateAttendee(Summit $summit, $attendee_id, array $payload)
     {
-        return $this->tx_service->transaction(function () use ($summit, $attendee_id, $data) {
+        return $this->tx_service->transaction(function () use ($summit, $attendee_id, $payload) {
 
-            $manager_id = $data['manager_id'] ?? 0;
-            $member_id = $data['member_id'] ?? 0;
+            Log::debug(sprintf("SummitAttendeeService::updateAttendee summit %s attendee %s payload %s", $summit->getId(), $attendee_id, json_encode($payload)));
+            $manager_id = $payload['manager_id'] ?? 0;
+            $member_id = $payload['member_id'] ?? 0;
             $member_id = intval($member_id);
-            $email = $data['email'] ?? null;
+            $email = $payload['email'] ?? null;
 
             $attendee = $summit->getAttendeeById($attendee_id);
             if (is_null($attendee))
@@ -309,15 +310,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             }
 
             // check if attendee already exist for this summit
-            if (isset($data['extra_questions']) && !$attendee->hasAllowedExtraQuestions()) {
+            if (isset($payload['extra_questions']) && !$attendee->hasAllowedExtraQuestions()) {
                 Log::debug(sprintf("SummitAttendeeService::updateAttendee attendee %s does not have allowed extra questions.", $attendee->getId()));
                 // dont not overwrite extra questions
-                unset($data['extra_questions']);
+                unset($payload['extra_questions']);
             }
 
             // tags
-            if (isset($data['tags'])) {
-                $attendee = $this->populateTags($attendee, $data);
+            if (isset($payload['tags'])) {
+                $attendee = $this->populateTags($attendee, $payload);
             }
 
             $manager = null;
@@ -327,7 +328,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     throw new EntityNotFoundException("Manager not found.");
             }
 
-            SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false, $manager);
+            SummitAttendeeFactory::populate($summit, $attendee, $payload, $member, false, $manager);
 
             $attendee->updateStatus();
             return $attendee;

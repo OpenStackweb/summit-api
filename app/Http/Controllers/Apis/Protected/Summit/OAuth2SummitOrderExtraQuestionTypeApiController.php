@@ -483,10 +483,10 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
     public function getAttendeeExtraQuestions($summit_id, $attendee_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404("Summit not found");
+        if (is_null($summit)) return $this->error404("Summit not found.");
 
         $attendee = $summit->getAttendeeById(intval($attendee_id));
-        if (is_null($attendee)) return $this->error404("Attendee not found");
+        if (is_null($attendee)) return $this->error404("Attendee not found.");
 
         // authz
         // check that we have a current member ( not service account )
@@ -499,7 +499,12 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
         if(!$auth){
             // check if current member is the attendee
-            $auth = $attendee->getEmail() == $current_member->getEmail() || $attendee->getMemberId() == $current_member->getId();
+            $auth = (
+                    $attendee->getEmail() == $current_member->getEmail()
+                    || $attendee->getMemberId() == $current_member->getId()
+                    || $attendee->isManagedBy($current_member)
+            );
+
             if(!$auth){
                 // check if the attendee is under some order of the current member
                 foreach($current_member->getPadRegistrationOrdersForSummit($summit) as $order){
@@ -513,7 +518,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         }
 
         if(!$auth)
-            return $this->error401();
+            return $this->error403("You are not Authorized.");
 
         return $this->_getAll(
             function () {

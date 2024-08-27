@@ -468,7 +468,7 @@ final class OAuth2SummitOrdersApiController
             $current_user = $this->getResourceServerContext()->getCurrentUser();
 
             if (is_null($current_user))
-                return $this->error403();
+                return $this->error401();
 
             if (!$order instanceof SummitOrder)
                 throw new EntityNotFoundException("Order not found.");

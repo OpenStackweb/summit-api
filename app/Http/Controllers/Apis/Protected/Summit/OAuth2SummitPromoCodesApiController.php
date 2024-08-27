@@ -142,6 +142,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier_name' =>  ['@@', '=@', '=='],
                     'email_sent' => ['=='],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -164,6 +165,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'sponsor_id' => 'sometimes|integer',
                     'tier_name' =>  'sometimes|string',
                     'email_sent' => ['sometimes', new Boolean()],
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -231,6 +233,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier_name' =>  ['@@', '=@', '=='],
                     'email_sent' => ['=='],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -245,6 +248,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'sponsor_id' => 'sometimes|integer',
                     'tier_name' =>  'sometimes|string',
                     'email_sent' => ['sometimes', new Boolean()],
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -319,6 +323,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier_name' =>  ['@@', '=@', '=='],
                     'email_sent' => ['=='],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -341,6 +346,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' => 'sometimes|string',
                     'tier_name' =>  'sometimes|string',
                     'email_sent' => ['sometimes', new Boolean()],
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -425,6 +431,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier_name' =>  ['@@', '=@', '=='],
                     'email_sent' => ['=='],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -438,6 +445,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' => 'sometimes|string',
                     'tier_name' =>  'sometimes|string',
                     'email_sent' => ['sometimes', new Boolean()],
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -1034,6 +1042,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                     'contact_email' =>  ['@@', '=@', '=='],
                     'tier_name' =>  ['@@', '=@', '=='],
                     'email_sent' => ['=='],
+                    'allows_to_delegate' => ['=='],
                 ]);
             }
 
@@ -1053,6 +1062,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 'sponsor_id' => 'sometimes|integer',
                 'tier_name' =>  'sometimes|string',
                 'email_sent' => ['sometimes', new Boolean()],
+                'allows_to_delegate' => ['sometimes', new Boolean()],
             ]);
 
             $this->promo_code_service->triggerSendSponsorPromoCodes($summit, $payload, FiltersParams::getFilterParam());

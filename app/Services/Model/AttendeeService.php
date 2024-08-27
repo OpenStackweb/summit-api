@@ -183,32 +183,59 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $member_id = $data['member_id'] ?? 0;
             $member_id = intval($member_id);
             $email = $data['email'] ?? null;
+            $manager_id = $data['manager_id'] ?? 0;
+
+            if($manager_id == 0 && empty($email) && $member_id == 0){
+                throw new ValidationException("You should define a member_id, an email or a manager_id.");
+            }
 
             if ($member_id > 0 && !empty($email)) {
                 // both are defined
-                throw new ValidationException("you should define a member_id or an email, not both");
+                throw new ValidationException("You should define a member_id or an email, not both.");
             }
 
             if ($member_id > 0) {
 
                 $member = $this->member_repository->getById($member_id);
-                if (is_null($member) || !$member instanceof Member)
+                if (!$member instanceof Member)
                     throw new EntityNotFoundException("member not found");
 
                 $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
 
                 if (!is_null($old_attendee))
-                    throw new ValidationException(sprintf("attendee already exist for summit id %s and member id %s", $summit->getId(), $member->getIdentifier()));
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "attendee already exist for summit id %s and member id %s",
+                            $summit->getId(),
+                            $member->getIdentifier()
+                        )
+                    );
 
             }
 
             if (!empty($email)) {
                 $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($email));
                 if (!is_null($old_attendee))
-                    throw new ValidationException(sprintf("attendee already exist for summit id %s and email %s", $summit->getId(), trim($data['email'])));
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Attendee already exist for summit id %s and email %s.",
+                            $summit->getId(),
+                            trim($data['email'])
+                        )
+                    );
+            }
+            $manager = null;
+            if($manager_id > 0){
+                $manager = $this->attendee_repository->getById($manager_id);
+                if(!$manager instanceof SummitAttendee)
+                    throw new EntityNotFoundException("Manager not found.");
             }
 
-            $attendee = SummitAttendeeFactory::build($summit, $data, $member);
+            $attendee = SummitAttendeeFactory::build($summit, $data, $member, $manager);
 
             // tags
             if (isset($data['tags'])) {
@@ -254,16 +281,20 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     {
         return $this->tx_service->transaction(function () use ($summit, $attendee_id, $data) {
 
+            $manager_id = $data['manager_id'] ?? 0;
+            $member_id = $data['member_id'] ?? 0;
+            $member_id = intval($member_id);
+            $email = $data['email'] ?? null;
+
             $attendee = $summit->getAttendeeById($attendee_id);
             if (is_null($attendee))
                 throw new EntityNotFoundException(sprintf("Attendee does not belongs to summit id %s.", $summit->getId()));
 
             $member = null;
-            if (isset($data['member_id']) && intval($data['member_id']) > 0) {
-                $member_id = intval($data['member_id']);
+            if ($member_id > 0) {
                 $member = $this->member_repository->getById($member_id);
 
-                if (is_null($member) || !$member instanceof Member)
+                if (!$member instanceof Member)
                     throw new EntityNotFoundException("Member not found.");
 
                 $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
@@ -271,10 +302,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     throw new ValidationException(sprintf("Another attendee (%s) already exist for summit id %s and member id %s.", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
             }
 
-            if (isset($data['email'])) {
-                $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($data['email']));
+            if (!empty($email)) {
+                $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($email));
                 if (!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
-                    throw new ValidationException(sprintf("Attendee already exist for summit id %s and email %s.", $summit->getId(), trim($data['email'])));
+                    throw new ValidationException(sprintf("Attendee already exist for summit id %s and email %s.", $summit->getId(), trim($email)));
             }
 
             // check if attendee already exist for this summit
@@ -289,7 +320,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 $attendee = $this->populateTags($attendee, $data);
             }
 
-            SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false);
+            $manager = null;
+            if($manager_id > 0){
+                $manager = $this->attendee_repository->getById($manager_id);
+                if(!$manager instanceof SummitAttendee)
+                    throw new EntityNotFoundException("Manager not found.");
+            }
+
+            SummitAttendeeFactory::populate($summit, $attendee, $data, $member, false, $manager);
+
             $attendee->updateStatus();
             return $attendee;
         });

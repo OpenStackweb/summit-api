@@ -159,6 +159,12 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     private $audience;
 
     /**
+     * @ORM\Column(name="AllowsToDelegate", type="boolean")
+     * @var bool
+     */
+    private $allows_to_delegate;
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_ticket_types")
      * @var SummitOrderExtraQuestionType[]
      */
@@ -224,6 +230,7 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
         $this->sales_start_date = null;
         $this->sales_end_date = null;
         $this->audience = self::Audience_All;
+        $this->allows_to_delegate = false;
     }
 
     /**
@@ -685,5 +692,22 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
 
     public function getSubType(): string {
         return self::Subtype_Regular;
+    }
+
+    /**
+     * @return void
+     */
+    public function isAllowsToDelegate(): bool
+    {
+        return $this->allows_to_delegate;
+    }
+
+    /**
+     * @param bool $allows_to_delegate
+     * @return void
+     */
+    public function setAllowsToDelegate(bool $allows_to_delegate): void
+    {
+        $this->allows_to_delegate = $allows_to_delegate;
     }
 }

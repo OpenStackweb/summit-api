@@ -20,6 +20,7 @@ use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
 use App\Services\Model\ISummitOrderService;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
@@ -478,17 +479,32 @@ final class OAuth2SummitOrdersApiController
                 $isOrderOwner = false;
 
             $ticket = $order->getTicketById(intval($ticket_id));
-            if (is_null($ticket))
+            if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException("Ticket not found.");
 
             if(!$ticket->hasOwner() && !$isOrderOwner)
                 throw new EntityNotFoundException("Order not found.");
 
-            $ticketOwnerEmail = $ticket->getOwnerEmail();
-
             $isTicketOwner = true;
-            if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail() )
+            $ticketOwnerEmail = $ticket->getOwnerEmail();
+            Log::debug
+            (
+                sprintf
+                (
+                    "OAuth2SummitOrdersApiController::getMyTicketById ticketOwnerEmail %s current email %s",
+                    $ticketOwnerEmail,
+                    $current_user->getEmail()
+                )
+            );
+
+            if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail())
                 $isTicketOwner = false;
+
+            if(!$isTicketOwner){
+                // check if we are the manager
+                $isTicketOwner = $ticket->hasOwner() && $ticket->getOwner()->isManagedBy($current_user);
+                Log::debug(sprintf("OAuth2SummitOrdersApiController::getMyTicketById isTicketOwner %b (manager)" , $isTicketOwner));
+            }
 
             if(!$isOrderOwner && !$isTicketOwner)
                 throw new EntityNotFoundException("Ticket not found.");
@@ -1256,5 +1272,43 @@ final class OAuth2SummitOrdersApiController
                 );
             },
         );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $order_id
+     * @param $ticket_id
+     * @return mixed
+     */
+    public function delegateTicket($summit_id, $order_id, $ticket_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_user = $this->getResourceServerContext()->getCurrentUser();
+            if (is_null($current_user))
+                return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'attendee_first_name' => 'required|string|max:255',
+                'attendee_last_name' => 'required|string|max:255',
+                'attendee_email' => 'sometimes|string|max:255|email',
+                'attendee_company' => 'nullable|string|max:255',
+                'attendee_company_id' => 'nullable|sometimes|integer',
+                'extra_questions' => 'sometimes|extra_question_dto_array',
+                'disclaimer_accepted' => 'nullable|boolean',
+            ]);
+
+            $ticket = $this->service->delegateTicket($summit, intval($order_id), intval($ticket_id), $current_user, $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 }

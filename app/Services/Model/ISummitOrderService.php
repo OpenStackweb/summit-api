@@ -17,7 +17,6 @@ use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
-use models\summit\SummitBadgeViewType;
 use models\summit\SummitOrder;
 use Illuminate\Http\UploadedFile;
 /**
@@ -419,4 +418,14 @@ interface ISummitOrderService extends IProcessPaymentService
      * @throws \Exception
      */
     public function processOrder2Revoke(int $order_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $order_id
+     * @param int $ticket_id
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitAttendeeTicket
+     */
+    public function delegateTicket(Summit $summit, int $order_id, int $ticket_id,Member $current_user, array $payload):SummitAttendeeTicket;
 }

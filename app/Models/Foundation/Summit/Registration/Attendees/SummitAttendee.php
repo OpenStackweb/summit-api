@@ -1,3 +1,4 @@
+
 <?php namespace models\summit;
 /**
  * Copyright 2015 OpenStack Foundation
@@ -183,6 +184,18 @@ class SummitAttendee extends SilverstripeBaseModel
     private $admin_notes;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitAttendee", mappedBy="manager")
+     */
+    protected $managed_attendees;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="managed_attendees")
+     * @ORM\JoinColumn(name="ManagedByID", referencedColumnName="ID", nullable=true)
+     * @var SummitAttendee
+     */
+    private $manager;
+
+    /**
      * @return \DateTime|null
      */
     public function getSummitHallCheckedInDate(): ?\DateTime
@@ -338,6 +351,8 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->presentation_votes = new ArrayCollection();
         $this->notes = new ArrayCollection();
         $this->tags = new ArrayCollection();
+        $this->managed_attendees = new ArrayCollection();
+        $this->manager = null;
     }
 
     public function isVirtualCheckedIn(): bool
@@ -594,9 +609,14 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getEmail(): string
     {
+        if ($this->hasManager() && $this->isEmailOverridenByManager()) {
+            return $this->manager->getEmail();
+        }
+
         if ($this->hasMember()) {
             return $this->member->getEmail();
         }
+        if(empty($this->email)) return '';
         return PunnyCodeHelper::decodeEmail($this->email);
     }
 
@@ -1276,7 +1296,7 @@ SQL;
 
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
     {
-       return new SummitOrderExtraQuestionAnswer();
+        return new SummitOrderExtraQuestionAnswer();
     }
 
     /**
@@ -1405,34 +1425,110 @@ SQL;
     }
 
     /**
-     * @param string $ticket_number
+     * @param SummitAttendee $manager
+     */
+    public function setManager(SummitAttendee $manager): void
+    {
+        $this->manager = $manager;
+    }
+
+    public function getManager(): ?SummitAttendee
+    {
+        return $this->manager;
+    }
+
+    public function getManagerId():int{
+        try {
+            return is_null($this->manager) ? 0 : $this->manager->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    public function hasManager():bool{
+        return $this->getManagerId() > 0;
+    }
+
+    /**
+     * @param Member $member
      * @return bool
      */
-    public function isTicketActive(string $ticket_number): bool
+    public function isManagedBy(Member $member):bool{
+        if(!$this->hasManager()) return false;
+        return ($this->manager->getEmail() == $member->getEmail());
+    }
+
+    public function clearManager():void{
+        $this->manager = null;
+    }
+
+    /**
+     * @param SummitAttendee $manager
+     * @return void
+     * @throws ValidationException
+     */
+    public function setManagerAndUseManagerEmailAddress(SummitAttendee $manager): void
     {
-        foreach($this->tickets as $ticket){
-            if($ticket->hasBadge() && $ticket->getNumber() === $ticket_number && $ticket->isActive()) {
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "SummitAttendee::isTicketActive attendee %s ticket %s is active",
-                        $this->id,
-                        $ticket_number
-                    )
-                );
-                return true;
-            }
-        }
+        Log::debug(sprintf("SummitAttendee::setManagerAndUseManagerEmailAddress attendee %s", $this->id));
+        $manager->addManaged($this);
+        $calculated_email = $this->calculatePlaceholderEmailFromManager();
+        Log::debug(sprintf("SummitAttendee::setManagerAndUseManagerEmailAddress attendee %s calculated email %s", $this->id, $calculated_email));
+        $this->setEmail($calculated_email);
+    }
+
+    public function isEmailOverridenByManager():bool{
+        if(!$this->hasManager()) return false;
+        if(empty($this->first_name) || empty($this->surname))
+            return false;
+        $calculated_email = $this->calculatePlaceholderEmailFromManager();
         Log::debug
         (
             sprintf
             (
-                "SummitAttendee::isTicketActive attendee %s ticket %s is not active",
+                "SummitAttendee::isEmailOverridenByManager attendee %s calculated email %s email %s",
                 $this->id,
-                $ticket_number
+                $calculated_email,
+                $this->email
             )
         );
-        return false;
+
+        return $calculated_email == $this->email;
+    }
+    /**
+     * @return string
+     * @throws ValidationException
+     */
+    private function calculatePlaceholderEmailFromManager():string{
+        if(!$this->hasManager())
+            throw new ValidationException("Attendee does not have a manager.");
+
+        $manager_email = $this->manager->getEmail();
+        if(empty($manager_email))
+            throw new ValidationException("Manager does not have an email address.");
+
+        $manager_mail_component = explode('@', $manager_email);
+        $first_name = $this->getFirstName();
+        $last_name = $this->getSurname();
+        if(empty($first_name) || empty($last_name))
+            throw new ValidationException("Attendee does not have a first name or last name.");
+
+        return sprintf("%s+%s@%s", $manager_mail_component[0], md5($first_name.$last_name), $manager_mail_component[1]);
+    }
+
+    public function getManagedAttendees(){
+        return $this->managed_attendees;
+    }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @return void
+     * @throws ValidationException
+     */
+    public function addManaged(SummitAttendee $attendee):void{
+        if($attendee->getId() == $this->getId())
+            throw new ValidationException("Attendee cannot be managed by itself.");
+        if($this->managed_attendees->contains($attendee)) return;
+        $this->managed_attendees->add($attendee);
+        $attendee->setManager($this);
     }
 }

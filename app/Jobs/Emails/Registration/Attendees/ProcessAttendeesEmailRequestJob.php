@@ -96,7 +96,8 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             'tags' => ['=@', '==', '@@'],
             'tags_id' => ['=='],
             'notes' => ['=@', '@@'],
-            'has_notes' => ['==']
+            'has_notes' => ['=='],
+            'has_manager' => ['==']
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);

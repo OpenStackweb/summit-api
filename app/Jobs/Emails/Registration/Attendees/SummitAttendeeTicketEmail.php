@@ -211,7 +211,6 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         return $payload;
     }
 
-
     public function handle
     (
         IMailApi $api
@@ -237,4 +236,5 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
             Cache::forever($summit_attendee_ticket_email_sent_key, $now->getTimestamp());
         parent::handle($api);
     }
+
 }

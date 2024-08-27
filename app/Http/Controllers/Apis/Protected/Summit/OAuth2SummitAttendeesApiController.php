@@ -390,6 +390,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'tags_id' => ['=='],
             'notes' => ['=@', '@@'],
             'has_notes' => ['=='],
+            'has_manager' => ['=='],
         ];
 
         if (Request::has('filter')) {
@@ -453,6 +454,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tags_id' => 'sometimes|integer',
                     'notes' => 'sometimes|string',
                     'has_notes' => ['sometimes', new Boolean()],
+                    'has_manager' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -532,6 +534,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tags_id' => ['=='],
                     'notes' => ['=@', '@@'],
                     'has_notes' => ['=='],
+                    'has_manager' => ['=='],
                 ];
             },
             function () {
@@ -566,6 +569,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tags_id' => 'sometimes|integer',
                     'notes' => 'sometimes|string',
                     'has_notes' => ['sometimes', new Boolean()],
+                    'has_manager' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -629,10 +633,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'surname' => 'required_without:member_id|string|max:255',
                 'admin_notes' => 'nullable|sometimes|string|max:1024',
                 'company' => 'nullable|sometimes|string|max:255',
-                'email' => 'required_without:member_id|string|max:255|email',
-                'member_id' => 'required_without:email|integer',
+                'email' => 'sometimes|string|max:255|email',
+                'member_id' => 'sometimes|integer',
                 'extra_questions' => 'sometimes|extra_question_dto_array',
                 'tags' => 'sometimes|string_array',
+                'manager_id' => 'sometimes|integer',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -716,6 +721,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'extra_questions' => 'sometimes|extra_question_dto_array',
                 'admin_notes' => 'nullable|sometimes|string|max:1024',
                 'tags' => 'sometimes|string_array',
+                'manager_id' => 'sometimes|integer',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -980,6 +986,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tags_id' => ['=='],
                     'notes' => ['=@', '@@'],
                     'has_notes' => ['=='],
+                    'has_manager' => ['=='],
                 ]);
             }
 
@@ -1020,6 +1027,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'tags_id' => 'sometimes|integer',
                 'notes' => 'sometimes|string',
                 'has_notes' => ['sometimes', new Boolean()],
+                'has_manager' => ['sometimes', new Boolean()],
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, FiltersParams::getFilterParam());

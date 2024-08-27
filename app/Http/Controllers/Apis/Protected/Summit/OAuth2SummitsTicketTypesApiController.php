@@ -13,6 +13,7 @@
  **/
 use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISummitTicketTypeService;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -92,6 +93,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
                     'created'=> ['>', '<', '<=', '>=', '==','[]'],
                     'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -106,6 +108,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'sales_end_date' => 'sometimes|required|date_format:U|epoch_seconds',
                     'created' => 'sometimes|required|date_format:U|epoch_seconds',
                     'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -162,6 +165,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
                     'created'=> ['>', '<', '<=', '>=', '==','[]'],
                     'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -176,6 +180,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'sales_end_date' => 'sometimes|required|date_format:U|epoch_seconds',
                     'created' => 'sometimes|required|date_format:U|epoch_seconds',
                     'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {
@@ -237,6 +242,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
                     'created'=> ['>', '<', '<=', '>=', '==','[]'],
                     'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
@@ -251,6 +257,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'sales_end_date' => 'sometimes|required|date_format:U|epoch_seconds',
                     'created' => 'sometimes|required|date_format:U|epoch_seconds',
                     'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'allows_to_delegate' => ['sometimes', new Boolean()],
                 ];
             },
             function () {

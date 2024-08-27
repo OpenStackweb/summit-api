@@ -156,7 +156,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
                     PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
                 ]
-            )
+            ),
+            'allows_to_delegate'  => 'pc.allows_to_delegate:json_boolean',
         ];
 
         if ($filter instanceof Filter) {
@@ -258,6 +259,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
             'id'   => 'pc.id',
             'code' => 'pc.code',
             'redeemed' => 'pc.redeemed',
+            'allows_to_delegate' => 'pc.allows_to_delegate',
         ];
     }
 
@@ -296,6 +298,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 'notes'         => 'pc.Notes',
                 'description'   => 'pc.Description',
                 'email_sent'    => 'pc.EmailSent',
+                'allows_to_delegate' => 'pc.AllowsToDelegate',
                 'tag'           => 't.Tag',
                 'tag_id'        => 't.ID',
                 'class_name'    =>
@@ -410,6 +413,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 'quantity_used' => 'pc.QuantityUsed',
                 'tier_name' => 'TIER_NAME_ORDER',
                 'sponsor_company_name' => 'SPONSOR_COMPANY_NAME_ORDER',
+                'allows_to_delegate' => 'pc.AllowsToDelegate',
             ]);
         }
 

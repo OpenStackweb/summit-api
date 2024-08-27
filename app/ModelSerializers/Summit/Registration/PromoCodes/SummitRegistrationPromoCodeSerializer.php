@@ -36,6 +36,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
         'ClassName'         => 'class_name:json_string',
         'Description'       => 'description:json_string',
         'Notes'             => 'notes:json_string',
+        'AllowsToDelegate'  => 'allows_to_delegate:json_boolean',
     ];
 
     protected static $allowed_relations = [

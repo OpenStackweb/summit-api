@@ -332,6 +332,7 @@ trait InsertSummitTestData
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
         self::$default_ticket_type->setAudience(SummitTicketType::Audience_All);
+        self::$default_ticket_type->setAllowsToDelegate(true);
         self::$ticket_types[] = self::$default_ticket_type;
 
         self::$default_ticket_type_2 = new SummitTicketType();
@@ -456,27 +457,29 @@ trait InsertSummitTestData
             $summitAttendeeBadge = new SummitAttendeeBadge();
             $summitAttendeeBadge->setType(self::$default_badge_type);
 
-            $order = new SummitOrder();
-            $order->setOwner(self::$defaultMember);
-            $ticket = new SummitAttendeeTicket();
-            $ticket->setTicketType(self::$default_ticket_type);
-            $ticket->setBadge($summitAttendeeBadge);
+            for($i = 0; $i < 5; $i++) {
+                $order = new SummitOrder();
+                $order->setOwner(self::$defaultMember);
+                $ticket = new SummitAttendeeTicket();
+                $ticket->setTicketType(self::$default_ticket_type);
+                $ticket->setBadge($summitAttendeeBadge);
 
-            $ticket->activate();
-            $attendee->addTicket($ticket);
-            $order->addTicket($ticket);
+                $ticket->activate();
+                $attendee->addTicket($ticket);
+                $order->addTicket($ticket);
 
-            $attendeeNote = new SummitAttendeeNote('Test attendee note', $attendee);
-            $attendee->addNote($attendeeNote);
+                $attendeeNote = new SummitAttendeeNote('Test attendee note', $attendee);
+                $attendee->addNote($attendeeNote);
 
-            self::$summit->addAttendee($attendee);
-            self::$summit->addOrder($order);
-            $order->setPaid();
-            $order->generateNumber();
+                self::$summit->addAttendee($attendee);
+                self::$summit->addOrder($order);
+                $order->setPaid();
+                $order->generateNumber();
 
-            $ticket->generateNumber();
-            $ticket->generateQRCode();
-            $summitAttendeeBadge->generateQRCode();
+                $ticket->generateNumber();
+                $ticket->generateQRCode();
+                $summitAttendeeBadge->generateQRCode();
+            }
         }
 
         if (self::$defaultMember2 != null) {

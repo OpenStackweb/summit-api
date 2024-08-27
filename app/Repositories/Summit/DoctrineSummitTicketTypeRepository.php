@@ -48,8 +48,9 @@ final class DoctrineSummitTicketTypeRepository
             'audience'    => 'e.audience:json_string',
             'sales_start_date' => 'e.sales_start_date:datetime_epoch',
             'sales_end_date' => 'e.sales_end_date:datetime_epoch',
-            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'created'        => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited'    => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'allows_to_delegate' => 'e.allows_to_delegate:json_boolean',
         ];
     }
 
@@ -64,6 +65,7 @@ final class DoctrineSummitTicketTypeRepository
             'id'          => 'e.id',
             'external_id' => 'e.external_id',
             'audience'    => 'e.audience',
+            'allows_to_delegate' => 'e.allows_to_delegate',
         ];
     }
 

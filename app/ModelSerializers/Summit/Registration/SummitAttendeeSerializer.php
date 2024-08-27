@@ -36,6 +36,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
         'DisclaimerAccepted'      => 'disclaimer_accepted:json_boolean',
         'Status'                  => 'status:json_string',
+        'ManagerId'               => 'manager_id:json_int',
     ];
 
     protected static $allowed_relations = [
@@ -304,6 +305,19 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                                 }
                             }
                             break;
+                        case 'manager':{
+                            if($attendee->hasManager()){
+                                unset($values['manager_id']);
+                                $values['manager'] = SerializerRegistry::getInstance()->getSerializer($attendee->getManager())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
+                            }
+                        }
+                        break;
                         case 'tags':
                             if (!in_array('tags', $relations)) break;
                             unset($values['tags']);

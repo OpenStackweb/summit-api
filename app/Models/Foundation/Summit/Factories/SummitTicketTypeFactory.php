@@ -115,6 +115,9 @@ final class SummitTicketTypeFactory
         if(isset($data['audience']))
             $ticket_type->setAudience($data['audience']);
 
+        if(isset($data['allows_to_delegate']))
+            $ticket_type->setAllowsToDelegate(boolval($data['allows_to_delegate']));
+
         return $ticket_type;
     }
 }

@@ -523,13 +523,26 @@ class AppServiceProvider extends ServiceProvider
 
         Validator::extend('greater_than_field', function ($attribute, $value, $parameters, $validator) {
             $validator->addReplacer('greater_than_field', function ($message, $attribute, $rule, $parameters) use ($validator) {
-                return sprintf("%s should be greather than %s", $attribute, $parameters[0]);
+                return sprintf("%s should be greater than %s", $attribute, $parameters[0]);
             });
             $data = $validator->getData();
             if (is_null($value) || intval($value) == 0) return true;
             if (isset($data[$parameters[0]])) {
                 $compare_to = $data[$parameters[0]];
                 return intval($compare_to) < intval($value);
+            }
+            return true;
+        });
+
+        Validator::extend('greater_or_equal_than_field', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('greater_or_equal_than_field', function ($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be greater or equal than %s", $attribute, $parameters[0]);
+            });
+            $data = $validator->getData();
+            if (is_null($value) || intval($value) == 0) return true;
+            if (isset($data[$parameters[0]])) {
+                $compare_to = $data[$parameters[0]];
+                return intval($compare_to) <= intval($value);
             }
             return true;
         });

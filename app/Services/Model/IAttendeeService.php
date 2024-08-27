@@ -47,12 +47,12 @@ interface IAttendeeService
     /**
      * @param Summit $summit
      * @param int $attendee_id
-     * @param array $data
+     * @param array $payload
      * @return SummitAttendee
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateAttendee(Summit $summit, $attendee_id, array $data);
+    public function updateAttendee(Summit $summit, $attendee_id, array $payload);
 
     /**
      * @param SummitAttendee $attendee

@@ -113,13 +113,14 @@ final class SummitAttendeeFactory
             if($manager_id === 0){
                 $attendee->clearManager();
             }
-            else if(!is_null($manager)){
-                    if(empty($attendee->getEmail()) || $email_override || $attendee->getEmail() == $manager->getEmail()){
-                        $attendee->setManagerAndUseManagerEmailAddress($manager);
-                    }
-                    else
-                        $attendee->setManager($manager);
+        }
+
+        if(!is_null($manager)){
+            if(empty($attendee->getEmail()) || $email_override || $attendee->getEmail() == $manager->getEmail()){
+                $attendee->setManagerAndUseManagerEmailAddress($manager);
             }
+            else
+                $attendee->setManager($manager);
         }
 
         $summit->addAttendee($attendee);

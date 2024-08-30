@@ -4100,7 +4100,7 @@ final class SummitService
             (
                 sprintf
                 (
-                    "SummitService::publishStreamUpdatesStartInXMinutes processing summit % (%s)",
+                    "SummitService::publishStreamUpdatesStartInXMinutes processing summit %s (%s)",
                     $summit->getName(),
                     $summit->getId()
                 )
@@ -4110,6 +4110,7 @@ final class SummitService
                 return $summit->getScheduleEventsIdsStartingInXMinutesOrLessWithStream($minutes);
             });
 
+            Log::debug(sprintf("SummitService::publishStreamUpdatesStartInXMinutes summit %s events %s", $summit->getId(), json_encode($event_ids)));
             foreach ($event_ids as $event_id) {
                 $event_id = intval($event_id['id']);
                 $this->tx_service->transaction(function () use ($event_id) {

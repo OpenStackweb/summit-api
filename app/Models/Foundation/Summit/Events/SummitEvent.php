@@ -1350,7 +1350,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         }
 
         if ($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()) {
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.", $member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is Super Admin/Admin/SummitAdmin or Tester.", $member->getId(), $member->getEmail(), $this->id));
             return true;
         }
 
@@ -1379,10 +1379,23 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                 Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
                 return false;
             }
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket with the proper AL.", $member->getId(), $member->getEmail(), $this->id));
             // check time
             $now = new DateTime("now", new \DateTimeZone("UTC"));
-            if (!is_null($this->start_date) && $this->start_date > $now) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitEvent::hasAccess member %s (%s) event %s has a paid ticket with the proper access levels now %s event start time %s.",
+                    $member->getId(),
+                    $member->getEmail(),
+                    $this->id,
+                    $now->format("Y-m-d H:i:s"),
+                    !is_null($this->start_date) ? $this->start_date->format("Y-m-d H:i:s") : "N/A"
+                )
+            );
+
+            if (!is_null($this->start_date) && $this->start_date > $now && $this->streaming_type === self::STREAMING_TYPE_LIVE) {
                 Log::debug
                 (
                     sprintf
@@ -1396,6 +1409,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                 );
                 return false;
             }
+
             return true;
         }
         Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));

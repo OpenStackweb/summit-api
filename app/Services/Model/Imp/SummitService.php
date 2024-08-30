@@ -4090,6 +4090,8 @@ final class SummitService
      */
     public function publishStreamUpdatesStartInXMinutes(int $minutes): void
     {
+        Log::debug(sprintf("SummitService::publishStreamUpdatesStartInXMinutes minutes %s", $minutes));
+
         $ongoing_summits = $this->tx_service->transaction(function () {
             return $this->summit_repository->getOnGoing();
         });

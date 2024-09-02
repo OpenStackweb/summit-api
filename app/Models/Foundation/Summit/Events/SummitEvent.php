@@ -1350,11 +1350,13 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         }
 
         if ($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()) {
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.", $member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is Super Admin/Admin/SummitAdmin or Tester.", $member->getId(), $member->getEmail(), $this->id));
             return true;
         }
 
         if ($member->hasPaidTicketOnSummit($this->summit)) {
+
+            // check required access levels
             if ($this->category->getAllowedAccessLevels()->count() > 0) {
                 $eventAccessLevelsIds = $this->category->getAllowedAccessLevelsIds();
                 Log::debug
@@ -1377,7 +1379,37 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                 Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
                 return false;
             }
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.", $member->getId(), $member->getEmail(), $this->id));
+            // check time
+            $now = new DateTime("now", new \DateTimeZone("UTC"));
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitEvent::hasAccess member %s (%s) event %s has a paid ticket with the proper access levels now %s event start time %s.",
+                    $member->getId(),
+                    $member->getEmail(),
+                    $this->id,
+                    $now->format("Y-m-d H:i:s"),
+                    !is_null($this->start_date) ? $this->start_date->format("Y-m-d H:i:s") : "N/A"
+                )
+            );
+
+            if (!is_null($this->start_date) && $this->start_date > $now && $this->streaming_type === self::STREAMING_TYPE_LIVE) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitEvent::hasAccess member %s (%s) event %s has not started yet (%s UTC).",
+                        $member->getId(),
+                        $member->getEmail(),
+                        $this->id,
+                        $this->start_date->format("Y-m-d H:i:s")
+                    )
+                );
+                return false;
+            }
+
             return true;
         }
         Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));

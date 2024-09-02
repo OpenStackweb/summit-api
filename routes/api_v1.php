@@ -646,9 +646,8 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('', 'OAuth2SummitEventsApiController@getEvent');
 
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', ['middleware' => 'cache:600,EVENTS,event_id', 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                    Route::get('', 'OAuth2SummitEventsApiController@getScheduledEvent');
                     Route::get('tokens',  'OAuth2SummitEventsApiController@getScheduledEventJWT');
-
                     Route::post('mail', 'OAuth2SummitEventsApiController@shareScheduledEventByEmail');
                     // media uploads
                     Route::group(['prefix' => 'media-uploads'], function () {

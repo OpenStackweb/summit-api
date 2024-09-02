@@ -2941,6 +2941,47 @@ SQL;
     }
 
     /**
+     * @param int $minutes
+     * @return array
+     * @throws \Exception
+     */
+    public function getScheduleEventsIdsStartingInXMinutesOrLessWithStream(int $minutes):array{
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::getScheduleEventsIdsStartingInXMinutesOrLessWithStream summit %s minutes %s",
+                $this->getId(),
+                $minutes
+            )
+        );
+
+        $query = <<<SQL
+SELECT e.id  
+FROM  models\summit\SummitEvent e
+WHERE 
+e.published = 1 
+    and e.streaming_url <> '' 
+    and e.streaming_type = 'Live' 
+    and e.start_date >= :now
+    and e.start_date <= :starting_date
+AND e.summit = :summit
+SQL;
+
+        $native_query = $this->getEM()->createQuery($query);
+
+        $native_query->setParameter("summit", $this);
+        $now = new DateTime('now', new \DateTimeZone('UTC'));
+        $starting_date = clone $now;
+        $starting_date->add(new \DateInterval("PT{$minutes}M"));
+        $native_query->setParameter("starting_date", $starting_date);
+        $native_query->setParameter("now", $now);
+
+        return $native_query->getResult();
+    }
+
+    /**
      * @param SummitAbstractLocation $location
      * @return int[]
      */

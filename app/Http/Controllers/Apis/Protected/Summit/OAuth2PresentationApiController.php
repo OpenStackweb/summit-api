@@ -34,6 +34,7 @@ use models\summit\ISummitRepository;
 use models\summit\Presentation;
 use models\summit\SummitPresentationComment;
 use models\utils\IEntity;
+use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
 use utils\Filter;
@@ -304,7 +305,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if(!$presentation->memberCanEdit($current_member))
                 return $this->error403();
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer
+            (
+                $presentation,
+                IPresentationSerializerTypes::Submission
+            )->serialize
             (
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),

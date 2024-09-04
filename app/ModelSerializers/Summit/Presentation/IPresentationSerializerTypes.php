@@ -24,4 +24,6 @@ interface IPresentationSerializerTypes
     const SubmitterEmails = "SUBMITTER_EMAILS";
 
     const SecureStream = 'SECURE_STREAM';
+
+    const Submission = 'SUBMISSION';
 }

@@ -317,6 +317,7 @@ final class SerializerRegistry
             IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class,
             IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+            IPresentationSerializerTypes::Submission => SubmissionPresentationSerializer::class,
         ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;

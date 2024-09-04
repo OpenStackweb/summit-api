@@ -574,6 +574,7 @@ SQL,
 COALESCE(LOWER(l.name), 'N/A')
 SQL,
             'event_type' => 'et.type',
+            'type' => 'et.type',
             'tags' => <<<SQL
     LOWER(t.tag)
 SQL,

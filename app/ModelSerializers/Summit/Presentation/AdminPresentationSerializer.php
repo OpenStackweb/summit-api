@@ -20,8 +20,6 @@ use models\summit\Presentation;
 class AdminPresentationSerializer extends PresentationSerializer
 {
 
-
-
     protected static $array_mappings = [
         'Rank'              => 'rank:json_int',
         'SelectionStatus'   => 'selection_status:json_string',
@@ -62,7 +60,7 @@ class AdminPresentationSerializer extends PresentationSerializer
     /**
      * @return string
      */
-    protected function getSpeakersSerializerType():string{
+    protected function getSerializerType(?string $relation = null):string{
         return SerializerRegistry::SerializerType_Private;
     }
 

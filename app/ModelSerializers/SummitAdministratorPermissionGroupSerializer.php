@@ -68,7 +68,11 @@ final class SummitAdministratorPermissionGroupSerializer extends SilverStripeSer
                         $members = [];
                         unset($values['members']);
                         foreach ($group->getMembers() as $m) {
-                            $members[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize
+                            $members[] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $m,
+                                SerializerRegistry::SerializerType_Admin
+                            )->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),
                                 AbstractSerializer::filterFieldsByPrefix($fields, $relation),

@@ -556,22 +556,22 @@ SQL,
             'created_by_company' => 'cb.company',
             'speaker_company' => "sp.company",
             'level' => <<<SQL
-COALESCE(LOWER(e.level), 'N/A') 
+COALESCE(LOWER(e.level), '') 
 SQL,
             'etherpad_link' => <<<SQL
-COALESCE(LOWER(e.etherpad_link), 'N/A') 
+COALESCE(LOWER(e.etherpad_link), '') 
 SQL,
             'streaming_url' => <<<SQL
-COALESCE(LOWER(e.streaming_url), 'N/A')
+COALESCE(LOWER(e.streaming_url), '')
 SQL,
             'streaming_type' => <<<SQL
-COALESCE(LOWER(e.streaming_type), 'N/A')
+COALESCE(LOWER(e.streaming_type), '')
 SQL,
             'meeting_url' => <<<SQL
-COALESCE(LOWER(e.meeting_url), 'N/A')
+COALESCE(LOWER(e.meeting_url), '')
 SQL,
             'location' => <<<SQL
-COALESCE(LOWER(l.name), 'N/A')
+COALESCE(LOWER(l.name), '')
 SQL,
             'event_type' => 'et.type',
             'type' => 'et.type',

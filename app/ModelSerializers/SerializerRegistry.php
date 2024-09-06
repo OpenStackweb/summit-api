@@ -722,7 +722,7 @@ final class SerializerDecorator implements IModelSerializer {
 
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        Log::debug
+       /* Log::debug
         (
             sprintf
             (
@@ -732,7 +732,7 @@ final class SerializerDecorator implements IModelSerializer {
                 json_encode($fields),
                 json_encode($relations)
             )
-        );
+        );*/
 
         // check first level fields, and if empty get default fields
         if (!count(AbstractSerializer::getFirstLevelAllowedFields($relations)))
@@ -745,7 +745,7 @@ final class SerializerDecorator implements IModelSerializer {
             list($expand, $fields, $relations, $params) = call_user_func($expand, $fields, $relations, $params);
         }
 
-        Log::debug
+        /*Log::debug
         (
             sprintf
             (
@@ -755,7 +755,7 @@ final class SerializerDecorator implements IModelSerializer {
                 json_encode($fields),
                 json_encode($relations)
             )
-        );
+        );*/
 
         $res = $this->serializer_imp->serialize($expand, $fields, $relations, $params);
 

@@ -33,17 +33,17 @@ final class RequestScopedCacheMiddleware
     {
         $scope = RequestScopedCache::getScopeId();
 
-        Log::debug(sprintf('RequestScopedCacheMiddleware::handle scope %s', $scope));
+        //Log::debug(sprintf('RequestScopedCacheMiddleware::handle scope %s', $scope));
         if ($request->getMethod() !== 'GET') {
             // short circuit
-            Log::debug('RequestScopedCacheMiddleware::handle method is not GET');
+            //Log::debug('RequestScopedCacheMiddleware::handle method is not GET');
             return $next($request);
         }
 
         $response = $next($request);
 
         // clear all related to current session
-        Log::debug(sprintf( 'RequestScopedCacheMiddleware::handle clearing cache scope %s', $scope));
+        //Log::debug(sprintf( 'RequestScopedCacheMiddleware::handle clearing cache scope %s', $scope));
         Cache::tags($scope)->flush();
         return $response;
     }

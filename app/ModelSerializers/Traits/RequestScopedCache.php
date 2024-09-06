@@ -36,25 +36,25 @@ trait RequestScopedCache
             $time = time();
             $sessionId = Session::getId();
             $uuid = Uuid::uuid4()->toString();
-            Log::debug
+            /*Log::debug
             (
                 sprintf
                 (
                     "RequestScopedCache::getScopeId scope is empty ip %s time %s sessionId %s uuid%s .",
                     $ip , $time, $sessionId, $uuid
                 )
-            );
+            );*/
 
             $requestId = md5(sprintf("%s.%s.%s.%s", $ip, $time, $sessionId, $uuid));
 
-            Log::debug
+            /*Log::debug
             (
                 sprintf
                 (
                     "RequestScopedCache::getScopeId setting request id %s.",
                     $requestId
                 )
-            );
+            );*/
 
             $request->headers->set('X-Request-ID', $requestId);
 
@@ -62,7 +62,7 @@ trait RequestScopedCache
 
         }
 
-        Log::debug(sprintf("RequestScopedCache::getScopeId retrieving request id %s" , $requestId));
+        //Log::debug(sprintf("RequestScopedCache::getScopeId retrieving request id %s" , $requestId));
 
         return $requestId;
     }
@@ -89,19 +89,19 @@ trait RequestScopedCache
 
         $scope = self::getScopeId();
 
-        Log::debug(sprintf("RequestScopedCache::cache scope %s key %s.", $scope, $key));
+        //Log::debug(sprintf("RequestScopedCache::cache scope %s key %s.", $scope, $key));
 
         $res = Cache::tags($scope)->get($key);
         if(!empty($res)){
             $json_res = gzinflate($res);
             $res = json_decode($json_res,true);
-            Log::debug(sprintf("RequestScopedCache::cache scope %s key %s cache hit res %s.", $scope, $key, $json_res));
+            //Log::debug(sprintf("RequestScopedCache::cache scope %s key %s cache hit res %s.", $scope, $key, $json_res));
             return $res;
         }
 
         $res = $callback();
         $json = json_encode($res);
-        Log::debug(sprintf("RequestScopedCache::cache scope %s key %s res %s adding to cache.", $scope, $key, $json));
+        //Log::debug(sprintf("RequestScopedCache::cache scope %s key %s res %s adding to cache.", $scope, $key, $json));
         Cache::tags($scope)->add($key, gzdeflate($json, 9));
         return $res;
     }

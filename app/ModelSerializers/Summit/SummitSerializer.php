@@ -119,8 +119,10 @@ class SummitSerializer extends SilverStripeSerializer
         'presentation_action_types',
         'schedule_settings',
         'badge_view_types',
-        'badge_access_level_types',
         'lead_report_settings',
+        'badge_types',
+        'badge_features_types',
+        'badge_access_level_types',
     ];
 
     /**
@@ -199,6 +201,25 @@ class SummitSerializer extends SilverStripeSerializer
                 $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'ticket_types'));
             }
             $values['ticket_types'] = $ticket_types;
+        }
+
+        // badge_types
+        if(in_array('badge_types', $relations)){
+            $badge_types = [];
+            foreach ($summit->getBadgeTypes() as $badgeType) {
+                $badge_types[] = SerializerRegistry::getInstance()->getSerializer($badgeType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_types'));
+            }
+            $values['badge_types'] = $badge_types;
+        }
+
+        // badge_features_types
+
+        if(in_array('badge_features_types', $relations)){
+            $badge_features_types = [];
+            foreach ($summit->getBadgeFeaturesTypes() as $badgeFeatureType) {
+                $badge_features_types[] = SerializerRegistry::getInstance()->getSerializer($badgeFeatureType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_features_types'));
+            }
+            $values['badge_features_types'] = $badge_features_types;
         }
 
         // badge_access_level_types

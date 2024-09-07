@@ -197,6 +197,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
                 'attendee_id' => 'required|integer',
                 'room_id' => 'sometimes|integer',
                 'event_id' => 'sometimes|integer',
+                'ticket_number' => 'sometimes|string',
                 'required_access_levels' => 'sometimes|int_array',
                 'check_ingress' =>  ['sometimes', new Boolean],
             ]);

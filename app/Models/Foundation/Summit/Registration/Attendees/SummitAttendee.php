@@ -1403,4 +1403,36 @@ SQL;
     {
         return $this->tags->clear();
     }
+
+    /**
+     * @param string $ticket_number
+     * @return bool
+     */
+    public function isTicketActive(string $ticket_number): bool
+    {
+        foreach($this->tickets as $ticket){
+            if($ticket->hasBadge() && $ticket->getNumber() === $ticket_number && $ticket->isActive()) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitAttendee::isTicketActive attendee %s ticket %s is active",
+                        $this->id,
+                        $ticket_number
+                    )
+                );
+                return true;
+            }
+        }
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendee::isTicketActive attendee %s ticket %s is not active",
+                $this->id,
+                $ticket_number
+            )
+        );
+        return false;
+    }
 }

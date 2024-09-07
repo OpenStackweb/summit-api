@@ -176,6 +176,7 @@ final class SummitMetricService
      * @param Summit $summit
      * @param Member $current_user
      * @param int $attendee_id
+     * @param string|null $ticket_number
      * @param array $required_access_levels
      * @param int|null $room_id
      * @param int|null $event_id
@@ -188,15 +189,25 @@ final class SummitMetricService
         Summit $summit,
         Member $current_user,
         int    $attendee_id,
+        ?string   $ticket_number = null,
         array  $required_access_levels = [],
         ?int   $room_id = null,
         ?int   $event_id = null,
         bool   $check_ingress = false
     ): SummitMetric
     {
-        Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ticket_number %s ",
+                $summit->getId(),
+                $attendee_id,
+                is_null($ticket_number) ? 'N/A': $ticket_number
+            )
+        );
 
-        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $required_access_levels, $room_id, $event_id, $check_ingress) {
+        return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $ticket_number, $required_access_levels, $room_id, $event_id, $check_ingress) {
 
             $attendee = $summit->getAttendeeById($attendee_id);
             if (is_null($attendee))
@@ -206,16 +217,19 @@ final class SummitMetricService
                 throw new ValidationException(sprintf("Attendee %s is not authorized.", $attendee->getEmail()));
             }
 
+            if(!empty($ticket_number) && !$attendee->isTicketActive($ticket_number))
+                throw new ValidationException("Provided Ticket is not active.");
+
             $event = null;
             $room = null;
 
-            if (!is_null($room_id)) {
+            if (!is_null($room_id) && $room_id > 0) {
                 $room = $summit->getLocation($room_id);
                 if (is_null($room) || !$room instanceof SummitVenueRoom)
                     throw new EntityNotFoundException("Room not found.");
             }
 
-            if (!is_null($event_id)) {
+            if (!is_null($event_id) && $event_id > 0) {
                 $event = $summit->getEvent($event_id);
                 if (is_null($event))
                     throw new EntityNotFoundException("Event not found.");
@@ -320,6 +334,8 @@ final class SummitMetricService
             )
         );
 
+        $ticket_number = $payload['ticket_number'] ?? null;
+
         $room_id = $payload['room_id'] ?? null;
         if(!is_null($room_id))
             $room_id = intval($room_id);
@@ -337,6 +353,7 @@ final class SummitMetricService
             $summit,
             $current_user,
             intval($payload['attendee_id']),
+            $ticket_number,
             $payload['required_access_levels'] ?? [],
             $room_id,
             $event_id,

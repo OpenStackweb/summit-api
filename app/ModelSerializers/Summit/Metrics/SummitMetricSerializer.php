@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Support\Facades\Config;
+use models\summit\SummitMetric;
 /**
  * Class SummitMetricSerializer
  * @package ModelSerializers
@@ -29,4 +30,34 @@ class SummitMetricSerializer extends SilverStripeSerializer
         'OutgressDate' => 'outgress_date:datetime_epoch',
         'IngressDate' => 'ingress_date:datetime_epoch'
     ];
+
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        $metric  = $this->object;
+        if(!$metric instanceof SummitMetric) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        return $this->checkDataPermissions($metric, $values);
+    }
+    /**
+     * @param SummitMetric $metric
+     * @param array $values
+     * @return array
+     */
+    protected function checkDataPermissions(SummitMetric $metric, array $values):array{
+
+        $member = $metric->hasMember() ? $metric->getMember() : null;
+        if(is_null($member)) return $values;
+
+        if(!$member->isPublicProfileShowPhoto())
+        {
+            if(isset($values['member_pic'])) $values['member_pic'] = Config::get("app.default_profile_image", null);
+        }
+
+        if(!$member->isPublicProfileShowFullname())
+        {
+            if(isset($values['member_last_name'])) $values['member_last_name'] = '';
+        }
+        return $values;
+    }
 }

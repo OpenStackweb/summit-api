@@ -53,10 +53,6 @@ class SummitSerializer extends SilverStripeSerializer
         'LogoUrl' => 'logo:json_url',
         'SecondaryLogoUrl' => 'secondary_logo:json_url',
         // registration
-        'OrderQRPrefix' => 'order_qr_prefix:json_string',
-        'TicketQRPrefix' => 'ticket_qr_prefix:json_string',
-        'BadgeQRPrefix' => 'badge_qr_prefix:json_string',
-        'QRRegistryFieldDelimiter' => 'qr_registry_field_delimiter:json_string',
         'ReassignTicketTillDate' => 'reassign_ticket_till_date:datetime_epoch',
         'RegistrationDisclaimerContent' => 'registration_disclaimer_content:json_string',
         'RegistrationDisclaimerMandatory' => 'registration_disclaimer_mandatory:json_boolean',

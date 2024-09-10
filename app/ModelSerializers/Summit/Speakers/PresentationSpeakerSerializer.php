@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Config;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationSpeaker;
 
@@ -40,63 +42,6 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
 
     protected function getMemberSerializerType():string {
         return SerializerRegistry::SerializerType_Public;
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     * @param array $values
-     * @return array
-     */
-    protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
-        // permissions check
-
-        if(!$speaker->isPublicProfileShowBio())
-        {
-            unset($values['bio']);
-            unset($values['gender']);
-            unset($values['company']);
-            unset($values['state']);
-            unset($values['country']);
-            unset($values['title']);
-            unset($values['affiliations']);
-            unset($values['languages']);
-            unset($values['other_presentation_links']);
-            unset($values['areas_of_expertise']);
-            unset($values['travel_preferences']);
-            unset($values['active_involvements']);
-            unset($values['organizational_roles']);
-            unset($values['badge_features']);
-        }
-
-        if(!$speaker->isPublicProfileShowEmail())
-        {
-            unset($values['email']);
-        }
-
-        if(!$speaker->isPublicProfileShowSocialMediaInfo())
-        {
-            unset($values['irc']);
-            unset($values['twitter']);
-        }
-
-        if(!$speaker->isPublicProfileShowPhoto())
-        {
-            unset($values['pic']);
-            unset($values['big_pic']);
-        }
-
-        if(!$speaker->isPublicProfileShowFullname())
-        {
-            unset($values['first_name']);
-            unset($values['last_name']);
-        }
-
-        if(!$speaker->isPublicProfileShowTelephoneNumber())
-        {
-            unset($values['phone_number']);
-        }
-
-        return $values;
     }
 
     /**
@@ -376,5 +321,62 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         }
 
        return $this->checkDataPermissions($speaker, $values);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @param array $values
+     * @return array
+     */
+    protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
+        // permissions check
+
+        if(!$speaker->isPublicProfileShowBio())
+        {
+            if(isset($values['bio'])) $values['bio'] = '';
+            if(isset($values['gender'])) $values['gender'] = '';
+            if(isset($values['company'])) $values['company'] = '';
+            if(isset($values['state'])) $values['state'] = '';
+            if(isset($values['country'])) $values['country'] = '';
+            if(isset($values['title'])) $values['title'] = '';
+
+            if(isset($values['affiliations'])) $values['affiliations'] = [];
+            if(isset($values['languages'])) $values['languages'] = [];
+            if(isset($values['other_presentation_links'])) $values['other_presentation_links'] = [];
+            if(isset($values['areas_of_expertise'])) $values['areas_of_expertise'] = [];
+            if(isset($values['travel_preferences'])) $values['travel_preferences'] = [];
+            if(isset($values['active_involvements'])) $values['active_involvements'] = [];
+            if(isset($values['organizational_roles'])) $values['organizational_roles'] = [];
+            if(isset($values['badge_features'])) $values['badge_features'] = [];
+        }
+
+        if(!$speaker->isPublicProfileShowEmail())
+        {
+            if(isset($values['email'])) $values['email'] = '';
+        }
+
+        if(!$speaker->isPublicProfileShowSocialMediaInfo())
+        {
+            if(isset($values['irc'])) $values['irc'] = '';
+            if(isset($values['twitter'])) $values['twitter'] = '';
+        }
+
+        if(!$speaker->isPublicProfileShowPhoto())
+        {
+            if(isset($values['pic'])) $values['pic'] = Config::get("app.default_profile_image", null);
+            if(isset($values['big_pic'])) $values['big_pic'] = Config::get("app.default_profile_image", null);
+        }
+
+        if(!$speaker->isPublicProfileShowFullname())
+        {
+            if(isset($values['last_name'])) $values['last_name'] = '';
+        }
+
+        if(!$speaker->isPublicProfileShowTelephoneNumber())
+        {
+            if(isset($values['phone_number'])) $values['phone_number'] = '';
+        }
+
+        return $values;
     }
 }

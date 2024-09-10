@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Config;
 use models\main\Member;
 /**
  * Class PublicMemberSerializer
@@ -25,32 +27,33 @@ final class PublicMemberSerializer extends AbstractMemberSerializer
      * @return array
      */
     protected function checkDataPermissions(Member $member, array $values):array{
+
         if(!$member->isPublicProfileShowBio())
         {
-            unset($values['bio']);
-            unset($values['gender']);
-            unset($values['company']);
-            unset($values['state']);
-            unset($values['country']);
+            if(isset($values['bio'])) $values['bio'] = '';
+            if(isset($values['gender'])) $values['gender'] = '';
+            if(isset($values['company'])) $values['company'] = '';
+            if(isset($values['state'])) $values['state'] = '';
+            if(isset($values['country'])) $values['country'] = '';
+            if(isset($values['bio'])) $values['bio'] = '';;
         }
 
         if(!$member->isPublicProfileShowSocialMediaInfo())
         {
-            unset($values['github_user']);
-            unset($values['linked_in']);
-            unset($values['irc']);
-            unset($values['twitter']);
+            if(isset($values['github_user'])) $values['github_user'] = '';
+            if(isset($values['linked_in'])) $values['linked_in'] = '';
+            if(isset($values['irc'])) $values['irc'] = '';
+            if(isset($values['twitter'])) $values['twitter'] = '';
         }
 
         if(!$member->isPublicProfileShowPhoto())
         {
-            unset($values['pic']);
+            if(isset($values['pic'])) $values['pic'] = Config::get("app.default_profile_image", null);
         }
 
         if(!$member->isPublicProfileShowFullname())
         {
-            unset($values['first_name']);
-            unset($values['last_name']);
+            if(isset($values['last_name'])) $values['last_name'] = '';
         }
         return $values;
     }

@@ -123,7 +123,8 @@ final class OAuth2SummitTrackChairsApiController
                         $current_user->isOnGroup(IGroup::Administrators) ||
                         $current_user->isOnGroup(IGroup::SuperAdmins) ||
                         $current_user->isOnGroup(IGroup::TrackChairsAdmins) ||
-                        $current_user->isOnGroup(IGroup::SummitAdministrators)
+                        $current_user->isOnGroup(IGroup::SummitAdministrators) ||
+                        $current_user->isOnGroup(IGroup::TrackChairs)
                     )
                         return SerializerRegistry::SerializerType_Private;
                 }

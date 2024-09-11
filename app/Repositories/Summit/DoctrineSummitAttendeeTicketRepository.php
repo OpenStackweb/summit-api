@@ -88,7 +88,15 @@ final class DoctrineSummitAttendeeTicketRepository
             ),
             'owner_first_name' => "COALESCE(LOWER(a.first_name),LOWER(m.first_name))",
             'owner_last_name' => "COALESCE(LOWER(a.surname),LOWER(m.last_name))",
-            'owner_email' => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string', 'a.email:json_string'],
+            'owner_email' => [
+                'm.email:json_string',
+                'm.second_email:json_string',
+                'm.third_email:json_string',
+                'm2.email:json_string',
+                'm2.second_email:json_string',
+                'm2.third_email:json_string',
+                'a.email:json_string'
+            ],
             'summit_id' => 's.id:json_int',
             'order_owner_id' => 'ord_m.id:json_int',
             'owner_id' => 'a.id:json_int',
@@ -238,7 +246,7 @@ final class DoctrineSummitAttendeeTicketRepository
         if ($filter->hasFilter('view_type_id')) {
             $query = $query->join("bt.allowed_view_types", "avt");
         }
-        if($filter->hasFilter("member_id")){
+        if($filter->hasFilter("member_id") || $filter->hasFilter("owner_email")){
             // add all managed tickets too
             $query = $query->leftJoin("a.manager", "am");
             $query = $query->leftJoin("am.member", "m2");

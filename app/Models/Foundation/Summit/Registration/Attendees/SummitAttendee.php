@@ -1,4 +1,3 @@
-
 <?php namespace models\summit;
 /**
  * Copyright 2015 OpenStack Foundation

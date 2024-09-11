@@ -153,16 +153,26 @@ class OAuth2BearerAccessTokenRequestValidator
             $token_info = $this->token_service->get($access_token_value);
 
             if(!is_null($token_info))
-                Log::debug(sprintf("token lifetime %s", $token_info->getLifetime()));
+                Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle token lifetime %s", $token_info->getLifetime()));
 
             //check lifetime
             if (is_null($token_info)) {
+                Log::warning("OAuth2BearerAccessTokenRequestValidator::handle token not found");
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }
             //check token audience
             Log::debug('OAuth2BearerAccessTokenRequestValidator::handle checking token audience ...');
             $audience = explode(' ', $token_info->getAudience());
             if ((!in_array($realm, $audience))) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "OAuth2BearerAccessTokenRequestValidator::handle invalid audience %s current aud %s",
+                        $realm,
+                        json_encode($audience)
+                    )
+                );
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }
             if (
@@ -250,7 +260,7 @@ class OAuth2BearerAccessTokenRequestValidator
             $response = new OAuth2WWWAuthenticateErrorResponse(
                 $realm,
                 OAuth2Protocol::OAuth2Protocol_Error_InvalidToken,
-                'the access token provided is expired, revoked, malformed, or invalid for other reasons.',
+                'The access token provided is expired, revoked, malformed, or invalid for other reasons.',
                 null,
                 401
             );

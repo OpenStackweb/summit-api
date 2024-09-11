@@ -71,12 +71,13 @@ final class AccessTokenService implements IAccessTokenService
      */
     public function get($token_value)
     {
+        Log::debug(sprintf('AccessTokenService::get token %s', $token_value));
         $token          = null;
         $cache_lifetime = intval(Config::get('server.access_token_cache_lifetime', 300));
 
         if($this->cache_service->exists(md5($token_value).'.revoked'))
         {
-            Log::debug(sprintf('token marked as revoked on cache (%s)',md5($token_value) ));
+            Log::warning(sprintf('AccessTokenService::get token marked as revoked on cache (%s)',md5($token_value) ));
             throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
         }
 
@@ -137,7 +138,7 @@ final class AccessTokenService implements IAccessTokenService
      * @return array
      */
     private function doIntrospection($token_value){
-        Log::debug("getting token from remote call ...");
+
         $cache_lifetime = intval(Config::get('server.access_token_cache_lifetime', 300));
         $token_info     = $this->doIntrospectionRequest($token_value);
 
@@ -185,6 +186,7 @@ final class AccessTokenService implements IAccessTokenService
     private function doIntrospectionRequest($token_value)
     {
 
+        Log::debug(sprintf("AccessTokenService::doIntrospectionRequest token %s", $token_value));
         try {
             $stack = HandlerStack::create();
             $stack->push(GuzzleRetryMiddleware::factory());
@@ -255,13 +257,16 @@ final class AccessTokenService implements IAccessTokenService
                 ))
             {
                 $this->cache_service->setSingleValue(md5($token_value).'.revoked', md5($token_value));
+                Log::warning(sprintf("AccessTokenService::doIntrospectionRequest token %s marked as revoked (400 %s)", $token_value, $body['error']));
                 throw new InvalidGrantTypeException($body['error']);
             }
             if($code == 503 ){
                 // service went offline temporally ... revoke token
                 $this->cache_service->setSingleValue(md5($token_value).'.revoked', md5($token_value));
+                Log::warning(sprintf("AccessTokenService::doIntrospectionRequest token %s marked as revoked (503 offline IDP)", $token_value));
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }
+            Log::warning(sprintf("AccessTokenService::doIntrospectionRequest token %s OAuth2InvalidIntrospectionResponse (%s %s)", $token_value, $ex->getCode(), $body));
             throw new OAuth2InvalidIntrospectionResponse(sprintf('http code %s - body %s', $ex->getCode(), $body));
         }
     }

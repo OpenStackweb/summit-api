@@ -69,6 +69,8 @@ final class SummitEventValidationRulesFactory
                 'custom_order' => 'sometimes|integer',
                 'duration' => 'sometimes|integer|min:0',
                 'stream_is_secure' =>  'sometimes|boolean',
+                'overflow_stream_is_secure' => 'sometimes|boolean',
+                'overflow_streaming_url' => 'sometimes|string|max:255',
                 'allowed_ticket_types' => 'sometimes|int_array',
             ];
         }
@@ -113,6 +115,8 @@ final class SummitEventValidationRulesFactory
             'show_sponsors' => 'sometimes|boolean',
             'duration' => 'sometimes|integer|min:0',
             'stream_is_secure' =>  'sometimes|boolean',
+            'overflow_stream_is_secure' => 'sometimes|boolean',
+            'overflow_streaming_url' => 'sometimes|string|max:255',
             'allowed_ticket_types' => 'sometimes|int_array',
         ];
     }

@@ -22,6 +22,8 @@ class AdminSummitEventSerializer extends SummitEventSerializer
 {
     protected static $array_mappings = [
         'Occupancy' => 'occupancy:json_string',
+        'OverflowStreamingUrl' => 'overflow_streaming_url:json_string',
+        'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
     ];
 
     protected static $allowed_fields = [

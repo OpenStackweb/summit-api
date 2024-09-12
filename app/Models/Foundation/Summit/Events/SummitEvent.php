@@ -363,6 +363,19 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     protected $submission_source;
 
+     /**
+     * @ORM\Column(name="OverflowStreamingUrl", type="string")
+     * @var string
+     */
+    protected $overflow_streaming_url;
+
+     /**
+     * @ORM\Column(name="OverflowStreamIsSecure", type="boolean")
+     * @var bool
+     */
+    protected $overflow_stream_is_secure;
+
+
     /**
      * SummitEvent constructor.
      */
@@ -385,6 +398,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->rsvp = new ArrayCollection();
         $this->attendance_metrics = new ArrayCollection();
         $this->stream_is_secure = false;
+        $this->overflow_stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
         $this->submission_source = SummitEvent::SOURCE_ADMIN;
     }
@@ -1740,5 +1754,47 @@ SQL;
 
         }
 
+    }
+
+    /**
+     * @return void
+     */
+    public function getOverflowStreamingUrl(): string
+    {
+        return $this->overflow_streaming_url;
+    }
+
+    /**
+     * @param string $overflow_streaming_url
+     * @return void
+     */
+    public function setOverflowStreamingUrl(string $overflow_streaming_url): void
+    {
+        $this->overflow_streaming_url = $overflow_streaming_url;
+    }
+
+    /**
+     * @return bool
+     */
+    public function gatOverflowStreamIsSecure(): bool
+    {
+        return $this->overflow_stream_is_secure;
+    }
+
+    /**
+     * @param bool $overflow_stream_is_secure
+     * @return void
+     */
+    public function setOverflowStreamIsSecure(bool $overflow_stream_is_secure): void
+    {
+        $this->overflow_stream_is_secure = $overflow_stream_is_secure;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getOverflowTokens(): ?string
+    {
+        return null;
     }
 }

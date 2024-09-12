@@ -65,6 +65,7 @@ final class CacheMiddleware
         $query = $request->getQueryString();
         $current_time = time();
         $evict_cache = false;
+
         if (!empty($query)) {
             Log::debug(sprintf('CacheMiddleware::handle query %s', $query));
             $query = explode('&', $query);
@@ -93,9 +94,11 @@ final class CacheMiddleware
         $time = $this->cache_service->getSingleValue($key . ".generated");
         $region = [];
         $cache_region_key = null;
+
         if(!empty($cache_region) && !empty($param_id)){
             $id = $request->route($param_id);
             $cache_region_key = CacheRegions::getCacheRegionFor($cache_region, $id);
+
             if(!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
                 //
                 Log::debug(sprintf("CacheMiddleware::handle trying to get region %s data ...", $cache_region_key));
@@ -106,6 +109,7 @@ final class CacheMiddleware
                 }
             }
         }
+
         if (empty($data) || empty($time) || $evict_cache) {
             $time = $current_time;
             Log::debug(sprintf("CacheMiddleware::handle cache value not found for key %s , getting from api...", $key));

@@ -51,7 +51,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitBadgesQREncryptor::class,
         \App\Console\Commands\CreateTestDBCommand::class,
         \App\Console\Commands\SeedTestDataCommand::class,
-        \App\Console\Commands\PublishStreamUpdatesCommand::class
+        \App\Console\Commands\PublishStreamUpdatesCommand::class,
+        \App\Console\Commands\PopulateAllowedExtraQuestionsCacheCommand::class,
     ];
 
     /**

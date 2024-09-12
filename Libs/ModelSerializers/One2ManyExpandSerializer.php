@@ -11,8 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use Illuminate\Support\Facades\Log;
 use ModelSerializers\SerializerRegistry;
 /**
  * Class One2ManyExpandSerializer
@@ -82,18 +80,6 @@ class One2ManyExpandSerializer implements IExpandSerializer
         $this->serializer_type = $serializer_type;
         $this->test_rule = $test_rule;
         $this->should_skip_rule = $should_skip_rule;
-        Log::debug
-        (
-            sprintf
-            (
-                "One2ManyExpandSerializer::__construct original attribute %s attribute %s getter %s has %s serializer type %s",
-                $this->original_attribute,
-                $this->attribute,
-                $this->getter,
-                $this->has,
-                $this->serializer_type
-            )
-        );
     }
 
 
@@ -129,16 +115,6 @@ class One2ManyExpandSerializer implements IExpandSerializer
         bool $should_verify_relation = false
     ): array
     {
-        Log::debug
-        (
-            sprintf
-            (
-                "One2ManyExpandSerializer::serialize expand %s fields %s relations %s",
-                $expand,
-                implode(',', $fields),
-                implode(',', $relations)
-            )
-        );
         $testRuleRes = is_null($this->test_rule) ? true : call_user_func($this->test_rule, $entity);
         $res = $entity->{$this->has}();
         if(boolval($res) && $testRuleRes){

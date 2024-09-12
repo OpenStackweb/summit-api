@@ -254,11 +254,11 @@ final class Filter
         $value = $filter->getValue();
         $op = $filter->getOperator();
         $sameOp = $filter->getSameFieldOp();
-        Log::debug(sprintf("Filter::applyCondition mapping %s op %s value %s", $mapping_parts[0], json_encode($op), json_encode($value)));
+        //Log::debug(sprintf("Filter::applyCondition mapping %s op %s value %s", $mapping_parts[0], json_encode($op), json_encode($value)));
         if (count($mapping_parts) > 1) {
             $filter->setValue($this->convertValue($filter->getRawValue(), $mapping_parts[1]));
             $value = $filter->getValue();
-            Log::debug(sprintf("Filter::applyCondition converted converted value %s", json_encode($value)));
+            //Log::debug(sprintf("Filter::applyCondition converted converted value %s", json_encode($value)));
         }
 
         if (is_array($value)) { // multiple values
@@ -346,7 +346,7 @@ final class Filter
 
         $sql = trim($sql);
 
-        Log::debug(sprintf("Filter::toRawSQL SQL %s", $sql));
+        //Log::debug(sprintf("Filter::toRawSQL SQL %s", $sql));
 
         return $sql;
     }
@@ -356,7 +356,7 @@ final class Filter
      * @return string
      */
     private function getMainOp(int $idx):string{
-        Log::debug(sprintf("Filter::getMainOp idx %s ops %s", $idx, json_encode($this->ops)));
+        //Log::debug(sprintf("Filter::getMainOp idx %s ops %s", $idx, json_encode($this->ops)));
         if(count($this->ops) == 0) return Filter::MainOperatorAnd;
         if((count($this->ops) - 1) < $idx) return Filter::MainOperatorAnd;
         return $this->ops[$idx];
@@ -373,17 +373,17 @@ final class Filter
         $this->bindings = [];
 
         foreach ($this->filters as $idx => $filter) {
-            Log::debug(sprintf("Filter::apply2Query idx %s filter %s", $idx, json_encode($filter)));
+            //Log::debug(sprintf("Filter::apply2Query idx %s filter %s", $idx, json_encode($filter)));
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 // single filter element
                 $mapping = $mappings[$filter->getField()];
-                Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping %s", $idx, $filter->getField(), json_encode($mapping)));
+                //Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping %s", $idx, $filter->getField(), json_encode($mapping)));
                 if ($mapping instanceof IQueryApplyable) {
-                    Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is IQueryApplyable", $idx, $filter->getField()));
+                    //Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is IQueryApplyable", $idx, $filter->getField()));
                     $mapping->setMainOperator($this->getMainOp($idx));
                     $query = $mapping->apply($query, $filter);
                 } else if (is_array($mapping)) {
-                    Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is array", $idx, $filter->getField()));
+                    //Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is array", $idx, $filter->getField()));
                     $condition = '';
                     // OR Criteria
                     foreach ($mapping as $mapping_or) {
@@ -395,7 +395,7 @@ final class Filter
                     else
                         $query = $query->orWhere($condition);
                 } else {
-                    Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is raw", $idx, $filter->getField()));
+                    //Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is raw", $idx, $filter->getField()));
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
                     if($this->getMainOp($idx) == Filter::MainOperatorAnd)
                         $query = $query->andWhere($condition);
@@ -403,7 +403,7 @@ final class Filter
                         $query = $query->orWhere($condition);
                 }
             } else if (is_array($filter)) {
-                Log::debug(sprintf("Filter::apply2Query single filter idx %s mapping is OR", $idx));
+                //Log::debug(sprintf("Filter::apply2Query single filter idx %s mapping is OR", $idx));
                 // OR
                 $sub_or_query = '';
                 foreach ($filter as $e) {
@@ -411,7 +411,7 @@ final class Filter
 
                         $mapping = $mappings[$e->getField()];
                         if ($mapping instanceof IQueryApplyable) {
-                            Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is OR", $idx, $e->getField()));
+                            //Log::debug(sprintf("Filter::apply2Query single filter idx %s field %s mapping is OR", $idx, $e->getField()));
                             $mapping->setMainOperator($this->getMainOp($idx));
                             $condition = $mapping->applyOr($query, $e);
                             if (!empty($sub_or_query)) $sub_or_query .= ' OR ';
@@ -442,7 +442,7 @@ final class Filter
         foreach ($this->bindings as $param => $value)
             $query->setParameter($param, $value);
 
-        Log::debug(sprintf("Filter::apply2Query DQL %s", $query->getDQL()));
+        //Log::debug(sprintf("Filter::apply2Query DQL %s", $query->getDQL()));
         return $this;
     }
 
@@ -472,10 +472,10 @@ final class Filter
         }
         // single value
         $datetime = new \DateTime("@$value");
-        Log::debug(sprintf("Filter::convertToDateTime original date value %s", $datetime->format("Y-m-d H:i:s")));
+        //Log::debug(sprintf("Filter::convertToDateTime original date value %s", $datetime->format("Y-m-d H:i:s")));
         if (!is_null($timezone))
             $datetime = $datetime->setTimezone($timezone);
-        Log::debug(sprintf("Filter::convertToDateTime final date %s", $datetime->format("Y-m-d H:i:s")));
+        //Log::debug(sprintf("Filter::convertToDateTime final date %s", $datetime->format("Y-m-d H:i:s")));
         return $datetime->format("Y-m-d H:i:s");
     }
 
@@ -499,7 +499,7 @@ final class Filter
                 }
                 return sprintf("%s", PunnyCodeHelper::encodeEmail($value));
             case self::DateTimeEpoch:
-                Log::debug(sprintf("Filter::convertValue datetime_epoch %s", $original_format));
+                //Log::debug(sprintf("Filter::convertValue datetime_epoch %s", $original_format));
                 $strTimeZone = count($original_format_parts) > 1 ? $original_format_parts[1] : null;
                 return self::convertToDateTime($value, $strTimeZone);
                 break;

@@ -493,6 +493,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         $current_member = $this->getResourceServerContext()->getCurrentUser();
         if(is_null($current_member))
             return $this->error401();
+
         // check is user is admin or its on any pre - authorized group
         $auth = $current_member->isSummitAllowed($summit) ||
             $current_member->isOnGroup(IGroup::BadgePrinters);

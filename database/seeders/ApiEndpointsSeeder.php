@@ -3283,6 +3283,20 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'get-attendee-allowed-extra-questions-v2',
+                'route' => '/api/v2/summits/{id}/attendees/{attendee_id}/allowed-extra-questions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::BadgePrinters,
+                ]
+            ],
+            [
                 'name' => 'add-attendee',
                 'route' => '/api/v1/summits/{id}/attendees',
                 'http_method' => 'POST',

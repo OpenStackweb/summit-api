@@ -169,7 +169,7 @@ final class PopulateAllowedExtraQuestionsCacheCommand extends Command {
 
                         $key = sprintf
                         (
-                            '/api/v1/summits/%s/attendees/%s/allowed-extra-questions?.expand=%s.order=%s.page=1.per_page=100',
+                            '/api/v2/summits/%s/attendees/%s/allowed-extra-questions.expand=%s.order=%s.page=1.per_page=100',
                             $summit->getId(),
                             $attendee->getId(),
                             urlencode($expand),

@@ -44,11 +44,10 @@ Route::group(['prefix' => 'summits'], function () {
         Route::group(['prefix' => 'ticket-types'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@getAllBySummitV2']);
         });
-
         // attendees
         Route::group(['prefix' => 'attendees'], function () {
             Route::group(['prefix' => '{attendee_id}'], function () {
-                Route::get('', ['middleware' => 'auth.user,cache:1200,ATTENDEE,attendee_id' , 'uses' => 'OAuth2SummitsTicketTypesApiController@getAttendeeExtraQuestionsV2']);
+                Route::get('allowed-extra-questions', ['middleware' => ['auth.user','cache:1200,ATTENDEE,attendee_id'] , 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestionsV2']);
             });
         });
 

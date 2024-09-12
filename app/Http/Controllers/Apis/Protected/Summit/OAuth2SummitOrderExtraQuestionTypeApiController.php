@@ -577,4 +577,74 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             ['attendee' => $attendee]
         );
     }
+
+    /**
+     * @param $summit_id
+     * @param $attendee_id
+     * @return mixed
+     */
+    public function getAttendeeExtraQuestionsV2($summit_id, $attendee_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404("Summit not found.");
+
+        $attendee = $summit->getAttendeeById(intval($attendee_id));
+        if (is_null($attendee)) return $this->error404("Attendee not found.");
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'name'      => ['=@', '=='],
+                    'type'      => ['=@', '=='],
+                    'label'     => ['=@', '=='],
+                    'printable' => ['=='],
+                    'usage'     => ['=@', '=='],
+                    'summit_id' => ['=='],
+                    'tickets_exclude_inactives' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'name'      => 'sometimes|string',
+                    'type'      => 'sometimes|string',
+                    'label'     => 'sometimes|string',
+                    'printable' => 'sometimes|string|in:true,false',
+                    'usage'     => 'sometimes|string',
+                    'summit_id' => 'sometimes|integer',
+                    'tickets_exclude_inactives' => ['sometimes', new Boolean()],
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'label',
+                    'order',
+                ];
+            },
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('class', ExtraQuestionTypeConstants::QuestionClassMain));
+                    $filter->addFilterCondition(FilterElement::makeEqual('usage', SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($attendee) {
+                return $this->repository->getAllAllowedByPage
+                (
+                    $attendee,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            ['attendee' => $attendee]
+        );
+    }
 }

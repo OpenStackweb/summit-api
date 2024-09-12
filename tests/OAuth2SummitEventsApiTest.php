@@ -461,7 +461,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
                 self::$summit->getTicketTypes()[0]->getId(),
                 self::$summit->getTicketTypes()[1]->getId(),
             ],
-            'submission_source' => SummitEvent::SOURCE_ADMIN
+            'submission_source' => SummitEvent::SOURCE_ADMIN,
+            'overflow_streaming_url' => 'https://test.com',
+            'overflow_stream_is_secure' => true,
         ];
 
 

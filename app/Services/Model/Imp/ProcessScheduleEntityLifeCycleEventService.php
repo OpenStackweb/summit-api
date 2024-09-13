@@ -84,20 +84,24 @@ final class ProcessScheduleEntityLifeCycleEventService
      * @param int $summit_id
      * @param int $entity_id
      * @param string $entity_type
+     * @param array $params
+     * @return void
+     * @throws \Exception
      */
-    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type): void
+    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type, array $params = []): void
     {
-        $this->tx_service->transaction(function () use ($entity_operator, $summit_id, $entity_id, $entity_type) {
+        $this->tx_service->transaction(function () use ($entity_operator, $summit_id, $entity_id, $entity_type,$params) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s",
+                    "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s %s",
                     $summit_id,
                     $entity_id,
                     $entity_type,
-                    $entity_operator
+                    $entity_operator,
+                    json_encode($params)
                 )
             );
 
@@ -120,7 +124,6 @@ final class ProcessScheduleEntityLifeCycleEventService
                 }
 
             }
-
 
             // clear cache region
             $cache_region_key = null;
@@ -238,6 +241,31 @@ final class ProcessScheduleEntityLifeCycleEventService
                         'entity_operator' => 'UPDATE'
                     ]);
 
+                return;
+            }
+
+            if ($entity_type === 'PresentationOverflow') {
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit) return;
+
+                $repository = EntityManager::getRepository(PresentationSpeakerAssignment::class);
+                $ps_assignment = $repository->find($entity_id);
+                if (!$ps_assignment instanceof PresentationSpeakerAssignment) return;
+                $presentation = $ps_assignment->getPresentation();
+
+                if ($presentation instanceof Presentation) {
+                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process presentation overflow %s from summit %s",
+                        $entity_id, $summit->getId()));
+
+                    $this->rabbit_service->publish(
+                        [
+                            'summit_id' => $summit->getId(),
+                            'entity_id' => $presentation->getId(),
+                            'entity_type' => 'PresentationOverflow',
+                            'entity_operator' => 'UPDATE',
+                            'params' => $params
+                        ]);
+                }
                 return;
             }
 

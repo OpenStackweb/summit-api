@@ -24,6 +24,11 @@ interface IProcessScheduleEntityLifeCycleEventService
      * @param int $summit_id
      * @param int $entity_id
      * @param string $entity_type
+     * @param array $params
+     * @return void
      */
-    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type):void;
+    public function process
+    (
+        string $entity_operator, int $summit_id, int $entity_id, string $entity_type, array $params = []
+    ):void;
 }

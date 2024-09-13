@@ -155,6 +155,12 @@ class Summit extends SilverstripeBaseModel
     private $registration_disclaimer_mandatory;
 
     /**
+     * @ORM\Column(name="MarkAsDeleted", type="boolean")
+     * @var bool
+     */
+    private $mark_as_deleted;
+
+    /**
      * @ORM\Column(name="RegistrationSendQRAsImageAttachmentOnTicketEmail", type="boolean")
      * @var bool
      */
@@ -4587,10 +4593,6 @@ DQL;
         return $this->orders->matching($criteria)->count() > 0;
     }
 
-    /**
-     * @var bool
-     */
-    private $mark_as_deleted;
 
     public function markAsDeleted()
     {

@@ -32,6 +32,7 @@ use models\summit\IEventFeedbackRepository;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
+use models\summit\Summit;
 use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SummitQREncKeySerializer;
@@ -165,7 +166,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             },
             function ($filter) use ($current_member) {
                 if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('available_on_api', '1'));
+                    $filter->addFilterCondition(FilterElement::makeEqual('mark_as_deleted', '0'));
                     if(!is_null($current_member)){
                         if($current_member->isAdmin()) return $filter;
                         $allowed_summits = $current_member->getAllAllowedSummitsIds();
@@ -266,6 +267,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             },
             function ($filter) use ($current_member) {
                 if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('mark_as_deleted', '0'));
                     if(!is_null($current_member)){
                         if($current_member->isAdmin()) return $filter;
                         $allowed_summits = $current_member->getAllAllowedSummitsIds();
@@ -313,7 +315,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (!$summit instanceof Summit || $summit->isDeleting()) return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
 
             if
@@ -383,7 +385,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if (is_null($summit))
                 $summit = $this->repository->getBySlug(trim($id));
 
-            if (is_null($summit)) return $this->error404();
+            if (!$summit instanceof Summit || $summit->isDeleting()) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionFor($summit))

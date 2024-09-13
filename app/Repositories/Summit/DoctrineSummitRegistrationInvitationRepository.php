@@ -17,6 +17,7 @@ use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
+use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use utils\DoctrineCaseFilterMapping;
@@ -150,5 +151,28 @@ class DoctrineSummitRegistrationInvitationRepository
             ->setParameter('hash', trim($hash));
 
         return $query->getQuery()->getOneOrNullResult();
+    }
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool{
+        try {
+            $sql = <<<SQL
+DELETE I FROM SummitRegistrationInvitation I WHERE I.SummitID = :summit_id;
+SQL;
+
+            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+            return $stmt->execute([
+                'summit_id' => $summit_id,
+            ]);
+
+        }
+        catch (\Exception $ex)
+        {
+            Log::error($ex);
+        }
     }
 }

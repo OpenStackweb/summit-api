@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Illuminate\Support\Facades\Log;
 use models\summit\IOrderConstants;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
@@ -321,5 +322,28 @@ SQL,
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool{
+        try {
+            $sql = <<<SQL
+DELETE O FROM SummitOrder O WHERE O.SummitID = :summit_id;
+SQL;
+
+            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+            return $stmt->execute([
+                'summit_id' => $summit_id,
+            ]);
+
+        }
+        catch (\Exception $ex)
+        {
+            Log::error($ex);
+        }
     }
 }

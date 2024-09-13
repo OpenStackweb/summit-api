@@ -51,7 +51,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitBadgesQREncryptor::class,
         \App\Console\Commands\CreateTestDBCommand::class,
         \App\Console\Commands\SeedTestDataCommand::class,
-        \App\Console\Commands\PublishStreamUpdatesCommand::class
+        \App\Console\Commands\PublishStreamUpdatesCommand::class,
+        \App\Console\Commands\PurgeSummitsMarkAsDeletedCommand::class
     ];
 
     /**
@@ -103,5 +104,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
 
         $schedule->command('summit:publish-stream-updates')->everyMinute()->withoutOverlapping()->onOneServer();
+
+        $schedule->command('summit:purge-mark-as-deleted')->everyTwoHours()->withoutOverlapping()->onOneServer();
+
     }
 }

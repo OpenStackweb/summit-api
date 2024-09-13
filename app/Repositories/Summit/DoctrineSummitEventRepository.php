@@ -840,4 +840,27 @@ SQL,*/
             return 0;
         }
     }
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool{
+        try {
+            $sql = <<<SQL
+DELETE E FROM SummitEvent E WHERE E.SummitID = :summit_id;
+SQL;
+
+            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+            return $stmt->execute([
+                'summit_id' => $summit_id,
+            ]);
+
+        }
+        catch (\Exception $ex)
+        {
+            Log::error($ex);
+        }
+    }
 }

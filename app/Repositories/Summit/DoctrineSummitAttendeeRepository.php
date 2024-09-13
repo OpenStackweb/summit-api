@@ -15,6 +15,7 @@
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use Doctrine\ORM\QueryBuilder;
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeRepository;
@@ -491,5 +492,28 @@ SQL,
             ->setParameter("member_id", $member->getId());
 
         return $query->getQuery()->getResult();
+    }
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool{
+        try {
+            $sql = <<<SQL
+DELETE A FROM SummitAttendee A WHERE A.SummitID = :summit_id;
+SQL;
+
+            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+            return $stmt->execute([
+                'summit_id' => $summit_id,
+            ]);
+
+        }
+        catch (\Exception $ex)
+        {
+            Log::error($ex);
+        }
     }
 }

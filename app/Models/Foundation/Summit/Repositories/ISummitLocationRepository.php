@@ -23,4 +23,11 @@ interface ISummitLocationRepository extends ISummitOwnedEntityRepository
      * @return array
      */
     public function getMetadata(Summit $summit);
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool;
 }

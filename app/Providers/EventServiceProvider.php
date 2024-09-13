@@ -232,7 +232,8 @@ final class EventServiceProvider extends ServiceProvider
                 $event->entity_operator,
                 $event->summit_id,
                 $event->entity_id,
-                $event->entity_type
+                $event->entity_type,
+                $event->params
             );
         });
 

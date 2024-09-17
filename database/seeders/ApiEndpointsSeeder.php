@@ -8909,6 +8909,29 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            //session overflow streaming
+            [
+                'name' => 'update-overflow-streaming',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/overflow',
+                'http_method' => 'PUT',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-overflow-streaming',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/overflow',
+                'http_method' => 'DELETE',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
         ]);
 
     }

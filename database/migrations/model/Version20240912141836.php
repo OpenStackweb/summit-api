@@ -34,6 +34,9 @@ final class Version20240912141836 extends AbstractMigration
             $builder->table("SummitEvent", function (Table $table) {
                 $table->string("OverflowStreamingUrl", 255)->setNotnull(false)->setDefault(null);
                 $table->boolean("OverflowStreamIsSecure")->setNotnull(true)->setDefault(false);
+                $table->string("OverflowStreamKey", 255)->setNotnull(false)->setDefault(null);
+
+                $table->unique("OverflowStreamKey", "OverflowStreamKey");
             });
         }
     }
@@ -51,6 +54,7 @@ final class Version20240912141836 extends AbstractMigration
             $builder->table("SummitEvent", function (Table $table) {
                 $table->dropColumn("OverflowStreamingUrl");
                 $table->dropColumn("OverflowStreamIsSecure");
+                $table->dropColumn("OverflowStreamKey");
             });
         }
     }

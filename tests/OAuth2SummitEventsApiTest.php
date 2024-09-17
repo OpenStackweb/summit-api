@@ -2182,4 +2182,97 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             $last_review_status = $presentation->review_status;
         }
     }
+
+     public function testGetPublishedEventsOverflowStreamingInfo(){
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 5,
+        );
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getOverflowStreaming",
+            $params
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $overflow_streaming_info = json_decode($content);
+        $this->assertTrue(!is_null($overflow_streaming_info));
+    }
+
+    public function testUpdateOverflowInfo()
+    {
+        $params = array
+        (
+            'id'       => self::$summit->getId(),
+            'event_id' => self::$summit->getEvents()->first()->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $streaming_data = array
+        (
+            'overflow_streaming_url'   => 'https://test_updated_streaming_url.com',
+            'overflow_stream_is_secure' => true,
+        );
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitEventsApiController@updateOverflowInfo",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($streaming_data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $event = json_decode($content);
+        $this->assertTrue(!is_null($event));
+    }
+
+     public function testRemoveOverflowState()
+    {
+        $params = array
+        (
+            'id'       => self::$summit->getId(),
+            'event_id' => self::$summit->getEvents()->first()->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "DELETE",
+            "OAuth2SummitEventsApiController@removeOverflowState",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+
+        $event = json_decode($content);
+        $this->assertTrue(is_null($event));
+    }
 }

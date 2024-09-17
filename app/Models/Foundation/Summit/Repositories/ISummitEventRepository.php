@@ -77,4 +77,17 @@ interface ISummitEventRepository extends ISummitEventPublishRepository
      * @return int
      */
     public function getLastPresentationOrderBySummit(int $summit_id):int;
+
+     /**
+     * @param string $enc_key
+     * @return SummitEvent|null
+     */
+    public function getByOverflowStreamKey(string $enc_key): ?SummitEvent;
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool;
 }

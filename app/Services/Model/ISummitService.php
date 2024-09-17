@@ -679,4 +679,19 @@ interface ISummitService
      * @return void
      */
     public function publishStreamUpdatesStartInXMinutes(int $minutes): void;
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param array $payload
+     * @return SummitEvent
+     */
+    public function updateOverflowInfo(Summit $summit, int $event_id, array $payload): SummitEvent;
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @return void
+     */
+    public function removeOverflowState(Summit $summit, int $event_id): SummitEvent;
 }

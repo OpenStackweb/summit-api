@@ -375,6 +375,11 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     protected $overflow_stream_is_secure;
 
+    /**
+     * @ORM\Column(name="OverflowStreamKey", type="string")
+     * @var string
+     */
+    protected $overflow_stream_key;
 
     /**
      * SummitEvent constructor.
@@ -1055,7 +1060,6 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         self::Occupancy50_Percent,
         self::Occupancy75_Percent,
         self::OccupancyFull,
-        self::OccupancyOverflow,
     ];
     /**
      * @param string $occupancy
@@ -1753,24 +1757,14 @@ SQL;
         } catch (\Exception $ex) {
 
         }
-
     }
 
     /**
-     * @return void
+     * @return string|null
      */
-    public function getOverflowStreamingUrl(): string
+    public function getOverflowStreamingUrl(): ?string
     {
         return $this->overflow_streaming_url;
-    }
-
-    /**
-     * @param string $overflow_streaming_url
-     * @return void
-     */
-    public function setOverflowStreamingUrl(string $overflow_streaming_url): void
-    {
-        $this->overflow_streaming_url = $overflow_streaming_url;
     }
 
     /**
@@ -1782,12 +1776,47 @@ SQL;
     }
 
     /**
+     * @return string|null
+     */
+    public function getOverflowStreamKey(): ?string
+    {
+        return $this->overflow_stream_key;
+    }
+
+    /**
+     * @param string $overflow_streaming_url
      * @param bool $overflow_stream_is_secure
+     * @param string $overflow_stream_key
      * @return void
      */
-    public function setOverflowStreamIsSecure(bool $overflow_stream_is_secure): void
+    public function setOverflow(string $overflow_streaming_url,
+                                bool $overflow_stream_is_secure,
+                                string $overflow_stream_key): void
     {
+        $this->overflow_streaming_url = $overflow_streaming_url;
         $this->overflow_stream_is_secure = $overflow_stream_is_secure;
+        $this->overflow_stream_key = $overflow_stream_key;
+        $this->occupancy = self::OccupancyOverflow;
+    }
+
+    public function clearOverflow(): void
+    {
+        $this->overflow_streaming_url = null;
+        $this->overflow_stream_is_secure = false;
+        $this->overflow_stream_key = null;
+        $this->occupancy = self::OccupancyEmpty;
+    }
+
+     /**
+     * @return string
+     */
+    public function getOverflowUrl(): string
+    {
+        return sprintf("%s%s?%s=%s",
+            $this->summit->getMarketingSiteUrl(),
+            config("overflow.path", "/a/overflow-player"),
+            config("overflow.query_string_key","k"),
+            $this->overflow_stream_key);
     }
 
     /**

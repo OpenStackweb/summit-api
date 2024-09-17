@@ -108,6 +108,7 @@ use models\summit\SummitGroupEvent;
 use models\summit\SummitLeadReportSetting;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitScheduleEmptySpot;
+use Random\RandomException;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
 use utils\FilterElement;
@@ -123,6 +124,7 @@ use utils\PagingInfo;
 final class SummitService
     extends AbstractPublishService implements ISummitService
 {
+    const PresentationOverflowEntityType = "PresentationOverflow";
 
     /**
      * @var ISummitEventRepository
@@ -328,6 +330,20 @@ final class SummitService
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
         $this->cache_service = $cache_service;
+    }
+
+    /**
+     * @param SummitEvent $event
+     * @return void
+     * @throws RandomException
+     */
+    private function generateOverflowStreamKey(SummitEvent $event): string
+    {
+        do {
+            $salt = random_bytes(16);
+            $overflow_key = hash('sha256', $event->getId() . $salt . time());
+        } while (!is_null($this->event_repository->getByOverflowStreamKey($overflow_key)));
+        return $overflow_key;
     }
 
     /**
@@ -4159,5 +4175,64 @@ final class SummitService
                 });
             }
         }
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param array $payload
+     * @return SummitEvent
+     * @throws Exception
+     */
+    public function updateOverflowInfo(Summit $summit, int $event_id, array $payload): SummitEvent
+    {
+        Log::debug(sprintf("SummitService::updateOverflowInfo %s", json_encode($payload)));
+
+        return $this->tx_service->transaction(function () use ($summit, $event_id, $payload) {
+
+            $event = $this->event_repository->getByIdRefreshed($event_id);
+            if (is_null($event))
+                throw new ValidationException(sprintf("Event id %s does not exists,", $event_id));
+
+            $event->setOverflow(
+                $payload['overflow_streaming_url'],
+                boolval($payload['overflow_stream_is_secure']),
+                $this->generateOverflowStreamKey($event));
+
+            $params = [
+                'overflow_url' => $event->getOverflowUrl()
+            ];
+
+            ProcessScheduleEntityLifeCycleEvent::dispatch
+            (
+                "UPDATE",
+                $summit->getId(),
+                $event->getId(),
+                self::PresentationOverflowEntityType,
+                $params
+            );
+
+            return $event;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @return void
+     * @throws Exception
+     */
+    public function removeOverflowState(Summit $summit, int $event_id): SummitEvent
+    {
+        return $this->tx_service->transaction(function () use ($summit, $event_id) {
+
+            $event = $this->event_repository->getByIdRefreshed($event_id);
+            if (is_null($event))
+                throw new ValidationException(sprintf("Event id %s does not exists,", $event_id));
+
+            $event->clearOverflow();
+
+            return $event;
+        });
     }
 }

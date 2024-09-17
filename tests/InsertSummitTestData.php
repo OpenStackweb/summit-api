@@ -764,6 +764,8 @@ trait InsertSummitTestData
             $event->setCategory(self::$defaultTrack);
             $event->setType( self::$defaultEventType );
             $event->setSubmissionSource( $i < 10 ? SummitEvent::SOURCE_ADMIN : SummitEvent::SOURCE_SUBMISSION);
+            $event->setOverflowStreamingUrl(sprintf("https://testoverflowurl_%s.org", $i));
+            $event->setOverflowStreamIsSecure(true);
             self::$summit->addEvent($event);
             self::$presentations[] = $event;
         }

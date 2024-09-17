@@ -683,8 +683,8 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
 
                 Route::group(['prefix' => 'overflow'], function () {
-                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateOverflowInfo']);
-                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@removeOverflowState']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@setOverflow']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@clearOverflow']);
                 });
             });
         });

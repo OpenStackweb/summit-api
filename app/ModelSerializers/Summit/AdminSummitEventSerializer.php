@@ -12,8 +12,6 @@
  * limitations under the License.
  **/
 
-use models\summit\SummitEvent;
-
 /**
  * Class AdminSummitEventSerializer
  * @package ModelSerializers
@@ -22,7 +20,10 @@ class AdminSummitEventSerializer extends SummitEventSerializer
 {
     protected static $array_mappings = [
         'Occupancy' => 'occupancy:json_string',
-        'OverflowStreamingUrl' => 'overflow_streaming_url:json_string',
+        'StreamingUrl' => 'streaming_url:json_url',
+        'StreamingType' => 'streaming_type:json_string',
+        'EtherpadLink' => 'etherpad_link:json_url',
+        'OverflowStreamingUrl' => 'overflow_streaming_url:json_url',
         'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
         'OverflowStreamKey' => 'overflow_stream_key:json_string',
     ];
@@ -32,6 +33,9 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         'streaming_url',
         'streaming_type',
         'etherpad_link',
+        'overflow_streaming_url',
+        'overflow_stream_is_secure',
+        'overflow_stream_key'
     ];
 
     /**
@@ -46,34 +50,5 @@ class AdminSummitEventSerializer extends SummitEventSerializer
             return SerializerRegistry::SerializerType_Admin;
 
         return SerializerRegistry::SerializerType_Private;
-    }
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize
-    (
-        $expand = null, array $fields = [], array $relations = [], array $params = []
-    )
-    {
-        $event = $this->object;
-        if (!$event instanceof SummitEvent) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        // always set
-        if (in_array('streaming_url', $fields))
-            $values['streaming_url'] = $event->getStreamingUrl();
-        if (in_array('streaming_type', $fields))
-            $values['streaming_type'] = $event->getStreamingType();
-        if (in_array('etherpad_link', $fields))
-            $values['etherpad_link'] = $event->getEtherpadLink();
-
-        return $values;
-
     }
 }

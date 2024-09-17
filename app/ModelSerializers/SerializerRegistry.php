@@ -70,7 +70,6 @@ use App\ModelSerializers\Summit\AdminSummitAttendeeNoteCSVSerializer;
 use App\ModelSerializers\Summit\AdminSummitAttendeeNoteSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
 use App\ModelSerializers\Summit\AssignedSelectionPlanExtraQuestionTypeSerializer;
-use App\ModelSerializers\Summit\ISummitEventSerializerTypes;
 use App\ModelSerializers\Summit\LawPayPaymentProfileSerializer;
 use App\ModelSerializers\Summit\PersonalCalendarShareInfoSerializer;
 use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
@@ -292,7 +291,7 @@ final class SerializerRegistry
             self::SerializerType_Private => AdminSummitEventSerializer::class,
             self::SerializerType_CSV => AdminSummitEventCSVSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
-            ISummitEventSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
+            IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
         ];
 
         $this->registry['SummitEventWithFile'] = [
@@ -321,7 +320,7 @@ final class SerializerRegistry
             IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
             IPresentationSerializerTypes::Submission => SubmissionPresentationSerializer::class,
-            ISummitEventSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
+            IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
         ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;

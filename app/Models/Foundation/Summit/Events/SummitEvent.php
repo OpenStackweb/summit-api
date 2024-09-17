@@ -24,9 +24,11 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -34,6 +36,7 @@ use models\main\Member;
 use models\main\Tag;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
+use Random\RandomException;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
@@ -63,9 +66,15 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     const MIN_EVENT_MINUTES = 1;
 
+    const JWT_TTL = 60 * 60 * 6; // secs
+
+    const TTL_SKEW = 60; // secs
+
     use One2ManyPropertyTrait;
 
     use TimeDurationRestrictedEvent;
+
+    use StreamableEventTrait;
 
     const ClassName = 'SummitEvent';
 
@@ -1675,6 +1684,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return sprintf("event_%s_secure_stream", $this->id);
     }
 
+    public function getOverflowStreamCacheKey():string{
+        return sprintf("event_%s_overflow_stream", $this->id);
+    }
+
     /**
      * @param bool $stream_is_secure
      */
@@ -1784,34 +1797,47 @@ SQL;
     }
 
     /**
-     * @param string $overflow_streaming_url
-     * @param bool $overflow_stream_is_secure
      * @param string $overflow_stream_key
      * @return void
      */
+    public function setOverflowStreamKey(string $overflow_stream_key): void
+    {
+        $this->overflow_stream_key = $overflow_stream_key;
+    }
+
+    /**
+     * @param string $overflow_streaming_url
+     * @param bool $overflow_stream_is_secure
+     * @return void
+     */
     public function setOverflow(string $overflow_streaming_url,
-                                bool $overflow_stream_is_secure,
-                                string $overflow_stream_key): void
+                                bool $overflow_stream_is_secure): void
     {
         $this->overflow_streaming_url = $overflow_streaming_url;
         $this->overflow_stream_is_secure = $overflow_stream_is_secure;
-        $this->overflow_stream_key = $overflow_stream_key;
         $this->occupancy = self::OccupancyOverflow;
     }
 
-    public function clearOverflow(): void
+    public function clearOverflow(string $occupancy = self::OccupancyEmpty): void
     {
         $this->overflow_streaming_url = null;
         $this->overflow_stream_is_secure = false;
         $this->overflow_stream_key = null;
-        $this->occupancy = self::OccupancyEmpty;
+        $this->occupancy = $occupancy;
     }
 
-     /**
+    /**
      * @return string
+     * @throws ValidationException
      */
     public function getOverflowUrl(): string
     {
+        if ($this->occupancy != self::OccupancyOverflow)
+            throw new ValidationException("To get the overflow url, occupancy must be OVERFLOW.");
+
+        if (is_null($this->overflow_stream_key))
+            throw new ValidationException("Overflow stream key is null.");
+
         return sprintf("%s%s?%s=%s",
             $this->summit->getMarketingSiteUrl(),
             config("overflow.path", "/a/overflow-player"),
@@ -1820,10 +1846,30 @@ SQL;
     }
 
     /**
-     * @return string|null
+     * @return string
+     * @throws RandomException
      */
-    public function getOverflowTokens(): ?string
+    public function generateOverflowKey(): string
     {
-        return null;
+         $salt = random_bytes(16);
+         return hash('sha256', $this->getId() . $salt . time());
+    }
+
+    /**
+     * @return array
+     */
+    public function getRegularStreamingTokens(): array
+    {
+        $cache_key = $this->getSecureStreamCacheKey();
+        return $this->getStreamingTokens('secure_streams', $cache_key, $this->streaming_url);
+    }
+
+    /**
+     * @return array
+     */
+    public function getOverflowStreamingTokens(): array
+    {
+        $cache_key = $this->getOverflowStreamCacheKey();
+        return $this->getStreamingTokens('overflow_streams', $cache_key, $this->overflow_streaming_url);
     }
 }

@@ -79,10 +79,10 @@ interface ISummitEventRepository extends ISummitEventPublishRepository
     public function getLastPresentationOrderBySummit(int $summit_id):int;
 
      /**
-     * @param string $enc_key
+     * @param string $overflow_key
      * @return SummitEvent|null
      */
-    public function getByOverflowStreamKey(string $enc_key): ?SummitEvent;
+    public function getByOverflowStreamKey(string $overflow_key): ?SummitEvent;
 
     /**
      * @param int $summit_id

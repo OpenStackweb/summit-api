@@ -34,6 +34,13 @@ class AdminPresentationSerializer extends PresentationSerializer
         'LikersCount' => 'likers_count:json_int',
         'SelectorsCount' => 'selectors_count:json_int',
         'Occupancy' => 'occupancy:json_string',
+        'StreamingUrl' => 'streaming_url:json_url',
+        'StreamingType' => 'streaming_type:json_string',
+        'EtherpadLink' => 'etherpad_link:json_url',
+        'OverflowStreamingUrl' => 'overflow_streaming_url:json_url',
+        'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
+        'OverflowStreamKey' => 'overflow_stream_key:json_string',
+        'TrackChairAvgScoresPerRakingType' => 'track_chair_scores_avg:json_string_array',
     ];
 
     protected static $allowed_fields = [
@@ -55,41 +62,16 @@ class AdminPresentationSerializer extends PresentationSerializer
         'streaming_url',
         'streaming_type',
         'etherpad_link',
+        'overflow_streaming_url',
+        'overflow_stream_is_secure',
+        'overflow_stream_key'
     ];
 
     /**
+     * @param string|null $relation
      * @return string
      */
     protected function getSerializerType(?string $relation = null):string{
         return SerializerRegistry::SerializerType_Private;
-    }
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize
-    (
-        $expand = null, array $fields = [], array $relations = [], array $params = []
-    )
-    {
-        $presentation = $this->object;
-        if (!$presentation instanceof Presentation) return [];
-
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        // alway set
-        if (in_array('streaming_url', $fields))
-            $values['streaming_url'] = $presentation->getStreamingUrl();
-        if (in_array('streaming_type', $fields))
-            $values['streaming_type'] = $presentation->getStreamingType();
-        if (in_array('etherpad_link', $fields))
-            $values['etherpad_link'] = $presentation->getEtherpadLink();
-        if (in_array('track_chair_scores_avg', $fields))
-            $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
-
-        return $values;
     }
 }

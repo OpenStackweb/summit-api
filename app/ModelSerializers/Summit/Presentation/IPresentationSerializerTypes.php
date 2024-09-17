@@ -26,4 +26,6 @@ interface IPresentationSerializerTypes
     const SecureStream = 'SECURE_STREAM';
 
     const Submission = 'SUBMISSION';
+
+    const OverflowStream = 'OVERFLOW_STREAM';
 }

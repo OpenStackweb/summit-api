@@ -32,6 +32,9 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         'streaming_url',
         'streaming_type',
         'etherpad_link',
+        'overflow_streaming_url',
+        'overflow_stream_is_secure',
+        'overflow_stream_key'
     ];
 
     /**
@@ -66,12 +69,20 @@ class AdminSummitEventSerializer extends SummitEventSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         // always set
+        if (in_array('occupancy', $fields))
+            $values['occupancy'] = $event->getOccupancy();
         if (in_array('streaming_url', $fields))
             $values['streaming_url'] = $event->getStreamingUrl();
         if (in_array('streaming_type', $fields))
             $values['streaming_type'] = $event->getStreamingType();
         if (in_array('etherpad_link', $fields))
             $values['etherpad_link'] = $event->getEtherpadLink();
+        if (in_array('overflow_streaming_url', $fields))
+            $values['overflow_streaming_url'] = $event->getOverflowStreamingUrl();
+        if (in_array('overflow_stream_is_secure', $fields))
+            $values['overflow_stream_is_secure'] = $event->gatOverflowStreamIsSecure();
+        if (in_array('overflow_stream_key', $fields))
+            $values['overflow_stream_key'] = $event->getOverflowStreamKey();
 
         return $values;
 

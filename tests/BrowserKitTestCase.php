@@ -55,21 +55,21 @@ abstract class BrowserKitTestCase extends BaseTestCase
      */
     protected function prepareForTests()
     {
-//        // see https://laravel.com/docs/9.x/mocking#mail-fake
-//        Mail::fake();
-//        Model::unguard();
-//        // clean up
-//        DB::setDefaultConnection("model");
-//        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force' => '']);
-//        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force' => '']);
-//        DB::setDefaultConnection("config");
-//        DB::delete('DELETE FROM endpoint_api_scopes');
-//        DB::delete('DELETE FROM endpoint_api_authz_groups');
-//        DB::delete('DELETE FROM api_scopes');
-//        DB::delete('DELETE FROM api_endpoints');
-//        DB::delete('DELETE FROM apis');
-//
-//        $this->seed(ConfigSeeder::class);
-//        $this->seed(MainDataSeeder::class);
+        // see https://laravel.com/docs/9.x/mocking#mail-fake
+        Mail::fake();
+        Model::unguard();
+        // clean up
+        DB::setDefaultConnection("model");
+        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force' => '']);
+        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force' => '']);
+        DB::setDefaultConnection("config");
+        DB::delete('DELETE FROM endpoint_api_scopes');
+        DB::delete('DELETE FROM endpoint_api_authz_groups');
+        DB::delete('DELETE FROM api_scopes');
+        DB::delete('DELETE FROM api_endpoints');
+        DB::delete('DELETE FROM apis');
+
+        $this->seed(ConfigSeeder::class);
+        $this->seed(MainDataSeeder::class);
     }
 }

@@ -691,7 +691,8 @@ interface ISummitService
     /**
      * @param Summit $summit
      * @param int $event_id
+     * @param array $payload
      * @return void
      */
-    public function removeOverflowState(Summit $summit, int $event_id): SummitEvent;
+    public function removeOverflowState(Summit $summit, int $event_id, array $payload): SummitEvent;
 }

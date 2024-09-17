@@ -24,9 +24,11 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -34,6 +36,7 @@ use models\main\Member;
 use models\main\Tag;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
+use Random\RandomException;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
@@ -62,6 +65,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      *  minimun number of minutes that an event must last
      */
     const MIN_EVENT_MINUTES = 1;
+
+    const JWT_TTL = 60 * 60 * 6; // secs
+
+    const TTL_SKEW = 60; // secs
 
     use One2ManyPropertyTrait;
 
@@ -1784,34 +1791,47 @@ SQL;
     }
 
     /**
-     * @param string $overflow_streaming_url
-     * @param bool $overflow_stream_is_secure
      * @param string $overflow_stream_key
      * @return void
      */
+    public function setOverflowStreamKey(string $overflow_stream_key): void
+    {
+        $this->overflow_stream_key = $overflow_stream_key;
+    }
+
+    /**
+     * @param string $overflow_streaming_url
+     * @param bool $overflow_stream_is_secure
+     * @return void
+     */
     public function setOverflow(string $overflow_streaming_url,
-                                bool $overflow_stream_is_secure,
-                                string $overflow_stream_key): void
+                                bool $overflow_stream_is_secure): void
     {
         $this->overflow_streaming_url = $overflow_streaming_url;
         $this->overflow_stream_is_secure = $overflow_stream_is_secure;
-        $this->overflow_stream_key = $overflow_stream_key;
         $this->occupancy = self::OccupancyOverflow;
     }
 
-    public function clearOverflow(): void
+    public function clearOverflow(string $occupancy = self::OccupancyEmpty): void
     {
         $this->overflow_streaming_url = null;
         $this->overflow_stream_is_secure = false;
         $this->overflow_stream_key = null;
-        $this->occupancy = self::OccupancyEmpty;
+        $this->occupancy = $occupancy;
     }
 
-     /**
+    /**
      * @return string
+     * @throws ValidationException
      */
     public function getOverflowUrl(): string
     {
+        if ($this->occupancy != self::OccupancyOverflow)
+            throw new ValidationException("To get the overflow url, occupancy must be OVERFLOW.");
+
+        if (is_null($this->overflow_stream_key))
+            throw new ValidationException("Overflow stream key is null.");
+
         return sprintf("%s%s?%s=%s",
             $this->summit->getMarketingSiteUrl(),
             config("overflow.path", "/a/overflow-player"),
@@ -1820,10 +1840,84 @@ SQL;
     }
 
     /**
-     * @return string|null
+     * @return string
+     * @throws RandomException
      */
-    public function getOverflowTokens(): ?string
+    public function generateOverflowKey(): string
     {
-        return null;
+         $salt = random_bytes(16);
+         return hash('sha256', $this->getId() . $salt . time());
+    }
+
+    /**
+     * @param bool $overflow
+     * @return array
+     */
+    public function getStreamingTokens(bool $overflow = true): array
+    {
+        $tokens = [];
+        $summit = $this->summit;
+        $cache_key = $this->getSecureStreamCacheKey();
+
+        Log::debug("SummitEvent::getStreamingTokens cache key {$cache_key}");
+
+        if(Cache::tags(sprintf('secure_streams_%s', $summit->getId()))->has($cache_key)) {
+            Log::debug(sprintf("SummitEvent::getStreamingTokens cache hit for event %s", $this->getId()));
+            return json_decode(Cache::tags(sprintf('secure_streams_%s', $summit->getId()))->get($cache_key), true);
+        }
+
+        if(!$summit->hasMuxPrivateKey()) {
+            Log::debug(
+                "SummitEvent::getStreamingTokens summit {$summit->getId()} does not have a mux private key set.");
+            return [];
+        }
+
+        $key_id = $summit->getMuxPrivateKeyId();
+        $key_secret = $summit->getMuxPrivateKey();
+
+        $streaming_url = $overflow ? $this->overflow_streaming_url : $this->streaming_url;
+
+        if(empty($streaming_url)){
+            Log::debug("SummitEvent::getStreamingTokens event {$this->getId()} does not have a stream url set.");
+            return [];
+        }
+
+        $playback_id = MUXUtils::getPlaybackId($streaming_url);
+
+        if(empty($playback_id)){
+            Log::debug("SummitEvent::getStreamingTokens event {$this->getId()} does not have a valid mux url ({$streaming_url}).");
+            return [];
+        }
+
+        $tokenTypes = [
+            'playback_token' => 'v', // video
+            'thumbnail_token' => 't', // thumbnail
+            'storyboard_token' => 'g', // gif
+        ];
+
+        $stream_duration = $this->getStreamDuration();
+        if(!$stream_duration) $stream_duration = self::JWT_TTL;
+        $exp = time() +  $stream_duration;
+        $playback_restriction_id = $this->summit->getMuxPlaybackRestrictionId();
+
+        foreach($tokenTypes as $type => $audience ) {
+            $payload = [
+                "sub" => $playback_id,
+                "aud" => $audience,
+                "exp" => $exp,
+                "kid" => $key_id,
+            ];
+
+            if(!empty($playback_restriction_id)) {
+                $payload['playback_restriction_id'] = $playback_restriction_id;
+            }
+
+            $tokens[$type] = JWT::encode($payload, base64_decode($key_secret), 'RS256');
+        }
+
+        Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))
+            ->put($cache_key, json_encode($tokens),$stream_duration - self::TTL_SKEW);
+
+        return $tokens;
     }
 }

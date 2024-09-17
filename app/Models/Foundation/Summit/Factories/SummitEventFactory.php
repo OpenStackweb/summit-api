@@ -137,14 +137,6 @@ final class SummitEventFactory
             $event->setSubmissionSource(trim($payload['submission_source']));
         }
 
-        if(isset($payload['overflow_streaming_url'])) {
-            $event->setOverflowStreamingUrl(trim($payload['overflow_streaming_url']));
-        }
-
-        if(isset($payload['overflow_stream_is_secure'])) {
-            $event->setOverflowStreamIsSecure(boolval($payload['overflow_stream_is_secure']));
-        }
-
         return $event;
     }
 }

@@ -844,17 +844,17 @@ SQL,*/
 
     /**
      * feature/session_overflow
-     * @param string $enc_key
+     * @param string $overflow_key
      * @return SummitEvent|null
      */
-    public function getByOverflowStreamKey(string $enc_key): ?SummitEvent
+    public function getByOverflowStreamKey(string $overflow_key): ?SummitEvent
     {
         try {
             return $this->getEntityManager()->createQueryBuilder()
                 ->select("e")
                 ->from($this->getBaseEntity(), "e")
                 ->where('e.overflow_stream_key = :overflow_stream_key')
-                ->setParameter('overflow_stream_key', strtoupper($enc_key))
+                ->setParameter('overflow_stream_key', trim($overflow_key))
                 ->getQuery()
                 ->getOneOrNullResult();
         } catch (\Exception $ex) {

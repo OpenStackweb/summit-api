@@ -34,6 +34,9 @@ class AdminPresentationSerializer extends PresentationSerializer
         'LikersCount' => 'likers_count:json_int',
         'SelectorsCount' => 'selectors_count:json_int',
         'Occupancy' => 'occupancy:json_string',
+        'OverflowStreamingUrl' => 'overflow_streaming_url:json_string',
+        'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
+        'OverflowStreamKey' => 'overflow_stream_key:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -55,6 +58,9 @@ class AdminPresentationSerializer extends PresentationSerializer
         'streaming_url',
         'streaming_type',
         'etherpad_link',
+        'overflow_streaming_url',
+        'overflow_stream_is_secure',
+        'overflow_stream_key'
     ];
 
     /**

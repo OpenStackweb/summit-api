@@ -2183,29 +2183,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         }
     }
 
-     public function testGetPublishedEventsOverflowStreamingInfo(){
-        $params = array
-        (
-            'id' => self::$summit->getId(),
-            'page' => 1,
-            'per_page' => 5,
-        );
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitEventsApiController@getOverflowStreaming",
-            $params
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $overflow_streaming_info = json_decode($content);
-        $this->assertTrue(!is_null($overflow_streaming_info));
-    }
-
-    public function testUpdateOverflowInfo()
+    public function testSetOverflow()
     {
         $params = array
         (
@@ -2219,16 +2197,18 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "CONTENT_TYPE" => "application/json"
         );
 
+        $overflow_streaming_url = 'https://test_updated_streaming_url.com';
+
         $streaming_data = array
         (
-            'overflow_streaming_url'   => 'https://test_updated_streaming_url.com',
+            'overflow_streaming_url'   => $overflow_streaming_url,
             'overflow_stream_is_secure' => true,
         );
 
         $response = $this->action
         (
             "PUT",
-            "OAuth2SummitEventsApiController@updateOverflowInfo",
+            "OAuth2SummitEventsApiController@setOverflow",
             $params,
             array(),
             array(),
@@ -2242,14 +2222,21 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $event = json_decode($content);
         $this->assertTrue(!is_null($event));
+        $this->assertEquals($overflow_streaming_url, $event->overflow_streaming_url);
+        $this->assertTrue(!is_null($event->overflow_stream_key));
+        $this->assertEquals(SummitEvent::OccupancyOverflow, $event->occupancy);
+
+        return $event;
     }
 
-     public function testRemoveOverflowState()
+    public function testClearOverflow(string $occupancy = SummitEvent::OccupancyEmpty)
     {
+        $event = $this->testSetOverflow();
+
         $params = array
         (
-            'id'       => self::$summit->getId(),
-            'event_id' => self::$summit->getEvents()->first()->getId(),
+            'id'       => $event->summit_id,
+            'event_id' => $event->id,
         );
 
         $headers = array
@@ -2258,21 +2245,69 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "CONTENT_TYPE" => "application/json"
         );
 
+        if ($occupancy === SummitEvent::OccupancyEmpty) {
+            $response = $this->action
+            (
+                "DELETE",
+                "OAuth2SummitEventsApiController@clearOverflow",
+                $params,
+                array(),
+                array(),
+                array(),
+                $headers
+            );
+        } else {
+            $response = $this->action
+            (
+                "DELETE",
+                "OAuth2SummitEventsApiController@clearOverflow",
+                $params,
+                array(),
+                array(),
+                array(),
+                $headers,
+                json_encode(['occupancy' => $occupancy])
+            );
+        }
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $event = json_decode($content);
+        $this->assertTrue(!is_null($event));
+        $this->assertTrue(is_null($event->overflow_streaming_url));
+        $this->assertTrue(is_null($event->overflow_stream_key));
+        $this->assertFalse($event->overflow_stream_is_secure);
+        $this->assertEquals($occupancy, $event->occupancy);
+    }
+
+    public function testClearOverflowWithTargetOccupancy()
+    {
+        $this->testClearOverflow(SummitEvent::Occupancy25_Percent);
+    }
+
+    public function testGetPublishedEventsOverflowStreamingInfo(){
+        $event = $this->testSetOverflow();
+
+        $params = array
+        (
+            'id' => $event->summit_id,
+            'k'  => $event->overflow_stream_key,
+            'page' => 1,
+            'per_page' => 5,
+        );
+
         $response = $this->action
         (
-            "DELETE",
-            "OAuth2SummitEventsApiController@removeOverflowState",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            "GET",
+            "OAuth2SummitEventsApiController@getOverflowStreamingInfo",
+            $params
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(204);
+        $this->assertResponseStatus(200);
 
-        $event = json_decode($content);
-        $this->assertTrue(is_null($event));
+        $overflow_streaming_info = json_decode($content);
+        $this->assertTrue(!is_null($overflow_streaming_info));
     }
 }

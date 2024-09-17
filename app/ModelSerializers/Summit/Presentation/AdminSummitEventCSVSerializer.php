@@ -21,6 +21,9 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
 {
     protected static $array_mappings = [
         'Occupancy' => 'occupancy:json_string',
+        'OverflowStreamingUrl' => 'overflow_streaming_url:json_string',
+        'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
+        'OverflowStreamKey' => 'overflow_stream_key:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -29,6 +32,9 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
         'type',
         'track',
         'location_name',
+        'overflow_streaming_url',
+        'overflow_stream_is_secure',
+        'overflow_stream_key'
     ];
 
     /**
@@ -46,6 +52,10 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
 
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
+        }
+
+        if (in_array('occupancy', $fields)) {
+            $values['occupancy'] = $summit_event->getOccupancy();
         }
 
         if(in_array("type",$fields) && $summit_event->hasType()) {
@@ -67,6 +77,18 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
 
         if(in_array("location_name",$fields) && $summit_event->hasLocation()){
             $values['location_name'] = $summit_event->getLocation()->getName();
+        }
+
+        if (in_array('overflow_streaming_url', $fields)) {
+            $values['overflow_streaming_url'] = $summit_event->getOverflowStreamingUrl();
+        }
+
+        if (in_array('overflow_stream_is_secure', $fields)) {
+            $values['overflow_stream_is_secure'] = $summit_event->gatOverflowStreamIsSecure();
+        }
+
+        if (in_array('overflow_stream_key', $fields)) {
+            $values['overflow_stream_key'] = $summit_event->getOverflowStreamKey();
         }
 
         return $values;

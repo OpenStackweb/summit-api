@@ -27,6 +27,6 @@ class SummitEventOverflowStreamingSerializer extends AbstractSerializer
         'EndDate' => 'end_date:datetime_epoch',
         'OverflowStreamingUrl' => 'overflow_streaming_url:json_string',
         'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
-        'OverflowTokens' => 'overflow_tokens:json_string',
+        'StreamingTokens' => 'overflow_tokens:json_string_array',
     ];
 }

@@ -80,4 +80,11 @@ interface ISummitOrderRepository extends IBaseRepository
      * @return PagingResponse
      */
     public function getAllOrderThatNeedsEmailActionReminder(Summit $summit, PagingInfo $paging_info):PagingResponse;
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool;
 }

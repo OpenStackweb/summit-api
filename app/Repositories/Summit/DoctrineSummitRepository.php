@@ -12,10 +12,8 @@
  * limitations under the License.
  **/
 
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -58,6 +56,7 @@ final class DoctrineSummitRepository
             'ticket_types_count' => new DoctrineHavingFilterMapping("", "tt.summit", "count(tt.id) :operator :value"),
             'begin_allow_booking_date' => Filter::buildDateTimeEpochField('e.begin_allow_booking_date'),
             'end_allow_booking_date' => Filter::buildDateTimeEpochField('e.end_allow_booking_date'),
+            'mark_as_deleted' => Filter::buildBooleanField('e.mark_as_deleted'),
         ];
     }
 

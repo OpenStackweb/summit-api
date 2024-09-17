@@ -1686,8 +1686,8 @@ final class SummitService
                 );
             }
 
+            Log::debug(sprintf("SummitService::deleteSummit summit_id %s", $summit_id));
             $summit->markAsDeleted();
-            $this->summit_repository->delete($summit);
 
         });
     }

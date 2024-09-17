@@ -843,6 +843,7 @@ SQL,*/
     }
 
     /**
+     * feature/session_overflow
      * @param string $enc_key
      * @return SummitEvent|null
      */
@@ -867,8 +868,7 @@ SQL,*/
      * @return bool
      * @throws \Doctrine\DBAL\Driver\Exception
      */
-    public function deleteAllBySummit(int $summit_id):bool
-    {
+    public function deleteAllBySummit(int $summit_id):bool{
         try {
             $sql = <<<SQL
 DELETE E FROM SummitEvent E WHERE E.SummitID = :summit_id;
@@ -877,7 +877,9 @@ SQL;
             return $stmt->execute([
                 'summit_id' => $summit_id,
             ]);
-        } catch (\Exception $ex) {
+        }
+        catch (\Exception $ex)
+        {
             Log::error($ex);
         }
     }

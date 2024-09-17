@@ -79,4 +79,11 @@ interface ISummitAttendeeRepository extends IBaseRepository
      * @return SummitAttendee|null
      */
     public function getBySummitAndExternalId(Summit $summit, string $external_id):?SummitAttendee;
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool;
 }

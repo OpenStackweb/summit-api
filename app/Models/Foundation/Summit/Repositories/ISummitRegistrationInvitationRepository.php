@@ -38,4 +38,11 @@ interface ISummitRegistrationInvitationRepository extends IBaseRepository
      * @return SummitRegistrationInvitation|null
      */
     public function getByHashAndSummit(string $hash, Summit $summit):?SummitRegistrationInvitation;
+
+    /**
+     * @param int $summit_id
+     * @return bool
+     * @throws \Doctrine\DBAL\Driver\Exception
+     */
+    public function deleteAllBySummit(int $summit_id):bool;
 }

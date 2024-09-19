@@ -1874,4 +1874,8 @@ SQL;
         $cache_key = $this->getOverflowStreamCacheKey();
         return $this->getStreamingTokens('overflow_streams', $cache_key, $this->overflow_streaming_url);
     }
+
+    public function isOnOverflow():bool{
+        return $this->occupancy == self::OccupancyOverflow;
+    }
 }

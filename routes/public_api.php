@@ -160,7 +160,7 @@ Route::group(['prefix' => 'summits'], function () {
             Route::group(['prefix' => 'all'], function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
-                    Route::get('overflow', 'OAuth2SummitEventsApiController@getOverflowStreamingInfo');
+                    Route::get('overflow', ['middleware' => 'cache:600' , 'uses' =>'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
                 });
             });
         });

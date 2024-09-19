@@ -30,6 +30,7 @@ use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\SummitEvent;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
@@ -1567,7 +1568,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $event = $this->event_repository->getByOverflowStreamKey($overflow_stream_key);
 
-            if (is_null($event))
+            if (!$event instanceof SummitEvent || !$event->isOnOverflow())
                 return $this->error404();
 
             return $this->ok(SerializerRegistry::getInstance()

@@ -1783,7 +1783,7 @@ SQL;
     /**
      * @return bool
      */
-    public function gatOverflowStreamIsSecure(): bool
+    public function getOverflowStreamIsSecure(): bool
     {
         return $this->overflow_stream_is_secure;
     }

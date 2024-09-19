@@ -1860,6 +1860,7 @@ SQL;
      */
     public function getRegularStreamingTokens(): array
     {
+        if(empty($this->streaming_url)) return [];
         $cache_key = $this->getSecureStreamCacheKey();
         return $this->getStreamingTokens('secure_streams', $cache_key, $this->streaming_url);
     }
@@ -1869,6 +1870,7 @@ SQL;
      */
     public function getOverflowStreamingTokens(): array
     {
+        if(empty($this->overflow_streaming_url)) return [];
         $cache_key = $this->getOverflowStreamCacheKey();
         return $this->getStreamingTokens('overflow_streams', $cache_key, $this->overflow_streaming_url);
     }

@@ -127,6 +127,9 @@ final class ProcessScheduleEntityLifeCycleEventService
             if ($entity_type === 'Presentation' || $entity_type === 'SummitEvent') {
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionEvents, $entity_id);
             }
+            if($entity_type === 'Summit'){
+                $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSummits, $entity_id);
+            }
 
             if (!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
                 Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));

@@ -70,6 +70,7 @@ final class CacheMiddleware
             $query = explode('&', $query);
             foreach ($query as $q) {
                 $q = explode('=', $q);
+                /*
                 if(strtolower($q[0]) === "evict_cache"){
                     if(strtolower($q[1]) === '1') {
                         Log::debug('CacheMiddleware::handle cache will be evicted');
@@ -77,8 +78,8 @@ final class CacheMiddleware
                     }
                     continue;
                 }
-
-                if (strtolower($q[0]) === 'q' || strtolower($q[0]) === 'access_token' || strtolower($q[0]) === 'token_type') continue;
+                */
+                if(in_array(strtolower($q[0]), ['access_token', 'token_type', 'q', 't','evict_cache'])) continue;
                 $key .= "." . implode("=", $q);
             }
         }

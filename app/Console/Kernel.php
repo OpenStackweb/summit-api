@@ -103,7 +103,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
 
-        $schedule->command('summit:publish-stream-updates')->everyMinute()->withoutOverlapping()->onOneServer();
+        //$schedule->command('summit:publish-stream-updates')->everyMinute()->withoutOverlapping()->onOneServer();
 
         $schedule->command('summit:purge-mark-as-deleted')->everyTwoHours()->withoutOverlapping()->onOneServer();
 

@@ -132,7 +132,7 @@ Route::group(['prefix' => 'summits'], function () {
             Route::get('current/{status}', 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus')->where('status', 'submission|selection|voting');
         });
 
-        Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 1200).',SUMMITS,id', 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+        Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 3600).',SUMMITS,id', 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
         // members
         Route::group(['prefix' => 'members'], function () {

@@ -288,11 +288,11 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             )
         );
 
-        $booking_start_time = $summit->getMeetingRoomBookingStartTime();
+        $booking_start_time = $summit->getMeetingRoomBookingStartTime($test_date);
         if(is_null($booking_start_time))
             throw new ValidationException("MeetingRoomBookingStartTime is null!");
 
-        $booking_end_time   = $summit->getMeetingRoomBookingEndTime();
+        $booking_end_time   = $summit->getMeetingRoomBookingEndTime($test_date);
         if(is_null($booking_end_time))
             throw new ValidationException("MeetingRoomBookingEndTime is null!");
 

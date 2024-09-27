@@ -3586,8 +3586,37 @@ SQL;
     /**
      * @return DateTime
      */
-    public function getMeetingRoomBookingStartTime(): ?DateTime
+    public function getMeetingRoomBookingStartTime(DateTime $day = null): ?DateTime
     {
+        if(!is_null($day) && !is_null($this->begin_allow_booking_date)){
+            $local_begin_allow_booking_date = $this->convertDateFromUTC2TimeZone($this->begin_allow_booking_date);
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::getMeetingRoomBookingStartTime day %s local_begin_allow_booking_date %s",
+                    $day->format("Y-m-d H:i:s"),
+                    $local_begin_allow_booking_date->format("Y-m-d H:i:s")
+                )
+            );
+
+            $begin_day = clone $local_begin_allow_booking_date;
+            $begin_day = $begin_day->setTime(0,0,0);
+            if($day == $begin_day){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "Summit::getMeetingRoomBookingStartTime day %s is the same as begin_allow_booking_date %s",
+                        $day->format("Y-m-d H:i:s"),
+                        $begin_day->format("Y-m-d H:i:s")
+                    )
+                );
+
+                // we should use as start time the time from begin allow booking date
+                return $local_begin_allow_booking_date;
+            }
+        }
         return $this->meeting_room_booking_start_time;
     }
 
@@ -3600,10 +3629,40 @@ SQL;
     }
 
     /**
-     * @return DateTime
+     * @param DateTime|null $day
+     * @return DateTime|null
      */
-    public function getMeetingRoomBookingEndTime(): ?DateTime
+    public function getMeetingRoomBookingEndTime(?DateTime $day = null): ?DateTime
     {
+        if(!is_null($day) && !is_null($this->end_allow_booking_date)){
+            $local_end_allow_booking_date = $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date);
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::getMeetingRoomBookingEndTime day %s local_end_allow_booking_date %s",
+                    $day->format("Y-m-d H:i:s"),
+                    $local_end_allow_booking_date->format("Y-m-d H:i:s")
+                )
+            );
+
+            $end_day = clone $local_end_allow_booking_date;
+            $end_day = $end_day->setTime(0,0,0);
+            if($day == $end_day){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "Summit::getMeetingRoomBookingEndTime day %s is the same as end_allow_booking_date %s",
+                        $day->format("Y-m-d H:i:s"),
+                        $end_day->format("Y-m-d H:i:s")
+                    )
+                );
+
+                // we should use as end time the time from end allow booking date
+                return $local_end_allow_booking_date;
+            }
+        }
         return $this->meeting_room_booking_end_time;
     }
 

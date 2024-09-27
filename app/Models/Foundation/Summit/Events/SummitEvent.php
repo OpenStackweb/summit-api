@@ -34,7 +34,8 @@ use models\main\Member;
 use models\main\Tag;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
-
+use Firebase\JWT\JWT;
+use libs\utils\MUXUtils;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
  * @ORM\AssociationOverrides({
@@ -66,6 +67,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     use One2ManyPropertyTrait;
 
     use TimeDurationRestrictedEvent;
+
+    const JWT_TTL = 60 * 60 * 6; // secs
+
+    const TTL_SKEW = 60; // secs
 
     const ClassName = 'SummitEvent';
 
@@ -1741,4 +1746,87 @@ SQL;
         }
 
     }
+
+    /**
+     * @param string $cache_tag_prefix
+     * @param string $cache_key
+     * @param string $streaming_url
+     * @return array
+     */
+    protected function getStreamingTokens(string $cache_tag_prefix, string $cache_key, string $streaming_url): array
+    {
+        $tokens = [];
+        $summit = $this->summit;
+        $cache_tag = sprintf('%s_%s', $cache_tag_prefix, $summit->getId());
+
+        Log::debug("StreamableEventTrait::getStreamingTokens cache key {$cache_key}");
+
+        if(Cache::tags($cache_tag)->has($cache_key)) {
+            Log::debug(sprintf("SummitEvent::getStreamingTokens cache hit for event %s", $this->getId()));
+            return json_decode(Cache::tags(sprintf('secure_streams_%s', $summit->getId()))->get($cache_key), true);
+        }
+
+        if(!$summit->hasMuxPrivateKey()) {
+            Log::debug(
+                "StreamableEventTrait::getStreamingTokens summit {$summit->getId()} does not have a mux private key set.");
+            return [];
+        }
+
+        $key_id = $summit->getMuxPrivateKeyId();
+        $key_secret = $summit->getMuxPrivateKey();
+
+        if(empty($streaming_url)){
+            Log::debug("StreamableEventTrait::getStreamingTokens event {$this->getId()} does not have a stream url set.");
+            return [];
+        }
+
+        $playback_id = MUXUtils::getPlaybackId($streaming_url);
+
+        if(empty($playback_id)){
+            Log::debug("StreamableEventTrait::getStreamingTokens event {$this->getId()} does not have a valid mux url ({$streaming_url}).");
+            return [];
+        }
+
+        $tokenTypes = [
+            'playback_token' => 'v', // video
+            'thumbnail_token' => 't', // thumbnail
+            'storyboard_token' => 'g', // gif
+        ];
+
+        $stream_duration = $this->getStreamDuration();
+        if(!$stream_duration) $stream_duration = self::JWT_TTL;
+        $exp = time() +  $stream_duration;
+        $playback_restriction_id = $this->summit->getMuxPlaybackRestrictionId();
+
+        foreach($tokenTypes as $type => $audience ) {
+            $payload = [
+                "sub" => $playback_id,
+                "aud" => $audience,
+                "exp" => $exp,
+                "kid" => $key_id,
+            ];
+
+            if(!empty($playback_restriction_id)) {
+                $payload['playback_restriction_id'] = $playback_restriction_id;
+            }
+
+            $tokens[$type] = JWT::encode($payload, base64_decode($key_secret), 'RS256');
+        }
+
+        Cache::tags($cache_tag)->put($cache_key, json_encode($tokens),$stream_duration - self::TTL_SKEW);
+
+        return $tokens;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getRegularStreamingTokens(): array
+    {
+        if(empty($this->streaming_url)) return [];
+        $cache_key = $this->getSecureStreamCacheKey();
+        return $this->getStreamingTokens('secure_streams', $cache_key, $this->streaming_url);
+    }
+
 }

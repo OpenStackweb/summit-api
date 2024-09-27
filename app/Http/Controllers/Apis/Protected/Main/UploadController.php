@@ -14,6 +14,7 @@
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
 use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
 use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
 use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
+
 /**
  * Class UploadController
  * @package App\Http\Controllers
@@ -39,32 +41,39 @@ class UploadController extends BaseController
      * @throws UploadFailedException
      */
     public function upload(Request $request) {
-        // create the file receiver
-        $receiver = new FileReceiver("file", $request, HandlerFactory::classFromRequest($request));
+        try {
+            Log::debug(sprintf("UploadController::upload"));
+            // create the file receiver
+            $receiver = new FileReceiver("file", $request, HandlerFactory::classFromRequest($request));
 
-        // check if the upload is success, throw exception or return response you need
-        if ($receiver->isUploaded() === false) {
-            throw new UploadMissingFileException();
+            // check if the upload is success, throw exception or return response you need
+            if ($receiver->isUploaded() === false) {
+                Log::warning(sprintf("UploadController::upload file not uploaded"));
+                throw new UploadMissingFileException();
+            }
+
+            // receive the file
+            $save = $receiver->receive();
+
+            // check if the upload has finished (in chunk mode it will send smaller files)
+            if ($save->isFinished()) {
+                // save the file and return any response you need, current example uses `move` function. If you are
+                // not using move, you need to manually delete the file by unlink($save->getFile()->getPathname())
+                return $this->saveFile($save->getFile());
+            }
+
+            // we are in chunk mode, lets send the current progress
+            /** @var AbstractHandler $handler */
+            $handler = $save->handler();
+
+            return response()->json([
+                "done" => $handler->getPercentageDone(),
+                'status' => true
+            ]);
         }
-
-        // receive the file
-        $save = $receiver->receive();
-
-        // check if the upload has finished (in chunk mode it will send smaller files)
-        if ($save->isFinished()) {
-            // save the file and return any response you need, current example uses `move` function. If you are
-            // not using move, you need to manually delete the file by unlink($save->getFile()->getPathname())
-            return $this->saveFile($save->getFile());
+        catch (\Exception $ex){
+            Log::error($ex);
         }
-
-        // we are in chunk mode, lets send the current progress
-        /** @var AbstractHandler $handler */
-        $handler = $save->handler();
-
-        return response()->json([
-            "done" => $handler->getPercentageDone(),
-            'status' => true
-        ]);
     }
 
     /**

@@ -25,5 +25,7 @@ interface IPresentationSerializerTypes
 
     const SecureStream = 'SECURE_STREAM';
 
+    const StreamingInfo = 'STREAMMING_INFO';
+
     const Submission = 'SUBMISSION';
 }

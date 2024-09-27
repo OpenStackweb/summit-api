@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\MultipartFormDataCleaner;
@@ -1549,4 +1550,39 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function getScheduledEventStreamingInfo($summit_id, $event_id)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id){
+            Log::debug(sprintf("OAuth2SummitEventsApiController::getScheduledEventStreamingInfo summit id %s event id %s", $summit_id, $event_id));
+            $current_user = $this->resource_server_context->getCurrentUser(false);
+            if(is_null($current_user))
+                throw new HTTP403ForbiddenException();
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $event = $summit->getScheduleEvent(intval($event_id));
+
+            if (is_null($event)) throw new EntityNotFoundException;
+
+
+
+            return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::StreamingInfo)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                [
+                    'current_user' => $current_user
+                ]
+            );
+        });
+    }
+
 }

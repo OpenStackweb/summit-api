@@ -109,6 +109,7 @@ use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeNoteSerializer;
 use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitEventSecureStreamSerializer;
+use App\ModelSerializers\Summit\SummitEventStreamingInfoSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
 use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
@@ -290,6 +291,7 @@ final class SerializerRegistry
             self::SerializerType_Private => AdminSummitEventSerializer::class,
             self::SerializerType_CSV => AdminSummitEventCSVSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+            IPresentationSerializerTypes::StreamingInfo => SummitEventStreamingInfoSerializer::class,
         ];
 
         $this->registry['SummitEventWithFile'] = [

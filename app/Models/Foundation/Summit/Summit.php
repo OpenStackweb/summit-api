@@ -2068,8 +2068,24 @@ class Summit extends SilverstripeBaseModel
         if (is_null($this->begin_allow_booking_date)) return false;
         if (is_null($this->end_allow_booking_date)) return false;
 
-        return $start_date >= $this->convertDateFromUTC2TimeZone($this->begin_allow_booking_date) && $start_date <= $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date) &&
-            $end_date <= $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date) && $end_date >= $start_date;
+        $local_begin_allow_booking_date = $this->convertDateFromUTC2TimeZone($this->begin_allow_booking_date);
+        $local_end_allow_booking_date = $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date);
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::isTimeFrameOnBookingPeriod summit %s start_date %s end_date %s local_begin_allow_booking_date %s local_end_allow_booking_date %s",
+                        $this->getId(),
+                        $start_date->format("Y-m-d H:i:s"),
+                        $end_date->format("Y-m-d H:i:s"),
+                        $local_begin_allow_booking_date->format("Y-m-d H:i:s"),
+                        $local_end_allow_booking_date->format("Y-m-d H:i:s")
+            )
+        );
+
+        return $start_date >=  $local_begin_allow_booking_date && $start_date <=  $local_end_allow_booking_date &&
+            $end_date <= $local_end_allow_booking_date && $end_date >= $start_date;
     }
 
     /**

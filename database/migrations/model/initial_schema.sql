@@ -9127,6 +9127,7 @@ create table Summit
     MUXAllowedDomains                                  varchar(255)                                     null,
     SecondaryLogoID                                    int                                              null,
     SpeakersSupportEmail                               varchar(255)                                     null,
+    MarkAsDeleted                                      tinyint unsigned                default '0'      not null,
     constraint QRCodesEncKey
         unique (QRCodesEncKey),
     constraint Summit_RegistrationSlugPrefix

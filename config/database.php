@@ -72,10 +72,6 @@ return [
         'model' => array_merge(
             [
                     'driver' => 'mysql',
-                    'host' => env('SS_DB_HOST'),
-                    'database' => env('SS_DATABASE'),
-                    'username' => env('SS_DB_USERNAME'),
-                    'password' => env('SS_DB_PASSWORD'),
                     'port' => env('SS_DB_PORT', 3306),
                     'charset' => env('SS_DB_CHARSET', 'utf8'),
                     'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
@@ -89,7 +85,30 @@ return [
                 'driverOptions' => [
                     PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
                 ],
-            ]:[]
+            ]:[],
+            env('USE_DB_REPLICA', '0') == '1' ?
+                [
+                    'read' => [
+                        'host' => [
+                            env('SS_DATABASE_REPLICA_READ_HOST')
+                        ],
+                    ],
+                    'write' => [
+                        'host' => [
+                            env('SS_DATABASE_REPLICA_WRITE_HOST')
+                        ],
+                    ],
+                    'sticky' => true,
+                    'database' => env('SS_DATABASE_REPLICA'),
+                    'username' => env('SS_DB_USERNAME_REPLICA'),
+                    'password' => env('SS_DB_PASSWORD_REPLICA'),
+                ]:
+                [
+                    'host' => env('SS_DB_HOST'),
+                    'database' => env('SS_DATABASE'),
+                    'username' => env('SS_DB_USERNAME'),
+                    'password' => env('SS_DB_PASSWORD'),
+                ]
         ),
 
     ],

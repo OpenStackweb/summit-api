@@ -392,13 +392,12 @@ SQL;
 
         $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchOne());
 
-        $bindings = array_merge( $bindings, array
-        (
+        $bindings = array_merge( $bindings, [
             'per_page'  => $paging_info->getPerPage(),
             'offset'    => $paging_info->getOffset(),
-        ));
+        ]);
 
         $query = <<<SQL
 SELECT *

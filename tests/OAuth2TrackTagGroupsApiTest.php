@@ -15,7 +15,7 @@ use App\Models\Foundation\Main\IGroup;
 /**
  * Class OAuth2TrackTagGroupsApiTest
  */
-final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
+final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

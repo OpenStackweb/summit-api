@@ -351,13 +351,15 @@ INNER JOIN PresentationCategoryGroup_Categories ON PresentationCategoryGroup_Cat
 WHERE PresentationAttendeeVote.SummitAttendeeID = :attendee_id
 AND PresentationCategoryGroup_Categories.PresentationCategoryGroupID = :id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute
-            ([
-                'id' => $this->id,
-                'attendee_id' => $attendee->getId(),
-            ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt = $this->prepareRawSQL($sql,
+                [
+                    'id' => $this->id,
+                    'attendee_id' => $attendee->getId(),
+                ]
+            );
+
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             $res = !is_null($res) ? $res : 0;
             Log::debug

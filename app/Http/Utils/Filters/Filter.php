@@ -265,14 +265,14 @@ final class Filter
             $inner_condition = '( ';
             foreach ($value as $idx => $val) {
                 $cond = is_array($op) ? $op[$idx] : $op;
-                $inner_condition .= sprintf("%s %s :%s %s ", self::cleanMapping($mapping_parts[0]), $cond, sprintf(self::ParamPrefix, $param_idx), $sameOp);
+                $inner_condition .= sprintf("%s %s :%s %s ", sprintf($cond == '<>'? "COALESCE(%s, 0)": "%s", self::cleanMapping($mapping_parts[0])), $cond, sprintf(self::ParamPrefix, $param_idx), $sameOp);
                 $this->bindings[sprintf(self::ParamPrefix, $param_idx)] = $val;
                 ++$param_idx;
             }
             $inner_condition = substr($inner_condition, 0, (strlen($sameOp) + 1) * -1);
             $inner_condition .= ' )';
         } else {
-            $inner_condition = sprintf("%s %s :%s ", self::cleanMapping($mapping_parts[0]), $op, sprintf(self::ParamPrefix, $param_idx));
+            $inner_condition = sprintf("%s %s :%s ", sprintf($op == '<>'? "COALESCE(%s, 0)": "%s", self::cleanMapping($mapping_parts[0])), $op, sprintf(self::ParamPrefix, $param_idx));
             $this->bindings[sprintf(self::ParamPrefix, $param_idx)] = $value;
             ++$param_idx;
         }

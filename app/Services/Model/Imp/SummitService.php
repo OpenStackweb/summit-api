@@ -4231,4 +4231,40 @@ final class SummitService
             return $event;
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_user
+     * @param int $event_id
+     * @return SummitEvent|null
+     * @throws EntityNotFoundException
+     */
+    public function getEventForStreamingInfo(Summit $summit, Member $current_user, int $event_id): ?SummitEvent
+    {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitService::getEventForStreamingInfo summit %s member %s(%s) event %s",
+                $summit->getId(),
+                $current_user->getEmail(),
+                $current_user->getId(),
+                $event_id
+            )
+        );
+
+        $event = $summit->getScheduleEvent($event_id);
+        if (is_null($event))
+            throw new EntityNotFoundException(sprintf("Event %s not found.", $event_id));
+
+        if (!$event->isPublished())
+            throw new EntityNotFoundException(sprintf("Event %s not found.", $event_id));
+
+        if (!$event->hasAccess($current_user))
+            throw new EntityNotFoundException(sprintf("Event %s not found.", $event_id));
+
+        return $event;
+
+    }
 }

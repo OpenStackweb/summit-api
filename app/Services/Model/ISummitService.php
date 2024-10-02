@@ -695,4 +695,12 @@ interface ISummitService
      * @return void
      */
     public function removeOverflowState(Summit $summit, int $event_id, array $payload): SummitEvent;
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_user
+     * @param int $event_id
+     * @return SummitEvent|null
+     */
+    public function getEventForStreamingInfo(Summit $summit, Member $current_user, int $event_id): ?SummitEvent;
 }

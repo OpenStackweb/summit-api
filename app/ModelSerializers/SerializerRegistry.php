@@ -110,6 +110,7 @@ use App\ModelSerializers\Summit\SummitAttendeeNoteSerializer;
 use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitEventOverflowStreamingSerializer;
 use App\ModelSerializers\Summit\SummitEventSecureStreamSerializer;
+use App\ModelSerializers\Summit\SummitEventStreamingInfoSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
 use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
@@ -292,6 +293,7 @@ final class SerializerRegistry
             self::SerializerType_CSV => AdminSummitEventCSVSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
             IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
+            IPresentationSerializerTypes::StreamingInfo => SummitEventStreamingInfoSerializer::class,
         ];
 
         $this->registry['SummitEventWithFile'] = [
@@ -299,6 +301,8 @@ final class SerializerRegistry
             self::SerializerType_Private => AdminSummitEventWithFileSerializer::class,
             self::SerializerType_CSV => AdminSummitEventWithFileCSVSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+            IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
+            IPresentationSerializerTypes::StreamingInfo => SummitEventStreamingInfoSerializer::class,
         ];
 
         $this->registry['SummitGroupEvent'] = [
@@ -306,6 +310,8 @@ final class SerializerRegistry
             self::SerializerType_Private => SummitGroupEventSerializer::class,
             self::SerializerType_CSV => SummitGroupEventSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+            IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
+            IPresentationSerializerTypes::StreamingInfo => SummitEventStreamingInfoSerializer::class,
         ];
 
         $this->registry['Presentation'] = [
@@ -321,6 +327,7 @@ final class SerializerRegistry
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
             IPresentationSerializerTypes::Submission => SubmissionPresentationSerializer::class,
             IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
+            IPresentationSerializerTypes::StreamingInfo => SummitEventStreamingInfoSerializer::class,
         ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;

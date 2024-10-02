@@ -28,6 +28,7 @@ use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\CacheRegions;
 use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
@@ -1364,20 +1365,31 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function hasAccess(?Member $member): bool
     {
+        Log::debug(sprintf("SummitEvent::hasAccess event %s member %s", $this->id, is_null($member) ? 'TBD': $member->getId()));
+        $ttl = Config::get("cache_api_response.event_has_access_lifetime", 600);
+        $cache_key = sprintf("event_has_access_%s", $member->getId());
+        $res = Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->get($cache_key);
+        if(!is_null($res)) {
+            Log::debug(sprintf("SummitEvent::hasAccess cache hit for member %s (%s) event %s res %b", $member->getId(), $member->getEmail(), $this->id, $res));
+            return $res;
+        }
 
         if (is_null($member)) {
             Log::debug("SummitEvent::hasAccess member is null");
+            Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, false, $ttl);
             return false;
         }
 
         Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s.", $member->getId(), $member->getEmail(), $this->id));
         if ($this->summit->isPubliclyOpen()) {
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s summit is public open.", $member->getId(), $member->getEmail(), $this->id));
+            Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, true, $ttl);
             return true;
         }
 
         if ($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()) {
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is Super Admin/Admin/SummitAdmin or Tester.", $member->getId(), $member->getEmail(), $this->id));
+            Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, true, $ttl);
             return true;
         }
 
@@ -1404,6 +1416,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                     if (count(array_intersect($eventAccessLevelsIds, $ticketAccessLevelsIds))) return true;
                 }
                 Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
+                Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, false, $ttl);
                 return false;
             }
             // check time
@@ -1434,15 +1447,20 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                         $this->start_date->format("Y-m-d H:i:s")
                     )
                 );
+                $ttl = $this->start_date->getTimestamp() - $now->getTimestamp();
+                Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s ttl %s res false.", $member->getId(), $member->getEmail(), $this->id, $ttl));
+                Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, false, $ttl);
                 return false;
             }
-
+            Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, true, $ttl);
             return true;
         }
-        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
 
+        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
+        Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, false, $ttl);
         return false;
     }
+
 
     /**
      * @return bool

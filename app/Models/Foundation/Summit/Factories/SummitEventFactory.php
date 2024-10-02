@@ -104,6 +104,9 @@ final class SummitEventFactory
         if (isset($payload['head_count']))
             $event->setHeadCount(intval($payload['head_count']));
 
+        if (isset($payload['occupancy']))
+            $event->setOccupancy($payload['occupancy']);
+
         $event->setAllowFeedBack(isset($payload['allow_feedback']) ?
             filter_var($payload['allow_feedback'], FILTER_VALIDATE_BOOLEAN) :
             false);

@@ -1070,6 +1070,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         self::Occupancy50_Percent,
         self::Occupancy75_Percent,
         self::OccupancyFull,
+        self::OccupancyOverflow,
     ];
     /**
      * @param string $occupancy

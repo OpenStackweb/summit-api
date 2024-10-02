@@ -15,6 +15,7 @@
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use libs\utils\CacheRegions;
 use libs\utils\MUXUtils;
 
 /**
@@ -24,21 +25,20 @@ use libs\utils\MUXUtils;
 trait StreamableEventTrait
 {
     /**
-     * @param string $cache_tag_prefix
      * @param string $cache_key
      * @param string $streaming_url
      * @return array
      */
-    protected function getStreamingTokens(string $cache_tag_prefix, string $cache_key, string $streaming_url): array
+    protected function getStreamingTokens(string $cache_key, string $streaming_url): array
     {
         $tokens = [];
         $summit = $this->summit;
-        $cache_tag = sprintf('%s_%s', $cache_tag_prefix, $summit->getId());
+        $cache_tag = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionEvents, $this->getId());
 
         Log::debug("StreamableEventTrait::getStreamingTokens cache key {$cache_key}");
 
         if(Cache::tags($cache_tag)->has($cache_key)) {
-            Log::debug(sprintf("SummitEvent::getStreamingTokens cache hit for event %s", $this->getId()));
+            Log::debug(sprintf("StreamableEventTrait::getStreamingTokens cache hit for event %s", $this->getId()));
             return json_decode(Cache::tags(sprintf('secure_streams_%s', $summit->getId()))->get($cache_key), true);
         }
 

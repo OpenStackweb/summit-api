@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Utils\RabbitPublisherService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -135,18 +136,21 @@ final class ProcessScheduleEntityLifeCycleEventService
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSummits, $entity_id);
             }
 
-            if (!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
-                Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
-                $region_data = $this->cache_service->getSingleValue($cache_region_key);
-                if (!empty($region_data)) {
-                    $region = json_decode(gzinflate($region_data), true);
-                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process got payload %s region %s", json_encode($region), $cache_region_key));
-                    foreach ($region as $key => $val) {
-                        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
-                        $this->cache_service->delete($key);
-                        $this->cache_service->delete($key . 'generated');
+            if (!empty($cache_region_key)) {
+                Cache::tags($cache_region_key)->flush();
+                if($this->cache_service->exists($cache_region_key)){
+                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
+                    $region_data = $this->cache_service->getSingleValue($cache_region_key);
+                    if (!empty($region_data)) {
+                        $region = json_decode(gzinflate($region_data), true);
+                        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process got payload %s region %s", json_encode($region), $cache_region_key));
+                        foreach ($region as $key => $val) {
+                            Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
+                            $this->cache_service->delete($key);
+                            $this->cache_service->delete($key . 'generated');
+                        }
+                        $this->cache_service->delete($cache_region_key);
                     }
-                    $this->cache_service->delete($cache_region_key);
                 }
             }
 

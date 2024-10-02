@@ -1629,7 +1629,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (is_null($event))
                 return $this->error404();
 
-            $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForOverflowInfo(true), true);
+            $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForClearOverFlowInfo(), true);
 
             $event = $this->service->removeOverflowState($summit, $event->getId(), $payload);
 

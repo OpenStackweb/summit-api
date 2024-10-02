@@ -69,8 +69,6 @@ final class SummitEventValidationRulesFactory
                 'custom_order' => 'sometimes|integer',
                 'duration' => 'sometimes|integer|min:0',
                 'stream_is_secure' =>  'sometimes|boolean',
-                'overflow_stream_is_secure' => 'sometimes|boolean',
-                'overflow_streaming_url' => 'sometimes|string|max:255',
                 'allowed_ticket_types' => 'sometimes|int_array',
             ];
         }
@@ -115,8 +113,6 @@ final class SummitEventValidationRulesFactory
             'show_sponsors' => 'sometimes|boolean',
             'duration' => 'sometimes|integer|min:0',
             'stream_is_secure' =>  'sometimes|boolean',
-            'overflow_stream_is_secure' => 'sometimes|boolean',
-            'overflow_streaming_url' => 'sometimes|string|max:255',
             'allowed_ticket_types' => 'sometimes|int_array',
         ];
     }
@@ -182,15 +178,16 @@ final class SummitEventValidationRulesFactory
      * @param bool $clear
      * @return string[]
      */
-    public static function buildForOverflowInfo(bool $clear = false){
-        if ($clear) {
-            return [
-                'occupancy' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidOccupanciesValues),
-            ];
-        }
+    public static function buildForOverflowInfo():array{
         return [
             'overflow_streaming_url'    => 'required|url',
             'overflow_stream_is_secure' => 'required|boolean',
+        ];
+    }
+
+    public static function buildForClearOverFlowInfo():array{
+        return [
+                'occupancy' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidOccupanciesValues),
         ];
     }
 }

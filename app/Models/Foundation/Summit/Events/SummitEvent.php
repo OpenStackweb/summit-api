@@ -1862,7 +1862,7 @@ SQL;
     {
         if(empty($this->streaming_url)) return [];
         $cache_key = $this->getSecureStreamCacheKey();
-        return $this->getStreamingTokens('secure_streams', $cache_key, $this->streaming_url);
+        return $this->getStreamingTokens($cache_key, $this->streaming_url);
     }
 
     /**
@@ -1872,7 +1872,7 @@ SQL;
     {
         if(empty($this->overflow_streaming_url)) return [];
         $cache_key = $this->getOverflowStreamCacheKey();
-        return $this->getStreamingTokens('overflow_streams', $cache_key, $this->overflow_streaming_url);
+        return $this->getStreamingTokens($cache_key, $this->overflow_streaming_url);
     }
 
     public function isOnOverflow():bool{

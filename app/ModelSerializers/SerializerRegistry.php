@@ -108,6 +108,7 @@ use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeNoteSerializer;
 use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
+use App\ModelSerializers\Summit\SummitEventOverflowStreamingSerializer;
 use App\ModelSerializers\Summit\SummitEventSecureStreamSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
@@ -290,6 +291,7 @@ final class SerializerRegistry
             self::SerializerType_Private => AdminSummitEventSerializer::class,
             self::SerializerType_CSV => AdminSummitEventCSVSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
+            IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
         ];
 
         $this->registry['SummitEventWithFile'] = [
@@ -318,6 +320,7 @@ final class SerializerRegistry
             IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
             IPresentationSerializerTypes::Submission => SubmissionPresentationSerializer::class,
+            IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
         ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;

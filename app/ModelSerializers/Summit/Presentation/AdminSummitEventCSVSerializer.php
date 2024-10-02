@@ -21,6 +21,9 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
 {
     protected static $array_mappings = [
         'Occupancy' => 'occupancy:json_string',
+        'OverflowStreamingUrl' => 'overflow_streaming_url:json_url',
+        'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
+        'OverflowStreamKey' => 'overflow_stream_key:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -29,6 +32,9 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
         'type',
         'track',
         'location_name',
+        'overflow_streaming_url',
+        'overflow_stream_is_secure',
+        'overflow_stream_key'
     ];
 
     /**

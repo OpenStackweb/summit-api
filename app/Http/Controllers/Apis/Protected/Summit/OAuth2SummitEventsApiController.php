@@ -30,6 +30,7 @@ use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\SummitEvent;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
@@ -106,7 +107,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      */
     private function getSerializerType(): string
     {
-
         $current_user = $this->resource_server_context->getCurrentUser(true);
         $application_type = $this->resource_server_context->getApplicationType();
         $path = Request::path();
@@ -1540,6 +1540,101 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $event = $this->service->upgradeSummitEvent($summit, intval($event_id), intval($type_id));
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getOverflowStreamingInfo($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            $query_string_key = config("overflow.query_string_key", "k");
+            if (!Request::has($query_string_key)) return $this->error400();
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $overflow_stream_key = Request::get($query_string_key);
+
+            $event = $this->event_repository->getByOverflowStreamKey($overflow_stream_key);
+
+            if (!$event instanceof SummitEvent || !$event->isOnOverflow())
+                return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($event, IPresentationSerializerTypes::OverflowStream)
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function setOverflow($summit_id, $event_id) {
+         return $this->processRequest(function() use($summit_id, $event_id){
+
+            Log::debug(sprintf("OAuth2SummitEventsApiController::setOverflow summit id %s event id %s", $summit_id, $event_id));
+
+            if (!Request::isJson()) return $this->error400();
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $event = $summit->getEvent(intval($event_id));
+            if (is_null($event))
+                return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForOverflowInfo(), true);
+
+            $event = $this->service->updateOverflowInfo($summit, intval($event_id), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($event, $this->getSerializerType())
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                )
+            );
+        });
+    }
+    public function clearOverflow($summit_id, $event_id)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id){
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $event = $summit->getEvent(intval($event_id));
+            if (is_null($event))
+                return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitEventValidationRulesFactory::buildForClearOverFlowInfo(), true);
+
+            $event = $this->service->removeOverflowState($summit, $event->getId(), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($event, $this->getSerializerType())
                 ->serialize
                 (
                     SerializerUtils::getExpand(),

@@ -24,9 +24,11 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -34,6 +36,7 @@ use models\main\Member;
 use models\main\Tag;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
+use Random\RandomException;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
@@ -63,9 +66,15 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     const MIN_EVENT_MINUTES = 1;
 
+    const JWT_TTL = 60 * 60 * 6; // secs
+
+    const TTL_SKEW = 60; // secs
+
     use One2ManyPropertyTrait;
 
     use TimeDurationRestrictedEvent;
+
+    use StreamableEventTrait;
 
     const ClassName = 'SummitEvent';
 
@@ -363,6 +372,24 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     protected $submission_source;
 
+     /**
+     * @ORM\Column(name="OverflowStreamingUrl", type="string")
+     * @var string
+     */
+    protected $overflow_streaming_url;
+
+     /**
+     * @ORM\Column(name="OverflowStreamIsSecure", type="boolean")
+     * @var bool
+     */
+    protected $overflow_stream_is_secure;
+
+    /**
+     * @ORM\Column(name="OverflowStreamKey", type="string")
+     * @var string
+     */
+    protected $overflow_stream_key;
+
     /**
      * SummitEvent constructor.
      */
@@ -385,6 +412,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->rsvp = new ArrayCollection();
         $this->attendance_metrics = new ArrayCollection();
         $this->stream_is_secure = false;
+        $this->overflow_stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
         $this->submission_source = SummitEvent::SOURCE_ADMIN;
     }
@@ -1041,7 +1069,6 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         self::Occupancy50_Percent,
         self::Occupancy75_Percent,
         self::OccupancyFull,
-        self::OccupancyOverflow,
     ];
     /**
      * @param string $occupancy
@@ -1657,6 +1684,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return sprintf("event_%s_secure_stream", $this->id);
     }
 
+    public function getOverflowStreamCacheKey():string{
+        return sprintf("event_%s_overflow_stream", $this->id);
+    }
+
     /**
      * @param bool $stream_is_secure
      */
@@ -1739,6 +1770,112 @@ SQL;
         } catch (\Exception $ex) {
 
         }
+    }
 
+    /**
+     * @return string|null
+     */
+    public function getOverflowStreamingUrl(): ?string
+    {
+        return $this->overflow_streaming_url;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getOverflowStreamIsSecure(): bool
+    {
+        return $this->overflow_stream_is_secure;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getOverflowStreamKey(): ?string
+    {
+        return $this->overflow_stream_key;
+    }
+
+    /**
+     * @param string $overflow_stream_key
+     * @return void
+     */
+    public function setOverflowStreamKey(string $overflow_stream_key): void
+    {
+        $this->overflow_stream_key = $overflow_stream_key;
+    }
+
+    /**
+     * @param string $overflow_streaming_url
+     * @param bool $overflow_stream_is_secure
+     * @return void
+     */
+    public function setOverflow(string $overflow_streaming_url,
+                                bool $overflow_stream_is_secure): void
+    {
+        $this->overflow_streaming_url = $overflow_streaming_url;
+        $this->overflow_stream_is_secure = $overflow_stream_is_secure;
+        $this->occupancy = self::OccupancyOverflow;
+    }
+
+    public function clearOverflow(string $occupancy = self::OccupancyEmpty): void
+    {
+        $this->overflow_streaming_url = null;
+        $this->overflow_stream_is_secure = false;
+        $this->overflow_stream_key = null;
+        $this->occupancy = $occupancy;
+    }
+
+    /**
+     * @return string
+     * @throws ValidationException
+     */
+    public function getOverflowUrl(): string
+    {
+        if ($this->occupancy != self::OccupancyOverflow)
+            throw new ValidationException("To get the overflow url, occupancy must be OVERFLOW.");
+
+        if (is_null($this->overflow_stream_key))
+            throw new ValidationException("Overflow stream key is null.");
+
+        return sprintf("%s%s?%s=%s",
+            $this->summit->getMarketingSiteUrl(),
+            config("overflow.path", "/a/overflow-player"),
+            config("overflow.query_string_key","k"),
+            $this->overflow_stream_key);
+    }
+
+    /**
+     * @return string
+     * @throws RandomException
+     */
+    public function generateOverflowKey(): string
+    {
+         $salt = random_bytes(16);
+         return hash('sha256', $this->getId() . $salt . time());
+    }
+
+    /**
+     * @return array
+     */
+    public function getRegularStreamingTokens(): array
+    {
+        if(empty($this->streaming_url)) return [];
+        $cache_key = $this->getSecureStreamCacheKey();
+        return $this->getStreamingTokens($cache_key, $this->streaming_url);
+    }
+
+    /**
+     * @return array
+     */
+    public function getOverflowStreamingTokens(): array
+    {
+        if(empty($this->overflow_streaming_url)) return [];
+        $cache_key = $this->getOverflowStreamCacheKey();
+        return $this->getStreamingTokens($cache_key, $this->overflow_streaming_url);
+    }
+
+    public function isOnOverflow():bool{
+        return $this->occupancy == self::OccupancyOverflow;
     }
 }

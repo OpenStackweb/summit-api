@@ -842,6 +842,27 @@ SQL,*/
         }
     }
 
+
+    /**
+     * @param string $overflow_key
+     * @return SummitEvent|null
+     */
+    public function getByOverflowStreamKey(string $overflow_key): ?SummitEvent
+    {
+        try {
+            return $this->getEntityManager()->createQueryBuilder()
+                ->select("e")
+                ->from($this->getBaseEntity(), "e")
+                ->where('e.overflow_stream_key = :overflow_stream_key')
+                ->setParameter('overflow_stream_key', trim($overflow_key))
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+            return null;
+        }
+    }
+
     /**
      * @param int $summit_id
      * @return bool
@@ -854,9 +875,9 @@ DELETE E FROM SummitEvent E WHERE E.SummitID = :summit_id;
 SQL;
 
             $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
-            return $stmt->execute([
+            return $stmt->executeStatement([
                 'summit_id' => $summit_id,
-            ]);
+            ]) > 0;
 
         }
         catch (\Exception $ex)

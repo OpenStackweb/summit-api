@@ -173,4 +173,21 @@ final class SummitEventValidationRulesFactory
             'submission_source' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidSubmissionSources),
         ];
     }
+
+    /**
+     * @param bool $clear
+     * @return string[]
+     */
+    public static function buildForOverflowInfo():array{
+        return [
+            'overflow_streaming_url'    => 'required|url',
+            'overflow_stream_is_secure' => 'required|boolean',
+        ];
+    }
+
+    public static function buildForClearOverFlowInfo():array{
+        return [
+                'occupancy' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidOccupanciesValues),
+        ];
+    }
 }

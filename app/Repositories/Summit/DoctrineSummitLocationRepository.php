@@ -228,9 +228,9 @@ DELETE E FROM SummitAbstractLocation E WHERE E.SummitID = :summit_id;
 SQL;
 
             $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
-            return $stmt->execute([
+            return $stmt->executeStatement([
                 'summit_id' => $summit_id,
-            ]);
+            ]) > 0;
 
         }
         catch (\Exception $ex)

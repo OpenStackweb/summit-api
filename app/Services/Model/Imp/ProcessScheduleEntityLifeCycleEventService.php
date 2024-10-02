@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Utils\RabbitPublisherService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -25,6 +26,7 @@ use libs\utils\ITransactionService;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
 use models\summit\Summit;
+use models\summit\SummitEvent;
 use models\summit\SummitTicketType;
 
 /**
@@ -84,20 +86,24 @@ final class ProcessScheduleEntityLifeCycleEventService
      * @param int $summit_id
      * @param int $entity_id
      * @param string $entity_type
+     * @param array $params
+     * @return void
+     * @throws \Exception
      */
-    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type): void
+    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type, array $params = []): void
     {
-        $this->tx_service->transaction(function () use ($entity_operator, $summit_id, $entity_id, $entity_type) {
+        $this->tx_service->transaction(function () use ($entity_operator, $summit_id, $entity_id, $entity_type, $params) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s",
+                    "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s %s",
                     $summit_id,
                     $entity_id,
                     $entity_type,
-                    $entity_operator
+                    $entity_operator,
+                    json_encode($params)
                 )
             );
 
@@ -121,7 +127,6 @@ final class ProcessScheduleEntityLifeCycleEventService
 
             }
 
-
             // clear cache region
             $cache_region_key = null;
             if ($entity_type === 'Presentation' || $entity_type === 'SummitEvent') {
@@ -131,18 +136,21 @@ final class ProcessScheduleEntityLifeCycleEventService
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSummits, $entity_id);
             }
 
-            if (!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
-                Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
-                $region_data = $this->cache_service->getSingleValue($cache_region_key);
-                if(!empty($region_data)) {
-                    $region = json_decode(gzinflate($region_data), true);
-                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process got payload %s region %s", json_encode($region), $cache_region_key));
-                    foreach ($region as $key => $val) {
-                        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
-                        $this->cache_service->delete($key);
-                        $this->cache_service->delete($key . 'generated');
+            if (!empty($cache_region_key)) {
+                Cache::tags($cache_region_key)->flush();
+                if($this->cache_service->exists($cache_region_key)){
+                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
+                    $region_data = $this->cache_service->getSingleValue($cache_region_key);
+                    if (!empty($region_data)) {
+                        $region = json_decode(gzinflate($region_data), true);
+                        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process got payload %s region %s", json_encode($region), $cache_region_key));
+                        foreach ($region as $key => $val) {
+                            Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
+                            $this->cache_service->delete($key);
+                            $this->cache_service->delete($key . 'generated');
+                        }
+                        $this->cache_service->delete($cache_region_key);
                     }
-                    $this->cache_service->delete($cache_region_key);
                 }
             }
 
@@ -244,7 +252,45 @@ final class ProcessScheduleEntityLifeCycleEventService
                 return;
             }
 
-            Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process publishing summit %s entity id %",
+            if ($entity_type === Presentation::PresentationOverflowEntityType) {
+                Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process presentation overflow %s from summit %s",
+                    $entity_id, $summit_id));
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit) {
+                    Log::warning(sprintf("ProcessScheduleEntityLifeCycleEventService::process summit %s not found", $summit_id));
+                    return;
+                }
+                $repository = EntityManager::getRepository(SummitEvent::class);
+                $summit_event = $repository->find($entity_id);
+                if (!$summit_event instanceof SummitEvent) {
+                    Log::warning(sprintf("ProcessScheduleEntityLifeCycleEventService::process summit event %s not found", $entity_id));
+                    return;
+                }
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ProcessScheduleEntityLifeCycleEventService::process publishing summit %s OVERFLOW entity id %s",
+                        $summit_id,
+                        $entity_id
+                    )
+                );
+
+                $this->rabbit_service->publish(
+                    [
+                        'summit_id' => $summit->getId(),
+                        'entity_id' => $summit_event->getId(),
+                        'entity_type' => $entity_type,
+                        'entity_operator' => 'UPDATE',
+                        'params' => $params
+                    ]);
+
+                return;
+            }
+
+
+            Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process publishing summit %s entity id %s",
                 $summit_id, $entity_id));
 
             $this->rabbit_service->publish([

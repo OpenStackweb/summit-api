@@ -57,7 +57,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     const FieldWillAllSpeakersAttend = 'will_all_speakers_attend';
     const FieldLinks = 'links';
     const FieldDisclaimerAccepted = 'disclaimer_accepted';
-
+    const PresentationOverflowEntityType = "PresentationOverflow";
 
     const AllowedEditableFields  = [
         self::FieldDisclaimerAccepted,

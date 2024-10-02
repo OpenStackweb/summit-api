@@ -681,6 +681,11 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::put('upgrade', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@upgradeEvent']);
                     });
                 });
+
+                Route::group(['prefix' => 'overflow'], function () {
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@setOverflow']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@clearOverflow']);
+                });
             });
         });
 

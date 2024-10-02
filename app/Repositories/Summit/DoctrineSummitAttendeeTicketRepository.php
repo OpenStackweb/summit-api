@@ -98,7 +98,7 @@ final class DoctrineSummitAttendeeTicketRepository
                 'a.email:json_string'
             ],
             'summit_id' => 's.id:json_int',
-            'order_owner_id' => 'ord_m.id:json_int',
+            'order_owner_id' => 'COALESCE(ord_m.id,0):json_int',
             'owner_id' => 'a.id:json_int',
             'member_id' => ['m.id:json_int','m2.id:json_int'],
             'order_id' => 'o.id:json_int',

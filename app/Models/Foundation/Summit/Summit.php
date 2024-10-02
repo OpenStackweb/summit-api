@@ -1418,8 +1418,13 @@ class Summit extends SilverstripeBaseModel
             $new_location = clone $location;
             $this->addLocation($new_location);
 
-            if($new_location instanceof SummitVenue){
-                foreach($new_location->getRooms() as $room){
+            if ($new_location instanceof SummitVenue) {
+                foreach ($new_location->getRooms() as $room) {
+                    if ($room instanceof SummitBookableVenueRoom) {
+                        foreach ($room->getAttributes() as $source_attribute_value) {
+                            $source_attribute_value->getType()->setSummit($this);
+                        }
+                    }
                     $this->addLocation($room);
                     $room->setSummit($this);
                 }

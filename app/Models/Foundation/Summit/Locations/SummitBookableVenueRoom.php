@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Google\Service\PubsubLite\Reservation;
@@ -47,7 +48,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
     private $reservations;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitBookableVenueRoomAttributeValue")
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitBookableVenueRoomAttributeValue", cascade={"persist"})
      * @ORM\JoinTable(name="SummitBookableVenueRoom_Attributes",
      *      joinColumns={@ORM\JoinColumn(name="SummitBookableVenueRoomID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBookableVenueRoomAttributeValueID", referencedColumnName="ID", unique=true)}
@@ -398,6 +399,15 @@ class SummitBookableVenueRoom extends SummitVenueRoom
     }
 
     /**
+     * @param Collection $attributes
+     * @return void
+     */
+    public function setAttributes(Collection $attributes): void
+    {
+        $this->attributes = $attributes;
+    }
+
+    /**
      * @param SummitBookableVenueRoomAttributeValue $attribute
      */
     public function addAttribute(SummitBookableVenueRoomAttributeValue $attribute){
@@ -431,5 +441,26 @@ class SummitBookableVenueRoom extends SummitVenueRoom
     public function getClosingHour(): ?int
     {
         return null;
+    }
+
+    // @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/cookbook/implementing-wakeup-or-clone.html
+    public function __clone()
+    {
+        if ($this->id) {
+            Log::debug(sprintf("SummitBookableVenueRoom::__clone id %s", $this->id));
+
+            $this->setAttributes(clone $this->getAttributes());
+            foreach ($this->getAttributes() as $source_attribute_value) {
+                $attribute_value = new SummitBookableVenueRoomAttributeValue();
+                $attribute_value->setValue($source_attribute_value->getValue());
+
+                $attribute_type = new SummitBookableVenueRoomAttributeType();
+                $attribute_type->setType($source_attribute_value->getType()->getType());
+                $attribute_type->addValue($attribute_value);
+
+                $this->removeAttribute($source_attribute_value);
+                $this->addAttribute($attribute_value);
+            }
+        }
     }
 }

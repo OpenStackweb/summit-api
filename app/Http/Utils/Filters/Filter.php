@@ -272,7 +272,7 @@ final class Filter
             $inner_condition = substr($inner_condition, 0, (strlen($sameOp) + 1) * -1);
             $inner_condition .= ' )';
         } else {
-            $inner_condition = sprintf("%s %s :%s ", self::cleanMapping($mapping_parts[0]), $op, sprintf(self::ParamPrefix, $param_idx));
+            $inner_condition = sprintf("%s %s :%s ", sprintf($op == '<>'? "COALESCE(%s, 0)": "%s", self::cleanMapping($mapping_parts[0])), $op, sprintf(self::ParamPrefix, $param_idx));
             $this->bindings[sprintf(self::ParamPrefix, $param_idx)] = $value;
             ++$param_idx;
         }

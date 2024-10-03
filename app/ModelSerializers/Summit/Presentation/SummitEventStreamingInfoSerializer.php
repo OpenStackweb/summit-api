@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Traits\RequestCache;
+use libs\utils\CacheRegions;
 use models\summit\SummitEvent;
 use ModelSerializers\SilverStripeSerializer;
 
@@ -21,6 +23,7 @@ use ModelSerializers\SilverStripeSerializer;
  */
 final class SummitEventStreamingInfoSerializer extends SilverStripeSerializer
 {
+    use RequestCache;
     /**
      * @param $expand
      * @param array $fields
@@ -30,6 +33,9 @@ final class SummitEventStreamingInfoSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
+        return $this->cache(CacheRegions::getCacheRegionForSummitEvent($this->object->getIdentifier()),sprintf("SummitEventStreamingInfoSerializer_%s", $this->object->getIdentifier()),
+            function () use ($expand, $fields, $relations, $params) {
+
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
@@ -38,9 +44,12 @@ final class SummitEventStreamingInfoSerializer extends SilverStripeSerializer
         $values['streaming_type'] = $event->getStreamingType();
         $values['etherpad_link'] = $event->getEtherpadLink();
         $values['stream_thumbnail'] = $event->getStreamThumbnailUrl();
+        $values['tokens'] = [];
         if($event->IsSecureStream()){
             $values['tokens'] = $event->getRegularStreamingTokens();
         }
         return $values;
+        });
+
     }
 }

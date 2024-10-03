@@ -37,6 +37,7 @@ final class SummitEventStreamingInfoSerializer extends SilverStripeSerializer
         $values['streaming_url'] = $event->getStreamingUrl();
         $values['streaming_type'] = $event->getStreamingType();
         $values['etherpad_link'] = $event->getEtherpadLink();
+        $values['stream_thumbnail'] = $event->getStreamThumbnailUrl();
         if($event->IsSecureStream()){
             $values['tokens'] = $event->getRegularStreamingTokens();
         }

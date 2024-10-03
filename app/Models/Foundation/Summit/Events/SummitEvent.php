@@ -1427,16 +1427,20 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             (
                 sprintf
                 (
-                    "SummitEvent::hasAccess member %s (%s) event %s has a paid ticket with the proper access levels now %s event start time %s.",
+                    "SummitEvent::hasAccess member %s (%s) event %s has a paid ticket with the proper access levels now %s event start time %s streaming type %s.",
                     $member->getId(),
                     $member->getEmail(),
                     $this->id,
                     $now->format("Y-m-d H:i:s"),
-                    !is_null($this->start_date) ? $this->start_date->format("Y-m-d H:i:s") : "N/A"
+                    !is_null($this->start_date) ? $this->start_date->format("Y-m-d H:i:s") : "N/A",
+                    $this->streaming_type
                 )
             );
 
-            if (!is_null($this->start_date) && $this->start_date > $now && $this->streaming_type === self::STREAMING_TYPE_LIVE) {
+            if (!is_null($this->start_date) &&
+                $this->start_date->getTimestamp() > $now->getTimestamp()
+                && $this->streaming_type == self::STREAMING_TYPE_LIVE
+            ) {
                 Log::debug
                 (
                     sprintf
@@ -1448,7 +1452,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
                         $this->start_date->format("Y-m-d H:i:s")
                     )
                 );
+
                 $ttl = $this->start_date->getTimestamp() - $now->getTimestamp();
+                $skew_time = Config::get("cache_api_response.event_has_access_skewtime", 60);
+                $ttl = $ttl > $skew_time ? $ttl - $skew_time : $ttl;
                 Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s ttl %s res false.", $member->getId(), $member->getEmail(), $this->id, $ttl));
                 Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->set($cache_key, false, $ttl);
                 return false;

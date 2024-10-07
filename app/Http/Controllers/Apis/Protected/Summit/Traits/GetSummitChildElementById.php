@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Request;
+use App\ModelSerializers\SerializerUtils;
 use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -58,8 +58,16 @@ trait GetSummitChildElementById
             if (is_null($child))
                 return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($child, $this->getChildSerializer())->serialize(Request::input('expand', '')));
-        });
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()->getSerializer($child, $this->getChildSerializer())->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+         });
     }
 
 }

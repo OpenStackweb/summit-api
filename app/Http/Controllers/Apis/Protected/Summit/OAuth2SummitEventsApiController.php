@@ -24,6 +24,7 @@ use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
+use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\IEventFeedbackRepository;
 use models\summit\ISpeakerRepository;
@@ -525,32 +526,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $event_id
-     * @param bool $published
-     * @return array
-     * @throws EntityNotFoundException
-     */
-    private function _getSummitEvent($summit_id, $event_id, $published = true)
-    {
-        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) throw new EntityNotFoundException;
-
-        $event = $published ? $summit->getScheduleEvent(intval($event_id)) : $summit->getEvent(intval($event_id));
-
-        if (is_null($event)) throw new EntityNotFoundException;
-
-        return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
-        (
-            SerializerUtils::getExpand(),
-            SerializerUtils::getFields(),
-            SerializerUtils::getRelations(),
-            [
-                'current_user' => $this->resource_server_context->getCurrentUser(true)
-            ]
-        );
-    }
 
     /**
      * @param $summit_id
@@ -560,7 +535,22 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEvent($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            return $this->ok($this->_getSummitEvent($summit_id, $event_id, false));
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $event = $summit->getEvent(intval($event_id));
+
+            if (is_null($event)) throw new EntityNotFoundException;
+
+            return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                [
+                    'current_user' => $this->resource_server_context->getCurrentUser(true)
+                ]
+            );
         });
     }
 
@@ -572,7 +562,20 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getScheduledEvent($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            return $this->ok($this->_getSummitEvent($summit_id, $event_id));
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $event = $summit->getScheduleEvent(intval($event_id));
+
+            if (is_null($event))
+                throw new EntityNotFoundException;
+
+            return SerializerRegistry::getInstance()->getSerializer($event)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            );
         });
     }
 
@@ -1641,6 +1644,36 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                 )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function getScheduledEventStreamingInfo($summit_id, $event_id)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id){
+
+            Log::debug(sprintf("getScheduledEventStreamingInfo::getScheduledEventStreamingInfo summit id %s event id %s", $summit_id, $event_id));
+
+            $current_user = $this->resource_server_context->getCurrentUser(false);
+            if(!$current_user instanceof Member)
+                throw new \HTTP401UnauthorizedException();
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $event = $this->service->getEventForStreamingInfo($summit, $current_user, intval($event_id));
+            if (is_null($event)) throw new EntityNotFoundException;
+
+            return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::StreamingInfo)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             );
         });
     }

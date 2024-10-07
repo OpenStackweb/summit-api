@@ -28,4 +28,5 @@ interface IPresentationSerializerTypes
     const Submission = 'SUBMISSION';
 
     const OverflowStream = 'OVERFLOW_STREAM';
+    const StreamingInfo = 'STREAMMING_INFO';
 }

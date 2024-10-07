@@ -166,15 +166,6 @@ class SummitEventSerializer extends SilverStripeSerializer
             $values['current_attendance'] = $attendance;
         }
 
-        if ($event->hasAccess($params['current_user'] ?? null)) {
-            if(in_array("streaming_url",$fields))
-                $values['streaming_url'] = $event->getStreamingUrl();
-            if(in_array("streaming_type",$fields))
-                $values['streaming_type'] = $event->getStreamingType();
-            if(in_array("etherpad_link",$fields))
-                $values['etherpad_link'] = $event->getEtherpadLink();
-        }
-
         if (in_array('allowed_ticket_types', $relations)) {
             $allowed_ticket_types = [];
             foreach ($event->getAllowedTicketTypes() as $ticket_type) {

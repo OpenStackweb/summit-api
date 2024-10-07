@@ -348,7 +348,7 @@ final class PresentationService
                     'validation_errors.PresentationService.submitPresentation.limitReached',
                     ['limit' => $limit]));
 
-            $current_selection_plan->checkPresentationAllowedQuestions($data);
+            $current_selection_plan->curatePayloadByPresentationAllowedQuestions($data);
 
             $presentation = new Presentation();
             $presentation->setSelectionPlan($current_selection_plan);
@@ -543,7 +543,7 @@ final class PresentationService
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
-            $current_selection_plan->checkPresentationAllowedQuestions($data);
+            $current_selection_plan->curatePayloadByPresentationAllowedQuestions($data);
             $current_selection_plan->checkPresentationAllowedEdtiableQuestions($data, $presentation->getSnapshot());
 
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));

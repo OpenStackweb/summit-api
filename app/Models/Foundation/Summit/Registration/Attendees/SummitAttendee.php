@@ -1290,7 +1290,7 @@ SQL;
         foreach ($bindings as $k => $v)
             $native_query->setParameter($k, $v);
 
-        return $native_query->getResult();
+        return $native_query->enableResultCache(600 , sprintf("ATTENDEES_%s_BADGE_FEATURES",$this->id))->getResult();
     }
 
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer

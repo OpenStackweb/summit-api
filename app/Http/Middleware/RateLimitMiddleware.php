@@ -69,11 +69,11 @@ final class RateLimitMiddleware extends ThrottleRequests
     {
         $route     = RequestUtils::getCurrentRoutePath($request);
         $method    = $request->getMethod();
-        $endpoint  = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
+        //$endpoint  = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
         $key       = $this->resolveRequestSignature($request);
         $client_ip = $request->getClientIp();
 
-        if (!is_null($endpoint) && $endpoint->getRateLimit() > 0) {
+        /*if (!is_null($endpoint) && $endpoint->getRateLimit() > 0) {
             $maxAttempts = $endpoint->getRateLimit();
         }
 
@@ -92,6 +92,7 @@ final class RateLimitMiddleware extends ThrottleRequests
             $maxAttempts  = $endpoint_rate_limit_by_ip->getRateLimit();
             $decayMinutes = $endpoint_rate_limit_by_ip->getRateLimitDecay();
         }
+        */
 
         if ($maxAttempts == 0 || $decayMinutes == 0) {
             // short circuit (infinite)

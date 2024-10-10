@@ -1281,4 +1281,38 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
         $media_upload = $accepted_presentation->media_uploads[0];
         $this->assertTrue(in_array($media_upload->media_upload_type_id, $media_upload_ids));
     }
+
+    public function testGetSpeakersByCategoryGroup()
+    {
+        $params = [
+            'id'        => self::$summit->getId(),
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'presentations_track_group_id=='.self::$defaultTrackGroup->getId(),
+            ],
+            'expand' => 'presentations',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
 }

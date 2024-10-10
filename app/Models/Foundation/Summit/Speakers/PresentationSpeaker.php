@@ -814,6 +814,15 @@ class PresentationSpeaker extends SilverstripeBaseModel
             {
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
+            if($filter->hasFilter("presentations_track_group_id"))
+            {
+                $extraWhere .= " AND cat.id IN (
+                    SELECT cat_1.id 
+                    FROM models\summit\PresentationCategory cat_1
+                    JOIN cat_1.groups catg_1
+                    WHERE catg_1.id IN (:track_group_id)
+                )";
+            }
             if($filter->hasFilter("presentations_type_id"))
             {
                 $extraWhere .= " AND t.id IN (:type_id)";
@@ -909,6 +918,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
             {
                 $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
+            }
+            if($filter->hasFilter("presentations_track_group_id"))
+            {
+                $v = $filter->getValue("presentations_track_group_id");
+                $query = $query->setParameter("track_group_id", $v);
             }
             if($filter->hasFilter("presentations_type_id"))
             {
@@ -1049,6 +1063,15 @@ class PresentationSpeaker extends SilverstripeBaseModel
             {
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
+            if($filter->hasFilter("presentations_track_group_id"))
+            {
+                $extraWhere .= " AND cat.id IN (
+                    SELECT cat_1.id 
+                    FROM models\summit\PresentationCategory cat_1
+                    JOIN cat_1.groups catg_1
+                    WHERE catg_1.id IN (:track_group_id)
+                )";
+            }
             if($filter->hasFilter("presentations_type_id"))
             {
                 $extraWhere .= " AND t.id IN (:type_id)";
@@ -1117,6 +1140,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
             {
                 $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
+            }
+            if($filter->hasFilter("presentations_track_group_id"))
+            {
+                $v = $filter->getValue("presentations_track_group_id");
+                $query = $query->setParameter("track_group_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id"))
             {
@@ -1338,6 +1366,15 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if ($filter->hasFilter("presentations_track_id")) {
                 $extraWhere .= " AND cat.id IN (:track_id)";
             }
+            if($filter->hasFilter("presentations_track_group_id"))
+            {
+                $extraWhere .= " AND cat.id IN (
+                    SELECT cat_1.id 
+                    FROM models\summit\PresentationCategory cat_1
+                    JOIN cat_1.groups catg_1
+                    WHERE catg_1.id IN (:track_group_id)
+                )";
+            }
             if ($filter->hasFilter("presentations_type_id")) {
                 $extraWhere .= " AND t.id IN (:type_id)";
             }
@@ -1402,6 +1439,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if ($filter->hasFilter("presentations_track_id")) {
                 $v = $filter->getValue("presentations_track_id");
                 $query = $query->setParameter("track_id", $v);
+            }
+            if($filter->hasFilter("presentations_track_group_id"))
+            {
+                $v = $filter->getValue("presentations_track_group_id");
+                $query = $query->setParameter("track_group_id", $v);
             }
             if ($filter->hasFilter("presentations_type_id")) {
                 $v = $filter->getValue("presentations_type_id");

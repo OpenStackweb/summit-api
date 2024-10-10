@@ -96,7 +96,7 @@ final class AccessTokenService implements IAccessTokenService
             (
                 sprintf
                 (
-                    "original token life time %s - current token life time %s - token cache remaining lifetime %s",
+                    "AccessTokenService::get original token life time %s - current token life time %s - token cache remaining lifetime %s",
                     $expires_in,
                     $token_info['expires_in'],
                     $cache_remaining_lifetime
@@ -108,7 +108,7 @@ final class AccessTokenService implements IAccessTokenService
 
         if($token->getLifetime() <= 0)
         {
-            Log::debug("token lifetime is <= 0 ... retrieving from IDP");
+            Log::debug("AccessTokenService::get token lifetime is <= 0 ... retrieving from IDP");
             $this->cache_service->delete(md5($token_value));
             $token_info = $this->doIntrospection($token_value);
             $token      = $this->unSerializeToken($token_info);
@@ -121,18 +121,9 @@ final class AccessTokenService implements IAccessTokenService
      * @return AccessToken
      */
     private function unSerializeToken(array $token_info){
-
-        $token = AccessToken::createFromParams($token_info);
-
-        $str_token_info = "";
-        foreach($token_info as $k => $v){
-            $str_token_info  .= sprintf("-%s=%s-", $k, $v);
-        }
-
-        Log::debug("token info : ". $str_token_info);
-
-        return $token;
+        return AccessToken::createFromParams($token_info);
     }
+
     /**
      * @param string $token_value
      * @return array
@@ -172,6 +163,7 @@ final class AccessTokenService implements IAccessTokenService
         }
 
         $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime);
+        Log::debug(sprintf("AccessTokenService::doIntrospection token %s introspection result %s", $token_value, json_encode($token_info)));
         return $token_info;
     }
 

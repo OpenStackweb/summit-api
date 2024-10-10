@@ -66,7 +66,8 @@ final class DoctrineSpeakerRepository
             }
             if($filter->hasFilter("presentations_track_group_id")){
                 $v = $filter->getValue("presentations_track_group_id");
-                $category_categorygroup_subquery = 'SELECT ___cat%1$s.id FROM models\summit\PresentationCategory ___cat%1$s
+                $category_categorygroup_subquery = 'SELECT ___cat%1$s.id 
+                    FROM models\summit\PresentationCategory ___cat%1$s
                     JOIN ___cat%1$s.groups ___catg%1$s
                     WHERE ___catg%1$s.id IN ('.implode(',', $v).')';
 

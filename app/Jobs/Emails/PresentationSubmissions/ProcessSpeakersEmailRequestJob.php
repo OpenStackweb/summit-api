@@ -90,6 +90,7 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
             'has_alternate_presentations' => ['=='],
             'has_rejected_presentations' => ['=='],
             'presentations_track_id' => ['=='],
+            'presentations_track_group_id' => ['=='],
             'presentations_selection_plan_id' => ['=='],
             'presentations_type_id' => ['=='],
             'presentations_title' => ['=@', '@@', '=='],

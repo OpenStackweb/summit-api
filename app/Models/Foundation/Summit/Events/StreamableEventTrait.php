@@ -39,7 +39,7 @@ trait StreamableEventTrait
 
         if(Cache::tags($cache_tag)->has($cache_key)) {
             Log::debug(sprintf("StreamableEventTrait::getStreamingTokens cache hit for event %s", $this->getId()));
-            return json_decode(Cache::tags(sprintf('secure_streams_%s', $summit->getId()))->get($cache_key), true);
+            return json_decode(Cache::tags($cache_tag)->get($cache_key), true);
         }
 
         if(!$summit->hasMuxPrivateKey()) {

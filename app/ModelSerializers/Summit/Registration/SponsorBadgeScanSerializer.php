@@ -77,7 +77,7 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
                     case 'scanned_by': {
                         if(!$scan->hasUser()) break;
                         unset($values['scanned_by_id']);
-                        $values['scanned_by'] = SerializerRegistry::getInstance()->getSerializer($scan->getUser())->serialize
+                        $values['scanned_by'] = SerializerRegistry::getInstance()->getSerializer($scan->getUser(), SerializerRegistry::SerializerType_Admin)->serialize
                         (
                             AbstractSerializer::filterExpandByPrefix($expand, $relation),
                             AbstractSerializer::filterFieldsByPrefix($fields, $relation),

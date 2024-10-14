@@ -300,4 +300,9 @@ SQL;
         }
         return null;
     }
+
+    public function getScanByNice():string{
+        if(!$this->hasUser()) return "TBD";
+        return sprintf("%s (%s)",$this->user->getFullName(), $this->user->getEmail());
+    }
 }

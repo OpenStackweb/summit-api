@@ -18,7 +18,6 @@ use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\Request;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\exceptions\EntityNotFoundException;
-use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;

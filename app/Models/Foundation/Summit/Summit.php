@@ -67,6 +67,7 @@ class Summit extends SilverstripeBaseModel
 
     private static $default_report_setting_columns = [
         'scan_date',
+        'scan_by',
         'attendee_first_name',
         'attendee_last_name',
         'attendee_email',

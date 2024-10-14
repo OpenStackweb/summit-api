@@ -285,7 +285,8 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_first_name',
                     'attendee_last_name',
                     'attendee_company',
-                    'scan_date'
+                    'scan_date',
+                    'scanned_by'
                 ];
             },
             function($filter) use($summit, $current_member){
@@ -372,7 +373,8 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_first_name',
                     'attendee_last_name',
                     'attendee_company',
-                    'scan_date'
+                    'scan_date',
+                    'scanned_by',
                 ];
             },
             function($filter) use($summit, $current_member){
@@ -411,6 +413,7 @@ final class OAuth2SummitBadgeScanApiController
 
                 $allowed_columns = [
                     'scan_date',
+                    'scanned_by',
                     'qr_code',
                     'sponsor_id',
                     'user_id',

@@ -15,6 +15,7 @@
 use App\Models\ResourceServer\ApiEndpoint;
 use App\Models\ResourceServer\IApiEndpointRepository;
 use Closure;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use libs\utils\RequestUtils;
@@ -72,22 +73,78 @@ final class UserAuthEndpoint
         if (is_null($current_member)) return $next($request);
         $method = $request->getMethod();
         $route = RequestUtils::getCurrentRoutePath($request);
-        $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
-        if(is_null($endpoint)) return $next($request);
-        if(!$endpoint instanceof ApiEndpoint) return $next($request);
-        $required_groups = $endpoint->getAuthzGroups();
 
-        foreach ($required_groups as $required_group) {
-            Log::debug(sprintf("UserAuthEndpoint::handle route %s method %s member %s (%s) required group %s",
-                $route, $method, $current_member->getId(), $current_member->getEmail(), $required_group->getSlug()));
+        $key_auth = sprintf("user_auth_endpoint_%s_%s_%s", $route, $method, $current_member->getId());
 
-            if($current_member->isOnGroup($required_group->getSlug())) {
-                Log::debug(sprintf("UserAuthEndpoint::handle member %s is on group %s request %s", $current_member->getId(), $required_group->getSlug(), $request->path()));
+        if(Cache::has($key_auth)){
+            $res_auth = Cache::get($key_auth, null);
+            if(!is_null($res_auth)) {
+                if ($res_auth == 1) {
+                    Log::debug(sprintf("UserAuthEndpoint::handle cache hit for key %s member %s is authorized", $key_auth, $current_member->getId()));
+                    return $next($request);
+                } else if ($res_auth == 0) {
+                    Log::warning(sprintf("UserAuthEndpoint::handle member %s is not authorized", $current_member->getId()));
+                    $http_response = Response::json(['error' => 'unauthorized member'], 403);
+                    return $http_response;
+                }
+            }
+        }
+
+        Log::debug(sprintf("UserAuthEndpoint::handle cache miss for key %s", $key_auth));
+
+        $required_groups = [];
+        $key = sprintf("user_auth_endpoint_%s_%s", $route, $method);
+        if(Cache::has($key)){
+            Log::debug(sprintf("UserAuthEndpoint::handle cache hit for key %s", $key));
+            $res = Cache::get($key);
+            if(!empty($res)){
+                $required_groups = json_decode(gzinflate($res),false);
+            }
+        }
+        else {
+            Log::debug(sprintf("UserAuthEndpoint::handle cache miss for key %s", $key));
+            $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
+            if (is_null($endpoint)) return $next($request);
+            if (!$endpoint instanceof ApiEndpoint) return $next($request);
+            $required_groups = [];
+            foreach($endpoint->getAuthzGroups() as $authzGroup){
+                $required_groups[] = $authzGroup->getSlug();
+            }
+            Cache::add($key, gzdeflate(json_encode($required_groups), 9));
+        }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "UserAuthEndpoint::handle route %s method %s member %s (%s) required groups %s",
+                $route,
+                $method,
+                $current_member->getId(),
+                $current_member->getEmail(),
+                json_encode($required_groups)
+            )
+        );
+
+        foreach ($required_groups as $required_group_slug) {
+            if($current_member->isOnGroup($required_group_slug)) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "UserAuthEndpoint::handle member %s is on group %s request %s is authorized",
+                        $current_member->getId(),
+                        $required_group_slug,
+                        $request->path()
+                    )
+                );
+                Cache::add($key_auth, 1);
                 return $next($request);
             }
         }
 
         Log::warning(sprintf("UserAuthEndpoint::handle member %s is not authorized", $current_member->getId()));
+        Cache::add($key_auth, 0);
         $http_response = Response::json(['error' => 'unauthorized member'], 403);
         return $http_response;
     }

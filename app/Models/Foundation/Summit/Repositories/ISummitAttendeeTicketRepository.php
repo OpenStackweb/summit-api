@@ -77,4 +77,12 @@ interface ISummitAttendeeTicketRepository extends IBaseRepository
      */
     public function getBySummitAndExternalOrderIdAndExternalAttendeeIdExclusiveLock(Summit $summit, $external_order_id, $external_attendee_id):?SummitAttendeeTicket;
 
+    /**
+     * @param Summit $summit
+     * @param string $external_attendee_id
+     * @return SummitAttendeeTicket|null
+     */
+    public function getByExternalAttendeeId(Summit $summit, string $external_attendee_id):?SummitAttendeeTicket;
+
+
 }

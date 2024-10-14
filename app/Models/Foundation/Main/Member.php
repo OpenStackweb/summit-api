@@ -2126,7 +2126,6 @@ SQL;
         $stmt = $this->prepareRawSQL($sql);
         $stmt->execute(
             [
-                'member_id' => $this->getId(),
                 'member_email' => $this->email,
                 'ticket_status' => IOrderConstants::PaidStatus,
                 'summit_id' => $summit->getId(),

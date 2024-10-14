@@ -482,6 +482,29 @@ SQL,
     }
 
     /**
+     * @param Summit $summit
+     * @param string $external_attendee_id
+     * @return SummitAttendeeTicket|null
+     */
+    public function getByExternalAttendeeId(Summit $summit, string $external_attendee_id): ?SummitAttendeeTicket
+    {
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e");
+
+        return $query
+            ->join("e.order", "o")
+            ->join("o.summit", "s")
+            ->join("e.owner", "ow")
+            ->where('ow.external_id = :external_attendee_id')
+            ->andWhere('s.id = :summit_id')
+            ->setParameter('external_attendee_id', $external_attendee_id)
+            ->setParameter('summit_id', $summit->getId())
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
      * @param QueryBuilder $query
      * @return QueryBuilder
      */

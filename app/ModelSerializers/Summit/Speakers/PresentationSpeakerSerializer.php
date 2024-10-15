@@ -367,10 +367,13 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             if(isset($values['big_pic'])) $values['big_pic'] = Config::get("app.default_profile_image", null);
         }
 
+        /*
+         * relax full name restriction for signage
         if(!$speaker->isPublicProfileShowFullname())
         {
             if(isset($values['last_name'])) $values['last_name'] = '';
         }
+        */
 
         if(!$speaker->isPublicProfileShowTelephoneNumber())
         {

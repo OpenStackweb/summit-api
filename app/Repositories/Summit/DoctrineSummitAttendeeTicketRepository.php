@@ -56,17 +56,19 @@ final class DoctrineSummitAttendeeTicketRepository
     protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
         //$query = $query->addSelect("COALESCE(SUM(ta.amount),0) AS HIDDEN HIDDEN_APPLIED_TAXES");
 
-        if($order->hasOrder('final_amount'))
-            $query = $query->addSelect("(e.raw_cost - e.discount) AS HIDDEN HIDDEN_FINAL_AMOUNT");
+        if(!is_null($order)){
+            if ($order->hasOrder('final_amount'))
+                $query = $query->addSelect("(e.raw_cost - e.discount) AS HIDDEN HIDDEN_FINAL_AMOUNT");
 
-        if($order->hasOrder('refunded_amount'))
-            $query = $query->addSelect("COALESCE(SUM(rr.refunded_amount),0) AS HIDDEN HIDDEN_REFUNDED_AMOUNT");
+            if ($order->hasOrder('refunded_amount'))
+                $query = $query->addSelect("COALESCE(SUM(rr.refunded_amount),0) AS HIDDEN HIDDEN_REFUNDED_AMOUNT");
 
-        if($order->hasOrder('final_amount_adjusted'))
-            $query = $query->addSelect("( (e.raw_cost - e.discount) - COALESCE(SUM(rr.refunded_amount),0) ) AS HIDDEN HIDDEN_FINAL_AMOUNT_ADJUSTED");
+            if ($order->hasOrder('final_amount_adjusted'))
+                $query = $query->addSelect("( (e.raw_cost - e.discount) - COALESCE(SUM(rr.refunded_amount),0) ) AS HIDDEN HIDDEN_FINAL_AMOUNT_ADJUSTED");
 
-        if($order->hasOrder('badge_prints_count'))
-            $query = $query->addSelect("COUNT(prt.id) AS HIDDEN HIDDEN_BADGE_PRINTS_COUNT");
+            if ($order->hasOrder('badge_prints_count'))
+                $query = $query->addSelect("COUNT(prt.id) AS HIDDEN HIDDEN_BADGE_PRINTS_COUNT");
+        }
         $query->groupBy("e");
         return $query;
     }

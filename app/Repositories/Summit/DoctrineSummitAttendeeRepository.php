@@ -249,17 +249,21 @@ final class DoctrineSummitAttendeeRepository
     }
 
     protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
-        $query = $query->addSelect
-        (
-            sprintf
-            (
-                "COALESCE(SUM(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END), 0) AS HIDDEN HIDDEN_TICKETS_QTY",
-                IOrderConstants::PaidStatus
-            )
-        );
-        $query = $query->addSelect(
-            "COALESCE(CASE WHEN (COUNT(n.id) = 0) THEN 0 ELSE 1 END, 0) AS HIDDEN HIDDEN_HAS_NOTES_ORDER"
-        );
+        if(!is_null($order)) {
+            if($order->hasOrder('tickets_count'))
+                $query = $query->addSelect
+                (
+                    sprintf
+                    (
+                        "COALESCE(SUM(CASE WHEN (t.status = '%s' AND t.is_active = 1) THEN 1 ELSE 0 END), 0) AS HIDDEN HIDDEN_TICKETS_QTY",
+                        IOrderConstants::PaidStatus
+                    )
+                );
+            if($order->hasOrder('has_notes'))
+                $query = $query->addSelect(
+                    "COALESCE(CASE WHEN (COUNT(n.id) = 0) THEN 0 ELSE 1 END, 0) AS HIDDEN HIDDEN_HAS_NOTES_ORDER"
+                );
+        }
         $query->groupBy("e");
         return $query;
     }

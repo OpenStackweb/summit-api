@@ -190,7 +190,7 @@ Route::group(['prefix' => 'summits'], function () {
         Route::group(['prefix' => 'speakers'], function () {
             Route::get('', 'OAuth2SummitSpeakersApiController@getSpeakers');
             Route::group(['prefix' => '{speaker_id}'], function () {
-                Route::get('', 'OAuth2SummitSpeakersApiController@getSummitSpeaker')->where('speaker_id', '[0-9]+');
+                Route::get('', ['middleware' => 'cache:3600,SPEAKERS,speaker_id' , 'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker']);
             });
         });
         // orders

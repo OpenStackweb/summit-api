@@ -18,9 +18,11 @@ use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Strategies\MemberSummitStrategyFactory;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
+use models\summit\SummitAccessLevelType;
 use models\summit\SummitMetric;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -2111,6 +2113,15 @@ SQL;
      */
     public function getPaidSummitTicketsIds(Summit $summit)
     {
+        return $this->getPaidSummitTicketsIdsBySummitId($summit->getId());
+    }
+
+    /**
+     * @param int $summit_id
+     * @return mixed
+     */
+    public function getPaidSummitTicketsIdsBySummitId(int $summit_id)
+    {
         $sql = <<<SQL
 SELECT SummitAttendeeTicket.ID 
 FROM SummitAttendeeTicket FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
@@ -2128,7 +2139,7 @@ SQL;
             [
                 'member_email' => $this->email,
                 'ticket_status' => IOrderConstants::PaidStatus,
-                'summit_id' => $summit->getId(),
+                'summit_id' => $summit_id,
             ]
         );
         $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
@@ -2151,7 +2162,7 @@ SQL;
             [
                 'member_id' => $this->getId(),
                 'ticket_status' => IOrderConstants::PaidStatus,
-                'summit_id' => $summit->getId(),
+                'summit_id' => $summit_id,
             ]
         );
 
@@ -2183,22 +2194,61 @@ SQL;
      */
     public function getPaidSummitTicketsBySummitId(int $summit_id)
     {
+        $sql = <<<SQL
+SELECT DISTINCT T.* 
+FROM SummitAttendeeTicket T FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
+INNER JOIN SummitAttendee A FORCE INDEX (IDX_SummitAttendee_Summit_Email) ON A.ID = T.OwnerID
+WHERE 
+A.Email = :member_email AND 
+A.SummitID = :summit_id AND 
+T.OwnerID = A.ID AND
+T.Status = :ticket_status AND 
+T.IsActive = 1
+SQL;
 
-        $query = $this->createQuery("SELECT t from models\summit\SummitAttendeeTicket t
-        JOIN t.owner o
-        LEFT JOIN o.member m 
-        JOIN o.summit su 
-        WHERE su.id = :summit_id 
-        and ( m.id = :member_id or o.email = :member_email) 
-        and t.status = :ticket_status and t.is_active = :active");
+        $rsm = new ResultSetMappingBuilder($this->getEM());
+        $rsm->addRootEntityFromClassMetadata(SummitAttendeeTicket::class, 'T');
 
-        return $query
-            ->setParameter('member_id', $this->getId())
-            ->setParameter('member_email', $this->email)
-            ->setParameter('ticket_status', IOrderConstants::PaidStatus)
-            ->setParameter('summit_id', $summit_id)
-            ->setParameter('active', true)
-            ->getResult();
+        // build rsm here
+        $native_query = $this->getEM()->createNativeQuery($sql, $rsm);
+
+        $bindings = [
+            'member_email' => $this->email,
+            'ticket_status' => IOrderConstants::PaidStatus,
+            'summit_id' => $summit_id,
+        ];
+
+        foreach ($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        $res = $native_query->getResult();
+        if(count($res) > 0 ) return $res;
+
+        $sql = <<<SQL
+SELECT DISTINCT T.*  
+FROM SummitAttendeeTicket T FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
+INNER JOIN SummitAttendee A FORCE INDEX (IDX_SummitAttendee_Summit_Member) ON A.ID = T.OwnerID
+WHERE 
+A.MemberID = :member_id AND 
+A.SummitID = :summit_id AND 
+T.OwnerID = A.ID AND
+T.Status = :ticket_status AND 
+T.IsActive = 1
+SQL;
+
+        $bindings = [
+            'member_id' => $this->getId(),
+            'ticket_status' => IOrderConstants::PaidStatus,
+            'summit_id' => $summit_id,
+        ];
+
+        // build rsm here
+        $native_query = $this->getEM()->createNativeQuery($sql, $rsm);
+
+        foreach ($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        return $native_query->getResult();
     }
 
     /**

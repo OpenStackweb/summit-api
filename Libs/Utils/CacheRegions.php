@@ -24,9 +24,14 @@ final class CacheRegions
 
 
     const CacheRegionSummits = 'SUMMITS';
+
+    const CacheRegionSpeakers = 'SPEAKERS';
+
     const CacheRegionEventsKey = "CACHE_REGION_SUMMIT_EVENT_%s";
 
     const CacheRegionSummitsKey = "CACHE_REGION_SUMMIT_%s";
+
+    const CacheRegionSpeakersKey = "CACHE_REGION_SPEAKER_%s";
 
     /**
      * @param string $region
@@ -39,6 +44,8 @@ final class CacheRegions
                 return self::getCacheRegionForSummitEvent($entity_id);
             case CacheRegions::CacheRegionSummits:
                 return self::getCacheRegionForSummit($entity_id);
+            case CacheRegions::CacheRegionSpeakers:
+                return self::getCacheRegionForSpeaker($entity_id);
         }
         return null;
     }
@@ -57,5 +64,9 @@ final class CacheRegions
      */
     public static function getCacheRegionForSummit(int $id):string{
         return sprintf(CacheRegions::CacheRegionSummitsKey, $id);
+    }
+
+    public static function getCacheRegionForSpeaker(int $id):string{
+        return sprintf(CacheRegions::CacheRegionSpeakersKey, $id);
     }
 }

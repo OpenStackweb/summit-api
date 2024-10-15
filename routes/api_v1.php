@@ -2196,7 +2196,7 @@ Route::group(['prefix' => 'speakers'], function () {
         Route::get('/edit-permission', 'OAuth2SummitSpeakersApiController@getSpeakerEditPermission')->where('speaker_id', '[0-9]+');
         Route::put('', 'OAuth2SummitSpeakersApiController@updateSpeaker')->where('speaker_id', 'me|[0-9]+');
         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@deleteSpeaker'])->where('speaker_id', 'me|[0-9]+');
-        Route::get('', 'OAuth2SummitSpeakersApiController@getSpeaker');
+        Route::get('', ['middleware' => 'cache:3600,SPEAKERS,speaker_id' , 'uses' =>'OAuth2SummitSpeakersApiController@getSpeaker']);
         // speaker photos
         Route::group(['prefix' => 'photo'], function () {
             Route::post('', ['uses' => 'OAuth2SummitSpeakersApiController@addSpeakerPhoto']);

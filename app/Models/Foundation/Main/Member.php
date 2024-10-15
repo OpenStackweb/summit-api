@@ -2113,13 +2113,14 @@ SQL;
     {
         $sql = <<<SQL
 SELECT SummitAttendeeTicket.ID 
-FROM SummitAttendeeTicket 
-INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
-LEFT JOIN Member ON Member.ID = SummitAttendee.MemberID
+FROM SummitAttendeeTicket FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
+INNER JOIN SummitAttendee FORCE INDEX (IDX_SummitAttendee_Summit_Email) ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE 
-( Member.ID = :member_id OR SummitAttendee.Email = :member_email) AND 
+SummitAttendee.Email = :member_email AND 
 SummitAttendee.SummitID = :summit_id AND 
-SummitAttendeeTicket.Status = :ticket_status AND SummitAttendeeTicket.IsActive = 1
+SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND
+SummitAttendeeTicket.Status = :ticket_status AND 
+SummitAttendeeTicket.IsActive = 1
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
@@ -2131,7 +2132,32 @@ SQL;
                 'summit_id' => $summit->getId(),
             ]
         );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        if(count($res) > 0) return $res;
+
+        $sql = <<<SQL
+SELECT SummitAttendeeTicket.ID 
+FROM SummitAttendeeTicket FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
+INNER JOIN SummitAttendee FORCE INDEX (IDX_SummitAttendee_Summit_Member) ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+WHERE 
+SummitAttendee.MemberID = :member_id AND 
+SummitAttendee.SummitID = :summit_id AND 
+SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND
+SummitAttendeeTicket.Status = :ticket_status AND 
+SummitAttendeeTicket.IsActive = 1
+SQL;
+
+        $stmt = $this->prepareRawSQL($sql);
+        $stmt->execute(
+            [
+                'member_id' => $this->getId(),
+                'ticket_status' => IOrderConstants::PaidStatus,
+                'summit_id' => $summit->getId(),
+            ]
+        );
+
+        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $res;
     }
 
     /**

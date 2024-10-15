@@ -77,7 +77,7 @@ final class DoctrineSponsorUserInfoGrantRepository
             'attendee_first_name'   => 'o.first_name',
             'attendee_last_name'    => 'o.surname',
             'attendee_email'        => 'o.email',
-            'scanned_by'            => "LOWER(CONCAT(u.first_name, ' ', u.surname))",
+            'scanned_by'            => "LOWER(CONCAT(u.first_name, ' ', u.last_name))",
         ];
     }
 

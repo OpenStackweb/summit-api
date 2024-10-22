@@ -1082,7 +1082,7 @@ final class PresentationService
 
             $presentation = $this->presentation_repository->getById($presentation_id);
 
-            if (is_null($presentation) || !$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException('Presentation not found.');
 
             $media_upload_type_id = intval($payload['media_upload_type_id']);

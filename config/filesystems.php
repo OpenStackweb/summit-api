@@ -63,7 +63,15 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
         ],
-
+        'file_api_disk' => [
+            'driver' => 's3',
+            'key' => env('FILE_UPLOAD_API_AWS_ACCESS_KEY_ID'),
+            'secret' => env('FILE_UPLOAD_API_AWS_SECRET_ACCESS_KEY'),
+            'region' => env('FILE_UPLOAD_API_AWS_DEFAULT_REGION'),
+            'bucket' => env('FILE_UPLOAD_API_AWS_BUCKET'),
+            'url' => env('FILE_UPLOAD_API_AWS_URL'),
+            'endpoint' => env('FILE_UPLOAD_API_AWS_ENDPOINT'),
+        ],
         'assets' => [
             'driver'                => 'swift',
             'auth_url'              => env('CLOUD_STORAGE_AUTH_URL'),

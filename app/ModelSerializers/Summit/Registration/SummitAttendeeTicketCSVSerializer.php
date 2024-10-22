@@ -78,22 +78,24 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         if (isset($params['ticket_questions'])) {
             foreach ($params['ticket_questions'] as $question) {
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
-                $values[$question->getLabel()] = '';
+                $question_label = html_entity_decode(strip_tags($question->getLabel()));
+                $values[$question_label] = '';
                 if (!is_null($ticket_owner)) {
                     $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
                     Log::debug(sprintf("SummitAttendeeTicketCSVSerializer::serialize question %s value %s", $question->getId(), $value));
                     if(is_null($value)) continue;
-                    $values[$question->getLabel()] = $question->getNiceValue($value);
+                    $values[$question_label] = $question->getNiceValue($value);
                 }
             }
         }
 
         // extra fields
-
+        $values['attendee_checked_in'] = '0';
         if($ticket->hasOwner()) {
             $values['attendee_checked_in'] = $ticket->getOwner()->hasCheckedIn();
         }
 
+        $values['promo_code_tags'] = '';
         if($ticket->hasPromoCode()) {
             $tags = [];
             foreach ($ticket->getPromoCode()->getTags() as $tag){

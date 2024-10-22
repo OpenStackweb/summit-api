@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
@@ -373,6 +374,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
                     'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
                     'purchase_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'attendee_checked_in' => new BooleanCellFormatter(),
+                    'is_active' => new BooleanCellFormatter(),
                 ];
             },
             function () use ($summit) {

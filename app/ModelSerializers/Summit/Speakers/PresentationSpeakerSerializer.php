@@ -44,6 +44,13 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         return SerializerRegistry::SerializerType_Public;
     }
 
+    protected static $allowed_fields = [
+        'featured',
+        'order',
+        'gender',
+        'member_id',
+        'member_external_id',
+    ];
     /**
      * @param null $expand
      * @param array $fields
@@ -63,9 +70,13 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         $published                        = isset($params['published'])? intval($params['published']):true;
 
         if(!is_null($summit)) {
-            $featured = $summit->getFeatureSpeaker($speaker);
-            $values['featured']                = !is_null($featured);
-            $values['order']                   = is_null($featured) ? 0 : $featured->getOrder();
+            if(in_array("featured", $fields)) {
+                $featured = $summit->getFeatureSpeaker($speaker);
+                $values['featured'] = !is_null($featured);
+                if(in_array("order", $fields))
+                    $values['order'] = is_null($featured) ? 0 : $featured->getOrder();
+            }
+
             if(in_array('presentations', $relations))
                 $values['presentations'] = $speaker->getPresentationIds($summit->getId(), $published);
             if(in_array('moderated_presentations', $relations))
@@ -75,9 +86,15 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         if (in_array('member', $relations) && $speaker->hasMember())
         {
             $member              = $speaker->getMember();
-            $values['gender']    = $member->getGender();
-            $values['member_id'] = intval($member->getId());
-            $values['member_external_id'] = intval($member->getUserExternalId());
+
+            if(in_array("gender", $fields))
+                $values['gender']    = $member->getGender();
+            if(in_array("member_id", $fields))
+                $values['member_id'] = intval($member->getId());
+            if(in_array("member_external_id", $fields))
+                $values['member_external_id'] = intval($member->getUserExternalId());
+
+
             if(!is_null($summit_id)) {
                 if(in_array('badge_features', $relations)) {
                     // check badges if the speaker user has tickets

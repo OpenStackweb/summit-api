@@ -24,6 +24,10 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         'Notes' => 'notes:json_string',
     ];
 
+    protected static $allowed_fields = [
+        'notes'
+    ];
+
     protected static $allowed_relations = [
         'accepted_presentations',
         'alternate_presentations',
@@ -44,7 +48,9 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         if(!$speaker instanceof PresentationSpeaker) return [];
 
         $values = parent::serialize($expand, $fields, $relations, $params);
-        $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
+        if(in_array("email", $fields))
+            $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
+
         $summit = isset($params['summit'])? $params['summit']:null;
 
         if(isset($values['bio'])){
@@ -83,6 +89,7 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
             }, $all_rejected_presentations));
             $values['rejected_presentations_count'] = count($all_rejected_presentations);
         }
+
         return $values;
     }
 }

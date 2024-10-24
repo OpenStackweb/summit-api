@@ -42,6 +42,28 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
         'PhoneNumber' => 'phone_number:json_string',
     ];
 
+    protected static $allowed_fields = [
+        'first_name',
+        'last_name',
+        'title',
+        'bio',
+        'irc',
+        'twitter',
+        'org_has_cloud',
+        'country',
+        'available_for_bureau',
+        'funded_travel',
+        'willing_to_travel',
+        'willing_to_present_video',
+        'member_id',
+        'registration_request_id',
+        'pic',
+        'big_pic',
+        'company',
+        'phone_number',
+        'email',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -57,7 +79,10 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (empty($values['first_name']) || empty($values['last_name'])) {
+        if (
+            (empty($values['first_name']) || empty($values['last_name']))
+            && in_array('first_name', $fields) && in_array('last_name', $fields)
+        ) {
 
             $first_name = '';
             $last_name = '';
@@ -71,12 +96,14 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
         }
 
 
-        $application_type = $this->resource_server_context->getApplicationType();
-        // choose email serializer depending on user permissions
-        // is current user is null then is a service account
-        $values['email'] = $application_type == "SERVICE" ?
-            JsonUtils::toNullEmail($speaker->getEmail()) :
-            JsonUtils::toObfuscatedEmail($speaker->getEmail());
+        if(in_array("email", $fields)) {
+            $application_type = $this->resource_server_context->getApplicationType();
+            // choose email serializer depending on user permissions
+            // is current user is null then is a service account
+            $values['email'] = $application_type == "SERVICE" ?
+                JsonUtils::toNullEmail($speaker->getEmail()) :
+                JsonUtils::toObfuscatedEmail($speaker->getEmail());
+        }
 
         return $values;
     }

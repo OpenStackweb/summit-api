@@ -63,23 +63,28 @@ abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
      */
     public function markAsDeleted(string $path, ?string $filename = null)
     {
-        Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted path %s filename %s", $path, $filename));
-        $from = empty($filename) ? $path : sprintf("%s/%s", $path, $filename);
-        $to = null;
-        if(empty($filename)){
-            $parts = explode("/", $path);
-            $parts[count($parts) - 1] = sprintf("DELETED_%s", $parts[count($parts) - 1] );
-            $to = implode("/", $parts);
-        }
-        else{
-            $to = sprintf("%s/DELETED_%s", $path, $filename);
-        }
-        Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted from %s to %s", $from, $to));
+        try{
+            Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted path %s filename %s", $path, $filename));
+            $from = empty($filename) ? $path : sprintf("%s/%s", $path, $filename);
+            $to = null;
+            if(empty($filename)){
+                $parts = explode("/", $path);
+                $parts[count($parts) - 1] = sprintf("DELETED_%s", $parts[count($parts) - 1] );
+                $to = implode("/", $parts);
+            }
+            else{
+                $to = sprintf("%s/DELETED_%s", $path, $filename);
+            }
+            Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted from %s to %s", $from, $to));
 
-        return Storage::disk($this->getDriver())->move
-        (
-            $from,
-            $to
-        );
+            return Storage::disk($this->getDriver())->move
+            (
+                $from,
+                $to
+            );
+        }
+        catch(\Exception $ex){
+            Log::error($ex);
+        }
     }
 }

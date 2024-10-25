@@ -300,6 +300,7 @@ final class OAuth2SummitOrdersApiController
                     'owner_name',
                     'owner_email',
                     'owner_company',
+                    'owner_id',
                     'created',
                     'amount',
                     'payment_method',
@@ -369,6 +370,7 @@ final class OAuth2SummitOrdersApiController
                     'owner_name',
                     'owner_email',
                     'owner_company',
+                    'owner_id',
                     'created',
                     'amount',
                     'payment_method',
@@ -436,6 +438,7 @@ final class OAuth2SummitOrdersApiController
                     'owner_name',
                     'owner_email',
                     'owner_company',
+                    'owner_id',
                     'created',
                 ];
             },

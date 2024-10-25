@@ -94,8 +94,9 @@ SQL,
 COALESCE(LOWER(o.email), LOWER(e.owner_email))
 SQL,
             'owner_company' => <<<SQL
-COALESCE(LOWER(e.owner_company_name), LOWER(oc.name))
+COALESCE(LOWER(oc.name),LOWER(e.owner_company_name))
 SQL,
+            'owner_id' => 'o.id',
             'amount'   => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
             'payment_method' => 'e.payment_method'
         ];

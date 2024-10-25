@@ -20,6 +20,7 @@ use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSponsorRepository
@@ -50,7 +51,7 @@ implements ISponsorRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         if($filter->hasFilter("badge_scans_count"))
             $query = $query->leftJoin("e.user_info_grants", "bs");
         return $query;

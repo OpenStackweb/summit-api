@@ -17,6 +17,8 @@ use App\Models\Foundation\Summit\Signs\SummitSign;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use utils\Filter;
+use utils\Order;
+
 /**
  * Class DoctrineSummitSignRepository
  * @package App\Repositories\Summit
@@ -34,7 +36,7 @@ final class DoctrineSummitSignRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->leftJoin("e.summit", "s");
         $query = $query->leftJoin("e.location", "l");

@@ -86,7 +86,7 @@ final class DoctrineSummitRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->leftJoin("e.ticket_types", "tt");
         $query = $query->leftJoin("e.selection_plans", "sp");

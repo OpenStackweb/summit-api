@@ -16,6 +16,8 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitSponsorshipType;
 use utils\Filter;
+use utils\Order;
+
 /**
  * Class DoctrineSummitSponsorshipTypeRepository
  * @package App\Repositories\Summit
@@ -28,7 +30,7 @@ final class DoctrineSummitSponsorshipTypeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->innerJoin("e.type", "t");
         $query = $query->innerJoin("e.summit", "s");
         return $query;

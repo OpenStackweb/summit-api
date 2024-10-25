@@ -17,6 +17,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\main\SupportingCompany;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSupportingCompanyRepository
@@ -56,7 +57,7 @@ final class DoctrineSupportingCompanyRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->innerJoin("e.sponsorship_type", "st");
         $query = $query->innerJoin("e.company", "c");

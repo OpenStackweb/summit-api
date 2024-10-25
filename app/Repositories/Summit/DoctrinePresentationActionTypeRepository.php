@@ -20,6 +20,7 @@ use models\summit\AllowedPresentationActionType;
 use models\summit\PresentationActionType;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrinePresentationActionTypeRepository
@@ -43,7 +44,7 @@ final class DoctrinePresentationActionTypeRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null): QueryBuilder
     {
         return $query->leftJoin("e.assigned_selection_plans", "asp")
             ->leftJoin("asp.selection_plan", "sp");

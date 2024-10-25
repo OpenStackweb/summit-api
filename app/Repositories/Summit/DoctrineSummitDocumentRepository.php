@@ -17,6 +17,7 @@ use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitDocument;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitDocumentRepository
@@ -37,7 +38,7 @@ implements ISummitDocumentRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
 
         $query = $query->join('e.summit', 's')
             ->leftJoin('e.event_types', 'et');

@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
 use LaravelDoctrine\ORM\Facades\Registry;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class ConfigDoctrineRepository
@@ -49,7 +50,7 @@ abstract class ConfigDoctrineRepository extends DoctrineRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null,  ?Order $order = null)
     {
         return $query;
     }

@@ -24,6 +24,7 @@ use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitRegistrationInvitationRepository
@@ -46,7 +47,7 @@ class DoctrineSummitRegistrationInvitationRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->join('e.summit', 's');
         return $query;
     }

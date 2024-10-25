@@ -16,6 +16,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitCategoryChange;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitCategoryChangeRepository
@@ -39,7 +40,7 @@ final class DoctrineSummitCategoryChangeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query->join("e.presentation","p");
         $query->join("p.selection_plan","sp");
         $query->join("p.summit","s");

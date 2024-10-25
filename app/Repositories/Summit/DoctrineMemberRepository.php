@@ -54,7 +54,7 @@ final class DoctrineMemberRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null): QueryBuilder
     {
         if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
             $query

@@ -127,9 +127,10 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
     /**
      * @param QueryBuilder $query
      * @param Filter|null $filter
-     * @return QueryBuilder
+     * @param Order|null $order
+     * @return mixed
      */
-    protected abstract function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null);
+    protected abstract function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null);
 
     /**
      * @param QueryBuilder $query
@@ -161,7 +162,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $query  = call_user_func($fnQuery);
 
-        $query = $this->applyExtraJoins($query, $filter);
+        $query = $this->applyExtraJoins($query, $filter, $order);
 
         $query = $this->applyExtraSelects($query, $filter, $order);
 
@@ -224,7 +225,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $query  = call_user_func($fnQuery);
 
-        $query = $this->applyExtraJoins($query, $filter);
+        $query = $this->applyExtraJoins($query, $filter, $order);
 
         $query = $this->applyExtraSelects($query, $filter, $order);
 
@@ -261,7 +262,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->select("e")
             ->from($this->getBaseEntity(), "e");
 
-        $query = $this->applyExtraJoins($query, $filter);
+        $query = $this->applyExtraJoins($query, $filter, $order);
 
         $query = $this->applyExtraSelects($query, $filter, $order);
 
@@ -310,7 +311,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->select("e.id")
             ->from($this->getBaseEntity(), "e");
 
-        $query = $this->applyExtraJoins($query, $filter);
+        $query = $this->applyExtraJoins($query, $filter, $order);
 
         $query = $this->applyExtraSelects($query, $filter, $order);
 

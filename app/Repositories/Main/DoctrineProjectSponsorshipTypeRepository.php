@@ -16,6 +16,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\main\ProjectSponsorshipType;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineProjectSponsorshipTypeRepository
@@ -45,7 +46,7 @@ final class DoctrineProjectSponsorshipTypeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->innerJoin("e.sponsored_project", "sp");
         return $query;
     }

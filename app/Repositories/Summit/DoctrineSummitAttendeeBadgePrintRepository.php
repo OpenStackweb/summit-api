@@ -19,6 +19,7 @@ use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitAttendeeBadgePrint;
 use models\utils\SilverstripeBaseModel;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitAttendeeBadgePrintRepository
@@ -34,7 +35,7 @@ final class DoctrineSummitAttendeeBadgePrintRepository
         return SummitAttendeeBadgePrint::class;
     }
 
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->innerJoin("e.badge", "b");
         $query = $query->innerJoin("e.requestor", "r");

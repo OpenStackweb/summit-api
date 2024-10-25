@@ -17,6 +17,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\PresentationMediaUpload;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrinePresentationMediaUploadRepository
@@ -57,7 +58,7 @@ extends SilverStripeDoctrineRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->innerJoin("e.media_upload_type", "t");
         return $query;
     }

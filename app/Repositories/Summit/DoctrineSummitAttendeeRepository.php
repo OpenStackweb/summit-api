@@ -48,7 +48,7 @@ final class DoctrineSummitAttendeeRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query =  $query->join('e.summit', 's')
             ->leftJoin('e.member', 'm')
             ->leftJoin('e.tickets', 't')

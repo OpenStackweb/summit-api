@@ -17,6 +17,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitScheduleConfig;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitScheduleConfigRepository
@@ -31,7 +32,7 @@ class DoctrineSummitScheduleConfigRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->innerJoin("e.summit", "s", Join::ON);
         return $query;
     }

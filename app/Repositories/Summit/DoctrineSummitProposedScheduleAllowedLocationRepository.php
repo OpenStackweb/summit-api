@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLoca
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitProposedScheduleAllowedLocationRepository
@@ -37,7 +38,7 @@ final class DoctrineSummitProposedScheduleAllowedLocationRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         return $query->innerJoin('e.track', 't')
             ->innerJoin('e.location', 'l');

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineExtraQuestionTypeRepository
@@ -36,7 +37,7 @@ abstract class DoctrineExtraQuestionTypeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         return $query;
     }
 

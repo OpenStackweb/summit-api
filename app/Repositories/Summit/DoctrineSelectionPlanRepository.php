@@ -48,7 +48,7 @@ final class DoctrineSelectionPlanRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         if ($filter->hasFilter("summit_id")) {
             $query = $query->join('e.summit', 's');

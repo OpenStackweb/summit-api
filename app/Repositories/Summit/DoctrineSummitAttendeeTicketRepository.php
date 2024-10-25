@@ -230,7 +230,7 @@ final class DoctrineSummitAttendeeTicketRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query->join("e.order", "o");
         $query = $query->join("o.summit", "s");

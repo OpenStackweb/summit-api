@@ -27,6 +27,7 @@ use models\utils\SilverstripeBaseModel;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineAuditLogRepository
@@ -49,7 +50,7 @@ final class DoctrineAuditLogRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null): QueryBuilder
     {
         $query = $query->leftJoin(Member::class, 'u', 'WITH', 'e.user = u.id');
 

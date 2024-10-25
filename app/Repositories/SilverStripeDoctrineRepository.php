@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\App;
 use models\utils\SilverstripeBaseModel;
 use LaravelDoctrine\ORM\Facades\Registry;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class SilverStripeDoctrineRepository
@@ -64,9 +65,11 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
 
     /**
      * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @param Order|null $order
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         return $query;
     }
 

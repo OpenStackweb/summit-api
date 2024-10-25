@@ -16,6 +16,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitTrackChair;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitTrackChairRepository
@@ -38,7 +39,7 @@ final class DoctrineSummitTrackChairRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query
             ->join('e.summit', 's')

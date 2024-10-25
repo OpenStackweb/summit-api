@@ -17,6 +17,7 @@ use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
 use Doctrine\ORM\QueryBuilder;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
@@ -31,7 +32,7 @@ final class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
 
         if(!is_null($filter) && $filter->hasFilter("selection_plan_id")){
             $query = $query->innerJoin("e.assigned_selection_plans", "a");

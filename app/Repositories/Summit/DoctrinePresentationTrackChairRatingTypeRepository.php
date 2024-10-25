@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeR
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrinePresentationTrackChairRatingTypeRepository
@@ -39,7 +40,7 @@ final class DoctrinePresentationTrackChairRatingTypeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         if($filter->hasFilter('selection_plan_id'))
             $query->join('e.selection_plan', 'sp');

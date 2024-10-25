@@ -40,7 +40,7 @@ final class DoctrineSummitAttendeeNoteRepository
         return SummitAttendeeNote::class;
     }
 
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->leftJoin("e.author", "a");
         $query = $query->innerJoin("e.owner", "o");

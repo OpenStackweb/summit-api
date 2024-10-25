@@ -16,6 +16,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\main\SummitAdministratorPermissionGroup;
 use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineSummitAdministratorPermissionGroupRepository
@@ -58,7 +59,7 @@ class DoctrineSummitAdministratorPermissionGroupRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->join('e.summits', 's')
             ->join('e.members', 'm');

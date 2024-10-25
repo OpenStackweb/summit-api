@@ -151,7 +151,7 @@ final class DoctrineSummitEventRepository
             $query = $query->leftJoin("p.actions", 'a', Join::LEFT_JOIN);
         }
 
-        $query = $this->applyExtraJoins($query, $filter);
+        $query = $this->applyExtraJoins($query, $filter, $order);
 
         $query = $this->applyExtraSelects($query, $filter, $order);
 
@@ -244,7 +244,7 @@ final class DoctrineSummitEventRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         $query = $query->innerJoin("e.type", "et", Join::ON);
         $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');

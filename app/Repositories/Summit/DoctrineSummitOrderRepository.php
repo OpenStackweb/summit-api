@@ -23,6 +23,7 @@ use models\summit\SummitOrder;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineFilterMapping;
 use utils\Filter;
+use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
 /**
@@ -61,14 +62,16 @@ final class DoctrineSummitOrderRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query
             ->join('e.tickets','t')
             ->join('e.summit','s')
             ->leftJoin('e.owner','o')
             ->leftJoin('t.owner','to')
             ->leftJoin('to.member', 'tom');
-        if($filter->hasFilter("owner_company")){
+
+        if((!is_null($filter) && $filter->hasFilter("owner_company")) ||
+            (!is_null($order)) && $order->hasOrder("owner_company")){
             $query = $query->leftJoin("e.owner_company","oc");
         }
         return $query;

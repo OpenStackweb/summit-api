@@ -77,7 +77,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
 
         if (!is_null($filter)) {
 

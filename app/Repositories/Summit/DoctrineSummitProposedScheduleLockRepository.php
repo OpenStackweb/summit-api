@@ -43,7 +43,7 @@ final class DoctrineSummitProposedScheduleLockRepository
      * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
         return $query->innerJoin('e.summit_proposed_schedule', 's')
             ->innerJoin('e.track', 't');

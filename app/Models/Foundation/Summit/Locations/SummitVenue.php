@@ -249,7 +249,10 @@ class SummitVenue extends SummitGeoLocatedLocation
                 foreach ($rooms as $room) {
                     $room_clone = clone $room;
                     $room_clone->clearSummit();
-                    $room_clone->setFloor($floors_clones[$room_clone->getFloor()->getNumber()]);
+                    $floor = $room_clone->getFloor();
+                    if (!is_null($floor)) {
+                        $room_clone->setFloor($floors_clones[$floor->getNumber()]);
+                    }
                     $this->addRoom($room_clone);
                 }
             }

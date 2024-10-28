@@ -31,7 +31,7 @@ class SummitBookableVenueRoomAttributeValue extends SilverstripeBaseModel
     private $value;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBookableVenueRoomAttributeType", inversedBy="values")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitBookableVenueRoomAttributeType", inversedBy="values", cascade={"persist"})
      * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var SummitBookableVenueRoomAttributeType
      */

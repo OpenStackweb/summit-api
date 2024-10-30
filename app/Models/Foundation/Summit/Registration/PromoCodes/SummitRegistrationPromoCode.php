@@ -124,6 +124,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     protected $allows_to_delegate;
 
     /**
+     * @ORM\Column(name="AllowReassignRelatedTickets", type="boolean")
+     * @var bool
+     */
+    protected $allows_reassign_related_tickets;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\summit\Summit", inversedBy="promo_codes")
      * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
@@ -296,6 +302,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->valid_since_date = null;
         $this->valid_until_date = null;
         $this->allows_to_delegate = false;
+        $this->allows_reassign_related_ticket = true;
         $this->sent_date = null;
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
@@ -821,5 +828,22 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         // if is infinite , then we can purchase one per time
         if($this->isInfinite()) return 1;
         return $this->getQuantityRemaining();
+    }
+
+    /**
+     * @return void
+     */
+    public function isAllowsToReassignRelatedTickets(): bool
+    {
+        return $this->allows_reassign_related_tickets;
+    }
+
+    /**
+     * @param bool $allows_to_delegate
+     * @return void
+     */
+    public function setAllowsToReassignRelatedTickets(bool $allows_reassign_related_tickets): void
+    {
+        $this->allows_reassign_related_tickets = $allows_reassign_related_tickets;
     }
 }

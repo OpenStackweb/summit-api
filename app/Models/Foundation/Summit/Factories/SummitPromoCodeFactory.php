@@ -158,6 +158,9 @@ final class SummitPromoCodeFactory
         if(isset($data['allows_to_delegate']))
             $promo_code->setAllowsToDelegate(boolval($data['allows_to_delegate']));
 
+        if(isset($data['allows_reassign_related_tickets']))
+            $promo_code->setAllowsToReassignRelatedTickets(boolval($data['allows_reassign_related_tickets']));
+
         switch ($data['class_name']){
             case SummitRegistrationDiscountCode::ClassName:
             case PrePaidSummitRegistrationDiscountCode::ClassName:{

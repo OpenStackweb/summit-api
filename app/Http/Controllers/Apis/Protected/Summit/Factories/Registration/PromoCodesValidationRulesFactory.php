@@ -60,6 +60,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             'allowed_ticket_types' => 'sometimes|int_array',
             'badge_features'       => 'sometimes|int_array',
             'allows_to_delegate'    => 'sometimes|boolean',
+            'allows_reassign_related_tickets'    => 'sometimes|boolean',
         ];
 
         $specific_rules = [];
@@ -175,6 +176,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             'badge_features_apply_to_all_tix_retroactively' => 'sometimes|boolean',
             'tags'                 => 'sometimes|string_array',
             'allows_to_delegate'    => 'sometimes|boolean',
+            'allows_reassign_related_tickets'    => 'sometimes|boolean',
         ];
 
         $specific_rules = [];

@@ -124,7 +124,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     protected $allows_to_delegate;
 
     /**
-     * @ORM\Column(name="AllowReassignRelatedTickets", type="boolean")
+     * @ORM\Column(name="AllowsReassignRelatedTickets", type="boolean")
      * @var bool
      */
     protected $allows_reassign_related_tickets;

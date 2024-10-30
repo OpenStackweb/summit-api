@@ -165,7 +165,7 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     private $allows_to_delegate;
 
     /**
-     * @ORM\Column(name="AllowReassignRelatedTickets", type="boolean")
+     * @ORM\Column(name="AllowsReassignRelatedTickets", type="boolean")
      * @var bool
      */
     private $allows_reassign_related_tickets;

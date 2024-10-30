@@ -30,7 +30,7 @@ final class Version20241030175417 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("SummitRegistrationPromoCode") && !$builder->hasColumn("SummitRegistrationPromoCode", "AllowsReassignRelatedTickets")) {
             $builder->table("SummitRegistrationPromoCode", function (Table $table) {
-                $table->boolean("AllowsReassignRelatedTickets")->setNotnull(true)->setDefault(false);
+                $table->boolean("AllowsReassignRelatedTickets")->setNotnull(true)->setDefault(true);
             });
         }
 

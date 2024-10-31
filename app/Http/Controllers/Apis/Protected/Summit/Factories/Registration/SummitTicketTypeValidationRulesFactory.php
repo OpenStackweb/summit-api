@@ -38,7 +38,7 @@ final class SummitTicketTypeValidationRulesFactory extends AbstractValidationRul
             'badge_type_id'          => 'sometimes|integer',
             'audience'               => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
             'allows_to_delegate'    => 'sometimes|boolean',
-            'allows_reassign_related_tickets'    => 'sometimes|boolean',
+            'allows_to_reassign'    => 'sometimes|boolean',
         ];
     }
 
@@ -61,7 +61,7 @@ final class SummitTicketTypeValidationRulesFactory extends AbstractValidationRul
             'cost'                    => 'sometimes|numeric|greater_than_or_equal:0',
             'audience'                => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
             'allows_to_delegate'      => 'sometimes|boolean',
-            'allows_reassign_related_tickets'    => 'sometimes|boolean',
+            'allows_to_reassign'      => 'sometimes|boolean',
         ];
     }
 }

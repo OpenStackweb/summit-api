@@ -38,7 +38,7 @@ class SummitTicketTypeSerializer extends SilverStripeSerializer
         'QuantitySold' => 'quantity_sold:json_int',
         'Audience' => 'audience:json_string',
         'AllowsToDelegate' => 'allows_to_delegate:json_boolean',
-        'AllowsToReassignRelatedTickets'  => 'allows_reassign_related_tickets:json_boolean',
+        'AllowsToReassignRelatedTickets'  => 'allows_to_reassign:json_boolean',
     ];
 
     protected static $allowed_relations = [

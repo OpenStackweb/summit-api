@@ -37,7 +37,7 @@ implements ISponsorRepository
     {
         return [
             'sponsor_id'        => new DoctrineFilterMapping("e.id :operator :value"),
-            'company_name'      => new DoctrineJoinFilterMapping("e.company", "c" ,"c.name :operator :value"),
+            'company_name'      => "c.name",
             'sponsorship_name'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.name :operator :value"),
             'sponsorship_label' => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.label :operator :value"),
             'sponsorship_size'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.size :operator :value"),
@@ -52,8 +52,13 @@ implements ISponsorRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
-        if($filter->hasFilter("badge_scans_count"))
+        if(!is_null($filter) && $filter->hasFilter("badge_scans_count"))
             $query = $query->leftJoin("e.user_info_grants", "bs");
+        if(
+            (is_null($filter) && $filter->hasFilter("company_name")) ||
+            (!is_null($order) && $order->hasOrder("company_name"))
+        )
+            $query = $query->leftJoin("e.company", "c");
         return $query;
     }
 
@@ -66,6 +71,7 @@ implements ISponsorRepository
             'id'    => 'e.id',
             'name'  => 'e.name',
             'order' => 'e.order',
+            'company_name' => 'c.name',
         ];
     }
 

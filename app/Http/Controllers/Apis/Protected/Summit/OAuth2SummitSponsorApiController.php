@@ -137,6 +137,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         return [
             'id',
             'order',
+            'company_name',
         ];
     }
 

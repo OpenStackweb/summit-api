@@ -165,6 +165,12 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     private $allows_to_delegate;
 
     /**
+     * @ORM\Column(name="AllowsReassignRelatedTickets", type="boolean")
+     * @var bool
+     */
+    private $allows_reassign_related_tickets;
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_ticket_types")
      * @var SummitOrderExtraQuestionType[]
      */
@@ -231,6 +237,7 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
         $this->sales_end_date = null;
         $this->audience = self::Audience_All;
         $this->allows_to_delegate = false;
+        $this->allows_reassign_related_tickets = true;
     }
 
     /**
@@ -709,5 +716,22 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     public function setAllowsToDelegate(bool $allows_to_delegate): void
     {
         $this->allows_to_delegate = $allows_to_delegate;
+    }
+
+    /**
+     * @return void
+     */
+    public function isAllowsToReassignRelatedTickets(): bool
+    {
+        return $this->allows_reassign_related_tickets;
+    }
+
+    /**
+     * @param bool $allows_to_delegate
+     * @return void
+     */
+    public function setAllowsToReassignRelatedTickets(bool $allows_reassign_related_tickets): void
+    {
+        $this->allows_reassign_related_tickets = $allows_reassign_related_tickets;
     }
 }

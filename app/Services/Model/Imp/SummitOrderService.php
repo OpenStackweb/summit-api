@@ -1853,6 +1853,14 @@ final class SummitOrderService
                 throw new ValidationException("Ticket can not be revoked due badge its already printed.");
             }
 
+            if(!$ticket->getTicketType()->isAllowsToReassignRelatedTickets()){
+                throw new ValidationException("You can not reassign this ticket. please contact support.");
+            }
+
+            if($ticket->hasPromoCode() && !$ticket->getPromoCode()->isAllowsToReassignRelatedTickets()){
+                throw new ValidationException("You can not reassign this ticket. please contact support.");
+            }
+
             $attendee->sendRevocationTicketEmail($ticket);
 
             $attendee->removeTicket($ticket);

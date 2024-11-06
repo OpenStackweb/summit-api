@@ -118,6 +118,9 @@ final class SummitTicketTypeFactory
         if(isset($data['allows_to_delegate']))
             $ticket_type->setAllowsToDelegate(boolval($data['allows_to_delegate']));
 
+        if(isset($data['allows_to_reassign']))
+            $ticket_type->setAllowsToReassignRelatedTickets(boolval($data['allows_to_reassign']));
+
         return $ticket_type;
     }
 }

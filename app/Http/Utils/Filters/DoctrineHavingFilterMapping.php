@@ -69,9 +69,16 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
             )
         );
 
-        if (is_string($value) && ( trim($value) == '' || empty($value))) return $query;
+        if (!is_numeric($value) && is_string($value) && ( trim($value) == '' || empty($value)))
+        {
+            Log::debug("DoctrineHavingFilterMapping::apply value is empty");
+            return $query;
+        }
 
-        if (is_array($value) && count($value) == 0) return $query;
+        if (is_array($value) && count($value) == 0) {
+            Log::debug("DoctrineHavingFilterMapping::apply value is empty");
+            return $query;
+        }
 
         if (!empty($where)) {
             if (strstr($where, ":value")) {

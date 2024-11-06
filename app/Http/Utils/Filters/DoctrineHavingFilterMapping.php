@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use Doctrine\ORM\QueryBuilder;
 
 /**
@@ -48,11 +49,25 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
      */
     public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
+
+
         $param_count = $query->getParameters()->count();
         $where = $this->where;
         $has_param = false;
-
         $value = $filter->getValue();
+
+
+        Log::debug
+        (
+            sprintf
+            (
+                "DoctrineHavingFilterMapping::apply where %s groupBy %s having %s value %s",
+                $this->where,
+                $this->groupBy,
+                $this->having,
+                $value
+            )
+        );
 
         if (is_string($value) && ( trim($value) == '' || empty($value))) return $query;
 

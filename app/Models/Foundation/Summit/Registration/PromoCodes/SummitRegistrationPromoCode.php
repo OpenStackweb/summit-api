@@ -302,7 +302,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->valid_since_date = null;
         $this->valid_until_date = null;
         $this->allows_to_delegate = false;
-        $this->allows_reassign_related_ticket = true;
+        $this->allows_reassign_related_tickets = true;
         $this->sent_date = null;
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();

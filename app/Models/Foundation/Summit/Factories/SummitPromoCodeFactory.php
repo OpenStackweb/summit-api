@@ -159,7 +159,7 @@ final class SummitPromoCodeFactory
             $promo_code->setAllowsToDelegate(boolval($data['allows_to_delegate']));
 
         if(isset($data['allows_to_reassign']))
-            $promo_code->setAllowsToReassignRelatedTickets(boolval($data['allows_to_reassign']));
+            $promo_code->setAllowsToReassign(boolval($data['allows_to_reassign']));
 
         switch ($data['class_name']){
             case SummitRegistrationDiscountCode::ClassName:

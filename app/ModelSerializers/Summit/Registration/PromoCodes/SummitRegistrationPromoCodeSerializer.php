@@ -37,7 +37,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
         'Description'       => 'description:json_string',
         'Notes'             => 'notes:json_string',
         'AllowsToDelegate'  => 'allows_to_delegate:json_boolean',
-        'AllowsToReassignRelatedTickets'  => 'allows_to_reassign:json_boolean',
+        'AllowsToReassign'  => 'allows_to_reassign:json_boolean',
     ];
 
     protected static $allowed_relations = [

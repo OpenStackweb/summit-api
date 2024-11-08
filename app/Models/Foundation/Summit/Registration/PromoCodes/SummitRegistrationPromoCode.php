@@ -123,12 +123,13 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     protected $allows_to_delegate;
 
-    /**
-     * @ORM\Column(name="AllowsReassignRelatedTickets", type="boolean")
-     * @var bool
-     */
+
     protected $allows_reassign_related_tickets;
 
+    /**
+     * @ORM\Column(name="AllowsReassign", type="boolean")
+     * @var bool
+     */
     protected $allows_to_reassign;
 
     /**
@@ -304,7 +305,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->valid_since_date = null;
         $this->valid_until_date = null;
         $this->allows_to_delegate = false;
-        $this->allows_reassign_related_tickets = true;
+        $this->allows_to_reassign = true;
         $this->sent_date = null;
         $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
@@ -546,6 +547,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         'summit_id' => 'integer',
         'creator_id' => 'integer',
         'allowed_ticket_types' => 'array',
+        'allows_to_delegate' => 'boolean',
+        'allows_to_reassign' => 'boolean',
     ];
 
     /**
@@ -835,17 +838,17 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @return void
      */
-    public function isAllowsToReassignRelatedTickets(): bool
+    public function isAllowsToReassign(): bool
     {
-        return $this->allows_reassign_related_tickets;
+        return $this->allows_to_reassign;
     }
 
     /**
-     * @param bool $allows_to_delegate
+     * @param bool $allows_to_reassign
      * @return void
      */
-    public function setAllowsToReassignRelatedTickets(bool $allows_reassign_related_tickets): void
+    public function setAllowsToReassign(bool $allows_to_reassign): void
     {
-        $this->allows_reassign_related_tickets = $allows_reassign_related_tickets;
+        $this->allows_to_reassign = $allows_to_reassign;
     }
 }

@@ -1857,7 +1857,7 @@ final class SummitOrderService
                 throw new ValidationException("You can not reassign this ticket. please contact support.");
             }
 
-            if($ticket->hasPromoCode() && !$ticket->getPromoCode()->isAllowsToReassignRelatedTickets()){
+            if($ticket->hasPromoCode() && !$ticket->getPromoCode()->isAllowsToReassign()){
                 throw new ValidationException("You can not reassign this ticket. please contact support.");
             }
 

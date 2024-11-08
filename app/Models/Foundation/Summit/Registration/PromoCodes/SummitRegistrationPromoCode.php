@@ -129,6 +129,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     protected $allows_reassign_related_tickets;
 
+    protected $allows_to_reassign;
+
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\Summit", inversedBy="promo_codes")
      * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")

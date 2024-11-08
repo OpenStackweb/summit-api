@@ -66,6 +66,7 @@ abstract class JsonUtils
         $url = str_replace("%3D","=", $url);
         $url = str_replace("%3F","?", $url);
         $url = str_replace("%26","&", $url);
+        $url = str_replace("%2B","+", $url);
         return $url;
     }
 

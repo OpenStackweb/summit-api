@@ -35,12 +35,6 @@ trait SpeakersPromoCodeTrait
      */
     private $owners;
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->owners = new ArrayCollection();
-    }
-
     /**
      * @return string
      */

@@ -43,6 +43,9 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
     ];
 
     protected static $allowed_fields = [
+        'id',
+        'created',
+        'last_edited',
         'first_name',
         'last_name',
         'title',

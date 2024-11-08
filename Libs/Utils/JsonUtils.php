@@ -60,13 +60,6 @@ abstract class JsonUtils
      */
     public static function encodeUrl(?string $url):?string{
         if(empty($url)) return null;
-        $url= rawurlencode($url);
-        $url = str_replace("%3A",":", $url);
-        $url = str_replace("%2F","/", $url);
-        $url = str_replace("%3D","=", $url);
-        $url = str_replace("%3F","?", $url);
-        $url = str_replace("%26","&", $url);
-        $url = str_replace("%2B","+", $url);
         return $url;
     }
 

@@ -4115,32 +4115,61 @@ final class SummitOrderService
                         $promo_code = null;
 
                         if ($reader->hasColumn('ticket_type_name')) {
+                            // use summit context
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by name %s", $row['ticket_type_name']));
                             $ticket_type = $this->ticket_type_repository->getByType($summit, $row['ticket_type_name']);
                         }
 
                         if ($reader->hasColumn('ticket_promo_code')) {
+                            // use summit context
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['ticket_promo_code']));
-                            $promo_code = $this->promo_code_repository->getByCode($row['ticket_promo_code']);
+                            $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $row['ticket_promo_code']);
                         }
 
                         if ($reader->hasColumn('promo_code_id')) {
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by id %s", $row['promo_code_id']));
                             $promo_code = $this->promo_code_repository->getById(intval($row['promo_code_id']));
+                            if($promo_code instanceof SummitRegistrationPromoCode && $promo_code->getSummitId() != $summit->getId()){
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "promo code %s does not belong to summit %s",
+                                        $promo_code->getId(),
+                                        $summit->getId()
+                                    )
+                                );
+                                return;
+                            }
                         }
 
                         if (is_null($promo_code) && $reader->hasColumn('promo_code')) {
+                            // use summit context
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['promo_code']));
-                            $promo_code = $this->promo_code_repository->getByCode($row['promo_code']);
+                            $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $row['promo_code']);
                         }
 
                         if (is_null($ticket_type) && $reader->hasColumn('ticket_type_id')) {
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by id %s", $row['ticket_type_id']));
                             $ticket_type = $this->ticket_type_repository->getById(intval($row['ticket_type_id']));
+                            if($ticket_type instanceof SummitTicketType && $ticket_type->getSummitId() != $summit->getId()){
+                                Log::debug(
+                                    sprintf
+                                    (
+                                        "ticket type %s does not belong to summit %s",
+                                        $ticket_type->getId(),
+                                        $summit->getId()
+                                    )
+                                );
+                                return;
+                            }
                         }
 
                         if (is_null($ticket_type)) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData - ticket type is not provide, ticket can not be created for attendee"));
+                            Log::debug
+                            (
+                                "SummitOrderService::processTicketData - ticket type is not provide, ticket can not be created for attendee"
+                            );
                             return;
                         }
 

@@ -375,7 +375,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 if (!isset($promotional_code['code'])) continue;
                 $code = $promotional_code['code'];
 
-                $promo_code = $this->promo_code_repository->getByCode($code);
+                $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $code);
                 if (is_null($promo_code)) continue;
                 $promo_code->setRedeemed(true);
             }

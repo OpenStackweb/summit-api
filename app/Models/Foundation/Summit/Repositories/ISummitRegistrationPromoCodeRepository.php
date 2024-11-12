@@ -65,4 +65,11 @@ interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepos
      */
     public function getByValueExclusiveLock(Summit $summit, string $code):?SummitRegistrationPromoCode;
 
+    /**
+     * @param Summit $summit
+     * @param string $code
+     * @return SummitRegistrationPromoCode|null
+     */
+    public function getBySummitAndCode(Summit $summit, string $code):?SummitRegistrationPromoCode;
+
 }

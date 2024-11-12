@@ -618,4 +618,27 @@ SQL;
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
             ->getOneOrNullResult();
     }
+
+    /**
+     * @param Summit $summit
+     * @param string $code
+     * @return SummitRegistrationPromoCode|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getBySummitAndCode(Summit $summit, string $code):?SummitRegistrationPromoCode{
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin('e.summit', 's')
+            ->where("s.id = :summit_id")
+            ->andWhere("e.code = :code");
+
+        $query->setParameter("code", trim($code));
+        $query->setParameter("summit_id", $summit->getId());
+
+        return $query->getQuery()
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
 }

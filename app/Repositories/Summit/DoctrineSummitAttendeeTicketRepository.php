@@ -182,11 +182,11 @@ final class DoctrineSummitAttendeeTicketRepository
                 new DoctrineSwitchFilterMapping([
                         '1' => new DoctrineCaseFilterMapping(
                             'true',
-                            sprintf("e.is_active = 1 and al.name = '%s'", SummitAccessLevelType::IN_PERSON),
+                            sprintf("(e.is_active = 1 and al.name = '%s' and a is not null)", SummitAccessLevelType::IN_PERSON),
                         ),
                         '0' => new DoctrineCaseFilterMapping(
                             'false',
-                            sprintf("not(e.is_active = 1 and al.name = '%s')", SummitAccessLevelType::IN_PERSON),
+                            sprintf("not(e.is_active = 1 and al.name = '%s' amd a is not null)", SummitAccessLevelType::IN_PERSON),
                         ),
                     ]
                 ),

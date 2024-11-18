@@ -112,6 +112,7 @@ class AppServiceProvider extends ServiceProvider
         'duration',
         'streaming_url',
         'streaming_type',
+        'stream_is_secure',
         'meeting_url',
         'etherpad_link',
     ];
@@ -162,6 +163,7 @@ class AppServiceProvider extends ServiceProvider
         'streaming_type' => 'required_with:streaming_url|string|in:VOD,LIVE',
         'etherpad_link' => 'nullable|sometimes|url',
         'meeting_url' => 'nullable|sometimes|url',
+        'stream_is_secure' =>  'sometimes|boolean',
     ];
 
 
@@ -241,12 +243,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Validator::extend('event_dto_array', function ($attribute, $value, $parameters, $validator) {
+
             $validator->addReplacer('event_dto_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf
                 (
                     "%s should be an array of event data {id : int, location_id: int, start_date: int (epoch), end_date: int (epoch)}",
                     $attribute);
             });
+
             if (!is_array($value)){
                 Log::debug(sprintf("event_dto_array::is not array %s", print_r($value, true)));
                 return false;

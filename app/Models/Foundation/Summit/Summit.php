@@ -4026,6 +4026,7 @@ SQL;
         if ($this->badge_features_types->contains($feature_type)) return;
         $this->badge_features_types->add($feature_type);
         $feature_type->setSummit($this);
+        $this->updated(null);
     }
 
     /**
@@ -4036,6 +4037,7 @@ SQL;
         if (!$this->badge_features_types->contains($feature_type)) return;
         $this->badge_features_types->removeElement($feature_type);
         $feature_type->clearSummit();
+        $this->updated(null);
     }
 
 

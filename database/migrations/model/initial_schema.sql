@@ -9478,6 +9478,12 @@ create index MemberID
 create index SummitID
     on SummitAttendee (SummitID);
 
+ALTER TABLE `SummitAttendee`
+ADD INDEX `IDX_SummitAttendee_Summit_Email` (`SummitID`, `Email`) USING BTREE;
+
+ALTER TABLE `SummitAttendee`
+ADD INDEX `IDX_SummitAttendee_Summit_Member` (`SummitID`, `MemberID`) USING BTREE;
+
 create table SummitAttendeeBadgeAuditLog
 (
     ID                    int not null
@@ -13110,6 +13116,10 @@ create table SummitAttendeeTicket
             on delete cascade
 )
     charset = latin1;
+
+
+ALTER TABLE `SummitAttendeeTicket`
+    ADD INDEX `IDX_SummitAttendeeTicket_Owner_Status_Active` (`OwnerID`, `Status`, `IsActive`) USING BTREE;
 
 create table SummitAttendeeNote
 (

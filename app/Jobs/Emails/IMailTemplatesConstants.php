@@ -78,6 +78,7 @@ interface IMailTemplatesConstants
     const net_selling_price = 'net_selling_price';
     const new_category = 'new_category';
     const number = 'number';
+    const main_venue_address = 'main_venue_address';
     const old_category = 'old_category';
     const order_amount = 'order_amount';
     const order_amount_adjusted = 'order_amount_adjusted';

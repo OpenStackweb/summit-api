@@ -197,6 +197,7 @@ interface IMailTemplatesConstants
     const type = 'type';
     const until_date = 'until_date';
     const virtual_event_site_link = 'virtual_event_site_link';
+    const venue_address = 'venue_address';
     const summit_marketing_site_url_magic_link = 'summit_marketing_site_url_magic_link';
     const edit_ticket_link = 'edit_ticket_link';
 

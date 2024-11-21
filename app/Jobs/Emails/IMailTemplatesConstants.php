@@ -78,6 +78,7 @@ interface IMailTemplatesConstants
     const net_selling_price = 'net_selling_price';
     const new_category = 'new_category';
     const number = 'number';
+    const main_venue_address = 'main_venue_address';
     const old_category = 'old_category';
     const order_amount = 'order_amount';
     const order_amount_adjusted = 'order_amount_adjusted';
@@ -197,7 +198,6 @@ interface IMailTemplatesConstants
     const type = 'type';
     const until_date = 'until_date';
     const virtual_event_site_link = 'virtual_event_site_link';
-    const venue_address = 'venue_address';
     const summit_marketing_site_url_magic_link = 'summit_marketing_site_url_magic_link';
     const edit_ticket_link = 'edit_ticket_link';
 

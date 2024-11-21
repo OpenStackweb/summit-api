@@ -106,7 +106,7 @@ final class SendAttendeeInvitationEmail implements ShouldQueue
                 )
             );
 
-            $attendee->sendInvitationEmail($ticket);
+            $attendee->sendInvitationEmailWithoutDelay($ticket);
         }
         catch (\Exception $ex){
             Log::error($ex);

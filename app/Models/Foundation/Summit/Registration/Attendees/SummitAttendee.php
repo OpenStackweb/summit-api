@@ -491,15 +491,17 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
      * @param array $payload
      * @param string|null $test_email_recipient
+     * @param bool $use_delay
      * @return void
-     * @throws \Exception
+     * @throws ValidationException
      */
     public function sendInvitationEmail
     (
         SummitAttendeeTicket $ticket,
         bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false,
         array $payload = [],
-        ?string $test_email_recipient = null
+        ?string $test_email_recipient = null,
+        bool $use_delay = true
     ):void
     {
 
@@ -539,6 +541,7 @@ class SummitAttendee extends SilverstripeBaseModel
         // they bought a ticket for themselves.
         if ($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             $delay = intval(Config::get("registration.attendee_invitation_email_delay", 10));
+            if(!$use_delay) $delay = 0;
             Log::debug
             (
                 sprintf
@@ -553,6 +556,25 @@ class SummitAttendee extends SilverstripeBaseModel
             InviteAttendeeTicketEditionMail::dispatch($ticket, $payload, $test_email_recipient)->delay(now()->addMinutes($delay));
             $ticket->getOwner()->markInvitationEmailSentDate();
         }
+    }
+
+    /**
+     * @param SummitAttendeeTicket $ticket
+     * @return void
+     * @throws ValidationException
+     */
+    public function sendInvitationEmailWithoutDelay
+    (
+        SummitAttendeeTicket $ticket
+    ):void{
+        $this->sendInvitationEmail
+        (
+            $ticket,
+            false,
+            [],
+            null,
+            false
+        );
     }
 
     /**

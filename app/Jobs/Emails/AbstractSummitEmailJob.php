@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitVenue;
 use services\apis\IMarketingAPI;
 
 /**
@@ -79,6 +80,15 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         if (empty($payload[IMailTemplatesConstants::support_email])){
             $payload[IMailTemplatesConstants::support_email] = $summit->getSupportEmail();
         }
+
+        $main_venue_addresses = collect($summit->getMainVenues())
+            ->filter(function(SummitVenue $venue) {
+                return !empty($venue->getAddress1());
+            })->map(function(SummitVenue $venue) {
+                return $venue->getAddress1() . ' ' . $venue->getAddress2() . ', ' . $venue->getCity() . ', ' . $venue->getState();
+            })->toArray();
+
+        $payload[IMailTemplatesConstants::main_venue_address] = implode(' - ', $main_venue_addresses);
 
         $payload = array_merge($payload, self::getMarketingVariables($summit));
         parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
@@ -171,6 +181,8 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         $payload[IMailTemplatesConstants::registration_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::virtual_event_site_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
+        $payload[IMailTemplatesConstants::main_venue_address]['type'] = 'string';
+
         return $payload;
     }
 }

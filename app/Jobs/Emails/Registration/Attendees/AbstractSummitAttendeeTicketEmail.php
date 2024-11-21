@@ -16,6 +16,7 @@ use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use models\summit\SummitVenue;
 
 /**
  * Class AbstractSummitAttendeeTicketEmail
@@ -191,6 +192,15 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractSummitEmailJob
             }
         }
 
+       $main_venue_addresses = collect($this->summit->getMainVenues())
+            ->filter(function(SummitVenue $venue) {
+                return !empty($venue->getAddress1());
+            })->map(function(SummitVenue $venue) {
+                return $venue->getAddress1() . ' ' . $venue->getAddress2() . ', ' . $venue->getCity() . ', ' . $venue->getState();
+            })->toArray();
+
+        $this->payload[IMailTemplatesConstants::main_venue_address] = implode(' - ', $main_venue_addresses);
+
         return parent::handle($api);
     }
 
@@ -201,6 +211,7 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::summit_marketing_site_url_magic_link]['type'] = 'string';
         $payload[IMailTemplatesConstants::summit_marketing_site_url]['type'] = 'string';
         $payload[IMailTemplatesConstants::edit_ticket_link]['type'] = 'string';
+        $payload[IMailTemplatesConstants::main_venue_address]['type'] = 'string';
 
         return $payload;
     }

@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\FormatUtils;
 use models\summit\SummitAttendeeTicket;
-use models\summit\SummitVenue;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 /**
  * Class SummitAttendeeTicketEmail
@@ -98,13 +97,6 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         }
 
         $payload[IMailTemplatesConstants::promo_code] = ($ticket->hasPromoCode()) ? $ticket->getPromoCode()->getCode() : '';
-
-        $main_venue_addresses = collect($ticket->getOrder()->getSummit()->getMainVenues())
-            ->map(function(SummitVenue $venue) {
-                return $venue->getAddress1() . ' ' . $venue->getAddress2() . ', ' . $venue->getCity() . ', ' . $venue->getState();
-            })->toArray();
-
-        $payload[IMailTemplatesConstants::main_venue_address] = implode(' - ', $main_venue_addresses);
 
         $support_email = $summit->getSupportEmail();
         $payload[IMailTemplatesConstants::support_email] = !empty($support_email) ? $support_email : Config::get("registration.support_email", null);
@@ -204,7 +196,6 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload[IMailTemplatesConstants::owner_full_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_company]['type'] = 'string';
         $payload[IMailTemplatesConstants::promo_code]['type'] = 'string';
-        $payload[IMailTemplatesConstants::main_venue_address]['type'] = 'string';
         $payload[IMailTemplatesConstants::support_email]['type'] = 'string';
         $payload[IMailTemplatesConstants::message]['type'] = 'string';
 

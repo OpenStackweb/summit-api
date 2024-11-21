@@ -25,6 +25,8 @@ use services\apis\IMarketingAPI;
  */
 abstract class AbstractSummitEmailJob extends AbstractEmailJob
 {
+    protected $summit;
+
     /**
      * @param Summit $summit
      * @param array $payload
@@ -58,6 +60,7 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
 
         $repository = App::make(ISummitRepository::class);
         $summit = $repository->getByIdRefreshed($summit->getId());
+        $this->summit = $summit;
 
         // inject summit common data
         $payload[IMailTemplatesConstants::summit_id]   = $summit->getId();

@@ -52,6 +52,7 @@ class DoctrineWorker extends IlluminateWorker
     protected function runJob($job, $connectionName, WorkerOptions $options): void
     {
         try {
+            Log::debug(sprintf("DoctrineWorker::runJob %s connectionName %s", $job->getRawBody(), $connectionName));
             $this->assertEntityManagerIsOpen();
             $this->ensureDatabaseConnectionIsOpen();
             $this->ensureEntityManagerIsClear();

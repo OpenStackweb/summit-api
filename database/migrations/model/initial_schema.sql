@@ -12349,7 +12349,6 @@ create table SummitRegistrationPromoCode
     Notes             longtext                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          null,
     SentDate          datetime                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          null,
     `AllowsToDelegate` TINYINT(1) NOT NULL DEFAULT '0',
-    `AllowsReassign` TINYINT(1) NOT NULL DEFAULT '1',
     constraint SummitID_Code
         unique (SummitID, Code)
 )

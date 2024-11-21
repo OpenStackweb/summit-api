@@ -170,6 +170,7 @@ return [
         Sichikawa\LaravelSendgridDriver\SendgridTransportServiceProvider::class,
         LaravelDoctrine\Migrations\MigrationsServiceProvider::class,
         SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
+        \App\Providers\DoctrineWorkerServiceProvider::class,
     ],
 
     /*

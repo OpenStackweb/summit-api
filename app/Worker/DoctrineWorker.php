@@ -21,6 +21,8 @@ use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Worker as IlluminateWorker;
 use Illuminate\Queue\WorkerOptions;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 use Throwable;
 
 /**
@@ -42,7 +44,7 @@ class DoctrineWorker extends IlluminateWorker
         callable               $isDownForMaintenance
     ) {
         $this->entityManager = $entityManager;
-
+        $this->manager_name = SilverstripeBaseModel::EntityManager;
         parent::__construct($manager, $events, $exceptions, $isDownForMaintenance);
     }
 
@@ -75,11 +77,12 @@ class DoctrineWorker extends IlluminateWorker
      */
     private function assertEntityManagerIsOpen(): void
     {
-        if ($this->entityManager->isOpen()) {
-            return;
-        }
+        $this->entityManager  = Registry::getManager($this->manager_name);
 
-        throw new ORMException('The entity manager is closed.');
+        if (!$this->entityManager->isOpen()) {
+            Log::warning("DoctrineWorker::runJob : entity manager is closed!, trying to re open...");
+            $this->entityManager = Registry::resetManager($this->manager_name);
+        }
     }
 
     /**
@@ -90,21 +93,19 @@ class DoctrineWorker extends IlluminateWorker
      */
     private function ensureDatabaseConnectionIsOpen(): void
     {
-        $connection = $this->entityManager->getConnection();
+        $con = $this->entityManager->getConnection();
 
-        // This replicates what the deprecated ping() function used to do.
-        try {
-            $connection->executeQuery($connection->getDatabasePlatform()->getDummySelectSQL());
-            $ping = true;
-        } catch (Exception $e) {
-            Log::warning(sprintf("DoctrineWorker::ensureDatabaseConnectionIsOpen error %s", $e->getMessage()));
-            $ping = false;
+        /**
+         * Some database systems close the connection after a period of time, in MySQL this is system variable
+         * `wait_timeout`. Given the daemon is meant to run indefinitely we need to make sure we have an open
+         * connection before working any job. Otherwise we would see `MySQL has gone away` type errors.
+         */
+
+        if ($con->ping() === false) {
+            $con->close();
+            $con->connect();
         }
 
-        if (!$ping) {
-            $connection->close();
-            $connection->connect();
-        }
     }
 
     /**

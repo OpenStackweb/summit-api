@@ -159,7 +159,7 @@ final class SummitAttendeeFactory
             $attendee->setSummitHallCheckedIn(boolval($payload['summit_hall_checked_in']));
         }
 
-        if (isset($payload['disclaimer_accepted']) && !empty($payload['disclaimer_accepted'])) {
+        if (isset($payload['disclaimer_accepted'])) {
             $disclaimer_accepted = boolval($payload['disclaimer_accepted']);
             if ($disclaimer_accepted && !$attendee->isDisclaimerAccepted()) {
                 $attendee->setDisclaimerAcceptedDate

@@ -1,5 +1,60 @@
 <?php
 
+// base config
+
+$model_db_config = [
+    'driver' =>  env('SS_DB_DRIVER', 'mysql'),
+    'database' => env('SS_DATABASE'),
+    'username' => env('SS_DB_USERNAME'),
+    'password' => env('SS_DB_PASSWORD'),
+    'port' => env('SS_DB_PORT', 3306),
+    'charset' => env('SS_DB_CHARSET', 'utf8'),
+    'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
+    'prefix' => env('SS_DB_PREFIX', ''),
+];
+
+/* see https://laravel.com/docs/11.x/database#read-and-write-connections
+ *  'read' => [
+        'host' => [
+            '192.168.1.1',
+            '196.168.1.2',
+        ],
+    ],
+    'write' => [
+        'host' => [
+            '196.168.1.3',
+        ],
+    ],
+    'sticky' => true,
+ */
+
+if(env('SS_DB_READ_HOST', null) && env('SS_DB_WRITE_HOST', null)) {
+    $model_db_config['read'] = [
+        'host' => explode(',', env('SS_DB_READ_HOST')),
+    ];
+    $model_db_config['write'] = [
+        'host' => explode(',', env('SS_DB_WRITE_HOST')),
+    ];
+    $model_db_config['sticky'] = env('SS_DB_STICKY', true);
+} else{
+    // single server
+    $model_db_config['host'] = env('SS_DB_HOST');
+}
+
+$model_db_config = array_merge(
+    $model_db_config,
+    !empty(env('DB_MYSQL_ATTR_SSL_CA', '')) ?
+        [
+            'options' => [
+                PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
+            ],
+            'driverOptions' => [
+                PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
+            ],
+        ]:[]
+);
+
+
 return [
 
     /*
@@ -69,31 +124,9 @@ return [
                     ],
                 ] : []),
         // Model DB
-        'model' => array_merge(
-            [
-                    'driver' => 'mysql',
-                    'host' => env('SS_DB_HOST'),
-                    'database' => env('SS_DATABASE'),
-                    'username' => env('SS_DB_USERNAME'),
-                    'password' => env('SS_DB_PASSWORD'),
-                    'port' => env('SS_DB_PORT', 3306),
-                    'charset' => env('SS_DB_CHARSET', 'utf8'),
-                    'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
-                    'prefix' => env('SS_DB_PREFIX', ''),
-            ],
-            !empty(env('DB_MYSQL_ATTR_SSL_CA', '')) ?
-            [
-                'options' => [
-                    PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
-                ],
-                'driverOptions' => [
-                    PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
-                ],
-            ]:[]
-        ),
+        'model' => $model_db_config
 
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Migration Repository Table

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use GuzzleHttp\Exception\RequestException;
+
 use models\exceptions\ValidationException;
 use libs\utils\ICacheService;
 use GuzzleHttp\Client;
@@ -21,6 +21,7 @@ use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Exception;
+
 /**
  * Class ExternalUserApi
  * @package App\Services
@@ -50,11 +51,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
         $stack->push(GuzzleRetryMiddleware::factory());
 
         $this->client = new Client([
-            'handler'         => $stack,
-            'base_uri'        => Config::get('idp.base_url') ?? '',
-            'timeout'         => Config::get('curl.timeout', 60),
+            'handler' => $stack,
+            'base_uri' => Config::get('idp.base_url') ?? '',
+            'timeout' => Config::get('curl.timeout', 60),
             'allow_redirects' => Config::get('curl.allow_redirects', false),
-            'verify'          => Config::get('curl.verify_ssl_cert', true),
+            'verify' => Config::get('curl.verify_ssl_cert', true),
         ]);
     }
 
@@ -65,8 +66,9 @@ final class ExternalUserApi extends AbstractOAuth2Api
      */
     public function getUserByEmail(string $email)
     {
-        try {
-            Log::debug(sprintf("ExternalUserApi::getUserByEmail email %s", $email));
+        Log::debug(sprintf("ExternalUserApi::getUserByEmail email %s", $email));
+
+        return $this->invokeWithRetry(function () use ($email) {
 
             $query = [
                 'access_token' => $this->getAccessToken()
@@ -88,20 +90,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
             $data = json_decode($response->getBody()->getContents(), true);
 
             return intval($data['total']) > 0 ? $data['data'][0] : null;
-        }
-        catch (RequestException $ex){
-            $this->cleanAccessToken();
-            Log::warning($ex);
-            if($ex->getCode() == 404){
-                return null;
-            }
-            throw $ex;
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+        });
     }
 
     /**
@@ -116,32 +105,28 @@ final class ExternalUserApi extends AbstractOAuth2Api
     {
         Log::debug(sprintf("ExternalUserApi::registerUser email %s first_name %s last_name %s", $email, $first_name, $last_name));
 
-        try {
+        return $this->invokeWithRetry(function () use ($email, $first_name, $last_name, $company) {
+
             $query = [
                 'access_token' => $this->getAccessToken()
             ];
 
-            if(empty($email))
+            if (empty($email))
                 throw new ValidationException("Email field es required.");
 
             $response = $this->client->post('/api/v1/user-registration-requests', [
                     'query' => $query,
                     RequestOptions::JSON => [
-                        'email'      => $email,
+                        'email' => $email,
                         'first_name' => $first_name,
-                        'last_name'  => $last_name,
-                        'company'    => $company
+                        'last_name' => $last_name,
+                        'company' => $company
                     ]
                 ]
             );
 
             return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+        });
     }
 
     const AppName = 'REGISTRATION_SERVICE';
@@ -173,8 +158,10 @@ final class ExternalUserApi extends AbstractOAuth2Api
      */
     public function getUserById(int $id)
     {
-        try {
-            Log::debug(sprintf("ExternalUserApi::getUserById id %s", $id));
+
+        Log::debug(sprintf("ExternalUserApi::getUserById id %s", $id));
+
+        return $this->invokeWithRetry(function () use ($id) {
 
             $query = [
                 'access_token' => $this->getAccessToken()
@@ -185,25 +172,12 @@ final class ExternalUserApi extends AbstractOAuth2Api
                 ]
             );
 
-            $res =  json_decode($response->getBody()->getContents(), true);
+            $res = json_decode($response->getBody()->getContents(), true);
 
             Log::debug(sprintf("ExternalUserApi::getUserById id %s res %s", $id, json_encode($res)));
 
             return $res;
-        }
-        catch (RequestException $ex){
-            $this->cleanAccessToken();
-            Log::warning($ex);
-            if($ex->getCode() == 404){
-                return null;
-            }
-            throw $ex;
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+        });
     }
 
     /**
@@ -227,7 +201,8 @@ final class ExternalUserApi extends AbstractOAuth2Api
             )
         );
 
-        try {
+        return $this->invokeWithRetry(function () use ($id, $first_name, $last_name, $company_name) {
+
             $query = [
                 'access_token' => $this->getAccessToken()
             ];
@@ -236,8 +211,8 @@ final class ExternalUserApi extends AbstractOAuth2Api
                     'query' => $query,
                     RequestOptions::JSON => [
                         'first_name' => $first_name,
-                        'last_name'  => $last_name,
-                        'company'   => $company_name
+                        'last_name' => $last_name,
+                        'company' => $company_name
                     ]
                 ]
             );
@@ -245,17 +220,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
             $res = json_decode($response->getBody()->getContents(), true);
             Log::debug(sprintf("ExternalUserApi::updateUser id %s res %s", $id, json_encode($res)));
             return $res;
-        }
-        catch(RequestException $ex){
-            $this->cleanAccessToken();
-            Log::warning($ex);
-            return null;
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+        });
     }
 
     /**
@@ -268,8 +233,10 @@ final class ExternalUserApi extends AbstractOAuth2Api
      */
     public function getUserRegistrationRequest(string $email)
     {
-        try {
-            Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
+
+        Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
+
+        return $this->invokeWithRetry(function () use ($email) {
 
             $query = [
                 'access_token' => $this->getAccessToken(),
@@ -288,12 +255,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
             ]);
 
             return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+        });
     }
 
     /**
@@ -310,7 +272,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
     {
         Log::debug(sprintf("ExternalUserApi::updateUserRegistrationRequest id %s", $id));
 
-        try {
+        return $this->invokeWithRetry(function () use ($id, $first_name, $last_name, $company_name, $country) {
             $query = [
                 'access_token' => $this->getAccessToken()
             ];
@@ -318,20 +280,15 @@ final class ExternalUserApi extends AbstractOAuth2Api
             $response = $this->client->put(sprintf('/api/v1/user-registration-requests/%s', $id), [
                     'query' => $query,
                     RequestOptions::JSON => [
-                        'first_name'    => $first_name,
-                        'last_name'     => $last_name,
-                        'company'       => $company_name,
-                        'country'       => $country
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'company' => $company_name,
+                        'country' => $country
                     ]
                 ]
             );
             return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (Exception $ex) {
-            $this->cleanAccessToken();
-            Log::error($ex);
-            throw $ex;
-        }
+        });
     }
 }
 

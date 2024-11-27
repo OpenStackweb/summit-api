@@ -1,5 +1,4 @@
 <?php namespace App\Services\Apis;
-
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\Auth\OAuth2ClientFactory;
-use GuzzleHttp\Exception\ClientException;
+use App\Services\Auth\OAuth2ClientFactory;;
 use Illuminate\Support\Facades\Config;
 use libs\utils\ICacheService;
 use Illuminate\Support\Facades\Log;
 use League\OAuth2\Client\Provider\GenericProvider;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ClientException;
 /**
  * Class AbstractOAuth2Api
  * @package App\Services\Apis
  */
 abstract class AbstractOAuth2Api
 {
+    const MaxRetries = 3;
+
     /**
      * @var ICacheService
      */
@@ -74,6 +76,51 @@ abstract class AbstractOAuth2Api
     }
 
     /**
+     * @param \Closure $callback
+     * @return mixed|null
+     * @throws \Exception
+     */
+    protected function invokeWithRetry(\Closure $callback)
+    {
+        $retry = 0;
+        $done = false;
+        $result = null;
+
+        while (!$done and $retry < self::MaxRetries) {
+            try {
+                $result = $callback($this);
+                $done = true;
+            } catch (ClientException $ex) {
+                Log::warning("AbstractOAuth2Api::invokeWithRetry retrying ...");
+                $retry++;
+                if ($retry === self::MaxRetries) {
+                    if ($ex->getCode() == 404) {
+                        return null;
+                    }
+                    throw $ex;
+                }
+                $this->cleanAccessToken();
+                Log::warning($ex);
+            }
+            catch (RequestException $ex){
+                $this->cleanAccessToken();
+                Log::error($ex);
+                if($ex->getCode() == 404){
+                    return null;
+                }
+                throw $ex;
+            }
+            catch (\Exception $ex) {
+                $this->cleanAccessToken();
+                Log::error($ex);
+                throw $ex;
+            }
+        }
+        return $result;
+    }
+
+
+        /**
      * @return string|null
      * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
      */
@@ -109,6 +156,7 @@ abstract class AbstractOAuth2Api
                 throw $ex;
             }
         }
+        Log::debug(sprintf("AbstractOAuth2Api::getAccessToken - returning access token %s", $token));
         return $token;
     }
 

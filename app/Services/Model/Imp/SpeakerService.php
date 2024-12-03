@@ -1218,6 +1218,7 @@ final class SpeakerService
      */
     public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
     {
+        Log::debug(sprintf("SpeakerService::triggerSendEmails summit %s payload %s", $summit->getId(), json_encode($payload)));
         ProcessSpeakersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
     }
 

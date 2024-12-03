@@ -1844,7 +1844,7 @@ final class SummitOrderService
                 // ticket assigned to order owner can not be reassigned if its the unique one
                 if ($attendee->getEmail() === $order->getOwnerEmail()) {
                     if ($summit->getTicketCountByTypeAndOwnerEmail($ticket->getTicketType(), $attendee->getEmail()) === 1) {
-                        throw new ValidationException("You can not reassign this ticket. please contact support.");
+                        throw new ValidationException("You cannot reassign this ticket. Please contact support.");
                     }
                 }
             }
@@ -1854,11 +1854,11 @@ final class SummitOrderService
             }
 
             if(!$ticket->getTicketType()->isAllowsToReassignRelatedTickets()){
-                throw new ValidationException("You can not reassign this ticket. please contact support.");
+                throw new ValidationException("You cannot reassign this ticket. Please contact support.");
             }
 
             if($ticket->hasPromoCode() && !$ticket->getPromoCode()->isAllowsToReassign()){
-                throw new ValidationException("You can not reassign this ticket. please contact support.");
+                throw new ValidationException("You cannot reassign this ticket. Please contact support.");
             }
 
             $attendee->sendRevocationTicketEmail($ticket);

@@ -16,7 +16,7 @@
 /**
  * Class OAuth2SummitTaxTypeApiTest
  */
-class OAuth2SummitTaxTypeApiTest extends ProtectedApiTest
+class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase
 {
     private $ticket_type;
 

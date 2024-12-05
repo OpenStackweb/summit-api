@@ -86,6 +86,6 @@ select MAX(`Order`) from SponsorshipType;
 SQL;
         $stm   = $this->getEntityManager()->getConnection()->executeQuery($sql);
 
-        return intval($stm->fetchColumn(0));
+        return intval($stm->fetchOne());
     }
 }

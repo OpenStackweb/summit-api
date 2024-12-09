@@ -81,7 +81,8 @@ BEGIN
         THEN 'Accepted'
         WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
         (
-            SP.SelectionBeginDate IS NULL OR SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP() OR SP.SelectionEndDate IS NULL
+            SP.SelectionBeginDate IS NOT NULL AND SP.SelectionEndDate IS NOT NULL AND
+            SP.SelectionBeginDate < UTC_TIMESTAMP() AND SP.SelectionEndDate < UTC_TIMESTAMP()
         )
         AND NOT EXISTS (
             SELECT 1 FROM SummitSelectedPresentation SSP

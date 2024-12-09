@@ -2432,11 +2432,13 @@ SQL;
             return self::ReviewStatusNoSubmitted;
 
         $selection_plan = $this->selection_plan;
-
+        // submission period data
         $submission_begin_date = $selection_plan->getSubmissionBeginDate();
         $submission_end_date = $selection_plan->getSubmissionEndDate();
+        // selection period data
         $selection_begin_date = $selection_plan->getSelectionBeginDate();
         $selection_end_date = $selection_plan->getSelectionEndDate();
+        $selectionPeriodIsDefined = !is_null($selection_begin_date) & !is_null($selection_end_date);
         $submission_lock_down_presentation_status_date = $selection_plan->getSubmissionLockDownPresentationStatusDate();
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
@@ -2483,11 +2485,11 @@ SQL;
             $submission_lock_down_presentation_status_date > $now;
 
         // if lock down period is enabled then short-circuit everything
-        if ($is_lock_down_period || ($submission_closed && $selection_open)) {
+        if ($is_lock_down_period || ($selectionPeriodIsDefined && $submission_closed && $selection_open)) {
             return self::ReviewStatusInReview;
         } else if ($this->isPublished()) {
             return self::ReviewStatusPublished;
-        } else if ($selection_closed) {
+        } else if ($selectionPeriodIsDefined && $selection_closed) {
             return $submission_accepted ? self::ReviewStatusAccepted : self::ReviewStatusRejected;
         }
 

@@ -106,7 +106,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     /**
      * SELECTION STATUS (TRACK CHAIRS LIST)
      */
-
+    const SelectionStatus_Pending = 'pending';
     const SelectionStatus_Selected = 'selected';
     const SelectionStatus_Accepted = 'accepted';
     const SelectionStatus_Unaccepted = 'rejected';
@@ -970,20 +970,6 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             throw new ValidationException(sprintf('presentation %s has more than 1 (one) selection.', $this->id));
         }
 
-        $selection = null;
-        if (count($session_sel) == 1) {
-            $selection = $session_sel[0];
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s got selection %s",
-                    $this->id,
-                    $selection->getId()
-                )
-            );
-        }
-
         if($this->isPublished()) {
             Log::debug
             (
@@ -996,6 +982,27 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             );
 
             return Presentation::SelectionStatus_Accepted;
+        }
+
+        // from here we need to be sure that the selection period is going on or it is over
+
+        $selection_plan = $this->getSelectionPlan();
+        if(is_null($selection_plan)) return Presentation::SelectionStatus_Pending;
+        if(!$selection_plan->hasSelectionPeriodDefined()) return Presentation::SelectionStatus_Pending;
+        if(!$selection_plan->isSelectionNotYetStarted()) return Presentation::SelectionStatus_Pending;
+
+        $selection = null;
+        if (count($session_sel) == 1) {
+            $selection = $session_sel[0];
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s got selection %s",
+                    $this->id,
+                    $selection->getId()
+                )
+            );
         }
 
         if (!$selection) {

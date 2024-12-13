@@ -98,6 +98,82 @@ class SummitSerializer extends SilverStripeSerializer
         'DefaultTicketTypeCurrencySymbol' => 'default_ticket_type_currency_symbol:json_string',
     ];
 
+    protected static $allowed_fields = [
+        'id',
+        'created',
+        'last_edited',
+        'name',
+        'start_date',
+        'end_date',
+        'registration_begin_date',
+        'registration_end_date',
+        'start_showing_venues_date',
+        'schedule_start_date',
+        'active',
+        'type_id',
+        'dates_label',
+        'max_submission_allowed_per_user',
+        'published_events_count',
+        'time_zone_id',
+        'slug',
+        'invite_only_registration',
+        'meeting_room_booking_start_time',
+        'meeting_room_booking_end_time',
+        'meeting_room_booking_slot_length',
+        'meeting_room_booking_max_allowed',
+        'begin_allow_booking_date',
+        'end_allow_booking_date',
+        'logo',
+        'secondary_logo',
+        'reassign_ticket_till_date',
+        'registration_disclaimer_content',
+        'registration_disclaimer_mandatory',
+        'registration_reminder_email_days_interval',
+        'registration_link',
+        'secondary_registration_link',
+        'secondary_registration_label',
+        'schedule_default_page_url',
+        'schedule_default_event_detail_url',
+        'schedule_og_site_name',
+        'schedule_og_image_url',
+        'schedule_og_image_secure_url',
+        'schedule_og_image_width',
+        'schedule_og_image_height',
+        'schedule_facebook_app_id',
+        'schedule_ios_app_name',
+        'schedule_ios_app_store_id',
+        'schedule_ios_app_custom_schema',
+        'schedule_android_app_name',
+        'schedule_android_app_package',
+        'schedule_android_custom_schema',
+        'schedule_twitter_app_name',
+        'schedule_twitter_text',
+        'default_page_url',
+        'speaker_confirmation_default_page_url',
+        'virtual_site_url',
+        'marketing_site_url',
+        'support_email',
+        'speakers_support_email',
+        'registration_send_qr_as_image_attachment_on_ticket_email',
+        'registration_send_ticket_as_pdf_attachment_on_ticket_email',
+        'registration_send_ticket_email_automatically',
+        'registration_send_order_email_automatically',
+        'registration_allow_automatic_reminder_emails',
+        'modality',
+        'allow_update_attendee_extra_questions',
+        'time_zone_label',
+        'registration_allowed_refund_request_till_date',
+        'registration_slug_prefix',
+        'marketing_site_oauth2_client_scopes',
+        'default_ticket_type_currency',
+        'default_ticket_type_currency_symbol',
+        'time_zone',
+        'schedule_page_url',
+        'schedule_event_detail_url',
+        'page_url',
+        'timestamp',
+    ];
+
     protected static $allowed_relations = [
         'ticket_types',
         'locations',
@@ -119,6 +195,8 @@ class SummitSerializer extends SilverStripeSerializer
         'badge_types',
         'badge_features_types',
         'badge_access_level_types',
+        'dates_with_events',
+        'supported_currencies',
     ];
 
     /**
@@ -135,106 +213,73 @@ class SummitSerializer extends SilverStripeSerializer
         if (!$summit instanceof Summit) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $values['dates_with_events'] = [];
-        foreach ($summit->getSummitDaysWithEvents() as $day) {
-            $values['dates_with_events'][] = $day->format('Y-m-d');
-        }
-
-        $timezone = $summit->getTimeZone();
-        $values['time_zone'] = null;
-
-        if (!is_null($timezone)) {
-            $time_zone_info = $timezone->getLocation();
-            $time_zone_info['name'] = $timezone->getName();
-            $summit_start = $summit->getLocalBeginDate() ?? new DateTime('now', $timezone);
-            // main offset
-            $time_zone_info['offset'] = $timezone->getOffset($summit_start);
-            // get all possible offsets ...
-            $start_date = $summit->getBeginDate();
-            $end_date = $summit->getEndDate();
-            if (!is_null($start_date) && !is_null($end_date)) {
-                $offsets = [];
-                $start_date_epoch = $start_date->getTimestamp();
-                $end_date_epoch = $end_date->getTimestamp();
-                $res = $timezone->getTransitions($start_date_epoch, $end_date_epoch);
-
-                if ($res && count($res) > 0) {
-                    $i = 0;
-                    foreach ($res as $t) {
-                        $offsets[] = [
-                            'from' => $t['ts'],
-                            'offset' => $t['offset'],
-                            'abbr' => $t['abbr']
-                        ];
-                        if ($i > 0) {
-                            $offsets[$i - 1]['to'] = $t['ts'];
-                        }
-                        $i++;
-                    }
-                    // set the last "to" = $end_date_epoch
-                    $offsets[count($offsets) - 1]['to'] = $end_date_epoch;
-                }
-
-                $time_zone_info['offsets'] = $offsets;
+        if (in_array('dates_with_events', $relations)) {
+            $values['dates_with_events'] = [];
+            foreach ($summit->getSummitDaysWithEvents() as $day) {
+                $values['dates_with_events'][] = $day->format('Y-m-d');
             }
-            $values['time_zone'] = $time_zone_info;
         }
+
+        if (in_array('time_zone', $fields)) {
+            $timezone = $summit->getTimeZone();
+            $values['time_zone'] = null;
+            if (!is_null($timezone)) {
+                $time_zone_info = $timezone->getLocation();
+                $time_zone_info['name'] = $timezone->getName();
+                $summit_start = $summit->getLocalBeginDate() ?? new DateTime('now', $timezone);
+                // main offset
+                $time_zone_info['offset'] = $timezone->getOffset($summit_start);
+                // get all possible offsets ...
+                $start_date = $summit->getBeginDate();
+                $end_date = $summit->getEndDate();
+                if (!is_null($start_date) && !is_null($end_date)) {
+                    $offsets = [];
+                    $start_date_epoch = $start_date->getTimestamp();
+                    $end_date_epoch = $end_date->getTimestamp();
+                    $res = $timezone->getTransitions($start_date_epoch, $end_date_epoch);
+
+                    if ($res && count($res) > 0) {
+                        $i = 0;
+                        foreach ($res as $t) {
+                            $offsets[] = [
+                                'from' => $t['ts'],
+                                'offset' => $t['offset'],
+                                'abbr' => $t['abbr']
+                            ];
+                            if ($i > 0) {
+                                $offsets[$i - 1]['to'] = $t['ts'];
+                            }
+                            $i++;
+                        }
+                        // set the last "to" = $end_date_epoch
+                        $offsets[count($offsets) - 1]['to'] = $end_date_epoch;
+                    }
+
+                    $time_zone_info['offsets'] = $offsets;
+                }
+                $values['time_zone'] = $time_zone_info;
+            }
+        }
+
+        if (in_array('supported_currencies', $relations)) {
+            $values['supported_currencies'] = $summit->getSupportedCurrencies();
+        }
+
+        if (in_array('timestamp', $fields))
+            $values['timestamp'] = time();
 
         // pages info
         $main_page = $summit->getMainPage();
         $schedule_page = $summit->getSchedulePage();
-        $values['page_url'] =
-            empty($main_page) ? null :
-                sprintf("%s%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $main_page);
-        $values['schedule_page_url'] = empty($schedule_page) ? null :
-            sprintf("%s%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $schedule_page);
-        $values['schedule_event_detail_url'] = empty($schedule_page) ? null : sprintf("%s%s/%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $schedule_page, 'events/:event_id/:event_title');
-
-        // tickets types
-        if (in_array('ticket_types', $relations)) {
-            $ticket_types = [];
-            foreach ($summit->getTicketTypes() as $ticket) {
-                $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'ticket_types'));
-            }
-            $values['ticket_types'] = $ticket_types;
-        }
-
-        // badge_types
-        if(in_array('badge_types', $relations)){
-            $badge_types = [];
-            foreach ($summit->getBadgeTypes() as $badgeType) {
-                $badge_types[] = SerializerRegistry::getInstance()->getSerializer($badgeType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_types'));
-            }
-            $values['badge_types'] = $badge_types;
-        }
-
-        // badge_features_types
-
-        if(in_array('badge_features_types', $relations)){
-            $badge_features_types = [];
-            foreach ($summit->getBadgeFeaturesTypes() as $badgeFeatureType) {
-                $badge_features_types[] = SerializerRegistry::getInstance()->getSerializer($badgeFeatureType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_features_types'));
-            }
-            $values['badge_features_types'] = $badge_features_types;
-        }
-
-        // badge_access_level_types
-        if (in_array('badge_access_level_types', $relations)) {
-            $badge_access_level_types = [];
-            foreach ($summit->getBadgeAccessLevelTypes() as $accessLevelType) {
-                $badge_access_level_types[] = SerializerRegistry::getInstance()->getSerializer($accessLevelType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_access_level_types'));
-            }
-            $values['badge_access_level_types'] = $badge_access_level_types;
-        }
-
-        // badge_view_types
-        if (in_array('badge_view_types', $relations)) {
-            $badge_view_types = [];
-            foreach ($summit->getBadgeViewTypes() as $viewType) {
-                $badge_view_types[] = SerializerRegistry::getInstance()->getSerializer($viewType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_view_types'));
-            }
-            $values['badge_view_types'] = $badge_view_types;
-        }
+        if (in_array('page_url', $fields))
+            $values['page_url'] =
+                empty($main_page) ? null :
+                    sprintf("%s%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $main_page);
+        if (in_array('schedule_page_url', $fields))
+            $values['schedule_page_url'] = empty($schedule_page) ? null :
+                sprintf("%s%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $schedule_page);
+        if (in_array('schedule_event_detail_url', $fields))
+            $values['schedule_event_detail_url'] = empty($schedule_page) ? null : sprintf("%s%s/%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $schedule_page, 'events/:event_id/:event_title');
 
         // payment_profiles
         if (in_array('payment_profiles', $relations)) {
@@ -292,178 +337,26 @@ class SummitSerializer extends SilverStripeSerializer
             }
         }
 
-        if (in_array('order_extra_questions', $relations)) {
-            $order_extra_questions = [];
-            foreach ($summit->getOrderExtraQuestions() as $question) {
-                $order_extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "order_extra_questions"));
-            }
-            $values['order_extra_questions'] = $order_extra_questions;
-        }
-
-        if (in_array('tax_types', $relations)) {
-            $tax_types = [];
-            foreach ($summit->getTaxTypes() as $tax_type) {
-                $tax_types[] = SerializerRegistry::getInstance()->getSerializer($tax_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "tax_types"));
-            }
-            $values['tax_types'] = $tax_types;
-        }
-
-        if (in_array('summit_documents', $relations)) {
-            $summit_documents = [];
-            foreach ($summit->getSummitDocuments() as $document) {
-                $summit_documents[] = SerializerRegistry::getInstance()->getSerializer($document)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "summit_documents"));
-            }
-            $values['summit_documents'] = $summit_documents;
-        }
-
-        // meeting_booking_room_allowed_attributes
-        if (in_array('meeting_booking_room_allowed_attributes', $relations)) {
-            $meeting_booking_room_allowed_attributes = [];
-            foreach ($summit->getMeetingBookingRoomAllowedAttributes() as $attr) {
-                $meeting_booking_room_allowed_attributes[] = SerializerRegistry::getInstance()->getSerializer($attr)
-                    ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'meeting_booking_room_allowed_attributes'));
-            }
-            $values['meeting_booking_room_allowed_attributes'] = $meeting_booking_room_allowed_attributes;
-        }
-
-        // summit sponsors
-        if (in_array('summit_sponsors', $relations)) {
-            $summit_sponsors = [];
-            // only get published ones
-            foreach ($summit->getPublishedSummitSponsors() as $sponsor) {
-                $summit_sponsors[] = SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit_sponsors'));
-            }
-            $values['summit_sponsors'] = $summit_sponsors;
-        }
-
-        // locations
-        if (in_array('locations', $relations)) {
-            $locations = [];
-            foreach ($summit->getLocations() as $location) {
-                $locations[] = SerializerRegistry::getInstance()->getSerializer($location)->serialize(
-                // is user is already expanding by schedule, its the total expand of the venues
-                    !is_null($expand) && str_contains('schedule', $expand) ?
-                        'floors,rooms' :
-                        AbstractSerializer::filterExpandByPrefix($expand, 'locations')
-                );
-            }
-            $values['locations'] = $locations;
-        }
-
-        // wifi connections
-        if (in_array('wifi_connections', $relations)) {
-            $wifi_connections = [];
-            foreach ($summit->getWifiConnections() as $wifi_connection) {
-                $wifi_connections[] = SerializerRegistry::getInstance()->getSerializer($wifi_connection)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'wifi_connections'));
-            }
-            $values['wifi_connections'] = $wifi_connections;
-        }
-
-        // selection plans
-        if (in_array('selection_plans', $relations)) {
-            $selection_plans = [];
-            foreach ($summit->getSelectionPlans() as $selection_plan) {
-                $selection_plans[] = SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'selection_plans'));
-            }
-            $values['selection_plans'] = $selection_plans;
-        }
-
-        if (in_array('email_flows_events', $relations)) {
-            $email_flows_events = [];
-            foreach ($summit->getAllEmailFlowsEvents() as $email_flow_event) {
-                $email_flows_events[] = SerializerRegistry::getInstance()->getSerializer($email_flow_event)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "email_flows_events"));
-            }
-            $values['email_flows_events'] = $email_flows_events;
-        }
-
-        // featured_speakers
-        if (in_array('featured_speakers', $relations)) {
-            $featured_speakers = [];
-            foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
-                if (!$featuredSpeaker->hasSpeaker()) continue;
-                $featured_speakers[] = $featuredSpeaker->getSpeaker()->getId();
-            }
-            $values['featured_speakers'] = $featured_speakers;
-        }
-
-        // presentation_action_types
-        if (in_array('presentation_action_types', $relations)) {
-            $presentation_action_types = [];
-            foreach ($summit->getPresentationActionTypes() as $action) {
-                $presentation_action_types[] = SerializerRegistry::getInstance()->getSerializer($action)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'presentation_action_types'));
-            }
-            $values['presentation_action_types'] = $presentation_action_types;
-        }
-
         if (!empty($expand)) {
-
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
-                    case 'event_types':
-                        {
-                            $event_types = [];
-                            foreach ($summit->getEventTypes() as $event_type) {
-                                $event_types[] = SerializerRegistry::getInstance()->getSerializer($event_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                            }
-                            $values['event_types'] = $event_types;
-                        }
-                        break;
-
                     case 'featured_speakers':
                         {
                             $featured_speakers = [];
                             foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
                                 if (!$featuredSpeaker->hasSpeaker()) continue;
-                                $featured_speakers[] = SerializerRegistry::getInstance()->getSerializer($featuredSpeaker->getSpeaker())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $featured_speakers[] = SerializerRegistry::getInstance()
+                                    ->getSerializer($featuredSpeaker->getSpeaker())
+                                    ->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
                             }
                             $values['featured_speakers'] = $featured_speakers;
-                        }
-                        break;
-                    case 'tracks':
-                        {
-                            $presentation_categories = [];
-                            foreach ($summit->getPresentationCategories() as $cat) {
-                                $presentation_categories[] = SerializerRegistry::getInstance()->getSerializer($cat)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                            }
-                            $values['tracks'] = $presentation_categories;
-                        }
-                        break;
-                    case 'track_groups':
-                        {
-                            // track_groups
-                            $track_groups = [];
-                            foreach ($summit->getCategoryGroups() as $group) {
-                                $track_groups[] = SerializerRegistry::getInstance()->getSerializer($group)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                            }
-                            $values['track_groups'] = $track_groups;
-                        }
-                        break;
-                    case 'sponsors':
-                        {
-                            $sponsors = [];
-                            foreach ($summit->getEventSponsors() as $company) {
-                                $sponsors[] = SerializerRegistry::getInstance()->getSerializer($company)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                            }
-                            $values['sponsors'] = $sponsors;
-                        }
-                        break;
-                    case 'speakers':
-                        {
-                            $speakers = [];
-                            foreach ($summit->getSpeakers() as $speaker) {
-                                $speakers[] =
-                                    SerializerRegistry::getInstance()->getSerializer($speaker)->serialize
-                                    (
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation), [], [],
-                                        [
-                                            'summit_id' => $summit->getId(),
-                                            'published' => true
-                                        ]
-                                    );
-
-                            }
-                            $values['speakers'] = $speakers;
                         }
                         break;
                     case 'schedule':
@@ -530,16 +423,37 @@ class SummitSerializer extends SilverStripeSerializer
                             if (isset($values['type_id'])) {
                                 unset($values['type_id']);
                                 $values['type'] = $summit->hasType() ?
-                                    SerializerRegistry::getInstance()->getSerializer($summit->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation)) : null;
+                                    SerializerRegistry::getInstance()->getSerializer($summit->getType())->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    ) : null;
                             }
+                        }
+                        break;
+                    case 'locations':
+                        // locations
+                        if (in_array('locations', $relations)) {
+                            $locations = [];
+                            foreach ($summit->getLocations() as $location) {
+                                $locations[] = SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                                // is user is already expanding by schedule, its the total expand of the venues
+                                    !is_null($expand) && str_contains('schedule', $expand) ?
+                                        'floors,rooms' :
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
+                            }
+                            $values['locations'] = $locations;
                         }
                         break;
                 }
             }
         }
-
-        $values['supported_currencies'] = $summit->getSupportedCurrencies();
-        $values['timestamp'] = time();
 
         if (in_array('schedule_settings', $relations) && !isset($values['schedule_settings'])) {
             $schedule_settings = [];
@@ -558,6 +472,15 @@ class SummitSerializer extends SilverStripeSerializer
             $values['lead_report_settings'] = $lead_report_settings;
         }
 
+        if (in_array('featured_speakers', $relations) && !isset($values['featured_speakers'])) {
+            $featured_speakers = [];
+            foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
+                if (!$featuredSpeaker->hasSpeaker()) continue;
+                $featured_speakers[] = $featuredSpeaker->getSpeaker()->getId();
+            }
+            $values['featured_speakers'] = $featured_speakers;
+        }
+
         return $values;
     }
 
@@ -571,6 +494,101 @@ class SummitSerializer extends SilverStripeSerializer
             'serializer_type' => SerializerRegistry::SerializerType_Public,
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getLeadReportSettings',
+        ],
+        'ticket_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTicketTypes',
+        ],
+        'badge_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getBadgeTypes',
+        ],
+        'badge_features_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getBadgeFeaturesTypes',
+        ],
+        'badge_access_level_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getBadgeAccessLevelTypes',
+        ],
+        'badge_view_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getBadgeViewTypes',
+        ],
+        'order_extra_questions' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getOrderExtraQuestions',
+        ],
+        'tax_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTaxTypes',
+        ],
+        'summit_documents' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSummitDocuments',
+        ],
+        'meeting_booking_room_allowed_attributes' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getMeetingBookingRoomAllowedAttributes',
+        ],
+        'summit_sponsors' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getPublishedSummitSponsors',
+        ],
+        'wifi_connections' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getWifiConnections',
+        ],
+        'selection_plans' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSelectionPlans',
+        ],
+        'email_flows_events' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllEmailFlowsEvents',
+        ],
+        'presentation_action_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getPresentationActionTypes',
+        ],
+        'tracks' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getPresentationCategories',
+        ],
+        'speakers' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSpeakers',
+        ],
+        'event_types' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getEventTypes',
+        ],
+        'track_groups' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCategoryGroups',
+        ],
+        'sponsors' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getEventSponsors',
         ],
     ];
 }

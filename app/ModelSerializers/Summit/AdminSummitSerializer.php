@@ -14,7 +14,6 @@
 
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\Summit;
-use models\summit\SummitScheduleConfig;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SummitSerializer;
 
@@ -70,6 +69,46 @@ final class AdminSummitSerializer extends SummitSerializer
         'MuxAllowedDomains' => 'mux_allowed_domains:json_string_array',
     ];
 
+    protected static $allowed_fields = [
+        'available_on_api',
+        'max_submission_allowed_per_user',
+        'registration_link',
+        'link',
+        'external_summit_id',
+        'calendar_sync_name',
+        'calendar_sync_desc',
+        'api_feed_type',
+        'api_feed_url',
+        'api_feed_key',
+        'order_qr_prefix',
+        'ticket_qr_prefix',
+        'badge_qr_prefix',
+        'qr_registry_field_delimiter',
+        'qr_codes_enc_key',
+        'reassign_ticket_till_date',
+        'registration_disclaimer_content',
+        'registration_disclaimer_mandatory',
+        'external_registration_feed_type',
+        'external_registration_feed_api_key',
+        'virtual_site_oauth2_client_id',
+        'marketing_site_oauth2_client_id',
+        'presentation_votes_count',
+        'presentation_voters_count',
+        'presentations_submitted_count',
+        'attendees_count',
+        'paid_tickets_count',
+        'speakers_count',
+        'speaker_announcement_email_accepted_count',
+        'speaker_announcement_email_rejected_count',
+        'speaker_announcement_email_alternate_count',
+        'speaker_announcement_email_accepted_alternate_count',
+        'speaker_announcement_email_accepted_rejected_count',
+        'speaker_announcement_email_alternate_rejected_count',
+        'mux_token_id',
+        'mux_token_secret',
+        'mux_allowed_domains',
+    ];
+
     protected static $allowed_relations = [
         'ticket_types',
         'locations',
@@ -92,7 +131,7 @@ final class AdminSummitSerializer extends SummitSerializer
      * @param string|null $relation
      * @return string
      */
-    protected function getSerializerType(?string $relation=null): string
+    protected function getSerializerType(?string $relation = null): string
     {
         return SerializerRegistry::SerializerType_Private;
     }
@@ -108,11 +147,11 @@ final class AdminSummitSerializer extends SummitSerializer
     {
         $summit = $this->object;
         if (!$summit instanceof Summit) return [];
-        $values  = parent::serialize($expand, $fields, $relations, $params);
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('track_groups', $relations) && !isset($values['track_groups'])){
+        if (in_array('track_groups', $relations) && !isset($values['track_groups'])) {
             $track_groups = [];
-            foreach ($summit->getCategoryGroups() as $group){
+            foreach ($summit->getCategoryGroups() as $group) {
                 $track_groups[] = $group->getId();
             }
             $values['track_groups'] = $track_groups;

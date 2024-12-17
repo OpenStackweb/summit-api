@@ -237,7 +237,6 @@ abstract class RetrieveSummitEventsStrategy
             'summit_id' => 'sometimes|integer',
             'speaker_id' => 'sometimes|integer',
             'location_id' => 'sometimes|integer',
-
             'selection_plan_id' => 'sometimes|integer',
             'created_by_fullname' => 'sometimes|string',
             'created_by_email' => 'sometimes|string',
@@ -250,7 +249,7 @@ abstract class RetrieveSummitEventsStrategy
             'class_name' => 'sometimes|string|in:' . implode(',', [Presentation::ClassName, SummitEvent::ClassName]),
             'presentation_attendee_vote_date' => 'sometimes|date_format:U|epoch_seconds',
             'votes_count' => 'sometimes|integer',
-            'selection_status' => 'sometimes|string|in:selected,accepted,rejected,alternate,lightning-accepted,lightning-alternate',
+            'selection_status' => 'sometimes|string|in:pending,selected,accepted,rejected,alternate,lightning-accepted,lightning-alternate',
             'duration' => 'sometimes|integer',
             'speakers_count' => 'sometimes|integer',
             'meeting_url' => 'sometimes|string',

@@ -59,7 +59,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     const FieldDisclaimerAccepted = 'disclaimer_accepted';
     const PresentationOverflowEntityType = "PresentationOverflow";
 
-    const AllowedEditableFields  = [
+    const AllowedEditableFields = [
         self::FieldDisclaimerAccepted,
         self::FieldAttendeesExpectedToLearn,
         self::FieldAttendingMedia,
@@ -91,6 +91,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         return in_array($type, Presentation::AllowedEditableFields) ||
             SummitEvent::isAllowedEditableField($type);
     }
+
     /**
      * @return array|string[]
      */
@@ -99,14 +100,15 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         return array_merge(Presentation::AllowedFields, SummitEvent::getAllowedFields());
     }
 
-    public static function getAllowedEditableFields(): array{
+    public static function getAllowedEditableFields(): array
+    {
         return array_merge(Presentation::AllowedEditableFields, SummitEvent::getAllowedEditableFields());
     }
 
     /**
      * SELECTION STATUS (TRACK CHAIRS LIST)
      */
-
+    const SelectionStatus_Pending = 'pending';
     const SelectionStatus_Selected = 'selected';
     const SelectionStatus_Accepted = 'accepted';
     const SelectionStatus_Unaccepted = 'rejected';
@@ -156,7 +158,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     const ReviewStatusRejected = 'Rejected';
     const ReviewStatusAccepted = 'Accepted';
 
-    const AllowedReviewStatus  = [
+    const AllowedReviewStatus = [
         self::ReviewStatusPublished,
         self::ReviewStatusNoSubmitted,
         self::ReviewStatusReceived,
@@ -826,7 +828,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         if ($this->isPublished())
             return 'Accepted';
-        return !empty( $this->status) ?  $this->status : 'Not Submitted';
+        return !empty($this->status) ? $this->status : 'Not Submitted';
     }
 
     /**
@@ -970,6 +972,62 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             throw new ValidationException(sprintf('presentation %s has more than 1 (one) selection.', $this->id));
         }
 
+        if ($this->isPublished()) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( is published ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Accepted
+                )
+            );
+
+            return Presentation::SelectionStatus_Accepted;
+        }
+
+        // from here we need to be sure that the selection period is going on or it is over
+
+        $selection_plan = $this->getSelectionPlan();
+        if (is_null($selection_plan)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( has no selection plan ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Pending
+                )
+            );
+            return Presentation::SelectionStatus_Pending;
+        }
+        if (!$selection_plan->hasSelectionPeriodDefined()) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( selection plan hasSelectionPeriodDefined ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Pending
+                )
+            );
+            return Presentation::SelectionStatus_Pending;
+        }
+        if ($selection_plan->isSelectionNotYetStarted()) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "Presentation::getSelectionStatus presentation %s return %s ( selection plan isSelectionNotYetStarted ).",
+                    $this->id,
+                    Presentation::SelectionStatus_Pending
+                )
+            );
+            return Presentation::SelectionStatus_Pending;
+        }
+
         $selection = null;
         if (count($session_sel) == 1) {
             $selection = $session_sel[0];
@@ -982,20 +1040,6 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
                     $selection->getId()
                 )
             );
-        }
-
-        if($this->isPublished()) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( is published ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Accepted
-                )
-            );
-
-            return Presentation::SelectionStatus_Accepted;
         }
 
         if (!$selection) {
@@ -2192,7 +2236,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             // then we need to clear up all selections ( individual / team)
             $this->selected_presentations->clear();
         }
-        if($this->hasSelectionPlan() && !$this->selection_plan->hasTrack($category)){
+        if ($this->hasSelectionPlan() && !$this->selection_plan->hasTrack($category)) {
             $this->clearSelectionPlan();
         }
         return parent::setCategory($category);
@@ -2370,10 +2414,10 @@ SQL;
      */
     public function canChangeAnswerValue(ExtraQuestionType $q): bool
     {
-        if(!$q instanceof SummitSelectionPlanExtraQuestionType) return false;
-        if(!$this->hasSelectionPlan()) return false;
+        if (!$q instanceof SummitSelectionPlanExtraQuestionType) return false;
+        if (!$this->hasSelectionPlan()) return false;
         $assignedQuestion = $this->selection_plan->getAssignedExtraQuestion($q);
-        if(is_null($assignedQuestion)) return false;
+        if (is_null($assignedQuestion)) return false;
         return $assignedQuestion->isEditable();
     }
 
@@ -2407,7 +2451,8 @@ SQL;
     /**
      * @return array
      */
-    public function getSnapshot():array{
+    public function getSnapshot(): array
+    {
         $snapshot = [
             self::FieldDisclaimerAccepted => $this->isDisclaimerAccepted(),
             self::FieldAttendeesExpectedToLearn => $this->attendees_expected_learnt,
@@ -2415,11 +2460,11 @@ SQL;
             self::FieldLinks => []
         ];
 
-        foreach ($this->getLinks() as $link){
+        foreach ($this->getLinks() as $link) {
             $snapshot[self::FieldLinks][] = $link->getLink();
         }
 
-        return array_merge( $snapshot, parent::getSnapshot());
+        return array_merge($snapshot, parent::getSnapshot());
     }
 
     /**
@@ -2500,7 +2545,8 @@ SQL;
      * @return string
      * @throws \Exception
      */
-    public function getReviewStatusNice(): string {
+    public function getReviewStatusNice(): string
+    {
         $review_status = $this->getReviewStatus();
         if ($review_status == self::ReviewStatusNoSubmitted) return 'Not Submitted';
         if ($review_status == self::ReviewStatusInReview) return 'In Review';

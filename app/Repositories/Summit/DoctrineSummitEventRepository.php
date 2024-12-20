@@ -366,6 +366,10 @@ final class DoctrineSummitEventRepository
                 "(sprs.name :operator :value)"
             ),
             'selection_status' => new DoctrineSwitchFilterMapping([
+                    'pending' => new DoctrineCaseFilterMapping(
+                        "pending",
+                              "selp is null OR selp.selection_begin_date is null OR selp.selection_begin_date > UTC_TIMESTAMP()"
+                    ),
                     'selected' => new DoctrineCaseFilterMapping(
                         'selected',
                         "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
@@ -376,7 +380,7 @@ final class DoctrineSummitEventRepository
                     ),
                     'rejected' => new DoctrineCaseFilterMapping(
                         'rejected',
-                        sprintf('e.published = 0 AND NOT EXISTS (
+                        sprintf('selp is not null AND  selp.selection_begin_date is not null AND selp.selection_begin_date <= UTC_TIMESTAMP() AND e.published = 0 AND NOT EXISTS (
                                             SELECT ___sp31.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
@@ -583,6 +587,7 @@ SQL,
             'selection_status' => <<<SQL
     CASE
     WHEN p is null THEN ''
+    WHEN selp is null OR selp.selection_begin_date is null OR selp.selection_begin_date > UTC_TIMESTAMP() THEN 'pending'
     WHEN e.published = 1 OR EXISTS (
                                             SELECT ___sp331.id
                                             FROM models\summit\SummitSelectedPresentation ___sp331

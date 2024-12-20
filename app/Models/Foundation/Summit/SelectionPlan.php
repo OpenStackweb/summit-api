@@ -664,10 +664,24 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getStageStatus($stage)
     {
 
+
         $getStartDate = "get{$stage}BeginDate";
         $getEndDate = "get{$stage}EndDate";
         $start_date = $this->$getStartDate();
         $end_date = $this->$getEndDate();
+
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SelectionPlan::getStageStatus id %s stage %s start_date %s end_date %s",
+                $this->id,
+                $stage,
+                $start_date->format('Y-m-d H:i:s'),
+                $end_date->format('Y-m-d H:i:s')
+            )
+        );
 
         if (empty($start_date) || empty($end_date)) {
             return null;
@@ -718,9 +732,23 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isSelectionOpen()
+    public function isSelectionOpen():bool
     {
         return $this->getStageStatus('Selection') === Summit::STAGE_OPEN;
+    }
+
+    public function isSelectionFinished():bool
+    {
+        return $this->getStageStatus('Selection') === Summit::STAGE_FINISHED;
+    }
+
+    public function isSelectionNotYetStarted():bool
+    {
+        return $this->getStageStatus('Selection') === Summit::STAGE_UNSTARTED;
+    }
+
+    public function hasSelectionPeriodDefined():bool{
+        return !is_null($this->selection_begin_date) && !is_null($this->selection_end_date);
     }
 
     /**

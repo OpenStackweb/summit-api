@@ -39,15 +39,16 @@ SQL;
         $this->addSql($sql);
 
         $sql = <<<SQL
+DELIMITER $$
 CREATE FUNCTION REVIEW_STATUS(ActivityID INT)
 RETURNS VARCHAR(100) DETERMINISTIC
 BEGIN
     DECLARE reviewStatus VARCHAR(100);
     SELECT
     CASE
-        WHEN S.ClassName <> 'Presentation' THEN 'N/A'
-        WHEN SP.ID IS NULL OR P.Status IS NULL THEN 'NotSubmitted'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
+        WHEN S.ClassName <> ‘Presentation’ THEN ‘N/A’
+        WHEN SP.ID IS NULL OR P.Status IS NULL THEN ‘NotSubmitted’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
             SP.ID IS NOT NULL AND (
             (
                 SP.SubmissionLockDownPresentationStatusDate IS NOT NULL AND
@@ -56,30 +57,35 @@ BEGIN
             OR
             (
                 (
-                    SP.SubmissionBeginDate IS NULL OR SP.SubmissionBeginDate > UTC_TIMESTAMP() OR SP.SubmissionEndDate < UTC_TIMESTAMP() OR SP.SubmissionEndDate IS NULL
+                    SP.SubmissionBeginDate IS NOT NULL AND SP.SubmissionEndDate IS NOT NULL AND
+                    SP.SubmissionBeginDate > UTC_TIMESTAMP() AND SP.SubmissionEndDate < UTC_TIMESTAMP()
                 )
                     AND
                 (
+                    SP.SelectionBeginDate IS NOT NULL AND SP.SelectionEndDate IS NOT NULL AND
                     SP.SelectionBeginDate <= UTC_TIMESTAMP() AND SP.SelectionEndDate >= UTC_TIMESTAMP()
                 )
             )
-        ) THEN 'InReview'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND S.Published = 1 THEN 'Published'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
-        (
-               SP.SelectionBeginDate IS NULL OR SP.SelectionBeginDate > UTC_TIMESTAMP() OR SP.SelectionEndDate < UTC_TIMESTAMP() OR SP.SelectionEndDate IS NULL
+        ) THEN ‘InReview’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND S.Published = 1 THEN ‘Published’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
+        SP.ID IS NOT NULL AND
+       (
+            SP.SelectionBeginDate IS NOT NULL AND SP.SelectionEndDate IS NOT NULL AND
+            SP.SelectionBeginDate < UTC_TIMESTAMP() AND SP.SelectionEndDate < UTC_TIMESTAMP()
         )
         AND EXISTS (
             SELECT 1 FROM SummitSelectedPresentation SSP
             INNER JOIN SummitSelectedPresentationList L ON L.ID = SSP.SummitSelectedPresentationListID
             WHERE
                 SSP.PresentationID = P.ID AND
-                SSP.Collection = 'selected' AND
-                L.ListType = 'Group' AND
-                L.ListClass = 'Session'
+                SSP.Collection = ‘selected’ AND
+                L.ListType = ‘Group’ AND
+                L.ListClass = ‘Session’
         )
-        THEN 'Accepted'
-        WHEN (P.status = 'Received' OR P.status = 'Accepted') AND
+        THEN ‘Accepted’
+        WHEN (P.status = ‘Received’ OR P.status = ‘Accepted’) AND
+        SP.ID IS NOT NULL AND
         (
             SP.SelectionBeginDate IS NOT NULL AND SP.SelectionEndDate IS NOT NULL AND
             SP.SelectionBeginDate < UTC_TIMESTAMP() AND SP.SelectionEndDate < UTC_TIMESTAMP()
@@ -89,20 +95,21 @@ BEGIN
             INNER JOIN SummitSelectedPresentationList L ON L.ID = SSP.SummitSelectedPresentationListID
             WHERE
                 SSP.PresentationID = P.ID AND
-                SSP.Collection = 'selected' AND
-                L.ListType = 'Group' AND
-                L.ListClass = 'Session'
+                SSP.Collection = ‘selected’ AND
+                L.ListType = ‘Group’ AND
+                L.ListClass = ‘Session’
         )
-        THEN 'Rejected'
-        WHEN (P.Status = 'Received' OR P.Status = 'Accepted') THEN 'Received'
-        ELSE 'NotSubmitted'
+        THEN ‘Rejected’
+        WHEN (P.Status = ‘Received’ OR P.Status = ‘Accepted’) THEN ‘Received’
+        ELSE ‘NotSubmitted’
         END
     FROM SummitEvent S
     LEFT JOIN Presentation P ON P.ID = S.ID
     LEFT JOIN SelectionPlan SP ON P.SelectionPlanID = SP.ID
     WHERE S.ID = ActivityID INTO reviewStatus;
     RETURN reviewStatus;
-END
+END$$
+DELIMITER ;
 SQL;
 
         $this->addSql($sql);

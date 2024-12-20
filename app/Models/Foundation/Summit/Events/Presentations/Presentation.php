@@ -2507,12 +2507,12 @@ SQL;
         // submission ( CFP )
         // check submission period
         $submission_open = $now >= $submission_begin_date && $now <= $submission_end_date;
-        $submission_closed = !$submission_open;
+        $submission_closed = !is_null($submission_end_date) && $now > $submission_end_date;
 
         // selection ( track chairs )
         // check selection period
-        $selection_open = $now >= $selection_begin_date && $now <= $selection_end_date;
-        $selection_closed = !$selection_open;
+        $selection_open = !is_null($selection_begin_date) && !is_null($selection_end_date) && $now >= $selection_begin_date && $now <= $selection_end_date;
+        $selection_closed = !is_null($selection_end_date) && $now > $selection_end_date;
 
         $presentation_status = $this->getStatus();
 

@@ -1520,10 +1520,10 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         $allowed_fields = Presentation::getAllowedFields();
         foreach ($allowed_fields as $field) {
-            Log::debug(sprintf("Selection Plan %s checking Presentation Field %s", $this->id, $field));
+            Log::debug(sprintf("SelectionPlan::curatePayloadByPresentationAllowedQuestions Selection Plan %s checking Presentation Field %s", $this->id, $field));
 
             if (isset($payload[$field]) && !$this->isAllowedPresentationQuestion($field)) {
-                Log::warning(sprintf("Field %s is not allowed on Selection Plan %s", $field, $this->name));
+                Log::warning(sprintf("SelectionPlan::curatePayloadByPresentationAllowedQuestions Field %s is not allowed on Selection Plan %s", $field, $this->name));
                 unset($payload[$field]);
             }
         }

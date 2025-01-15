@@ -76,8 +76,10 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
     public function addMember(Member $member)
     {
         if(!$this->canAddMember($member)){
-            throw new ValidationException(sprintf("Member %s should belong to following groups (%s).", $member->getId(),
-            implode(",", self::ValidGroups)));
+            throw new ValidationException(sprintf("Member %s (%s) should belong to following groups (%s).",
+                $member->getEmail(),
+                $member->getId(),
+                implode(",", self::ValidGroups)));
         }
 
         if ($this->members->contains($member)) return;

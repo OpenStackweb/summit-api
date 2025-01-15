@@ -1012,7 +1012,7 @@ final class OAuth2SummitOrdersApiController
             'promo_code' => 'sometimes|string',
             'ticket_qty' => 'required|integer|min:1',
             'extra_questions' => 'sometimes|extra_question_dto_array',
-            'owner_company' => 'required|string|max:255',
+            'owner_company' => 'sometimes|string|max:255',
             'billing_address_1' => 'sometimes|string|max:255',
             'billing_address_2' => 'sometimes|string|max:255',
             'billing_address_zip_code' => 'sometimes|string|max:255',

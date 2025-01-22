@@ -55,7 +55,7 @@ implements ISponsorRepository
         if(!is_null($filter) && $filter->hasFilter("badge_scans_count"))
             $query = $query->leftJoin("e.user_info_grants", "bs");
         if(
-            (is_null($filter) && $filter->hasFilter("company_name")) ||
+            (!is_null($filter) && $filter->hasFilter("company_name")) ||
             (!is_null($order) && $order->hasOrder("company_name"))
         )
             $query = $query->leftJoin("e.company", "c");

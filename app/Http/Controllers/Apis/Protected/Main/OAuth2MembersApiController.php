@@ -113,7 +113,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             function () use ($current_member, $application_type) {
                 $serializer_type = SerializerRegistry::SerializerType_Public;
 
-                if ($application_type == "SERVICE" || (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin()))) {
+                if ($application_type == IResourceServerContext::ApplicationType_Service || (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin()))) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
                 return $serializer_type;
@@ -199,7 +199,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             $application_type = $this->resource_server_context->getApplicationType();
             $serializer_type = SerializerRegistry::SerializerType_Public;
 
-            if ($application_type == "SERVICE" || (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin()))) {
+            if ($application_type == IResourceServerContext::ApplicationType_Service || (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin()))) {
                 $serializer_type = SerializerRegistry::SerializerType_Admin;
             }
 

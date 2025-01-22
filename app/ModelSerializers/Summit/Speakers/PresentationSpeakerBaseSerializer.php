@@ -13,6 +13,7 @@
  **/
 
 use libs\utils\JsonUtils;
+use models\oauth2\IResourceServerContext;
 use models\summit\PresentationSpeaker;
 
 /**
@@ -103,7 +104,7 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
             $application_type = $this->resource_server_context->getApplicationType();
             // choose email serializer depending on user permissions
             // is current user is null then is a service account
-            $values['email'] = $application_type == "SERVICE" ?
+            $values['email'] = $application_type == IResourceServerContext::ApplicationType_Service ?
                 JsonUtils::toNullEmail($speaker->getEmail()) :
                 JsonUtils::toObfuscatedEmail($speaker->getEmail());
         }

@@ -116,7 +116,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         $scope = $this->resource_server_context->getCurrentScope();
 
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType client id %s app_type %s scope %s has current user %b %s %s ", $clientId, $application_type, implode(" ", $scope), !is_null($current_user), $method, $path));
-        if ($application_type == "SERVICE" || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))) {
+        if ($application_type == IResourceServerContext::ApplicationType_Service || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))) {
             Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PRIVATE", $application_type, !is_null($current_user)));
             return SerializerRegistry::SerializerType_Private;
         }

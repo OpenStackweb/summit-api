@@ -209,10 +209,14 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
-        // authz check
+        // authz check ( SERVICE or authz member )
+        $application_type = $this->resource_server_context->getApplicationType();
         $current_member = $this->resource_server_context->getCurrentUser();
-        if(!$current_member->isAuthzFor($summit))
-            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+        $is_authz = $application_type == IResourceServerContext::ApplicationType_Service ||
+            (!is_null($current_member) && !$current_member->isAuthzFor($summit));
+
+        if(!$is_authz)
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
         return $this->service->addSponsor($summit, $payload);
     }
 

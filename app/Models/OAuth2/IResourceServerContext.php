@@ -26,6 +26,8 @@ interface IResourceServerContext
     const UserEmail = 'user_email';
     const UserEmailVerified = 'user_email_verified';
 
+    const ApplicationType_Service = 'SERVICE';
+
     /**
      * returns given scopes for current request
      * @return array

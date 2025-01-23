@@ -28,6 +28,7 @@ use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRefundRequestConstants;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitAttendeeTicketRefundRequest;
 use models\summit\SummitOrder;
@@ -419,6 +420,9 @@ final class OAuth2SummitOrdersApiController
                     'status' => ['==', '<>'],
                     'owner_id' => ['=='],
                     'created' => ['>', '<', '<=', '>=', '==','[]'],
+                    'tickets_assigned_to' =>  ['=='],
+                    'tickets_owner_status' =>  ['=='],
+                    'tickets_badge_features_id' =>  ['=='],
                 ];
             },
             function () {
@@ -428,6 +432,9 @@ final class OAuth2SummitOrdersApiController
                     'summit_id' => 'sometimes|integer',
                     'owner_id' => 'sometimes|integer',
                     'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'tickets_assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
+                    'tickets_owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
+                    'tickets_badge_features_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -448,6 +455,13 @@ final class OAuth2SummitOrdersApiController
                         $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
                     }
                     $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $owner->getId()));
+                    if($filter->hasFilter("tickets_assigned_to")){
+                        $assigned_to = $filter->getValue("tickets_assigned_to")[0];
+                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
+                            $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_id', $owner->getId()));
+                            $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_email', $owner->getEmail()));
+                        }
+                    }
                 }
                 return $filter;
             },
@@ -1095,13 +1109,19 @@ final class OAuth2SummitOrdersApiController
                     'order_id' => ['=='],
                     'order_owner_id' => ['=='],
                     'is_active' => ['=='],
+                    'assigned_to' =>  ['=='],
+                    'owner_status' =>  ['=='],
+                    'badge_features_id' =>  ['=='],
                 ];
             },
             function () {
                 return [
                     'order_id' => 'sometimes|integer',
                     'order_owner_id' => 'sometimes|integer',
-                    'is_active' => ['sometimes', new Boolean()]
+                    'is_active' => ['sometimes', new Boolean()],
+                    'assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
+                    'owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
+                    'badge_features_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -1119,6 +1139,13 @@ final class OAuth2SummitOrdersApiController
                     $filter->addFilterCondition(FilterElement::makeEqual('order_id', intval($order_id)));
                     $filter->addFilterCondition(FilterElement::makeEqual('order_owner_id', $owner->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('status', IOrderConstants::PaidStatus));
+                    if($filter->hasFilter("assigned_to")){
+                        $assigned_to = $filter->getValue("assigned_to")[0];
+                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
+                            $filter->addFilterCondition(FilterElement::makeEqual('owner_member_id', $owner->getId()));
+                            $filter->addFilterCondition(FilterElement::makeEqual('owner_member_email', $owner->getEmail()));
+                        }
+                    }
                 }
                 return $filter;
             },

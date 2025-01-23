@@ -21,7 +21,9 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitOrder;
 use models\utils\SilverstripeBaseModel;
+use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -40,6 +42,18 @@ final class DoctrineSummitOrderRepository
      */
     protected function getFilterMappings()
     {
+        $args = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+        $tickets_owner_member_id = 0;
+        $tickets_owner_member_email = null;
+        if(!is_null($filter) && $filter instanceof Filter) {
+            if ($filter->hasFilter("tickets_owner_member_id")) {
+                $tickets_owner_member_id = $filter->getValue("tickets_owner_member_id")[0];
+            }
+            if ($filter->hasFilter("tickets_owner_member_email")) {
+                $tickets_owner_member_email = $filter->getValue("tickets_owner_member_email")[0];
+            }
+        }
         return [
             'number'             => 'e.number:json_string',
             'summit_id'          =>  new DoctrineFilterMapping("s.id :operator :value"),
@@ -55,6 +69,33 @@ final class DoctrineSummitOrderRepository
             'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'amount'            => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
             'payment_method'    => 'e.payment_method:json_string',
+            'tickets_owner_status' => 'to.status:json_string',
+            'tickets_badge_features_id' => 'bf.id',
+            'tickets_assigned_to' => new DoctrineSwitchFilterMapping([
+                    'Me' => new DoctrineCaseFilterMapping(
+                        'Me',
+                        sprintf
+                        (
+                            "to is not null and ( tom.id = %s or to.email = '%s' )",
+                            $tickets_owner_member_id,
+                            $tickets_owner_member_email
+                        ),
+                    ),
+                    'SomeoneElse' => new DoctrineCaseFilterMapping(
+                        'SomeoneElse',
+                        sprintf
+                        (
+                            "to is not null and tom.id <> %s and to.email <> '%s' )",
+                            $tickets_owner_member_id,
+                            $tickets_owner_member_email
+                        ),
+                    ),
+                    'Nobody' => new DoctrineCaseFilterMapping(
+                        'Nobody',
+                        "to is null"
+                    ),
+                ]
+            ),
         ];
     }
 
@@ -73,6 +114,10 @@ final class DoctrineSummitOrderRepository
         if((!is_null($filter) && $filter->hasFilter("owner_company")) ||
             (!is_null($order)) && $order->hasOrder("owner_company")){
             $query = $query->leftJoin("e.owner_company","oc");
+        }
+        if((!is_null($filter) && $filter->hasFilter("tickets_badge_features_id"))){
+            $query = $query->leftJoin('t.badge','b')
+                ->leftJoin('b.features','bf');
         }
         return $query;
     }

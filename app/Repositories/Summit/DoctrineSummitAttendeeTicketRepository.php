@@ -77,6 +77,19 @@ final class DoctrineSummitAttendeeTicketRepository
      */
     protected function getFilterMappings()
     {
+        $args = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+        $owner_member_id = 0;
+        $owner_member_email = null;
+        if($filter instanceof Filter) {
+            if ($filter->hasFilter("owner_member_id")) {
+                $owner_member_id = $filter->getValue("owner_member_id")[0];
+            }
+            if ($filter->hasFilter("owner_member_email")) {
+                $owner_member_email = $filter->getValue("owner_member_email")[0];
+            }
+        }
+
         return [
             'id' => new DoctrineInFilterMapping('e.id'),
             'not_id' => new DoctrineNotInFilterMapping('e.id'),
@@ -176,7 +189,6 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
-            'owner_status' => 'a.status',
             'final_amount' =>  "(e.raw_cost - e.discount) :operator :value",
             'is_printable' =>
                 new DoctrineSwitchFilterMapping([
@@ -223,6 +235,33 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
+            'owner_status' => 'a.status:json_string',
+            'badge_features_id' => 'bf.id',
+            'assigned_to' => new DoctrineSwitchFilterMapping([
+                    'Me' => new DoctrineCaseFilterMapping(
+                        'Me',
+                        sprintf
+                        (
+                            "a is not null and ( m.id = %s or a.email = '%s' )",
+                            $owner_member_id,
+                            $owner_member_email
+                        ),
+                    ),
+                    'SomeoneElse' => new DoctrineCaseFilterMapping(
+                        'SomeoneElse',
+                        sprintf
+                        (
+                            "a is not null and m.id <> %s and a.email <> '%s' )",
+                            $owner_member_id,
+                            $owner_member_email
+                        ),
+                    ),
+                    'Nobody' => new DoctrineCaseFilterMapping(
+                        'Nobody',
+                        "a is null"
+                    ),
+                ]
+            ),
         ];
     }
 
@@ -238,6 +277,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $query = $query->leftJoin("e.owner", "a");
         $query = $query->leftJoin("a.company", "a_c");
         $query = $query->leftJoin("e.badge", "b");
+        $query = $query->leftJoin("b.features", "bf");
         $query = $query->leftJoin("b.prints", "prt");
         $query = $query->leftJoin("b.type", "bt");
         $query = $query->leftJoin("bt.access_levels", "al");

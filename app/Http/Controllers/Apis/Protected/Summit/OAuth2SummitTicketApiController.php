@@ -577,6 +577,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'order_owner_id' => ['==', '<>'],
                     'has_order_owner' => ['=='],
                     'final_amount' => ['==', '<>', '>=', '>'],
+                    'assigned_to' =>  ['=='],
+                    'owner_status' =>  ['=='],
+                    'badge_features_id' =>  ['=='],
                 ];
             },
             function () {
@@ -589,6 +592,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_order_owner' => 'sometimes|boolean',
                     'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
                     'final_amount' => 'sometimes|numeric',
+                    'assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
+                    'owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
+                    'badge_features_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -605,6 +611,14 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     }
                     $filter->addFilterCondition(FilterElement::makeEqual('member_id', $owner->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('is_active', true));
+
+                    if($filter->hasFilter("assigned_to")){
+                        $assigned_to = $filter->getValue("assigned_to")[0];
+                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
+                            $filter->addFilterCondition(FilterElement::makeEqual('owner_member_id', $owner->getId()));
+                            $filter->addFilterCondition(FilterElement::makeEqual('owner_member_email', $owner->getEmail()));
+                        }
+                    }
                 }
                 return $filter;
             },

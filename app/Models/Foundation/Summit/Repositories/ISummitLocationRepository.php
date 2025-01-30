@@ -12,6 +12,11 @@
  * limitations under the License.
  **/
 use models\summit\Summit;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISummitLocationRepository
  * @package App\Models\Foundation\Summit\Repositories
@@ -30,4 +35,19 @@ interface ISummitLocationRepository extends ISummitOwnedEntityRepository
      * @throws \Doctrine\DBAL\Driver\Exception
      */
     public function deleteAllBySummit(int $summit_id):bool;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllVenueRoomsBySummit
+    (
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null
+    ):PagingResponse;
 }

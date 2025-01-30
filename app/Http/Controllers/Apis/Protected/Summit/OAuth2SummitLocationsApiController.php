@@ -281,6 +281,56 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         );
     }
 
+    public function getAllVenuesRooms($summit_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            return $this->_getAll(
+                function () {
+                    return [
+                        'name' => ['==', '=@','@@'],
+                        'floor_name' =>['==', '=@','@@'],
+                        'venue_name' =>['==', '=@','@@'],
+                        'description' => ['=@','@@'],
+                    ];
+                },
+                function () {
+                    return [
+                        'name' => 'sometimes|string',
+                        'floor_name' => 'sometimes|string',
+                        'venue_name' => 'sometimes|string',
+                        'description' => 'sometimes|string',
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'name',
+                        'order',
+                        'venue_name',
+                        'floor_name',
+                    ];
+                },
+                function ($filter) {
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_Public;
+                },
+                null,
+                null,
+                function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                    return $this->location_repository->getAllVenueRoomsBySummit
+                    (
+                        $summit,
+                        new PagingInfo($page, $per_page),
+                        call_user_func($applyExtraFilters, $filter),
+                        $order
+                    );
+                }
+            );
+    }
     /**
      * @param $summit_id
      * @return mixed

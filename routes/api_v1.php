@@ -820,7 +820,6 @@ Route::group(array('prefix' => 'summits'), function () {
 
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@getMetadata']);
 
-            // bookable-rooms
             Route::group(['prefix' => 'bookable-rooms'], function () {
                 // GET /api/v1/summits/{id}/locations/bookable-rooms
                 Route::get('', 'OAuth2SummitLocationsApiController@getBookableVenueRooms');
@@ -874,7 +873,14 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::get('', 'OAuth2SummitLocationsApiController@getVenues');
                 Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@addVenue']);
-
+                Route::group(['prefix' => 'all'], function () {
+                    Route::group(['prefix' => 'rooms'], function () {
+                        Route::get('', 'OAuth2SummitLocationsApiController@getAllVenuesRooms');
+                    });
+                    Route::group(['prefix' => 'bookable-rooms'], function () {
+                        Route::get('', 'OAuth2SummitLocationsApiController@getBookableVenueRooms');
+                    });
+                });
                 Route::group(['prefix' => '{venue_id}'], function () {
                     Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@updateVenue']);
 

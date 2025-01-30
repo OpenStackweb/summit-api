@@ -128,7 +128,7 @@ final class DoctrineSummitLocationRepository
             ->from(SummitAbstractLocation::class, "al")
             ->leftJoin(SummitGeoLocatedLocation::class, 'gll', 'WITH', 'gll.id = al.id')
             ->leftJoin(SummitVenue::class, 'v', 'WITH', 'v.id = gll.id')
-            ->leftJoin(SummitVenueRoom::class, 'vr', 'WITH', 'v.id = gll.id')
+            ->leftJoin(SummitExternalLocation::class, 'el', 'WITH', 'el.id = gll.id')
             ->leftJoin(SummitHotel::class, 'h', 'WITH', 'h.id = el.id')
             ->leftJoin(SummitAirport::class, 'ap', 'WITH', 'ap.id = el.id')
             ->leftJoin(SummitVenueRoom::class, 'r', 'WITH', 'r.id = al.id')
@@ -160,17 +160,17 @@ final class DoctrineSummitLocationRepository
             $query = $query->addOrderBy("al.id",'ASC');
         }
 
-        if($filter->hasFilter("rooms_name") || $filter->hasFilter("rooms_floor_name")){
+        if(!is_null($filter) && ($filter->hasFilter("rooms_name") || $filter->hasFilter("rooms_floor_name"))){
             $query = $query->leftJoin('v.rooms', 'v_rooms');
             if($filter->hasFilter("rooms_floor_name")){
                 $query = $query->leftJoin('v_rooms.floor', 'v_rooms_floor');
             }
         }
-        if($filter->hasFilter("floors_name")){
+        if(!is_null($filter) && $filter->hasFilter("floors_name")){
             $query = $query->leftJoin('v.floors', 'v_floors');
         }
 
-        if($filter->hasFilter("availability_day")){
+        if(!is_null($filter) && $filter->hasFilter("availability_day")){
             // special case, we need to figure if each room has available slots
             $res              = $query->getQuery()->execute();
             $rooms            = [];
@@ -249,5 +249,78 @@ SQL;
         {
             Log::error($ex);
         }
+        return true;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllVenueRoomsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
+    {
+        $query  =   $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("al")
+            ->from(SummitAbstractLocation::class, "al")
+            ->leftJoin(SummitVenueRoom::class, 'r', 'WITH', 'al.id = r.id')
+            ->leftJoin('al.summit', 's')
+            ->where("s.id = :summit_id");
+
+        if((!is_null($filter) &&$filter->hasFilter("floor_name")) ||
+            (!is_null($order) && $order->hasOrder("floor_name"))){
+            $query = $query->leftJoin('r.floor', 'f');
+        }
+
+        if((!is_null($filter) && $filter->hasFilter("venue_name")) ||
+            (!is_null($order) && $order->hasOrder("venue_name"))){
+            $query = $query->leftJoin('r.venue', 'v');
+        }
+
+        $query->setParameter("summit_id", $summit->getId());
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, [
+                'name'             => 'al.name:json_string',
+                'floor_name'       => 'f.name:json_string',
+                'description'      => 'al.description:json_string',
+                'venue_name'       => 'v.name:json_string',
+            ]);
+        }
+
+        if (!is_null($order)) {
+            $order->apply2Query($query,  [
+                'id'    => 'al.id',
+                'name'  => 'al.name',
+                'order' => 'al.order',
+                'venue_name' => 'v.name',
+                'floor_name' => 'f.name',
+            ]);
+        } else {
+            //default order
+            $query = $query->addOrderBy("al.id",'ASC');
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $total     = $paginator->count();
+        $data      = [];
+
+        foreach($paginator as $entity)
+            $data[] = $entity;
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
     }
 }

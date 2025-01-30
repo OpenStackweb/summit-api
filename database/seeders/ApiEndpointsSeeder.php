@@ -4506,6 +4506,24 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-all-venues-rooms',
+                'route' => '/api/v1/summits/{id}/locations/venues/all/rooms',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-all-venues-bookable-rooms',
+                'route' => '/api/v1/summits/{id}/locations/venues/all/bookable-rooms',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'add-venue',
                 'route' => '/api/v1/summits/{id}/locations/venues',
                 'http_method' => 'POST',

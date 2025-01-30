@@ -214,33 +214,71 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getVenues($summit_id)
     {
-        return $this->processRequest(function () use ($summit_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            //locations
-            $locations = [];
-
-            foreach ($summit->getVenues() as $location) {
-                $locations[] = SerializerRegistry::getInstance()->getSerializer($location)->serialize();
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['==', '=@','@@'],
+                    'rooms_name' => ['==', '=@','@@'],
+                    'rooms_floor_name' =>['==', '=@','@@'],
+                    'floors_name' => ['==', '=@','@@'],
+                    'description' => ['=@','@@'],
+                    'address_1' => ['=@'],
+                    'address_2' => ['=@'],
+                    'zip_code' => ['==', '=@'],
+                    'city' => ['==', '=@'],
+                    'state' => ['==', '=@'],
+                    'country' => ['==', '=@'],
+                    'sold_out' => ['=='],
+                    'is_main' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'rooms_name' => 'sometimes|string',
+                    'rooms_floor_name' => 'sometimes|string',
+                    'floors_name' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'address_1' => 'sometimes|string',
+                    'address_2' => 'sometimes|string',
+                    'zip_code' => 'sometimes|string',
+                    'city' => 'sometimes|string',
+                    'state' => 'sometimes|string',
+                    'country' => 'sometimes|string',
+                    'sold_out' => 'sometimes|boolean',
+                    'is_main' => 'sometimes|boolean',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'order'
+                ];
+            },
+            function ($filter) {
+                $filter->addFilterCondition(FilterParser::buildFilter('class_name', '==', SummitVenue::ClassName));
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->location_repository->getBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
             }
-
-            $response = new PagingResponse
-            (
-                count($locations),
-                count($locations),
-                1,
-                1,
-                $locations
-            );
-
-            return $this->ok($response->toArray(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-            ));
-        });
+        );
     }
 
     /**

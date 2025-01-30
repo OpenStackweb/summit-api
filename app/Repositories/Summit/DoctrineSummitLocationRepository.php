@@ -23,7 +23,6 @@ use models\summit\SummitExternalLocation;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitHotel;
 use models\summit\SummitVenue;
-use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
@@ -56,7 +55,10 @@ final class DoctrineSummitLocationRepository
     protected function getFilterMappings()
     {
         return [
-            'name'           => 'al.name:json_string',
+            'name'             => 'al.name:json_string',
+            'rooms_name'       => 'v_rooms.name:json_string',
+            'rooms_floor_name' => 'v_rooms_floor.name:json_string',
+            'floors_name'      => 'v_floors.name:json_string',
             'description'    => 'al.description:json_string',
             'opening_hour'   => 'al.opening_hour:json_int',
             'closing_hour'   => 'al.closing_hour:json_int',
@@ -126,7 +128,7 @@ final class DoctrineSummitLocationRepository
             ->from(SummitAbstractLocation::class, "al")
             ->leftJoin(SummitGeoLocatedLocation::class, 'gll', 'WITH', 'gll.id = al.id')
             ->leftJoin(SummitVenue::class, 'v', 'WITH', 'v.id = gll.id')
-            ->leftJoin(SummitExternalLocation::class, 'el', 'WITH', 'el.id = gll.id')
+            ->leftJoin(SummitVenueRoom::class, 'vr', 'WITH', 'v.id = gll.id')
             ->leftJoin(SummitHotel::class, 'h', 'WITH', 'h.id = el.id')
             ->leftJoin(SummitAirport::class, 'ap', 'WITH', 'ap.id = el.id')
             ->leftJoin(SummitVenueRoom::class, 'r', 'WITH', 'r.id = al.id')
@@ -156,6 +158,16 @@ final class DoctrineSummitLocationRepository
         } else {
             //default order
             $query = $query->addOrderBy("al.id",'ASC');
+        }
+
+        if($filter->hasFilter("rooms_name") || $filter->hasFilter("rooms_floor_name")){
+            $query = $query->leftJoin('v.rooms', 'v_rooms');
+            if($filter->hasFilter("rooms_floor_name")){
+                $query = $query->leftJoin('v_rooms.floor', 'v_rooms_floor');
+            }
+        }
+        if($filter->hasFilter("floors_name")){
+            $query = $query->leftJoin('v.floors', 'v_floors');
         }
 
         if($filter->hasFilter("availability_day")){

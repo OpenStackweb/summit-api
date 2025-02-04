@@ -23,7 +23,7 @@ use Mockery;
 /**
  * Class SummitEventModelTest
  */
-class SummitEventModelTest extends ProtectedApiTest
+class SummitEventModelTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

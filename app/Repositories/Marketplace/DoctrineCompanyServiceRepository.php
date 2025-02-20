@@ -17,6 +17,7 @@ use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use utils\DoctrineJoinFilterMapping;
+
 /**
  * Class DoctrineCompanyServiceRepository
  * @package App\Repositories\Marketplace

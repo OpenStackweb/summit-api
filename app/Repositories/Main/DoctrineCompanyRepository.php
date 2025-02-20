@@ -14,6 +14,7 @@
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\main\Company;
 use models\main\ICompanyRepository;
+use utils\Filter;
 
 /**
  * Class DoctrineCompanyRepository
@@ -30,7 +31,9 @@ final class DoctrineCompanyRepository
     protected function getFilterMappings()
     {
         return [
-            'name' => 'e.name:json_string'
+            'name' => 'e.name:json_string',
+            'member_level' => 'e.member_level',
+            'display_on_site' => Filter::buildBooleanField('e.display_on_site'),
         ];
     }
 
@@ -42,6 +45,7 @@ final class DoctrineCompanyRepository
         return [
             'id'   => 'e.id',
             'name' => 'e.name',
+            'member_level' => 'e.member_level',
         ];
     }
 

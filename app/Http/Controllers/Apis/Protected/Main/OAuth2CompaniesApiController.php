@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Rules\Boolean;
 use App\Services\Model\ICompanyService;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
@@ -70,17 +71,22 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'name' => ['=@', '==', '@@'],
+                    'member_level' => ['=@', '==', '@@'],
+                    'display_on_site' => [ '=='],
                 ];
             },
             function () {
                 return [
                     'name' => 'sometimes|string',
+                    'member_level' => 'sometimes|string',
+                    'display_on_site' =>  ['sometimes', new Boolean],
                 ];
             },
             function () {
                 return [
                     'name',
                     'id',
+                    'member_level',
                 ];
             },
             function ($filter) {

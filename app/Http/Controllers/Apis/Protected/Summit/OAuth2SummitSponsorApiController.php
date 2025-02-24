@@ -300,7 +300,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
             // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
-            if(!$current_member->isAuthzFor($summit))
+            if(!is_null($current_member) && !$current_member->isAuthzFor($summit))
                 throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
             $sponsor = $this->service->addSponsorUser($summit, $sponsor_id, $member_id);

@@ -127,7 +127,7 @@ return [
         'cluster' => false,
 
         'default' => [
-            'host' => env('REDIS_HOST'),
+            'host' => env('REDIS_HOST2'),
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_DEFAULT_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
@@ -137,7 +137,7 @@ return [
         ],
 
         'cache' => [
-            'host' => env('REDIS_HOST'),
+            'host' => env('REDIS_HOST2'),
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_CACHE_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
@@ -147,7 +147,7 @@ return [
         ],
 
         'session' => [
-            'host' => env('REDIS_HOST'),
+            'host' => env('REDIS_HOST2'),
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_SESSION_DATABASE', 1),
             'password' => env('REDIS_PASSWORD'),
@@ -157,7 +157,7 @@ return [
         ],
 
         'worker' => [
-            'host' => env('REDIS_HOST'),
+            'host' => env('REDIS_HOST2'),
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_WORKER_DATABASE', 2),
             'password' => env('REDIS_PASSWORD'),

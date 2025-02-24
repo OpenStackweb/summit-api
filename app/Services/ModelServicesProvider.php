@@ -39,6 +39,7 @@ use App\Services\Model\Imp\RegistrationIngestionService;
 use App\Services\Model\Imp\SelectionPlanOrderExtraQuestionTypeService;
 use App\Services\Model\Imp\SponsoredProjectService;
 use App\Services\Model\Imp\SponsorUserInfoGrantService;
+use App\Services\Model\Imp\SponsorUserSyncService;
 use App\Services\Model\Imp\SummitAdministratorPermissionGroupService;
 use App\Services\Model\Imp\SummitDocumentService;
 use App\Services\Model\Imp\SummitEmailEventFlowService;
@@ -69,6 +70,7 @@ use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISponsoredProjectService;
 use App\Services\Model\ISponsorshipTypeService;
 use App\Services\Model\ISponsorUserInfoGrantService;
+use App\Services\Model\ISponsorUserSyncService;
 use App\Services\Model\ISummitAccessLevelTypeService;
 use App\Services\Model\ISummitAdministratorPermissionGroupService;
 use App\Services\Model\ISummitBadgeFeatureTypeService;
@@ -492,6 +494,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitAttendeeBadgePrintService::class,
             SummitAttendeeBadgePrintService::class
         );
+
+        App::singleton(
+            ISponsorUserSyncService::class,
+            SponsorUserSyncService::class
+        );
     }
 
     /**
@@ -562,6 +569,7 @@ final class ModelServicesProvider extends ServiceProvider
             ITicketFinderStrategyFactory::class,
             IPromoCodeStrategyFactory::class,
             ISummitAttendeeBadgePrintService::class,
+            ISponsorUserSyncService::class
         ];
     }
 }

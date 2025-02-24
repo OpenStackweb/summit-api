@@ -84,6 +84,7 @@ return [
                     'durable' => env('RABBITMQ_QUEUE_DURABLE', true),
                     'exclusive' => env('RABBITMQ_QUEUE_EXCLUSIVE', false),
                     'auto_delete' => env('RABBITMQ_QUEUE_AUTODELETE', true),
+                    'job' => \App\Queue\Jobs\RabbitMQJob::class,
                 ],
             ],
         ]

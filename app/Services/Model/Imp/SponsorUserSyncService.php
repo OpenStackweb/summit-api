@@ -70,12 +70,8 @@ final class SponsorUserSyncService
     /**
      * @inheritDoc
      */
-    public function addSponsorUser(array $payload) {
+    public function addSponsorUser(int $summit_id, int $sponsor_id, int $user_external_id) {
         try {
-            $summit_id = intval($payload['summit_id']);
-            $sponsor_id = intval($payload['sponsor_id']);
-            $user_external_id = intval($payload['user_external_id']);
-
             Log::debug(
                 "SponsorUserSyncService::addSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_external_id {$user_external_id}");
 

@@ -21,10 +21,13 @@ use models\exceptions\ValidationException;
 interface ISponsorUserSyncService
 {
     /**
-     * @param array $payload
+     * @param int $summit_id
+     * @param int $sponsor_id
+     * @param int $user_external_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
+     * @throws \Exception
      */
-    public function addSponsorUser(array $payload);
+    public function addSponsorUser(int $summit_id, int $sponsor_id, int $user_external_id);
 }

@@ -1,4 +1,4 @@
-<?php namespace App\Queue\Jobs;
+<?php namespace App\Jobs;
 /*
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +19,12 @@ use Illuminate\Support\Facades\Log;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob as BaseJob;
 
 /**
- * Class RabbitMQJob
+ * Class SyncSponsorMemberMQJob
  * @package App\Jobs
  */
-final class RabbitMQJob extends BaseJob
+final class SyncSponsorMemberMQJob extends BaseJob
 {
+    public $tries = 3;
 
     /**
      * Fire the job.
@@ -35,19 +36,29 @@ final class RabbitMQJob extends BaseJob
     {
         try {
             $payload = $this->payload();
-
             $json = json_encode($payload);
 
-            Log::debug("RabbitMQJob::handle payload {$json} from queue {$this->queue}");
+            Log::debug("SyncSponsorMemberMQJob::fire payload {$json}");
 
-            if ($this->queue == 'ADD_USER_TO_SPONSOR_QUEUE') {
-                $sponsor_user_sync_service = App::make(ISponsorUserSyncService::class);
-                $sponsor_user_sync_service->addSponsorUser($payload['data']);
-            }
+            $data = $payload['data'];
+            $summit_id = intval($data['summit_id']);
+            $sponsor_id = intval($data['sponsor_id']);
+            $user_external_id = intval($data['user_external_id']);
+
+            $sponsor_user_sync_service = App::make(ISponsorUserSyncService::class);
+            $sponsor_user_sync_service->addSponsorUser($summit_id, $sponsor_id, $user_external_id);
+            $this->delete();
         } catch (\Exception $ex) {
             Log::error($ex);
-        } finally {
-            $this->delete();
+            throw $ex;
         }
+    }
+
+    /**
+     * @param $e
+     */
+    public function failed($e)
+    {
+        Log::error("SyncSponsorMemberMQJob::failed {$e->getMessage()}");
     }
 }

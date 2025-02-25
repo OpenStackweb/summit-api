@@ -204,7 +204,7 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     /**
      * @return SummitScheduleFilterElementConfig[]
      */
-    public function getFilters(): array
+    public function getFilters()
     {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'ASC']);

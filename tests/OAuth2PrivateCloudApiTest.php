@@ -15,7 +15,7 @@
 /**
 * Class OAuth2PrivateCloudApiTest
 */
-class OAuth2PrivateCloudApiTest extends ProtectedApiTest
+class OAuth2PrivateCloudApiTest extends ProtectedApiTestCase
 {
 
 

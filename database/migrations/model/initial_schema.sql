@@ -2767,7 +2767,7 @@ create table ExtraQuestionTypeValue
         primary key,
     Created    datetime             not null,
     LastEdited datetime             not null,
-    ClassName  varchar(255)         not null,
+    ClassName  enum ('ExtraQuestionTypeValue') charset utf8mb3 default 'ExtraQuestionTypeValue' null,
     Label      text                 not null,
     Value      text                 not null,
     `Order`    int        default 1 not null,
@@ -9478,6 +9478,12 @@ create index MemberID
 create index SummitID
     on SummitAttendee (SummitID);
 
+ALTER TABLE `SummitAttendee`
+ADD INDEX `IDX_SummitAttendee_Summit_Email` (`SummitID`, `Email`) USING BTREE;
+
+ALTER TABLE `SummitAttendee`
+ADD INDEX `IDX_SummitAttendee_Summit_Member` (`SummitID`, `MemberID`) USING BTREE;
+
 create table SummitAttendeeBadgeAuditLog
 (
     ID                    int not null
@@ -13111,6 +13117,10 @@ create table SummitAttendeeTicket
 )
     charset = latin1;
 
+
+ALTER TABLE `SummitAttendeeTicket`
+    ADD INDEX `IDX_SummitAttendeeTicket_Owner_Status_Active` (`OwnerID`, `Status`, `IsActive`) USING BTREE;
+
 create table SummitAttendeeNote
 (
     ID         int auto_increment
@@ -14045,7 +14055,7 @@ create table SummitLeadReportSetting
     ClassName  varchar(255) default 'SummitLeadReportSetting' not null,
     Created    datetime                                       not null,
     LastEdited datetime                                       not null,
-    Columns    json                                           not null comment '(DC2Type:json_array)',
+    Columns    json                                           not null,
     SummitID   int                                            not null,
     SponsorID  int                                            null,
     constraint UNIQ_5C01A78790CF727894CE1A1A

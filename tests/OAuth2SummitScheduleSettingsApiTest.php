@@ -19,7 +19,7 @@ use models\summit\SummitScheduleFilterElementConfig;
  * Class OAuth2SummitScheduleSettingsApiTest
  * @package Tests
  */
-final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
+final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

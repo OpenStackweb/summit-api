@@ -13,41 +13,61 @@
  **/
 
 use App\Services\Model\ISponsorUserSyncService;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Support\Facades\App;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob as BaseJob;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 
 /**
  * Class SyncSponsorMemberMQJob
  * @package App\Jobs
  */
-final class SyncSponsorMemberMQJob extends BaseJob
+final class SyncSponsorMemberMQJob implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     public $tries = 3;
 
     /**
-     * Fire the job.
-     *
-     * @return void
-     * @throws BindingResolutionException
+     * @var ISponsorUserSyncService
      */
-    public function fire()
+    public $service;
+
+    /**
+     * SyncSponsorMemberMQJob constructor.
+     * @param ISponsorUserSyncService $service
+     */
+    public function __construct(ISponsorUserSyncService $service)
+    {
+        $this->service = $service;
+    }
+
+    /**
+     * @param RabbitMQJob $job
+     * @throws BindingResolutionException
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function handle(RabbitMQJob $job)
     {
         try {
-            $payload = $this->payload();
+            $payload = $job->payload();
             $json = json_encode($payload);
 
-            Log::debug("SyncSponsorMemberMQJob::fire payload {$json}");
+            Log::debug("SyncSponsorMemberMQJob::handle payload {$json}");
 
             $data = $payload['data'];
             $summit_id = intval($data['summit_id']);
             $sponsor_id = intval($data['sponsor_id']);
             $user_external_id = intval($data['user_external_id']);
 
-            $sponsor_user_sync_service = App::make(ISponsorUserSyncService::class);
-            $sponsor_user_sync_service->addSponsorUser($summit_id, $sponsor_id, $user_external_id);
-            $this->delete();
+            $this->service->addSponsorUser($summit_id, $sponsor_id, $user_external_id);
+            $job->delete();
         } catch (\Exception $ex) {
             Log::error($ex);
             throw $ex;
@@ -55,10 +75,11 @@ final class SyncSponsorMemberMQJob extends BaseJob
     }
 
     /**
-     * @param $e
+     * @param array $data
+     * @param \Throwable $exception
      */
-    public function failed($e)
+    public function failed(array $data, \Throwable $exception)
     {
-        Log::error("SyncSponsorMemberMQJob::failed {$e->getMessage()}");
+        Log::error("SyncSponsorMemberMQJob::failed {$exception->getMessage()}");
     }
 }

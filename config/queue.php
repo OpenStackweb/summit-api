@@ -90,7 +90,7 @@ return [
 
         'sponsor_users_sync_message_broker' => [
             'driver' => 'rabbitmq',
-            'queue' => env('SPONSOR_USERS_SYNC_QUEUE', 'sponsor-users-sync-queue'),
+            'queue' => env('SPONSOR_USERS_QUEUE', 'sponsor-users'),
             'connection' => $rabbit_connection,
             'hosts' => [
                 [
@@ -111,7 +111,7 @@ return [
                     'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
                 ],
                 'queue' => [
-                    'exchange' =>  env('RABBITMQ_EXCHANGE_NAME'),
+                    'exchange' =>  env('SPONSOR_USERS_EXCHANGE_NAME'),
                     'exchange_type' =>  env('RABBITMQ_EXCHANGE_TYPE', 'fanout'),
                     'passive' => env('RABBITMQ_QUEUE_PASSIVE', false),
                     'durable' => env('RABBITMQ_QUEUE_DURABLE', true),

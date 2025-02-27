@@ -1288,7 +1288,7 @@ final class SpeakerService
                         $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);
 
                         $original_filter = $payload["original_filter"] ?? null;
-                        if(!is_null($original_filter) && is_array($original_filter) && count($original_filter) > 0){
+                        if(is_array($original_filter)){
                             // in case that we are sending the original filter on the payload
                             try {
 
@@ -1301,7 +1301,8 @@ final class SpeakerService
                                     )
                                 );
 
-                                $original_filter = FilterParser::parse($original_filter, [
+                                $original_filter = count($original_filter) > 0 ?
+                                    FilterParser::parse($original_filter, [
                                     'id' => ['=='],
                                     'not_id' => ['=='],
                                     'first_name' => ['=@', '@@', '=='],
@@ -1320,7 +1321,7 @@ final class SpeakerService
                                     'presentations_submitter_email' => ['=@', '@@', '=='],
                                     'has_media_upload_with_type' => ['=='],
                                     'has_not_media_upload_with_type' => ['=='],
-                                ]) ;
+                                ]) : null;
                             }
                             catch (\Exception $ex){
                                 Log::warning($ex);

@@ -2552,4 +2552,18 @@ SQL;
         if ($review_status == self::ReviewStatusInReview) return 'In Review';
         return $review_status;
     }
+
+    /**
+     * @return bool
+     * @throws \Exception
+     */
+    public function isSubmissionClosed(): bool
+    {
+        $selection_plan = $this->selection_plan;
+        if (is_null($selection_plan)) return false;
+
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $submission_end_date = $selection_plan->getSubmissionEndDate();
+        return !is_null($submission_end_date) && $now > $submission_end_date;
+    }
 }

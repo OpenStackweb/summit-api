@@ -1037,13 +1037,15 @@ final class SummitService
             $event = $this->event_repository->getById($event_id);
 
             if (is_null($event))
-                throw new EntityNotFoundException(sprintf("event id %s does not exists!", $event_id));
+                throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
 
             if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
-                throw new ValidationException(sprintf("event %s does not belongs to summit id %s", $event_id, $summit->getIdentifier()));
-
+                throw new ValidationException(sprintf("Event %s does not belongs to summit id %s.", $event_id, $summit->getIdentifier()));
 
             if ($event instanceof Presentation) {
+                if ($event->isSubmissionClosed())
+                    throw new ValidationException(sprintf("Presentation %s can not be deleted because the submission is closed.", $event_id));
+
                 $event->clearMediaUploads();
             }
 

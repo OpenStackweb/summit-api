@@ -118,14 +118,11 @@ FROM SummitAdministratorPermissionGroup_Members
 WHERE SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID = :group_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'group_id' => $this->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
-
+        $stmt = $this->prepareRawSQL($sql, [
+            'group_id' => $this->id,
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -159,13 +156,11 @@ FROM SummitAdministratorPermissionGroup_Summits
 WHERE SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = :group_id;
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'group_id' => $this->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->prepareRawSQL($sql, [
+            'group_id' => $this->id,
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
 
     }
 

@@ -15,7 +15,7 @@
 /**
  * Class OAuth2SpeakersAssistancesApiTest
  */
-final class OAuth2SpeakersAssistancesApiTest extends ProtectedApiTest
+final class OAuth2SpeakersAssistancesApiTest extends ProtectedApiTestCase
 {
     public function testGetAllBySummit($summit_id = 23){
 

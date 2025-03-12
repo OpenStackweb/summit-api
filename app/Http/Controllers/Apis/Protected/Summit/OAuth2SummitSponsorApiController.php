@@ -138,6 +138,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             'id',
             'order',
             'company_name',
+            'sponsorship_name',
+            'sponsorship_size'
         ];
     }
 

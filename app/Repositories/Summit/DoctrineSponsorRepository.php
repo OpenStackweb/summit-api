@@ -38,9 +38,9 @@ implements ISponsorRepository
         return [
             'sponsor_id'        => new DoctrineFilterMapping("e.id :operator :value"),
             'company_name'      => "c.name",
-            'sponsorship_name'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.name :operator :value"),
-            'sponsorship_label' => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.label :operator :value"),
-            'sponsorship_size'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.size :operator :value"),
+            'sponsorship_name'  => "st.name",
+            'sponsorship_label' => "st.label",
+            'sponsorship_size'  => "st.size",
             'summit_id'         => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
             'badge_scans_count' => new DoctrineHavingFilterMapping("", "bs.sponsor", "count(bs.id) :operator :value"),
             'is_published' => Filter::buildBooleanField('e.is_published'),
@@ -59,6 +59,17 @@ implements ISponsorRepository
             (!is_null($order) && $order->hasOrder("company_name"))
         )
             $query = $query->leftJoin("e.company", "c");
+
+        if(
+            (!is_null($filter) && $filter->hasFilter("sponsorship_label")) ||
+            (!is_null($filter) && $filter->hasFilter("sponsorship_name")) ||
+            (!is_null($filter) && $filter->hasFilter("sponsorship_size")) ||
+            (!is_null($order) && $order->hasOrder("sponsorship_name")) ||
+            (!is_null($order) && $order->hasOrder("sponsorship_size"))
+        )
+            $query = $query->leftJoin("e.sponsorship", "sp")
+                            ->leftJoin("sp.type", "st");
+
         return $query;
     }
 
@@ -72,6 +83,8 @@ implements ISponsorRepository
             'name'  => 'e.name',
             'order' => 'e.order',
             'company_name' => 'c.name',
+            'sponsorship_name' => 'st.name',
+            'sponsorship_size' => 'st.size',
         ];
     }
 

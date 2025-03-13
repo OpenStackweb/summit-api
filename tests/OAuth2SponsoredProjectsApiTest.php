@@ -18,7 +18,7 @@ use models\main\SponsoredProject;
 /**
  * Class OAuth2SponsoredProjectsApiTest
  */
-class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
+class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
 {
     public function testAddSponsoredProject(){
 

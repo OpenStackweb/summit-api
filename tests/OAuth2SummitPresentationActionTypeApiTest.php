@@ -19,7 +19,7 @@ use models\summit\PresentationActionType;
  * Class OAuth2SummitPresentationActionTypeApiTest
  * @package Tests
  */
-final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTest
+final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

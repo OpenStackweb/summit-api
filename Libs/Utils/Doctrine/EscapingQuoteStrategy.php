@@ -171,6 +171,6 @@ class EscapingQuoteStrategy implements QuoteStrategy
         $columnName = preg_replace('/[^A-Za-z0-9_]/', '', $columnName);
         $columnName = is_numeric($columnName) ? '_'.$columnName : $columnName;
 
-        return $platform->getSQLResultCasing($columnName);
+        return $columnName;
     }
 }

@@ -136,6 +136,9 @@ final class ProcessScheduleEntityLifeCycleEventService
             if($entity_type === 'Summit'){
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSummits, $entity_id);
             }
+            if($entity_type === 'PresentationCategory'){
+                $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSummits, $summit_id);
+            }
             if($entity_type === 'PresentationSpeaker'){
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSpeakers, $entity_id);
             }

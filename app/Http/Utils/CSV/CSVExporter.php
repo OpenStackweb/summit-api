@@ -79,7 +79,13 @@ final class CSVExporter
             $output .= implode($field_separator, $values) . PHP_EOL;
         }
 
-        return implode($field_separator, $header) . PHP_EOL . $output;
+        $csv_header = implode($field_separator, $header);
+
+        if (empty($csv_header) && empty($output)) {
+            return '';
+        }
+
+        return $csv_header . PHP_EOL . $output;
     }
 
     function cleanData(&$str)

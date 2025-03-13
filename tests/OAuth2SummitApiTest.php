@@ -817,58 +817,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($member));
     }
 
-    public function testGetMembersBySummit()
-    {
-
-        $params = [
-
-            'expand'    => 'attendee,speaker,feedback,groups,presentations',
-            'id'        => self::$summit->getId(),
-            'filter'   => 'schedule_event_id==23828'
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitMembersApiController@getAllBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders()
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $members = json_decode($content);
-        $this->assertTrue(!is_null($members));
-    }
-
-    public function testGetMembersBySummitCSV()
-    {
-
-        $params = [
-
-            'expand'    => 'attendee,speaker,feedback,groups,presentations',
-            'id'        => self::$summit->getId(),
-            'columns'  => 'id,first_name,last_name,email,affiliations',
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitMembersApiController@getAllBySummitCSV",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders()
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $csv = $content;
-        $this->assertTrue(!empty($csv));
-    }
-
     public function testCurrentSummitMyMemberFavorites()
     {
         $params = [
@@ -911,6 +859,58 @@ final class OAuth2SummitApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders()
         );
         $this->assertResponseStatus(201);
+    }
+
+    public function testGetMembersBySummit()
+    {
+
+        $params = [
+
+            'expand'    => 'attendee,speaker,feedback,groups,presentations',
+            'id'        => self::$summit->getId(),
+            'filter'   => 'schedule_event_id==23828'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitMembersApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $members = json_decode($content);
+        $this->assertTrue(!is_null($members));
+    }
+
+    public function testGetMembersBySummitCSV()
+    {
+        $this->testCurrentSummitMemberAddToSchedule();
+
+        $params = [
+            'expand'    => 'attendee,speaker,feedback,groups,presentations',
+            'id'        => self::$summit->getId(),
+            'columns'   => 'id,first_name,last_name,email,affiliations',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitMembersApiController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $csv = $content;
+        $this->assertNotEmpty($csv);
     }
 
     public function testCurrentSummitMemberScheduleUnset()

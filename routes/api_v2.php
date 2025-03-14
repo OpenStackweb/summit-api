@@ -14,6 +14,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Config;
+use libs\utils\CacheRegions;
 //OAuth2 Protected API V2
 
 
@@ -22,7 +23,12 @@ Route::group(['prefix' => 'summits'], function () {
 
     Route::group(['prefix' => '{id}'], function () {
 
-        Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime_v2', 300).',SUMMITS,id', 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+        Route::get('', ['middleware' =>
+            sprintf('cache:%s,%s,id',
+                Config::get('cache_api_response.get_summit_response_lifetime_v2', 300),
+                CacheRegions::CacheRegionSummits,
+            ),
+            'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
         // events
         Route::group(['prefix' => 'events'], function () {
 

@@ -14,7 +14,7 @@
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
-
+use libs\utils\CacheRegions;
 // public api ( without AUTHZ [OAUTH2.0])
 
 
@@ -132,7 +132,12 @@ Route::group(['prefix' => 'summits'], function () {
             Route::get('current/{status}', 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus')->where('status', 'submission|selection|voting');
         });
 
-        Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 3600).',SUMMITS,id', 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+        Route::get('', ['middleware' =>
+              sprintf('cache:%s,%s,id',
+                Config::get('cache_api_response.get_summit_response_lifetime', 1200),
+                CacheRegions::CacheRegionSummits,
+            ),
+            'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
         // members
         Route::group(['prefix' => 'members'], function () {
@@ -153,7 +158,12 @@ Route::group(['prefix' => 'summits'], function () {
 
             Route::group(array('prefix' => '{event_id}'), function () {
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', ['middleware' => 'cache:1200,EVENTS,event_id' , 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                    Route::get('', ['middleware' =>
+                        sprintf('cache:%s,%s,event_id',
+                            Config::get('cache_api_response.get_published_event_response_lifetime', 600),
+                            CacheRegions::CacheRegionEvents,
+                        ),
+                        'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                 });
             });
 
@@ -190,7 +200,11 @@ Route::group(['prefix' => 'summits'], function () {
         Route::group(['prefix' => 'speakers'], function () {
             Route::get('', 'OAuth2SummitSpeakersApiController@getSpeakers');
             Route::group(['prefix' => '{speaker_id}'], function () {
-                Route::get('', ['middleware' => 'cache:3600,SPEAKERS,speaker_id' , 'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker']);
+                Route::get('', ['middleware' =>
+                    sprintf('cache:%s,%s,speaker_id',
+                        3600,
+                        CacheRegions::CacheRegionSpeakers,
+                    ) , 'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker']);
             });
         });
         // orders

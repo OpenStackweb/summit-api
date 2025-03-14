@@ -12,7 +12,7 @@
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
-
+use libs\utils\CacheRegions;
 
 //OAuth2 Protected API
 
@@ -269,7 +269,12 @@ Route::group(array('prefix' => 'summits'), function () {
         });
 
         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummit']);
-        Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+        Route::get('', ['middleware' =>
+            sprintf('cache:%s,%s,id',
+                Config::get('cache_api_response.get_summit_response_lifetime', 1200),
+                CacheRegions::CacheRegionSummits,
+            ),
+            'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
         // selection plan extra questions ( by summit )
 
@@ -596,7 +601,12 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@send']);
             });
             Route::group(['prefix' => '{speaker_id}'], function () {
-                Route::get('', ['middleware' => 'cache:3600,SPEAKERS,speaker_id' , 'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker'])->where('speaker_id', 'me|[0-9]+');
+                Route::get('', ['middleware' =>
+                    sprintf('cache:%s,%s,speaker_id',
+                        3600,
+                        CacheRegions::CacheRegionSpeakers,
+                    ),
+                    'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker'])->where('speaker_id', 'me|[0-9]+');
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@updateSpeakerBySummit'])->where('speaker_id', 'me|[0-9]+');
             });
         });
@@ -646,7 +656,12 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('', 'OAuth2SummitEventsApiController@getEvent');
 
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', ['middleware' => 'cache:'.Config::get('cache_api_response.get_published_event_response_lifetime', 600).',EVENTS,event_id', 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                    Route::get('', ['middleware' =>
+                        sprintf('cache:%s,%s,event_id',
+                            Config::get('cache_api_response.get_published_event_response_lifetime', 600),
+                            CacheRegions::CacheRegionEvents,
+                        ),
+                        'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                     Route::get('tokens',  'OAuth2SummitEventsApiController@getScheduledEventJWT');
                     Route::get('streaming-info', 'OAuth2SummitEventsApiController@getScheduledEventStreamingInfo');
                     Route::post('mail', 'OAuth2SummitEventsApiController@shareScheduledEventByEmail');
@@ -2202,7 +2217,12 @@ Route::group(['prefix' => 'speakers'], function () {
         Route::get('/edit-permission', 'OAuth2SummitSpeakersApiController@getSpeakerEditPermission')->where('speaker_id', '[0-9]+');
         Route::put('', 'OAuth2SummitSpeakersApiController@updateSpeaker')->where('speaker_id', 'me|[0-9]+');
         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@deleteSpeaker'])->where('speaker_id', 'me|[0-9]+');
-        Route::get('', ['middleware' => 'cache:3600,SPEAKERS,speaker_id' , 'uses' =>'OAuth2SummitSpeakersApiController@getSpeaker']);
+        Route::get('', ['middleware' =>
+            sprintf('cache:%s,%s,speaker_id',
+                3600,
+                CacheRegions::CacheRegionSpeakers,
+            ),
+            'uses' =>'OAuth2SummitSpeakersApiController@getSpeaker']);
         // speaker photos
         Route::group(['prefix' => 'photo'], function () {
             Route::post('', ['uses' => 'OAuth2SummitSpeakersApiController@addSpeakerPhoto']);

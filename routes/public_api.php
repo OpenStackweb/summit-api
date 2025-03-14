@@ -182,6 +182,12 @@ Route::group(['prefix' => 'summits'], function () {
                 Route::get('', 'OAuth2SummitsEventTypesApiController@getEventTypeBySummit');
             });
         });
+        // tracks
+        Route::group(['prefix' => 'tracks'], function () {
+            Route::group(['prefix' => '{track_id}'], function () {
+                Route::get('', 'OAuth2SummitTracksApiController@getTrackBySummit');
+            });
+        });
         // locations
         Route::group(['prefix' => 'locations'], function () {
             Route::group(['prefix' => '{location_id}'], function () {

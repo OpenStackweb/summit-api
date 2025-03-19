@@ -30,3 +30,5 @@ routes.txt
 phpunit.xml
 .phpunit.result.cache
 .phpunit.cache/
+docker-compose/mysql/config/*.sql
+docker-compose/mysql/model/*.sql

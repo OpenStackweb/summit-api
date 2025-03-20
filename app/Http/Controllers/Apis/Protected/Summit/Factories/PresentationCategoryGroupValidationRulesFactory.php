@@ -46,7 +46,7 @@ final class PresentationCategoryGroupValidationRulesFactory
         $base_rules =  [
             'name'        => 'required|string',
             'description' => 'sometimes|string',
-            'color'       => 'sometimes|hex_color',
+            'color'       => 'sometimes|hex_color2',
             'max_attendee_votes' => 'sometimes|integer|min:0',
             'begin_attendee_voting_period_date' => 'nullable|date_format:U|epoch_seconds|required_with:submission_begin_date',
             'end_attendee_voting_period_date' => 'nullable|date_format:U|epoch_seconds|required_with:begin_attendee_voting_period_date|after:begin_attendee_voting_period_date',
@@ -56,7 +56,7 @@ final class PresentationCategoryGroupValidationRulesFactory
             $base_rules = [
                 'name'        => 'sometimes|string',
                 'description' => 'sometimes|string',
-                'color'       => 'sometimes|hex_color',
+                'color'       => 'sometimes|hex_color2',
             ];
         }
 

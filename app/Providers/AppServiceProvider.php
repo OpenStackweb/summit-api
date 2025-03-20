@@ -558,8 +558,8 @@ class AppServiceProvider extends ServiceProvider
             return intval($value) > 0;
         });
 
-        Validator::extend('hex_color', function ($attribute, $value, $parameters, $validator) {
-            $validator->addReplacer('hex_color', function ($message, $attribute, $rule, $parameters) use ($validator) {
+        Validator::extend('hex_color2', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('hex_color2', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be a valid hex color value", $attribute);
             });
             if (strlen($value) != 6) return false;

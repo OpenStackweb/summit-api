@@ -225,6 +225,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTestCase
             'class_name' => \models\summit\SummitEventType::ClassName,
             'allows_publishing_dates' => false,
             'allows_location' => false,
+            'color' => 'baba36',
         ];
 
         $headers = [

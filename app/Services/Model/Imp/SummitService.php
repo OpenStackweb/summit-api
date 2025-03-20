@@ -1027,24 +1027,25 @@ final class SummitService
     /**
      * @param Summit $summit
      * @param int $event_id
-     * @param Member $member
+     * @param Member|null $current_user
      * @return mixed
      * @throws Exception
      */
-    public function deleteEvent(Summit $summit, $event_id, Member $member)
+    public function deleteEvent(Summit $summit, $event_id, Member $current_user = null)
     {
-        return $this->tx_service->transaction(function () use ($summit, $event_id, $member) {
+        return $this->tx_service->transaction(function () use ($summit, $event_id, $current_user) {
 
             $event = $this->event_repository->getById($event_id);
 
             if (is_null($event))
                 throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
 
-            if (!$member->isAdmin() && $event->getSummit()->getIdentifier() !== $summit->getIdentifier())
+            if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
                 throw new ValidationException(sprintf("Event %s does not belongs to summit id %s.", $event_id, $summit->getIdentifier()));
 
             if ($event instanceof Presentation) {
-                if ($event->isSubmissionClosed())
+                $can_delete_closed_submissions = is_null($current_user) || $current_user->isAdmin();
+                if ($event->isSubmissionClosed() && !$can_delete_closed_submissions)
                     throw new ValidationException(sprintf("Presentation %s can not be deleted because the submission is closed.", $event_id));
 
                 $event->clearMediaUploads();

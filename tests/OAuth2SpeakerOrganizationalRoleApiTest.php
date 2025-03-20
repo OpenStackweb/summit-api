@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-final class OAuth2SpeakerOrganizationalRoleApiTest extends ProtectedApiTest
+final class OAuth2SpeakerOrganizationalRoleApiTest extends ProtectedApiTestCase
 {
 
     public function testGelAll(){

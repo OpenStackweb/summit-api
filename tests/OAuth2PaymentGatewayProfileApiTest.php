@@ -18,7 +18,7 @@ use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 /**
  * Class OAuth2PaymentGatewayProfileApiTest
  */
-final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTest
+final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
 {
     /**
     * @var string
@@ -42,7 +42,7 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTest
 
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');

@@ -29,8 +29,8 @@ final class SummitTrackValidationRulesFactory extends AbstractValidationRulesFac
         return [
             'name' => 'sometimes|string|max:100',
             'description' => 'sometimes|string|max:1500',
-            'color' => 'sometimes|hex_color|max:50',
-            'text_color' => 'sometimes|hex_color|max:50',
+            'color' => 'sometimes|hex_color2',
+            'text_color' => 'sometimes|hex_color2',
             'code' => 'sometimes|string|max:5',
             'session_count' => 'sometimes|integer',
             'alternate_count' => 'sometimes|integer',

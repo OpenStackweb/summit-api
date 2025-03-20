@@ -77,7 +77,7 @@ interface ISummitService
      * @param Member|null $current_user
      * @return mixed
      */
-    public function deleteEvent(Summit $summit, $event_id, Member $current_user = null);
+    public function deleteEvent(Summit $summit, $event_id, ?Member $current_user = null);
 
     /**
      * @param Summit $summit

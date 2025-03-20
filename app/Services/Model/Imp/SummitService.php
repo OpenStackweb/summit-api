@@ -1031,7 +1031,7 @@ final class SummitService
      * @return mixed
      * @throws Exception
      */
-    public function deleteEvent(Summit $summit, $event_id, Member $current_user = null)
+    public function deleteEvent(Summit $summit, $event_id, ?Member $current_user = null)
     {
         return $this->tx_service->transaction(function () use ($summit, $event_id, $current_user) {
 

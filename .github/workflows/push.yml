@@ -108,6 +108,8 @@ jobs:
           vendor/bin/phpunit --filter "OAuth2SummitEventsApiTest" --log-junit results_events_api_test.xml
           echo "running OAuth2PresentationSubmissionTest"
           vendor/bin/phpunit --filter "OAuth2PresentationSubmissionTest" --log-junit results_presentation_submissions_api_test.xml
+          echo "running OAuth2EventTypesApiTest"
+          vendor/bin/phpunit --filter "OAuth2EventTypesApiTest" --log-junit results_event_types_api_test.xml
       - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
         uses: actions/upload-artifact@v4
         with:

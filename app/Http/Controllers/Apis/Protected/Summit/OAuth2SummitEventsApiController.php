@@ -800,7 +800,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $this->service->deleteEvent($summit, $event_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $this->service->deleteEvent($summit, $event_id, $current_member);
 
             return $this->deleted();
         });

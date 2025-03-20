@@ -1027,19 +1027,20 @@ final class SummitService
     /**
      * @param Summit $summit
      * @param int $event_id
+     * @param Member $member
      * @return mixed
+     * @throws Exception
      */
-    public function deleteEvent(Summit $summit, $event_id)
+    public function deleteEvent(Summit $summit, $event_id, Member $member)
     {
-
-        return $this->tx_service->transaction(function () use ($summit, $event_id) {
+        return $this->tx_service->transaction(function () use ($summit, $event_id, $member) {
 
             $event = $this->event_repository->getById($event_id);
 
             if (is_null($event))
                 throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
 
-            if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
+            if (!$member->isAdmin() && $event->getSummit()->getIdentifier() !== $summit->getIdentifier())
                 throw new ValidationException(sprintf("Event %s does not belongs to summit id %s.", $event_id, $summit->getIdentifier()));
 
             if ($event instanceof Presentation) {

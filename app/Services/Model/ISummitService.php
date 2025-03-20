@@ -74,9 +74,10 @@ interface ISummitService
     /**
      * @param Summit $summit
      * @param $event_id
+     * @param Member $member
      * @return mixed
      */
-    public function deleteEvent(Summit $summit, $event_id);
+    public function deleteEvent(Summit $summit, $event_id, Member $member);
 
     /**
      * @param Summit $summit

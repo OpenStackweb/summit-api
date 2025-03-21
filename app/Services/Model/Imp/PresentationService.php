@@ -562,43 +562,51 @@ final class PresentationService
         });
     }
 
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function deletePresentation(Summit $summit, $presentation_id)
+    /*
+      * @param Summit $summit
+      * @param int $presentation_id
+      * @param Member $current_user
+      * @return void
+      * @throws EntityNotFoundException
+      * @throws ValidationException
+      */
+    public function deletePresentation(Summit $summit, int $presentation_id, ?Member $current_user = null): void
     {
-        return $this->tx_service->transaction(function () use ($summit, $presentation_id) {
-
-            $member = ResourceServerContext::getCurrentUser(false);
-
-            $current_speaker = $this->speaker_repository->getByMember($member);
-            if (is_null($current_speaker))
-                throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $member->getId()));
+         $this->tx_service->transaction(function () use ($summit, $presentation_id, $current_user) {
 
             $presentation = $summit->getEvent($presentation_id);
-            if (is_null($presentation))
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
-
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+
+             $can_delete_closed_submissions = is_null($current_user) || $current_user->isAdmin();
+             if ($presentation->isSubmissionClosed() && !$can_delete_closed_submissions)
+                 throw new ValidationException
+                 (
+                     sprintf
+                     (
+                         "Presentation %s can not be deleted because the submission is closed.",
+                         $presentation_id
+                     )
+                 );
 
             $current_selection_plan = $presentation->getSelectionPlan();
 
             if (is_null($current_selection_plan))
                 throw new ValidationException("Presentation is not assigned to any selection plan.");
 
+            $current_speaker = $this->speaker_repository->getByMember($current_user);
+            if (is_null($current_speaker))
+                throw new EntityNotFoundException(sprintf("Member %s does not has a speaker profile.", $current_user->getId()));
+
+
             if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
-                    $member->getId(),
+                throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
+                    $current_user->getId(),
                     $presentation_id
                 ));
 
-            if (!$current_selection_plan->isAllowedMember($member->getEmail())) {
-                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
+            if (!$current_selection_plan->isAllowedMember($current_user->getEmail())) {
+                throw new AuthzException("Member is not Authorized at Selection Plan.");
             }
 
             $presentation->clearMediaUploads();

@@ -1037,7 +1037,7 @@ final class SummitService
 
             $event = $this->event_repository->getById($event_id);
 
-            if (is_null($event))
+            if (!$event instanceof SummitEvent)
                 throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
 
             if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())

@@ -85,14 +85,15 @@ interface IPresentationService
      */
     public function completePresentationSubmission(Summit $summit, $presentation_id);
 
-    /**
+    /*
      * @param Summit $summit
      * @param int $presentation_id
+     * @param Member $current_user
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function deletePresentation(Summit $summit, $presentation_id);
+    public function deletePresentation(Summit $summit, int $presentation_id, ?Member $current_user = null):void;
 
     /**
      * @param LaravelRequest $request

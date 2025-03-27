@@ -70,6 +70,8 @@ final class DoctrineSummitOrderRepository
             'amount'            => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
             'payment_method'    => 'e.payment_method:json_string',
             'tickets_owner_status' => 'to.status:json_string',
+            'tickets_promo_code' => 'pc.code:json_string',
+            'tickets_type_id' => 'tt.id',
             'tickets_badge_features_id' => 'bf.id',
             'tickets_assigned_to' => new DoctrineSwitchFilterMapping([
                     'Me' => new DoctrineCaseFilterMapping(
@@ -118,6 +120,12 @@ final class DoctrineSummitOrderRepository
         if((!is_null($filter) && $filter->hasFilter("tickets_badge_features_id"))){
             $query = $query->leftJoin('t.badge','b')
                 ->leftJoin('b.features','bf');
+        }
+        if((!is_null($filter) && $filter->hasFilter("tickets_type_id"))){
+            $query = $query->leftJoin('t.ticket_type','tt');
+        }
+        if((!is_null($filter) && $filter->hasFilter("tickets_promo_code"))){
+            $query = $query->leftJoin('t.promo_code','pc');
         }
         return $query;
     }

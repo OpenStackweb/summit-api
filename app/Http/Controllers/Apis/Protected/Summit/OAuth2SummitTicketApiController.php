@@ -580,6 +580,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'assigned_to' =>  ['=='],
                     'owner_status' =>  ['=='],
                     'badge_features_id' =>  ['=='],
+                    'ticket_type_id' =>  ['=='],
+                    'promo_code' => ['=@', '=='],
                 ];
             },
             function () {
@@ -595,6 +597,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
                     'owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
                     'badge_features_id' => 'sometimes|integer',
+                    'ticket_type_id' => 'sometimes|integer',
+                    'promo_code' => 'sometimes|string',
                 ];
             },
             function () {

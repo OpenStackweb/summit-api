@@ -78,7 +78,7 @@ final class DoctrineSummitOrderRepository
                         'Me',
                         sprintf
                         (
-                            "to is not null and ( tom.id = %s or to.email = '%s' )",
+                            "( to is not null and ( tom.id = %s or to.email = '%s' ))",
                             $tickets_owner_member_id,
                             $tickets_owner_member_email
                         ),
@@ -87,7 +87,7 @@ final class DoctrineSummitOrderRepository
                         'SomeoneElse',
                         sprintf
                         (
-                            "to is not null and tom.id <> %s and to.email <> '%s' )",
+                            "( to is not null and tom.id <> %s and to.email <> '%s' )",
                             $tickets_owner_member_id,
                             $tickets_owner_member_email
                         ),

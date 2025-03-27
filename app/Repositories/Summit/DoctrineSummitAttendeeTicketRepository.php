@@ -242,7 +242,7 @@ final class DoctrineSummitAttendeeTicketRepository
                         'Me',
                         sprintf
                         (
-                            "a is not null and ( m.id = %s or a.email = '%s' )",
+                            "( a is not null and ( m.id = %s or a.email = '%s' ) )",
                             $owner_member_id,
                             $owner_member_email
                         ),
@@ -251,7 +251,7 @@ final class DoctrineSummitAttendeeTicketRepository
                         'SomeoneElse',
                         sprintf
                         (
-                            "a is not null and m.id <> %s and a.email <> '%s' )",
+                            "( a is not null and m.id <> %s and a.email <> '%s' )",
                             $owner_member_id,
                             $owner_member_email
                         ),

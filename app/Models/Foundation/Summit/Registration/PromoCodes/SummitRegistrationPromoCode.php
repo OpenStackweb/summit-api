@@ -239,6 +239,15 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     public function markSent(string $recipient = null)
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationPromoCode::markSent %s recipient %s",
+                $this->code,
+                $recipient
+            )
+        );
         $this->email_sent = true;
         $this->sent_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }

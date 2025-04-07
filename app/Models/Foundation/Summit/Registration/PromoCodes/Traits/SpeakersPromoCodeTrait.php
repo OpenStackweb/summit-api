@@ -243,6 +243,19 @@ trait SpeakersPromoCodeTrait
         throw new ValidationException("Quantity available can't be assigned to this Promo Code.");
     }
 
+    public function markSent(string $recipient = null){
+        Log::debug
+        (
+            sprintf
+            (
+                "SpeakersPromoCode::markSent promo_code %s recipient %s",
+                $this->getId(),
+                $recipient
+            )
+        );
+        $this->setEmailSent($recipient);
+    }
+
     /**
      * @param string|null $recipient
      * @return void
@@ -253,7 +266,7 @@ trait SpeakersPromoCodeTrait
         (
             sprintf
             (
-                "SpeakersPromoCode::setEmailSent promo_code %s email_sent %b recipient %s",
+                "SpeakersPromoCode::setEmailSent promo_code %s recipient %s",
                 $this->getId(),
                 $recipient
             )

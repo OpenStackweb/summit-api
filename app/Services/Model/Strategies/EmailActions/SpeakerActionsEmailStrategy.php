@@ -238,8 +238,19 @@ final class SpeakerActionsEmailStrategy
                 );
 
                 // mark the promo code as sent
-                if (!is_null($promo_code))
-                    $promo_code->markSent( $speaker->getEmail());
+                if (!is_null($promo_code)) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SpeakerActionsEmailStrategy::send marking promo %s as sent for speaker %s (%s)",
+                            $promo_code->getCode(),
+                            $speaker->getEmail(),
+                            $speaker->getId()
+                        )
+                    );
+                    $promo_code->markSent($speaker->getEmail());
+                }
 
                 // generate email proof
                 $proof = new SpeakerAnnouncementSummitEmail();

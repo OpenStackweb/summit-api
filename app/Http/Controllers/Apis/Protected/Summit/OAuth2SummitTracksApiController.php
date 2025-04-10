@@ -264,7 +264,12 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $track = $summit->getPresentationCategory($track_id);
             if (is_null($track))
                 return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track)->serialize(Request::input('expand', '')));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
@@ -437,7 +442,11 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             $track = $this->track_service->addTrack($summit, $data->all());
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($track)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($track)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
@@ -517,7 +526,11 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             $track = $this->track_service->updateTrack($summit, $track_id, $data->all());
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($track)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($track)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
@@ -569,7 +582,11 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             $image = $this->track_service->addTrackIcon($summit, $track_id, $file);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
         } catch (ValidationException $ex1) {
             Log::warning($ex1);

@@ -38,8 +38,10 @@ use models\main\Member;
 use models\main\Organization;
 use models\summit\ISpeakerRegistrationRequestRepository;
 use models\summit\ISummitAttendeeRepository;
+use models\summit\Presentation;
 use models\summit\SummitAttendee;
 use models\summit\SummitOrder;
+use function Psy\debug;
 
 /**
  * Class MemberService
@@ -362,6 +364,7 @@ final class MemberService
             }
 
             $this->synchronizeGroups($member, $user_data['groups']);
+
             // check speaker registration request by email and no member set
             Log::debug(sprintf("MemberService::registerExternalUserById trying to get former registration request by email %s", $email));
             $request = $this->speaker_registration_request_repository->getByEmail($email);
@@ -370,7 +373,58 @@ final class MemberService
                 $speaker = $request->getSpeaker();
                 if(!is_null($speaker))
                     if(!$speaker->hasMember()) {
-                        Log::debug(sprintf("MemberService::registerExternalUserById setting current member to speaker %s", $speaker->getId()));
+                        if($member->hasSpeaker()){
+                            // member has a former speaker
+                            $former_speaker  = $member->getSpeaker();
+                            Log::debug
+                            (
+                                sprintf
+                                (
+                                    "MemberService::registerExternalUserById Member %s (%s) has a former speaker profile %s",
+                                    $member->getEmail(),
+                                    $member->getFirstName(),
+                                    $former_speaker->getId(),
+                                )
+                            );
+                            foreach($former_speaker->getAllPresentations() as $presentation){
+                                if(!$presentation instanceof Presentation) continue;
+                                Log:debug
+                                (
+                                    sprintf
+                                    (
+                                        "MemberService::registerExternalUserById Member %s (%s) moving presentation %s from speaker %s to speaker %s",
+                                        $member->getEmail(),
+                                        $member->getFirstName(),
+                                        $presentation->getId(),
+                                        $former_speaker->getId(),
+                                        $speaker->getId()
+                                    )
+                                );
+                                $presentation->removeSpeaker($former_speaker);
+                                $presentation->addSpeaker($speaker);
+                            }
+                            Log::debug
+                            (
+                                sprintf
+                                (
+                                    "MemberService::registerExternalUserById Member %s (%s) former speaker %s will be deleted",
+                                    $member->getEmail(),
+                                    $member->getFirstName(),
+                                    $former_speaker->getId()
+                                )
+                            );
+                        }
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "MemberService::registerExternalUserById setting Member %s (%s) to speaker %s",
+                                $member->getEmail(),
+                                $member->getFirstName(),
+                                $speaker->getId()
+                            )
+                        );
+                        // after this , former speaker will be deleted
                         $speaker->setMember($member);
                     }
             }

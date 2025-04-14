@@ -220,9 +220,12 @@ final class DoctrineSummitAttendeeTicketRepository
                         'true',
                         sprintf
                         (
-                            "NOT EXISTS ( select e2 from %s e2 left join e2.owner a2 left join e2.badge b2 ".
-                            " left join b2.type bt2 left join bt2.access_levels al2 ".
-                            " where e2.id = e.id and e2.is_active = 1 and al2.name = '%s' and  a2 is null ".
+                            "NOT EXISTS ( select e2 from %s e2 ".
+                            " left join e2.owner a2 ".
+                            " left join e2.badge b2 ".
+                            " left join b2.type bt2 ".
+                            " left join bt2.access_levels al2 ".
+                            " where e2.id = e.id and al2.name = '%s' and a2 is null ".
                             " and (e2.raw_cost - e2.discount) = 0 )",
                             $this->getBaseEntity(),
                             SummitAccessLevelType::IN_PERSON

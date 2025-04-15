@@ -154,6 +154,7 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'access_level_type_name' => 'al.name :operator :value',
+            'access_level_type_id' => 'al.id :operator :value',
             'ticket_type_id' => 'tt.id:json_int',
             'view_type_id' => 'avt.id:json_int',
             'has_owner' => new DoctrineSwitchFilterMapping([

@@ -22,7 +22,6 @@ use App\Services\Apis\IMUXApi;
 use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Apis\MailApi;
 use App\Services\Apis\MUXApi;
-use App\Services\Apis\MuxCredentials;
 use App\Services\Apis\PasswordlessAPI;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Apis\Samsung\SamsungRegistrationAPI;

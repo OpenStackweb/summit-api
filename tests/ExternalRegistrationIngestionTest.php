@@ -13,7 +13,6 @@
  **/
 
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeed;
-use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitTicketTypeService;

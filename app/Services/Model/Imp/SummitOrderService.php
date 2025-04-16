@@ -5100,15 +5100,51 @@ final class SummitOrderService
 
             if (empty($new_attendee_email) || $new_attendee_email == $manager->getEmail()) {
                 // delegate email to manager
-                Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to manager %s", $manager->getEmail()));
-                $attendee = SummitAttendeeFactory::build($summit, [
-                    'first_name' => $new_attendee_first_name,
-                    'last_name' => $new_attendee_last_name,
-                    'company' => $company,
-                    'company_id' => $company_id,
-                    'extra_questions' => $new_attendee_extra_questions,
-                    'disclaimer_accepted' => $disclaimer_accepted,
-                ], null, $manager);
+                Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to manager %s (%s)", $manager->getId(), $manager->getEmail()));
+                // check if the attendee exists already
+                $attendee = null;
+                if($manager->getId() > 0) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::delegateTicket - checking if attendee exists by name %s %s and manager %s (%s)",
+                            $new_attendee_first_name,
+                            $new_attendee_last_name,
+                            $manager->getId(),
+                            $manager->getEmail()
+                        )
+                    );
+                    $attendee = $this->attendee_repository->getBySummitAndFirstNameAndLastNameAndManager
+                    (
+                        $summit,
+                        $new_attendee_first_name,
+                        $new_attendee_last_name,
+                        $manager
+                    );
+                }
+                if(is_null($attendee)) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::delegateTicket - creating attendee for %s %s and manager %s (%s)",
+                            $new_attendee_first_name,
+                            $new_attendee_last_name,
+                            $manager->getId(),
+                            $manager->getEmail()
+                        )
+                    );
+                    $attendee = SummitAttendeeFactory::build($summit, [
+                        'first_name' => $new_attendee_first_name,
+                        'last_name' => $new_attendee_last_name,
+                        'company' => $company,
+                        'company_id' => $company_id,
+                        'extra_questions' => $new_attendee_extra_questions,
+                        'disclaimer_accepted' => $disclaimer_accepted,
+                    ], null, $manager);
+                }
+
             } else {
                 Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to %s", $new_attendee_email));
                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $new_attendee_email);

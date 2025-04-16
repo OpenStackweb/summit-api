@@ -86,4 +86,14 @@ interface ISummitAttendeeRepository extends IBaseRepository
      * @throws \Doctrine\DBAL\Driver\Exception
      */
     public function deleteAllBySummit(int $summit_id):bool;
+
+    /**
+     * @param Summit $summit
+     * @param string $first_name
+     * @param string $last_name
+     * @param SummitAttendee $manager
+     * @return SummitAttendee|null
+     */
+    public function getBySummitAndFirstNameAndLastNameAndManager(Summit $summit, string $first_name, string $last_name, SummitAttendee $manager):?SummitAttendee;
+
 }

@@ -531,4 +531,29 @@ SQL;
             Log::error($ex);
         }
     }
+
+    /**
+     * @param Summit $summit
+     * @param string $first_name
+     * @param string $last_name
+     * @param SummitAttendee $manager
+     * @return SummitAttendee|null
+     */
+    public function getBySummitAndFirstNameAndLastNameAndManager(Summit $summit, string $first_name, string $last_name, SummitAttendee $manager):?SummitAttendee
+    {
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin('e.summit', 's')
+            ->leftJoin('e.member', 'm')
+            ->where("s.id = :summit_id")->andWhere("e.manager = :manager");
+        $query = $query->andWhere("e.first_name = :first_name")->setParameter("first_name", $first_name);
+        $query = $query->andWhere("e.surname = :surname")->setParameter("surname", $last_name);
+        $query = $query
+            ->setParameter("manager", $manager)
+            ->setParameter("summit_id", $summit->getId());
+        return $query->getQuery()->getOneOrNullResult();
+    }
+
 }

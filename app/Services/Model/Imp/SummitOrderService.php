@@ -5057,15 +5057,7 @@ final class SummitOrderService
             $new_attendee_extra_questions = $payload['extra_questions'] ?? [];
             $company = $payload['attendee_company'] ?? null;
             $company_id = $payload['attendee_company_id'] ?? null;
-            $disclaimer_accepted = $payload['disclaimer_accepted'] ?? null;
-
-
-            if ($summit->isRegistrationDisclaimerMandatory()) {
-                $disclaimer_accepted = boolval($payload['disclaimer_accepted'] ?? false);
-                if (!$disclaimer_accepted)
-                    throw new ValidationException("Disclaimer is Mandatory.");
-            }
-
+            $disclaimer_accepted = $payload['disclaimer_accepted'] ?? false;
             $manager = $ticket->getOwner();
 
             if (!$ticket->canEditTicket($current_user)) {

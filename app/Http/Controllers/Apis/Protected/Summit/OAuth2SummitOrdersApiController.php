@@ -1342,7 +1342,14 @@ final class OAuth2SummitOrdersApiController
                 'disclaimer_accepted' => 'nullable|boolean',
             ]);
 
-            $ticket = $this->service->delegateTicket($summit, intval($order_id), intval($ticket_id), $current_user, $payload);
+            $ticket = $this->service->delegateTicket
+            (
+                $summit,
+                intval($order_id),
+                intval($ticket_id),
+                $current_user,
+                $payload
+            );
 
             return $this->updated(SerializerRegistry::getInstance()
                 ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)

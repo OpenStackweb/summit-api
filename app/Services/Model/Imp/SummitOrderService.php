@@ -5030,15 +5030,17 @@ final class SummitOrderService
             (
                 sprintf
                 (
-                    "SummitOrderService::delegateTicket summit %s order %s ticket %s payload %s",
+                    "SummitOrderService::delegateTicket summit %s order %s ticket %s current user %s (%s) payload %s",
                     $summit->getId(),
                     $order_id,
                     $ticket_id,
+                    $current_user->getId(),
+                    $current_user->getEmail(),
                     json_encode($payload)
                 )
             );
 
-            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+            $order = $this->order_repository->getById($order_id);
 
             if (!$order instanceof SummitOrder || $order->getSummitId() !== $summit->getId())
                 throw new EntityNotFoundException("Order not found.");
@@ -5058,10 +5060,37 @@ final class SummitOrderService
             $company = $payload['attendee_company'] ?? null;
             $company_id = $payload['attendee_company_id'] ?? null;
             $disclaimer_accepted = $payload['disclaimer_accepted'] ?? false;
-            $manager = $ticket->getOwner();
 
             if (!$ticket->canEditTicket($current_user)) {
                 throw new ValidationException("You can not delegate this ticket.");
+            }
+
+            $ticket_owner = $ticket->getOwner();
+            $former_manager = !is_null($ticket_owner) ? $ticket_owner->getManager() : null;
+            // check current manager against new manager
+            if(!is_null($former_manager) && $current_user->getEmail() !== $former_manager->getEmail()){
+                throw new ValidationException("You can not delegate this ticket ( it has already assigned a different Manager).");
+            }
+
+            $manager = $this->attendee_repository->getBySummitAndEmail($summit, $current_user->getEmail());
+
+            if(is_null($manager)){
+                // create the manager attendee
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::delegateTicket - creating attendee for user %s (%s)",
+                        $current_user->getId(),
+                        $current_user->getEmail()
+                    )
+                );
+
+                $manager = SummitAttendeeFactory::build($summit, [
+                    'first_name' => $current_user->getFirstName(),
+                    'last_name' => $current_user->getLastName(),
+                    'email' => $current_user->getEmail(),
+                ], $current_user);
             }
 
             if (empty($new_attendee_first_name))

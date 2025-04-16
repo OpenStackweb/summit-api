@@ -337,13 +337,12 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
             INNER JOIN Group_Members ON Member.ID = Group_Members.MemberID
             WHERE SummitAttendeeBadgePrint.BadgeID = :badge_id AND Group_Members.GroupID = :group_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'badge_id' => $this->id,
                 'group_id' => $group->getId(),
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-
+            $res= $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 

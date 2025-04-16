@@ -21,7 +21,7 @@ use models\summit\SummitSelectedPresentation;
  * Class OAuth2SelectionPlansApiTest
  * @package Tests
  */
-final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
+final class OAuth2SelectionPlansApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 

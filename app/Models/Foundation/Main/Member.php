@@ -1029,14 +1029,12 @@ INNER JOIN `Group` ON `Group`.ID = Group_Members.GroupID
 WHERE MemberID = :member_id AND `Group`.Code = :code
 SQL;
 
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
-                [
-                    'member_id' => $this->getId(),
-                    'code' => trim($code),
-                ]
-            );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt = $this->prepareRawSQL($sql, [
+                'member_id' => $this->getId(),
+                'code' => trim($code),
+            ]);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             return intval($res[0]) > 0;
         } catch (\Exception $ex) {
 
@@ -1159,14 +1157,12 @@ INNER JOIN SummitEvent ON SummitEvent.ID = Member_FavoriteSummitEvents.SummitEve
 WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->prepareRawSQL($sql,[
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -1330,14 +1326,12 @@ INNER JOIN SummitEvent ON SummitEvent.ID = Member_Schedule.SummitEventID
 WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->prepareRawSQL($sql,[
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -1418,14 +1412,14 @@ SQL;
 
     /**
      * @param Summit $summit
-     * @return CalendarSyncInfo[]
+     * @return array|null
      */
     public function getSyncInfoBy(Summit $summit)
     {
         try {
             $criteria = Criteria::create();
             $criteria->where(Criteria::expr()->eq('summit', $summit));
-            $criteria->andWhere(Criteria::expr()->eq('revoked', 0));
+            $criteria->andWhere(Criteria::expr()->eq('revoked', false));
             $res = $this->calendars_sync->matching($criteria)->first();
             return $res == false ? null : $res;
         } catch (NoResultException $ex1) {
@@ -1817,14 +1811,12 @@ INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
 WHERE MemberID = :member_id AND Sponsor.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->prepareRawSQL($sql,  [
+            'member_id' => $this->getId(),
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
@@ -1850,9 +1842,9 @@ SQL;
             $params['sponsor_id'] = $sponsor->getId();
         }
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute($params);
-        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->prepareRawSQL($sql, $params);
+        $res = $stmt->executeQuery();
+        $res = $res->fetchFirstColumn();
         return intval($res[0]) > 0;
         } catch (\Exception $ex) {
             return false;
@@ -1932,6 +1924,10 @@ SQL;
         return $this->membership_type;
     }
 
+
+    public function clearGroups():void{
+        $this->groups->clear();
+    }
     /**
      * @param Group $group
      */
@@ -1939,7 +1935,6 @@ SQL;
     {
         if ($this->groups->contains($group)) return;
         $this->groups->add($group);
-        //$group->addMember($this);
     }
 
     public function removeFromGroup(Group $group)
@@ -2067,14 +2062,14 @@ AND
 SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $stmt = $this->prepareRawSQL($sql,
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId()
             ]
         );
-        $allowed_summits = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $res = $stmt->executeQuery();
+        $allowed_summits = $res->fetchFirstColumn();
         return count($allowed_summits) > 0 && $this->isOnGroup($groupSlug);
     }
 
@@ -2094,14 +2089,14 @@ AND
 SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
+        $stmt = $this->prepareRawSQL($sql,
             [
                 'member_id' => $this->getId(),
                 'summit_id' => $summit->getId()
             ]
         );
-        $allowed_summits = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $res = $stmt->executeQuery();
+        $allowed_summits = $res->fetchFirstColumn();
         return count($allowed_summits) > 0;
     }
 
@@ -2123,15 +2118,13 @@ SummitAttendeeTicket.Status = :ticket_status AND
 SummitAttendeeTicket.IsActive = 1
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_email' => $this->email,
-                'ticket_status' => IOrderConstants::PaidStatus,
-                'summit_id' => $summit->getId(),
-            ]
-        );
-        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->prepareRawSQL($sql,  [
+            'member_email' => $this->email,
+            'ticket_status' => IOrderConstants::PaidStatus,
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        $res = $res->fetchFirstColumn();
         if(count($res) > 0) return $res;
 
         $sql = <<<SQL
@@ -2146,17 +2139,13 @@ SummitAttendeeTicket.Status = :ticket_status AND
 SummitAttendeeTicket.IsActive = 1
 SQL;
 
-        $stmt = $this->prepareRawSQL($sql);
-        $stmt->execute(
-            [
-                'member_id' => $this->getId(),
-                'ticket_status' => IOrderConstants::PaidStatus,
-                'summit_id' => $summit->getId(),
-            ]
-        );
-
-        $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-        return $res;
+        $stmt = $this->prepareRawSQL($sql,  [
+            'member_id' => $this->getId(),
+            'ticket_status' => IOrderConstants::PaidStatus,
+            'summit_id' => $summit->getId(),
+        ]);
+        $res = $stmt->executeQuery();
+        return $res->fetchFirstColumn();
     }
 
     /**
@@ -2417,12 +2406,12 @@ SQL;
             WHERE C.ElectionID = :election_id AND 
                   C.CandidateID = :candidate_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute([
+            $stmt = $this->prepareRawSQL($sql, [
                 'election_id' => $election->getId(),
                 'candidate_id' => $this->id
             ]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
             Log::warning($ex);

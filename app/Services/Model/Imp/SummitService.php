@@ -699,13 +699,15 @@ final class SummitService
             // existing event
 
             if (!is_null($event_id) && $event_id > 0) {
+
                 $event = $this->event_repository->getByIdRefreshed($event_id);
+
                 if (is_null($event))
                     throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
+
                 $old_event_type = $event->getType();
 
                 // check event type transition ...
-
                 if (!is_null($event_type) && !$this->canPerformEventTypeTransition($old_event_type, $event_type)) {
                     throw new ValidationException
                     (
@@ -1174,7 +1176,7 @@ final class SummitService
                     if (!is_null($old_attendee))
                         throw new ValidationException
                         (
-                            'attendee already exists for current summit!'
+                            'Attendee already exists for current summit.'
                         );
 
                     $old_ticket = $this->ticket_repository->getByExternalOrderIdAndExternalAttendeeId(

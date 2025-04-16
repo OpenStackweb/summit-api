@@ -19,7 +19,7 @@ use models\summit\SummitTicketType;
 /**
  * Class OAuth2SummitRegistrationInvitationApiControllerTest
  */
-class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTest
+class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

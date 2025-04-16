@@ -51,7 +51,7 @@ final class EventTypeValidationRulesFactory
 
         $base_rules = [
             'name'                    => $name_rule,
-            'color'                   => 'sometimes|hex_color',
+            'color'                   => 'sometimes|hex_color2',
             'black_out_times'         => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_blackout_times),
             'use_sponsors'            => 'sometimes|boolean',
             'are_sponsors_mandatory'  => 'sometimes|boolean|required_with:use_sponsors',

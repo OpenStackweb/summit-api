@@ -16,7 +16,7 @@
 /**
  * Class OAuth2SummitAccessLevelTypeTest
  */
-final class OAuth2SummitAccessLevelTypeTest extends ProtectedApiTest
+final class OAuth2SummitAccessLevelTypeTest extends ProtectedApiTestCase
 {
     /**
      * @param int $summit_id

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2ChatTeamApiTest extends ProtectedApiTest
+final class OAuth2ChatTeamApiTest extends ProtectedApiTestCase
 {
     public function testAddTeam()
     {

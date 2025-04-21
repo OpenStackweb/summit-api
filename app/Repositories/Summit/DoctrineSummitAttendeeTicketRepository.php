@@ -123,7 +123,7 @@ final class DoctrineSummitAttendeeTicketRepository
             'summit_id' => 's.id:json_int',
             'order_owner_id' => 'COALESCE(ord_m.id,0):json_int',
             'owner_id' => 'a.id:json_int',
-            'member_id' => ['m.id:json_int','m2.id:json_int'],
+            'member_id' => ['m.id:json_int'],
             'order_id' => 'o.id:json_int',
             'status' => 'e.status:json_string',
             'promo_code_id' => 'pc.id:json_int',
@@ -300,7 +300,7 @@ final class DoctrineSummitAttendeeTicketRepository
         if ($filter->hasFilter('view_type_id')) {
             $query = $query->join("bt.allowed_view_types", "avt");
         }
-        if($filter->hasFilter("member_id") || $filter->hasFilter("owner_email")){
+        if($filter->hasFilter("owner_email")){
             // add all managed tickets too
             $query = $query->leftJoin("a.manager", "am");
             $query = $query->leftJoin("am.member", "m2");

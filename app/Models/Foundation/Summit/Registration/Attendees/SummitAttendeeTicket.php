@@ -562,6 +562,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
 
     /**
      * @return string
+     * @throws ValidationException
      */
     public function generateQRCode(): string
     {

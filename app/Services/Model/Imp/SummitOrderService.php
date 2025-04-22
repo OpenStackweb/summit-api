@@ -5061,6 +5061,11 @@ final class SummitOrderService
             $company_id = $payload['attendee_company_id'] ?? null;
             $disclaimer_accepted = $payload['disclaimer_accepted'] ?? false;
 
+            if (empty($new_attendee_first_name))
+                throw new ValidationException("Attendee first name is mandatory.");
+            if (empty($new_attendee_last_name))
+                throw new ValidationException("Attendee last name is mandatory.");
+
             if (!$ticket->canEditTicket($current_user)) {
                 throw new ValidationException("You can not delegate this ticket.");
             }
@@ -5071,7 +5076,7 @@ final class SummitOrderService
             if(!is_null($former_manager) && $current_user->getEmail() !== $former_manager->getEmail()){
                 throw new ValidationException("You can not delegate this ticket ( it has already assigned a different Manager).");
             }
-
+            // try to get attendee for current user
             $manager = $this->attendee_repository->getBySummitAndEmail($summit, $current_user->getEmail());
 
             if(is_null($manager)){
@@ -5080,7 +5085,7 @@ final class SummitOrderService
                 (
                     sprintf
                     (
-                        "SummitOrderService::delegateTicket - creating attendee for user %s (%s)",
+                        "SummitOrderService::delegateTicket - creating attendee for manager user %s (%s)",
                         $current_user->getId(),
                         $current_user->getEmail()
                     )
@@ -5092,11 +5097,11 @@ final class SummitOrderService
                     'email' => $current_user->getEmail(),
                 ], $current_user);
             }
-
-            if (empty($new_attendee_first_name))
-                throw new ValidationException("Attendee first name is mandatory.");
-            if (empty($new_attendee_last_name))
-                throw new ValidationException("Attendee last name is mandatory.");
+            if($manager->hasManager()){
+                // if proposed manager already has a manager then short circuit
+                throw new ValidationException("You can not delegate this ticket ( proposed manager already has a manager).");
+            }
+            
 
             if (empty($new_attendee_email) || $new_attendee_email == $manager->getEmail()) {
                 // delegate email to manager
@@ -5172,9 +5177,10 @@ final class SummitOrderService
                     ], $member, true, $manager);
                 }
             }
+
             $attendee->updateStatus();
             $attendee->addTicket($ticket);
-
+            $ticket->generateQRCode();
             return $ticket;
         });
     }

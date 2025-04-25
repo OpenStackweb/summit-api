@@ -138,7 +138,8 @@ abstract class RetrieveSummitEventsStrategy
                 'selection_plan',
                 'actions',
                 'review_status',
-                'submission_source'
+                'submission_source',
+                'submission_status',
             ]);
         }
         return $order;

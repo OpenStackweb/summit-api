@@ -631,6 +631,14 @@ SQL,
 SQL,*/
             'review_status' => 'REVIEW_STATUS(e.id)',
             'submission_source' => 'e.submission_source',
+            'submission_status' => <<<SQL
+    CASE 
+    WHEN p.status = 'Received' AND e.published = 1 THEN 'Accepted'
+    WHEN p.status = 'Received' AND e.published = 0 THEN 'Received'
+    WHEN p.status is null THEN 'NonReceived'
+    ELSE 'NonReceived'
+    END
+SQL,
         ];
     }
 

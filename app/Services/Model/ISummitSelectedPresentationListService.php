@@ -13,6 +13,7 @@
  **/
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitSelectedPresentationList;
 /**
@@ -62,6 +63,7 @@ interface ISummitSelectedPresentationListService
     public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id, int $member_id):SummitSelectedPresentationList;
 
     /**
+     * @param Member $current_member
      * @param Summit $summit
      * @param int $selection_plan_id
      * @param int $track_id
@@ -71,7 +73,7 @@ interface ISummitSelectedPresentationListService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function reorderList(Summit $summit, int $selection_plan_id, int $track_id, int $list_id, array $payload):SummitSelectedPresentationList;
+    public function reorderList(Member $current_member, Summit $summit, int $selection_plan_id, int $track_id, int $list_id, array $payload):SummitSelectedPresentationList;
 
     /**
      * @param Summit $summit

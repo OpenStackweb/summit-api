@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Exceptions\AuthzException;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use Illuminate\Support\Facades\Request;
@@ -194,7 +195,12 @@ class OAuth2SummitSelectedPresentationListApiController
                 );
             }
 
-            $selection_list = $this->service->reorderList($summit, intval($selection_plan_id), intval($track_id), intval($list_id), $payload);
+            $current_member = $this->resource_server_context->getCurrentUser();
+
+            if(is_null($current_member))
+                throw new AuthzException("Current Member not found.");
+
+            $selection_list = $this->service->reorderList($current_member, $summit, intval($selection_plan_id), intval($track_id), intval($list_id), $payload);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
             (

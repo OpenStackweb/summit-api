@@ -16,6 +16,7 @@ use App\Models\Exceptions\AuthzException;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use Illuminate\Support\Facades\Log;
+use models\main\Member;
 use models\summit\PresentationCategory;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -209,18 +210,37 @@ final class SummitSelectedPresentationListService
     /**
      * @inheritDoc
      */
-    public function reorderList(Summit $summit, int $selection_plan_id, int $track_id, int $list_id, array $payload): SummitSelectedPresentationList
+    public function reorderList(Member $current_member, Summit $summit, int $selection_plan_id, int $track_id, int $list_id, array $payload): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $list_id, $payload) {
+        return $this->tx_service->transaction(function () use ($current_member, $summit, $selection_plan_id, $track_id, $list_id, $payload) {
 
-            Log::debug(sprintf("SummitSelectedPresentationListService::reorderList track %s list %s payload %s.", $track_id, $list_id, json_encode($payload)));
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitSelectedPresentationListService::reorderList current user %s(%s) summit %s track %s list %s payload %s.",
+                    $current_member->getEmail(),
+                    $current_member->getId(),
+                    $summit->getId(),
+                    $track_id,
+                    $list_id,
+                    json_encode($payload)
+                )
+            );
+
 
             $category = $summit->getPresentationCategory($track_id);
 
-            if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible()) throw new EntityNotFoundException("Track not found.");
+            if (!$category instanceof PresentationCategory || !$category->isChairVisible()) throw new EntityNotFoundException("Track not found.");
+
+            $auth = $summit->isTrackChair($current_member, $category);
+            if(!$auth){
+                throw new AuthzException("Current user is not allowed to perform this operation.");
+            }
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
-            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+            if (is_null($selectionPlan))
+                throw new EntityNotFoundException("Selection plan not found.");
 
             $selection_list = $selectionPlan->getSelectionListById($list_id);
             if (is_null($selection_list))
@@ -229,42 +249,35 @@ final class SummitSelectedPresentationListService
             if ($selection_list->getCategoryId() !== $track_id)
                 throw new EntityNotFoundException("List not found.");
 
-            if(!$selectionPlan->isSelectionOpen())
-                throw new ValidationException
-                (
-                    sprintf
+            $shouldApplySelectionPlanValidationRules = !$current_member->isAdmin();
+            if($shouldApplySelectionPlanValidationRules) {
+                if (!$selectionPlan->isSelectionOpen())
+                    throw new ValidationException
                     (
-                        ' Presentation Plan "%s" (%s) is not on selection Phase.',
-                        $selectionPlan->getName(),
-                        $selectionPlan->getId()
-                    )
-                );
+                        sprintf
+                        (
+                            'Presentation Plan "%s" (%s) is not on selection Phase.',
+                            $selectionPlan->getName(),
+                            $selectionPlan->getId()
+                        )
+                    );
 
-            if(!$selectionPlan->IsEnabled())
-                throw new ValidationException
-                (
-                    sprintf
+                if (!$selectionPlan->IsEnabled())
+                    throw new ValidationException
                     (
-                        'Presentation Plan "%s" (%s) is not enabled.',
-                        $selectionPlan->getName(),
-                        $selectionPlan->getId()
-                    )
-                );
-
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-
-            if(is_null($current_member))
-                throw new AuthzException("Current Member not found.");
-
-            $auth = $summit->isTrackChair($current_member, $category);
-            if(!$auth){
-                throw new AuthzException("Current user is not allowed to perform this operation.");
+                        sprintf
+                        (
+                            'Presentation Plan "%s" (%s) is not enabled.',
+                            $selectionPlan->getName(),
+                            $selectionPlan->getId()
+                        )
+                    );
             }
 
             // check if we can edit it
 
             if(!$selection_list->canEdit($current_member)){
-                throw new AuthzException(sprintf("Member %s can not edit list %s", $current_member->getId(), $selection_list->getId()));
+                throw new AuthzException(sprintf("Member %s can not edit list %s.", $current_member->getId(), $selection_list->getId()));
             }
 
             if (count($payload['presentations']) > $category->getTrackChairAvailableSlots() && trim($payload['collection']) == SummitSelectedPresentation::CollectionSelected) {
@@ -274,7 +287,10 @@ final class SummitSelectedPresentationListService
             if ($selection_list->isGroup()){
                 $hash = $payload['hash'] ?? "";
                 if(!$selection_list->compareHash(trim($hash)))
-                    throw new ValidationException("The Teams List was modified by someone else. Please refresh the page.");
+                    throw new ValidationException
+                    (
+                        "The Teams List was modified by someone else. Please refresh the page."
+                    );
             }
 
             /**
@@ -295,8 +311,8 @@ final class SummitSelectedPresentationListService
 
                 $presentation = $summit->getEvent(intval($id));
 
-                if (is_null($presentation)
-                    || !$presentation instanceof Presentation
+                if (
+                    !$presentation instanceof Presentation
                     || $presentation->getStatus() !== Presentation::STATUS_RECEIVED
                     || $presentation->getProgress() !== Presentation::PHASE_COMPLETE)
                     throw new EntityNotFoundException(sprintf("Presentation %s not found.", $id));
@@ -305,7 +321,14 @@ final class SummitSelectedPresentationListService
                 $presentation->setSelectionPlan($selectionPlan);
 
                 if($category->getId() !== $presentation->getCategoryId()){
-                    throw new ValidationException(sprintf("Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].", $id));
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].",
+                            $id
+                        )
+                    );
                 }
 
                 // check if the selection already exists on the current list

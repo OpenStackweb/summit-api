@@ -264,6 +264,7 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
     public function canEdit(Member $member):bool
     {
 
+        if($member->isAdmin()) return true;
         // if is individual only owner can edit it
         if ($this->list_type == self::Individual && $this->isOwner($member)){
             return true;

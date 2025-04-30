@@ -43,6 +43,41 @@ SQL;
     /**
      * @param string $db
      * @param string $table
+     * @param string $idx
+     * @return bool
+     */
+    public static function existsIDX(string $db, string $table, string $idx):bool{
+        $sql = <<<SQL
+SELECT
+    1
+FROM
+    INFORMATION_SCHEMA.STATISTICS
+WHERE
+    TABLE_SCHEMA = '{$db}'
+    AND TABLE_NAME = '{$table}'
+    AND INDEX_NAME = '{$idx}';
+SQL;
+        $res = DB::select($sql);
+        if($res && count($res)){
+            return true;
+        }
+        return false;
+    }
+
+    public static function dropIDX(string $db, string $table, string $idx):bool{
+        $sql = <<<SQL
+ALTER TABLE `{$table}` DROP INDEX `{$idx}`
+SQL;
+        $res = DB::update($sql);
+        if($res){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param string $db
+     * @param string $table
      * @param string $fk
      * @return bool
      */

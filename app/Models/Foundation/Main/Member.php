@@ -18,6 +18,7 @@ use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Strategies\MemberSummitStrategyFactory;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
@@ -2172,33 +2173,54 @@ SQL;
      * @param Summit $summit
      * @return SummitAttendeeTicket[]
      */
-    public function getPaidSummitTickets(Summit $summit)
+    public function getPaidSummitTickets(Summit $summit):array
     {
         return $this->getPaidSummitTicketsBySummitId($summit->getId());
     }
 
     /**
-     * @param Summit $summit
+     * @param int $summit_id
      * @return SummitAttendeeTicket[]
      */
-    public function getPaidSummitTicketsBySummitId(int $summit_id)
+    public function getPaidSummitTicketsBySummitId(int $summit_id): array
     {
 
-        $query = $this->createQuery("SELECT t from models\summit\SummitAttendeeTicket t
-        JOIN t.owner o
-        LEFT JOIN o.member m 
-        JOIN o.summit su 
-        WHERE su.id = :summit_id 
-        and ( m.id = :member_id or o.email = :member_email) 
-        and t.status = :ticket_status and t.is_active = :active");
+        $sql = <<<SQL
+SELECT DISTINCT T.* 
+FROM SummitAttendeeTicket T FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active) 
+WHERE 
+    T.Status = :TICKET_STATUS
+    AND T.IsActive = 1 
+    AND T.OwnerID IN 
+    ( 
+        SELECT SummitAttendee.ID FROM SummitAttendee FORCE INDEX(IDX_SummitAttendee_SummitID_MemberID_Email) 
+        LEFT JOIN Member ON Member.ID = SummitAttendee.MemberID 
+        WHERE SummitAttendee.SummitID = :SUMMIT_ID 
+        AND 
+        ( 
+            SummitAttendee.MemberID = :MEMBER_ID OR 
+            SummitAttendee.Email = :MEMBER_EMAIL
+        ) 
+    )
+SQL;
 
-        return $query
-            ->setParameter('member_id', $this->getId())
-            ->setParameter('member_email', $this->email)
-            ->setParameter('ticket_status', IOrderConstants::PaidStatus)
-            ->setParameter('summit_id', $summit_id)
-            ->setParameter('active', true)
-            ->getResult();
+        $bindings = [
+            'TICKET_STATUS' => IOrderConstants::PaidStatus,
+            'SUMMIT_ID' => $summit_id,
+            'MEMBER_ID' => $this->id,
+            'MEMBER_EMAIL' => $this->email,
+        ];
+
+        $rsm = new ResultSetMappingBuilder($this->getEM());
+        $rsm->addRootEntityFromClassMetadata(SummitAttendeeTicket::class, 'T');
+
+        // build rsm here
+        $native_query = $this->getEM()->createNativeQuery($sql, $rsm);
+
+        foreach ($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        return $native_query->getResult();
     }
 
     /**

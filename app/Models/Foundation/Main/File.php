@@ -279,9 +279,10 @@ class File extends SilverstripeBaseModel
     {
         try {
             $relativeLink = ltrim($this->getRelativeLinkFor(), '/');
-            return Storage::disk(Config::get('filesystems.assets_disk', 'assets') )->url($relativeLink);
-        }
-        catch (\Exception $ex){
+            $disk = Storage::disk(Config::get('filesystems.assets_disk', 'assets'));
+            if ($disk == null) return null;
+            return $disk->url($relativeLink);
+        } catch (\Exception $ex) {
             Log::warning($ex);
             return null;
         }
@@ -294,9 +295,10 @@ class File extends SilverstripeBaseModel
     public static function getCloudLinkForImages(string $imageRelativePath):?string {
         try {
             $imageRelativePath = ltrim($imageRelativePath, '/');
-            return Storage::disk(Config::get('filesystems.static_images_disk', 'static_images'))->url($imageRelativePath);
-        }
-        catch (\Exception $ex){
+            $disk = Storage::disk(Config::get('filesystems.static_images_disk', 'static_images'));
+            if ($disk == null) return null;
+            return $disk->url($imageRelativePath);
+        } catch (\Exception $ex) {
             Log::warning($ex);
             return null;
         }

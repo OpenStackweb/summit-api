@@ -209,6 +209,8 @@ abstract class RetrieveSummitEventsStrategy
             'created' => ['>', '<', '<=', '>=', '==','[]'],
             'last_edited' => ['>', '<', '<=', '>=', '==','[]'],
             'submission_source' => ['=='],
+            'progress' => ['=='],
+            'status' => ['=='],
         ];
     }
 
@@ -266,6 +268,8 @@ abstract class RetrieveSummitEventsStrategy
             'created' => 'sometimes|required|date_format:U|epoch_seconds',
             'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
             'submission_source' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidSubmissionSources),
+            'progress' => 'sometimes|integer',
+            'status' =>'sometimes|string',
         ];
     }
 }

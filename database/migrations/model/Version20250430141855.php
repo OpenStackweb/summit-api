@@ -15,6 +15,8 @@
 use Database\Utils\DBHelpers;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use Illuminate\Support\Facades\DB;
+
 /**
  * Class Version20250430141855
  * @package Database\Migrations\Model
@@ -26,7 +28,7 @@ class Version20250430141855 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
-        if(!DBHelpers::existsIDX(env('SS_DATABASE'), 'SummitAttendee', 'IDX_SummitAttendee_SummitID_MemberID_Email')) {
+        if(!DBHelpers::existsIDX(DB::connection("model")->getDatabaseName(), 'SummitAttendee', 'IDX_SummitAttendee_SummitID_MemberID_Email')) {
 
             $sql = <<<SQL
 ALTER TABLE `SummitAttendee`
@@ -38,7 +40,7 @@ SQL;
 
     public function down(Schema $schema):void
     {
-        if(DBHelpers::existsIDX(env('SS_DATABASE'), 'SummitAttendee', 'IDX_SummitAttendee_SummitID_MemberID_Email')) {
+        if(DBHelpers::existsIDX(DB::connection("model")->getDatabaseName(), 'SummitAttendee', 'IDX_SummitAttendee_SummitID_MemberID_Email')) {
 
             $sql = <<<SQL
 ALTER TABLE `SummitAttendee` DROP INDEX `IDX_SummitAttendee_SummitID_MemberID_Email`;

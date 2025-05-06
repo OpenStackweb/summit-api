@@ -15,6 +15,8 @@
 use Database\Utils\DBHelpers;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use Illuminate\Support\Facades\DB;
+
 /**
  * Class Version20250430143938
  * @package Database\Migrations\Model
@@ -26,7 +28,7 @@ class Version20250430143938 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
-        if(!DBHelpers::existsIDX(env('SS_DATABASE'), 'SummitAttendeeTicket', 'IDX_SummitAttendeeTicket_Owner_Status_Active')) {
+        if(!DBHelpers::existsIDX(DB::connection("model")->getDatabaseName(), 'SummitAttendeeTicket', 'IDX_SummitAttendeeTicket_Owner_Status_Active')) {
             $sql = <<<SQL
 ALTER TABLE `SummitAttendeeTicket` ADD INDEX `IDX_SummitAttendeeTicket_Owner_Status_Active` (`OwnerID`, `Status`, `IsActive`) USING BTREE;
 SQL;
@@ -39,7 +41,7 @@ SQL;
      */
     public function down(Schema $schema): void
     {
-        if(DBHelpers::existsIDX(env('SS_DATABASE'), 'SummitAttendeeTicket', 'IDX_SummitAttendeeTicket_Owner_Status_Active')) {
+        if(DBHelpers::existsIDX(DB::connection("model")->getDatabaseName(), 'SummitAttendeeTicket', 'IDX_SummitAttendeeTicket_Owner_Status_Active')) {
 
             $sql = <<<SQL
 ALTER TABLE `SummitAttendeeTicket` DROP INDEX `IDX_SummitAttendeeTicket_Owner_Status_Active`

@@ -836,7 +836,10 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
 
         if ($now > $begin_date) {
             Log::debug("SummitAttendeeTicket::requestRefund: now is greater than Summit.BeginDate");
-            throw new ValidationException("You can not request a refund after summit started.");
+            throw new ValidationException
+            (
+                "You can not request a refund after the event has started."
+            );
         }
 
         if ($this->hasPendingRefundRequests()) {

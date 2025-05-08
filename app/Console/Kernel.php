@@ -12,12 +12,10 @@
  * limitations under the License.
  **/
 
-use App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand;
-use App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\App;
-use models\summit\CalendarSync\CalendarSyncInfo;
+
 /**
  * Class Kernel
  * @package App\Console

@@ -15,7 +15,7 @@
 /**
  * Class OAuth2EventTypesApiTest
  */
-final class OAuth2EventTypesApiTest extends ProtectedApiTest
+final class OAuth2EventTypesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
@@ -225,6 +225,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
             'class_name' => \models\summit\SummitEventType::ClassName,
             'allows_publishing_dates' => false,
             'allows_location' => false,
+            'color' => 'baba36',
         ];
 
         $headers = [

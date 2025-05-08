@@ -13,7 +13,7 @@
  **/
 
 class OAuth2SummitMediaFileTypeApiControllerTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
 
     public function testAdd(){

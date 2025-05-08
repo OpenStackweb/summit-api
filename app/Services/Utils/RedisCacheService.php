@@ -13,10 +13,9 @@
  **/
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 use libs\utils\ICacheService;
 use Predis\Connection\ConnectionException;
-
+use \Illuminate\Support\Facades\Redis;
 /**
  * Class RedisCacheService
  * Cache Service Implementation Based on REDIS
@@ -49,13 +48,15 @@ class RedisCacheService implements ICacheService
         try {
             if (!is_null($this->redis)) {
                 $this->redis->disconnect();
-                Redis::purge(self::Connection);
                 $this->redis = null;
             }
         } catch (ConnectionException $ex) {
             $resource = $ex->getConnection()->getResource();
             $metadata = var_export(stream_get_meta_data($resource), true);
             Log::error(sprintf("RedisCacheService::__destruct %s %s %s", $ex->getCode(), $ex->getMessage(), $metadata));
+        }
+        catch(\Exception $ex){
+            Log::warning($ex);
         }
     }
 

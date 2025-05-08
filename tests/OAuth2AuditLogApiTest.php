@@ -13,7 +13,7 @@
  * limitations under the License.
  **/
 
-class OAuth2AuditLogApiTest extends ProtectedApiTest
+class OAuth2AuditLogApiTest extends ProtectedApiTestCase
 {
     public function testGetSummitAuditLog()
     {

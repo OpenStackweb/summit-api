@@ -1,10 +1,4 @@
 <?php namespace Tests;
-use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
-use App\Models\Foundation\Main\IGroup;
-use App\Services\Utils\Facades\EmailExcerpt;
-use App\Services\utils\IEmailExcerptService;
-use Illuminate\Support\Facades\Date;
-
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +11,17 @@ use Illuminate\Support\Facades\Date;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-class OAuth2AttendeesApiTest extends ProtectedApiTest
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use App\Models\Foundation\Main\IGroup;
+use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\utils\IEmailExcerptService;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Date;
+/**
+ * Class OAuth2AttendeesApiTest
+ * @package Tests
+ */
+class OAuth2AttendeesApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
@@ -466,4 +469,138 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $this->assertResponseStatus(200);
     }
+
+    public function testCurrentSummitMyAttendeeFail404()
+    {
+        App::singleton('App\Models\ResourceServer\IAccessTokenService', AccessTokenServiceStub2::class);
+
+        $params = [
+            'expand'       => 'schedule',
+            'id'           =>  self::$summit->getAttendees()[0]->getId(),
+            'attendee_id'  => 'me',
+            'access_token' => $this->access_token
+        ];
+
+        $headers  = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendee",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(404);
+    }
+
+    public function testCurrentSummitMyAttendeeOK()
+    {
+        $params = [
+
+            'expand' => 'schedule,ticket_type,speaker,feedback',
+            'id' => self::$summit->getId(),
+            'attendee_id' => self::$summit->getAttendees()[0]->getId()
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $attendee = json_decode($content);
+        $this->assertTrue(!is_null($attendee));
+    }
+
+    public function testCurrentSummitMyAttendeeSchedule()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'attendee_id' => 'me'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendeeSchedule",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $attendee = json_decode($content);
+        $this->assertTrue(!is_null($attendee));
+    }
+
+    public function testCurrentSummitMyAttendeeAddToSchedule()
+    {
+        $params = [
+            'id'          => self::$summit->getId(),
+            'attendee_id' => 'me',
+            'event_id'    => self::$presentations[0]->getId()
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitAttendeesApiController@addEventToAttendeeSchedule",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(201);
+    }
+
+    public function testCurrentSummitMyAttendeeScheduleUnset()
+    {
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'attendee_id' => 'me',
+            'event_id'    => self::$presentations[0]->getId()
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitAttendeesApiController@addEventToAttendeeSchedule",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(201);
+
+        $params = [
+
+            'id'          => self::$summit->getId(),
+            'attendee_id' => 'me',
+            'event_id'    => self::$presentations[0]->getId()
+        ];
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitAttendeesApiController@removeEventFromAttendeeSchedule",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(204);
+    }
+
 }

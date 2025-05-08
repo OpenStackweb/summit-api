@@ -16,7 +16,7 @@ use Mockery;
 /**
  * Class OAuth2SummitBadgeFeatureTypeApiTest
  */
-final class OAuth2SummitBadgeFeatureTypeApiTest extends ProtectedApiTest
+final class OAuth2SummitBadgeFeatureTypeApiTest extends ProtectedApiTestCase
 {
 
     use InsertSummitTestData;

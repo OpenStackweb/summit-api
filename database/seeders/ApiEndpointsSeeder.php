@@ -23,7 +23,6 @@ use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
 use App\Security\CompanyScopes;
 use App\Security\SponsoredProjectScope;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Class ApiEndpointsSeeder
@@ -33,9 +32,6 @@ class ApiEndpointsSeeder extends Seeder
 
     public function run()
     {
-        DB::table('endpoint_api_scopes')->delete();
-        DB::table('endpoint_api_authz_groups')->delete();
-        DB::table('api_endpoints')->delete();
 
         $this->seedSummitEndpoints();
         $this->seedAuditLogEndpoints();

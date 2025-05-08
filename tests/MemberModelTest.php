@@ -1,7 +1,6 @@
-<?php
-
+<?php namespace Tests;
 /*
- * Copyright 2025 OpenStack Foundation
+ * Copyright 2024 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,23 +12,26 @@
  * limitations under the License.
  **/
 
-use Tests\InsertOrdersTestData;
-use Tests\InsertSummitTestData;
-use Tests\ProtectedApiTest;
+use App\Models\Foundation\Main\IGroup;
+use models\main\SummitAdministratorPermissionGroup;
+
 
 /**
  * Class MemberModelTest
+ * @package Tests
  */
-class MemberModelTest extends ProtectedApiTest
+final class MemberModelTest  extends TestCase
 {
     use InsertSummitTestData;
 
+    use InsertMemberTestData;
+
     use InsertOrdersTestData;
+
     protected function setUp():void
     {
         parent::setUp();
-        self::$defaultMember = self::$member;
-        self::$defaultMember2 = self::$member2;
+        self::insertMemberTestData(IGroup::SummitAdministrators);
         self::insertSummitTestData();
         self::InsertOrdersTestData();
     }
@@ -37,7 +39,22 @@ class MemberModelTest extends ProtectedApiTest
     public function tearDown():void
     {
         self::clearSummitTestData();
+        self::clearMemberTestData();
         parent::tearDown();
+    }
+
+    public function testSummitAdministratrPermissionGroup(){
+        $group = new SummitAdministratorPermissionGroup();
+        $group->setTitle("TEST_GROUP_".str_random(16));
+        $group->addMember(self::$member);
+        $group->addMember(self::$member2);
+        $group->addSummit(self::$summit);
+
+        self::$em->persist($group);
+        self::$em->flush();
+
+        $members_id = $group->getMembersIds();
+        $this->assertTrue(count($members_id) == 2);
     }
 
     public function testGetPaidSummitTicketsBySummitId(){
@@ -49,6 +66,7 @@ class MemberModelTest extends ProtectedApiTest
             $this->assertTrue($ticket->isPaid());
             $this->assertEquals($ticket->getOrder()->getSummit()->getId(),$summit->getId());
         }
+        self::clearMemberTestData();
+        parent::tearDown();
     }
-
 }

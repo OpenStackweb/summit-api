@@ -15,7 +15,7 @@
 /**
  * Class OAuth2SpeakerActiveInvolvementApiTest
  */
-final class OAuth2SpeakerActiveInvolvementApiTest extends ProtectedApiTest
+final class OAuth2SpeakerActiveInvolvementApiTest extends ProtectedApiTestCase
 {
 
     public function testGelAll(){

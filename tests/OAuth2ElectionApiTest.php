@@ -17,7 +17,7 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2ElectionApiTest
  * @package Tests
  */
-class OAuth2ElectionApiTest extends ProtectedApiTest
+class OAuth2ElectionApiTest extends ProtectedApiTestCase
 {
     /**
      * @var Election|null

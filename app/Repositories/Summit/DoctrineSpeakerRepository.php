@@ -18,6 +18,7 @@ use App\libs\Utils\PunnyCodeHelper;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Log;
+use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\PresentationSpeaker;
@@ -745,14 +746,13 @@ SQL,
         }
 
         if (!is_null($order)) {
-            $extra_orders = $order->toRawSQL(array
-            (
+            $extra_orders = $order->toRawSQL([
                 'id' => 'ID',
                 'email' => 'Email',
                 'first_name' => 'FirstName',
                 'last_name' => 'LastName',
                 'full_name' => 'FullName',
-            ));
+            ]);
         }
 
         $query_count = <<<SQL
@@ -817,9 +817,13 @@ SUMMIT_SPEAKERS
 SQL;
 
 
-        $stm = $this->getEntityManager()->getConnection()->prepare($query_count);
-        $stm->execute($bindings);
-        $res = $stm->fetchAll(\PDO::FETCH_COLUMN);
+        $stm =
+            DoctrineStatementValueBinder::bind(
+                $this->getEntityManager()->getConnection()->prepare($query_count),
+                $bindings
+            );
+        $res = $stm->executeQuery();
+        $res = $res->fetchFirstColumn();
 
         $total = count($res) > 0 ? $res[0] : 0;
 
@@ -1044,7 +1048,7 @@ SQL;
 
         $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchOne());
 
         $bindings = array_merge($bindings, array
         (
@@ -1209,13 +1213,16 @@ SQL;
 		WHERE E.SummitID = :summit_id AND PS.PresentationSpeakerID = :speaker_id AND E.Published = 1
 SQL;
 
-            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
-            $stmt->execute([
-                'summit_id' => $summit_id,
-                'speaker_id' => $speaker_id
-            ]);
+            $stmt =
+                DoctrineStatementValueBinder::bind(
+                    $this->getEntityManager()->getConnection()->prepare($sql),
+                    [
+                        'summit_id' => $summit_id,
+                        'speaker_id' => $speaker_id
+                    ]);
 
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             if (count($res) > 0 && intval($res[0]) > 0) return true;
 
             $sql = <<<SQL
@@ -1224,13 +1231,15 @@ SQL;
 		WHERE E.SummitID = :summit_id AND P.ModeratorID = :speaker_id AND E.Published = 1
 SQL;
 
-            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
-            $stmt->execute([
-                'summit_id' => $summit_id,
-                'speaker_id' => $speaker_id
-            ]);
-
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt = DoctrineStatementValueBinder::bind(
+                $this->getEntityManager()->getConnection()->prepare($sql),
+                [
+                    'summit_id' => $summit_id,
+                    'speaker_id' => $speaker_id
+                ]
+            );
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             if (count($res) > 0 && intval($res[0]) > 0) return true;
         } catch (\Exception $ex) {
             Log::warning($ex);
@@ -1298,7 +1307,7 @@ SQL;
 
         $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = intval($stm->fetchOne());
 
         $bindings = array_merge($bindings, array
         (

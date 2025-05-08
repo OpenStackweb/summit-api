@@ -22,8 +22,7 @@ use Tests\InsertSummitTestData;
  * Class CreateTestDBCommand
  * @package App\Console\Commands
  */
-final class SeedTestDataCommand extends Command
-{
+final class SeedTestDataCommand extends Command {
     use InsertSummitTestData;
 
     use InsertMemberTestData;
@@ -35,30 +34,28 @@ final class SeedTestDataCommand extends Command
      *
      * @var string
      */
-    protected $name = 'seed_test_data';
+    protected $name = "seed_test_data";
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'db:seed_test_data';
-
+    protected $signature = "db:seed_test_data";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Seet Test Data';
+    protected $description = "Seet Test Data";
 
     /**
      * Execute the console command.
      *
      * @return void
      */
-    public function handle(): void
-    {
+    public function handle(): void {
         try {
             $this->info("inserting test Member data ...");
             self::insertMemberTestData(IGroup::FoundationMembers);
@@ -66,7 +63,7 @@ final class SeedTestDataCommand extends Command
             self::insertSummitTestData();
             $this->info("inserting test Order data ...");
             self::InsertOrdersTestData();
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->error($e->getMessage());
         }
     }

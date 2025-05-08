@@ -18,7 +18,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackDropDo
  * Class OAuth2TrackQuestionsTemplateTest
  */
 final class OAuth2TrackQuestionsTemplateTest
-    extends ProtectedApiTest
+    extends ProtectedApiTestCase
 {
     /**
      * @param int $summit_id

@@ -568,14 +568,14 @@ WHERE PresentationCategoryGroupID = :group_id AND
 SQL;
 
 
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
+            $stmt = $this->prepareRawSQL($sql,
                 [
                     'track_id' => $this->getId(),
                     'group_id' => $group_id
                 ]
             );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : 0;
             return $res > 0;
         }

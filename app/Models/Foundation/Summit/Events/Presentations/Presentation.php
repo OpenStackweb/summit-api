@@ -2274,13 +2274,13 @@ GROUP BY PresentationTrackChairRatingType.ID
 SQL;
 
         try {
-            $stmt = $this->prepareRawSQL($query);
-            $stmt->execute(
+            $stmt = $this->prepareRawSQL($query,
                 [
                     'presentation_id' => $this->getId(),
                 ]
             );
-            $res = $stmt->fetchAll();
+            $res = $stmt->executeQuery();
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             return $res;
         } catch (\Exception $ex) {
@@ -2308,13 +2308,13 @@ WHERE PresentationID = :presentation_id
 GROUP BY TrackChairID,PresentationID ) AS Presentation_Scores
 SQL;
         try {
-            $stmt = $this->prepareRawSQL($query);
-            $stmt->execute(
+            $stmt = $this->prepareRawSQL($query,
                 [
                     'presentation_id' => $this->getId(),
                 ]
             );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             $score = count($res) > 0 ? $res[0] : 0;
             return floatval($score);
         } catch (\Exception $ex) {
@@ -2351,14 +2351,13 @@ GROUP BY TrackChairID,PresentationID
 
 SQL;
         try {
-            $stmt = $this->prepareRawSQL($query);
-            $stmt->execute(
+            $stmt = $this->prepareRawSQL($query,
                 [
                     'presentation_id' => $this->getId(),
                     'track_chair_id' => $trackChair->getId()
-                ]
-            );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                ]);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             $score = count($res) > 0 ? $res[0] : 0;
             return floatval($score);
         } catch (\Exception $ex) {

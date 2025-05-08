@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
 use LaravelDoctrine\ORM\Facades\Registry;
+use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 use models\main\LegalDocument;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -33,12 +34,16 @@ final class DoctrineLegalDocumentRepository implements ILegalDocumentRepository
 select ID,Title,Content,URLSegment FROM SiteTree
 where SiteTree.URLSegment = :url_segment AND SiteTree.ClassName = :class_name
 SQL;
-            $stmt = Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection()->prepare($sql);
-            $stmt->execute([
-                'url_segment' => trim($slug),
-                'class_name' => "LegalDocumentPage"
-            ]);
-            $res = $stmt->fetchAll();
+            $stmt =
+                DoctrineStatementValueBinder::bind(
+                    Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection()->prepare($sql),
+                    [
+                        'url_segment' => trim($slug),
+                        'class_name' => "LegalDocumentPage"
+                    ]
+                );
+            $res = $stmt->executeQuery();
+            $res = $res->fetchAllAssociative();
             if(count($res) == 0 ) return null;
             return new LegalDocument(
                 $res[0]['ID'],
@@ -49,7 +54,6 @@ SQL;
         } catch (\Exception $ex) {
             return null;
         }
-        return null;
     }
 
     /**
@@ -63,12 +67,16 @@ SQL;
 select ID,Title,Content,URLSegment FROM SiteTree
 where SiteTree.ID = :id AND SiteTree.ClassName = :class_name
 SQL;
-            $stmt = Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection()->prepare($sql);
-            $stmt->execute([
-                'id' => $id,
-                'class_name' => "LegalDocumentPage"
-            ]);
-            $res = $stmt->fetchAll();
+            $stmt =
+                DoctrineStatementValueBinder::bind(
+                    Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection()->prepare($sql),
+                    [
+                        'id' => $id,
+                        'class_name' => "LegalDocumentPage"
+                    ]
+                );
+            $res = $stmt->executeQuery();
+            $res = $res->fetchAllAssociative();
             if(count($res) == 0 ) return null;
             return new LegalDocument(
                 $res[0]['ID'],
@@ -79,6 +87,5 @@ SQL;
         } catch (\Exception $ex) {
             return null;
         }
-        return null;
     }
 }

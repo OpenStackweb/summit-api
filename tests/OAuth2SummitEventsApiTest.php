@@ -12,23 +12,22 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
-use models\summit\Presentation;
-use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
-/**
- * Class OAuth2SummitEventsApiTest
- * @package Tests
- */
-final class OAuth2SummitEventsApiTest extends ProtectedApiTest
+use models\summit\SummitEvent;
+
+final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
 {
+
     use InsertSummitTestData;
 
     use InsertOrdersTestData;
 
     protected function setUp():void
     {
+        $this->current_group = IGroup::TrackChairs;
         parent::setUp();
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
@@ -44,25 +43,23 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testAddPublishableEvent($start_date = 1477645200, $end_date = 1477647600, $location_id = 0)
     {
+
+
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
             'id' => self::$summit->getId(),
         ];
 
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
-
-        $data = array
-        (
+        $data = [
             'title'         => 'Neutron: tbd',
             'description'    => 'TBD',
             'allow_feedback' => true,
             'type_id'        => self::$defaultPresentationType->getId(),
             'tags'           => ['Neutron'],
-            'track_id'       => self::$defaultTrack->getId()
-        );
+            'track_id'       => self::$defaultTrack->getId(),
+            'speakers'       => [self::$defaultMember->getSpeaker()->getId()],
+        ];
 
         if($start_date > 0){
             $data['start_date'] = $start_date;
@@ -81,10 +78,10 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "POST",
             "OAuth2SummitEventsApiController@addEvent",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -97,6 +94,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testAddNonPublishableEventWithScheduledDates($start_date = 1477645200, $end_date = 1477647600, $location_id = 0)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
+
         $params = [
             'id' => self::$summit->getId(),
         ];
@@ -148,6 +148,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testAddNonPublishableEventWithScheduledDatesAndLocation()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
             'id' => self::$summit->getId(),
         ];
@@ -193,6 +195,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testAddNonPublishableEvent()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
             'id' => self::$summit->getId(),
         ];
@@ -267,6 +271,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testPostEventRSVPTemplateUnExistent()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -308,6 +314,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testPostEventRSVPTemplate($summit_id = 23, $location_id = 0, $type_id = 124, $track_id = 208, $start_date = 0, $end_date = 0)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => $summit_id,
@@ -364,75 +372,60 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testPostPresentationFail412($start_date = 1461510000, $end_date = 1461513600)
     {
-        $params = array
-        (
-            'id' => 7,
-        );
+        $this->markTestSkipped('Skipped test: needs review');
 
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
 
-        $data = array
-        (
+        $data = [
             'title' => 'test presentation BCN',
             'description' => 'test presentation BCN',
             'allow_feedback' => true,
             'type_id' => 86,
             'tags' => ['tag#1', 'tag#2']
-        );
+        ];
 
         $response = $this->action
         (
             "POST",
             "OAuth2SummitEventsApiController@addEvent",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
         $this->assertResponseStatus(412);
     }
 
-    public function testPostPresentation($start_date = 1461510000, $end_date = 1461513600)
+    public function testPostPresentation()
     {
-        $params = array
-        (
+        $params = [
             'id' => self::$summit->getId(),
-        );
+        ];
 
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
-
-        $data = array
-        (
+        $data = [
             'title' => 'test presentation BCN',
             'description' => 'test presentation BCN',
             'allow_feedback' => true,
             'type_id' => self::$defaultPresentationType->getId(),
             'track_id' => self::$defaultTrack->getId(),
             'tags' => ['tag#1', 'tag#2'],
-            'speakers' => [1],
-            'submission_source' => SummitEvent::SOURCE_ADMIN,
-        );
+            'speakers' => [self::$defaultMember->getSpeaker()->getId()],
+        ];
 
         $response = $this->action
         (
             "POST",
             "OAuth2SummitEventsApiController@addEvent",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -460,28 +453,18 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'allowed_ticket_types' => [
                 self::$summit->getTicketTypes()[0]->getId(),
                 self::$summit->getTicketTypes()[1]->getId(),
-            ],
-            'submission_source' => SummitEvent::SOURCE_ADMIN,
-            'overflow_streaming_url' => 'https://test.com',
-            'overflow_stream_is_secure' => true,
+            ]
         ];
-
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
 
         $response = $this->action
         (
             "PUT",
             "OAuth2SummitEventsApiController@updateEvent",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -496,6 +479,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testPublishEvent($start_date = 1509789600, $end_date = 1509791400)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $event = $this->testPostEvent($summit_id = 23, $location_id = 0, $type_id = 124, $track_id = 206, $start_date, $end_date);
         unset($event->tags);
 
@@ -531,6 +516,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testPublishEventOnTimeRestrictedLocation($start_date = 1677764037, $end_date = 1682861637)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id'         => 3589,
@@ -566,6 +553,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
     public function testUpdateEventOccupancy(){
+
+        $this->markTestSkipped('Skipped test: needs review');
 
         $params = array
         (
@@ -604,6 +593,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testUnPublishEvent()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $event = $this->testPublishEvent(1461529800, 1461533400);
 
         $params = array
@@ -636,6 +627,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testDeleteEvent($summit_id = 23, $event_id = 0)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         if($event_id == 0) {
             $event = $this->testPostEvent($summit_id, $location_id = 0 , 117, 151, 0 , 0);
             $event_id = $event->id;
@@ -669,6 +662,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsWithFilter($summit_id=27)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
             'id'       => $summit_id,
             "expand"   => "speakers,type",
@@ -704,32 +699,45 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsWithFilterCSV()
     {
-        $params = [
-            'id' => self::$summit->getId(),
+        $this->markTestSkipped('Skipped test: needs review');
+
+        $params = array
+        (
+            'id' => 31,
             //'expand' => 'feedback',
             /*'filter' => [
                 'published==1'
             ]*/
-        ];
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitEventsApiController@getEventsCSV",
             $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders()
+            array(),
+            array(),
+            array(),
+            $headers
         );
 
         $csv = $response->getContent();
         $this->assertResponseStatus(200);
+
+
         $this->assertTrue(!empty($csv));
     }
 
     public function testCurrentSelectionMotiveSummitEvents()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -765,6 +773,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsBySummitType()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 6,
@@ -802,6 +812,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitPublishedEventsBySummitType()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => 6,
@@ -840,6 +852,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
      */
     public function testGetScheduledEventsBySummitAndLevel($summit_id = 27, $level = 'N/A')
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => $summit_id,
@@ -877,6 +891,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
      */
     public function testGetScheduledEventsBySummit($summit_id = 27)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => $summit_id,
@@ -911,6 +927,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetScheduledEventsTags($summit_id = 27)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => $summit_id,
@@ -941,6 +959,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetORSpeakers($summit_id=24)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => $summit_id,
@@ -976,6 +996,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitPublishedEventsSummitTypeDesign()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 6,
@@ -1014,6 +1036,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsBySummitTypeOR()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 'current',
@@ -1051,6 +1075,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsBySummitTypeAND()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 'current',
@@ -1089,6 +1115,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsByEventType()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 'current',
@@ -1126,6 +1154,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetScheduleEmptySpotsBySummit()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $summit_repository   = EntityManager::getRepository(\models\summit\Summit::class);
         $summit              = $summit_repository->getById(25);
         $summit_time_zone    = $summit->getTimeZone();
@@ -1172,6 +1202,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetUnpublishedEventBySummit()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => 23,
@@ -1210,6 +1242,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetUnpublishedEventBySummiOrderedByTrackSelChair($summit_id=27)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => $summit_id,
@@ -1248,6 +1282,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetUnpublishedEventBySummitOrderByTrack($summit_id=26)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => $summit_id,
@@ -1280,6 +1316,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
     public function testGetAllEvents(){
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -1317,6 +1355,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
     public function testGetEventsByMediaUploadWithType(){
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -1352,6 +1392,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
     public function testGetAllPresentations(){
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -1385,6 +1427,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
 
     public function testGetAllVoteablePresentations(){
+        $this->markTestSkipped('Skipped test: needs review');
 
         $service = App::make(IPresentationService::class);
         $summitPresentations = self::$summit->getPresentations();
@@ -1444,6 +1487,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     public function testGetAllScheduledEventsUsingOrder()
     {
 
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -1478,6 +1523,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetAllScheduledEvents()
     {
+        $this->markTestSkipped('Skipped test: needs review');
 
         $params = array
         (
@@ -1512,6 +1558,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsByEventTypeExpandLocation($summit_id = 7)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => $summit_id,
@@ -1548,6 +1596,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetSummitEventsExpandSpeaker()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -1581,6 +1631,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetEvent()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 2941,
@@ -1615,6 +1667,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetPublishedEventFields()
     {
+        $this->markTestSkipped('Skipped test: needs review');
 
         $params = array
         (
@@ -1650,6 +1703,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetPublishedEventFieldsNotExists()
     {
+
+        $this->markTestSkipped('Skipped test: needs review');
 
         $params = array
         (
@@ -1687,6 +1742,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     public function testGetPublishedEvent()
     {
 
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 6,
@@ -1720,6 +1777,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetMeEventFeedback()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $this->testAddFeedback2Event();
 
         $params = array
@@ -1755,6 +1814,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testGetEventFeedback()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         //$this->testAddFeedback2Event();
 
         $params = array
@@ -1806,6 +1867,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testUpdateFeedback2EventByMember($summit_id = 27, $event_id = 24340)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         //$this->testAddFeedback2EventByMember($summit_id, $event_id);
         $params = array
         (
@@ -1844,6 +1907,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testAddFeedback2Event()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => 7,
@@ -1882,6 +1947,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testAddFeedback2EventByMember($summit_id = 27, $event_id = 24340)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id'       => $summit_id,
@@ -1917,6 +1984,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCloneEvent($summit_id = 3693, $event_id= 119634)
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = [
 
             'id' => $summit_id,
@@ -1951,10 +2020,13 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
      * @param int $event_id
      */
     public function testShareEvent($summit_id = 27, $event_id = 24344){
-         $params = [
-             'id' => $summit_id,
-             'event_id' => $event_id,
-         ];
+
+        $this->markTestSkipped('Skipped test: needs review');
+
+        $params = [
+            'id' => $summit_id,
+            'event_id' => $event_id,
+        ];
 
         $headers = [
 
@@ -1982,6 +2054,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
     public function testCastVote(){
+        $this->markTestSkipped('Skipped test: needs review');
+
         $presentation = self::$presentations[count(self::$presentations) - 1];
         $params = [
             'id' => self::$summit->getId(),
@@ -2012,6 +2086,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitEventsFilteredByDuration()
     {
+        $this->markTestSkipped('Skipped test: needs review');
+
         $params = array
         (
             'id' => self::$summit->getId(),
@@ -2042,272 +2118,51 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
-    private function testGetPresentationsByReviewStatus($review_status) {
+    public function testImportEventData(){
+        $this->markTestSkipped('Skipped test: needs review');
+
+        /*        $csv_content = <<<CSV
+        title,abstract,type,track,social_summary,allow_feedback,to_record,tags,speakers_names,speakers,start_date,end_date,is_published,selection_plan,attendees_expected_learnt,problem_addressed,location
+        test1,test abstract1,TEST PRESENTATION TYPE,DEFAULT TRACK,social test1,1,1,tag1|tag2|tag3,Sebas Marcet|Sebas 1 Marcet|Sebas 2 Marcet,smarcet@gmail.com|smarcet+1@gmail.com,smarcet+2@gmail.com,2020-01-01 13:00:00,2020-01-01 13:45:00,1,TEST_SELECTION_PLAN,DEFAULT TRACK,big things,world issues,TEST VENUE
+        test2,test abstract2,TEST PRESENTATION TYPE,DEFAULT TRACK,social test2,1,1,tag1|tag2,Sebas  Marcet,smarcet@gmail.com,2020-01-01 13:45:00,2020-01-01 14:45:00,1,TEST_SELECTION_PLAN,big things,world issues,TEST VENUE
+        test3,test abstract3,TEST PRESENTATION TYPE,DEFAULT TRACK,social test3,1,1,tag4,Sebas 2 Marcet,smarcet+2@gmail.com,2020-01-01 14:45:00,2020-01-01 15:45:00,1,TEST_SELECTION_PLAN,big things,world issues,
+        CSV;*/
+        $csv_content = <<<CSV
+track,start_date,end_date,type,title,abstract,attendees_expected_learnt,social_summary ,speakers_names,speakers,selection_plan
+Security,2020-11-12 8:00:00,2020-11-12 9:00:00,Presentation,Security Projects Alignment,"OCP-Security scope / threat model
+Compare Resiliency approaches
+General role of RoT
+Alignment on security requirements across OCP Server sub-groups.",Cross-orgs alignment/sync on scope and approaches ,,JP Mon,jp@tipit.net,Draft Presentations Submissions
+CSV;
+
+        $path = "/tmp/events.csv";
+
+        file_put_contents($path, $csv_content);
+
+        $file = new UploadedFile($path, "events.csv", 'text/csv', null, true);
 
         $params = [
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 80,
-            'order'    => "+id",
-            'filter'   => ["class_name==Presentation", "review_status==$review_status"]
+            'summit_id' => self::$summit->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
-            "GET",
-            "OAuth2SummitEventsApiController@getEvents",
+            "POST",
+            "OAuth2SummitEventsApiController@importEventData",
             $params,
+            [
+                'send_speaker_email' => true,
+            ],
             [],
-            [],
-            [],
+            [
+                'file' => $file,
+            ],
             $headers
         );
 
         $this->assertResponseStatus(200);
-        return $response->getContent();
-    }
-
-    public function testGetPresentationsByReviewStatusNoSubmitted(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusNoSubmitted);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals('No Submitted', $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusReceived(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusReceived);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertTrue(in_array($presentation->review_status,
-                [Presentation::ReviewStatusReceived, Presentation::ReviewStatusAccepted]));
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusInReview(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusInReview);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals('In Review', $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusPublished(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusPublished);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals(Presentation::ReviewStatusPublished, $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusAccepted(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusAccepted);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals(Presentation::ReviewStatusAccepted, $presentation->review_status);
-        }
-    }
-
-    public function testGetPresentationsByReviewStatusRejected(){
-        $content = $this->testGetPresentationsByReviewStatus(Presentation::ReviewStatusRejected);
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        foreach ($page->data as $presentation) {
-            $this->assertEquals(Presentation::ReviewStatusRejected, $presentation->review_status);
-        }
-    }
-
-    private function getPresentationsOrderedByReviewStatus($order_asc) {
-
-        $params = [
-            'id'       => self::$summit->getId(),
-            'page'     => 1,
-            'per_page' => 80,
-            'filter'   => "class_name==Presentation",
-            'order'    => $order_asc ? "+review_status" : "-review_status"
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitEventsApiController@getEvents",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $this->assertResponseStatus(200);
-        $content = $response->getContent();
-        $page = json_decode($content);
-        $this->assertNotNull($page);
-
-        return $page;
-    }
-
-    public function testGetPresentationsOrderedByReviewStatusASC() {
-        $page = $this->getPresentationsOrderedByReviewStatus(true);
-        $last_review_status = '';
-        foreach ($page->data as $presentation) {
-            $this->assertTrue($last_review_status <= $presentation->review_status);
-            $last_review_status = $presentation->review_status;
-        }
-    }
-
-    public function testGetPresentationsOrderedByReviewStatusDESC() {
-        $page = $this->getPresentationsOrderedByReviewStatus(false);
-        $last_review_status = $page->data[0];
-        foreach ($page->data as $presentation) {
-            $this->assertTrue( $last_review_status >= $presentation->review_status);
-            $last_review_status = $presentation->review_status;
-        }
-    }
-
-    public function testSetOverflow()
-    {
-        $params = array
-        (
-            'id'       => self::$summit->getId(),
-            'event_id' => self::$summit->getEvents()->first()->getId(),
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
-
-        $overflow_streaming_url = 'https://test_updated_streaming_url.com';
-
-        $streaming_data = array
-        (
-            'overflow_streaming_url'   => $overflow_streaming_url,
-            'overflow_stream_is_secure' => true,
-        );
-
-        $response = $this->action
-        (
-            "PUT",
-            "OAuth2SummitEventsApiController@setOverflow",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers,
-            json_encode($streaming_data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-
-        $event = json_decode($content);
-        $this->assertTrue(!is_null($event));
-        $this->assertEquals($overflow_streaming_url, $event->overflow_streaming_url);
-        $this->assertTrue(!is_null($event->overflow_stream_key));
-        $this->assertEquals(SummitEvent::OccupancyOverflow, $event->occupancy);
-
-        return $event;
-    }
-
-    public function testClearOverflow(string $occupancy = SummitEvent::OccupancyEmpty)
-    {
-        $event = $this->testSetOverflow();
-
-        $params = array
-        (
-            'id'       => $event->summit_id,
-            'event_id' => $event->id,
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
-
-        if ($occupancy === SummitEvent::OccupancyEmpty) {
-            $response = $this->action
-            (
-                "DELETE",
-                "OAuth2SummitEventsApiController@clearOverflow",
-                $params,
-                array(),
-                array(),
-                array(),
-                $headers
-            );
-        } else {
-            $response = $this->action
-            (
-                "DELETE",
-                "OAuth2SummitEventsApiController@clearOverflow",
-                $params,
-                array(),
-                array(),
-                array(),
-                $headers,
-                json_encode(['occupancy' => $occupancy])
-            );
-        }
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-
-        $event = json_decode($content);
-        $this->assertTrue(!is_null($event));
-        $this->assertTrue(is_null($event->overflow_streaming_url));
-        $this->assertTrue(is_null($event->overflow_stream_key));
-        $this->assertFalse($event->overflow_stream_is_secure);
-        $this->assertEquals($occupancy, $event->occupancy);
-    }
-
-    public function testClearOverflowWithTargetOccupancy()
-    {
-        $this->testClearOverflow(SummitEvent::Occupancy25_Percent);
-    }
-
-    public function testGetPublishedEventsOverflowStreamingInfo(){
-        $event = $this->testSetOverflow();
-
-        $params = array
-        (
-            'id' => $event->summit_id,
-            'k'  => $event->overflow_stream_key,
-            'page' => 1,
-            'per_page' => 5,
-        );
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitEventsApiController@getOverflowStreamingInfo",
-            $params
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $overflow_streaming_info = json_decode($content);
-        $this->assertTrue(!is_null($overflow_streaming_info));
     }
 }

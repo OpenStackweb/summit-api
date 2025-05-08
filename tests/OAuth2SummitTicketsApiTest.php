@@ -19,7 +19,7 @@ use models\summit\PaymentGatewayProfileFactory;
 /**
  * Class OAuth2SummitTicketsApiTest
  */
-final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
+final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
 {
 
     /**

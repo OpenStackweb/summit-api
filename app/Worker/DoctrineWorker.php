@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
@@ -44,7 +46,6 @@ class DoctrineWorker extends IlluminateWorker
         callable               $isDownForMaintenance
     ) {
         $this->entityManager = $entityManager;
-        $this->manager_name = SilverstripeBaseModel::EntityManager;
         parent::__construct($manager, $events, $exceptions, $isDownForMaintenance);
     }
 
@@ -77,11 +78,11 @@ class DoctrineWorker extends IlluminateWorker
      */
     private function assertEntityManagerIsOpen(): void
     {
-        $this->entityManager  = Registry::getManager($this->manager_name);
+        $this->entityManager  = Registry::getManager(SilverstripeBaseModel::EntityManager);
 
         if (!$this->entityManager->isOpen()) {
             Log::warning("DoctrineWorker::runJob : entity manager is closed!, trying to re open...");
-            $this->entityManager = Registry::resetManager($this->manager_name);
+            $this->entityManager = Registry::resetManager(SilverstripeBaseModel::EntityManager);
         }
     }
 
@@ -101,11 +102,25 @@ class DoctrineWorker extends IlluminateWorker
          * connection before working any job. Otherwise we would see `MySQL has gone away` type errors.
          */
 
-        if ($con->ping() === false) {
+        if ($this->pingConnection($con) === false) {
             $con->close();
             $con->connect();
         }
 
+    }
+
+    /**
+     * @param Connection $con
+     * @return bool
+     */
+    private function pingConnection(Connection $con):bool{
+        try {
+            $con->executeQuery($con->getDatabasePlatform()->getDummySelectSQL());
+            return true;
+        } catch (\Exception $e) {
+            Log::error($e);
+            return false;
+        }
     }
 
     /**

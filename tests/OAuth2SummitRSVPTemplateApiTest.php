@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-final class OAuth2SummitRSVPTemplateApiTest extends ProtectedApiTest
+final class OAuth2SummitRSVPTemplateApiTest extends ProtectedApiTestCase
 {
     public function testGetSummitRSVPTemplates($summit_id = 23)
     {

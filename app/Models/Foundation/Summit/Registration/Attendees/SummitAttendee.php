@@ -734,14 +734,12 @@ SELECT ExtraQuestionAnswer.Value FROM `SummitOrderExtraQuestionAnswer`
 INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SummitOrderExtraQuestionAnswer.ID
 WHERE SummitOrderExtraQuestionAnswer.SummitAttendeeID = :owner_id AND ExtraQuestionAnswer.QuestionID = :question_id
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(
-                [
-                    'owner_id' => $this->getId(),
-                    'question_id' => $question->getId()
-                ]
-            );
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $stmt = $this->prepareRawSQL($sql, [
+                'owner_id' => $this->getId(),
+                'question_id' => $question->getId()
+            ]);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchFirstColumn();
             $res = count($res) > 0 ? $res[0] : null;
             return !is_null($res) ? $res : null;
         } catch (\Exception $ex) {
@@ -1203,9 +1201,9 @@ SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid'
 GROUP BY OwnerID, TicketTypeID;
 SQL;
-            $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['owner_id' => $this->id]);
-            $res = $stmt->fetchAll();
+            $stmt = $this->prepareRawSQL($sql, ['owner_id' => $this->id]);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchAllAssociative();
             $res = count($res) > 0 ? $res : [];
             if (count($res) > 0) {
                 $res = array_map(function ($e) {

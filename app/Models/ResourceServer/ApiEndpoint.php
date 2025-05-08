@@ -14,8 +14,6 @@
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
-use Illuminate\Support\Facades\Cache as CacheFacade;
-use Illuminate\Support\Facades\Config;
 
 /**
  * @ORM\Entity(repositoryClass="repositories\resource_server\DoctrineApiEndpointRepository")
@@ -188,7 +186,7 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
     private $scopes;
 
     /**
-     * @ORM\OneToMany(targetEntity="ApiEndpointAuthzGroup", mappedBy="api_endpoint", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="ApiEndpointAuthzGroup", mappedBy="api_endpoint", cascade={"persist", "remove"}, orphanRemoval=true)
      */
     private $authz_groups;
 
@@ -363,5 +361,20 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
             $ids[] = intval($e->getId());
         }
         return $ids;
+    }
+
+    public function clearScopes():void
+    {
+
+        $this->scopes->clear();
+    }
+
+    public function clearAuthzGroups():void
+    {
+        foreach($this->authz_groups as $authz_group)
+        {
+            $authz_group->clearApiEndpoint();
+        }
+        $this->authz_groups->clear();
     }
 }

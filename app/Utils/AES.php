@@ -202,9 +202,9 @@ final class AES
     /**
      * To string return resulting data
      *
-     * @return null|string
+     * @return string
      */
-    public function __toString():?string
+    public function __toString():string
     {
         return $this->getData();
     }

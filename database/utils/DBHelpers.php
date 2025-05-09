@@ -26,6 +26,7 @@ final class DBHelpers
      * @return bool
      */
     public static function existsFK(string $db, string $table, string $fk):bool{
+
         $sql = <<<SQL
 SELECT 1
 FROM information_schema.REFERENTIAL_CONSTRAINTS
@@ -33,6 +34,7 @@ WHERE CONSTRAINT_SCHEMA = '{$db}'
 AND TABLE_NAME = '{$table}'
 AND CONSTRAINT_NAME = '{$fk}';
 SQL;
+        DB::setDefaultConnection("model");
         $res = DB::select($sql);
         if($res && count($res)){
             return true;
@@ -49,7 +51,7 @@ SQL;
     public static function existsIDX(string $db, string $table, string $idx):bool{
         $sql = <<<SQL
 SELECT
-    1
+    *
 FROM
     INFORMATION_SCHEMA.STATISTICS
 WHERE
@@ -57,6 +59,7 @@ WHERE
     AND TABLE_NAME = '{$table}'
     AND INDEX_NAME = '{$idx}';
 SQL;
+        DB::setDefaultConnection("model");
         $res = DB::select($sql);
         if($res && count($res)){
             return true;
@@ -68,6 +71,7 @@ SQL;
         $sql = <<<SQL
 ALTER TABLE `{$table}` DROP INDEX `{$idx}`
 SQL;
+        DB::setDefaultConnection("model");
         $res = DB::update($sql);
         if($res){
             return true;
@@ -87,6 +91,7 @@ SQL;
 alter table $table
     drop foreign key $fk;
 SQL;
+        DB::setDefaultConnection("model");
         $res = DB::update($sql);
         if($res){
             return true;

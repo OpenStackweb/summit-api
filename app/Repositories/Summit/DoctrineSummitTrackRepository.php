@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -43,6 +45,7 @@ final class DoctrineSummitTrackRepository
     protected function getFilterMappings()
     {
         return [
+            'not_id' => new DoctrineNotInFilterMapping('t.id'),
             'name'        => 't.title:json_string',
             'description' => 't.description:json_string',
             'code'        => 't.code:json_string',

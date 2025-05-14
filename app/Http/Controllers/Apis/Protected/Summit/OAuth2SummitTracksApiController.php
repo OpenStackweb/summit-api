@@ -89,6 +89,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
+                    'not_id' => ['=='],
                     'name' => ['=@', '==', '@@'],
                     'description' => ['=@', '==', '@@'],
                     'code' => ['=@', '==', '@@'],
@@ -98,10 +99,12 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'has_parent'  => ['=='],
                     'has_subtracks' => ['=='],
                     'has_proposed_schedule_allowed_locations' => ['=='],
+
                 ];
             },
             function () {
                 return [
+                    'not_id' => 'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'code' => 'sometimes|string',
@@ -175,7 +178,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
-                    'title' => ['=@', '==', '@@'],
+                    'not_id' => ['=='],
+                    'name' => ['=@', '==', '@@'],
                     'description' => ['=@', '==', '@@'],
                     'code' => ['=@', '==', '@@'],
                     'group_name' => ['=@', '==', '@@'],
@@ -190,6 +194,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             if (is_null($filter)) $filter = new Filter();
 
             $filter->validate([
+                'not_id' => 'sometimes|integer',
                 'name' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'code' => 'sometimes|string',

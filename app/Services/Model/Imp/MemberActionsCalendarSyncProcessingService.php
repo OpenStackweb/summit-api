@@ -107,8 +107,8 @@ implements IMemberActionsCalendarSyncProcessingService
 
             $res = $this->work_request_repository->getUnprocessedMemberScheduleWorkRequestActionByPage
             (
-                $provider,
-                new PagingInfo(1, $batch_size)
+                new PagingInfo(1, $batch_size),
+                $provider
             );
 
             $requests = $this->preprocessor_requests->preProcessActions($res->getItems());

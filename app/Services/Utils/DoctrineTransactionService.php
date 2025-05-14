@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Doctrine\DBAL\Exception\ConnectionException;
 use Doctrine\DBAL\Exception\ConnectionLost;
 use Doctrine\DBAL\TransactionIsolationLevel;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +21,7 @@ use LaravelDoctrine\ORM\Facades\Registry;
 use Doctrine\DBAL\Exception\RetryableException;
 use Exception;
 use libs\utils\ITransactionService;
-
+use ErrorException;
 /**
  * Class DoctrineTransactionService
  * @package App\Services\Utils
@@ -49,8 +50,19 @@ final class DoctrineTransactionService implements ITransactionService
      */
     public function shouldReconnect(\Exception $e):bool
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "DoctrineTransactionService::shouldReconnect %s code %s message %s",
+                get_class($e),
+                $e->getCode(),
+                $e->getMessage()
+            )
+        );
         if($e instanceof RetryableException) return true;
         if($e instanceof ConnectionLost) return true;
+        if($e instanceof ConnectionException) return true;
         if($e instanceof \PDOException){
             switch(intval($e->getCode())){
                 case 2006:

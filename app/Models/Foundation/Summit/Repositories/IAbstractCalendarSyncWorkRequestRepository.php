@@ -35,11 +35,7 @@ interface IAbstractCalendarSyncWorkRequestRepository extends IBaseRepository
     public function getUnprocessedMemberScheduleWorkRequest($member, $event, $calendar_sync_info, $type = null);
 
     /**
-     * @param string $provider
-     * @param PagingInfo $paging_info
-     * @return PagingResponse
-     */
-    public function getUnprocessedMemberScheduleWorkRequestActionByPage($provider = 'ALL', PagingInfo $paging_info);
+    public function getUnprocessedMemberScheduleWorkRequestActionByPage(PagingInfo $paging_info, $provider = 'ALL');
 
     /**
      * @param PagingInfo $paging_info

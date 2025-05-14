@@ -67,11 +67,11 @@ final class DoctrineAbstractCalendarSyncWorkRequestRepository
     }
 
     /**
-     * @param string $provider
      * @param PagingInfo $paging_info
+     * @param $provider
      * @return PagingResponse
      */
-    public function getUnprocessedMemberScheduleWorkRequestActionByPage($provider = 'ALL', PagingInfo $paging_info){
+    public function getUnprocessedMemberScheduleWorkRequestActionByPage(PagingInfo $paging_info, $provider = 'ALL'){
 
         log::debug(sprintf("DoctrineAbstractCalendarSyncWorkRequestRepository::getUnprocessedMemberScheduleWorkRequestActionByPage: provider %s",$provider));
         $query  = $this->getEntityManager()

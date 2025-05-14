@@ -2298,7 +2298,7 @@ final class SummitOrderService
                 throw new EntityNotFoundException('Ticket not found.');
 
             if ($ticket->isFree()) {
-                throw new ValidationException("You can not request a refund because ticket is free.");
+                throw new ValidationException("You cannot request a refund because ticket is free.");
             }
 
             $ticket->requestRefund($current_user);

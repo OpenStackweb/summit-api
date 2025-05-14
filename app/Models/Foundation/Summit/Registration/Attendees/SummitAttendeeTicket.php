@@ -762,6 +762,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
 
         $net_price = $this->getNetSellingPrice();
         $alreadyRefundedAmount = $this->getRefundedAmount();
+
         Log::debug
         (
             sprintf
@@ -804,11 +805,38 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             (
                 sprintf
                 (
-                    "You can not request a refund for this ticket %s ( invalid status %s).",
+                    "You cannot request a refund for this ticket %s ( invalid status %s ).",
                     $this->number,
                     $this->status
                 )
             );
+
+        // check price
+        // if its free we cant request a refund
+
+        if($this->isFree()){
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "You cannot request a refund for this ticket %s ( free ticket ).",
+                    $this->number
+                )
+            );
+        }
+        // if its already refunded we cant request a refund
+        $net_price = $this->getNetSellingPrice();
+        $alreadyRefundedAmount = $this->getRefundedAmount();
+        if($alreadyRefundedAmount > 0 && $net_price == $alreadyRefundedAmount){
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "You cannot request a refund for this ticket %s ( already refunded ).",
+                    $this->number
+                )
+            );
+        }
 
         $summit = $this->getOrder()->getSummit();
         $begin_date = $summit->getBeginDate();
@@ -817,7 +845,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             (
                 sprintf
                 (
-                    "You can not request a refund for this ticket %s ( summit has not begin date).",
+                    "You cannot request a refund for this ticket %s ( summit has not begin date ).",
                     $this->number
                 )
             );
@@ -827,7 +855,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             (
                 sprintf
                 (
-                    "You can not request a refund for this ticket %s ( badge already printed).",
+                    "You cannot request a refund for this ticket %s ( badge already printed ).",
                     $this->number
                 )
             );
@@ -838,7 +866,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             Log::debug("SummitAttendeeTicket::requestRefund: now is greater than Summit.BeginDate");
             throw new ValidationException
             (
-                "You can not request a refund after the event has started."
+                "You cannot request a refund after the event has started."
             );
         }
 

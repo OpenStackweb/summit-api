@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\PresentationCategoryGroup;
 /**
  * Class PresentationCategoryGroupSerializer
@@ -31,6 +31,13 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         'MaxAttendeeVotes' => 'max_attendee_votes:json_int'
     ];
 
+    protected static $expand_mappings = [
+        'tracks' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCategories',
+        ],
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -44,23 +51,14 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         $track_group = $this->object;
         if(!$track_group instanceof PresentationCategoryGroup) return $values;
 
-        $categories = [];
-
-        foreach($track_group->getCategories() as $c)
-        {
-            if(!is_null($expand) &&  in_array('tracks', explode(',',$expand))){
-                $categories[] = SerializerRegistry::getInstance()->getSerializer($c)->serialize(
-                    AbstractSerializer::filterExpandByPrefix($expand, 'tracks'),
-                    AbstractSerializer::filterFieldsByPrefix($fields, 'tracks'),
-                    AbstractSerializer::filterFieldsByPrefix($relations, 'tracks'),
-                    $params
-                );
+        if(in_array('tracks', $relations) && !isset($values['tracks'])) {
+            $tracks = [];
+            foreach ($track_group->getCategories() as $track) {
+                $tracks[] = $track->getId();
             }
-            else
-                $categories[] = intval($c->getId());
+            $values['tracks'] = $tracks;
         }
 
-        $values['tracks'] = $categories;
         return $values;
     }
 }

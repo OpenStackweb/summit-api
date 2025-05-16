@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\PresentationCategoryGroup;
 /**
@@ -50,8 +51,9 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $track_group = $this->object;
         if(!$track_group instanceof PresentationCategoryGroup) return $values;
-
+        Log::debug(sprintf("PresentationCategoryGroupSerializer::serialize expand %s fields %s relations %s", $expand, json_encode($fields), json_encode($relations)));
         if(in_array('tracks', $relations) && !isset($values['tracks'])) {
+            Log::debug(sprintf("PresentationCategoryGroupSerializer::serialize adding tracks relations %s", json_encode($relations)));
             $tracks = [];
             foreach ($track_group->getCategories() as $track) {
                 $tracks[] = $track->getId();

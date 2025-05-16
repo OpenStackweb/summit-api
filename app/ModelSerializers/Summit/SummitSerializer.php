@@ -16,6 +16,7 @@ use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Security\SummitScopes;
 use DateTime;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\IPaymentConstants;
@@ -212,6 +213,8 @@ class SummitSerializer extends SilverStripeSerializer
         $summit = $this->object;
         if (!$summit instanceof Summit) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        Log::debug(sprintf("SummitSerializer::serialize expand %s fields %s relations %s", $expand, json_encode($fields), json_encode($relations)));
 
         if (in_array('dates_with_events', $relations)) {
             $values['dates_with_events'] = [];

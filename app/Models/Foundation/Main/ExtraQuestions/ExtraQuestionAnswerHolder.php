@@ -95,6 +95,17 @@ trait ExtraQuestionAnswerHolder
         //Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s former answers %s current answers %s", $q->getId(), json_encode($formerAnswers->serialize()), json_encode($answers->serialize())));
         $formerAnswer = $formerAnswers->getAnswerFor($q);
         $currentAnswer = $answers->getAnswerFor($q);
+
+        Log::debug
+        (
+            sprintf
+            (
+                "ExtraQuestionAnswerHolder::checkQuestion ExtraQuestionType %s former answer %s current answer %s",
+                $q->getId(),
+                json_encode($formerAnswers->serialize()),
+                json_encode($answers->serialize())
+            )
+        );
         // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
         if(!$this->canChangeAnswerValue($q) && $this->answerChanged($formerAnswer, $currentAnswer)){
             throw new ValidationException
@@ -107,12 +118,16 @@ trait ExtraQuestionAnswerHolder
             );
         }
         $res = $q->isAnswered($answers);
-
+        Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s answered %b", $q->getId(), $res));
         // check sub-questions ...
         foreach ($q->getSubQuestionRules() as $rule){
             $sq = $rule->getSubQuestion();
+            Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s subquestion %s", $q->getId(), $sq->getId()));
+
             if ($this->isAllowedQuestion($sq)) {
+                Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s subquestion %s is allowed", $q->getId(), $sq->getId()));
                 $res &= $this->checkQuestion($sq, $formerAnswers, $answers);
+                Log::debug(sprintf("ExtraQuestionAnswerHolder::checkQuestion question %s subquestion %s res %b", $q->getId(), $sq->getId(), $res));
             }
         }
         return $res;

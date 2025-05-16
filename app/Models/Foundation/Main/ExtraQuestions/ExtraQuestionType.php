@@ -488,16 +488,72 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      */
     public function isAnswered(ExtraQuestionAnswerSet $answers):bool{
         $answer = $answers->getAnswerFor($this);
+        Log::debug
+        (
+            sprintf
+            (
+                "ExtraQuestionType::isAnswered question %s answer %s",
+                $this->getId(),
+                is_null($answer) ? "null" :
+                    $answer->getValue()
+            )
+        );
+
         // root question
         if($this->getClass() === ExtraQuestionTypeConstants::QuestionClassMain){
-            if(!$this->isMandatory()) return true;
+            Log::debug
+            (
+                sprintf
+                (
+                    "ExtraQuestionType::isAnswered question %s answer %s is QuestionClassMain",
+                    $this->getId(),
+                    is_null($answer) ? "null" :
+                        $answer->getValue()
+                )
+            );
+            if(!$this->isMandatory()){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionType::isAnswered question %s answer %s is QuestionClassMain not mandatory -> true",
+                        $this->getId(),
+                        is_null($answer) ? "null" :
+                            $answer->getValue()
+                    )
+                );
+                return true;
+            }
 
-            if(is_null($answer)) return false;
-            if(!$answer->hasValue()) return false;
+            if(is_null($answer)){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionType::isAnswered question %s answer NULL -> false",
+                        $this->getId(),
+
+                    )
+                );
+                return false;
+            }
+            if(!$answer->hasValue()) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionType::isAnswered question %s answer has not value -> false",
+                        $this->getId(),
+
+                    )
+                );
+                return false;
+            }
+
             $value = $answer->getValue();
 
             if ($this->allowsValues() && !$this->allowValue($value)) {
-                Log::warning(sprintf("value %s is not allowed for question %s", $value, $this->getName()));
+                Log::warning(sprintf("ExtraQuestionType::isAnswered value %s is not allowed for question %s", $value, $this->getName()));
                 throw new ValidationException
                 (
                     sprintf
@@ -513,6 +569,15 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
            return true;
         }
         // has parent rules , verify those ( its a sub question )
+
+        Log::debug
+        (
+            sprintf
+            (
+                "ExtraQuestionType::isAnswered question %s has parent rules",
+                $this->getId(),
+            )
+        );
         foreach ($this->parent_rules as $parent_rule){
             if(!$parent_rule->isSubQuestionVisible($answers->getAnswerFor($parent_rule->getParentQuestion()))) {
                 // we should disregard the answer if we have one
@@ -521,9 +586,31 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
                 }
                 continue;
             }
-            if(!$this->isMandatory()) return true;
-            if(is_null($answer)) return false;
-            if(!$answer->hasValue()) return false;
+            if(!$this->isMandatory()) {
+                return true;
+            }
+            if(is_null($answer)) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionType::isAnswered question %s has parent rules answer NULL -> false",
+                        $this->getId(),
+                    )
+                );
+                return false;
+            }
+            if(!$answer->hasValue()){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionType::isAnswered question %s has parent rules answer has no value -> false",
+                        $this->getId(),
+                    )
+                );
+                return false;
+            }
             $value = $answer->getValue();
             if ($this->allowsValues() && !$this->allowValue($value)) {
                 Log::warning(sprintf("value %s is not allowed for question %s", $value, $this->getName()));

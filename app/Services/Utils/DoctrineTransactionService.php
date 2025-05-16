@@ -33,7 +33,7 @@ final class DoctrineTransactionService implements ITransactionService
      */
     private $manager_name;
 
-    const MaxRetries = 3;
+    const MaxRetries = 10;
 
     /**
      * DoctrineTransactionService constructor.
@@ -60,19 +60,68 @@ final class DoctrineTransactionService implements ITransactionService
                 $e->getMessage()
             )
         );
-        if($e instanceof RetryableException) return true;
-        if($e instanceof ConnectionLost) return true;
-        if($e instanceof ConnectionException) return true;
+        if($e instanceof ErrorException && str_contains($e->getMessage(), "Packets out of order")){
+            Log::debug
+            (
+                sprintf
+                (
+                    "DoctrineTransactionService::shouldReconnect %s Packets out of order true",
+                    get_class($e),
+                )
+            );
+            return true;
+        }
+        if($e instanceof RetryableException) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "DoctrineTransactionService::shouldReconnect %s true",
+                    get_class($e),
+                )
+            );
+            return true;
+        }
+        if($e instanceof ConnectionLost) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "DoctrineTransactionService::shouldReconnect %s true",
+                    get_class($e),
+                )
+            );
+            return true;
+        }
+        if($e instanceof ConnectionException) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "DoctrineTransactionService::shouldReconnect %s true",
+                    get_class($e),
+                )
+            );
+            return true;
+        }
         if($e instanceof \PDOException){
             switch(intval($e->getCode())){
                 case 2006:
-                    Log::warning("DoctrineTransactionService::shouldReconnect: MySQL server has gone away!");
+                    Log::warning("DoctrineTransactionService::shouldReconnect: MySQL server has gone away true");
                     return true;
                 case 2002:
-                    Log::warning("DoctrineTransactionService::shouldReconnect:  php_network_getaddresses: getaddrinfo failed: nodename nor servname provided, or not known!");
+                    Log::warning("DoctrineTransactionService::shouldReconnect: php_network_getaddresses: getaddrinfo failed: nodename nor servname provided, or not known true");
                     return true;
             }
         }
+        Log::debug
+        (
+            sprintf
+            (
+                "DoctrineTransactionService::shouldReconnect %s false",
+                get_class($e),
+            )
+        );
         return false;
     }
 

@@ -315,6 +315,7 @@ final class DoctrineSummitAttendeeTicketRepository
     {
         return [
             'id' => 'e.id',
+            'created' => 'e.created',
             'number' => 'e.number',
             'status' => 'e.status',
             'owner_first_name' => 'COALESCE(LOWER(a.first_name), LOWER(m.first_name))',

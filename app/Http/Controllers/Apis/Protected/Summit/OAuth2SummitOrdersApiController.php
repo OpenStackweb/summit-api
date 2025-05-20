@@ -1143,7 +1143,8 @@ final class OAuth2SummitOrdersApiController
                     'status',
                     'owner_first_name',
                     'owner_last_name',
-                    'owner_name'
+                    'owner_name',
+                    'created',
                 ];
             },
             function ($filter) use ($owner, $order_id) {

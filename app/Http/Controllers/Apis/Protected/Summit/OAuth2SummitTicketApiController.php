@@ -191,6 +191,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'badge_type_id',
                     'badge_type',
                     'badge_prints_count',
+                    'created',
                 ];
             },
             function ($filter) use ($summit) {
@@ -362,6 +363,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'badge_type_id',
                     'badge_type',
                     'badge_prints_count',
+                    'created',
                 ];
             },
             function ($filter) use ($summit) {
@@ -610,6 +612,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'id',
                     'number',
                     'status',
+                    'created',
                 ];
             },
             function ($filter) use ($owner, $summit_id) {

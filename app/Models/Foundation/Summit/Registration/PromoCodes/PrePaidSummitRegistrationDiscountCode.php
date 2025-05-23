@@ -16,11 +16,10 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="PrePaidSummitRegistrationDiscountCode")
- * Class PrePaidSummitRegistrationDiscountCode
  * @package models\summit
  */
+#[ORM\Table(name: 'PrePaidSummitRegistrationDiscountCode')]
+#[ORM\Entity]
 class PrePaidSummitRegistrationDiscountCode extends SummitRegistrationDiscountCode
 {
     use PrePaidPromoCodeTrait;

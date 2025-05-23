@@ -14,66 +14,65 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Office")
- * Class Office
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'Office')]
+#[ORM\Entity]
 class Office extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Address", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Address', type: 'string')]
     private $address;
 
     /**
-     * @ORM\Column(name="Address2", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Address2', type: 'string')]
     private $address2;
 
     /**
-     * @ORM\Column(name="State", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'State', type: 'string')]
     private $state;
 
     /**
-     * @ORM\Column(name="ZipCode", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ZipCode', type: 'string')]
     private $zip_code;
 
     /**
-     * @ORM\Column(name="City", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'City', type: 'string')]
     private $city;
 
     /**
-     * @ORM\Column(name="Country", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Country', type: 'string')]
     private $country;
 
     /**
-     * @ORM\Column(name="Lat", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Lat', type: 'float')]
     private $lat;
 
     /**
-     * @ORM\Column(name="Lng", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Lng', type: 'float')]
     private $lng;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Consultant",inversedBy="offices", fetch="LAZY")
-     * @ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")
      * @var Consultant
      */
+    #[ORM\JoinColumn(name: 'ConsultantID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Consultant::class, inversedBy: 'offices', fetch: 'LAZY')]
     private $consultant;
 
     /**

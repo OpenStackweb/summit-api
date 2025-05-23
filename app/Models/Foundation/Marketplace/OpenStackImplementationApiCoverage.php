@@ -15,38 +15,34 @@ use App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="OpenStackImplementationApiCoverage")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "OpenStackImplementationApiCoverage" = "OpenStackImplementationApiCoverage",
- *     "CloudServiceOffered" = "CloudServiceOffered",
- * } )
- * Class OpenStackImplementationApiCoverage
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'OpenStackImplementationApiCoverage')]
+#[ORM\Entity]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['OpenStackImplementationApiCoverage' => 'OpenStackImplementationApiCoverage', 'CloudServiceOffered' => 'CloudServiceOffered'])] // Class OpenStackImplementationApiCoverage
 class OpenStackImplementationApiCoverage
     extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="CoveragePercent", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'CoveragePercent', type: 'integer')]
     protected $percent;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ReleaseSupportedApiVersionID", referencedColumnName="ID")
      * @var OpenStackReleaseSupportedApiVersion
      */
+    #[ORM\JoinColumn(name: 'ReleaseSupportedApiVersionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion::class, fetch: 'EXTRA_LAZY')]
     protected $release_supported_api_version;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Marketplace\OpenStackImplementation", fetch="EXTRA_LAZY", inversedBy="capabilities")
-     * @ORM\JoinColumn(name="ImplementationID", referencedColumnName="ID")
      * @var OpenStackImplementation
      */
+    #[ORM\JoinColumn(name: 'ImplementationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Marketplace\OpenStackImplementation::class, fetch: 'EXTRA_LAZY', inversedBy: 'capabilities')]
     protected $implementation;
 
     /**

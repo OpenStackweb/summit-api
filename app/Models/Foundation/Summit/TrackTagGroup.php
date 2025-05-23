@@ -18,49 +18,43 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="track_tag_groups"
- *     )
- * })
- * @ORM\Table(name="TrackTagGroup")
- * Class TrackTagGroup
  * @package models\summit\TrackTagGroup
  */
+#[ORM\Table(name: 'TrackTagGroup')]
+#[ORM\Entity]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'track_tag_groups')])]
 class TrackTagGroup extends SilverstripeBaseModel implements IOrderable
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\Column(name="Mandatory", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'Mandatory', type: 'boolean')]
     private $is_mandatory;
 
     /**
-     * @ORM\OneToMany(targetEntity="TrackTagGroupAllowedTag", mappedBy="track_tag_group", cascade={"persist"}, orphanRemoval=true)
      * @var TrackTagGroupAllowedTag[]
      */
+    #[ORM\OneToMany(targetEntity: \TrackTagGroupAllowedTag::class, mappedBy: 'track_tag_group', cascade: ['persist'], orphanRemoval: true)]
     private $allowed_tags;
 
     /**

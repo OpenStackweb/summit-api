@@ -23,11 +23,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineUserStoryRepository")
- * @ORM\Table(name="UserStoryDO")
- * Class File
  * @package App\Models\Foundation\UserStories
  */
+#[ORM\Table(name: 'UserStoryDO')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineUserStoryRepository::class)]
 class UserStory extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -46,71 +45,62 @@ class UserStory extends SilverstripeBaseModel
         'hasImage'        => 'image',
     ];
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
-    /**
-     * @ORM\Column(name="Description", type="string")
-     */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
-    /**
-     * @ORM\Column(name="ShortDescription", type="string")
-     */
+    #[ORM\Column(name: 'ShortDescription', type: 'string')]
     private $short_description;
-    /**
-     * @ORM\Column(name="Link", type="string")
-     */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**
-     * @ORM\Column(name="Active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Active', type: 'boolean')]
     private $is_active;
 
     /**
-     * @ORM\Column(name="MillionCoreClub", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'MillionCoreClub', type: 'boolean')]
     private $is_million_core_club;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Organization")
-     * @ORM\JoinColumn(name="OrganizationID", referencedColumnName="ID")
      * @var Organization
      */
+    #[ORM\JoinColumn(name: 'OrganizationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Organization::class)]
     private $organization;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\UserStories\UserStoriesIndustry", inversedBy="user_stories")
-     * @ORM\JoinColumn(name="IndustryID", referencedColumnName="ID")
      * @var UserStoriesIndustry
      */
+    #[ORM\JoinColumn(name: 'IndustryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\UserStories\UserStoriesIndustry::class, inversedBy: 'user_stories')]
     protected $industry;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Main\Continent")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID")
      * @var Continent
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Main\Continent::class)]
     protected $location;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File")
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class)]
     private $image;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="UserStoryDO_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="UserStoryDOID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
      * @var Tag[]
      */
+    #[ORM\JoinTable(name: 'UserStoryDO_Tags')]
+    #[ORM\JoinColumn(name: 'UserStoryDOID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $tags;
 
     public function __construct()

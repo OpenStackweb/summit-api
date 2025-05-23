@@ -19,10 +19,10 @@ use models\utils\One2ManyPropertyTrait;
 
 /**
  * Class SummitEventAttendanceMetric
- * @ORM\Entity
- * @ORM\Table(name="SummitEventAttendanceMetric")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitEventAttendanceMetric')]
+#[ORM\Entity]
 class SummitEventAttendanceMetric extends SummitMetric
 {
     use One2ManyPropertyTrait;
@@ -45,37 +45,37 @@ class SummitEventAttendanceMetric extends SummitMetric
     const SubTypeOnSite = 'ON_SITE';
 
     /**
-     * @ORM\Column(name="SubType", type="string")
      * @var string|null
      */
+    #[ORM\Column(name: 'SubType', type: 'string')]
     private $sub_type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="attendance_metrics", fetch="LAZY")
-     * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitEvent|null
      */
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class, inversedBy: 'attendance_metrics', fetch: 'LAZY')]
     private $event;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitVenueRoom", fetch="LAZY")
-     * @ORM\JoinColumn(name="SummitVenueRoomID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitVenueRoom|null
      */
+    #[ORM\JoinColumn(name: 'SummitVenueRoomID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitVenueRoom::class, fetch: 'LAZY')]
     private $room;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", fetch="LAZY")
-     * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitAttendee|null
      */
+    #[ORM\JoinColumn(name: 'SummitAttendeeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendee::class, fetch: 'LAZY')]
     private $attendee;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member|null
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $created_by;
 
     /**

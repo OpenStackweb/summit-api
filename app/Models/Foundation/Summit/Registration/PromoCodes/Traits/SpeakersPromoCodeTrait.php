@@ -25,14 +25,12 @@ use models\exceptions\ValidationException;
 trait SpeakersPromoCodeTrait
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
-    /**
-     * @ORM\OneToMany(targetEntity="AssignedPromoCodeSpeaker", mappedBy="registration_promo_code", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
+    #[ORM\OneToMany(targetEntity: \AssignedPromoCodeSpeaker::class, mappedBy: 'registration_promo_code', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $owners;
 
     /**

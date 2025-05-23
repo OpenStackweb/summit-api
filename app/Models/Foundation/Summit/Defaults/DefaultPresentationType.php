@@ -18,70 +18,70 @@ use models\summit\SummitEventType;
 
 /**
  * Class DefaultPresentationType
- * @ORM\Entity
- * @ORM\Table(name="DefaultPresentationType")
  * @package App\Models\Foundation\Summit\Defaults
  */
+#[ORM\Table(name: 'DefaultPresentationType')]
+#[ORM\Entity]
 class DefaultPresentationType extends DefaultSummitEventType
 {
     /**
-     * @ORM\Column(name="MaxSpeakers", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxSpeakers', type: 'integer')]
     protected $max_speakers;
 
     /**
-     * @ORM\Column(name="MinSpeakers", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MinSpeakers', type: 'integer')]
     protected $min_speakers;
 
     /**
-     * @ORM\Column(name="MaxModerators", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxModerators', type: 'integer')]
     protected $max_moderators;
 
     /**
-     * @ORM\Column(name="MinModerators", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MinModerators', type: 'integer')]
     protected $min_moderators;
 
     /**
-     * @ORM\Column(name="UseSpeakers", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseSpeakers', type: 'boolean')]
     protected $use_speakers;
 
     /**
-     * @ORM\Column(name="AreSpeakersMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AreSpeakersMandatory', type: 'boolean')]
     protected $are_speakers_mandatory;
 
     /**
-     * @ORM\Column(name="UseModerator", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseModerator', type: 'boolean')]
     protected $use_moderator;
 
     /**
-     * @ORM\Column(name="IsModeratorMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsModeratorMandatory', type: 'boolean')]
     protected $is_moderator_mandatory;
 
     /**
-     * @ORM\Column(name="ShouldBeAvailableOnCFP", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShouldBeAvailableOnCFP', type: 'boolean')]
     protected $should_be_available_on_cfp;
 
     /**
-     * @ORM\Column(name="ModeratorLabel", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ModeratorLabel', type: 'string')]
     protected $moderator_label;
 
     /**

@@ -22,54 +22,51 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class PresentationCategoryGroup
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationCategoryGroupRepository")
- * @ORM\Table(name="PresentationCategoryGroup")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "PresentationCategoryGroup" = "PresentationCategoryGroup",
- *     "PrivatePresentationCategoryGroup" = "PrivatePresentationCategoryGroup"
- * })
  * @package models\summit
- * @ORM\HasLifecycleCallbacks
  */
+#[ORM\Table(name: 'PresentationCategoryGroup')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePresentationCategoryGroupRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['PresentationCategoryGroup' => 'PresentationCategoryGroup', 'PrivatePresentationCategoryGroup' => 'PrivatePresentationCategoryGroup'])]
+#[ORM\HasLifecycleCallbacks]
 class PresentationCategoryGroup extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="Color", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Color', type: 'string')]
     protected $color;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     protected $description;
 
     /**
-     * @ORM\Column(name="BeginAttendeeVotingPeriodDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'BeginAttendeeVotingPeriodDate', type: 'datetime')]
     protected $begin_attendee_voting_period_date;
 
     /**
-     * @ORM\Column(name="EndAttendeeVotingPeriodDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'EndAttendeeVotingPeriodDate', type: 'datetime')]
     protected $end_attendee_voting_period_date;
 
     /**
-     * @ORM\Column(name="MaxUniqueAttendeeVotes", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxUniqueAttendeeVotes', type: 'integer')]
     protected $max_attendee_votes;
 
 
@@ -132,10 +129,10 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="Summit", inversedBy="category_groups")
-     * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
      */
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Summit::class, inversedBy: 'category_groups')]
     protected $summit;
 
     public function setSummit($summit)
@@ -170,13 +167,12 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
 
     /**
      * owning side
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", inversedBy="groups")
-     * @ORM\JoinTable(name="PresentationCategoryGroup_Categories",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryGroupID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
      * @var PresentationCategory[]
      */
+    #[ORM\JoinTable(name: 'PresentationCategoryGroup_Categories')]
+    #[ORM\JoinColumn(name: 'PresentationCategoryGroupID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class, inversedBy: 'groups')]
     protected $categories;
 
     /**

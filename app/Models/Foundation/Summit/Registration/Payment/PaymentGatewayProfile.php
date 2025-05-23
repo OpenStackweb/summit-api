@@ -18,74 +18,65 @@ use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePaymentGatewayProfileRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="payment_profiles"
- *     )
- * })
- * @ORM\Table(name="PaymentGatewayProfile")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"PaymentGatewayProfile" = "PaymentGatewayProfile",
- *     "StripePaymentProfile" = "StripePaymentProfile",
- *      "LawPayPaymentProfile" = "LawPayPaymentProfile"
- * })
- * Class PaymentGatewayProfile
  * @package models\summit
  */
+#[ORM\Table(name: 'PaymentGatewayProfile')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePaymentGatewayProfileRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'payment_profiles')])]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['PaymentGatewayProfile' => 'PaymentGatewayProfile', 'StripePaymentProfile' => 'StripePaymentProfile', 'LawPayPaymentProfile' => 'LawPayPaymentProfile'])] // Class PaymentGatewayProfile
 abstract class PaymentGatewayProfile extends SilverstripeBaseModel
 {
 
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="IsActive", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsActive', type: 'boolean')]
     protected $active;
 
     /**
-     * @ORM\Column(name="ApplicationType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ApplicationType', type: 'string')]
     protected $application_type;
 
     /**
-     * @ORM\Column(name="Provider", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Provider', type: 'string')]
     protected $provider;
 
     /**
-     * @ORM\Column(name="IsTestModeEnabled", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsTestModeEnabled', type: 'boolean')]
     protected $test_mode_enabled;
 
     /**
-     * @ORM\Column(name="LiveSecretKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LiveSecretKey', type: 'string')]
     protected $live_secret_key;
 
     /**
-     * @ORM\Column(name="LivePublishableKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LivePublishableKey', type: 'string')]
     protected $live_publishable_key;
 
     /**
-     * @ORM\Column(name="TestSecretKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TestSecretKey', type: 'string')]
     protected $test_secret_key;
 
     /**
-     * @ORM\Column(name="TestPublishableKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TestPublishableKey', type: 'string')]
     protected $test_publishable_key;
 
     /**

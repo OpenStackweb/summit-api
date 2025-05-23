@@ -15,11 +15,10 @@ use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleAllowedDayRepository")
- * @ORM\Table(name="SummitProposedScheduleAllowedDay")
- * Class SummitProposedScheduleAllowedDay
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
+#[ORM\Table(name: 'SummitProposedScheduleAllowedDay')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitProposedScheduleAllowedDayRepository::class)]
 class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
 {
 
@@ -34,28 +33,28 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="`Day`", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: '`Day`', type: 'datetime')]
     private $day;
 
     /**
-     * @ORM\Column(name="`OpeningHour`", type="smallint")
      * @var int
      */
+    #[ORM\Column(name: '`OpeningHour`', type: 'smallint')]
     private $opening_hour;
 
     /**
-     * @ORM\Column(name="`ClosingHour`", type="smallint")
      * @var int
      */
+    #[ORM\Column(name: '`ClosingHour`', type: 'smallint')]
     private $closing_hour;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitProposedScheduleAllowedLocation",inversedBy="allowed_timeframes")
-     * @ORM\JoinColumn(name="AllowedLocationID", referencedColumnName="ID")
      * @var SummitProposedScheduleAllowedLocation
      */
+    #[ORM\JoinColumn(name: 'AllowedLocationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitProposedScheduleAllowedLocation::class, inversedBy: 'allowed_timeframes')]
     private $allowed_location;
 
     /**

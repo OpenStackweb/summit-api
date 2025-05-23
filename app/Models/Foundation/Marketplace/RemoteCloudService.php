@@ -13,37 +13,36 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineRemoteCloudServiceRepository")
- * @ORM\Table(name="RemoteCloudService")
- * Class RemoteCloudService
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'RemoteCloudService')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Marketplace\DoctrineRemoteCloudServiceRepository::class)]
 class RemoteCloudService extends OpenStackImplementation
 {
     const ClassName = 'RemoteCloudService';
 
     /**
-     * @ORM\Column(name="HardwareSpecifications", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'HardwareSpecifications', type: 'string')]
     private $hardware_spec;
 
     /**
-     * @ORM\Column(name="PricingModels", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PricingModels', type: 'string')]
     private $pricing_models;
 
     /**
-     * @ORM\Column(name="PublishedSLAs", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PublishedSLAs', type: 'string')]
     private $published_sla;
 
     /**
-     * @ORM\Column(name="VendorManagedUpgrades", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'VendorManagedUpgrades', type: 'boolean')]
     private $vendor_managed_upgrades;
 
     /**

@@ -20,38 +20,37 @@ use models\main\Group;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class PrivatePresentationCategoryGroup
- * @ORM\Entity
- * @ORM\Table(name="PrivatePresentationCategoryGroup")
  * @package models\summit
  */
+#[ORM\Table(name: 'PrivatePresentationCategoryGroup')]
+#[ORM\Entity]
 class PrivatePresentationCategoryGroup extends PresentationCategoryGroup
 {
     /**
-     * @ORM\Column(name="SubmissionBeginDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'SubmissionBeginDate', type: 'datetime')]
     protected $submission_begin_date;
 
     /**
-     * @ORM\Column(name="SubmissionEndDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'SubmissionEndDate', type: 'datetime')]
     protected $submission_end_date;
 
     /**
-     * @ORM\Column(name="MaxSubmissionAllowedPerUser", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxSubmissionAllowedPerUser', type: 'integer')]
     protected $max_submission_allowed_per_user;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Group")
-     * @ORM\JoinTable(name="PrivatePresentationCategoryGroup_AllowedGroups",
-     *      joinColumns={@ORM\JoinColumn(name="PrivatePresentationCategoryGroupID", referencedColumnName="ID", onDelete="CASCADE")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="GroupID", referencedColumnName="ID", onDelete="CASCADE")}
-     * )
      * @var Group[]
      */
+    #[ORM\JoinTable(name: 'PrivatePresentationCategoryGroup_AllowedGroups')]
+    #[ORM\JoinColumn(name: 'PrivatePresentationCategoryGroupID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'GroupID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Group::class)]
     protected $allowed_groups;
 
     /**

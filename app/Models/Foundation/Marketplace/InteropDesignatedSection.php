@@ -14,36 +14,35 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="InteropDesignatedSection")
- * Class InteropCapability
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'InteropDesignatedSection')]
+#[ORM\Entity]
 class InteropDesignatedSection extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
-     * @ORM\Column(name="Guidance", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Guidance', type: 'string')]
     private $guidance;
 
 
     /**
-     * @ORM\Column(name="Comment", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Comment', type: 'string')]
     private $comment;
 
     /**

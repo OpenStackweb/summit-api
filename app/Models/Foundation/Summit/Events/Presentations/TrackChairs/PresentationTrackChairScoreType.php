@@ -17,11 +17,10 @@ use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationTrackChairScoreTypeRepository")
- * @ORM\Table(name="PresentationTrackChairScoreType")
- * Class PresentationTrackChairScoreType
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs
  */
+#[ORM\Table(name: 'PresentationTrackChairScoreType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePresentationTrackChairScoreTypeRepository::class)]
 class PresentationTrackChairScoreType
     extends SilverstripeBaseModel
     implements IOrderable
@@ -37,28 +36,28 @@ class PresentationTrackChairScoreType
     ];
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="`Score`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Score`', type: 'integer')]
     private $score;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", inversedBy="score_types", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var PresentationTrackChairRatingType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType::class, inversedBy: 'score_types', fetch: 'EXTRA_LAZY')]
     private $type;
 
     public function __construct()

@@ -16,26 +16,20 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationActionTypeRepository")
- * @ORM\Table(name="PresentationActionType")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="presentation_action_types"
- *     )
- * })
- * @ORM\HasLifecycleCallbacks
- * Class PresentationActionType
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationActionType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePresentationActionTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'presentation_action_types')])]
+#[ORM\HasLifecycleCallbacks] // Class PresentationActionType
 class PresentationActionType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
@@ -45,9 +39,9 @@ class PresentationActionType extends SilverstripeBaseModel
     private $order;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="type", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AllowedPresentationActionType[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\AllowedPresentationActionType::class, mappedBy: 'type', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $assigned_selection_plans;
 
     /**

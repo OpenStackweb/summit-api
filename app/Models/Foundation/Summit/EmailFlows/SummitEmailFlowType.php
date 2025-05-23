@@ -15,23 +15,22 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitEmailFlowType")
- * Class DefaultTrackTagGroup
  * @package models\summit\DefaultTrackTagGroup
  */
+#[ORM\Table(name: 'SummitEmailFlowType')]
+#[ORM\Entity]
 class SummitEmailFlowType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\OneToMany(targetEntity="SummitEmailEventFlowType", mappedBy="flow", cascade={"persist"}, orphanRemoval=true)
      * @var SummitEmailEventFlowType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitEmailEventFlowType::class, mappedBy: 'flow', cascade: ['persist'], orphanRemoval: true)]
     private $flow_event_types;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**

@@ -17,90 +17,87 @@ use Doctrine\ORM\Mapping AS ORM;
 use DateTime;
 use DateTimeZone;
 /**
- * @ORM\Entity
- * @ORM\Table(name="OpenStackImplementation")
- * Class OpenStackImplementation
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'OpenStackImplementation')]
+#[ORM\Entity]
 class OpenStackImplementation extends RegionalSupportedCompanyService
 {
     const ClassName = 'OpenStackImplementation';
 
     /**
-     * @ORM\Column(name="CompatibleWithStorage", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'CompatibleWithStorage', type: 'boolean')]
     protected $is_compatible_with_storage;
 
     /**
-     * @ORM\Column(name="CompatibleWithCompute", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'CompatibleWithCompute', type: 'boolean')]
     protected $is_compatible_with_compute;
 
     /**
-     * @ORM\Column(name="CompatibleWithFederatedIdentity", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'CompatibleWithFederatedIdentity', type: 'boolean')]
     protected $is_compatible_with_federated_identity;
 
     /**
-     * @ORM\Column(name="ExpiryDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ExpiryDate', type: 'datetime')]
     protected $expire_date;
 
     /**
-     * @ORM\Column(name="Notes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Notes', type: 'string')]
     protected $notes;
 
     /**
-     * @ORM\ManyToOne(targetEntity="InteropProgramVersion", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ProgramVersionID", referencedColumnName="ID")
      * @var InteropProgramVersion
      */
+    #[ORM\JoinColumn(name: 'ProgramVersionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \InteropProgramVersion::class, fetch: 'EXTRA_LAZY')]
     protected $program_version;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackRelease", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ReportedReleaseID", referencedColumnName="ID")
      * @var OpenStackRelease
      */
+    #[ORM\JoinColumn(name: 'ReportedReleaseID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackRelease::class, fetch: 'EXTRA_LAZY')]
     protected $reported_release;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackRelease", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PassedReleaseID", referencedColumnName="ID")
      * @var OpenStackRelease
      */
+    #[ORM\JoinColumn(name: 'PassedReleaseID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackRelease::class, fetch: 'EXTRA_LAZY')]
     protected $passed_release;
 
     /**
-     * @ORM\OneToMany(targetEntity="OpenStackImplementationApiCoverage", mappedBy="implementation", cascade={"persist"})
      * @var OpenStackImplementationApiCoverage[]
      */
+    #[ORM\OneToMany(targetEntity: \OpenStackImplementationApiCoverage::class, mappedBy: 'implementation', cascade: ['persist'])]
     protected $capabilities;
 
     /**
-     * @ORM\ManyToMany(targetEntity="HyperVisorType", cascade={"persist"})
-     * @ORM\JoinTable(name="OpenStackImplementation_HyperVisors",
-     *      joinColumns={@ORM\JoinColumn(name="OpenStackImplementationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="HyperVisorTypeID", referencedColumnName="ID")}
-     *     )
      * @var HyperVisorType[]
      */
+    #[ORM\JoinTable(name: 'OpenStackImplementation_HyperVisors')]
+    #[ORM\JoinColumn(name: 'OpenStackImplementationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'HyperVisorTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \HyperVisorType::class, cascade: ['persist'])]
     protected $hypervisors;
 
     /**
-     * @ORM\ManyToMany(targetEntity="GuestOSType", cascade={"persist"})
-     * @ORM\JoinTable(name="OpenStackImplementation_Guests",
-     *      joinColumns={@ORM\JoinColumn(name="OpenStackImplementationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="GuestOSTypeID", referencedColumnName="ID")}
-     *      )
      * @var GuestOSType[]
      */
+    #[ORM\JoinTable(name: 'OpenStackImplementation_Guests')]
+    #[ORM\JoinColumn(name: 'OpenStackImplementationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'GuestOSTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \GuestOSType::class, cascade: ['persist'])]
     protected $guests;
 
     /**

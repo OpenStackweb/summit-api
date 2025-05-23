@@ -16,31 +16,30 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="RSVPAnswer")
- * Class RSVPAnswer
  * @package models\summit
  */
+#[ORM\Table(name: 'RSVPAnswer')]
+#[ORM\Entity]
 class RSVPAnswer extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     private $value;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\RSVP", inversedBy="answers")
-     * @ORM\JoinColumn(name="RSVPID", referencedColumnName="ID", onDelete="CASCADE")
      * @var RSVP
      */
+    #[ORM\JoinColumn(name: 'RSVPID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\RSVP::class, inversedBy: 'answers')]
     private $rsvp;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
      * @var RSVPQuestionTemplate
      */
+    #[ORM\JoinColumn(name: 'QuestionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate::class)]
     private $question;
 
     /**

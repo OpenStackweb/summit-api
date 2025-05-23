@@ -28,17 +28,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitOrderRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="orders"
- *     )
- * })
- * @ORM\Table(name="SummitOrder")
- * Class SummitOrder
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitOrder')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitOrderRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'orders')])]
 class SummitOrder extends SilverstripeBaseModel implements IQREntity
 {
     use SummitOwned;
@@ -46,155 +40,155 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     use FinancialTrait;
 
     /**
-     * @ORM\Column(name="Number", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Number', type: 'string')]
     private $number;
 
     /**
-     * @ORM\Column(name="ExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
     private $external_id;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
-     * @ORM\Column(name="PaymentMethod", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PaymentMethod', type: 'string')]
     private $payment_method;
 
     /**
-     * @ORM\Column(name="QRCode", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'QRCode', type: 'string', nullable: true)]
     private $qr_code;
 
     /**
-     * @ORM\Column(name="OwnerFirstName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OwnerFirstName', type: 'string')]
     private $owner_first_name;
 
     /**
-     * @ORM\Column(name="OwnerSurname", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OwnerSurname', type: 'string')]
     private $owner_surname;
 
     /**
-     * @ORM\Column(name="OwnerEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OwnerEmail', type: 'string')]
     private $owner_email;
 
     /**
-     * @ORM\Column(name="OwnerCompany", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OwnerCompany', type: 'string')]
     private $owner_company_name;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="OwnerCompanyID", referencedColumnName="ID", nullable=true)
      * @var Company
      */
+    #[ORM\JoinColumn(name: 'OwnerCompanyID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\main\Company::class)]
     private $owner_company;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="summit_registration_orders")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=true)
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'summit_registration_orders')]
     private $owner;
 
     /**
-     * @ORM\Column(name="BillingAddress1", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BillingAddress1', type: 'string')]
     private $billing_address_1;
 
     /**
-     * @ORM\Column(name="BillingAddress2", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BillingAddress2', type: 'string')]
     private $billing_address_2;
 
     /**
-     * @ORM\Column(name="BillingAddressZipCode", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BillingAddressZipCode', type: 'string')]
     private $billing_address_zip_code;
 
     /**
-     * @ORM\Column(name="BillingAddressCity", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BillingAddressCity', type: 'string')]
     private $billing_address_city;
 
     /**
-     * @ORM\Column(name="BillingAddressState", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BillingAddressState', type: 'string')]
     private $billing_address_state;
 
     /**
-     * @ORM\Column(name="BillingAddressCountryISOCode", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BillingAddressCountryISOCode', type: 'string')]
     private $billing_address_country_iso_code;
 
     /**
-     * @ORM\Column(name="ApprovedPaymentDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ApprovedPaymentDate', type: 'datetime')]
     private $approved_payment_date;
 
     /**
-     * @ORM\Column(name="LastError", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LastError', type: 'string')]
     private $last_error;
 
     /**
-     * @ORM\Column(name="PaymentGatewayClientToken", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PaymentGatewayClientToken', type: 'string')]
     private $payment_gateway_client_token;
 
     /**
-     * @ORM\Column(name="PaymentGatewayCartId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PaymentGatewayCartId', type: 'string')]
     private $payment_gateway_cart_id;
 
     /**
-     * @ORM\Column(name="Hash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $hash;
 
     /**
-     * @ORM\Column(name="HashCreationDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'HashCreationDate', type: 'datetime')]
     private $hash_creation_date;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeTicket", mappedBy="order", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitAttendeeTicket[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeTicket::class, mappedBy: 'order', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $tickets;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitOrderExtraQuestionAnswer", mappedBy="order", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitOrderExtraQuestionAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitOrderExtraQuestionAnswer::class, mappedBy: 'order', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $extra_question_answers;
 
     /**
@@ -203,21 +197,21 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     private $disclaimer_accepted_date;
 
     /**
-     * @ORM\Column(name="LastReminderEmailSentDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'LastReminderEmailSentDate', type: 'datetime')]
     private $last_reminder_email_sent_date;
 
     /**
-     * @ORM\Column(name="CreditCardType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CreditCardType', type: 'string')]
     private $credit_card_type;
 
     /**
-     * @ORM\Column(name="CreditCard4Numbers", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CreditCard4Numbers', type: 'string')]
     private $credit_card_4numbers;
 
     /**

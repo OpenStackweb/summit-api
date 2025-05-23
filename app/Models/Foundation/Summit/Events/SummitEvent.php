@@ -40,26 +40,15 @@ use models\utils\SilverstripeBaseModel;
 use Random\RandomException;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="events"
- *     )
- * })
- * @ORM\Table(name="SummitEvent")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\HasLifecycleCallbacks
- * @ORM\DiscriminatorMap({
- *     "SummitEvent" = "SummitEvent",
- *     "Presentation" = "Presentation",
- *     "SummitGroupEvent" = "SummitGroupEvent",
- *     "SummitEventWithFile" = "SummitEventWithFile"
- * })
- * Class SummitEvent
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitEvent')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitEventRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'events')])]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\HasLifecycleCallbacks]
+#[ORM\DiscriminatorMap(['SummitEvent' => 'SummitEvent', 'Presentation' => 'Presentation', 'SummitGroupEvent' => 'SummitGroupEvent', 'SummitEventWithFile' => 'SummitEventWithFile'])] // Class SummitEvent
 class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 {
     /**
@@ -111,176 +100,170 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     ];
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     protected $title;
 
     /**
-     * @ORM\Column(name="Abstract", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Abstract', type: 'string')]
     protected $abstract;
 
     /**
-     * @ORM\Column(name="SocialSummary", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SocialSummary', type: 'string')]
     protected $social_summary;
 
     /**
-     * @ORM\Column(name="Occupancy", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Occupancy', type: 'string')]
     protected $occupancy;
 
     /**
-     * @ORM\Column(name="Level", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Level', type: 'string')]
     protected $level;
 
     /**
-     * @ORM\Column(name="StartDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'StartDate', type: 'datetime')]
     protected $start_date;
 
     /**
-     * @ORM\Column(name="EndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'EndDate', type: 'datetime')]
     protected $end_date;
 
     /**
-     * @ORM\Column(name="Published", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Published', type: 'boolean')]
     protected $published;
 
     /**
-     * @ORM\Column(name="PublishedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'PublishedDate', type: 'datetime')]
     protected $published_date;
 
     /**
-     * @ORM\Column(name="AllowFeedBack", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowFeedBack', type: 'boolean')]
     protected $allow_feedback;
 
     /**
-     * @ORM\Column(name="AvgFeedbackRate", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'AvgFeedbackRate', type: 'float')]
     protected $avg_feedback;
 
     /**
-     * @ORM\Column(name="HeadCount", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'HeadCount', type: 'integer')]
     protected $head_count;
 
     /**
-     * @ORM\Column(name="RSVPMaxUserNumber", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'RSVPMaxUserNumber', type: 'integer')]
     protected $rsvp_max_user_number;
 
     /**
-     * @ORM\Column(name="RSVPMaxUserWaitListNumber", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'RSVPMaxUserWaitListNumber', type: 'integer')]
     protected $rsvp_max_user_wait_list_number;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="RSVPTemplateID", referencedColumnName="ID", onDelete="SET NULL")
      * @var RSVPTemplate
      */
+    #[ORM\JoinColumn(name: 'RSVPTemplateID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate::class, fetch: 'EXTRA_LAZY')]
     protected $rsvp_template;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\RSVP", mappedBy="event", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var RSVP[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\RSVP::class, mappedBy: 'event', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     protected $rsvp;
 
     /**
-     * @ORM\Column(name="RSVPLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'RSVPLink', type: 'string')]
     protected $rsvp_link;
 
     /**
-     * @ORM\Column(name="ExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
     protected $external_id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationCategory", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinColumn(name="CategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'CategoryID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \PresentationCategory::class, fetch: 'EXTRA_LAZY', cascade: ['persist'])]
     protected $category = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitEventType", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitEventType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \SummitEventType::class, fetch: 'EXTRA_LAZY', cascade: ['persist'])]
     protected $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAbstractLocation", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="events")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \SummitAbstractLocation::class, fetch: 'EXTRA_LAZY', cascade: ['persist'], inversedBy: 'events')]
     protected $location = null;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Company", inversedBy="sponsorships", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitEvent_Sponsors",
-     *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="CASCADE")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitEvent_Sponsors')]
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'CompanyID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Company::class, inversedBy: 'sponsorships', fetch: 'EXTRA_LAZY')]
     protected $sponsors;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventFeedback", mappedBy="event", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\Cache("NONSTRICT_READ_WRITE")
      * @var SummitEventFeedback[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitEventFeedback::class, mappedBy: 'event', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
+    #[ORM\Cache('NONSTRICT_READ_WRITE')]
     protected $feedback;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitEvent_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitEvent_Tags')]
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'], inversedBy: 'events', fetch: 'EXTRA_LAZY')]
     protected $tags;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventAttendanceMetric", mappedBy="event", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitEventAttendanceMetric[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitEventAttendanceMetric::class, mappedBy: 'event', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $attendance_metrics;
 
     /**
-     * @ORM\Column(name="StreamingUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'StreamingUrl', type: 'string')]
     protected $streaming_url;
 
     /**
-     * @ORM\Column(name="StreamIsSecure", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'StreamIsSecure', type: 'boolean')]
     protected $stream_is_secure;
 
 
@@ -290,75 +273,72 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     const ValidStreamingTypes = [self::STREAMING_TYPE_LIVE, self::STREAMING_TYPE_VOD];
 
     /**
-     * @ORM\Column(name="StreamingType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'StreamingType', type: 'string')]
     protected $streaming_type;
 
     /**
-     * @ORM\Column(name="MuxPlaybackID", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MuxPlaybackID', type: 'string')]
     protected $mux_playback_id;
 
     /**
-     * @ORM\Column(name="MuxAssetID", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MuxAssetID', type: 'string')]
     protected $mux_asset_id;
 
     /**
-     * @ORM\Column(name="EtherpadLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EtherpadLink', type: 'string')]
     protected $etherpad_link;
 
     /**
-     * @ORM\Column(name="MeetingUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MeetingUrl', type: 'string')]
     protected $meeting_url;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     protected $image;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY", inversedBy="created_presentations")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY', inversedBy: 'created_presentations')]
     protected $created_by = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="UpdatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'UpdatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     protected $updated_by = null;
 
     /**
-     * @ORM\Column(name="ShowSponsors", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShowSponsors', type: 'boolean')]
     protected $show_sponsors;
 
     /**
-     * @ORM\Column(name="DurationInSeconds", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'DurationInSeconds', type: 'integer')]
     protected $duration;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitEvent_SummitTicketType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitEvent_SummitTicketType')]
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitTicketType::class, cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     protected $allowed_ticket_types;
 
 
@@ -368,27 +348,27 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     const ValidSubmissionSources = [self::SOURCE_SUBMISSION, self::SOURCE_ADMIN];
 
      /**
-     * @ORM\Column(name="SubmissionSource", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SubmissionSource', type: 'string')]
     protected $submission_source;
 
      /**
-     * @ORM\Column(name="OverflowStreamingUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OverflowStreamingUrl', type: 'string')]
     protected $overflow_streaming_url;
 
      /**
-     * @ORM\Column(name="OverflowStreamIsSecure", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'OverflowStreamIsSecure', type: 'boolean')]
     protected $overflow_stream_is_secure;
 
     /**
-     * @ORM\Column(name="OverflowStreamKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OverflowStreamKey', type: 'string')]
     protected $overflow_stream_key;
 
     /**

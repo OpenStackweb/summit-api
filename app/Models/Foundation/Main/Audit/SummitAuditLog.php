@@ -17,11 +17,10 @@ use models\summit\Summit;
 use models\summit\SummitOwned;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitAuditLog")
- * Class SummitAuditLog
  * @package models\main
  */
+#[ORM\Table(name: 'SummitAuditLog')]
+#[ORM\Entity]
 class SummitAuditLog extends AuditLog
 {
     use SummitOwned;

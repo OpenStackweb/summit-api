@@ -17,10 +17,10 @@ use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * Class AdminSummitEventActionSyncWorkRequest
- * @ORM\Entity
- * @ORM\Table(name="AdminSummitEventActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'AdminSummitEventActionSyncWorkRequest')]
+#[ORM\Entity]
 class AdminSummitEventActionSyncWorkRequest
     extends AdminScheduleSummitActionSyncWorkRequest
 {
@@ -28,9 +28,9 @@ class AdminSummitEventActionSyncWorkRequest
     const SubType = 'ADMIN_EVENT';
 
     /**
-     * @ORM\Column(name="SummitEventID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'SummitEventID', type: 'integer')]
     private $summit_event_id;
 
     /**

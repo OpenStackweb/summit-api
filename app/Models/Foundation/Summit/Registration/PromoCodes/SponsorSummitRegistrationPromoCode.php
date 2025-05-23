@@ -13,11 +13,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SponsorSummitRegistrationPromoCode")
- * Class SponsorSummitRegistrationPromoCode
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorSummitRegistrationPromoCode')]
+#[ORM\Entity]
 class SponsorSummitRegistrationPromoCode extends SummitRegistrationPromoCode
 {
 

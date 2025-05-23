@@ -23,11 +23,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleAllowedLocationRepository")
- * @ORM\Table(name="SummitProposedScheduleAllowedLocation")
- * Class SummitProposedScheduleAllowedLocation
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
+#[ORM\Table(name: 'SummitProposedScheduleAllowedLocation')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitProposedScheduleAllowedLocationRepository::class)]
 class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
 {
 
@@ -43,10 +42,10 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
         'hasTrack' => 'track',
     ];
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="proposed_schedule_allowed_locations")
-     * @ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationCategory::class, fetch: 'EXTRA_LAZY', cascade: ['persist'], inversedBy: 'proposed_schedule_allowed_locations')]
     private $track;
 
     /**
@@ -90,15 +89,13 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAbstractLocation::class, fetch: 'EXTRA_LAZY', cascade: ['persist'])]
     private $location;
 
-    /**
-     * @ORM\OneToMany(targetEntity="SummitProposedScheduleAllowedDay", mappedBy="allowed_location", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
+    #[ORM\OneToMany(targetEntity: \SummitProposedScheduleAllowedDay::class, mappedBy: 'allowed_location', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $allowed_timeframes;
 
     /*

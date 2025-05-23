@@ -14,16 +14,13 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SpeakerExpertise")
- * Class SpeakerExpertise
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerExpertise')]
+#[ORM\Entity]
 class SpeakerExpertise extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="Expertise", type="string")
-     */
+    #[ORM\Column(name: 'Expertise', type: 'string')]
     private $expertise;
 
     /**
@@ -37,10 +34,10 @@ class SpeakerExpertise extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="areas_of_expertise")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class, inversedBy: 'areas_of_expertise')]
     private $speaker;
 
     /**

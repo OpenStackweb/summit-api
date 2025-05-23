@@ -22,11 +22,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SubQuestionRule")
- * Class SubQuestionRule
  * @package App\Models\Foundation\Main\ExtraQuestions
  */
+#[ORM\Table(name: 'SubQuestionRule')]
+#[ORM\Entity]
 class SubQuestionRule extends SilverstripeBaseModel
     implements IOrderable
 {
@@ -42,47 +41,47 @@ class SubQuestionRule extends SilverstripeBaseModel
         'hasSubQuestion' => 'sub_question',
     ];
     /**
-     * @ORM\Column(name="Visibility", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Visibility', type: 'string')]
     private $visibility;
 
     /**
-     * @ORM\Column(name="VisibilityCondition", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'VisibilityCondition', type: 'string')]
     private $visibility_condition;
 
     /**
-     * @ORM\Column(name="AnswerValues", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AnswerValues', type: 'string')]
     private $answer_values;
 
     /**
-     * @ORM\Column(name="AnswerValuesOperator", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AnswerValuesOperator', type: 'string')]
     private $answer_values_operator;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\ExtraQuestions\ExtraQuestionType", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="sub_question_rules")
-     * @ORM\JoinColumn(name="ParentQuestionID", referencedColumnName="ID")
      * @var ExtraQuestionType
      */
+    #[ORM\JoinColumn(name: 'ParentQuestionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\ExtraQuestions\ExtraQuestionType::class, fetch: 'EXTRA_LAZY', cascade: ['persist'], inversedBy: 'sub_question_rules')]
     private $parent_question;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\ExtraQuestions\ExtraQuestionType", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="parent_rules")
-     * @ORM\JoinColumn(name="SubQuestionID", referencedColumnName="ID")
      * @var ExtraQuestionType
      */
+    #[ORM\JoinColumn(name: 'SubQuestionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\ExtraQuestions\ExtraQuestionType::class, fetch: 'EXTRA_LAZY', cascade: ['persist'], inversedBy: 'parent_rules')]
     private $sub_question;
 
     public function __construct()

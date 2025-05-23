@@ -18,31 +18,30 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineTrackTagGroupAllowedTagsRepository")
- * @ORM\Table(name="TrackTagGroup_AllowedTags")
- * Class TrackTagGroupAllowedTag
  * @package models\summit\TrackTagGroupAllowedTag
  */
+#[ORM\Table(name: 'TrackTagGroup_AllowedTags')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineTrackTagGroupAllowedTagsRepository::class)]
 class TrackTagGroupAllowedTag extends BaseEntity
 {
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     private $is_default;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Tag", cascade={"persist"})
-     * @ORM\JoinColumn(name="TagID", referencedColumnName="ID")
      * @var Tag
      */
+    #[ORM\JoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Tag::class, cascade: ['persist'])]
     private $tag;
 
     /**
-     * @ORM\ManyToOne(targetEntity="TrackTagGroup", inversedBy="allowed_tags")
-     * @ORM\JoinColumn(name="TrackTagGroupID", referencedColumnName="ID")
      * @var TrackTagGroup
      */
+    #[ORM\JoinColumn(name: 'TrackTagGroupID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \TrackTagGroup::class, inversedBy: 'allowed_tags')]
     private $track_tag_group;
 
     /**

@@ -14,43 +14,42 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="MarketPlaceVideo")
- * Class MarketPlaceVideo
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'MarketPlaceVideo')]
+#[ORM\Entity]
 class MarketPlaceVideo extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="YouTubeID", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'YouTubeID', type: 'string')]
     private $youtube_id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="MarketPlaceVideoType", fetch="LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var MarketPlaceVideoType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \MarketPlaceVideoType::class, fetch: 'LAZY')]
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="videos", fetch="LAZY")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var CompanyService
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \CompanyService::class, inversedBy: 'videos', fetch: 'LAZY')]
     private $company_service;
 
     /**

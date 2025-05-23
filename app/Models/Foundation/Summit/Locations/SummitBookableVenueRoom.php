@@ -19,41 +19,37 @@ use Google\Service\PubsubLite\Reservation;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitBookableVenueRoom")
- * Class SummitBookableVenueRoom
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitBookableVenueRoom')]
+#[ORM\Entity]
 class SummitBookableVenueRoom extends SummitVenueRoom
 {
 
     const ClassName = 'SummitBookableVenueRoom';
 
     /**
-     * @ORM\Column(name="TimeSlotCost", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'TimeSlotCost', type: 'integer')]
     private $time_slot_cost;
 
     /**
      * @var string
-     * @ORM\Column(name="Currency", type="string")
      */
+    #[ORM\Column(name: 'Currency', type: 'string')]
     private $currency;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitRoomReservation", mappedBy="room", cascade={"persist"}, orphanRemoval=true)
      * @var ArrayCollection
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitRoomReservation::class, mappedBy: 'room', cascade: ['persist'], orphanRemoval: true)]
     private $reservations;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitBookableVenueRoomAttributeValue", cascade={"persist"})
-     * @ORM\JoinTable(name="SummitBookableVenueRoom_Attributes",
-     *      joinColumns={@ORM\JoinColumn(name="SummitBookableVenueRoomID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBookableVenueRoomAttributeValueID", referencedColumnName="ID", unique=true)}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitBookableVenueRoom_Attributes')]
+    #[ORM\JoinColumn(name: 'SummitBookableVenueRoomID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitBookableVenueRoomAttributeValueID', referencedColumnName: 'ID', unique: true)]
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitBookableVenueRoomAttributeValue::class, cascade: ['persist'])]
     private $attributes;
 
     public function __construct()

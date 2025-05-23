@@ -16,11 +16,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="ExtraQuestionTypeValue")
- * Class ExtraQuestionTypeValue
  * @package App\Models\Foundation\ExtraQuestions
  */
+#[ORM\Table(name: 'ExtraQuestionTypeValue')]
+#[ORM\Entity]
 class ExtraQuestionTypeValue extends SilverstripeBaseModel
 implements IOrderable
 {
@@ -34,34 +33,34 @@ implements IOrderable
         'hasQuestion' => 'question',
     ];
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     protected $label;
 
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     protected $value;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     protected $order;
 
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     protected $is_default;
 
     /**
-     * @ORM\ManyToOne(targetEntity="ExtraQuestionType", inversedBy="values")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
      * @var ExtraQuestionType
      */
+    #[ORM\JoinColumn(name: 'QuestionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \ExtraQuestionType::class, inversedBy: 'values')]
     protected $question;
 
     /**

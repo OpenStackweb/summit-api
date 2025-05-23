@@ -18,25 +18,25 @@ use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * Class MemberScheduleSummitActionSyncWorkRequest
- * @ORM\Entity
- * @ORM\Table(name="MemberScheduleSummitActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'MemberScheduleSummitActionSyncWorkRequest')]
+#[ORM\Entity]
 class MemberScheduleSummitActionSyncWorkRequest
     extends AbstractCalendarSyncWorkRequest
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, cascade: ['persist'])]
     protected $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\CalendarSync\CalendarSyncInfo", cascade={"persist"})
-     * @ORM\JoinColumn(name="CalendarSyncInfoID", referencedColumnName="ID")
      * @var CalendarSyncInfo
      */
+    #[ORM\JoinColumn(name: 'CalendarSyncInfoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\CalendarSync\CalendarSyncInfo::class, cascade: ['persist'])]
     protected $calendar_sync_info;
 
     /**

@@ -17,40 +17,37 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Main\Software\DoctrineOpenStackReleaseRepository")
- * @ORM\Table(name="OpenStackRelease")
- * Class OpenStackRelease
  * @package App\Models\Foundation\Software
  */
+#[ORM\Table(name: 'OpenStackRelease')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Main\Software\DoctrineOpenStackReleaseRepository::class)]
 class OpenStackRelease extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="ReleaseNumber", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ReleaseNumber', type: 'string')]
     private $release_number;
 
     /**
-     * @ORM\Column(name="ReleaseDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'ReleaseDate', type: 'datetime')]
     private $release_date;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
-    /**
-     * @ORM\OneToMany(targetEntity="OpenStackReleaseComponent", mappedBy="release", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
+    #[ORM\OneToMany(targetEntity: \OpenStackReleaseComponent::class, mappedBy: 'release', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $components;
 
     public function __construct()

@@ -19,41 +19,34 @@ use models\summit\PresentationSpeaker;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerEditPermissionRequestRepository")
- * @ORM\Table(name="SpeakerEditPermissionRequest")
- * Class SpeakerEditPermissionRequest
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerEditPermissionRequest')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSpeakerEditPermissionRequestRepository::class)]
 class SpeakerEditPermissionRequest extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", inversedBy="granted_edit_permissions")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationSpeaker::class, inversedBy: 'granted_edit_permissions')]
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="RequestedByID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'RequestedByID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $requested_by;
 
-    /**
-     * @ORM\Column(name="Approved", type="boolean")
-     */
+    #[ORM\Column(name: 'Approved', type: 'boolean')]
     private $approved;
 
-    /**
-     * @ORM\Column(name="ApprovedDate", type="datetime")
-     */
+    #[ORM\Column(name: 'ApprovedDate', type: 'datetime')]
     private $approved_date;
 
-    /**
-     * @ORM\Column(name="Hash", type="string")
-     */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $hash;
 
 

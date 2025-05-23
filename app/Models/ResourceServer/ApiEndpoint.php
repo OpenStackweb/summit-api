@@ -16,12 +16,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity(repositoryClass="repositories\resource_server\DoctrineApiEndpointRepository")
- * @ORM\Table(name="api_endpoints")
- * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="resource_server_region")
- * Class ApiEndpoint
  * @package App\Models\ResourceServer
 */
+#[ORM\Table(name: 'api_endpoints')]
+#[ORM\Entity(repositoryClass: \repositories\resource_server\DoctrineApiEndpointRepository::class)]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'resource_server_region')] // Class ApiEndpoint
 class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
 {
 
@@ -169,79 +168,76 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
         $this->http_method = $http_method;
     }
     /**
-     * @ORM\ManyToOne(targetEntity="Api", cascade={"persist"}, inversedBy="endpoints")
-     * @ORM\JoinColumn(name="api_id", referencedColumnName="id")
      * @var Api
      */
+    #[ORM\JoinColumn(name: 'api_id', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: \Api::class, cascade: ['persist'], inversedBy: 'endpoints')]
     private $api;
 
     /**
-     * @ORM\ManyToMany(targetEntity="ApiScope")
-     * @ORM\JoinTable(name="endpoint_api_scopes",
-     *      joinColumns={@ORM\JoinColumn(name="api_endpoint_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="scope_id", referencedColumnName="id")}
-     * )
      * @var ApiScope[]
      */
+    #[ORM\JoinTable(name: 'endpoint_api_scopes')]
+    #[ORM\JoinColumn(name: 'api_endpoint_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'scope_id', referencedColumnName: 'id')]
+    #[ORM\ManyToMany(targetEntity: \ApiScope::class)]
     private $scopes;
 
-    /**
-     * @ORM\OneToMany(targetEntity="ApiEndpointAuthzGroup", mappedBy="api_endpoint", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \ApiEndpointAuthzGroup::class, mappedBy: 'api_endpoint', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $authz_groups;
 
     /**
-     * @ORM\Column(name="name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'active', type: 'boolean')]
     private $active;
 
     /**
-     * @ORM\Column(name="allow_cors", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'allow_cors', type: 'boolean')]
     private $allow_cors;
 
     /**
-     * @ORM\Column(name="allow_credentials", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'allow_credentials', type: 'boolean')]
     private $allow_credentials;
 
     /**
-     * @ORM\Column(name="route", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'route', type: 'string')]
     private $route;
 
     /**
-     * @ORM\Column(name="http_method", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'http_method', type: 'string')]
     private $http_method;
 
     /**
-     * @ORM\Column(name="rate_limit", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'rate_limit', type: 'integer')]
     private $rate_limit;
 
     /**
-     * @ORM\Column(name="rate_limit_decay", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'rate_limit_decay', type: 'integer')]
     private $rate_limit_decay;
 
     /**

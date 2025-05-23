@@ -15,19 +15,19 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\summit\SummitAbstractLocation;
 /**
  * Class AdminSummitLocationActionSyncWorkRequest
- * @ORM\Entity
- * @ORM\Table(name="AdminSummitLocationActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'AdminSummitLocationActionSyncWorkRequest')]
+#[ORM\Entity]
 class AdminSummitLocationActionSyncWorkRequest
 extends AdminScheduleSummitActionSyncWorkRequest
 {
     const SubType = 'ADMIN_LOCATION';
 
     /**
-     * @ORM\Column(name="LocationID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'LocationID', type: 'integer')]
     private $location_id;
 
     /**

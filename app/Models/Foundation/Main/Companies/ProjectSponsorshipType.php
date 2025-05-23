@@ -21,56 +21,55 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineProjectSponsorshipTypeRepository")
- * @ORM\Table(name="ProjectSponsorshipType")
- * Class ProjectSponsorshipType
  * @package models\main
  */
+#[ORM\Table(name: 'ProjectSponsorshipType')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineProjectSponsorshipTypeRepository::class)]
 class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
 {
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="IsActive", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsActive', type: 'boolean')]
     private $is_active;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SponsoredProject", fetch="EXTRA_LAZY", inversedBy="sponsorship_types")
-     * @ORM\JoinColumn(name="SponsoredProjectID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SponsoredProject
      */
+    #[ORM\JoinColumn(name: 'SponsoredProjectID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \SponsoredProject::class, fetch: 'EXTRA_LAZY', inversedBy: 'sponsorship_types')]
     private $sponsored_project;
 
     /**
-     * @ORM\OneToMany(targetEntity="SupportingCompany", mappedBy="sponsorship_type", cascade={"persist"}, orphanRemoval=true)
-     * @ORM\OrderBy({"order" = "ASC"})
      * @var SupportingCompany[]
      */
+    #[ORM\OneToMany(targetEntity: \SupportingCompany::class, mappedBy: 'sponsorship_type', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['order' => 'ASC'])]
     private $supporting_companies;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     private $slug;
 
     /**

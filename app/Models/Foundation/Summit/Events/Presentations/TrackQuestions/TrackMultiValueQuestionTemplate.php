@@ -17,31 +17,30 @@ use Doctrine\Common\Collections\Criteria;
 use models\exceptions\ValidationException;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackMultiValueQuestionTemplate")
- * Class TrackMultiValueQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackMultiValueQuestionTemplate')]
+#[ORM\Entity]
 class TrackMultiValueQuestionTemplate extends TrackQuestionTemplate
 {
 
     /**
-     * @ORM\Column(name="EmptyString", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EmptyString', type: 'string')]
     protected $empty_string;
 
     /**
-     * @ORM\OneToMany(targetEntity="TrackQuestionValueTemplate", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
      * @var TrackQuestionValueTemplate[]
      */
+    #[ORM\OneToMany(targetEntity: \TrackQuestionValueTemplate::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true)]
     protected $values;
 
     /**
-     * @ORM\ManyToOne(targetEntity="TrackQuestionValueTemplate", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="DefaultValueID", referencedColumnName="ID", onDelete="SET NULL")
      * @var TrackQuestionValueTemplate
      */
+    #[ORM\JoinColumn(name: 'DefaultValueID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \TrackQuestionValueTemplate::class, fetch: 'EXTRA_LAZY')]
     protected $default_value;
 
     public function __construct()

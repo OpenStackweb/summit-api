@@ -15,23 +15,20 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use App\Models\Foundation\Main\CountryCodes;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SpeakerTravelPreference")
- * Class SpeakerTravelPreference
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerTravelPreference')]
+#[ORM\Entity]
 class SpeakerTravelPreference extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="Country", type="string")
-     */
+    #[ORM\Column(name: 'Country', type: 'string')]
     private $country;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="travel_preferences")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class, inversedBy: 'travel_preferences')]
     private $speaker;
 
     /**

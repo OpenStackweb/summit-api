@@ -21,55 +21,55 @@ use models\summit\SummitEventType;
 use models\utils\SilverstripeBaseModel;
 /**
  * Class DefaultSummitEventType
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineDefaultSummitEventTypeRepository")
- * @ORM\Table(name="DefaultSummitEventType")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"DefaultSummitEventType" = "DefaultSummitEventType", "DefaultPresentationType" = "DefaultPresentationType"})
  * @package App\Models\Foundation\Summit\Defaults
  */
+#[ORM\Table(name: 'DefaultSummitEventType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineDefaultSummitEventTypeRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['DefaultSummitEventType' => 'DefaultSummitEventType', 'DefaultPresentationType' => 'DefaultPresentationType'])]
 class DefaultSummitEventType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="Color", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Color', type: 'string')]
     protected $color;
 
     /**
-     * @ORM\Column(name="BlackoutTimes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BlackoutTimes', type: 'string')]
     protected $blackout_times;
 
     /**
-     * @ORM\Column(name="UseSponsors", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseSponsors', type: 'boolean')]
     protected $use_sponsors;
 
     /**
-     * @ORM\Column(name="AreSponsorsMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AreSponsorsMandatory', type: 'boolean')]
     protected $are_sponsors_mandatory;
 
     /**
-     * @ORM\Column(name="AllowsAttachment", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsAttachment', type: 'boolean')]
     protected $allows_attachment;
 
     /**
-     * @ORM\Column(name="IsPrivate", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsPrivate', type: 'boolean')]
     protected $is_private;
 
     /**

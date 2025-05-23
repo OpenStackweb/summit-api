@@ -13,11 +13,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPMemberLastNameQuestionTemplate")
- * @ORM\Entity
- * Class RSVPMemberLastNameQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPMemberLastNameQuestionTemplate')]
+#[ORM\Entity] // Class RSVPMemberLastNameQuestionTemplate
 class RSVPMemberLastNameQuestionTemplate extends RSVPTextBoxQuestionTemplate
 {
     const ClassName = 'RSVPMemberLastNameQuestionTemplate';

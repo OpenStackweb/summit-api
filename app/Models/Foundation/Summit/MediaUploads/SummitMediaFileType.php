@@ -14,11 +14,10 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitMediaFileTypeRepository")
- * @ORM\Table(name="SummitMediaFileType")
- * Class SummitMediaFileType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitMediaFileType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitMediaFileTypeRepository::class)]
 class SummitMediaFileType extends SilverstripeBaseModel
 {
     public function __construct()
@@ -29,27 +28,27 @@ class SummitMediaFileType extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="AllowedExtensions", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AllowedExtensions', type: 'string')]
     private $allowed_extensions;
 
     /**
-     * @ORM\Column(name="IsSystemDefine", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsSystemDefine', type: 'boolean')]
     private $is_system_defined;
 
     /**

@@ -15,38 +15,32 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEmailEventFlowRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="email_flows_events"
- *     )
- * })
- * @ORM\Table(name="SummitEmailEventFlow")
- * Class SummitEmailEventFlow
  * @package App\Models\Foundation\Summit\EmailFlows
  */
+#[ORM\Table(name: 'SummitEmailEventFlow')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitEmailEventFlowRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'email_flows_events')])]
 class SummitEmailEventFlow extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="EmailTemplateIdentifier", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EmailTemplateIdentifier', type: 'string')]
     private $email_template_identifier;
 
     /**
-     * @ORM\Column(name="EmailRecipients", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EmailRecipients', type: 'string')]
     private $recipients;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitEmailEventFlowType")
-     * @ORM\JoinColumn(name="SummitEmailEventFlowTypeID", referencedColumnName="ID")
      * @var SummitEmailEventFlowType
      */
+    #[ORM\JoinColumn(name: 'SummitEmailEventFlowTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitEmailEventFlowType::class)]
     private $event_type;
 
     /**

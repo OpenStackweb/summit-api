@@ -13,25 +13,24 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="endpoint_api_authz_groups")
- * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="resource_server_region")
- * Class ApiEndpointAuthzGroup
  * @package App\Models\ResourceServer
  */
+#[ORM\Table(name: 'endpoint_api_authz_groups')]
+#[ORM\Entity]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'resource_server_region')] // Class ApiEndpointAuthzGroup
 class ApiEndpointAuthzGroup extends ResourceServerEntity
 {
     /**
-     * @ORM\ManyToOne(targetEntity="ApiEndpoint", inversedBy="authz_groups")
-     * @ORM\JoinColumn(name="api_endpoint_id", referencedColumnName="id")
      * @var ApiEndpoint
      */
+    #[ORM\JoinColumn(name: 'api_endpoint_id', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: \ApiEndpoint::class, inversedBy: 'authz_groups')]
     private $api_endpoint;
 
     /**
-     * @ORM\Column(name="group_slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'group_slug', type: 'string')]
     private $slug;
 
     /**

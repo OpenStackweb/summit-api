@@ -14,36 +14,35 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="CompanyServiceResource")
- * Class CompanyServiceResource
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'CompanyServiceResource')]
+#[ORM\Entity]
 class CompanyServiceResource extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Uri", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Uri', type: 'string')]
     private $uri;
 
     /**
-     * @ORM\Column(name="Order", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Order', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="resources", fetch="LAZY")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var CompanyService
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \CompanyService::class, inversedBy: 'resources', fetch: 'LAZY')]
     private $company_service;
 
     /**

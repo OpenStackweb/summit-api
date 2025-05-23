@@ -14,56 +14,55 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="DataCenterLocation")
- * Class DataCenterLocation
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'DataCenterLocation')]
+#[ORM\Entity]
 class DataCenterLocation extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="City", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'City', type: 'string')]
     private $city;
 
     /**
-     * @ORM\Column(name="State", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'State', type: 'string')]
     private $state;
 
     /**
-     * @ORM\Column(name="Country", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Country', type: 'string')]
     private $country;
 
     /**
-     * @ORM\Column(name="Lat", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Lat', type: 'float')]
     private $lat;
 
     /**
-     * @ORM\Column(name="Lng", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Lng', type: 'float')]
     private $lng;
 
     /**
-     * @ORM\ManyToOne(targetEntity="CloudService",inversedBy="data_centers", fetch="LAZY")
-     * @ORM\JoinColumn(name="CloudServiceID", referencedColumnName="ID")
      * @var CloudService
      */
+    #[ORM\JoinColumn(name: 'CloudServiceID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \CloudService::class, inversedBy: 'data_centers', fetch: 'LAZY')]
     private $cloud_service;
 
     /**
-     * @ORM\ManyToOne(targetEntity="DataCenterRegion",inversedBy="locations", fetch="LAZY")
-     * @ORM\JoinColumn(name="DataCenterRegionID", referencedColumnName="ID")
      * @var DataCenterRegion
      */
+    #[ORM\JoinColumn(name: 'DataCenterRegionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \DataCenterRegion::class, inversedBy: 'locations', fetch: 'LAZY')]
     private $region;
 
     /**

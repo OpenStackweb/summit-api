@@ -15,50 +15,49 @@
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="api_scopes")
- * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="resource_server_region")
- * Class ApiScope
  * @package App\Models\ResourceServer
  */
+#[ORM\Table(name: 'api_scopes')]
+#[ORM\Entity]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'resource_server_region')] // Class ApiScope
 class ApiScope extends ResourceServerEntity implements IApiScope
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="Api", inversedBy="scopes")
-     * @ORM\JoinColumn(name="api_id", referencedColumnName="id")
      * @var Api
      */
+    #[ORM\JoinColumn(name: 'api_id', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: \Api::class, inversedBy: 'scopes')]
     private $api;
 
     /**
-     * @ORM\Column(name="name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="short_description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'short_description', type: 'string')]
     private $short_description;
 
     /**
-     * @ORM\Column(name="active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'active', type: 'boolean')]
     private $active;
 
     /**
-     * @ORM\Column(name="`default`", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: '`default`', type: 'boolean')]
     private $default;
 
     /**

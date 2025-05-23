@@ -14,31 +14,31 @@
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class MemberCalendarScheduleSummitActionSyncWorkRequest
- * @ORM\Entity
- * @ORM\Table(name="MemberCalendarScheduleSummitActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'MemberCalendarScheduleSummitActionSyncWorkRequest')]
+#[ORM\Entity]
 class MemberCalendarScheduleSummitActionSyncWorkRequest
 extends MemberScheduleSummitActionSyncWorkRequest
 {
     const SubType = 'CALENDAR';
 
     /**
-     * @ORM\Column(name="CalendarId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarId', type: 'string')]
     private $calendar_id;
 
     /**
-     * @ORM\Column(name="CalendarName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarName', type: 'string')]
     private $calendar_name;
 
     /**
-     * @ORM\Column(name="CalendarDescription", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarDescription', type: 'string')]
     private $calendar_description;
 
     /**

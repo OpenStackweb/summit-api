@@ -17,19 +17,19 @@ use models\utils\One2ManyPropertyTrait;
 use Doctrine\Common\Collections\Collection;
 /**
  * Class SummitAttendeeTicketRefundRequest
- * @ORM\Entity
- * @ORM\Table(name="SummitAttendeeTicketRefundRequest")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeTicketRefundRequest')]
+#[ORM\Entity]
 class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
 {
     const ClassName = 'SummitAttendeeTicketRefundRequest';
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="refund_requests", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TicketID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAttendeeTicket
      */
+    #[ORM\JoinColumn(name: 'TicketID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \SummitAttendeeTicket::class, inversedBy: 'refund_requests', fetch: 'EXTRA_LAZY')]
     protected $ticket;
 
     use One2ManyPropertyTrait;

@@ -52,12 +52,11 @@ use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRepository")
- * @ORM\Table(name="Summit")
- * @ORM\HasLifecycleCallbacks
- * Class Summit
  * @package models\summit
  */
+#[ORM\Table(name: 'Summit')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRepository::class)]
+#[ORM\HasLifecycleCallbacks] // Class Summit
 class Summit extends SilverstripeBaseModel
 {
 
@@ -78,392 +77,383 @@ class Summit extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="TimeZoneLabel", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TimeZoneLabel', type: 'string')]
     private $time_zone_label;
 
     /**
-     * @ORM\Column(name="DateLabel", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'DateLabel', type: 'string')]
     private $dates_label;
 
     /**
-     * @ORM\Column(name="Link", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     private $slug;
 
     /**
-     * @ORM\Column(name="RegistrationLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'RegistrationLink', type: 'string')]
     private $registration_link;
 
     /**
-     * @ORM\Column(name="MaxSubmissionAllowedPerUser", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxSubmissionAllowedPerUser', type: 'integer')]
     private $max_submission_allowed_per_user;
 
     /**
-     * @ORM\Column(name="SummitBeginDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SummitBeginDate', type: 'datetime')]
     private $begin_date;
 
     /**
-     * @ORM\Column(name="SummitEndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SummitEndDate', type: 'datetime')]
     private $end_date;
 
     /**
-     * @ORM\Column(name="ReAssignTicketTillDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ReAssignTicketTillDate', type: 'datetime')]
     private $reassign_ticket_till_date;
 
     /**
-     * @ORM\Column(name="RegistrationAllowedRefundRequestTillDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'RegistrationAllowedRefundRequestTillDate', type: 'datetime')]
     private $registration_allowed_refund_request_till_date;
 
     /**
-     * @ORM\Column(name="RegistrationDisclaimerContent", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'RegistrationDisclaimerContent', type: 'string')]
     private $registration_disclaimer_content;
 
     /**
-     * @ORM\Column(name="RegistrationDisclaimerMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationDisclaimerMandatory', type: 'boolean')]
     private $registration_disclaimer_mandatory;
 
     /**
-     * @ORM\Column(name="MarkAsDeleted", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'MarkAsDeleted', type: 'boolean')]
     private $mark_as_deleted;
 
     /**
-     * @ORM\Column(name="RegistrationSendQRAsImageAttachmentOnTicketEmail", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationSendQRAsImageAttachmentOnTicketEmail', type: 'boolean')]
     private $registration_send_qr_as_image_attachment_on_ticket_email;
 
     /**
-     * @ORM\Column(name="RegistrationSendTicketAsPDFAttachmentOnTicketEmail", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationSendTicketAsPDFAttachmentOnTicketEmail', type: 'boolean')]
     private $registration_send_ticket_as_pdf_attachment_on_ticket_email;
 
     /**
-     * @ORM\Column(name="RegistrationSendTicketEmailAutomatically", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationSendTicketEmailAutomatically', type: 'boolean')]
     private $registration_send_ticket_email_automatically;
 
     /**
-     * @ORM\Column(name="RegistrationSendOrderEmailAutomatically", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationSendOrderEmailAutomatically', type: 'boolean')]
     private $registration_send_order_email_automatically;
 
     /**
-     * @ORM\Column(name="RegistrationBeginDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'RegistrationBeginDate', type: 'datetime')]
     private $registration_begin_date;
 
     /**
-     * @ORM\Column(name="RegistrationEndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'RegistrationEndDate', type: 'datetime')]
     private $registration_end_date;
 
     /**
-     * @ORM\Column(name="Active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Active', type: 'boolean')]
     private $active;
 
     /**
-     * @ORM\Column(name="AvailableOnApi", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AvailableOnApi', type: 'boolean')]
     private $available_on_api;
 
     /**
-     * @ORM\Column(name="ExternalEventId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalEventId', type: 'string')]
     private $external_summit_id;
 
     /**
-     * @ORM\Column(name="ScheduleDefaultStartDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ScheduleDefaultStartDate', type: 'datetime')]
     private $schedule_default_start_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitType")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var SummitType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitType::class)]
     private $type;
 
-    /**
-     * @ORM\Column(name="StartShowingVenuesDate", type="datetime")
-     */
+    #[ORM\Column(name: 'StartShowingVenuesDate', type: 'datetime')]
     private $start_showing_venues_date;
 
     /**
-     * @ORM\Column(name="TimeZoneIdentifier", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TimeZoneIdentifier', type: 'string')]
     private $time_zone_id;
 
     /**
-     * @ORM\Column(name="SecondaryRegistrationLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SecondaryRegistrationLink', type: 'string')]
     private $secondary_registration_link;
 
     /**
-     * @ORM\Column(name="SecondaryRegistrationBtnText", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SecondaryRegistrationBtnText', type: 'string')]
     private $secondary_registration_label;
 
     /**
-     * @ORM\Column(name="CalendarSyncName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarSyncName', type: 'string')]
     private $calendar_sync_name;
 
     /**
-     * @ORM\Column(name="CalendarSyncDescription", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarSyncDescription', type: 'string')]
     private $calendar_sync_desc;
 
     /**
-     * @ORM\Column(name="MeetingRoomBookingStartTime", type="time", nullable=true)
      * @var DateTime
      */
+    #[ORM\Column(name: 'MeetingRoomBookingStartTime', type: 'time', nullable: true)]
     private $meeting_room_booking_start_time;
 
     /**
-     * @ORM\Column(name="MeetingRoomBookingEndTime", type="time", nullable=true)
      * @var DateTime
      */
+    #[ORM\Column(name: 'MeetingRoomBookingEndTime', type: 'time', nullable: true)]
     private $meeting_room_booking_end_time;
 
     /**
-     * @ORM\Column(name="MeetingRoomBookingSlotLength", type="integer", nullable=true)
      * @var int
      */
+    #[ORM\Column(name: 'MeetingRoomBookingSlotLength', type: 'integer', nullable: true)]
     private $meeting_room_booking_slot_length;
 
     /**
-     * @ORM\Column(name="MeetingRoomBookingMaxAllowed", type="integer", nullable=true)
      * @var int
      */
+    #[ORM\Column(name: 'MeetingRoomBookingMaxAllowed', type: 'integer', nullable: true)]
     private $meeting_room_booking_max_allowed;
 
     /**
-     * @ORM\Column(name="RegistrationReminderEmailsDaysInterval", type="integer", nullable=true)
      * @var int
      */
+    #[ORM\Column(name: 'RegistrationReminderEmailsDaysInterval', type: 'integer', nullable: true)]
     private $registration_reminder_email_days_interval;
 
     /**
-     * @ORM\Column(name="DefaultPageUrl", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'DefaultPageUrl', type: 'string', nullable: true)]
     private $default_page_url;
 
     /**
-     * @ORM\Column(name="SpeakerConfirmationDefaultPageUrl", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'SpeakerConfirmationDefaultPageUrl', type: 'string', nullable: true)]
     private $speaker_confirmation_default_page_url;
 
     // schedule app
-
     /**
-     * @ORM\Column(name="ScheduleDefaultPageUrl", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleDefaultPageUrl', type: 'string', nullable: true)]
     private $schedule_default_page_url;
 
     /**
-     * @ORM\Column(name="ScheduleDefaultEventDetailUrl", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleDefaultEventDetailUrl', type: 'string', nullable: true)]
     private $schedule_default_event_detail_url;
 
     /**
-     * @ORM\Column(name="ScheduleOGSiteName", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleOGSiteName', type: 'string', nullable: true)]
     private $schedule_og_site_name;
 
     /**
-     * @ORM\Column(name="ScheduleOGImageUrl", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleOGImageUrl', type: 'string', nullable: true)]
     private $schedule_og_image_url;
 
     /**
-     * @ORM\Column(name="ScheduleOGImageSecureUrl", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleOGImageSecureUrl', type: 'string', nullable: true)]
     private $schedule_og_image_secure_url;
 
     /**
-     * @ORM\Column(name="ScheduleOGImageWidth", type="integer", nullable=true)
      * @var int
      */
+    #[ORM\Column(name: 'ScheduleOGImageWidth', type: 'integer', nullable: true)]
     private $schedule_og_image_width;
 
     /**
-     * @ORM\Column(name="ScheduleOGImageHeight", type="integer", nullable=true)
      * @var int
      */
+    #[ORM\Column(name: 'ScheduleOGImageHeight', type: 'integer', nullable: true)]
     private $schedule_og_image_height;
 
     /**
-     * @ORM\Column(name="ScheduleFacebookAppId", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleFacebookAppId', type: 'string', nullable: true)]
     private $schedule_facebook_app_id;
 
     /**
-     * @ORM\Column(name="ScheduleIOSAppName", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleIOSAppName', type: 'string', nullable: true)]
     private $schedule_ios_app_name;
 
     /**
-     * @ORM\Column(name="ScheduleIOSAppStoreId", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleIOSAppStoreId', type: 'string', nullable: true)]
     private $schedule_ios_app_store_id;
 
     /**
-     * @ORM\Column(name="ScheduleIOSAppCustomSchema", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleIOSAppCustomSchema', type: 'string', nullable: true)]
     private $schedule_ios_app_custom_schema;
 
     /**
-     * @ORM\Column(name="ScheduleAndroidAppName", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleAndroidAppName', type: 'string', nullable: true)]
     private $schedule_android_app_name;
 
     /**
-     * @ORM\Column(name="ScheduleAndroidAppPackage", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleAndroidAppPackage', type: 'string', nullable: true)]
     private $schedule_android_app_package;
 
     /**
-     * @ORM\Column(name="ScheduleAndroidAppCustomSchema", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleAndroidAppCustomSchema', type: 'string', nullable: true)]
     private $schedule_android_custom_schema;
 
     /**
-     * @ORM\Column(name="ScheduleTwitterAppName", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleTwitterAppName', type: 'string', nullable: true)]
     private $schedule_twitter_app_name;
 
     /**
-     * @ORM\Column(name="ScheduleTwitterText", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'ScheduleTwitterText', type: 'string', nullable: true)]
     private $schedule_twitter_text;
 
-    /**
-     * @ORM\OneToMany(targetEntity="SummitAbstractLocation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \SummitAbstractLocation::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $locations;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Signs\SummitSign", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Signs\SummitSign::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $signs;
 
-    /**
-     * @ORM\OneToMany(targetEntity="SummitBookableVenueRoomAttributeType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \SummitBookableVenueRoomAttributeType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $meeting_booking_room_allowed_attributes;
 
     /**
-     * @ORM\Column(name="BeginAllowBookingDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'BeginAllowBookingDate', type: 'datetime')]
     private $begin_allow_booking_date;
 
     /**
-     * @ORM\Column(name="EndAllowBookingDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'EndAllowBookingDate', type: 'datetime')]
     private $end_allow_booking_date;
 
     /**
-     * @ORM\Column(name="RegistrationSlugPrefix", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'RegistrationSlugPrefix', type: 'string')]
     private $registration_slug_prefix;
 
     /**
-     * @ORM\Column(name="VirtualSiteUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'VirtualSiteUrl', type: 'string')]
     private $virtual_site_url;
 
     /**
-     * @ORM\Column(name="VirtualSiteOAuth2ClientId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'VirtualSiteOAuth2ClientId', type: 'string')]
     private $virtual_site_oauth2_client_id;
 
     /**
-     * @ORM\Column(name="MarketingSiteUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MarketingSiteUrl', type: 'string')]
     private $marketing_site_url;
 
     /**
-     * @ORM\Column(name="MarketingSiteOAuth2ClientId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MarketingSiteOAuth2ClientId', type: 'string')]
     private $marketing_site_oauth2_client_id;
 
     /**
-     * @ORM\Column(name="MarketingSiteOAuth2ClientScopes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MarketingSiteOAuth2ClientScopes', type: 'string')]
     private $marketing_site_oauth2_client_scopes;
 
     /**
@@ -483,399 +473,383 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="SupportEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SupportEmail', type: 'string')]
     private $support_email;
 
     /**
-     * @ORM\Column(name="SpeakersSupportEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SpeakersSupportEmail', type: 'string')]
     private $speakers_support_email;
 
     /**
-     * @ORM\Column(name="RegistrationAllowUpdateAttendeeExtraQuestions", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationAllowUpdateAttendeeExtraQuestions', type: 'boolean')]
     private $allow_update_attendee_extra_questions;
 
     /**
-     * @ORM\Column(name="RegistrationAllowAutomaticReminderEmails", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegistrationAllowAutomaticReminderEmails', type: 'boolean')]
     private $registration_allow_automatic_reminder_emails;
 
-    /**
-     * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
+    #[ORM\OneToMany(targetEntity: \SummitEvent::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $events;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $rsvp_templates;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitWIFIConnection", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitWIFIConnection[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitWIFIConnection::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $wifi_connections;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\TrackTagGroup", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var TrackTagGroup[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\TrackTagGroup::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $track_tag_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitRegistrationPromoCode", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRegistrationPromoCode[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitRegistrationPromoCode::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $promo_codes;
 
     /**
-     * @ORM\OneToMany(targetEntity="PresentationSpeakerSummitAssistanceConfirmationRequest", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationSpeakerSummitAssistanceConfirmationRequest[]
      */
+    #[ORM\OneToMany(targetEntity: \PresentationSpeakerSummitAssistanceConfirmationRequest::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $speaker_assistances;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAccessLevelType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitAccessLevelType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAccessLevelType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $badge_access_level_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitBadgeFeatureType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitBadgeFeatureType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitBadgeFeatureType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $badge_features_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitBadgeType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitBadgeType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitBadgeType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $badge_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitBadgeViewType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitBadgeViewType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitBadgeViewType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $badge_view_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitOrder", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitOrder[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitOrder::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $orders;
 
     /**
-     * @ORM\OneToMany(targetEntity="Sponsor", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Sponsor[]
      */
+    #[ORM\OneToMany(targetEntity: \Sponsor::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $summit_sponsors;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitSponsorshipType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitSponsorshipType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitSponsorshipType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $sponsorship_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitTaxType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitTaxType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitTaxType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $tax_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="PaymentGatewayProfile", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PaymentGatewayProfile[]
      */
+    #[ORM\OneToMany(targetEntity: \PaymentGatewayProfile::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $payment_profiles;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitOrderExtraQuestionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitOrderExtraQuestionType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitOrderExtraQuestionType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $order_extra_questions;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitRefundPolicyType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRefundPolicyType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitRefundPolicyType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $refund_policies;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitMediaUploadType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitMediaUploadType[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitMediaUploadType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $media_upload_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitScheduleConfig", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitScheduleConfig[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitScheduleConfig::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $schedule_settings;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'LogoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $logo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="SecondaryLogoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'SecondaryLogoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $secondary_logo;
 
     /**
-     * @ORM\Column(name="ApiFeedType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ApiFeedType', type: 'string')]
     private $api_feed_type;
 
     /**
-     * @ORM\Column(name="ApiFeedUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ApiFeedUrl', type: 'string')]
     private $api_feed_url;
 
     /**
-     * @ORM\Column(name="ApiFeedKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ApiFeedKey', type: 'string')]
     private $api_feed_key;
 
     /**
-     * @ORM\Column(name="ExternalRegistrationFeedType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalRegistrationFeedType', type: 'string')]
     private $external_registration_feed_type;
 
     /**
-     * @ORM\Column(name="ExternalRegistrationFeedApiKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalRegistrationFeedApiKey', type: 'string')]
     private $external_registration_feed_api_key;
 
     /**
-     * @ORM\Column(name="ExternalRegistrationFeedLastIngestDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'ExternalRegistrationFeedLastIngestDate', type: 'datetime')]
     private $external_registration_feed_last_ingest_date;
 
     /**
-     * @ORM\Column(name="QRCodesEncKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'QRCodesEncKey', type: 'string')]
     private $qr_codes_enc_key;
 
     /**
-     * @ORM\Column(name="MUXTokenId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MUXTokenId', type: 'string')]
     private $mux_token_id;
 
     /**
-     * @ORM\Column(name="MUXTokenSecret", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MUXTokenSecret', type: 'string')]
     private $mux_token_secret;
 
     /**
-     * @ORM\Column(name="MUXPrivateKeyId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MUXPrivateKeyId', type: 'string')]
     private $mux_private_key_id;
 
     /**
-     * @ORM\Column(name="MUXPrivateKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MUXPrivateKey', type: 'string')]
     private $mux_private_key;
 
     /**
-     * @ORM\Column(name="MUXPlaybackRestrictionId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MUXPlaybackRestrictionId', type: 'string')]
     private $mux_playback_restriction_id;
 
     /**
-     * @ORM\Column(name="MUXAllowedDomains", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MUXAllowedDomains', type: 'string')]
     private $mux_allowed_domains;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitEventType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $event_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationCategory", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var PresentationCategory[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationCategory::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $presentation_categories;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitAttendee", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitAttendee[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitAttendee::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $attendees;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlan", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SelectionPlan[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $selection_plans;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationCategoryGroup", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var PresentationCategoryGroup[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationCategoryGroup::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $category_groups;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitTicketType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     * var SummitTicketType[]
-     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitTicketType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')] // var SummitTicketType[]
     private $ticket_types;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitDocument", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitDocument::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $summit_documents;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", cascade={"persist"})
-     * @ORM\JoinTable(name="Summit_ExcludedCategoriesForAcceptedPresentations",
-     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
      * @var PresentationCategory[]
      */
+    #[ORM\JoinTable(name: 'Summit_ExcludedCategoriesForAcceptedPresentations')]
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class, cascade: ['persist'])]
     private $excluded_categories_for_accepted_presentations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\FeaturedSpeaker", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var FeaturedSpeaker[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Speakers\FeaturedSpeaker::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $featured_speakers;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory")
-     * @ORM\JoinTable(name="Summit_ExcludedCategoriesForAlternatePresentations",
-     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
      * @var PresentationCategory[]
      */
+    #[ORM\JoinTable(name: 'Summit_ExcludedCategoriesForAlternatePresentations')]
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class)]
     private $excluded_categories_for_alternate_presentations;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory")
-     * @ORM\JoinTable(name="Summit_ExcludedCategoriesForRejectedPresentations",
-     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
      * @var PresentationCategory[]
      */
+    #[ORM\JoinTable(name: 'Summit_ExcludedCategoriesForRejectedPresentations')]
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class)]
     private $excluded_categories_for_rejected_presentations;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory")
-     * @ORM\JoinTable(name="Summit_ExcludedTracksForUploadPresentationSlideDeck",
-     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
      * @var PresentationCategory[]
      */
+    #[ORM\JoinTable(name: 'Summit_ExcludedTracksForUploadPresentationSlideDeck')]
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class)]
     private $excluded_categories_for_upload_slide_decks;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PersonalCalendarShareInfo[]
      */
+    #[ORM\OneToMany(targetEntity: \models\main\PersonalCalendarShareInfo::class, mappedBy: 'summit', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $schedule_shareable_links;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitEmailEventFlow[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $email_flows_events;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitRegistrationInvitation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRegistrationInvitation[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitRegistrationInvitation::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $registration_invitations;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitSubmissionInvitation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitSubmissionInvitation[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitSubmissionInvitation::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $submission_invitations;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\SummitAdministratorPermissionGroup",  mappedBy="summits"))
      * @var SummitAdministratorPermissionGroup[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\main\SummitAdministratorPermissionGroup::class, mappedBy: 'summits')]
     private $permission_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMetric[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitMetric::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $metrics;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitTrackChair[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitTrackChair::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $track_chairs;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationActionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var PresentationActionType[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationActionType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $presentation_action_types;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Company", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="Summit_RegistrationCompanies",
-     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")}
-     * )
      * @var Company[]
      */
+    #[ORM\JoinTable(name: 'Summit_RegistrationCompanies')]
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'CompanyID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Company::class, fetch: 'EXTRA_LAZY')]
     private $registration_companies;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SpeakerAnnouncementSummitEmail", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SpeakerAnnouncementSummitEmail[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SpeakerAnnouncementSummitEmail::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $speakers_announcement_emails;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitSelectionPlanExtraQuestionType[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $selection_plan_extra_questions;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitRegistrationFeedMetadata[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $registration_feed_metadata;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitLeadReportSetting", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitLeadReportSetting[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitLeadReportSetting::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $lead_report_settings;
 
     /**
@@ -2030,15 +2004,15 @@ class Summit extends SilverstripeBaseModel
 
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEntityEvent", mappedBy="summit", cascade={"persist"}, orphanRemoval=true)
      * @var SummitEntityEvent[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitEntityEvent::class, mappedBy: 'summit', cascade: ['persist'], orphanRemoval: true)]
     private $entity_events;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitPushNotification", mappedBy="summit", cascade={"persist"}, orphanRemoval=true)
      * @var SummitPushNotification[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitPushNotification::class, mappedBy: 'summit', cascade: ['persist'], orphanRemoval: true)]
     private $notifications;
 
     /**

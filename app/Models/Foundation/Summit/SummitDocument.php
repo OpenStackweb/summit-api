@@ -19,17 +19,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitDocumentRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="summit_documents"
- *     )
- * })
- * @ORM\Table(name="SummitDocument")
- * Class SummitDocument
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitDocument')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitDocumentRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'summit_documents')])]
 class SummitDocument extends SilverstripeBaseModel
 {
     use SummitOwned;
@@ -44,57 +38,56 @@ class SummitDocument extends SilverstripeBaseModel
         'hasSelectionPlan' => 'selection_plan',
     ];
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="ShowAlways", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShowAlways', type: 'boolean')]
     private $show_always;
 
     /**
-     * @ORM\Column(name="WebLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'WebLink', type: 'string')]
     private $web_link;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class)]
     private $selection_plan;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
-     * @ORM\JoinColumn(name="FileID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'FileID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
     private $file;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitEventType", inversedBy="summit_documents")
-     * @ORM\JoinTable(name="SummitDocument_EventTypes",
-     *      joinColumns={@ORM\JoinColumn(name="SummitDocumentID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitEventType[]
      */
+    #[ORM\JoinTable(name: 'SummitDocument_EventTypes')]
+    #[ORM\JoinColumn(name: 'SummitDocumentID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitEventTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitEventType::class, inversedBy: 'summit_documents')]
     private $event_types;
 
     /**

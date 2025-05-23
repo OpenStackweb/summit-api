@@ -15,17 +15,16 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SupportChannelType")
- * Class SupportChannelType
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'SupportChannelType')]
+#[ORM\Entity]
 class SupportChannelType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**

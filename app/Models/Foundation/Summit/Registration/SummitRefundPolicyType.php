@@ -14,37 +14,31 @@
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRefundPolicyTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="refund_policies"
- *     )
- * })
- * @ORM\Table(name="SummitRefundPolicyType")
- * Class SummitRefundPolicyType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRefundPolicyType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRefundPolicyTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'refund_policies')])]
 class SummitRefundPolicyType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="UntilXDaysBeforeEventStarts", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'UntilXDaysBeforeEventStarts', type: 'integer')]
     private $until_x_days_before_event_starts;
 
     /**
-     * @ORM\Column(name="RefundRate", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'RefundRate', type: 'float')]
     private $refund_rate;
 
     /**

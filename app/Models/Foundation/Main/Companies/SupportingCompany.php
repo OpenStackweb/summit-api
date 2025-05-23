@@ -16,11 +16,10 @@ use App\Models\Utils\BaseEntity;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineSupportingCompanyRepository")
- * @ORM\Table(name="SupportingCompany")
- * Class SupportingCompany
  * @package models\main
  */
+#[ORM\Table(name: 'SupportingCompany')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineSupportingCompanyRepository::class)]
 class SupportingCompany extends BaseEntity implements IOrderable
 {
     use One2ManyPropertyTrait;
@@ -36,23 +35,23 @@ class SupportingCompany extends BaseEntity implements IOrderable
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="Company", fetch="EXTRA_LAZY", inversedBy="project_sponsorships")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Company
      */
+    #[ORM\JoinColumn(name: 'CompanyID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Company::class, fetch: 'EXTRA_LAZY', inversedBy: 'project_sponsorships')]
     private $company;
 
     /**
-     * @ORM\ManyToOne(targetEntity="ProjectSponsorshipType", fetch="EXTRA_LAZY", inversedBy="supporting_companies")
-     * @ORM\JoinColumn(name="ProjectSponsorshipTypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var ProjectSponsorshipType
      */
+    #[ORM\JoinColumn(name: 'ProjectSponsorshipTypeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \ProjectSponsorshipType::class, fetch: 'EXTRA_LAZY', inversedBy: 'supporting_companies')]
     private $sponsorship_type;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**

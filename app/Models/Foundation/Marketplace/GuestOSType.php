@@ -14,17 +14,16 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="GuestOSType")
- * Class GuestOSType
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'GuestOSType')]
+#[ORM\Entity]
 class GuestOSType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**

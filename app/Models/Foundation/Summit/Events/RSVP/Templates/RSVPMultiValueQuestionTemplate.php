@@ -18,30 +18,29 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 
 /**
- * @ORM\Table(name="RSVPMultiValueQuestionTemplate")
- * @ORM\Entity
- * Class RSVPMultiValueQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPMultiValueQuestionTemplate')]
+#[ORM\Entity] // Class RSVPMultiValueQuestionTemplate
 class RSVPMultiValueQuestionTemplate extends RSVPQuestionTemplate
 {
     /**
-     * @ORM\Column(name="EmptyString", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EmptyString', type: 'string')]
     protected $empty_string;
 
     /**
-     * @ORM\OneToMany(targetEntity="RSVPQuestionValueTemplate", mappedBy="owner", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var RSVPQuestionValueTemplate[]
      */
+    #[ORM\OneToMany(targetEntity: \RSVPQuestionValueTemplate::class, mappedBy: 'owner', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $values;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RSVPQuestionValueTemplate", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="DefaultValueID", referencedColumnName="ID")
      * @var RSVPQuestionValueTemplate
      */
+    #[ORM\JoinColumn(name: 'DefaultValueID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \RSVPQuestionValueTemplate::class, fetch: 'EXTRA_LAZY')]
     protected $default_value;
 
     /**

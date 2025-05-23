@@ -14,25 +14,24 @@
 use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPQuestionTemplate_DependsOn")
- * @ORM\Entity
- * Class RSVPQuestionDependsOn
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPQuestionTemplate_DependsOn')]
+#[ORM\Entity] // Class RSVPQuestionDependsOn
 class RSVPQuestionDependsOn extends BaseEntity
 {
     /**
-     * @ORM\ManyToOne(targetEntity="RSVPQuestionTemplate", inversedBy="depends_on")
-     * @ORM\JoinColumn(name="RSVPQuestionTemplateID", referencedColumnName="ID", onDelete="CASCADE")
      * @var RSVPQuestionTemplate
      */
+    #[ORM\JoinColumn(name: 'RSVPQuestionTemplateID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \RSVPQuestionTemplate::class, inversedBy: 'depends_on')]
     private $parent;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RSVPQuestionTemplate")
-     * @ORM\JoinColumn(name="ChildID", referencedColumnName="ID", onDelete="CASCADE")
      * @var RSVPQuestionTemplate
      */
+    #[ORM\JoinColumn(name: 'ChildID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \RSVPQuestionTemplate::class)]
     private $child;
 
     /**

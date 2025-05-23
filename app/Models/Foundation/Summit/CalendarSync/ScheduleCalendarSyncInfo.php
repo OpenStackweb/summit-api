@@ -18,24 +18,24 @@ use models\summit\SummitEvent;
 use models\summit\SummitVenueRoom;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineScheduleCalendarSyncInfoRepository")
- * @ORM\Table(name="ScheduleCalendarSyncInfo")
  * @package models\summit\CalendarSync
  */
+#[ORM\Table(name: 'ScheduleCalendarSyncInfo')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineScheduleCalendarSyncInfoRepository::class)]
 class ScheduleCalendarSyncInfo extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="schedule_sync_info")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=true, onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', nullable: true, onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'schedule_sync_info')]
     private $member;
 
     /**
-     * @ORM\Column(name="SummitEventID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'SummitEventID', type: 'integer')]
     private $summit_event_id;
 
     /**
@@ -78,40 +78,40 @@ class ScheduleCalendarSyncInfo extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="LocationID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'LocationID', type: 'integer')]
     private $location_id;
 
     /**
-     * @ORM\Column(name="ExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
     private $external_id;
 
     /**
-     * @ORM\Column(name="ETag", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ETag', type: 'string')]
     private $etag;
 
     /**
-     * @ORM\Column(name="VCard", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'VCard', type: 'string')]
     private $vcard;
 
     /**
-     * @ORM\Column(name="CalendarEventExternalUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarEventExternalUrl', type: 'string')]
     private $external_url;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\CalendarSync\CalendarSyncInfo", inversedBy="synchronized_events")
-     * @ORM\JoinColumn(name="CalendarSyncInfoID", referencedColumnName="ID", nullable=true )
      * @var CalendarSyncInfo
      */
+    #[ORM\JoinColumn(name: 'CalendarSyncInfoID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\summit\CalendarSync\CalendarSyncInfo::class, inversedBy: 'synchronized_events')]
     private $calendar_sync_info;
 
     /**

@@ -13,12 +13,11 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitAirport")
- * @ORM\HasLifecycleCallbacks
- * Class SummitAirport
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAirport')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class SummitAirport
 class SummitAirport extends SummitExternalLocation
 {
     const AirportTypeInternational = 'International';
@@ -49,9 +48,7 @@ class SummitAirport extends SummitExternalLocation
         $this->airport_type = $airport_type;
     }
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $airport_type;
 
     public static $metadata = [

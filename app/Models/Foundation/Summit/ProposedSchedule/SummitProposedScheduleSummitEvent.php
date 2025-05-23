@@ -28,12 +28,11 @@ use models\summit\SummitEventType;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleEventRepository")
- * @ORM\HasLifecycleCallbacks
- * Class SummitProposedScheduleSummitEvent
- * @ORM\Table(name="SummitProposedScheduleSummitEvent")
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
+#[ORM\Table(name: 'SummitProposedScheduleSummitEvent')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitProposedScheduleEventRepository::class)]
+#[ORM\HasLifecycleCallbacks] // Class SummitProposedScheduleSummitEvent
 class SummitProposedScheduleSummitEvent
     extends SilverstripeBaseModel
     implements IPublishableEventWithSpeakerConstraint
@@ -46,56 +45,56 @@ class SummitProposedScheduleSummitEvent
     const MIN_EVENT_MINUTES = 1;
 
     /**
-     * @ORM\Column(name="StartDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'StartDate', type: 'datetime')]
     protected $start_date;
 
     /**
-     * @ORM\Column(name="EndDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'EndDate', type: 'datetime')]
     protected $end_date;
 
     /**
-     * @ORM\Column(name="Duration", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Duration', type: 'integer')]
     protected $duration;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class, fetch: 'EXTRA_LAZY')]
     protected $summit_event;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAbstractLocation::class, fetch: 'EXTRA_LAZY')]
     protected $location = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     protected $created_by = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="UpdatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'UpdatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     protected $updated_by = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="scheduled_summit_events")
-     * @ORM\JoinColumn(name="ScheduleID", referencedColumnName="ID")
      * @var SummitProposedSchedule
      */
+    #[ORM\JoinColumn(name: 'ScheduleID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitProposedSchedule::class, fetch: 'EXTRA_LAZY', inversedBy: 'scheduled_summit_events')]
     protected $summit_proposed_schedule;
 
     /**

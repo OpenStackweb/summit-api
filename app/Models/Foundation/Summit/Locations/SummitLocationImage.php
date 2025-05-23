@@ -15,46 +15,38 @@ use models\main\File;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitLocationImage")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitLocationImage')]
+#[ORM\Entity]
 class SummitLocationImage extends SilverstripeBaseModel
 {
     const TypeMap   = 'SummitLocationMap';
     const TypeImage = 'SummitLocationImage';
-    /**
-     * @ORM\Column(name="Name", type="string")
-     */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     */
+    #[ORM\Column(name: 'Description', type: 'string')]
     protected $description;
 
-    /**
-     * @ORM\Column(name="`Order`", type="integer")
-     */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     protected $order;
 
-    /**
-     * @ORM\Column(name="ClassName", type="string")
-     */
+    #[ORM\Column(name: 'ClassName', type: 'string')]
     protected $class_name;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", fetch="EAGER", cascade={"persist"})
-     * @ORM\JoinColumn(name="PictureID", referencedColumnName="ID", onDelete="CASCADE")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'PictureID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, fetch: 'EAGER', cascade: ['persist'])]
     protected $picture;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitGeoLocatedLocation", inversedBy="images")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitGeoLocatedLocation
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitGeoLocatedLocation::class, inversedBy: 'images')]
     protected $location;
 
     /**

@@ -24,55 +24,49 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRegistrationInvitationRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="registration_invitations"
- *     )
- * })
- * @ORM\Table(name="SummitRegistrationInvitation")
- * Class SummitRegistrationInvitation
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRegistrationInvitation')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRegistrationInvitationRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'registration_invitations')])]
 class SummitRegistrationInvitation extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="FirstName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FirstName', type: 'string')]
     private $first_name;
 
     /**
-     * @ORM\Column(name="LastName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LastName', type: 'string')]
     private $last_name;
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     private $email;
 
     /**
-     * @ORM\Column(name="Hash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $hash;
 
     /**
-     * @ORM\Column(name="SetPasswordLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SetPasswordLink', type: 'string')]
     private $set_password_link;
 
     /**
-     * @ORM\Column(name="AcceptanceCriteria", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AcceptanceCriteria', type: 'string')]
     private $acceptance_criteria;
 
     const AcceptanceCriteria_AnyTicketType = 'ANY_TICKET_TYPE';
@@ -99,20 +93,19 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     private $accepted_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", nullable=true)
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $member;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitOrder", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitRegistrationInvitation_SummitOrders",
-     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationInvitationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitOrderID", referencedColumnName="ID")}
-     *      )
      * @var SummitOrder[]
      */
+    #[ORM\JoinTable(name: 'SummitRegistrationInvitation_SummitOrders')]
+    #[ORM\JoinColumn(name: 'SummitRegistrationInvitationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitOrderID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitOrder::class, fetch: 'EXTRA_LAZY')]
     private $orders;
 
     /**
@@ -122,34 +115,30 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     private $order;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitTicketType", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitRegistrationInvitation_SummitTicketTypes",
-     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationInvitationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitTicketType[]
      */
+    #[ORM\JoinTable(name: 'SummitRegistrationInvitation_SummitTicketTypes')]
+    #[ORM\JoinColumn(name: 'SummitRegistrationInvitationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitTicketType::class, fetch: 'EXTRA_LAZY')]
     private $ticket_types;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitRegistrationInvitation_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationInvitationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitRegistrationInvitation_Tags')]
+    #[ORM\JoinColumn(name: 'SummitRegistrationInvitationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'], inversedBy: 'events', fetch: 'EXTRA_LAZY')]
     private $tags;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="ActionDate", type="datetime")
      */
+    #[ORM\Column(name: 'ActionDate', type: 'datetime')]
     private $action_date;
 
 

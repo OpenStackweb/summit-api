@@ -15,37 +15,31 @@ use Doctrine\ORM\Cache;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="wifi_connections"
- *     )
- * })
- * @ORM\Table(name="SummitWIFIConnection")
- * Class SummitWIFIConnection
  * @package models\summit\SummitWIFIConnection
  */
+#[ORM\Table(name: 'SummitWIFIConnection')]
+#[ORM\Entity]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'wifi_connections')])]
 class SummitWIFIConnection extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="SSID", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SSID', type: 'string')]
     private $ssid;
 
     /**
-     * @ORM\Column(name="Password", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Password', type: 'string')]
     private $password;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**

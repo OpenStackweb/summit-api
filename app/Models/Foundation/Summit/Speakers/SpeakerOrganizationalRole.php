@@ -14,21 +14,16 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerOrganizationalRoleRepository")
- * @ORM\Table(name="SpeakerOrganizationalRole")
- * Class SpeakerOrganizationalRole
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerOrganizationalRole')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSpeakerOrganizationalRoleRepository::class)]
 class SpeakerOrganizationalRole extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="Role", type="string")
-     */
+    #[ORM\Column(name: 'Role', type: 'string')]
     private $role;
 
-    /**
-     * @ORM\Column(name="IsDefault", type="boolean")
-     */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     private $is_default;
 
     /**

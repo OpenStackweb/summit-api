@@ -20,114 +20,102 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-/**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="event_types"
- *     )
- * })
- * @ORM\Table(name="SummitEventType")
- * @ORM\InheritanceType("JOINED")
- * @ORM\HasLifecycleCallbacks
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"SummitEventType" = "SummitEventType", "PresentationType" = "PresentationType"})
- */
+#[ORM\Table(name: 'SummitEventType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitEventTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'event_types')])]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\HasLifecycleCallbacks]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitEventType' => 'SummitEventType', 'PresentationType' => 'PresentationType'])]
 class SummitEventType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="Color", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Color', type: 'string')]
     protected $color;
 
     /**
-     * @ORM\Column(name="BlackoutTimes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BlackoutTimes', type: 'string')]
     protected $blackout_times;
 
     /**
-     * @ORM\Column(name="UseSponsors", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseSponsors', type: 'boolean')]
     protected $use_sponsors;
 
     /**
-     * @ORM\Column(name="AreSponsorsMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AreSponsorsMandatory', type: 'boolean')]
     protected $are_sponsors_mandatory;
 
     /**
-     * @ORM\Column(name="AllowsAttachment", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsAttachment', type: 'boolean')]
     protected $allows_attachment;
 
     /**
-     * @ORM\Column(name="AllowsLevel", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsLevel', type: 'boolean')]
     protected $allows_level;
 
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     protected $is_default;
 
     /**
-     * @ORM\Column(name="AllowsPublishingDates", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsPublishingDates', type: 'boolean')]
     protected $allows_publishing_dates;
 
     /**
-     * @ORM\Column(name="AllowsLocation", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsLocation', type: 'boolean')]
     protected $allows_location;
 
     /**
-     * @ORM\Column(name="IsPrivate", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsPrivate', type: 'boolean')]
     protected $is_private;
 
     /**
-     * @ORM\Column(name="AllowsLocationAndTimeFrameCollision", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsLocationAndTimeFrameCollision', type: 'boolean')]
     protected $allows_location_timeframe_collision;
 
     /**
-     * @ORM\Column(name="ShowAlwaysOnSchedule", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShowAlwaysOnSchedule', type: 'boolean')]
     protected $show_always_on_schedule;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="SummitDocument", mappedBy="event_types")
-     */
+    #[ORM\ManyToMany(targetEntity: \SummitDocument::class, mappedBy: 'event_types')]
     protected $summit_documents;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitTicketType", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitEventType_SummitTicketType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitEventType_SummitTicketType')]
+    #[ORM\JoinColumn(name: 'SummitEventTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitTicketType::class, cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     protected $allowed_ticket_types;
 
     /**

@@ -16,19 +16,18 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="RegionalSupportedCompanyService")
- * Class RegionalSupportedCompanyService
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'RegionalSupportedCompanyService')]
+#[ORM\Entity]
 class RegionalSupportedCompanyService extends CompanyService
 {
     const ClassName = 'RegionalSupportedCompanyService';
 
     /**
-     * @ORM\OneToMany(targetEntity="RegionalSupport", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
      * @var RegionalSupport[]
      */
+    #[ORM\OneToMany(targetEntity: \RegionalSupport::class, mappedBy: 'company_service', cascade: ['persist'], orphanRemoval: true)]
     protected $regional_supports;
 
     public function __construct()

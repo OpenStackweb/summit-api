@@ -16,35 +16,34 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorshipTypeRepository")
- * @ORM\Table(name="SponsorshipType")
- * Class SponsorshipType
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorshipType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorshipTypeRepository::class)]
 class SponsorshipType extends SilverstripeBaseModel implements IOrderable
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\Column(name="Size", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Size', type: 'string')]
     private $size;
 
     /**

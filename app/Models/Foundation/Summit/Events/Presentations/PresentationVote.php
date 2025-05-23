@@ -15,37 +15,36 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationVote")
- * Class PresentationVote
  * @package models\summit;
  */
+#[ORM\Table(name: 'PresentationVote')]
+#[ORM\Entity]
 class PresentationVote extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Vote", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Vote', type: 'integer')]
     private $vote;
 
     /**
-     * @ORM\Column(name="Content", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Content', type: 'string')]
     private $content;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $voter;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="votes")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'votes')]
     private $presentation;
 
     /**

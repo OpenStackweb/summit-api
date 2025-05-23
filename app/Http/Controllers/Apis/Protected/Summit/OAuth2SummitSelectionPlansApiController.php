@@ -288,11 +288,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         return $this->_getAll(
             function () {
                 return [
+                    'name' => ['=@','@@','=='],
                     'status' => ['=='],
                 ];
             },
             function () {
+
                 return [
+                    'name' => 'sometimes|string',
                     'status' => 'sometimes|string|in:submission,selection,voting',
                 ];
             },

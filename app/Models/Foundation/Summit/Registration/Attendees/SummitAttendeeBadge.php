@@ -23,11 +23,10 @@ use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeBadgeRepository")
- * @ORM\Table(name="SummitAttendeeBadge")
- * Class SummitAttendeeBadge
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeBadge')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAttendeeBadgeRepository::class)]
 class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
 {
 
@@ -45,45 +44,44 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
 
 
     /**
-     * @ORM\Column(name="IsVoid", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsVoid', type: 'boolean')]
     private $is_void;
 
     /**
-     * @ORM\Column(name="QRCode", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'QRCode', type: 'string', nullable: true)]
     private $qr_code;
 
     /**
-     * @ORM\OneToOne(targetEntity="SummitAttendeeTicket", inversedBy="badge")
-     * @ORM\JoinColumn(name="TicketID", referencedColumnName="ID")
      * @var SummitAttendeeTicket
      */
+    #[ORM\JoinColumn(name: 'TicketID', referencedColumnName: 'ID')]
+    #[ORM\OneToOne(targetEntity: \SummitAttendeeTicket::class, inversedBy: 'badge')]
     private $ticket;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitBadgeType")
-     * @ORM\JoinColumn(name="BadgeTypeID", referencedColumnName="ID")
      * @var SummitBadgeType
      */
+    #[ORM\JoinColumn(name: 'BadgeTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitBadgeType::class)]
     private $type;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitBadgeFeatureType")
-     * @ORM\JoinTable(name="SummitAttendeeBadge_Features",
-     *      joinColumns={@ORM\JoinColumn(name="SummitAttendeeBadgeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBadgeFeatureTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitBadgeFeatureType[]
      */
+    #[ORM\JoinTable(name: 'SummitAttendeeBadge_Features')]
+    #[ORM\JoinColumn(name: 'SummitAttendeeBadgeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitBadgeFeatureTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitBadgeFeatureType::class)]
     private $features;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitAttendeeBadgePrint", mappedBy="badge",  cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitAttendeeBadgePrint[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitAttendeeBadgePrint::class, mappedBy: 'badge', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $prints;
 
     /**

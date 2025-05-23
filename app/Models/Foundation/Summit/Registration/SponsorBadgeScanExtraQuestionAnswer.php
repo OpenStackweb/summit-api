@@ -16,11 +16,10 @@ use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SponsorBadgeScanExtraQuestionAnswer")
- * Class SponsorBadgeScanExtraQuestionAnswer
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorBadgeScanExtraQuestionAnswer')]
+#[ORM\Entity]
 class SponsorBadgeScanExtraQuestionAnswer extends ExtraQuestionAnswer
 {
     use One2ManyPropertyTrait;
@@ -36,10 +35,10 @@ class SponsorBadgeScanExtraQuestionAnswer extends ExtraQuestionAnswer
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SponsorBadgeScan", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="SponsorBadgeScanID", referencedColumnName="ID")
      * @var SponsorBadgeScan
      */
+    #[ORM\JoinColumn(name: 'SponsorBadgeScanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SponsorBadgeScan::class, inversedBy: 'extra_question_answers')]
     private $badge_scan;
 
     /**

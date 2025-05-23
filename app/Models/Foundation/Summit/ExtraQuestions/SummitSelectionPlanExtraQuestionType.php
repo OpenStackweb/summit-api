@@ -17,25 +17,19 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\summit\SummitOwned;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitSelectionPlanExtraQuestionTypeRepository")
- * @ORM\Table(name="SummitSelectionPlanExtraQuestionType")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="selection_plan_extra_questions"
- *     )
- * })
- * Class SummitSelectionPlanExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
+#[ORM\Table(name: 'SummitSelectionPlanExtraQuestionType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitSelectionPlanExtraQuestionTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'selection_plan_extra_questions')])] // Class SummitSelectionPlanExtraQuestionType
 class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
 {
     use SummitOwned;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="question_type",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AssignedSelectionPlanExtraQuestionType[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType::class, mappedBy: 'question_type', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $assigned_selection_plans;
 
     public function __construct()

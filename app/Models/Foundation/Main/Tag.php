@@ -15,24 +15,20 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Tag")
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineTagRepository")
- * Class Tag
  * @package models\main
  */
+#[ORM\Table(name: 'Tag')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineTagRepository::class)] // Class Tag
 class Tag extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Tag", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Tag', type: 'string')]
     private $tag;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitEvent", mappedBy="tags")
-     */
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitEvent::class, mappedBy: 'tags')]
     private $events;
 
     /**

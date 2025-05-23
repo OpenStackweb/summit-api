@@ -21,16 +21,16 @@ use Doctrine\ORM\Mapping AS ORM;
 trait SponsorPromoCodeTrait
 {
     /**
-     * @ORM\Column(name="ContactEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ContactEmail', type: 'string')]
     protected $contact_email;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class)]
     protected $sponsor;
 
     /**

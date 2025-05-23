@@ -19,11 +19,10 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeBadgePrintRepository")
- * @ORM\Table(name="SummitAttendeeBadgePrint")
- * Class SummitAttendeeBadgePrint
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeBadgePrint')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAttendeeBadgePrintRepository::class)]
 class SummitAttendeeBadgePrint extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -41,30 +40,30 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeBadge", inversedBy="prints")
-     * @ORM\JoinColumn(name="BadgeID", referencedColumnName="ID")
      * @var SummitAttendeeBadge
      */
+    #[ORM\JoinColumn(name: 'BadgeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendeeBadge::class, inversedBy: 'prints')]
     private $badge;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeViewType")
-     * @ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")
      * @var SummitBadgeViewType
      */
+    #[ORM\JoinColumn(name: 'SummitBadgeViewTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitBadgeViewType::class)]
     private $view_type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="RequestorID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'RequestorID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $requestor;
 
     /**
-     * @ORM\Column(name="PrintDate", type="datetime", nullable=true)
      * @var \DateTime
      */
+    #[ORM\Column(name: 'PrintDate', type: 'datetime', nullable: true)]
     private $print_date;
 
     /**

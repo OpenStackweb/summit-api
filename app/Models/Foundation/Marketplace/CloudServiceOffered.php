@@ -14,27 +14,25 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="CloudServiceOffered")
- * Class CloudServiceOffered
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'CloudServiceOffered')]
+#[ORM\Entity]
 class CloudServiceOffered extends OpenStackImplementationApiCoverage
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Marketplace\PricingSchemaType", cascade={"persist"})
-     * @ORM\JoinTable(name="CloudServiceOffered_PricingSchemas",
-     *      joinColumns={@ORM\JoinColumn(name="CloudServiceOfferedID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PricingSchemaTypeID", referencedColumnName="ID")}
-     *      )
      * @var PricingSchemaType[]
      */
+    #[ORM\JoinTable(name: 'CloudServiceOffered_PricingSchemas')]
+    #[ORM\JoinColumn(name: 'CloudServiceOfferedID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PricingSchemaTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \App\Models\Foundation\Marketplace\PricingSchemaType::class, cascade: ['persist'])]
     private $pricing_schemas;
 
     /**

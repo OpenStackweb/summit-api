@@ -14,11 +14,10 @@
 use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineOrganizationRepository")
- * @ORM\Table(name="Org")
- * Class Organization
  * @package models\main
  */
+#[ORM\Table(name: 'Org')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineOrganizationRepository::class)]
 class Organization extends SilverstripeBaseModel
 {
     /**
@@ -37,8 +36,8 @@ class Organization extends SilverstripeBaseModel
         $this->name = $name;
     }
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 }

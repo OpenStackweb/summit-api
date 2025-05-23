@@ -15,17 +15,11 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAccessLevelTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="badge_access_level_types"
- *     )
- * })
- * @ORM\Table(name="SummitAccessLevelType")
- * Class SummitAccessLevelType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAccessLevelType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAccessLevelTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'badge_access_level_types')])]
 class SummitAccessLevelType extends SilverstripeBaseModel
 {
     use SummitOwned;
@@ -35,27 +29,27 @@ class SummitAccessLevelType extends SilverstripeBaseModel
     const CHAT = 'CHAT';
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="TemplateContent", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TemplateContent', type: 'string')]
     private $template_content;
 
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     private $is_default;
 
     /**

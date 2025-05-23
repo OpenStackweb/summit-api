@@ -21,12 +21,11 @@ use models\summit\PresentationSpeaker;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitPresentationSpeakerAssignmentRepository")
- * @ORM\Table(name="Presentation_Speakers")
- * @ORM\HasLifecycleCallbacks
- * Class PresentationSpeakerAssignment
  * @package models\summit
  */
+#[ORM\Table(name: 'Presentation_Speakers')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitPresentationSpeakerAssignmentRepository::class)]
+#[ORM\HasLifecycleCallbacks] // Class PresentationSpeakerAssignment
 class PresentationSpeakerAssignment extends BaseEntity implements IOrderable
 {
     use One2ManyPropertyTrait;
@@ -42,23 +41,23 @@ class PresentationSpeakerAssignment extends BaseEntity implements IOrderable
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", fetch="EXTRA_LAZY", inversedBy="presentations")
-     * @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID", onDelete="CASCADE")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'PresentationSpeakerID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationSpeaker::class, fetch: 'EXTRA_LAZY', inversedBy: 'presentations')]
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", fetch="EXTRA_LAZY", inversedBy="speakers")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, fetch: 'EXTRA_LAZY', inversedBy: 'speakers')]
     private $presentation;
 
     /**
-     * @ORM\Column(name="CustomOrder", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'CustomOrder', type: 'integer')]
     private $order;
 
     /**

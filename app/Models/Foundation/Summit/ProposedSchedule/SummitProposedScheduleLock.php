@@ -19,11 +19,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleLockRepository")
- * @ORM\Table(name="SummitProposedScheduleLock")
- * Class SummitProposedScheduleLock
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
+#[ORM\Table(name: 'SummitProposedScheduleLock')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitProposedScheduleLockRepository::class)]
 class SummitProposedScheduleLock extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -39,30 +38,30 @@ class SummitProposedScheduleLock extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="Reason", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Reason', type: 'string')]
     private $reason;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TrackID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'TrackID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationCategory::class, fetch: 'EXTRA_LAZY')]
     protected $track;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitTrackChair", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitTrackChair
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitTrackChair::class, fetch: 'EXTRA_LAZY')]
     protected $created_by;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="locks")
-     * @ORM\JoinColumn(name="SummitProposedScheduleID", referencedColumnName="ID")
      * @var SummitProposedSchedule
      */
+    #[ORM\JoinColumn(name: 'SummitProposedScheduleID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitProposedSchedule::class, fetch: 'EXTRA_LAZY', inversedBy: 'locks')]
     protected $summit_proposed_schedule;
 
     /**

@@ -14,43 +14,42 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="MarketPlaceReview")
- * Class MarketPlaceReview
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'MarketPlaceReview')]
+#[ORM\Entity]
 class MarketPlaceReview extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     protected $title;
 
     /**
-     * @ORM\Column(name="Comment", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Comment', type: 'string')]
     protected $comment;
 
     /**
-     * @ORM\Column(name="Rating", type="float")
      * @var string
      */
+    #[ORM\Column(name: 'Rating', type: 'float')]
     protected $rating;
 
     /**
-     * @ORM\Column(name="Approved", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Approved', type: 'boolean')]
     protected $is_approved;
 
     /**
-     * @ORM\ManyToOne(targetEntity="CompanyService",inversedBy="reviews", fetch="LAZY")
-     * @ORM\JoinColumn(name="CompanyServiceID", referencedColumnName="ID")
      * @var CompanyService
      */
+    #[ORM\JoinColumn(name: 'CompanyServiceID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \CompanyService::class, inversedBy: 'reviews', fetch: 'LAZY')]
     protected $company_service;
 
     /**

@@ -14,44 +14,43 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="OpenStackReleaseSupportedApiVersion")
- * Class OpenStackReleaseSupportedApiVersion
  * @package App\Models\Foundation\Software
  */
+#[ORM\Table(name: 'OpenStackReleaseSupportedApiVersion')]
+#[ORM\Entity]
 class OpenStackReleaseSupportedApiVersion extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="ReleaseVersion", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ReleaseVersion', type: 'string')]
     private $version;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackComponent", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
      * @var OpenStackComponent
      */
+    #[ORM\JoinColumn(name: 'OpenStackComponentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackComponent::class, fetch: 'EXTRA_LAZY')]
     private $component;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackApiVersion", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ApiVersionID", referencedColumnName="ID")
      * @var OpenStackApiVersion
      */
+    #[ORM\JoinColumn(name: 'ApiVersionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackApiVersion::class, fetch: 'EXTRA_LAZY')]
     private $api_version;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackRelease", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ReleaseID", referencedColumnName="ID")
      * @var OpenStackRelease
      */
+    #[ORM\JoinColumn(name: 'ReleaseID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackRelease::class, fetch: 'EXTRA_LAZY')]
     private $release;
 
     /**

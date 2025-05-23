@@ -16,34 +16,30 @@ use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorUserInfoGrantRepository")
- * @ORM\Table(name="SponsorUserInfoGrant")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "SponsorUserInfoGrant" = "SponsorUserInfoGrant",
- *     "SponsorBadgeScan" = "SponsorBadgeScan"
- * })
- * Class SponsorUserInfoGrant
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorUserInfoGrant')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorUserInfoGrantRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SponsorUserInfoGrant' => 'SponsorUserInfoGrant', 'SponsorBadgeScan' => 'SponsorBadgeScan'])] // Class SponsorUserInfoGrant
 class SponsorUserInfoGrant extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
 
     const ClassName = 'SponsorUserInfoGrant';
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="user_info_grants")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class, inversedBy: 'user_info_grants')]
     protected $sponsor;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="AllowedUserID", referencedColumnName="ID")
      * @var Member|null
      */
+    #[ORM\JoinColumn(name: 'AllowedUserID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     protected $allowed_user;
 
     protected $getIdMappings = [

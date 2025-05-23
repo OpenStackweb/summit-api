@@ -21,16 +21,16 @@ use Doctrine\ORM\Mapping AS ORM;
 trait SpeakerPromoCodeTrait
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="promo_codes")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class, inversedBy: 'promo_codes')]
     protected $speaker;
 
     /**

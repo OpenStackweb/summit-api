@@ -15,11 +15,10 @@ use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use models\summit\SummitEvent;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Member_FavoriteSummitEvents")
- * Class SummitMemberSchedule
  * @package models\main
  */
+#[ORM\Table(name: 'Member_FavoriteSummitEvents')]
+#[ORM\Entity]
 class SummitMemberFavorite extends BaseEntity
 {
 
@@ -62,16 +61,16 @@ class SummitMemberFavorite extends BaseEntity
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="Member", inversedBy="favorites")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Member::class, inversedBy: 'favorites')]
     private $member;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class)]
     private $event;
 }

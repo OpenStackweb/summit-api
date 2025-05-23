@@ -15,24 +15,23 @@ use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SelectionPlanAllowedPresentationQuestion")
- * Class SelectionPlanAllowedPresentationQuestion
  * @package App\Models\Foundation\Summit
  */
+#[ORM\Table(name: 'SelectionPlanAllowedPresentationQuestion')]
+#[ORM\Entity]
 class SelectionPlanAllowedPresentationQuestion extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_presentation_questions", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'allowed_presentation_questions', fetch: 'EXTRA_LAZY')]
     private $selection_plan;
 
     /**

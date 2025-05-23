@@ -18,50 +18,44 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBadgeFeatureTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="badge_features_types"
- *     )
- * })
- * @ORM\Table(name="SummitBadgeFeatureType")
- * Class SummitBadgeFeatureType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitBadgeFeatureType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitBadgeFeatureTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'badge_features_types')])]
 class SummitBadgeFeatureType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="TemplateContent", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TemplateContent', type: 'string')]
     private $template_content;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $image;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_badge_features_types")
      * @var SummitOrderExtraQuestionType[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitOrderExtraQuestionType::class, mappedBy: 'allowed_badge_features_types')]
     private $extra_question_types;
 
     /**

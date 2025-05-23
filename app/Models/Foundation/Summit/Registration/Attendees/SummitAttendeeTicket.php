@@ -31,12 +31,10 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitAttendeeTicket")
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeTicketRepository")
- * Class SummitAttendeeTicket
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeTicket')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAttendeeTicketRepository::class)] // Class SummitAttendeeTicket
 class SummitAttendeeTicket extends SilverstripeBaseModel
     implements IQREntity
 {
@@ -44,139 +42,139 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     use FinancialTrait;
 
     /**
-     * @ORM\Column(name="ExternalOrderId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalOrderId', type: 'string')]
     private $external_order_id;
 
     /**
-     * @ORM\Column(name="ExternalAttendeeId", type="string")
      * @var
      */
+    #[ORM\Column(name: 'ExternalAttendeeId', type: 'string')]
     private $external_attendee_id;
 
     /**
-     * @ORM\Column(name="TicketBoughtDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'TicketBoughtDate', type: 'datetime')]
     private $bought_date;
 
     /**
-     * @ORM\Column(name="TicketChangedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'TicketChangedDate', type: 'datetime')]
     private $changed_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitTicketType")
-     * @ORM\JoinColumn(name="TicketTypeID", referencedColumnName="ID")
      * @var SummitTicketType
      */
+    #[ORM\JoinColumn(name: 'TicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitTicketType::class)]
     private $ticket_type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendee", inversedBy="tickets")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=true)
      * @var SummitAttendee
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \SummitAttendee::class, inversedBy: 'tickets')]
     private $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitOrder", inversedBy="tickets")
-     * @ORM\JoinColumn(name="OrderID", referencedColumnName="ID")
      * @var SummitOrder
      */
+    #[ORM\JoinColumn(name: 'OrderID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitOrder::class, inversedBy: 'tickets')]
     private $order;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeTicketTax", mappedBy="ticket", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitAttendeeTicketTax[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeTicketTax::class, mappedBy: 'ticket', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $applied_taxes;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeTicketRefundRequest", mappedBy="ticket", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitAttendeeTicketRefundRequest[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeTicketRefundRequest::class, mappedBy: 'ticket', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $refund_requests;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitRegistrationPromoCode", inversedBy="tickets")
-     * @ORM\JoinColumn(name="PromoCodeID", referencedColumnName="ID", nullable=true)
      * @var SummitRegistrationPromoCode
      */
+    #[ORM\JoinColumn(name: 'PromoCodeID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitRegistrationPromoCode::class, inversedBy: 'tickets')]
     private $promo_code;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeNote", mappedBy="ticket", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitAttendeeNote[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeNote::class, mappedBy: 'ticket', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $notes;
 
     /**
-     * @ORM\Column(name="Hash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $hash;
 
     /**
-     * @ORM\Column(name="HashCreationDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'HashCreationDate', type: 'datetime')]
     private $hash_creation_date;
 
     /**
-     * @ORM\Column(name="Number", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Number', type: 'string')]
     private $number;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
-     * @ORM\Column(name="RawCost", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'RawCost', type: 'float')]
     private $raw_cost;
 
     /**
-     * @ORM\Column(name="Discount", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Discount', type: 'float')]
     private $discount;
 
     /**
-     * @ORM\Column(name="Currency", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Currency', type: 'string')]
     private $currency;
 
     /**
-     * @ORM\Column(name="QRCode", type="string", nullable=true)
      * @var string
      */
+    #[ORM\Column(name: 'QRCode', type: 'string', nullable: true)]
     private $qr_code;
 
     /**
-     * @ORM\OneToOne(targetEntity="SummitAttendeeBadge", mappedBy="ticket", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitAttendeeBadge
      */
+    #[ORM\OneToOne(targetEntity: \SummitAttendeeBadge::class, mappedBy: 'ticket', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $badge;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeTicketFormerHash", mappedBy="ticket", cascade={"persist"}, orphanRemoval=true)
      * @var SummitAttendeeTicketFormerHash[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeTicketFormerHash::class, mappedBy: 'ticket', cascade: ['persist'], orphanRemoval: true)]
     private $former_hashes;
 
     /**
-     * @ORM\Column(name="IsActive", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsActive', type: 'boolean')]
     private $is_active;
 
     /**

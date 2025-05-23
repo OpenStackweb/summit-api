@@ -18,11 +18,10 @@ use models\summit\Sponsor;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorExtraQuestionTypeRepository")
- * @ORM\Table(name="SummitSponsorExtraQuestionType")
- * Class SummitSponsorExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
+#[ORM\Table(name: 'SummitSponsorExtraQuestionType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorExtraQuestionTypeRepository::class)]
 class SummitSponsorExtraQuestionType extends ExtraQuestionType
 {
     use One2ManyPropertyTrait;
@@ -36,10 +35,10 @@ class SummitSponsorExtraQuestionType extends ExtraQuestionType
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="extra_questions")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class, inversedBy: 'extra_questions')]
     private $sponsor;
 
     /**

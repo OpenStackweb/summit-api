@@ -20,17 +20,11 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 /**
  * /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitSubmissionInvitationRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="submission_invitations"
- *     )
- * })
- * @ORM\Table(name="SummitSubmissionInvitation")
- * Class SummitSubmissionInvitation
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitSubmissionInvitation')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitSubmissionInvitationRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'submission_invitations')])]
 class SummitSubmissionInvitation extends SilverstripeBaseModel
 {
     use SummitOwned;
@@ -46,49 +40,46 @@ class SummitSubmissionInvitation extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="FirstName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FirstName', type: 'string')]
     private $first_name;
 
     /**
-     * @ORM\Column(name="LastName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LastName', type: 'string')]
     private $last_name;
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     private $email;
 
     /**
-     * @ORM\Column(name="OTP", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OTP', type: 'string')]
     private $otp;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="SentDate", type="datetime")
      */
+    #[ORM\Column(name: 'SentDate', type: 'datetime')]
     private $sent_date;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitSubmissionInvitation_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="SummitSubmissionInvitationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitSubmissionInvitation_Tags')]
+    #[ORM\JoinColumn(name: 'SummitSubmissionInvitationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'], inversedBy: 'events', fetch: 'EXTRA_LAZY')]
     private $tags;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID", nullable=true)
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationSpeaker::class)]
     private $speaker;
 
     public function __construct()

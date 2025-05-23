@@ -17,34 +17,28 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="ExtraQuestionAnswer")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "ExtraQuestionAnswer" = "ExtraQuestionAnswer",
- *     "SummitOrderExtraQuestionAnswer" = "models\summit\SummitOrderExtraQuestionAnswer",
- *     "PresentationExtraQuestionAnswer" = "models\summit\PresentationExtraQuestionAnswer",
- *     "SponsorBadgeScanExtraQuestionAnswer" = "models\summit\SponsorBadgeScanExtraQuestionAnswer",
- * })
- * Class ExtraQuestionAnswer
  * @package App\Models\Foundation\ExtraQuestionAnswer
  */
+#[ORM\Table(name: 'ExtraQuestionAnswer')]
+#[ORM\Entity]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['ExtraQuestionAnswer' => 'ExtraQuestionAnswer', 'SummitOrderExtraQuestionAnswer' => 'models\summit\SummitOrderExtraQuestionAnswer', 'PresentationExtraQuestionAnswer' => 'models\summit\PresentationExtraQuestionAnswer', 'SponsorBadgeScanExtraQuestionAnswer' => 'models\summit\SponsorBadgeScanExtraQuestionAnswer'])] // Class ExtraQuestionAnswer
 abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
 
     /**
-     * @ORM\ManyToOne(targetEntity="ExtraQuestionType")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
      * @var ExtraQuestionType
      */
+    #[ORM\JoinColumn(name: 'QuestionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \ExtraQuestionType::class)]
     protected $question;
 
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     protected $value;
 
     /**

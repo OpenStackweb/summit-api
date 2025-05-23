@@ -16,11 +16,10 @@ use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\One2ManyPropertyTrait;
 /**
- * @ORM\Entity
- * @ORM\Table(name="OpenStackRelease_OpenStackComponents")
- * Class OpenStackReleaseComponent
  * @package App\Models\Foundation\Software
  */
+#[ORM\Table(name: 'OpenStackRelease_OpenStackComponents')]
+#[ORM\Entity]
 class OpenStackReleaseComponent extends BaseEntity
 {
 
@@ -37,35 +36,35 @@ class OpenStackReleaseComponent extends BaseEntity
     ];
 
     /**
-     * @ORM\Column(name="Adoption", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Adoption', type: 'integer')]
     private $adoption;
 
     /**
-     * @ORM\Column(name="MaturityPoints", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaturityPoints', type: 'integer')]
     private $maturity_points;
 
     /**
-     * @ORM\Column(name="HasInstallationGuide", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'HasInstallationGuide', type: 'boolean')]
     private $has_installation_guide;
 
     /**
-     * @ORM\ManyToOne(targetEntity="OpenStackRelease", fetch="EXTRA_LAZY", cascade={"persist"},  inversedBy="components")
-     * @ORM\JoinColumn(name="OpenStackReleaseID", referencedColumnName="ID")
      * @var OpenStackRelease
      */
+    #[ORM\JoinColumn(name: 'OpenStackReleaseID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \OpenStackRelease::class, fetch: 'EXTRA_LAZY', cascade: ['persist'], inversedBy: 'components')]
     private $release;
 
     /**
-     * @ORM\ManyToOne(targetEntity="OpenStackComponent", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
      * @var OpenStackComponent
      */
+    #[ORM\JoinColumn(name: 'OpenStackComponentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \OpenStackComponent::class, fetch: 'EXTRA_LAZY', cascade: ['persist'])]
     private $component;
 
     public function __construct()

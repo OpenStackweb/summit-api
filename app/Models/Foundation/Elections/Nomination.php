@@ -17,11 +17,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="CandidateNomination")
- * Class Nomination
  * @package App\Models\Foundation\Elections
  */
+#[ORM\Table(name: 'CandidateNomination')]
+#[ORM\Entity]
 class Nomination extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -40,23 +39,23 @@ class Nomination extends SilverstripeBaseModel
 
     /**
      * @var Election
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Elections\Election", inversedBy="nominations")
-     * @ORM\JoinColumn(name="ElectionID", referencedColumnName="ID")
      */
+    #[ORM\JoinColumn(name: 'ElectionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Elections\Election::class, inversedBy: 'nominations')]
     private $election;
 
     /**
      * @var Member
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="election_applications")
-     * @ORM\JoinColumn(name="CandidateID", referencedColumnName="ID")
      */
+    #[ORM\JoinColumn(name: 'CandidateID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'election_applications')]
     private $candidate;
 
     /**
      * @var Member
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="election_nominations")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'election_nominations')]
     private $nominator;
 
     /**

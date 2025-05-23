@@ -15,37 +15,36 @@ use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Utils\BaseEntity;
 use models\exceptions\ValidationException;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitRegistrationDiscountCode_AllowedTicketTypes")
- * Class SummitRegistrationDiscountCodeTicketTypeRule
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRegistrationDiscountCode_AllowedTicketTypes')]
+#[ORM\Entity]
 class SummitRegistrationDiscountCodeTicketTypeRule extends BaseEntity
 {
     /**
-     * @ORM\Column(name="DiscountRate", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'DiscountRate', type: 'float')]
     protected $rate;
 
     /**
-     * @ORM\Column(name="DiscountAmount", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'DiscountAmount', type: 'float')]
     protected $amount;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitTicketType")
-     * @ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitTicketType
      */
+    #[ORM\JoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \SummitTicketType::class)]
     protected $ticket_type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitRegistrationDiscountCode", inversedBy="ticket_types_rules"))
-     * @ORM\JoinColumn(name="SummitRegistrationDiscountCodeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitRegistrationDiscountCode
      */
+    #[ORM\JoinColumn(name: 'SummitRegistrationDiscountCodeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \SummitRegistrationDiscountCode::class, inversedBy: 'ticket_types_rules')]
     protected $discount_code;
 
     /**

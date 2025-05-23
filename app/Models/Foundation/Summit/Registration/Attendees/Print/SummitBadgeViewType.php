@@ -14,37 +14,31 @@
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBadgeViewTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="badge_view_types"
- *     )
- * })
- * @ORM\Table(name="SummitBadgeViewType")
- * Class SummitBadgeViewType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitBadgeViewType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitBadgeViewTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'badge_view_types')])]
 class SummitBadgeViewType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     private $default;
 
     public function __construct()

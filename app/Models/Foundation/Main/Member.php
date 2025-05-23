@@ -52,12 +52,11 @@ use Doctrine\ORM\Mapping as ORM;
 use utils\Filter;
 
 /**
- * @ORM\Table(name="`Member`")
- * @ORM\HasLifecycleCallbacks
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineMemberRepository")
- * Class Member
  * @package models\main
  */
+#[ORM\Table(name: '`Member`')]
+#[ORM\HasLifecycleCallbacks]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineMemberRepository::class)] // Class Member
 class Member extends SilverstripeBaseModel
 {
 
@@ -68,367 +67,365 @@ class Member extends SilverstripeBaseModel
     const MembershipTypeNone = 'None';
 
     /**
-     * @ORM\Column(name="FirstName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FirstName', type: 'string')]
     private $first_name;
 
     /**
-     * @ORM\Column(name="Bio", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Bio', type: 'string')]
     private $bio;
 
     /**
-     * @ORM\Column(name="Surname", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Surname', type: 'string')]
     private $last_name;
 
     /**
-     * @ORM\Column(name="GitHubUser", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'GitHubUser', type: 'string')]
     private $github_user;
 
     /**
-     * @ORM\Column(name="MembershipType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MembershipType', type: 'string')]
     private $membership_type;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventFeedback", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitEventFeedback[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitEventFeedback::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $feedback;
 
     /**
-     * @ORM\OneToMany(targetEntity="Affiliation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Affiliation[]
      */
+    #[ORM\OneToMany(targetEntity: \Affiliation::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $affiliations;
 
     /**
-     * @ORM\OneToMany(targetEntity="LegalAgreement", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var LegalAgreement[]
      */
+    #[ORM\OneToMany(targetEntity: \LegalAgreement::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $legal_agreements;
 
     /**
-     * @ORM\Column(name="Active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Active', type: 'boolean')]
     private $active;
 
     /**
-     * @ORM\Column(name="LinkedInProfile", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LinkedInProfile', type: 'string')]
     private $linked_in_profile;
 
     /**
-     * @ORM\Column(name="IRCHandle", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'IRCHandle', type: 'string')]
     private $irc_handle;
 
     /**
-     * @ORM\Column(name="TwitterName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TwitterName', type: 'string')]
     private $twitter_handle;
 
     /**
-     * @ORM\Column(name="Gender", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Gender', type: 'string')]
     private $gender;
 
     /**
-     * @ORM\Column(name="Projects", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Projects', type: 'string')]
     private $projects;
 
     /**
-     * @ORM\Column(name="OtherProject", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OtherProject', type: 'string')]
     private $other_project;
 
     /**
-     * @ORM\Column(name="DisplayOnSite", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'DisplayOnSite', type: 'boolean')]
     private $display_on_site;
 
     /**
-     * @ORM\Column(name="SubscribedToNewsletter", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'SubscribedToNewsletter', type: 'boolean')]
     private $subscribed_to_newsletter;
 
     /**
-     * @ORM\Column(name="ShirtSize", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ShirtSize', type: 'string')]
     private $shirt_size;
 
     /**
-     * @ORM\Column(name="FoodPreference", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FoodPreference', type: 'string')]
     private $food_preference;
 
     /**
-     * @ORM\Column(name="OtherFood", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OtherFood', type: 'string')]
     private $other_food_preference;
 
     /**
-     * @ORM\Column(name="Country", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Country', type: 'string')]
     private $country;
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     private $email;
 
     /**
-     * @ORM\Column(name="SecondEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SecondEmail', type: 'string')]
     private $second_email;
 
     /**
-     * @ORM\Column(name="ThirdEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ThirdEmail', type: 'string')]
     private $third_email;
 
     /**
-     * @ORM\Column(name="EmailVerified", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'EmailVerified', type: 'boolean')]
     private $email_verified;
 
     /**
-     * @ORM\Column(name="EmailVerifiedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'EmailVerifiedDate', type: 'datetime')]
     private $email_verified_date;
 
     /**
      *
-     * @ORM\Column(name="ExternalUserId", type="integer")
      * @var int|null
      */
+    #[ORM\Column(name: 'ExternalUserId', type: 'integer')]
     private $user_external_id;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="ResignDate", type="datetime")
      */
+    #[ORM\Column(name: 'ResignDate', type: 'datetime')]
     protected $resign_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File")
-     * @ORM\JoinColumn(name="PhotoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'PhotoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class)]
     private $photo;
 
     /**
-     * @ORM\Column(name="State", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'State', type: 'string')]
     private $state;
 
     /**
-     * @ORM\Column(name="ExternalPic", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalPic', type: 'string')]
     private $external_pic;
 
     /**
-     * @ORM\Column(name="PublicProfileShowPhoto", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileShowPhoto', options: ['default' => 0], type: 'boolean')]
     private $public_profile_show_photo;
 
     /**
-     * @ORM\Column(name="PublicProfileShowFullName", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileShowFullName', options: ['default' => 0], type: 'boolean')]
     private $public_profile_show_fullname;
 
     /**
-     * @ORM\Column(name="PublicProfileShowEmail", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileShowEmail', options: ['default' => 0], type: 'boolean')]
     private $public_profile_show_email;
 
     /**
-     * @ORM\Column(name="PublicProfileAllowChatWithMe", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileAllowChatWithMe', options: ['default' => 0], type: 'boolean')]
     private $public_profile_allow_chat_with_me;
 
     /**
-     * @ORM\Column(name="PublicProfileShowSocialMediaInfo", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileShowSocialMediaInfo', options: ['default' => 0], type: 'boolean')]
     private $public_profile_show_social_media_info;
 
     /**
-     * @ORM\Column(name="PublicProfileShowBio", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileShowBio', options: ['default' => 0], type: 'boolean')]
     private $public_profile_show_bio;
 
     /**
-     * @ORM\Column(name="PublicProfileShowTelephoneNumber", options={"default":0}, type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'PublicProfileShowTelephoneNumber', options: ['default' => 0], type: 'boolean')]
     private $public_profile_show_telephone_number;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitMemberSchedule", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMemberSchedule[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitMemberSchedule::class, mappedBy: 'member', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $schedule;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\CalendarSync\ScheduleCalendarSyncInfo", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ScheduleCalendarSyncInfo[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\CalendarSync\ScheduleCalendarSyncInfo::class, mappedBy: 'member', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $schedule_sync_info;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\CalendarSync\CalendarSyncInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var CalendarSyncInfo[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\CalendarSync\CalendarSyncInfo::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $calendars_sync;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\RSVP", mappedBy="owner", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var RSVP[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\RSVP::class, mappedBy: 'owner', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $rsvp;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\Sponsor", mappedBy="members", fetch="EXTRA_LAZY")
      * @var Sponsor[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\summit\Sponsor::class, mappedBy: 'members', fetch: 'EXTRA_LAZY')]
     private $sponsor_memberships;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Group", inversedBy="members", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="Group_Members",
-     *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="GroupID", referencedColumnName="ID")}
-     *      )
      * @var Group[]
      */
+    #[ORM\JoinTable(name: 'Group_Members')]
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'GroupID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Group::class, inversedBy: 'members', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $groups;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Models\Foundation\Main\CCLA\Team", inversedBy="members", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="Team_Members",
-     *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TeamID", referencedColumnName="ID")}
-     *      )
      * @var Team[]
      */
+    #[ORM\JoinTable(name: 'Team_Members')]
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TeamID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \Models\Foundation\Main\CCLA\Team::class, inversedBy: 'members', fetch: 'EXTRA_LAZY')]
     private $ccla_teams;
 
     /**
-     * @ORM\OneToMany(targetEntity="ChatTeamMember", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ChatTeamMember[]
      */
+    #[ORM\OneToMany(targetEntity: \ChatTeamMember::class, mappedBy: 'member', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $team_memberships;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitMemberFavorite", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMemberFavorite[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitMemberFavorite::class, mappedBy: 'member', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $favorites;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitRoomReservation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRoomReservation[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitRoomReservation::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $reservations;
 
     /**
      * @var PresentationSpeaker
-     * @ORM\OneToOne(targetEntity="models\summit\PresentationSpeaker", mappedBy="member", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
+    #[ORM\OneToOne(targetEntity: \models\summit\PresentationSpeaker::class, mappedBy: 'member', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $speaker;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PersonalCalendarShareInfo[]
      */
+    #[ORM\OneToMany(targetEntity: \models\main\PersonalCalendarShareInfo::class, mappedBy: 'owner', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $schedule_shareable_links;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitOrder", mappedBy="owner", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var SummitOrder[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitOrder::class, mappedBy: 'owner', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $summit_registration_orders;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\SummitAdministratorPermissionGroup", mappedBy="members", fetch="EXTRA_LAZY")
      * @var SummitAdministratorPermissionGroup[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\main\SummitAdministratorPermissionGroup::class, mappedBy: 'members', fetch: 'EXTRA_LAZY')]
     private $summit_permission_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMetric[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitMetric::class, mappedBy: 'member', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $summit_attendance_metrics;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitTrackChair[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitTrackChair::class, mappedBy: 'member', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $track_chairs;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="candidate", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Nomination[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Elections\Nomination::class, mappedBy: 'candidate', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $election_applications;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="nominator", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Nomination[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Elections\Nomination::class, mappedBy: 'nominator', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $election_nominations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Candidate", mappedBy="member", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Candidate[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Elections\Candidate::class, mappedBy: 'member', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $candidate_profiles;
 
     /**
-     * @ORM\Column(name="Company", nullable=true, type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Company', nullable: true, type: 'string')]
     private $company;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="created_by", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var Presentation[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\Presentation::class, mappedBy: 'created_by', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $created_presentations;
 
     /**

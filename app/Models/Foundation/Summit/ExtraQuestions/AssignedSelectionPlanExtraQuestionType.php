@@ -19,40 +19,39 @@ use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitSelectionPlanExtraQuestionType_SelectionPlan")
- * Class AssignedSelectionPlanExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
+#[ORM\Table(name: 'SummitSelectionPlanExtraQuestionType_SelectionPlan')]
+#[ORM\Entity]
 class AssignedSelectionPlanExtraQuestionType
     extends BaseEntity
     implements IOrderable
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", inversedBy="assigned_selection_plans")
-     * @ORM\JoinColumn(name="SummitSelectionPlanExtraQuestionTypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitSelectionPlanExtraQuestionType
      */
+    #[ORM\JoinColumn(name: 'SummitSelectionPlanExtraQuestionTypeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType::class, inversedBy: 'assigned_selection_plans')]
     private $question_type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="extra_questions")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'extra_questions')]
     private $selection_plan;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\Column(name="`IsEditable`", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: '`IsEditable`', type: 'boolean')]
     private $is_editable;
 
     /**

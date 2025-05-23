@@ -17,11 +17,10 @@ use models\summit\Presentation;
 use models\utils\SilverstripeBaseModel;
 use models\utils\One2ManyPropertyTrait;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationTrackChairView")
- * Class PresentationTrackChairView
  * @package models\summit;
  */
+#[ORM\Table(name: 'PresentationTrackChairView')]
+#[ORM\Entity]
 class PresentationTrackChairView extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -37,17 +36,17 @@ class PresentationTrackChairView extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'TrackChairID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $viewer;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chair_views")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'track_chair_views')]
     private $presentation;
 
     /**

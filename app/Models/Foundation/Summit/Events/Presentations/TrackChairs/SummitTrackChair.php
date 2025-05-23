@@ -22,42 +22,35 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTrackChairRepository")
- * @ORM\Table(name="SummitTrackChair")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="track_chairs"
- *     )
- * })
- * Class SummitTrackChair
  * @package models\summit;
  */
+#[ORM\Table(name: 'SummitTrackChair')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitTrackChairRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'track_chairs')])] // Class SummitTrackChair
 class SummitTrackChair extends SilverstripeBaseModel
 {
     use SummitOwned;
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="track_chairs")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'track_chairs')]
     private $member;
 
     /**
      * owning side
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", inversedBy="track_chairs",  fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitTrackChair_Categories",
-     *      joinColumns={@ORM\JoinColumn(name="SummitTrackChairID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
-     * )
      * @var PresentationCategory[]
      */
+    #[ORM\JoinTable(name: 'SummitTrackChair_Categories')]
+    #[ORM\JoinColumn(name: 'SummitTrackChairID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class, inversedBy: 'track_chairs', fetch: 'EXTRA_LAZY')]
     private $categories;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore", mappedBy="reviewer", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationTrackChairScore[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore::class, mappedBy: 'reviewer', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $scores;
 
     /**

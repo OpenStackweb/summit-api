@@ -13,17 +13,16 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPSingleValueTemplateQuestion")
- * @ORM\Entity
- * Class RSVPSingleValueTemplateQuestion
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPSingleValueTemplateQuestion')]
+#[ORM\Entity] // Class RSVPSingleValueTemplateQuestion
 class RSVPSingleValueTemplateQuestion extends RSVPQuestionTemplate
 {
     /**
-     * @ORM\Column(name="InitialValue", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'InitialValue', type: 'string')]
     protected $initial_value;
 
     /**

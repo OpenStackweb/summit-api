@@ -38,17 +38,11 @@ use DateTime;
 use DateTimeZone;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSelectionPlanRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="selection_plans"
- *     )
- * })
- * @ORM\Table(name="SelectionPlan")
- * Class SelectionPlan
  * @package App\Models\Foundation\Summit
  */
+#[ORM\Table(name: 'SelectionPlan')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSelectionPlanRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'selection_plans')])]
 class SelectionPlan extends SilverstripeBaseModel
 {
     use SummitOwned;
@@ -62,179 +56,177 @@ class SelectionPlan extends SilverstripeBaseModel
     const STATUS_VOTING = 'VOTING';
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="MaxSubmissionAllowedPerUser", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxSubmissionAllowedPerUser', type: 'integer')]
     private $max_submission_allowed_per_user;
 
     /**
-     * @ORM\Column(name="Enabled", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Enabled', type: 'boolean')]
     private $is_enabled;
 
     /**
-     * @ORM\Column(name="IsHidden", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsHidden', type: 'boolean')]
     private $is_hidden;
 
     /**
-     * @ORM\Column(name="AllowNewPresentations", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowNewPresentations', type: 'boolean')]
     private $allow_new_presentations;
 
     /**
-     * @ORM\Column(name="AllowProposedSchedules", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowProposedSchedules', type: 'boolean')]
     private $allow_proposed_schedules;
 
     /**
-     * @ORM\Column(name="AllowTrackChangeRequests", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowTrackChangeRequests', type: 'boolean')]
     private $allow_track_change_requests;
 
     /**
-     * @ORM\Column(name="SubmissionBeginDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SubmissionBeginDate', type: 'datetime')]
     private $submission_begin_date;
 
     /**
-     * @ORM\Column(name="SubmissionEndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SubmissionEndDate', type: 'datetime')]
     private $submission_end_date;
 
     /**
-     * @ORM\Column(name="SubmissionLockDownPresentationStatusDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'SubmissionLockDownPresentationStatusDate', type: 'datetime')]
     private $submission_lock_down_presentation_status_date;
 
     /**
-     * @ORM\Column(name="VotingBeginDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'VotingBeginDate', type: 'datetime')]
     private $voting_begin_date;
 
     /**
-     * @ORM\Column(name="VotingEndDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'VotingEndDate', type: 'datetime')]
     private $voting_end_date;
 
     /**
-     * @ORM\Column(name="SelectionBeginDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SelectionBeginDate', type: 'datetime')]
     private $selection_begin_date;
 
     /**
-     * @ORM\Column(name="SelectionEndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SelectionEndDate', type: 'datetime')]
     private $selection_end_date;
 
     /**
-     * @ORM\Column(name="SubmissionPeriodDisclaimer", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'SubmissionPeriodDisclaimer', type: 'string')]
     private $submission_period_disclaimer;
 
     /**
-     * @ORM\Column(name="PresentationCreatorNotificationEmailTemplate", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'PresentationCreatorNotificationEmailTemplate', type: 'string')]
     private $presentation_creator_notification_email_template;
 
     /**
-     * @ORM\Column(name="PresentationModeratorNotificationEmailTemplate", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'PresentationModeratorNotificationEmailTemplate', type: 'string')]
     private $presentation_moderator_notification_email_template;
 
     /**
-     * @ORM\Column(name="PresentationSpeakerNotificationEmailTemplate", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'PresentationSpeakerNotificationEmailTemplate', type: 'string')]
     private $presentation_speaker_notification_email_template;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SelectionPlan_CategoryGroups",
-     *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryGroupID", referencedColumnName="ID")}
-     *      )
      * @var PresentationCategoryGroup[]
      */
+    #[ORM\JoinTable(name: 'SelectionPlan_CategoryGroups')]
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationCategoryGroupID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategoryGroup::class, fetch: 'EXTRA_LAZY')]
     private $category_groups;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitEventType", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SelectionPlan_SummitEventTypes",
-     *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitEventType[]
      */
+    #[ORM\JoinTable(name: 'SelectionPlan_SummitEventTypes')]
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitEventTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitEventType::class, fetch: 'EXTRA_LAZY')]
     private $event_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlanAllowedMember", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SelectionPlanAllowedMember[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\SelectionPlanAllowedMember::class, mappedBy: 'selection_plan', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $allowed_members;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="selection_plan", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var Presentation[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\Presentation::class, mappedBy: 'selection_plan', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $presentations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var PresentationTrackChairRatingType
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType::class, mappedBy: 'selection_plan', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $track_chair_rating_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="selection_plan", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AllowedPresentationActionType[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\AllowedPresentationActionType::class, mappedBy: 'selection_plan', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $allowed_presentation_action_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="selection_plan",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AssignedSelectionPlanExtraQuestionType[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType::class, mappedBy: 'selection_plan', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $extra_questions;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentationList", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitSelectedPresentationList[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitSelectedPresentationList::class, mappedBy: 'selection_plan', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $selection_lists;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlanAllowedPresentationQuestion", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SelectionPlanAllowedPresentationQuestion[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\SelectionPlanAllowedPresentationQuestion::class, mappedBy: 'selection_plan', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $allowed_presentation_questions;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlanAllowedEditablePresentationQuestion", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SelectionPlanAllowedEditablePresentationQuestion[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\SelectionPlanAllowedEditablePresentationQuestion::class, mappedBy: 'selection_plan', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $allowed_editable_presentation_questions;
 
     /**

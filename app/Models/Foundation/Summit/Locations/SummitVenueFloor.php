@@ -21,12 +21,11 @@ use models\main\File;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitVenueFloor")
- * @ORM\HasLifecycleCallbacks
- * Class Summit
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitVenueFloor')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class Summit
 class SummitVenueFloor extends SilverstripeBaseModel
 {
 
@@ -42,40 +41,34 @@ class SummitVenueFloor extends SilverstripeBaseModel
         'hasImage' => 'image',
     ];
 
-    /**
-     * @ORM\Column(name="Name", type="string")
-     */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
-    /**
-     * @ORM\Column(name="Number", type="integer")
-     */
+    #[ORM\Column(name: 'Number', type: 'integer')]
     private $number;
 
     /**
      *
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitVenue", inversedBy="floors")
-     * @ORM\JoinColumn(name="VenueID", referencedColumnName="ID")
      * @var SummitVenue
      */
+    #[ORM\JoinColumn(name: 'VenueID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitVenue::class, inversedBy: 'floors')]
     private $venue;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitVenueRoom", mappedBy="floor", cascade={"persist"})
      * @var SummitVenueRoom[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitVenueRoom::class, mappedBy: 'floor', cascade: ['persist'])]
     private $rooms;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", fetch="EAGER", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, fetch: 'EAGER', cascade: ['persist', 'remove'])]
     private $image;
 
     /**

@@ -30,215 +30,178 @@ use models\utils\SilverstripeBaseModel;
 use utils\Filter;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationSpeaker")
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerRepository")
- * @ORM\HasLifecycleCallbacks
- * Class PresentationSpeaker
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationSpeaker')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSpeakerRepository::class)]
+#[ORM\HasLifecycleCallbacks] // Class PresentationSpeaker
 class PresentationSpeaker extends SilverstripeBaseModel
 {
     const RoleSpeaker = 'SPEAKER';
     const RoleModerator = 'MODERATOR';
 
-    /**
-     * @ORM\Column(name="FirstName", type="string")
-     */
+    #[ORM\Column(name: 'FirstName', type: 'string')]
     private $first_name;
 
-    /**
-     * @ORM\Column(name="LastName", type="string")
-     */
+    #[ORM\Column(name: 'LastName', type: 'string')]
     private $last_name;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
-    /**
-     * @ORM\Column(name="Bio", type="string")
-     */
+    #[ORM\Column(name: 'Bio', type: 'string')]
     private $bio;
 
-    /**
-     * @ORM\Column(name="IRCHandle", type="string")
-     */
+    #[ORM\Column(name: 'IRCHandle', type: 'string')]
     private $irc_handle;
 
-    /**
-     * @ORM\Column(name="TwitterName", type="string")
-     */
+    #[ORM\Column(name: 'TwitterName', type: 'string')]
     private $twitter_name;
 
-    /**
-     * @ORM\Column(name="CreatedFromAPI", type="boolean")
-     */
+    #[ORM\Column(name: 'CreatedFromAPI', type: 'boolean')]
     private $created_from_api;
 
-    /**
-     * @ORM\Column(name="AvailableForBureau", type="boolean")
-     */
+    #[ORM\Column(name: 'AvailableForBureau', type: 'boolean')]
     private $available_for_bureau;
 
-    /**
-     * @ORM\Column(name="FundedTravel", type="boolean")
-     */
+    #[ORM\Column(name: 'FundedTravel', type: 'boolean')]
     private $funded_travel;
 
-    /**
-     * @ORM\Column(name="WillingToTravel", type="boolean")
-     */
+    #[ORM\Column(name: 'WillingToTravel', type: 'boolean')]
     private $willing_to_travel;
 
-    /**
-     * @ORM\Column(name="Country", type="string")
-     */
+    #[ORM\Column(name: 'Country', type: 'string')]
     private $country;
 
-    /**
-     * @ORM\Column(name="WillingToPresentVideo", type="boolean")
-     */
+    #[ORM\Column(name: 'WillingToPresentVideo', type: 'boolean')]
     private $willing_to_present_video;
 
-    /**
-     * @ORM\Column(name="Notes", type="string")
-     */
+    #[ORM\Column(name: 'Notes', type: 'string')]
     private $notes;
 
-    /**
-     * @ORM\Column(name="OrgHasCloud", type="boolean")
-     */
+    #[ORM\Column(name: 'OrgHasCloud', type: 'boolean')]
     private $org_has_cloud;
 
-    /**
-     * @ORM\Column(name="Company", type="string")
-     */
+    #[ORM\Column(name: 'Company', type: 'string')]
     private $company;
 
-    /**
-     * @ORM\Column(name="PhoneNumber", type="string")
-     */
+    #[ORM\Column(name: 'PhoneNumber', type: 'string')]
     private $phone_number;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SpeakerRegistrationRequest", cascade={"persist","remove"}), orphanRemoval=true
-     * @ORM\JoinColumn(name="RegistrationRequestID", referencedColumnName="ID")
      * @var SpeakerRegistrationRequest
      */
+    #[ORM\JoinColumn(name: 'RegistrationRequestID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SpeakerRegistrationRequest::class, cascade: ['persist', 'remove'])] // , orphanRemoval=true
     private $registration_request;
 
     /**
-     * @ORM\OneToMany(targetEntity="PresentationSpeakerSummitAssistanceConfirmationRequest", mappedBy="speaker", cascade={"persist","remove"}), orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationSpeakerSummitAssistanceConfirmationRequest[]
      */
+    #[ORM\OneToMany(targetEntity: \PresentationSpeakerSummitAssistanceConfirmationRequest::class, mappedBy: 'speaker', cascade: ['persist', 'remove'])] // , orphanRemoval=true, fetch="EXTRA_LAZY")
     private $summit_assistances;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerSummitRegistrationPromoCode", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SpeakerSummitRegistrationPromoCode[]
      */
+    #[ORM\OneToMany(targetEntity: \SpeakerSummitRegistrationPromoCode::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $promo_codes;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerSummitRegistrationDiscountCode", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SpeakerSummitRegistrationDiscountCode[]
      */
+    #[ORM\OneToMany(targetEntity: \SpeakerSummitRegistrationDiscountCode::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $discount_codes;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationSpeakerAssignment[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $presentations;
 
     /**
-     * @ORM\OneToMany(targetEntity="Presentation", mappedBy="moderator", cascade={"persist"})
      * @var Presentation[]
      */
+    #[ORM\OneToMany(targetEntity: \Presentation::class, mappedBy: 'moderator', cascade: ['persist'])]
     private $moderated_presentations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest", mappedBy="speaker", cascade={"persist"})
      * @var Presentation[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest::class, mappedBy: 'speaker', cascade: ['persist'])]
     private $granted_edit_permissions;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="PhotoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'PhotoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $photo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="BigPhotoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'BigPhotoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $big_photo;
 
     /**
      * Owning side
-     * @ORM\OneToOne(targetEntity="models\main\Member",inversedBy="speaker", cascade={"persist"})
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", nullable=true)
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\OneToOne(targetEntity: \models\main\Member::class, inversedBy: 'speaker', cascade: ['persist'])]
     private $member;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerExpertise", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true)
      * @var SpeakerExpertise[]
      */
+    #[ORM\OneToMany(targetEntity: \SpeakerExpertise::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true)]
     private $areas_of_expertise;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerPresentationLink", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true)
      * @var SpeakerPresentationLink[]
      */
+    #[ORM\OneToMany(targetEntity: \SpeakerPresentationLink::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true)]
     private $other_presentation_links;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerTravelPreference", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true)
      * @var SpeakerTravelPreference[]
      */
+    #[ORM\OneToMany(targetEntity: \SpeakerTravelPreference::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true)]
     private $travel_preferences;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Main\Language", cascade={"persist"})
-     * @ORM\JoinTable(name="PresentationSpeaker_Languages",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="LanguageID", referencedColumnName="ID")}
-     *      )
      * @var Language[]
      */
+    #[ORM\JoinTable(name: 'PresentationSpeaker_Languages')]
+    #[ORM\JoinColumn(name: 'PresentationSpeakerID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'LanguageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \App\Models\Foundation\Main\Language::class, cascade: ['persist'])]
     private $languages;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SpeakerOrganizationalRole", cascade={"persist"})
-     * @ORM\JoinTable(name="PresentationSpeaker_OrganizationalRoles",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SpeakerOrganizationalRoleID", referencedColumnName="ID")}
-     *      )
      * @var SpeakerOrganizationalRole[]
      */
+    #[ORM\JoinTable(name: 'PresentationSpeaker_OrganizationalRoles')]
+    #[ORM\JoinColumn(name: 'PresentationSpeakerID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SpeakerOrganizationalRoleID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SpeakerOrganizationalRole::class, cascade: ['persist'])]
     protected $organizational_roles;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SpeakerActiveInvolvement", cascade={"persist"})
-     * @ORM\JoinTable(name="PresentationSpeaker_ActiveInvolvements",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SpeakerActiveInvolvementID", referencedColumnName="ID")}
-     *      )
      * @var SpeakerActiveInvolvement[]
      */
+    #[ORM\JoinTable(name: 'PresentationSpeaker_ActiveInvolvements')]
+    #[ORM\JoinColumn(name: 'PresentationSpeakerID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SpeakerActiveInvolvementID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SpeakerActiveInvolvement::class, cascade: ['persist'])]
     protected $active_involvements;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerAnnouncementSummitEmail", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SpeakerAnnouncementSummitEmail[]
      */
+    #[ORM\OneToMany(targetEntity: \SpeakerAnnouncementSummitEmail::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $announcement_summit_emails;
 
     /**

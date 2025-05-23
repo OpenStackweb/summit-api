@@ -13,23 +13,22 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackDropDownQuestionTemplate")
- * Class TrackDropDownQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackDropDownQuestionTemplate')]
+#[ORM\Entity]
 class TrackDropDownQuestionTemplate extends TrackMultiValueQuestionTemplate
 {
     /**
-     * @ORM\Column(name="IsMultiSelect", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsMultiSelect', type: 'boolean')]
     private $is_multi_select;
 
     /**
-     * @ORM\Column(name="IsCountrySelector", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsCountrySelector', type: 'boolean')]
     private $is_country_selector;
 
 

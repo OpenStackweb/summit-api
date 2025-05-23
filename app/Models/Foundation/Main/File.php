@@ -17,71 +17,54 @@ use Illuminate\Support\Facades\Storage;
 use models\utils\SilverstripeBaseModel;
 use Illuminate\Support\Facades\Config;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineFolderRepository")
- * @ORM\Table(name="File")
- * Class File
  * @package models\main
  */
+#[ORM\Table(name: 'File')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineFolderRepository::class)]
 class File extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="Name", type="string")
-     */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
-    /**
-     * @ORM\Column(name="ClassName", type="string")
-     */
+    #[ORM\Column(name: 'ClassName', type: 'string')]
     private $class_name;
 
-    /**
-     * @ORM\Column(name="Content", type="string")
-     */
+    #[ORM\Column(name: 'Content', type: 'string')]
     private $content;
 
-    /**
-     * @ORM\Column(name="Filename", type="string")
-     */
+    #[ORM\Column(name: 'Filename', type: 'string')]
     private $filename;
 
     /**
-     * @ORM\Column(name="ShowInSearch", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShowInSearch', type: 'boolean')]
     private $show_in_search;
 
-    /**
-     * @ORM\Column(name="CloudStatus", type="string")
-     */
+    #[ORM\Column(name: 'CloudStatus', type: 'string')]
     private $cloud_status;
 
-    /**
-     * @ORM\Column(name="CloudSize", type="integer")
-     */
+    #[ORM\Column(name: 'CloudSize', type: 'integer')]
     private $cloud_size;
 
-    /**
-     * @ORM\Column(name="CloudMetaJson", type="string")
-     */
+    #[ORM\Column(name: 'CloudMetaJson', type: 'string')]
     private $cloud_metajson;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File")
-     * @ORM\JoinColumn(name="ParentID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ParentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class)]
     private $parent;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $owner;
 
     /**

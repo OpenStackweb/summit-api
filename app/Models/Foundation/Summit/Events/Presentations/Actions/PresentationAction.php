@@ -16,18 +16,17 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationAction")
- * Class PresentationAction
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationAction')]
+#[ORM\Entity]
 class PresentationAction extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
     /**
-     * @ORM\Column(name="IsCompleted", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsCompleted', type: 'boolean')]
     private $is_completed;
 
     protected $getIdMappings = [
@@ -51,31 +50,31 @@ class PresentationAction extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="Presentation", inversedBy="actions", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Presentation::class, inversedBy: 'actions', fetch: 'EXTRA_LAZY')]
     private $presentation;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationActionType", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var PresentationActionType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \PresentationActionType::class, fetch: 'EXTRA_LAZY')]
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     private $created_by;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="UpdateByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'UpdateByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     private $updated_by;
 
     /**

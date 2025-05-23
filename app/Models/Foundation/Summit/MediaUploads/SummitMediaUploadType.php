@@ -19,45 +19,39 @@ use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitMediaUploadTypeRepository")
- * @ORM\Table(name="SummitMediaUploadType")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="media_upload_types"
- *     )
- * })
- * Class SummitMediaUploadType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitMediaUploadType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitMediaUploadTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'media_upload_types')])] // Class SummitMediaUploadType
 class SummitMediaUploadType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaFileType")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var SummitMediaFileType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitMediaFileType::class)]
     protected $type;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="MaxSize", type="integer")
      * @var int
      * in KB
      */
+    #[ORM\Column(name: 'MaxSize', type: 'integer')]
     private $max_size;
 
     /**
@@ -66,61 +60,58 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     private $is_mandatory;
 
     /**
-     * @ORM\Column(name="MinUploadsQty", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MinUploadsQty', type: 'integer')]
     private $min_uploads_qty;
 
     /**
-     * @ORM\Column(name="MaxUploadsQty", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxUploadsQty', type: 'integer')]
     private $max_uploads_qty;
 
     /**
-     * @ORM\Column(name="PrivateStorageType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PrivateStorageType', type: 'string')]
     private $private_storage_type;
 
     /**
-     * @ORM\Column(name="PublicStorageType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PublicStorageType', type: 'string')]
     private $public_storage_type;
 
     /**
-     * @ORM\Column(name="UseTemporaryLinksOnPublicStorage", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseTemporaryLinksOnPublicStorage', type: 'boolean')]
     private $use_temporary_links_on_public_storage;
 
     /**
-     * @ORM\Column(name="TemporaryLinksOnPublicStorageTTL", type="integer")
      * @var int
      * in minutes
      */
+    #[ORM\Column(name: 'TemporaryLinksOnPublicStorageTTL', type: 'integer')]
     private $temporary_links_public_storage_ttl;
 
     /**
-     * @ORM\Column(name="IsEditable", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsEditable', type: 'boolean')]
     private $is_editable;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationType", inversedBy="allowed_media_upload_types", cascade={"persist"})
-     * @ORM\JoinTable(name="PresentationType_SummitMediaUploadType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationTypeID", referencedColumnName="ID")}
-     *      )
      * @var PresentationType[]
      */
+    #[ORM\JoinTable(name: 'PresentationType_SummitMediaUploadType')]
+    #[ORM\JoinColumn(name: 'SummitMediaUploadTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'PresentationTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationType::class, inversedBy: 'allowed_media_upload_types', cascade: ['persist'])]
     private $presentation_types;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationMediaUpload", mappedBy="media_upload_type", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationMediaUpload::class, mappedBy: 'media_upload_type', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $media_uploads;
 
     /**

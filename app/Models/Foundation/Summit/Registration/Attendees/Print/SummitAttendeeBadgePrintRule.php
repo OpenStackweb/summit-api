@@ -16,11 +16,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeBadgePrintRuleRepository")
- * @ORM\Table(name="SummitAttendeeBadgePrintRule")
- * Class SummitAttendeeBadgePrintRule
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeBadgePrintRule')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAttendeeBadgePrintRuleRepository::class)]
 class SummitAttendeeBadgePrintRule extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -34,16 +33,16 @@ class SummitAttendeeBadgePrintRule extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="MaxPrintTimes", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxPrintTimes', type: 'integer')]
     private $max_print_times;
 
     /**
-     * @ORM\OneToOne(targetEntity="models\main\Group")
-     * @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
      * @var Group
      */
+    #[ORM\JoinColumn(name: 'GroupID', referencedColumnName: 'ID')]
+    #[ORM\OneToOne(targetEntity: \models\main\Group::class)]
     private $group;
 
     public function __construct()

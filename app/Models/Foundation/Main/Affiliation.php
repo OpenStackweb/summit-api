@@ -14,49 +14,48 @@
 use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Affiliation")
- * Class Affiliation
  * @package models\main
  */
+#[ORM\Table(name: 'Affiliation')]
+#[ORM\Entity]
 class Affiliation extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="StartDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'StartDate', type: 'datetime')]
     private $start_date;
 
     /**
-     * @ORM\Column(name="EndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'EndDate', type: 'datetime')]
     private $end_date;
 
     /**
-     * @ORM\Column(name="Current", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Current', type: 'boolean')]
     private $is_current;
 
     /**
-     * @ORM\Column(name="JobTitle", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'JobTitle', type: 'string')]
     private $job_title;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="affiliations")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'affiliations')]
     private $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Organization")
-     * @ORM\JoinColumn(name="OrganizationID", referencedColumnName="ID")
      * @var Organization
      */
+    #[ORM\JoinColumn(name: 'OrganizationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Organization::class)]
     private $organization;
 
     /**

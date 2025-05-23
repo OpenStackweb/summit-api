@@ -23,34 +23,34 @@ use Doctrine\ORM\Mapping AS ORM;
 trait MemberPromoCodeTrait
 {
      /**
-     * @ORM\Column(name="FirstName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FirstName', type: 'string')]
     protected $first_name;
 
     /**
-     * @ORM\Column(name="LastName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LastName', type: 'string')]
     protected $last_name;
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     protected $email;
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     protected $owner;
 
     /**

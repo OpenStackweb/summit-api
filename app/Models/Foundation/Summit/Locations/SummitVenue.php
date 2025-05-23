@@ -18,12 +18,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitVenue")
- * @ORM\HasLifecycleCallbacks
- * Class SummitVenue
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitVenue')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class SummitVenue
 class SummitVenue extends SummitGeoLocatedLocation
 {
     /**
@@ -45,21 +44,21 @@ class SummitVenue extends SummitGeoLocatedLocation
     }
 
     /**
-     * @ORM\Column(name="IsMain", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsMain', type: 'boolean')]
     private $is_main;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitVenueRoom", mappedBy="venue", cascade={"persist"}, orphanRemoval=true)
      * @var SummitVenueRoom[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitVenueRoom::class, mappedBy: 'venue', cascade: ['persist'], orphanRemoval: true)]
     private $rooms;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitVenueFloor", mappedBy="venue", cascade={"persist"}, orphanRemoval=true)
      * @var SummitVenueFloor[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitVenueFloor::class, mappedBy: 'venue', cascade: ['persist'], orphanRemoval: true)]
     private $floors;
 
     public function addFloor(SummitVenueFloor $floor){

@@ -14,30 +14,29 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="MarketPlaceType")
- * Class MarketPlaceType
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'MarketPlaceType')]
+#[ORM\Entity]
 class MarketPlaceType extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     private $slug;
 
     /**
-     * @ORM\Column(name="Active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Active', type: 'boolean')]
     private $is_active;
 
     /**

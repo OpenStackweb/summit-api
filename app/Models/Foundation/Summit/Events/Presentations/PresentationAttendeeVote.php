@@ -15,11 +15,10 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use models\utils\One2ManyPropertyTrait;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationAttendeeVote")
- * Class PresentationAttendeeVote
  * @package models\summit;
  */
+#[ORM\Table(name: 'PresentationAttendeeVote')]
+#[ORM\Entity]
 class PresentationAttendeeVote extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -35,17 +34,17 @@ class PresentationAttendeeVote extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="presentation_votes")
-     * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAttendee
      */
+    #[ORM\JoinColumn(name: 'SummitAttendeeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendee::class, inversedBy: 'presentation_votes')]
     private $voter;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="attendees_votes")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'attendees_votes')]
     private $presentation;
 
     /**

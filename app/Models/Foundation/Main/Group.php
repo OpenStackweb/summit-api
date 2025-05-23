@@ -16,11 +16,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineGroupRepository")
- * @ORM\Table(name="`Group`")
- * Class Group
  * @package models\main
  */
+#[ORM\Table(name: '`Group`')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineGroupRepository::class)]
 class Group extends SilverstripeBaseModel
 {
 
@@ -144,43 +143,37 @@ class Group extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="Code", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Code', type: 'string')]
     private $code;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="groups", fetch="EXTRA_LAZY")
-     */
+    #[ORM\ManyToMany(targetEntity: \models\main\Member::class, mappedBy: 'groups', fetch: 'EXTRA_LAZY')]
     private $members;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Group", inversedBy="groups")
-     * @ORM\JoinColumn(name="ParentID", referencedColumnName="ID")
-     */
+    #[ORM\JoinColumn(name: 'ParentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Group::class, inversedBy: 'groups')]
     private $parent;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Group", mappedBy="parent")
-     */
+    #[ORM\OneToMany(targetEntity: \Group::class, mappedBy: 'parent')]
     private $groups;
 
     /**
-     * @ORM\Column(name="IsExternal", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsExternal', type: 'boolean')]
     private $is_external;
 
     public function setExternal(){

@@ -16,73 +16,64 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBadgeTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="badge_types"
- *     )
- * })
- * @ORM\Table(name="SummitBadgeType")
- * Class SummitBadgeType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitBadgeType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitBadgeTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'badge_types')])]
 class SummitBadgeType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="TemplateContent", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TemplateContent', type: 'string')]
     private $template_content;
 
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     private $default;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitAccessLevelType")
-     * @ORM\JoinTable(name="SummitBadgeType_AccessLevels",
-     *      joinColumns={@ORM\JoinColumn(name="SummitBadgeTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitAccessLevelTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitAccessLevelType[]
      */
+    #[ORM\JoinTable(name: 'SummitBadgeType_AccessLevels')]
+    #[ORM\JoinColumn(name: 'SummitBadgeTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitAccessLevelTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitAccessLevelType::class)]
     private $access_levels;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitBadgeFeatureType")
-     * @ORM\JoinTable(name="SummitBadgeType_BadgeFeatures",
-     *      joinColumns={@ORM\JoinColumn(name="SummitBadgeTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBadgeFeatureTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitBadgeFeatureType[]
      */
+    #[ORM\JoinTable(name: 'SummitBadgeType_BadgeFeatures')]
+    #[ORM\JoinColumn(name: 'SummitBadgeTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitBadgeFeatureTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitBadgeFeatureType::class)]
     private $badge_features;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitBadgeViewType")
-     * @ORM\JoinTable(name="SummitBadgeViewType_SummitBadgeType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitBadgeTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitBadgeViewType[]
      */
+    #[ORM\JoinTable(name: 'SummitBadgeViewType_SummitBadgeType')]
+    #[ORM\JoinColumn(name: 'SummitBadgeTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitBadgeViewTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitBadgeViewType::class)]
     private $allowed_view_types;
 
     /**

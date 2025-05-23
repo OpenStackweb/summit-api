@@ -15,61 +15,57 @@ use App\Models\Foundation\Software\OpenStackComponent;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineConsultantRepository")
- * @ORM\Table(name="Consultant")
- * Class Consultant
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'Consultant')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Marketplace\DoctrineConsultantRepository::class)]
 class Consultant extends RegionalSupportedCompanyService
 {
     const ClassName = 'Consultant';
 
     /**
-     * @ORM\OneToMany(targetEntity="Office", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
      * @var Office[]
      */
+    #[ORM\OneToMany(targetEntity: \Office::class, mappedBy: 'consultant', cascade: ['persist'], orphanRemoval: true)]
     private $offices;
 
     /**
-     * @ORM\OneToMany(targetEntity="ConsultantClient", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
      * @var ConsultantClient[]
      */
+    #[ORM\OneToMany(targetEntity: \ConsultantClient::class, mappedBy: 'consultant', cascade: ['persist'], orphanRemoval: true)]
     private $clients;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SpokenLanguage", cascade={"persist"})
-     * @ORM\JoinTable(name="Consultant_SpokenLanguages",
-     *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SpokenLanguageID", referencedColumnName="ID")}
-     *      )
      * @var SpokenLanguage[]
      */
+    #[ORM\JoinTable(name: 'Consultant_SpokenLanguages')]
+    #[ORM\JoinColumn(name: 'ConsultantID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SpokenLanguageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SpokenLanguage::class, cascade: ['persist'])]
     private $spoken_languages;
 
     /**
-     * @ORM\ManyToMany(targetEntity="ConfigurationManagementType", cascade={"persist"})
-     * @ORM\JoinTable(name="Consultant_ConfigurationManagementExpertises",
-     *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="ConfigurationManagementTypeID", referencedColumnName="ID")}
-     *      )
      * @var ConfigurationManagementType[]
      */
+    #[ORM\JoinTable(name: 'Consultant_ConfigurationManagementExpertises')]
+    #[ORM\JoinColumn(name: 'ConsultantID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'ConfigurationManagementTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \ConfigurationManagementType::class, cascade: ['persist'])]
     private $configuration_management_expertise;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Software\OpenStackComponent", cascade={"persist"})
-     * @ORM\JoinTable(name="Consultant_ExpertiseAreas",
-     *      joinColumns={@ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")}
-     *      )
      * @var OpenStackComponent[]
      */
+    #[ORM\JoinTable(name: 'Consultant_ExpertiseAreas')]
+    #[ORM\JoinColumn(name: 'ConsultantID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'OpenStackComponentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \App\Models\Foundation\Software\OpenStackComponent::class, cascade: ['persist'])]
     private $expertise_areas;
 
     /**
-     * @ORM\OneToMany(targetEntity="ConsultantServiceOfferedType", mappedBy="consultant", cascade={"persist"}, orphanRemoval=true)
      * @var ConsultantServiceOfferedType[]
      */
+    #[ORM\OneToMany(targetEntity: \ConsultantServiceOfferedType::class, mappedBy: 'consultant', cascade: ['persist'], orphanRemoval: true)]
     private $services_offered;
 
     /**

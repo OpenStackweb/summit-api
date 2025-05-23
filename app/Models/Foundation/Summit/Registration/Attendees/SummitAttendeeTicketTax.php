@@ -19,11 +19,10 @@ use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitAttendeeTicket_Taxes")
- * Class SummitAttendeeTicket_Taxes
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeTicket_Taxes')]
+#[ORM\Entity]
 class SummitAttendeeTicketTax extends BaseEntity
 {
     use FinancialTrait;
@@ -74,29 +73,29 @@ class SummitAttendeeTicketTax extends BaseEntity
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="applied_taxes")
-     * @ORM\JoinColumn(name="SummitAttendeeTicketID", referencedColumnName="ID")
      * @var SummitAttendeeTicket
      */
+    #[ORM\JoinColumn(name: 'SummitAttendeeTicketID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitAttendeeTicket::class, inversedBy: 'applied_taxes')]
     private $ticket;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitTaxType")
-     * @ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")
      * @var SummitTaxType
      */
+    #[ORM\JoinColumn(name: 'SummitTaxTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitTaxType::class)]
     private $tax;
 
     /**
-     * @ORM\Column(name="Amount", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Amount', type: 'float')]
     private $amount;
 
     /**
-     * @ORM\Column(name="Rate", type="float")
      * @var double
      */
+    #[ORM\Column(name: 'Rate', type: 'float')]
     private $rate;
 
     /**

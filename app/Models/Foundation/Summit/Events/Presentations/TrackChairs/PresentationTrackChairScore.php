@@ -17,11 +17,10 @@ use models\summit\SummitTrackChair;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationTrackChairScore")
- * Class PresentationTrackChairScore
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs
  */
+#[ORM\Table(name: 'PresentationTrackChairScore')]
+#[ORM\Entity]
 class PresentationTrackChairScore
     extends SilverstripeBaseModel
 {
@@ -40,24 +39,24 @@ class PresentationTrackChairScore
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var PresentationTrackChairScoreType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType::class)]
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitTrackChair", inversedBy="scores")
-     * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitTrackChair
      */
+    #[ORM\JoinColumn(name: 'TrackChairID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitTrackChair::class, inversedBy: 'scores')]
     private $reviewer;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chairs_scores")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'track_chairs_scores')]
     private $presentation;
 
     /**

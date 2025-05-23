@@ -23,11 +23,10 @@ use DateTime;
 use DateTimeZone;
 
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineElectionsRepository")
- * @ORM\Table(name="Election")
- * Class Election
  * @package App\Models\Foundation\Elections
  */
+#[ORM\Table(name: 'Election')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineElectionsRepository::class)]
 class Election extends SilverstripeBaseModel
 {
     const StatusClosed           = 'Closed';
@@ -50,84 +49,83 @@ class Election extends SilverstripeBaseModel
 
     /**
      * @var string
-     * @ORM\Column(name="Name", type="string")
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="NominationsOpen", type="datetime")
      */
+    #[ORM\Column(name: 'NominationsOpen', type: 'datetime')]
     private $nomination_opens;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="NominationsClose", type="datetime")
      */
+    #[ORM\Column(name: 'NominationsClose', type: 'datetime')]
     private $nomination_closes;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="NominationAppDeadline", type="datetime")
      */
+    #[ORM\Column(name: 'NominationAppDeadline', type: 'datetime')]
     private $nomination_deadline;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="ElectionsOpen", type="datetime")
      */
+    #[ORM\Column(name: 'ElectionsOpen', type: 'datetime')]
     private $opens;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="ElectionsClose", type="datetime")
      */
+    #[ORM\Column(name: 'ElectionsClose', type: 'datetime')]
     private $closes;
 
     /**
      * @var string
-     * @ORM\Column(name="TimeZoneIdentifier", type="string")
      */
+    #[ORM\Column(name: 'TimeZoneIdentifier', type: 'string')]
     private $timezone_id;
 
     /**
      * Question labels
      */
-
     /**
      * @var string
-     * @ORM\Column(name="CandidateApplicationFormRelationshipToOpenStackLabel", type="string")
      */
+    #[ORM\Column(name: 'CandidateApplicationFormRelationshipToOpenStackLabel', type: 'string')]
     private $candidate_application_form_relationship_to_openstack_label;
 
     /**
      * @var string
-     * @ORM\Column(name="CandidateApplicationFormExperienceLabel", type="string")
      */
+    #[ORM\Column(name: 'CandidateApplicationFormExperienceLabel', type: 'string')]
     private $candidate_application_form_experience_label;
 
     /**
      * @var string
-     * @ORM\Column(name="CandidateApplicationFormBoardsRoleLabel", type="string")
      */
+    #[ORM\Column(name: 'CandidateApplicationFormBoardsRoleLabel', type: 'string')]
     private $candidate_application_form_boards_role_label;
 
     /**
      * @var string
-     * @ORM\Column(name="CandidateApplicationFormTopPriorityLabel", type="string")
      */
+    #[ORM\Column(name: 'CandidateApplicationFormTopPriorityLabel', type: 'string')]
     private $candidate_application_form_top_priority_label;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Candidate", mappedBy="election", cascade={"persist"}, orphanRemoval=true)
      * @var Candidate[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Elections\Candidate::class, mappedBy: 'election', cascade: ['persist'], orphanRemoval: true)]
     private $candidates;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="election", cascade={"persist"}, orphanRemoval=true)
      * @var Nomination[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Elections\Nomination::class, mappedBy: 'election', cascade: ['persist'], orphanRemoval: true)]
     private $nominations;
 
     /**

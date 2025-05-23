@@ -19,14 +19,13 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineCalendarSyncInfoRepository")
- * @ORM\Table(name="CalendarSyncInfo")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"CalendarSyncInfo" = "CalendarSyncInfo", "CalendarSyncInfoCalDav" = "CalendarSyncInfoCalDav", "CalendarSyncInfoOAuth2" = "CalendarSyncInfoOAuth2"})
- * Class CalendarSyncInfo
  * @package models\summit\CalendarSync
  */
+#[ORM\Table(name: 'CalendarSyncInfo')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineCalendarSyncInfoRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['CalendarSyncInfo' => 'CalendarSyncInfo', 'CalendarSyncInfoCalDav' => 'CalendarSyncInfoCalDav', 'CalendarSyncInfoOAuth2' => 'CalendarSyncInfoOAuth2'])] // Class CalendarSyncInfo
 class CalendarSyncInfo extends SilverstripeBaseModel
 {
     const ProviderGoogle  = 'Google';
@@ -53,42 +52,42 @@ class CalendarSyncInfo extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Provider", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Provider', type: 'string')]
     protected $provider;
 
     /**
-     * @ORM\Column(name="CalendarExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarExternalId', type: 'string')]
     protected $external_id;
 
     /**
-     * @ORM\Column(name="ETag", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ETag', type: 'string')]
     protected $etag;
 
     /**
-     * @ORM\Column(name="Revoked", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Revoked', type: 'boolean')]
     protected $revoked;
 
     use SummitOwned;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="calendars_sync")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'calendars_sync')]
     protected $owner;
 
     /**
-     * @ORM\OneToMany(targetEntity="ScheduleCalendarSyncInfo", mappedBy="calendar_sync_info", cascade={"persist"}, orphanRemoval=true)
      * @var ScheduleCalendarSyncInfo[]
      */
+    #[ORM\OneToMany(targetEntity: \ScheduleCalendarSyncInfo::class, mappedBy: 'calendar_sync_info', cascade: ['persist'], orphanRemoval: true)]
     protected $synchronized_events;
 
     /**

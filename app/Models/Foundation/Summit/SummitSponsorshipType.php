@@ -20,17 +20,11 @@ use models\main\File;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitSponsorshipTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="sponsorship_types"
- *     )
- * })
- * @ORM\Table(name="Summit_SponsorshipType")
- * Class SummitSponsorshipType
  * @package models\summit
  */
+#[ORM\Table(name: 'Summit_SponsorshipType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitSponsorshipTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'sponsorship_types')])]
 class SummitSponsorshipType extends BaseEntity implements IOrderable
 {
     use SummitOwned;
@@ -88,95 +82,95 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
     ];
 
     /**
-     * @ORM\Column(name="WidgetTitle", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'WidgetTitle', type: 'string')]
     private $widget_title;
 
     /**
-     * @ORM\Column(name="LobbyTemplate", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LobbyTemplate', type: 'string')]
     private $lobby_template;
 
     /**
-     * @ORM\Column(name="ExpoHallTemplate", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExpoHallTemplate', type: 'string')]
     private $expo_hall_template;
 
     /**
-     * @ORM\Column(name="SponsorPageTemplate", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SponsorPageTemplate', type: 'string')]
     private $sponsor_page_template;
 
     /**
-     * @ORM\Column(name="EventPageTemplate", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EventPageTemplate', type: 'string')]
     private $event_page_template;
 
     /**
-     * @ORM\Column(name="SponsorPageShouldUseDisqusWidget", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'SponsorPageShouldUseDisqusWidget', type: 'boolean')]
     private $sponsor_page_use_disqus_widget;
 
     /**
-     * @ORM\Column(name="SponsorPageShouldUseLiveEventWidget", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'SponsorPageShouldUseLiveEventWidget', type: 'boolean')]
     private $sponsor_page_use_live_event_widget;
 
     /**
-     * @ORM\Column(name="SponsorPageShouldUseScheduleWidget", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'SponsorPageShouldUseScheduleWidget', type: 'boolean')]
     private $sponsor_page_use_schedule_widget;
 
     /**
-     * @ORM\Column(name="ShouldDisplayOnExpoHallPage", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'ShouldDisplayOnExpoHallPage', type: 'boolean')]
     private $should_display_on_expo_hall_page;
 
     /**
-     * @ORM\Column(name="ShouldDisplayOnLobbyPage", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'ShouldDisplayOnLobbyPage', type: 'boolean')]
     private $should_display_on_lobby_page;
 
     /**
-     * @ORM\Column(name="SponsorPageShouldUseBannerWidget", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'SponsorPageShouldUseBannerWidget', type: 'boolean')]
     private $sponsor_page_use_banner_widget;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SponsorshipType")
-     * @ORM\JoinColumn(name="SponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SponsorshipType
      */
+    #[ORM\JoinColumn(name: 'SponsorshipTypeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SponsorshipType::class)]
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
-     * @ORM\JoinColumn(name="BadgeImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'BadgeImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $badge_image;
 
     /**
-     * @ORM\Column(name="BadgeImageAltText", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'BadgeImageAltText', type: 'string')]
     private $badge_image_alt_text;
 
     public function __construct()

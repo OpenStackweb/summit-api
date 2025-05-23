@@ -19,12 +19,10 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="RSVP")
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineRSVPRepository")
- * Class RSVP
  * @package models\summit
  */
+#[ORM\Table(name: 'RSVP')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineRSVPRepository::class)] // Class RSVP
 class RSVP extends SilverstripeBaseModel
 {
 
@@ -34,41 +32,41 @@ class RSVP extends SilverstripeBaseModel
     const ValidSeatTypes = [self::SeatTypeRegular, self::SeatTypeWaitList];
 
     /**
-     * @ORM\Column(name="SeatType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SeatType', type: 'string')]
     protected $seat_type;
 
     /**
-     * @ORM\Column(name="EventUri", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'EventUri', type: 'string')]
     protected $event_uri;
 
     /**
-     * @ORM\Column(name="BeenEmailed", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'BeenEmailed', type: 'boolean')]
     protected $been_emailed;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="rsvp")
-     * @ORM\JoinColumn(name="SubmittedByID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'SubmittedByID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'rsvp')]
     private $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="rsvp")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'EventID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class, inversedBy: 'rsvp')]
     private $event;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\RSVPAnswer", mappedBy="rsvp", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var RSVPAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\RSVPAnswer::class, mappedBy: 'rsvp', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $answers;
 
     /**

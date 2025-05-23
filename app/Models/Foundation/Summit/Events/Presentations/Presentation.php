@@ -38,11 +38,11 @@ use models\utils\SilverstripeBaseModel;
 
 /**
  * Class Presentation
- * @ORM\Entity
- * @ORM\Table(name="Presentation")
- * @ORM\HasLifecycleCallbacks
  * @package models\summit
  */
+#[ORM\Table(name: 'Presentation')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks]
 class Presentation extends SummitEvent implements IPublishableEventWithSpeakerConstraint
 {
     use ExtraQuestionAnswerHolder;
@@ -172,149 +172,149 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     const MaxAllowedLinks = 5;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     protected $slug;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     protected $status;
 
     /**
-     * @ORM\Column(name="Progress", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Progress', type: 'integer')]
     protected $progress;
 
     /**
-     * @ORM\Column(name="ProblemAddressed", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ProblemAddressed', type: 'string')]
     protected $problem_addressed;
 
     /**
-     * @ORM\Column(name="AttendeesExpectedLearnt", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AttendeesExpectedLearnt', type: 'string')]
     protected $attendees_expected_learnt;
 
     /**
-     * @ORM\Column(name="ToRecord", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ToRecord', type: 'boolean')]
     protected $to_record;
 
     /**
-     * @ORM\Column(name="AttendingMedia", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AttendingMedia', type: 'boolean')]
     protected $attending_media;
 
     /**
-     * @ORM\Column(name="WillAllSpeakersAttend", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'WillAllSpeakersAttend', type: 'boolean')]
     protected $will_all_speakers_attend;
 
     /**
-     * @ORM\Column(name="DisclaimerAcceptedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'DisclaimerAcceptedDate', type: 'datetime')]
     protected $disclaimer_accepted_date;
 
     /**
-     * @ORM\Column(name="CustomOrder", type="integer")
      * @var integer
      */
+    #[ORM\Column(name: 'CustomOrder', type: 'integer')]
     protected $custom_order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="moderated_presentations", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ModeratorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'ModeratorID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class, inversedBy: 'moderated_presentations', fetch: 'EXTRA_LAZY')]
     protected $moderator;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="presentations", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'presentations', fetch: 'EXTRA_LAZY')]
     protected $selection_plan;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationMaterial", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationMaterial[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationMaterial::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $materials;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitPresentationComment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitPresentationComment[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitPresentationComment::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $comments;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationSpeakerAssignment[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $speakers;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentation", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitSelectedPresentation[]|ArrayCollection
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitSelectedPresentation::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $selected_presentations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer", mappedBy="presentation", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var TrackAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer::class, mappedBy: 'presentation', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $answers;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationTrackChairView", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationTrackChairView[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationTrackChairView::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $track_chair_views;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationVote", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationVote[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationVote::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $votes;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationAttendeeVote", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationAttendeeVote[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationAttendeeVote::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $attendees_votes;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitCategoryChange", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitCategoryChange[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitCategoryChange::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $category_changes_requests;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationAction", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationAction[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationAction::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $actions;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationExtraQuestionAnswer", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationExtraQuestionAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationExtraQuestionAnswer::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $extra_question_answers;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationTrackChairScore[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore::class, mappedBy: 'presentation', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $track_chairs_scores;
 
     /**

@@ -19,29 +19,28 @@ use Doctrine\ORM\NoResultException;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitRegistrationDiscountCode")
- * Class SummitRegistrationDiscountCode
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRegistrationDiscountCode')]
+#[ORM\Entity]
 class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
 {
     /**
-     * @ORM\Column(name="DiscountRate", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'DiscountRate', type: 'float')]
     protected $rate;
 
     /**
-     * @ORM\Column(name="DiscountAmount", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'DiscountAmount', type: 'float')]
     protected $amount;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitRegistrationDiscountCodeTicketTypeRule", mappedBy="discount_code", cascade={"persist"}, orphanRemoval=true)
      * @var SummitRegistrationDiscountCodeTicketTypeRule[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitRegistrationDiscountCodeTicketTypeRule::class, mappedBy: 'discount_code', cascade: ['persist'], orphanRemoval: true)]
     private $ticket_types_rules;
 
     /**

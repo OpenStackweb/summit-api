@@ -29,17 +29,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Main\IOrderable;
 /**
  * Class PresentationCategory
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTrackRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="presentation_categories"
- *     )
- * })
- * @ORM\HasLifecycleCallbacks
- * @ORM\Table(name="PresentationCategory")
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationCategory')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitTrackRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'presentation_categories')])]
+#[ORM\HasLifecycleCallbacks]
 class PresentationCategory extends SilverstripeBaseModel
     implements IOrderable
 {
@@ -59,101 +54,96 @@ class PresentationCategory extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="Code", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Code', type: 'string')]
     private $code;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     private $slug;
 
     /**
-     * @ORM\Column(name="SessionCount", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'SessionCount', type: 'integer')]
     private $session_count;
 
     /**
-     * @ORM\Column(name="AlternateCount", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'AlternateCount', type: 'integer')]
     private $alternate_count;
 
     /**
-     * @ORM\Column(name="LightningCount", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'LightningCount', type: 'integer')]
     private $lightning_count;
 
     /**
-     * @ORM\Column(name="LightningAlternateCount", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'LightningAlternateCount', type: 'integer')]
     private $lightning_alternate_count;
 
     /**
-     * @ORM\Column(name="VotingVisible", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'VotingVisible', type: 'boolean')]
     private $voting_visible;
 
     /**
-     * @ORM\Column(name="ChairVisible", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'ChairVisible', type: 'boolean')]
     private $chair_visible;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     protected $order;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitAccessLevelType", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="PresentationCategory_SummitAccessLevelType",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID", onDelete="CASCADE")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitAccessLevelTypeID", referencedColumnName="ID", onDelete="CASCADE")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'PresentationCategory_SummitAccessLevelType')]
+    #[ORM\JoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'SummitAccessLevelTypeID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitAccessLevelType::class, fetch: 'EXTRA_LAZY')]
     protected $allowed_access_levels;
 
     /**
-     * @ORM\Column(name="Color", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Color', type: 'string')]
     protected $color;
 
     /**
-     * @ORM\Column(name="TextColor", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TextColor', type: 'string')]
     protected $text_color;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation", mappedBy="track", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation::class, mappedBy: 'track', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $proposed_schedule_allowed_locations;
 
     /**
-     * @ORM\Column(name="ProposedScheduleTransitionTime", type="integer")
      * @var int|null
      */
+    #[ORM\Column(name: 'ProposedScheduleTransitionTime', type: 'integer')]
     protected $proposed_schedule_transition_time;
 
     /**
@@ -205,61 +195,59 @@ class PresentationCategory extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup", mappedBy="categories")
      * @var PresentationCategoryGroup[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategoryGroup::class, mappedBy: 'categories')]
     private $groups;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="categories")
      * @var SummitTrackChair[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitTrackChair::class, mappedBy: 'categories')]
     private $track_chairs;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"})
-     * @ORM\JoinTable(name="PresentationCategory_AllowedTags",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
      * @var Tag[]
      */
+    #[ORM\JoinTable(name: 'PresentationCategory_AllowedTags')]
+    #[ORM\JoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'])]
     protected $allowed_tags;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate", cascade={"persist"}, inversedBy="tracks")
-     * @ORM\JoinTable(name="PresentationCategory_ExtraQuestions",
-     *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TrackQuestionTemplateID", referencedColumnName="ID")}
-     *      )
      * @var TrackQuestionTemplate[]
      */
+    #[ORM\JoinTable(name: 'PresentationCategory_ExtraQuestions')]
+    #[ORM\JoinColumn(name: 'PresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TrackQuestionTemplateID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate::class, cascade: ['persist'], inversedBy: 'tracks')]
     protected $extra_questions;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
-     * @ORM\JoinColumn(name="IconID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'IconID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
     protected $icon;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentationList", mappedBy="category", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitSelectedPresentationList[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitSelectedPresentationList::class, mappedBy: 'category', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $selection_lists;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", inversedBy="subtracks", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ParentPresentationCategoryID", referencedColumnName="ID")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'ParentPresentationCategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationCategory::class, inversedBy: 'subtracks', fetch: 'EXTRA_LAZY')]
     protected $parent;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationCategory", mappedBy="parent", cascade={"persist","remove"}, fetch="EXTRA_LAZY")
      * @var PresentationCategory[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationCategory::class, mappedBy: 'parent', cascade: ['persist', 'remove'], fetch: 'EXTRA_LAZY')]
     protected $subtracks;
 
     /**

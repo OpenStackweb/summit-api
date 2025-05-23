@@ -14,11 +14,10 @@
 use Doctrine\ORM\Mapping AS ORM;
 use DateTime;
 /**
- * @ORM\Entity
- * @ORM\Table(name="ScheduledSummitLocationBanner")
- * Class ScheduledSummitLocationBanner
  * @package App\Models\Foundation\Summit\Locations\Banners
  */
+#[ORM\Table(name: 'ScheduledSummitLocationBanner')]
+#[ORM\Entity]
 class ScheduledSummitLocationBanner extends SummitLocationBanner
 {
     const ClassName = 'ScheduledSummitLocationBanner';
@@ -31,15 +30,15 @@ class ScheduledSummitLocationBanner extends SummitLocationBanner
     }
 
     /**
-     * @ORM\Column(name="StartDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'StartDate', type: 'datetime')]
     protected $start_date;
 
     /**
-     * @ORM\Column(name="EndDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'EndDate', type: 'datetime')]
     protected $end_date;
 
     /**

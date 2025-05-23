@@ -14,18 +14,13 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PushNotificationMessage")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "PushNotificationMessage" = "PushNotificationMessage",
- *     "SummitPushNotification" = "models\summit\SummitPushNotification",
- *     "ChatTeamPushNotificationMessage" = "ChatTeamPushNotificationMessage"
- * })
- * Class PushNotificationMessage
  * @package models\main
  */
+#[ORM\Table(name: 'PushNotificationMessage')]
+#[ORM\Entity]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['PushNotificationMessage' => 'PushNotificationMessage', 'SummitPushNotification' => 'models\summit\SummitPushNotification', 'ChatTeamPushNotificationMessage' => 'ChatTeamPushNotificationMessage'])] // Class PushNotificationMessage
 class PushNotificationMessage extends SilverstripeBaseModel
 {
     const PlatformMobile = 'MOBILE';
@@ -43,53 +38,53 @@ class PushNotificationMessage extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Message", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Message', type: 'string')]
     protected $message;
 
     /**
-     * @ORM\Column(name="Priority", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Priority', type: 'string')]
     protected $priority;
 
     /**
-     * @ORM\Column(name="SentDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SentDate', type: 'datetime')]
     protected $sent_date;
 
     /**
-     * @ORM\Column(name="IsSent", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsSent', type: 'boolean')]
     protected $is_sent;
 
     /**
-     * @ORM\Column(name="Approved", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Approved', type: 'boolean')]
     protected $approved;
 
     /**
-     * @ORM\Column(name="Platform", type="string")
      * @var bool
      */
+    #[ORM\Column(name: 'Platform', type: 'string')]
     protected $platform;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     protected $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="ApprovedByID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'ApprovedByID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     protected $approved_by;
 
     /**

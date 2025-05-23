@@ -16,45 +16,44 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\main\File;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitVenueRoom")
- * @ORM\HasLifecycleCallbacks
- * Class SummitVenueRoom
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitVenueRoom')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class SummitVenueRoom
 class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitVenue", inversedBy="rooms")
-     * @ORM\JoinColumn(name="VenueID", referencedColumnName="ID")
      * @var SummitVenue
      */
+    #[ORM\JoinColumn(name: 'VenueID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitVenue::class, inversedBy: 'rooms')]
     private $venue;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitVenueFloor", inversedBy="rooms")
-     * @ORM\JoinColumn(name="FloorID", referencedColumnName="ID")
      * @var SummitVenueFloor
      */
+    #[ORM\JoinColumn(name: 'FloorID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitVenueFloor::class, inversedBy: 'rooms')]
     private $floor;
 
     /**
-     * @ORM\Column(name="Capacity", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Capacity', type: 'integer')]
     private $capacity;
 
     /**
-     * @ORM\Column(name="OverrideBlackouts", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'OverrideBlackouts', type: 'boolean')]
     private $override_blackouts;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
     protected $image;
 
     /**

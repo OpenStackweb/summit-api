@@ -18,17 +18,11 @@ use models\summit\SummitOwned;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitSignRepository")
- * @ORM\Table(name="SummitSign")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="signs"
- *     )
- * })
- * Class SummitSign
  * @package App\Models\Foundation\Summit\Signs;
  */
+#[ORM\Table(name: 'SummitSign')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitSignRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'signs')])] // Class SummitSign
 class SummitSign extends SilverstripeBaseModel
 {
 
@@ -45,17 +39,17 @@ class SummitSign extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Template", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Template', type: 'string')]
     private $template;
 
 
     /**
-     * @ORM\OneToOne(targetEntity="models\summit\SummitAbstractLocation")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID")
      * @var SummitAbstractLocation
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID')]
+    #[ORM\OneToOne(targetEntity: \models\summit\SummitAbstractLocation::class)]
     private $location;
 
     /**

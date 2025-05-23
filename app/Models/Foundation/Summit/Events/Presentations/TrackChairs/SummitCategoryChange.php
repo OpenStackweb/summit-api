@@ -16,64 +16,63 @@ use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitCategoryChangeRepository")
- * @ORM\Table(name="SummitCategoryChange")
- * Class SummitCategoryChange
  * @package models\summit;
  */
+#[ORM\Table(name: 'SummitCategoryChange')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitCategoryChangeRepository::class)]
 class SummitCategoryChange extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Reason", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Reason', type: 'string')]
     private $reason;
 
     /**
-     * @ORM\Column(name="Status", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Status', type: 'integer')]
     private $status;
 
     /**
-    * @ORM\Column(name="ApprovalDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ApprovalDate', type: 'datetime')]
     private $approval_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="category_changes_requests")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'category_changes_requests')]
     private $presentation;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory")
-     * @ORM\JoinColumn(name="NewCategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'NewCategoryID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationCategory::class)]
     private $new_category;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory")
-     * @ORM\JoinColumn(name="OldCategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'OldCategoryID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationCategory::class)]
     private $old_category;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="ReqesterID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'ReqesterID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $requester;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="AdminApproverID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'AdminApproverID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $aprover;
 
     use One2ManyPropertyTrait;

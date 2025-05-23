@@ -19,10 +19,10 @@ use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * Class SummitRefundRequest
- * @ORM\Entity
- * @ORM\Table(name="SummitTaxRefund")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitTaxRefund')]
+#[ORM\Entity]
 class SummitTaxRefund extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -30,23 +30,23 @@ class SummitTaxRefund extends SilverstripeBaseModel
     use FinancialTrait;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitRefundRequest", inversedBy="refunded_taxes", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SummitRefundRequestID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitRefundRequest
      */
+    #[ORM\JoinColumn(name: 'SummitRefundRequestID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitRefundRequest::class, inversedBy: 'refunded_taxes', fetch: 'EXTRA_LAZY')]
     private $refund_request;
 
     /**
-     * @ORM\Column(name="RefundedAmount", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'RefundedAmount', type: 'float')]
     private $refunded_amount;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitTaxType")
-     * @ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")
      * @var SummitTaxType
      */
+    #[ORM\JoinColumn(name: 'SummitTaxTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitTaxType::class)]
     private $tax;
 
     protected $getIdMappings = [

@@ -13,12 +13,10 @@
  **/
 use Doctrine\ORM\Mapping as ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="ChatTeamPushNotificationMessage")
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineChatTeamPushNotificationMessageRepository")
- * Class ChatTeamPushNotificationMessage
  * @package models\summit
  */
+#[ORM\Table(name: 'ChatTeamPushNotificationMessage')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineChatTeamPushNotificationMessageRepository::class)] // Class ChatTeamPushNotificationMessage
 class ChatTeamPushNotificationMessage extends PushNotificationMessage
 {
     const PushType = 'TEAM_MESSAGE';
@@ -51,9 +49,9 @@ class ChatTeamPushNotificationMessage extends PushNotificationMessage
         $this->team = $team;
     }
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="messages")
-     * @ORM\JoinColumn(name="ChatTeamID", referencedColumnName="ID")
      * @var ChatTeam
      */
+    #[ORM\JoinColumn(name: 'ChatTeamID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\ChatTeam::class, inversedBy: 'messages')]
     private $team;
 }

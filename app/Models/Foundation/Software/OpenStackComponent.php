@@ -14,41 +14,40 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="OpenStackComponent")
- * Class OpenStackComponent
  * @package App\Models\Foundation\Software
  */
+#[ORM\Table(name: 'OpenStackComponent')]
+#[ORM\Entity]
 class OpenStackComponent extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="CodeName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CodeName', type: 'string')]
     private $code_name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="IsCoreService", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsCoreService', type: 'boolean')]
     private $is_core_service;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     public function __construct()

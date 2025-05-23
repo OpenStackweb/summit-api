@@ -15,18 +15,18 @@ use models\main\Member;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class AdminScheduleSummitActionSyncWorkRequest
- * @ORM\Entity
- * @ORM\Table(name="AdminScheduleSummitActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'AdminScheduleSummitActionSyncWorkRequest')]
+#[ORM\Entity]
 class AdminScheduleSummitActionSyncWorkRequest
     extends AbstractCalendarSyncWorkRequest
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, cascade: ['persist'])]
     protected $created_by;
 
     /**

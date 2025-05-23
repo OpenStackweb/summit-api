@@ -13,11 +13,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackTextBoxQuestionTemplate")
- * Class TrackTextBoxQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackTextBoxQuestionTemplate')]
+#[ORM\Entity]
 class TrackTextBoxQuestionTemplate extends TrackSingleValueTemplateQuestion
 {
     const ClassName = 'TrackTextBoxQuestionTemplate';

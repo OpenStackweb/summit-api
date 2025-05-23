@@ -14,32 +14,31 @@
 use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Consultant_ServicesOffered")
- * Class ConsultantServiceOfferedType
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'Consultant_ServicesOffered')]
+#[ORM\Entity]
 class ConsultantServiceOfferedType extends BaseEntity
 {
     /**
-     * @ORM\ManyToOne(targetEntity="Consultant", inversedBy="services_offered")
-     * @ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")
      * @var Consultant
      */
+    #[ORM\JoinColumn(name: 'ConsultantID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Consultant::class, inversedBy: 'services_offered')]
     private $consultant;
 
     /**
-     * @ORM\ManyToOne(targetEntity="ServiceOfferedType", fetch="LAZY")
-     * @ORM\JoinColumn(name="ConsultantServiceOfferedTypeID", referencedColumnName="ID")
      * @var ServiceOfferedType
      */
+    #[ORM\JoinColumn(name: 'ConsultantServiceOfferedTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \ServiceOfferedType::class, fetch: 'LAZY')]
     private $service_offered;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Region", fetch="LAZY")
-     * @ORM\JoinColumn(name="RegionID", referencedColumnName="ID")
      * @var Region
      */
+    #[ORM\JoinColumn(name: 'RegionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Region::class, fetch: 'LAZY')]
     private $region;
 
     /**

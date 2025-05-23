@@ -17,27 +17,22 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="UserStoriesIndustry")
- * Class File
  * @package App\Models\Foundation\UserStories
  */
+#[ORM\Table(name: 'UserStoriesIndustry')]
+#[ORM\Entity]
 class UserStoriesIndustry extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="IndustryName", type="string")
-     */
+    #[ORM\Column(name: 'IndustryName', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Active', type: 'boolean')]
     private $is_active;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\UserStories\UserStory", mappedBy="industry", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\UserStories\UserStory::class, mappedBy: 'industry', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $user_stories;
 
     public function __construct()

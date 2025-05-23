@@ -16,59 +16,54 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class PresentationSpeakerSummitAssistanceConfirmationRequest
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationSpeakerSummitAssistanceConfirmationRequestRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="speaker_assistances"
- *     )
- * })
- * @ORM\Table(name="PresentationSpeakerSummitAssistanceConfirmationRequest")
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationSpeakerSummitAssistanceConfirmationRequest')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePresentationSpeakerSummitAssistanceConfirmationRequestRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'speaker_assistances')])]
 class PresentationSpeakerSummitAssistanceConfirmationRequest extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="OnSitePhoneNumber", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'OnSitePhoneNumber', type: 'string')]
     private $on_site_phone;
 
     /**
-     * @ORM\Column(name="RegisteredForSummit", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'RegisteredForSummit', type: 'boolean')]
     private $registered;
 
     /**
-     * @ORM\Column(name="IsConfirmed", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsConfirmed', type: 'boolean')]
     private $is_confirmed;
 
     /**
-     * @ORM\Column(name="CheckedIn", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'CheckedIn', type: 'boolean')]
     private $checked_in;
 
     /**
-     * @ORM\Column(name="ConfirmationDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ConfirmationDate', type: 'datetime')]
     private $confirmation_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="summit_assistances")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class, inversedBy: 'summit_assistances')]
     private $speaker;
 
     /**
-     * @ORM\Column(name="ConfirmationHash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ConfirmationHash', type: 'string')]
     private $confirmation_hash;
 
     /**

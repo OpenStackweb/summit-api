@@ -16,11 +16,10 @@ use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitOrderExtraQuestionAnswer")
- * Class SummitOrderExtraQuestionAnswer
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitOrderExtraQuestionAnswer')]
+#[ORM\Entity]
 class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
 {
     use One2ManyPropertyTrait;
@@ -37,17 +36,17 @@ class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
         'hasQuestion' => 'question',
     ];
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitOrder", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="OrderID", referencedColumnName="ID")
      * @var SummitOrder
      */
+    #[ORM\JoinColumn(name: 'OrderID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitOrder::class, inversedBy: 'extra_question_answers')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID")
      * @var SummitAttendee
      */
+    #[ORM\JoinColumn(name: 'SummitAttendeeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendee::class, inversedBy: 'extra_question_answers')]
     private $attendee;
 
     /**

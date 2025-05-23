@@ -14,11 +14,10 @@
 
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrainingService")
- * Class Distribution
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'TrainingService')]
+#[ORM\Entity]
 class TrainingService extends CompanyService
 {
     const ClassName = 'TrainingService';

@@ -16,17 +16,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 /**
- * @ORM\Entity
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="speaker",
- *          inversedBy="discount_codes"
- *     )
- * })
- * @ORM\Table(name="SpeakerSummitRegistrationDiscountCode")
- * Class SpeakerSummitRegistrationDiscountCode
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerSummitRegistrationDiscountCode')]
+#[ORM\Entity]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'speaker', inversedBy: 'discount_codes')])]
 class SpeakerSummitRegistrationDiscountCode
     extends SummitRegistrationDiscountCode
     implements IOwnablePromoCode

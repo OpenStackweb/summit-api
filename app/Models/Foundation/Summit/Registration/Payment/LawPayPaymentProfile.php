@@ -17,19 +17,18 @@ use models\exceptions\ValidationException;
 use App\Services\Apis\IPaymentGatewayAPI;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="LawPayPaymentProfile")
- * @ORM\HasLifecycleCallbacks
- * Class LawPayPaymentProfile
  * @package models\summit
  */
+#[ORM\Table(name: 'LawPayPaymentProfile')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class LawPayPaymentProfile
 class LawPayPaymentProfile extends PaymentGatewayProfile
 {
 
     /**
-     * @ORM\Column(name="MerchantAccountId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MerchantAccountId', type: 'string')]
     protected $merchant_account_id;
 
     /**

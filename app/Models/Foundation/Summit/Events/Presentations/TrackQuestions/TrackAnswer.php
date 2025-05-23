@@ -15,31 +15,30 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\summit\Presentation;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackAnswer")
- * Class TrackAnswer
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackAnswer')]
+#[ORM\Entity]
 class TrackAnswer extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     private $value;
 
     /**
-     * @ORM\ManyToOne(targetEntity="TrackQuestionTemplate", fetch="EXTRA_LAZY", inversedBy="answers")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID", onDelete="SET NULL")
      * @var TrackQuestionTemplate
      */
+    #[ORM\JoinColumn(name: 'QuestionID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \TrackQuestionTemplate::class, fetch: 'EXTRA_LAZY', inversedBy: 'answers')]
     private $question;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", fetch="EXTRA_LAZY", inversedBy="answers")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, fetch: 'EXTRA_LAZY', inversedBy: 'answers')]
     private $presentation;
 
     /**

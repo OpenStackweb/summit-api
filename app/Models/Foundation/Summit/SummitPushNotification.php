@@ -46,48 +46,39 @@ final class SummitPushNotificationChannel {
     }
 }
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitNotificationRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="notifications"
- *     )
- * })
- * @ORM\Table(name="SummitPushNotification")
- * Class SummitPushNotification
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitPushNotification')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitNotificationRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'notifications')])]
 class SummitPushNotification extends PushNotificationMessage
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Channel", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Channel', type: 'string')]
     private $channel;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'EventID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class)]
     private $summit_event;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Group")
-     * @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
      * @var Group
      */
+    #[ORM\JoinColumn(name: 'GroupID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Group::class)]
     private $group;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member")
-     * @ORM\JoinTable(name="SummitPushNotification_Recipients",
-     *      joinColumns={@ORM\JoinColumn(name="SummitPushNotificationID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
-     *      )
-     */
+    #[ORM\JoinTable(name: 'SummitPushNotification_Recipients')]
+    #[ORM\JoinColumn(name: 'SummitPushNotificationID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Member::class)]
     private $recipients;
 
     /**

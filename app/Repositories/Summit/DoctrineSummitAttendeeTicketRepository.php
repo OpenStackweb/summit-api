@@ -240,7 +240,7 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'owner_status' => 'a.status:json_string',
-            'badge_features_id' => 'bf.id',
+            'badge_features_id' => ['bf.id:json_int','bt_bf.id:json_int'],
             'assigned_to' => new DoctrineSwitchFilterMapping([
                     'Me' => new DoctrineCaseFilterMapping(
                         'Me',
@@ -285,6 +285,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $query = $query->leftJoin("b.prints", "prt");
         $query = $query->leftJoin("b.type", "bt");
         $query = $query->leftJoin("bt.access_levels", "al");
+        $query = $query->leftJoin('bt.badge_features','bt_bf');
         $query = $query->leftJoin("a.member", "m");
         $query = $query->leftJoin("e.refund_requests", "rr");
         $query = $query->leftJoin("e.applied_taxes", "ta");

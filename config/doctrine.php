@@ -83,7 +83,7 @@ return [
              * https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/architecture.html#middlewares
              */
             'middlewares' => [
-                //Doctrine\DBAL\Logging\Middleware::class
+                Doctrine\DBAL\Logging\Middleware::class
             ]
         ],
         'model' => [
@@ -149,7 +149,7 @@ return [
              * https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/architecture.html#middlewares
              */
             'middlewares' => [
-                //Doctrine\DBAL\Logging\Middleware::class
+                Doctrine\DBAL\Logging\Middleware::class
             ]
         ]
     ],
@@ -237,6 +237,19 @@ return [
     'custom_string_functions'   => [
         'FIELD' => DoctrineExtensions\Query\Mysql\Field::class,
     ],
+        /*
+       |--------------------------------------------------------------------------
+       | Enable query logging with laravel file logging,
+       | debugbar, clockwork or an own implementation.
+       | Setting it to false, will disable logging
+       |
+       | Available:
+       | - LaravelDoctrine\ORM\Loggers\LaravelDebugbarLogger
+       | - LaravelDoctrine\ORM\Loggers\ClockworkLogger
+       | - LaravelDoctrine\ORM\Loggers\FileLogger
+       |--------------------------------------------------------------------------
+       */
+    'logger'                    => env('DOCTRINE_LOGGER', false),
     /*
     |--------------------------------------------------------------------------
     | Cache

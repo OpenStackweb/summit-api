@@ -95,6 +95,5 @@ class SummitEventTest extends TestCase
 
         //Test ManyToMany relations
         $this->assertEmpty($found_event->getTags()->toArray());
-
     }
 }

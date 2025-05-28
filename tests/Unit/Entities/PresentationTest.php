@@ -105,7 +105,5 @@ class PresentationTest extends TestCase
         //Test OneToMany relations
         $this->assertCount($previous_media_uploads_count - 1,
             $found_presentation->getMediaUploads()->toArray());
-
-
     }
 }

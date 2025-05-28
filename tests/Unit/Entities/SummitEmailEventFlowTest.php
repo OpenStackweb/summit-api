@@ -162,6 +162,5 @@ class SummitEmailEventFlowTest extends TestCase
         // Test changed ManyToOne relationship with summit
         $updated_summit = $updated_email_event_flow->getSummit();
         $this->assertEquals($new_summit->getId(), $updated_summit->getId());
-
     }
 }

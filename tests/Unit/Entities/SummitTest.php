@@ -95,6 +95,5 @@ class SummitTest extends TestCase
 
         //Test OneToMany relations
         $this->assertCount($previous_event_types_count - 1, $found_summit->getEventTypes()->toArray());
-
     }
 }

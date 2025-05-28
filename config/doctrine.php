@@ -83,7 +83,7 @@ return [
              * https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/architecture.html#middlewares
              */
             'middlewares' => array_filter([
-                !env('APP_DEBUG') ? Doctrine\DBAL\Logging\Middleware::class : null,
+                env('DOCTRINE_LOGGING', false) ? Doctrine\DBAL\Logging\Middleware::class : null,
             ]),
         ],
         'model' => [
@@ -149,7 +149,7 @@ return [
              * https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/architecture.html#middlewares
              */
             'middlewares' => array_filter([
-                !env('APP_DEBUG') ? Doctrine\DBAL\Logging\Middleware::class : null,
+                env('DOCTRINE_LOGGING', false) ? Doctrine\DBAL\Logging\Middleware::class : null,
             ]),
         ]
     ],

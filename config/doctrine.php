@@ -83,7 +83,7 @@ return [
              * https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/architecture.html#middlewares
              */
             'middlewares' => [
-                Doctrine\DBAL\Logging\Middleware::class
+                //Doctrine\DBAL\Logging\Middleware::class
             ]
         ],
         'model' => [
@@ -149,7 +149,7 @@ return [
              * https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/architecture.html#middlewares
              */
             'middlewares' => [
-                Doctrine\DBAL\Logging\Middleware::class
+                //Doctrine\DBAL\Logging\Middleware::class
             ]
         ]
     ],

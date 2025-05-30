@@ -46,7 +46,7 @@ class PresentationSpeakerTest extends TestCase
         parent::tearDown();
     }
 
-    public function testAddPresentationSpeaker(){
+    public function testPersistPresentationSpeaker(){
         $repository = self::$em->getRepository(PresentationSpeaker::class);
 
         $speaker = new PresentationSpeaker();
@@ -106,46 +106,16 @@ class PresentationSpeakerTest extends TestCase
             }
         }
         $this->assertNotNull($found_link);
-    }
 
-    public function testDeletePresentationSpeakerChildren(){
-        // Get an existing speaker from the test data
-        $speaker_id = self::$summit->getPresentations()[0]->getSpeakers()[0]->getId();
-        $repository = self::$em->getRepository(PresentationSpeaker::class);
-        $speaker = $repository->find($speaker_id);
-
-        // Get the current counts
-        $previous_presentations_count = count($speaker->getAssignedPresentations()->toArray());
-        $previous_expertise_areas_count = count($speaker->getAreasOfExpertise()->toArray());
-        $previous_links_count = count($speaker->getOtherPresentationLinks()->toArray());
-        $previous_travel_preferences_count = count($speaker->getTravelPreferences()->toArray());
-        $previous_languages_count = count($speaker->getLanguages()->toArray());
+        $speaker = $repository->find($speaker->getId());
 
         // Clear relationships
-        if ($previous_presentations_count > 0) {
-            $speaker->clearPresentations();
-        }
-
-        if ($previous_expertise_areas_count > 0) {
-            $speaker->clearAreasOfExpertise();
-        }
-
-        if ($previous_links_count > 0) {
-            $speaker->clearOtherPresentationLinks();
-        }
-
-        if ($previous_travel_preferences_count > 0) {
-            $speaker->clearTravelPreferences();
-        }
-
-        if ($previous_languages_count > 0) {
-            $speaker->clearLanguages();
-        }
-
-        // Clear photo
-        if ($speaker->hasPhoto()) {
-            $speaker->clearPhoto();
-        }
+        $speaker->clearPresentations();
+        $speaker->clearAreasOfExpertise();
+        $speaker->clearOtherPresentationLinks();
+        $speaker->clearTravelPreferences();
+        $speaker->clearLanguages();
+        $speaker->clearPhoto();
 
         self::$em->flush();
         self::$em->clear();
@@ -157,7 +127,7 @@ class PresentationSpeakerTest extends TestCase
         $this->assertFalse($found_speaker->hasPhoto());
 
         // Test ManyToMany relationship with presentations
-        $this->assertEmpty($found_speaker->getAssignedPresentations()->toArray());
+        $this->assertEmpty($found_speaker->getPresentations(self::$summit->getId()));
 
         // Test ManyToMany relationship with areas of expertise
         $this->assertEmpty($found_speaker->getAreasOfExpertise()->toArray());
@@ -170,5 +140,6 @@ class PresentationSpeakerTest extends TestCase
 
         // Test ManyToMany relationship with languages
         $this->assertEmpty($found_speaker->getLanguages()->toArray());
+
     }
 }

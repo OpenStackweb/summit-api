@@ -18,14 +18,20 @@ namespace Tests\Unit\Entities;
 use DateInterval;
 use DateTime;
 use DateTimeZone;
+use models\main\Company;
+use models\main\Group;
+use models\main\Member;
 use models\main\Tag;
 use models\summit\ISummitEventType;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\RSVP;
+use models\summit\Sponsor;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
+use models\summit\SummitSponsorshipType;
+use models\summit\SummitTrackChair;
 
 class TestUtils
 {
@@ -100,5 +106,39 @@ class TestUtils
         $rsvp->setEvent($event);
 
         return $rsvp;
+    }
+
+    public static function mockCompany(): Company
+    {
+        $company = new Company();
+        $company->setName("Test Company " . str_random(5));
+        $company->setIndustry("Test Industry " . str_random(5));
+
+        return $company;
+    }
+
+    public static function mockSummitTrackChair(Summit $summit): SummitTrackChair
+    {
+        $track_chair = new SummitTrackChair();
+        $track_chair->setSummit($summit);
+
+        return $track_chair;
+    }
+
+    public static function mockMember(?Group $group = null): Member
+    {
+        $member = new Member();
+        $prefix = str_random(10);
+        $member->setEmail("test+{$prefix}@gmail.com");
+        $member->setActive(true);
+        $member->setFirstName("Test");
+        $member->setLastName("Member");
+        $member->setEmailVerified(true);
+        $member->setUserExternalId(mt_rand());
+        if ($group) {
+            $member->add2Group($group);
+        }
+
+        return $member;
     }
 }

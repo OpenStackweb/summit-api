@@ -57,9 +57,7 @@ class SummitAttendeeTest extends TestCase
         $attendee = $repository->find($attendee_id);
 
         // Create a new company
-        $company = new Company();
-        $company->setName("Test Company " . str_random(5));
-        $company->setIndustry("Test Industry " . str_random(5));
+        $company = TestUtils::mockCompany();
         self::$em->persist($company);
 
         // Set the company (ManyToOne relationship)
@@ -157,5 +155,6 @@ class SummitAttendeeTest extends TestCase
         if ($previous_tickets_count > 0) {
             $this->assertCount($previous_tickets_count - 1, $found_attendee->getTickets()->toArray());
         }
+
     }
 }

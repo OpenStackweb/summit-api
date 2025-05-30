@@ -18,18 +18,17 @@ use Illuminate\Support\Facades\Cache as CacheFacade;
 use Illuminate\Support\Facades\Config;
 
 /**
- * @ORM\Entity(repositoryClass="repositories\resource_server\DoctrineEndPointRateLimitByIPRepository")
- * @ORM\Table(name="ip_rate_limit_routes")
- * Class EndPointRateLimitByIP
  * @package App\Models\ResourceServer
  */
+#[ORM\Table(name: 'ip_rate_limit_routes')]
+#[ORM\Entity(repositoryClass: \repositories\resource_server\DoctrineEndPointRateLimitByIPRepository::class)]
 class EndPointRateLimitByIP extends ResourceServerEntity
 {
 
     /**
-     * @ORM\Column(name="ip", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ip', type: 'string')]
     private $ip;
 
     /**
@@ -129,33 +128,33 @@ class EndPointRateLimitByIP extends ResourceServerEntity
     }
 
     /**
-     * @ORM\Column(name="active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'active', type: 'boolean')]
     private $active;
 
     /**
-     * @ORM\Column(name="route", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'route', type: 'string')]
     private $route;
 
     /**
-     * @ORM\Column(name="http_method", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'http_method', type: 'string')]
     private $http_method;
 
     /**
-     * @ORM\Column(name="rate_limit", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'rate_limit', type: 'integer')]
     private $rate_limit;
 
     /**
-     * @ORM\Column(name="rate_limit_decay", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'rate_limit_decay', type: 'integer')]
     private $rate_limit_decay;
 
 }

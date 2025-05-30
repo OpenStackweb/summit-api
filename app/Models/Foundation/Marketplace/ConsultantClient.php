@@ -14,30 +14,29 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="ConsultantClient")
- * Class ConsultantClient
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'ConsultantClient')]
+#[ORM\Entity]
 class ConsultantClient extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Order", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Order', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Consultant",inversedBy="clients", fetch="LAZY")
-     * @ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")
      * @var Consultant
      */
+    #[ORM\JoinColumn(name: 'ConsultantID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Consultant::class, inversedBy: 'clients', fetch: 'LAZY')]
     private $consultant;
 
     /**

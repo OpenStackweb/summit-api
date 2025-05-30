@@ -14,25 +14,24 @@
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitAttendeeTicketFormerHash")
- * Class SummitAttendeeTicketFormerHash
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeTicketFormerHash')]
+#[ORM\Entity]
 class SummitAttendeeTicketFormerHash extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Hash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $hash;
 
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeTicket", inversedBy="former_hashes")
-     * @ORM\JoinColumn(name="SummitAttendeeTicketID", referencedColumnName="ID")
      * @var SummitAttendeeTicket
      */
+    #[ORM\JoinColumn(name: 'SummitAttendeeTicketID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendeeTicket::class, inversedBy: 'former_hashes')]
     protected $ticket;
 
     /**

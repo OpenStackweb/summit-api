@@ -17,75 +17,65 @@ use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitMetricRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="metrics"
- *     )
- * })
- * @ORM\Table(name="SummitMetric")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "SummitMetric" = "SummitMetric",
- *     "SummitEventAttendanceMetric" = "SummitEventAttendanceMetric",
- *     "SummitSponsorMetric" = "SummitSponsorMetric"
- * })
- * Class SummitMetric
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitMetric')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitMetricRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'metrics')])]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitMetric' => 'SummitMetric', 'SummitEventAttendanceMetric' => 'SummitEventAttendanceMetric', 'SummitSponsorMetric' => 'SummitSponsorMetric'])] // Class SummitMetric
 class SummitMetric extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="IngressDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'IngressDate', type: 'datetime')]
     protected $ingress_date;
 
     /**
-     * @ORM\Column(name="OutgressDate", type="datetime")
      * @var \DateTime|null
      */
+    #[ORM\Column(name: 'OutgressDate', type: 'datetime')]
     protected $outgress_date;
 
     /**
-     * @ORM\Column(name="Ip", type="string")
      * @var string|null
      */
+    #[ORM\Column(name: 'Ip', type: 'string')]
     protected $ip;
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string|null
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="Origin", type="string")
      * @var string|null
      */
+    #[ORM\Column(name: 'Origin', type: 'string')]
     protected $origin;
 
     /**
-     * @ORM\Column(name="Location", type="string")
      * @var string|null
      */
+    #[ORM\Column(name: 'Location', type: 'string')]
     protected $location;
 
     /**
-     * @ORM\Column(name="Browser", type="string")
      * @var string|null
      */
+    #[ORM\Column(name: 'Browser', type: 'string')]
     protected $browser;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="summit_attendance_metrics")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member|null
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'summit_attendance_metrics')]
     protected $member;
 
     const AccessTypeIngress = 'INGRESS';

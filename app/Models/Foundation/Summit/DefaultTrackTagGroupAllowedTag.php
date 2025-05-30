@@ -15,26 +15,24 @@ use App\Models\Utils\BaseEntity;
 use models\main\Tag;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="DefaultTrackTagGroup_AllowedTags")
- * Class DefaultTrackTagGroupAllowedTag
  * @package models\summit\DefaultTrackTagGroupAllowedTag
  */
-
+#[ORM\Table(name: 'DefaultTrackTagGroup_AllowedTags')]
+#[ORM\Entity]
 class DefaultTrackTagGroupAllowedTag extends BaseEntity
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Tag")
-     * @ORM\JoinColumn(name="TagID", referencedColumnName="ID")
      * @var Tag
      */
+    #[ORM\JoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Tag::class)]
     private $tag;
 
     /**
-     * @ORM\ManyToOne(targetEntity="DefaultTrackTagGroup", inversedBy="allowed_tags")
-     * @ORM\JoinColumn(name="DefaultTrackTagGroupID", referencedColumnName="ID")
      * @var DefaultTrackTagGroup
      */
+    #[ORM\JoinColumn(name: 'DefaultTrackTagGroupID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \DefaultTrackTagGroup::class, inversedBy: 'allowed_tags')]
     private $track_tag_group;
 
     /**

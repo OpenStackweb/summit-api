@@ -17,24 +17,23 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBookableVenueRoomAttributeValueRepository")
- * @ORM\Table(name="SummitBookableVenueRoomAttributeValue")
- * Class SummitBookableVenueRoomAttributeValue
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitBookableVenueRoomAttributeValue')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitBookableVenueRoomAttributeValueRepository::class)]
 class SummitBookableVenueRoomAttributeValue extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     private $value;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBookableVenueRoomAttributeType", inversedBy="values", cascade={"persist"})
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var SummitBookableVenueRoomAttributeType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitBookableVenueRoomAttributeType::class, inversedBy: 'values', cascade: ['persist'])]
     private $type;
 
     /**

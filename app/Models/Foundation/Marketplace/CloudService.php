@@ -14,25 +14,24 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="CloudService")
- * Class CloudService
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'CloudService')]
+#[ORM\Entity]
 class CloudService extends OpenStackImplementation
 {
     const ClassName = 'CloudService';
 
     /**
-     * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
      * @var DataCenterLocation[]
      */
+    #[ORM\OneToMany(targetEntity: \DataCenterLocation::class, mappedBy: 'cloud_service', cascade: ['persist'], orphanRemoval: true)]
     protected $data_centers;
 
     /**
-     * @ORM\OneToMany(targetEntity="DataCenterRegion", mappedBy="cloud_service", cascade={"persist"}, orphanRemoval=true)
      * @var DataCenterRegion[]
      */
+    #[ORM\OneToMany(targetEntity: \DataCenterRegion::class, mappedBy: 'cloud_service', cascade: ['persist'], orphanRemoval: true)]
     protected $data_center_regions;
 
     public function __construct()

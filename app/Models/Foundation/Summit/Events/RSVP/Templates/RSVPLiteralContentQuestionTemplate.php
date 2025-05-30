@@ -13,18 +13,17 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPLiteralContentQuestionTemplate")
- * @ORM\Entity
- * Class RSVPLiteralContentQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPLiteralContentQuestionTemplate')]
+#[ORM\Entity] // Class RSVPLiteralContentQuestionTemplate
 class RSVPLiteralContentQuestionTemplate extends RSVPQuestionTemplate
 {
     const ClassName = 'RSVPLiteralContentQuestionTemplate';
     /**
-     * @ORM\Column(name="Content", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Content', type: 'string')]
     protected $content;
 
     /**

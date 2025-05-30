@@ -17,11 +17,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 /**
- * @ORM\Entity
- * @ORM\Table(name="MemberSummitRegistrationDiscountCode")
- * Class MemberSummitRegistrationDiscountCode
  * @package models\summit
  */
+#[ORM\Table(name: 'MemberSummitRegistrationDiscountCode')]
+#[ORM\Entity]
 class MemberSummitRegistrationDiscountCode
     extends SummitRegistrationDiscountCode
     implements IOwnablePromoCode

@@ -19,11 +19,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorAdRepository")
- * @ORM\Table(name="SponsorAd")
- * Class SponsorAd
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorAd')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorAdRepository::class)]
 class SponsorAd extends SilverstripeBaseModel implements IOrderable
 {
     use One2ManyPropertyTrait;
@@ -39,41 +38,41 @@ class SponsorAd extends SilverstripeBaseModel implements IOrderable
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="ads", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Sponsor::class, inversedBy: 'ads', fetch: 'EXTRA_LAZY')]
     private $sponsor;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'ImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $image;
 
     /**
-     * @ORM\Column(name="Link", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**
-     * @ORM\Column(name="Alt", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Alt', type: 'string')]
     private $alt;
 
     /**
-     * @ORM\Column(name="Text", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Text', type: 'string')]
     private $text;
 
     /**

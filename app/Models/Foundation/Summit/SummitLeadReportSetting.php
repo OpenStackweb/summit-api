@@ -17,11 +17,10 @@ use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitLeadReportSetting")
- * Class SummitLeadReportSetting
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitLeadReportSetting')]
+#[ORM\Entity]
 class SummitLeadReportSetting extends SilverstripeBaseModel
 {
     use SummitOwned;
@@ -30,16 +29,16 @@ class SummitLeadReportSetting extends SilverstripeBaseModel
     const SponsorExtraQuestionsKey = 'extra_questions';
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class)]
     private $sponsor;
 
     /**
-     * @ORM\Column(name="Columns", type="json")
      * @var array
      */
+    #[ORM\Column(name: 'Columns', type: 'json')]
     protected $columns;
 
     /**

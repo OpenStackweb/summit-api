@@ -15,40 +15,40 @@ use Doctrine\ORM\Mapping AS ORM;
 use services\utils\Facades\Encryption;
 /**
  * Class CalendarSyncInfoCalDav
- * @ORM\Entity
- * @ORM\Table(name="CalendarSyncInfoCalDav")
  * @package models\summit\CalendarSync
  */
+#[ORM\Table(name: 'CalendarSyncInfoCalDav')]
+#[ORM\Entity]
 class CalendarSyncInfoCalDav extends CalendarSyncInfo
 {
     /**
-     * @ORM\Column(name="UserName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'UserName', type: 'string')]
     protected $user_name;
 
     /**
-     * @ORM\Column(name="UserPassword", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'UserPassword', type: 'string')]
     protected $user_password;
 
     /**
-     * @ORM\Column(name="UserPrincipalURL", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'UserPrincipalURL', type: 'string')]
     protected $user_principal_url;
 
     /**
-     * @ORM\Column(name="CalendarDisplayName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarDisplayName', type: 'string')]
     protected $calendar_display_name;
 
     /**
-     * @ORM\Column(name="CalendarSyncToken", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CalendarSyncToken', type: 'string')]
     protected $calendar_sync_token;
 
     /**

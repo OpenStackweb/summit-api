@@ -20,44 +20,38 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPTemplate")
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineRSVPTemplateRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="rsvp_templates"
- *     )
- * })
- * Class RSVPTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPTemplate')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineRSVPTemplateRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'rsvp_templates')])] // Class RSVPTemplate
 class RSVPTemplate extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
     /**
-     * @ORM\Column(name="Enabled", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Enabled', type: 'boolean')]
     private $is_enabled;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'LAZY')]
     private $created_by;
 
     /**
-     * @ORM\OneToMany(targetEntity="RSVPQuestionTemplate", mappedBy="template", cascade={"persist"}, orphanRemoval=true)
      * @var RSVPQuestionTemplate[]
      */
+    #[ORM\OneToMany(targetEntity: \RSVPQuestionTemplate::class, mappedBy: 'template', cascade: ['persist'], orphanRemoval: true)]
     private $questions;
 
     /**

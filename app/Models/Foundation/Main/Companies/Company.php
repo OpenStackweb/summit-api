@@ -18,160 +18,156 @@ use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineCompanyRepository")
- * @ORM\Table(name="Company")
- * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="sponsors_region")
- * Class Company
  * @package models\main
  */
+#[ORM\Table(name: 'Company')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineCompanyRepository::class)]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'sponsors_region')] // Class Company
 class Company extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="URL", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'URL', type: 'string')]
     private $url;
 
     /**
-     * @ORM\Column(name="DisplayOnSite", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'DisplayOnSite', type: 'boolean')]
     private $display_on_site;
 
     /**
-     * @ORM\Column(name="Featured", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Featured', type: 'boolean')]
     private $featured;
 
     /**
-     * @ORM\Column(name="City", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'City', type: 'string')]
     private $city;
 
     /**
-     * @ORM\Column(name="State", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'State', type: 'string')]
     private $state;
 
     /**
-     * @ORM\Column(name="Country", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Country', type: 'string')]
     private $country;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="Industry", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Industry', type: 'string')]
     private $industry;
 
     /**
-     * @ORM\Column(name="Products", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Products', type: 'string')]
     private $products;
 
     /**
-     * @ORM\Column(name="Contributions", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Contributions', type: 'string')]
     private $contributions;
 
     /**
-     * @ORM\Column(name="ContactEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ContactEmail', type: 'string')]
     private $contact_email;
 
     /**
-     * @ORM\Column(name="MemberLevel", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'MemberLevel', type: 'string')]
     private $member_level;
 
     /**
-     * @ORM\Column(name="AdminEmail", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AdminEmail', type: 'string')]
     private $admin_email;
 
     /**
-     * @ORM\Column(name="Color", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Color', type: 'string')]
     private $color;
 
     /**
-     * @ORM\Column(name="Overview", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Overview', type: 'string')]
     private $overview;
 
     /**
-     * @ORM\Column(name="Commitment", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Commitment', type: 'string')]
     private $commitment;
 
     /**
-     * @ORM\Column(name="CommitmentAuthor", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CommitmentAuthor', type: 'string')]
     private $commitment_author;
 
     /**
-     * @ORM\Column(name="isDeleted", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'isDeleted', type: 'boolean')]
     private $is_deleted;
 
     /**
-     * @ORM\Column(name="URLSegment", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'URLSegment', type: 'string')]
     private $url_segment;
 
     // relations
-
-    /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitEvent", mappedBy="sponsors")
-     */
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitEvent::class, mappedBy: 'sponsors')]
     private $sponsorships;
 
     /**
-     * @ORM\OneToMany(targetEntity="SupportingCompany", mappedBy="company", cascade={"persist"}, orphanRemoval=true)
-     * @ORM\OrderBy({"order" = "ASC"})
      * @var SupportingCompany[]
      */
+    #[ORM\OneToMany(targetEntity: \SupportingCompany::class, mappedBy: 'company', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['order' => 'ASC'])]
     private $project_sponsorships;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'LogoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
     private $logo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="BigLogoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'BigLogoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
     private $big_logo;
 
     /**

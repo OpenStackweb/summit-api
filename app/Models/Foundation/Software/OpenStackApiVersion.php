@@ -14,31 +14,30 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="OpenStackApiVersion")
- * Class OpenStackApiVersion
  * @package App\Models\Foundation\Software
  */
+#[ORM\Table(name: 'OpenStackApiVersion')]
+#[ORM\Entity]
 class OpenStackApiVersion extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="ReleaseVersion", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ReleaseVersion', type: 'string')]
     private $version;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Software\OpenStackComponent", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
-     * @var OpenStackComponent
-     */
+        /**
+    * @var OpenStackComponent
+    */
+    #[ORM\JoinColumn(name: 'OpenStackComponentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Software\OpenStackComponent::class, fetch: 'EXTRA_LAZY')]
     private $component;
 
     /**

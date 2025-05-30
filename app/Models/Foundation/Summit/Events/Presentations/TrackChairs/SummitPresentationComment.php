@@ -16,42 +16,42 @@ use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 /**
  * Class SummitPresentationComment
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitPresentationCommentRepository")
- * @ORM\Table(name="SummitPresentationComment")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitPresentationComment')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitPresentationCommentRepository::class)]
 class SummitPresentationComment extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Body", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Body', type: 'string')]
     private $body;
 
     /**
-     * @ORM\Column(name="IsActivity", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsActivity', type: 'boolean')]
     private $is_activity;
 
     /**
-     * @ORM\Column(name="IsPublic", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsPublic', type: 'boolean')]
     private $is_public;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Presentation", inversedBy="comments")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \Presentation::class, inversedBy: 'comments')]
     private $presentation;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="CommenterID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CommenterID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $creator;
 
     /**

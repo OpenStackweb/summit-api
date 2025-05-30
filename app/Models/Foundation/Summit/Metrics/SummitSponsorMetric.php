@@ -15,17 +15,17 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 /**
  * Class SummitSponsorMetric
- * @ORM\Entity
- * @ORM\Table(name="SummitSponsorMetric")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitSponsorMetric')]
+#[ORM\Entity]
 class SummitSponsorMetric extends SummitMetric
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Sponsor|null
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class)]
     protected $sponsor;
 
     /**

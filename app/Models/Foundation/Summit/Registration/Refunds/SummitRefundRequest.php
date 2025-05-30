@@ -22,16 +22,13 @@ use models\utils\SilverstripeBaseModel;
 
 /**
  * Class SummitRefundRequest
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRefundRequestRepository")
- * @ORM\Table(name="SummitRefundRequest")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "SummitRefundRequest" = "SummitRefundRequest",
- *     "SummitAttendeeTicketRefundRequest" = "SummitAttendeeTicketRefundRequest"
- * })
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRefundRequest')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRefundRequestRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitRefundRequest' => 'SummitRefundRequest', 'SummitAttendeeTicketRefundRequest' => 'SummitAttendeeTicketRefundRequest'])]
 class SummitRefundRequest extends SilverstripeBaseModel
 {
     const ClassName = 'SummitRefundRequest';
@@ -51,53 +48,53 @@ class SummitRefundRequest extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="RequestedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'RequestedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     protected $requested_by = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="ActionByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'ActionByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     protected $action_by = null;
 
     /**
-     * @ORM\Column(name="RefundedAmount", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'RefundedAmount', type: 'float')]
     protected $refunded_amount;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitTaxRefund", mappedBy="refund_request", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitTaxRefund[]|Collection
      */
+    #[ORM\OneToMany(targetEntity: \SummitTaxRefund::class, mappedBy: 'refund_request', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $refunded_taxes;
 
     /**
-     * @ORM\Column(name="ActionDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ActionDate', type: 'datetime')]
     protected $action_date;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     protected $status;
 
     /**
-     * @ORM\Column(name="Notes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Notes', type: 'string')]
     protected $notes;
 
     /**
-     * @ORM\Column(name="PaymentGatewayResult", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PaymentGatewayResult', type: 'string')]
     protected $payment_gateway_result;
 
     /**

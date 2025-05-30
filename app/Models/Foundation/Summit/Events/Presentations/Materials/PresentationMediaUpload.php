@@ -18,11 +18,10 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationMediaUploadRepository")
- * @ORM\Table(name="PresentationMediaUpload")
- * Class PresentationMediaUpload
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationMediaUpload')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePresentationMediaUploadRepository::class)]
 class PresentationMediaUpload extends PresentationMaterial
 {
     const ClassName = 'PresentationMediaUpload';
@@ -35,22 +34,22 @@ class PresentationMediaUpload extends PresentationMaterial
     }
 
     /**
-     * @ORM\Column(name="FileName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FileName', type: 'string')]
     private $filename;
 
     /**
-     * @ORM\Column(name="LegacyPathFormat", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'LegacyPathFormat', type: 'boolean')]
     private $legacy_path_format;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaUploadType",  inversedBy="media_uploads")
-     * @ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")
      * @var SummitMediaUploadType
      */
+    #[ORM\JoinColumn(name: 'SummitMediaUploadTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitMediaUploadType::class, inversedBy: 'media_uploads')]
     protected $media_upload_type;
 
     /**

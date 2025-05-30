@@ -20,17 +20,16 @@ use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use models\summit\Summit;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineSummitAdministratorPermissionGroupRepository")
- * @ORM\Table(name="`SummitAdministratorPermissionGroup`")
- * Class Group
  * @package models\main
  */
+#[ORM\Table(name: '`SummitAdministratorPermissionGroup`')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineSummitAdministratorPermissionGroupRepository::class)]
 class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
     const ValidGroups = [
@@ -50,23 +49,21 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", inversedBy="summit_permission_groups")
-     * @ORM\JoinTable(name="SummitAdministratorPermissionGroup_Members",
-     *      joinColumns={@ORM\JoinColumn(name="SummitAdministratorPermissionGroupID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
-     *      )
      * @var Member[]
      */
+    #[ORM\JoinTable(name: 'SummitAdministratorPermissionGroup_Members')]
+    #[ORM\JoinColumn(name: 'SummitAdministratorPermissionGroupID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Member::class, inversedBy: 'summit_permission_groups')]
     private $members;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\Summit", inversedBy="permission_groups")
-     * @ORM\JoinTable(name="SummitAdministratorPermissionGroup_Summits",
-     *      joinColumns={@ORM\JoinColumn(name="SummitAdministratorPermissionGroupID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")}
-     *      )
      * @var Summit[]
      */
+    #[ORM\JoinTable(name: 'SummitAdministratorPermissionGroup_Summits')]
+    #[ORM\JoinColumn(name: 'SummitAdministratorPermissionGroupID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\Summit::class, inversedBy: 'permission_groups')]
     private $summits;
 
     /**

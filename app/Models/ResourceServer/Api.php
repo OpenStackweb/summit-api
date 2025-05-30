@@ -14,41 +14,36 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="repositories\resource_server\DoctrineApiRepository")
- * @ORM\Table(name="apis")
- * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="resource_server_region")
- * Class Api
  * @package App\Models\ResourceServer
 */
+#[ORM\Table(name: 'apis')]
+#[ORM\Entity(repositoryClass: \repositories\resource_server\DoctrineApiRepository::class)]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'resource_server_region')] // Class Api
 class Api extends ResourceServerEntity implements IApi
 {
 
-    /**
-     * @ORM\OneToMany(targetEntity="ApiScope", mappedBy="api", cascade={"persist", "remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \ApiScope::class, mappedBy: 'api', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $scopes;
 
-    /**
-     * @ORM\OneToMany(targetEntity="ApiEndpoint", mappedBy="api", cascade={"persist","remove"}, orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: \ApiEndpoint::class, mappedBy: 'api', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $endpoints;
 
     /**
-     * @ORM\Column(name="name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'active', type: 'boolean')]
     private $active;
 
     /**

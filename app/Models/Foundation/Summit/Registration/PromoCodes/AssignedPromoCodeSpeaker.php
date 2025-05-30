@@ -17,37 +17,36 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="AssignedPromoCodeSpeaker")
- * Class AssignedPromoCodeSpeaker
  * @package models\summit
  */
+#[ORM\Table(name: 'AssignedPromoCodeSpeaker')]
+#[ORM\Entity]
 class AssignedPromoCodeSpeaker extends BaseEntity
 {
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class)]
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitRegistrationPromoCode")
-     * @ORM\JoinColumn(name="RegistrationPromoCodeID", referencedColumnName="ID")
      * @var SummitRegistrationPromoCode
      */
+    #[ORM\JoinColumn(name: 'RegistrationPromoCodeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitRegistrationPromoCode::class)]
     protected $registration_promo_code;
 
     /**
-     * @ORM\Column(name="RedeemedAt", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'RedeemedAt', type: 'datetime')]
     protected $redeemed;
 
     /**
-     * @ORM\Column(name="SentAt", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SentAt', type: 'datetime')]
     protected $sent;
 
     /**

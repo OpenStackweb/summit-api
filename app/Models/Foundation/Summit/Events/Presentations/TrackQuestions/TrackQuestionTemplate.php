@@ -16,66 +16,55 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\summit\PresentationCategory;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineTrackQuestionTemplateRepository")
- * @ORM\Table(name="TrackQuestionTemplate")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "TrackQuestionTemplate" = "TrackQuestionTemplate",
- *     "TrackSingleValueTemplateQuestion" = "TrackSingleValueTemplateQuestion",
- *     "TrackMultiValueQuestionTemplate" = "TrackMultiValueQuestionTemplate",
- *     "TrackLiteralContentQuestionTemplate" = "TrackLiteralContentQuestionTemplate",
- *     "TrackRadioButtonListQuestionTemplate" = "TrackRadioButtonListQuestionTemplate",
- *     "TrackCheckBoxListQuestionTemplate" = "TrackCheckBoxListQuestionTemplate",
- *     "TrackDropDownQuestionTemplate" = "TrackDropDownQuestionTemplate",
- *     "TrackTextBoxQuestionTemplate" = "TrackTextBoxQuestionTemplate",
- *     "TrackCheckBoxQuestionTemplate" = "TrackCheckBoxQuestionTemplate"
- *     })
- * Class TrackQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations
  */
+#[ORM\Table(name: 'TrackQuestionTemplate')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineTrackQuestionTemplateRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['TrackQuestionTemplate' => 'TrackQuestionTemplate', 'TrackSingleValueTemplateQuestion' => 'TrackSingleValueTemplateQuestion', 'TrackMultiValueQuestionTemplate' => 'TrackMultiValueQuestionTemplate', 'TrackLiteralContentQuestionTemplate' => 'TrackLiteralContentQuestionTemplate', 'TrackRadioButtonListQuestionTemplate' => 'TrackRadioButtonListQuestionTemplate', 'TrackCheckBoxListQuestionTemplate' => 'TrackCheckBoxListQuestionTemplate', 'TrackDropDownQuestionTemplate' => 'TrackDropDownQuestionTemplate', 'TrackTextBoxQuestionTemplate' => 'TrackTextBoxQuestionTemplate', 'TrackCheckBoxQuestionTemplate' => 'TrackCheckBoxQuestionTemplate'])] // Class TrackQuestionTemplate
 class TrackQuestionTemplate extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'label', type: 'string')]
     protected $label;
 
     /**
-     * @ORM\Column(name="Mandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Mandatory', type: 'boolean')]
     protected $is_mandatory;
 
     /**
-     * @ORM\Column(name="ReadOnly", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ReadOnly', type: 'boolean')]
     protected $is_read_only;
 
     /**
-     * @ORM\Column(name="AfterQuestion", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AfterQuestion', type: 'string')]
     protected $after_question;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", mappedBy="extra_questions")
      * @var PresentationCategory[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategory::class, mappedBy: 'extra_questions')]
     protected $tracks;
 
     /**
-     * @ORM\OneToMany(targetEntity="TrackAnswer", mappedBy="question", cascade={"persist"})
      * @var TrackAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \TrackAnswer::class, mappedBy: 'question', cascade: ['persist'])]
     protected $answers;
 
     /**

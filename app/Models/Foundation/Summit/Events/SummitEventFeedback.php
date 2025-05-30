@@ -17,39 +17,37 @@ use models\utils\SilverstripeBaseModel;
 use models\main\Member;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitEventFeedback")
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineEventFeedbackRepository")
- * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="summit_event_feedback_region")
- * Class SummitEventFeedback
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitEventFeedback')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineEventFeedbackRepository::class)]
+#[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'summit_event_feedback_region')] // Class SummitEventFeedback
 class SummitEventFeedback extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Rate", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Rate', type: 'integer')]
     private $rate;
 
     /**
-     * @ORM\Column(name="note", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'note', type: 'string')]
     private $note;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="feedback")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'feedback')]
     private $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="feedback", fetch="LAZY")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'EventID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class, inversedBy: 'feedback', fetch: 'LAZY')]
     private $event;
 
     /**

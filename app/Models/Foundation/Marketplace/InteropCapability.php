@@ -14,36 +14,35 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="InteropCapability")
- * Class InteropCapability
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'InteropCapability')]
+#[ORM\Entity]
 class InteropCapability extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $descripion;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
-     * @ORM\ManyToOne(targetEntity="InteropCapabilityType", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID")
      * @var InteropCapabilityType
      */
+    #[ORM\JoinColumn(name: 'TypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \InteropCapabilityType::class, fetch: 'EXTRA_LAZY')]
     private $type;
 
     /**

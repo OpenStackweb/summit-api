@@ -13,11 +13,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineApplianceRepository")
- * @ORM\Table(name="Appliance")
- * Class Appliance
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'Appliance')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Marketplace\DoctrineApplianceRepository::class)]
 class Appliance extends OpenStackImplementation
 {
     const ClassName = 'Appliance';

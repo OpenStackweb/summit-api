@@ -19,17 +19,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitScheduleConfigRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="schedule_settings"
- *     )
- * })
- * @ORM\Table(name="SummitScheduleConfig")
- * Class SummitScheduleConfig
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitScheduleConfig')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitScheduleConfigRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'schedule_settings')])]
 class SummitScheduleConfig extends SilverstripeBaseModel
 {
     use SummitOwned;
@@ -45,63 +39,63 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     const AllowedTimeFormats = [self::TimeFormat_12, self::TimeFormat_24];
 
     /**
-     * @ORM\Column(name="Key", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Key', type: 'string')]
     private $key;
 
     /**
-     * @ORM\Column(name="IsEnabled", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsEnabled', type: 'boolean')]
     private $is_enabled;
 
     /**
-     * @ORM\Column(name="IsMySchedule", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsMySchedule', type: 'boolean')]
     private $is_my_schedule;
 
     /**
-     * @ORM\Column(name="IsDefault", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsDefault', type: 'boolean')]
     private $is_default;
 
     /**
-     * @ORM\Column(name="OnlyEventsWithAttendeeAccess", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'OnlyEventsWithAttendeeAccess', type: 'boolean')]
     private $only_events_with_attendee_access;
 
     /**
-     * @ORM\Column(name="ColorSource", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ColorSource', type: 'string')]
     private $color_source;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitScheduleFilterElementConfig", mappedBy="config", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitScheduleFilterElementConfig[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitScheduleFilterElementConfig::class, mappedBy: 'config', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $filters;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitSchedulePreFilterElementConfig", mappedBy="config", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitSchedulePreFilterElementConfig[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitSchedulePreFilterElementConfig::class, mappedBy: 'config', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $pre_filters;
 
     /**
-     * @ORM\Column(name="HidePastEventsWithShowAlwaysOnSchedule", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'HidePastEventsWithShowAlwaysOnSchedule', type: 'boolean')]
     private $hide_past_events_with_show_always_on_schedule;
 
     /**
-     * @ORM\Column(name="TimeFormat", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TimeFormat', type: 'string')]
     private $time_format;
 
     public function __construct()

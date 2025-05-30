@@ -14,28 +14,23 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SpeakerPresentationLink")
- * Class SpeakerPresentationLink
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerPresentationLink')]
+#[ORM\Entity]
 class SpeakerPresentationLink extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="LinkUrl", type="string")
-     */
+    #[ORM\Column(name: 'LinkUrl', type: 'string')]
     private $link;
 
-    /**
-     * @ORM\Column(name="Title", type="string")
-     */
+    #[ORM\Column(name: 'Title', type: 'string')]
     private $title;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="other_presentation_links")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class, inversedBy: 'other_presentation_links')]
     private $speaker;
 
     /**

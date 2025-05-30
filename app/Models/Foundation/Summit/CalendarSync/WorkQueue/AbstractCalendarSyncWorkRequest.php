@@ -14,14 +14,13 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineAbstractCalendarSyncWorkRequestRepository")
- * @ORM\Table(name="AbstractCalendarSyncWorkRequest")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"AbstractCalendarSyncWorkRequest" = "AbstractCalendarSyncWorkRequest", "AdminScheduleSummitActionSyncWorkRequest" = "AdminScheduleSummitActionSyncWorkRequest", "AdminSummitEventActionSyncWorkRequest" = "AdminSummitEventActionSyncWorkRequest", "AdminSummitLocationActionSyncWorkRequest" = "AdminSummitLocationActionSyncWorkRequest", "MemberCalendarScheduleSummitActionSyncWorkRequest" = "MemberCalendarScheduleSummitActionSyncWorkRequest", "MemberEventScheduleSummitActionSyncWorkRequest" = "MemberEventScheduleSummitActionSyncWorkRequest", "MemberScheduleSummitActionSyncWorkRequest" = "MemberScheduleSummitActionSyncWorkRequest"})
- * Class AbstractCalendarSyncWorkRequest
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'AbstractCalendarSyncWorkRequest')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineAbstractCalendarSyncWorkRequestRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['AbstractCalendarSyncWorkRequest' => 'AbstractCalendarSyncWorkRequest', 'AdminScheduleSummitActionSyncWorkRequest' => 'AdminScheduleSummitActionSyncWorkRequest', 'AdminSummitEventActionSyncWorkRequest' => 'AdminSummitEventActionSyncWorkRequest', 'AdminSummitLocationActionSyncWorkRequest' => 'AdminSummitLocationActionSyncWorkRequest', 'MemberCalendarScheduleSummitActionSyncWorkRequest' => 'MemberCalendarScheduleSummitActionSyncWorkRequest', 'MemberEventScheduleSummitActionSyncWorkRequest' => 'MemberEventScheduleSummitActionSyncWorkRequest', 'MemberScheduleSummitActionSyncWorkRequest' => 'MemberScheduleSummitActionSyncWorkRequest'])] // Class AbstractCalendarSyncWorkRequest
 class AbstractCalendarSyncWorkRequest extends SilverstripeBaseModel
 {
 
@@ -36,21 +35,21 @@ class AbstractCalendarSyncWorkRequest extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="IsProcessed", type="boolean", options={"default":"0"})
      * @var bool
      */
+    #[ORM\Column(name: 'IsProcessed', type: 'boolean', options: ['default' => '0'])]
     protected $is_processed;
 
     /**
-     * @ORM\Column(name="ProcessedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ProcessedDate', type: 'datetime')]
     protected $processed_date;
 
 

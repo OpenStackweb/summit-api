@@ -16,31 +16,22 @@ use Doctrine\ORM\Mapping AS ORM;
 use DateTime;
 
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineAssetsSyncRequestRepository")
- * @ORM\Table(name="AssetsSyncRequest")
- * Class File
  * @package models\main
  */
+#[ORM\Table(name: 'AssetsSyncRequest')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineAssetsSyncRequestRepository::class)]
 class AssetsSyncRequest extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="`Origin`", type="string")
-     */
+    #[ORM\Column(name: '`Origin`', type: 'string')]
     private $from;
 
-    /**
-     * @ORM\Column(name="`Destination`", type="string")
-     */
+    #[ORM\Column(name: '`Destination`', type: 'string')]
     private $to;
 
-    /**
-     * @ORM\Column(name="Processed", type="boolean")
-     */
+    #[ORM\Column(name: 'Processed', type: 'boolean')]
     private $processed;
 
-    /**
-     * @ORM\Column(name="ProcessedDate", type="datetime")
-     */
+    #[ORM\Column(name: 'ProcessedDate', type: 'datetime')]
     private $processed_date;
 
     /**

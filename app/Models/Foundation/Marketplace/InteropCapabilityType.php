@@ -15,17 +15,16 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="InteropCapabilityType")
- * Class InteropCapabilityType
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'InteropCapabilityType')]
+#[ORM\Entity]
 class InteropCapabilityType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**

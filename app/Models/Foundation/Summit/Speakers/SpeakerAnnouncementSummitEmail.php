@@ -15,17 +15,11 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SpeakerAnnouncementSummitEmail")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="speakers_announcement_emails"
- *     )
- * })
- * Class SpeakerAnnouncementSummitEmail
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerAnnouncementSummitEmail')]
+#[ORM\Entity]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'speakers_announcement_emails')])] // Class SpeakerAnnouncementSummitEmail
 class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
 {
 
@@ -41,24 +35,24 @@ class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
     const TypeNone                    = 'NONE';
 
     /**
-     * @ORM\Column(name="AnnouncementEmailTypeSent", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AnnouncementEmailTypeSent', type: 'string')]
     private $type;
 
     /**
-     * @ORM\Column(name="AnnouncementEmailSentDate", type="datetime")
      * @var DateTime
      */
+    #[ORM\Column(name: 'AnnouncementEmailSentDate', type: 'datetime')]
     private $send_date;
 
     Use SummitOwned;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", inversedBy="announcement_summit_emails")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationSpeaker::class, inversedBy: 'announcement_summit_emails')]
     protected $speaker;
 
     /**

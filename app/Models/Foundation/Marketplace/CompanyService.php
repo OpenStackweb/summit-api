@@ -18,91 +18,78 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use models\main\Company;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineCompanyServiceRepository")
- * @ORM\Table(name="CompanyService")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "CompanyService" = "CompanyService",
- *     "RegionalSupportedCompanyService" = "RegionalSupportedCompanyService",
- *     "OpenStackImplementation" = "OpenStackImplementation",
- *     "Appliance" = "Appliance",
- *     "Distribution" = "Distribution",
- *     "Consultant" = "Consultant",
- *     "CloudService", "CloudService",
- *     "PrivateCloudService" = "PrivateCloudService",
- *     "PublicCloudService" = "PublicCloudService",
- *     "RemoteCloudService" = "RemoteCloudService",
- *     "TrainingService" = "TrainingService",
- * } )
- * Class CompanyService
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'CompanyService')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Marketplace\DoctrineCompanyServiceRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['CompanyService' => 'CompanyService', 'RegionalSupportedCompanyService' => 'RegionalSupportedCompanyService', 'OpenStackImplementation' => 'OpenStackImplementation', 'Appliance' => 'Appliance', 'Distribution' => 'Distribution', 'Consultant' => 'Consultant', 'CloudService', 'CloudService', 'PrivateCloudService' => 'PrivateCloudService', 'PublicCloudService' => 'PublicCloudService', 'RemoteCloudService' => 'RemoteCloudService', 'TrainingService' => 'TrainingService'])] // Class CompanyService
 class CompanyService extends SilverstripeBaseModel
 {
     const ClassName = 'CompanyService';
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     protected $slug;
 
     /**
-     * @ORM\Column(name="Overview", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Overview', type: 'string')]
     protected $overview;
 
     /**
-     * @ORM\Column(name="Call2ActionUri", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Call2ActionUri', type: 'string')]
     protected $call_2_action_url;
 
     /**
-     * @ORM\Column(name="Active", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Active', type: 'boolean')]
     protected $is_active;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")
      * @var Company
      */
+    #[ORM\JoinColumn(name: 'CompanyID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Company::class, fetch: 'EXTRA_LAZY')]
     protected $company;
 
     /**
-     * @ORM\ManyToOne(targetEntity="MarketPlaceType", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="MarketPlaceTypeID", referencedColumnName="ID")
      * @var MarketPlaceType
      */
+    #[ORM\JoinColumn(name: 'MarketPlaceTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \MarketPlaceType::class, fetch: 'EXTRA_LAZY')]
     protected $type;
 
     /**
-     * @ORM\OneToMany(targetEntity="MarketPlaceReview", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
      * @var MarketPlaceReview[]
      */
+    #[ORM\OneToMany(targetEntity: \MarketPlaceReview::class, mappedBy: 'company_service', cascade: ['persist'], orphanRemoval: true)]
     protected $reviews;
 
     /**
-     * @ORM\OneToMany(targetEntity="MarketPlaceVideo", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
      * @var MarketPlaceVideo[]
      */
+    #[ORM\OneToMany(targetEntity: \MarketPlaceVideo::class, mappedBy: 'company_service', cascade: ['persist'], orphanRemoval: true)]
     protected $videos;
 
     /**
-     * @ORM\OneToMany(targetEntity="CompanyServiceResource", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
-     * @ORM\OrderBy({"name" = "order"})
      * @var CompanyServiceResource[]
      */
+    #[ORM\OneToMany(targetEntity: \CompanyServiceResource::class, mappedBy: 'company_service', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['name' => 'order'])]
     protected $resources;
 
     /**

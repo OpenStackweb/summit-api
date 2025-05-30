@@ -15,23 +15,22 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Main\DoctrineLanguageRepository")
- * @ORM\Table(name="Language")
- * Class Language
  * @package App\Models\Foundation\Main
  */
+#[ORM\Table(name: 'Language')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Main\DoctrineLanguageRepository::class)]
 class Language extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="IsoCode_639_1", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'IsoCode_639_1', type: 'string')]
     private $iso_code;
 
     /**

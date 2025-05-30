@@ -14,32 +14,31 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="`LegalAgreement`")
- * Class LegalAgreement
  * @package models\main
  */
+#[ORM\Table(name: '`LegalAgreement`')]
+#[ORM\Entity]
 class LegalAgreement extends SilverstripeBaseModel
 {
 
     const Slug = 'the-openstack-foundation-individual-member-agreement';
     /**
-     * @ORM\Column(name="Signature", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Signature', type: 'string')]
     private $signature;
 
     /**
-     * @ORM\Column(name="LegalDocumentPageID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'LegalDocumentPageID', type: 'integer')]
     private $document_id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="legal_agreements")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'legal_agreements')]
     private $owner;
 
     /**

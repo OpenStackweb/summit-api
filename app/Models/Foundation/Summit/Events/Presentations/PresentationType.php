@@ -18,107 +18,105 @@ use models\exceptions\ValidationException;
 
 /**
  * Class PresentationType
- * @ORM\Entity
- * @ORM\Table(name="PresentationType")
- * @ORM\HasLifecycleCallbacks
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationType')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks]
 class PresentationType extends SummitEventType
 {
 
     /**
-     * @ORM\Column(name="MaxSpeakers", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxSpeakers', type: 'integer')]
     protected $max_speakers;
 
     /**
-     * @ORM\Column(name="MinSpeakers", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MinSpeakers', type: 'integer')]
     protected $min_speakers;
 
     /**
-     * @ORM\Column(name="MaxModerators", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxModerators', type: 'integer')]
     protected $max_moderators;
 
     /**
-     * @ORM\Column(name="MinModerators", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MinModerators', type: 'integer')]
     protected $min_moderators;
 
     /**
-     * @ORM\Column(name="UseSpeakers", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseSpeakers', type: 'boolean')]
     protected $use_speakers;
 
     /**
-     * @ORM\Column(name="AreSpeakersMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AreSpeakersMandatory', type: 'boolean')]
     protected $are_speakers_mandatory;
 
     /**
-     * @ORM\Column(name="UseModerator", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseModerator', type: 'boolean')]
     protected $use_moderator;
 
     /**
-     * @ORM\Column(name="IsModeratorMandatory", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsModeratorMandatory', type: 'boolean')]
     protected $is_moderator_mandatory;
 
     /**
-     * @ORM\Column(name="ShouldBeAvailableOnCFP", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShouldBeAvailableOnCFP', type: 'boolean')]
     protected $should_be_available_on_cfp;
 
     /**
-     * @ORM\Column(name="ModeratorLabel", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ModeratorLabel', type: 'string')]
     protected $moderator_label;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="SummitMediaUploadType", mappedBy="presentation_types")
-     */
+    #[ORM\ManyToMany(targetEntity: \SummitMediaUploadType::class, mappedBy: 'presentation_types')]
     protected $allowed_media_upload_types;
 
     /**
-     * @ORM\Column(name="AllowAttendeeVote", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowAttendeeVote', type: 'boolean')]
     protected $allow_attendee_vote;
 
     /**
-     * @ORM\Column(name="AllowCustomOrdering", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowCustomOrdering', type: 'boolean')]
     protected $allow_custom_ordering;
 
     /**
-     * @ORM\Column(name="AllowsSpeakerAndEventCollision", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsSpeakerAndEventCollision', type: 'boolean')]
     protected $allows_speaker_event_collision;
 
     /**
-     * @ORM\Column(name="MinDuration", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MinDuration', type: 'integer')]
     protected $min_duration;
 
     /**
-     * @ORM\Column(name="MaxDuration", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxDuration', type: 'integer')]
     protected $max_duration;
 
     /**

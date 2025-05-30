@@ -13,12 +13,11 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitExternalLocation")
- * @ORM\HasLifecycleCallbacks
- * Class SummitExternalLocation
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitExternalLocation')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class SummitExternalLocation
 class SummitExternalLocation extends SummitGeoLocatedLocation
 {
     const Bar    = 'Bar';
@@ -50,9 +49,7 @@ class SummitExternalLocation extends SummitGeoLocatedLocation
         $this->capacity = $capacity;
     }
 
-    /**
-     * @ORM\Column(name="Capacity", type="integer")
-     */
+    #[ORM\Column(name: 'Capacity', type: 'integer')]
     protected $capacity;
 
     public static $metadata = [

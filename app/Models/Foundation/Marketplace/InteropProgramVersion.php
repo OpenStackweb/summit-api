@@ -15,38 +15,35 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="InteropProgramVersion")
- * Class InteropProgramVersion
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'InteropProgramVersion')]
+#[ORM\Entity]
 class InteropProgramVersion extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\ManyToMany(targetEntity="InteropCapability", cascade={"persist"})
-     * @ORM\JoinTable(name="InteropProgramVersion_Capabilities",
-     *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="InteropCapabilityID", referencedColumnName="ID")}
-     *      )
      * @var SupportChannelType[]
      */
+    #[ORM\JoinTable(name: 'InteropProgramVersion_Capabilities')]
+    #[ORM\JoinColumn(name: 'InteropProgramVersionID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'InteropCapabilityID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \InteropCapability::class, cascade: ['persist'])]
     private $capabilities;
 
 
     /**
-     * @ORM\ManyToMany(targetEntity="InteropDesignatedSection", cascade={"persist"})
-     * @ORM\JoinTable(name="InteropProgramVersion_DesignatedSections",
-     *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="InteropDesignatedSectionID", referencedColumnName="ID")}
-     *      )
      * @var InteropDesignatedSection[]
      */
+    #[ORM\JoinTable(name: 'InteropProgramVersion_DesignatedSections')]
+    #[ORM\JoinColumn(name: 'InteropProgramVersionID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'InteropDesignatedSectionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \InteropDesignatedSection::class, cascade: ['persist'])]
     private $designated_sections;
 
     public function __construct()

@@ -15,36 +15,35 @@ use App\Models\Foundation\Main\IOrderable;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPQuestionValueTemplate")
- * @ORM\Entity
- * Class RSVPQuestionValueTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPQuestionValueTemplate')]
+#[ORM\Entity] // Class RSVPQuestionValueTemplate
 class RSVPQuestionValueTemplate extends SilverstripeBaseModel implements IOrderable
 {
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     private $value;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RSVPMultiValueQuestionTemplate", inversedBy="values")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var RSVPMultiValueQuestionTemplate
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \RSVPMultiValueQuestionTemplate::class, inversedBy: 'values')]
     private $owner;
 
     /**

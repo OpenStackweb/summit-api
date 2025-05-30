@@ -16,25 +16,16 @@ use models\utils\IEntity;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="entity_events"
- *     )
- * })
- * @ORM\Table(name="SummitEntityEvent")
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEntityEventRepository")
- * Class SummitEntityEvent
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitEntityEvent')]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'entity_events')])]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitEntityEventRepository::class)] // Class SummitEntityEvent
 class SummitEntityEvent extends SilverstripeBaseModel
 {
     use SummitOwned;
 
-    /**
-     * @ORM\Column(name="EntityID", type="integer")
-     */
+    #[ORM\Column(name: 'EntityID', type: 'integer')]
     protected $entity_id;
 
     /**
@@ -49,9 +40,7 @@ class SummitEntityEvent extends SilverstripeBaseModel
      */
     public function getEntityId(){return $this->entity_id;}
 
-    /**
-     * @ORM\Column(name="EntityClassName", type="string")
-     */
+    #[ORM\Column(name: 'EntityClassName', type: 'string')]
     private $entity_class_name;
 
     /**
@@ -64,9 +53,7 @@ class SummitEntityEvent extends SilverstripeBaseModel
      */
     public function setEntityClassName($entity_class_name){$this->entity_class_name = $entity_class_name;}
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**
@@ -79,9 +66,7 @@ class SummitEntityEvent extends SilverstripeBaseModel
      */
     public function setType($type){$this->type = $type;}
 
-    /**
-     * @ORM\Column(name="Metadata", type="string")
-     */
+    #[ORM\Column(name: 'Metadata', type: 'string')]
     private $metadata;
 
     /**
@@ -106,10 +91,10 @@ class SummitEntityEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", cascade={"persist"})
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, cascade: ['persist'])]
     private $owner;
 
     /**

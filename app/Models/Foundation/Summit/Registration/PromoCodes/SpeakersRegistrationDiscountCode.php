@@ -16,12 +16,10 @@ use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakersRegistrationDiscountCodeRepository")
- * @ORM\Table(name="SpeakersRegistrationDiscountCode")
- * Class SpeakersRegistrationDiscountCode
- * This entity has the purpose of allowing to associate several speakers to a single discount code
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakersRegistrationDiscountCode')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSpeakersRegistrationDiscountCodeRepository::class)]
 class SpeakersRegistrationDiscountCode
     extends SummitRegistrationDiscountCode
 {

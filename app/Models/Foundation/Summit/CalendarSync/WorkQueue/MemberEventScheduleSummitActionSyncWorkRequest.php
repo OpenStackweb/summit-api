@@ -16,19 +16,19 @@ use models\summit\SummitEvent;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class MemberEventScheduleSummitActionSyncWorkRequest
- * @ORM\Entity
- * @ORM\Table(name="MemberEventScheduleSummitActionSyncWorkRequest")
  * @package models\summit\CalendarSync\WorkQueue
  */
+#[ORM\Table(name: 'MemberEventScheduleSummitActionSyncWorkRequest')]
+#[ORM\Entity]
 class MemberEventScheduleSummitActionSyncWorkRequest
 extends MemberScheduleSummitActionSyncWorkRequest
 {
     const SubType = 'EVENT';
 
     /**
-     * @ORM\Column(name="SummitEventID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'SummitEventID', type: 'integer')]
     private $summit_event_id;
 
     /**

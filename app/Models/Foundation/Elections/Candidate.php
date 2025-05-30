@@ -18,11 +18,10 @@ use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Candidate")
- * Class Candidate
  * @package App\Models\Foundation\Elections
  */
+#[ORM\Table(name: 'Candidate')]
+#[ORM\Entity]
 class Candidate extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -39,62 +38,61 @@ class Candidate extends SilverstripeBaseModel
 
     /**
      * @var Election
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Elections\Election", inversedBy="candidates")
-     * @ORM\JoinColumn(name="ElectionID", referencedColumnName="ID")
      */
+    #[ORM\JoinColumn(name: 'ElectionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Elections\Election::class, inversedBy: 'candidates')]
     private $election;
 
     /**
      * @var Member
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="candidate_profiles")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'candidate_profiles')]
     private $member;
 
     /**
-     * @ORM\Column(name="HasAcceptedNomination", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'HasAcceptedNomination', type: 'boolean')]
     private $has_accepted_nomination;
 
     /**
-     * @ORM\Column(name="IsGoldMemberCandidate", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsGoldMemberCandidate', type: 'boolean')]
     private $is_gold_member;
 
     /**
      * Questions
      */
-
     /**
      * @var string
-     * @ORM\Column(name="Bio", type="string")
      */
+    #[ORM\Column(name: 'Bio', type: 'string')]
     private $bio;
 
     /**
      * @var string
-     * @ORM\Column(name="RelationshipToOpenStack", type="string")
      */
+    #[ORM\Column(name: 'RelationshipToOpenStack', type: 'string')]
     private $relationship_to_openstack;
 
     /**
      * @var string
-     * @ORM\Column(name="Experience", type="string")
      */
+    #[ORM\Column(name: 'Experience', type: 'string')]
     private $experience;
 
     /**
      * @var string
-     * @ORM\Column(name="BoardsRole", type="string")
      */
+    #[ORM\Column(name: 'BoardsRole', type: 'string')]
     private $boards_role;
 
     /**
      * @var string
-     * @ORM\Column(name="TopPriority", type="string")
      */
+    #[ORM\Column(name: 'TopPriority', type: 'string')]
     private $top_priority;
 
     /**

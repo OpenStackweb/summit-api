@@ -18,11 +18,10 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeNoteRepository")
- * @ORM\Table(name="SummitAttendeeNote")
- * Class SummitAttendeeNote
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendeeNote')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAttendeeNoteRepository::class)]
 class SummitAttendeeNote extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -40,30 +39,30 @@ class SummitAttendeeNote extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="Content", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Content', type: 'string')]
     private $content;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="AuthorID", referencedColumnName="ID", nullable=true)
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'AuthorID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $author;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendee", inversedBy="notes")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=false)
      * @var SummitAttendee
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', nullable: false)]
+    #[ORM\ManyToOne(targetEntity: \SummitAttendee::class, inversedBy: 'notes')]
     private $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAttendeeTicket", inversedBy="notes")
-     * @ORM\JoinColumn(name="TicketID", referencedColumnName="ID", nullable=true)
      * @var SummitAttendeeTicket
      */
+    #[ORM\JoinColumn(name: 'TicketID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \SummitAttendeeTicket::class, inversedBy: 'notes')]
     private $ticket;
 
     /**

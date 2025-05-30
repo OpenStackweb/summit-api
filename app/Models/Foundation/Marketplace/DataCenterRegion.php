@@ -15,42 +15,41 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="DataCenterRegion")
- * Class DataCenterRegion
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'DataCenterRegion')]
+#[ORM\Entity]
 class DataCenterRegion extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Endpoint", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Endpoint', type: 'string')]
     private $endpoint;
 
     /**
-     * @ORM\Column(name="Color", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Color', type: 'string')]
     private $color;
 
     /**
-     * @ORM\OneToMany(targetEntity="DataCenterLocation", mappedBy="region", cascade={"persist"}, orphanRemoval=true)
      * @var DataCenterLocation[]
      */
+    #[ORM\OneToMany(targetEntity: \DataCenterLocation::class, mappedBy: 'region', cascade: ['persist'], orphanRemoval: true)]
     private $locations;
 
     /**
-     * @ORM\ManyToOne(targetEntity="CloudService",inversedBy="data_center_regions", fetch="LAZY")
-     * @ORM\JoinColumn(name="CloudServiceID", referencedColumnName="ID")
      * @var CloudService
      */
+    #[ORM\JoinColumn(name: 'CloudServiceID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \CloudService::class, inversedBy: 'data_center_regions', fetch: 'LAZY')]
     private $cloud_service;
 
     public function __construct()

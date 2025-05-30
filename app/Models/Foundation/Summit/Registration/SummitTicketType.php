@@ -23,18 +23,12 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTicketTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="ticket_types"
- *     )
- * })
- * @ORM\Table(name="SummitTicketType")
- * @ORM\HasLifecycleCallbacks
- * Class SummitTicketType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitTicketType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitTicketTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'ticket_types')])]
+#[ORM\HasLifecycleCallbacks] // Class SummitTicketType
 class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketType
 {
     use SummitOwned;
@@ -80,100 +74,100 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     ];
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="ExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
     private $external_id;
 
     /**
-     * @ORM\Column(name="Cost", type="float")
      * @var double
      */
+    #[ORM\Column(name: 'Cost', type: 'float')]
     private $cost;
 
     /**
-     * @ORM\Column(name="Currency", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Currency', type: 'string')]
     private $currency;
 
     /**
-     * @ORM\Column(name="QuantityToSell", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'QuantityToSell', type: 'integer')]
     private $quantity_2_sell;
 
     /**
-     * @ORM\Column(name="QuantitySold", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'QuantitySold', type: 'integer')]
     private $quantity_sold;
 
     /**
-     * @ORM\Column(name="MaxQuantityToSellPerOrder", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'MaxQuantityToSellPerOrder', type: 'integer')]
     private $max_quantity_per_order;
 
     /**
-     * @ORM\Column(name="SaleStartDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SaleStartDate', type: 'datetime')]
     private $sales_start_date;
 
     /**
-     * @ORM\Column(name="SaleEndDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SaleEndDate', type: 'datetime')]
     private $sales_end_date;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitTaxType", mappedBy="ticket_types")
      * @var SummitTaxType[]
      */
+    #[ORM\ManyToMany(targetEntity: \SummitTaxType::class, mappedBy: 'ticket_types')]
     private $applied_taxes;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeType",)
-     * @ORM\JoinColumn(name="BadgeTypeID", referencedColumnName="ID")
      * @var SummitBadgeType
      */
+    #[ORM\JoinColumn(name: 'BadgeTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitBadgeType::class)]
     private $badge_type;
 
     /**
-     * @ORM\Column(name="Audience", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Audience', type: 'string')]
     private $audience;
 
     /**
-     * @ORM\Column(name="AllowsToDelegate", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsToDelegate', type: 'boolean')]
     private $allows_to_delegate;
 
     /**
-     * @ORM\Column(name="AllowsReassignRelatedTickets", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsReassignRelatedTickets', type: 'boolean')]
     private $allows_reassign_related_tickets;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_ticket_types")
      * @var SummitOrderExtraQuestionType[]
      */
+    #[ORM\ManyToMany(targetEntity: \models\summit\SummitOrderExtraQuestionType::class, mappedBy: 'allowed_ticket_types')]
     private $extra_question_types;
 
     /**
@@ -241,10 +235,10 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     }
 
     /**
-     * @ORM\PreRemove:
      * @param LifecycleEventArgs $args
      * @throws ValidationException
      */
+    #[ORM\PreRemove] // :
     public function preRemoveHandler(LifecycleEventArgs $args){
        if(Config::get('registration.validate_ticket_type_removal', true) && $this->quantity_sold > 0)
             throw new ValidationException

@@ -13,11 +13,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPCheckBoxListQuestionTemplate")
- * @ORM\Entity
- * Class RSVPCheckBoxListQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPCheckBoxListQuestionTemplate')]
+#[ORM\Entity] // Class RSVPCheckBoxListQuestionTemplate
 class RSVPCheckBoxListQuestionTemplate extends RSVPMultiValueQuestionTemplate
 {
     const ClassName = 'RSVPCheckBoxListQuestionTemplate';

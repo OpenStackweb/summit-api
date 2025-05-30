@@ -16,26 +16,25 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\summit\SummitEvent;
 use models\utils\IEntity;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Member_Schedule")
- * Class SummitMemberSchedule
  * @package models\main
  */
+#[ORM\Table(name: 'Member_Schedule')]
+#[ORM\Entity]
 class SummitMemberSchedule extends BaseEntity
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="Member", inversedBy="schedule")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Member::class, inversedBy: 'schedule')]
     private $member;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'SummitEventID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class)]
     private $event;
 
     /**

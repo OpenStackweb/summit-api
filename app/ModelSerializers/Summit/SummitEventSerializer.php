@@ -194,6 +194,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                         }
                         $values['current_attendance'] = $attendance;
                     }
+                    break;
                     case 'feedback':
                         {
                             $feedback = [];

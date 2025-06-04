@@ -52,7 +52,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'getCarouselAdvertiseImageId' => 'carousel_advertise_image',
         'getFeaturedEventId' => 'featured_event',
         'getCompanyId' => 'company',
-        'getSponsorshipId' => 'sponsorship',
+        'getLeadReportSettingId' => 'lead_report_setting',
     ];
 
     protected $hasPropertyMappings = [
@@ -62,7 +62,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'hasCarouselAdvertiseImage' => 'carousel_advertise_image',
         'hasFeaturedEvent' => 'featured_event',
         'hasCompany' => 'company',
-        'hasSponsorship' => 'sponsorship',
+        'hasLeadReportSetting' => 'lead_report_setting',
     ];
 
     /**
@@ -90,13 +90,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      */
     #[ORM\Column(name: 'IsPublished', type: 'boolean')]
     protected $is_published;
-
-    /**
-     * @var SummitSponsorshipType
-     */
-    #[ORM\JoinColumn(name: 'SummitSponsorshipTypeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
-    #[ORM\ManyToOne(targetEntity: \SummitSponsorshipType::class)]
-    protected $sponsorship;
 
     /**
      * @var SponsorUserInfoGrant[]
@@ -231,6 +224,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     #[ORM\OneToOne(targetEntity: \models\summit\SummitLeadReportSetting::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $lead_report_setting;
 
+     /**
+     * @var SummitSponsorship[]
+     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitSponsorship::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $sponsorships;
+
     /**
      * Sponsor constructor.
      */
@@ -244,7 +243,8 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->ads = new ArrayCollection();
         $this->is_published = true;
         $this->show_logo_in_event_page = true;
-        $this->extra_questions = new ArrayCollection;
+        $this->extra_questions = new ArrayCollection();
+        $this->sponsorships = new ArrayCollection();
     }
 
     public static function getAllowedQuestionTypes(): array
@@ -288,22 +288,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function setCompany(Company $company): void
     {
         $this->company = $company;
-    }
-
-    /**
-     * @return SummitSponsorshipType
-     */
-    public function getSponsorship(): ?SummitSponsorshipType
-    {
-        return $this->sponsorship;
-    }
-
-    /**
-     * @param SummitSponsorshipType $sponsorship
-     */
-    public function setSponsorship(SummitSponsorshipType $sponsorship): void
-    {
-        $this->sponsorship = $sponsorship;
     }
 
     /**
@@ -975,6 +959,26 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
+     * @return bool
+     */
+    public function hasLeadReportSetting(): bool
+    {
+        return $this->getLeadReportSettingId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLeadReportSettingId(): int
+    {
+        try {
+            return is_null($this->lead_report_setting) ? 0 : $this->lead_report_setting->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    /**
      * @return void
      */
     public function clearLeadReportSetting()
@@ -1005,7 +1009,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         return $sponsorship === false ? null : $sponsorship;
     }
 
-
     /**
      * @param SummitSponsorship $sponsorship
      * @throws ValidationException
@@ -1014,7 +1017,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         $sponsorship_type = $sponsorship->getType();
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('type_id', $sponsorship_type->getId()));
+        $criteria->where(Criteria::expr()->eq('type', $sponsorship_type));
         if ($this->sponsorships->matching($criteria)->count() > 0) {
             throw new ValidationException(
                 sprintf('Sponsor %s already has a sponsorship of the same type (%s).',
@@ -1043,7 +1046,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         if (is_null($this->sponsorships)) return;
         $this->sponsorships->clear();
-        $this->sponsorships = new ArrayCollection();
+        $this->sponsorships = null;
     }
 
     /**

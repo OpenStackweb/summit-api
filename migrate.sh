@@ -1,4 +1,4 @@
 #!/bin/bash
 
-php artisan doctrine:migrations:migrate --connection=config
-php artisan doctrine:migrations:migrate --connection=model
+php artisan doctrine:migrations:migrate --em=config
+php artisan doctrine:migrations:migrate --em=model

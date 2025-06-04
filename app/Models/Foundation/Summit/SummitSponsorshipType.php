@@ -173,6 +173,9 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
     #[ORM\Column(name: 'BadgeImageAltText', type: 'string')]
     private $badge_image_alt_text;
 
+    #[ORM\Column(name: 'IsPublic', type: 'boolean')]
+    private $is_public;
+
     public function __construct()
     {
         $this->order = 1;
@@ -182,6 +185,7 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
         $this->sponsor_page_use_banner_widget = true;
         $this->should_display_on_expo_hall_page = true;
         $this->should_display_on_lobby_page = true;
+        $this->is_public = false;
     }
 
     /**

@@ -230,6 +230,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     #[ORM\OneToOne(targetEntity: \models\summit\SummitLeadReportSetting::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $lead_report_setting;
 
+     /**
+     * @var SummitSponsorship[]
+     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitSponsorship::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $sponsorships;
+
     /**
      * Sponsor constructor.
      */
@@ -243,7 +249,8 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->ads = new ArrayCollection();
         $this->is_published = true;
         $this->show_logo_in_event_page = true;
-        $this->extra_questions = new ArrayCollection;
+        $this->extra_questions = new ArrayCollection();
+        $this->sponsorships = new ArrayCollection();
     }
 
     public static function getAllowedQuestionTypes(): array
@@ -956,5 +963,34 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         if (is_null($this->lead_report_setting)) return;
         $this->lead_report_setting->clearSponsor();
         $this->lead_report_setting = null;
+    }
+
+
+    /**
+     * @return SummitSponsorship[]
+     */
+    public function getSponsorships(): array|ArrayCollection
+    {
+        return $this->sponsorships;
+    }
+
+    /**
+     * @param SummitSponsorship $sponsorship
+     */
+    public function addSponsorship(SummitSponsorship $sponsorship): void
+    {
+        if ($this->sponsorship->contains($sponsorship)) return;
+        $sponsorship->setSponsor($this);
+        $this->sponsorships->add($sponsorship);
+    }
+
+    /**
+     * @return void
+     */
+    public function clearSponsorships(): void
+    {
+        if (is_null($this->sponsorships)) return;
+        $this->sponsorships->clear();
+        $this->sponsorships = null;
     }
 }

@@ -14,17 +14,16 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="Region")
- * Class Region
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'Region')]
+#[ORM\Entity]
 class Region extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**

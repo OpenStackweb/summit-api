@@ -17,10 +17,10 @@ use models\main\File;
 
 /**
  * Class SummitEventWithFile
- * @ORM\Entity
- * @ORM\Table(name="SummitEventWithFile")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitEventWithFile')]
+#[ORM\Entity]
 class SummitEventWithFile extends SummitEvent
 {
     /**
@@ -31,10 +31,10 @@ class SummitEventWithFile extends SummitEvent
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
-     * @ORM\JoinColumn(name="AttachmentID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'AttachmentID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $attachment;
 
     /**

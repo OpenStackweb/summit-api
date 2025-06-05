@@ -15,36 +15,35 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitEmailEventFlowType")
- * Class SummitEmailEventFlowType
  * @package App\Models\Foundation\Summit\EmailFlows
  */
+#[ORM\Table(name: 'SummitEmailEventFlowType')]
+#[ORM\Entity]
 class SummitEmailEventFlowType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\ManyToOne(targetEntity="SummitEmailFlowType", inversedBy="flow_event_types")
-     * @ORM\JoinColumn(name="SummitEmailFlowTypeID", referencedColumnName="ID")
      * @var SummitEmailFlowType
      */
+    #[ORM\JoinColumn(name: 'SummitEmailFlowTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitEmailFlowType::class, inversedBy: 'flow_event_types')]
     private $flow;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     private $slug;
 
     /**
-     * @ORM\Column(name="DefaultEmailTemplateIdentifier", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'DefaultEmailTemplateIdentifier', type: 'string')]
     private $default_email_template;
 
     /**

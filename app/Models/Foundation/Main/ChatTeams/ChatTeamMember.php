@@ -14,11 +14,10 @@
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="ChatTeam_Members")
- * Class ChatTeamMember
  * @package models\main
  */
+#[ORM\Table(name: 'ChatTeam_Members')]
+#[ORM\Entity]
 class ChatTeamMember
 {
     /**
@@ -89,11 +88,9 @@ class ChatTeamMember
     {
         $this->permission = $permission;
     }
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="ID", type="integer", unique=true, nullable=false)
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'ID', type: 'integer', unique: true, nullable: false)]
     private $id;
 
     /**
@@ -123,23 +120,23 @@ class ChatTeamMember
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="team_memberships")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'team_memberships')]
     private $member;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="members")
-     * @ORM\JoinColumn(name="ChatTeamID", referencedColumnName="ID")
      * @var ChatTeam
      */
+    #[ORM\JoinColumn(name: 'ChatTeamID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\ChatTeam::class, inversedBy: 'members')]
     private $team;
 
     /**
-     * @ORM\Column(name="Permission", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Permission', type: 'string')]
     private $permission;
 
 }

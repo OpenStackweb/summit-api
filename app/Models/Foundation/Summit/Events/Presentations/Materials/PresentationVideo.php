@@ -15,11 +15,10 @@
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationVideo")
-  * Class PresentationVideo
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationVideo')]
+#[ORM\Entity]
 class PresentationVideo extends PresentationMaterial
 {
     const ClassName = 'PresentationVideo';
@@ -32,15 +31,15 @@ class PresentationVideo extends PresentationMaterial
     }
 
     /**
-     * @ORM\Column(name="YouTubeID", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'YouTubeID', type: 'string')]
     private $youtube_id;
 
     /**
-     * @ORM\Column(name="ExternalUrl", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalUrl', type: 'string')]
     private $external_url;
 
     /**
@@ -108,21 +107,21 @@ class PresentationVideo extends PresentationMaterial
     }
 
     /**
-     * @ORM\Column(name="DateUploaded", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'DateUploaded', type: 'datetime')]
     private $date_uploaded;
 
     /**
-     * @ORM\Column(name="Highlighted", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Highlighted', type: 'boolean')]
     private $highlighted;
 
     /**
-     * @ORM\Column(name="Views", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Views', type: 'integer')]
     private $views;
 
     public function __construct()

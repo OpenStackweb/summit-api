@@ -716,6 +716,7 @@ trait InsertSummitTestData
             $presentation->setStartDate($start_date);
             $presentation->setEndDate($end_date);
             $presentation->addSpeaker($speaker1);
+            $presentation->addTag(new Tag('TEST TAG'));
             $media_upload = new PresentationMediaUpload();
             $media_upload_type_idx = array_rand(self::$media_uploads_types);
             $media_upload->setName(sprintf("Media Upload %s", $i));
@@ -746,6 +747,7 @@ trait InsertSummitTestData
             $presentation->setEndDate($end_date);
             $presentation->addSpeaker($speaker1);
             $presentation->setLocation(self::$mainVenue);
+            $presentation->addTag(new Tag('TEST TAG'));
             self::$default_selection_plan2->addPresentation($presentation);
             self::$presentations[] = $presentation;
             $presentation->publish();
@@ -763,6 +765,7 @@ trait InsertSummitTestData
             $presentation->setProgress(Presentation::PHASE_COMPLETE);
             $presentation->setStatus(Presentation::STATUS_RECEIVED);
             $presentation->setType( self::$allow2VotePresentationType );
+            $presentation->addTag(new Tag('TEST TAG'));
             self::$summit->addEvent($presentation);
             self::$presentations[] = $presentation;
             $presentation->publish();
@@ -777,6 +780,7 @@ trait InsertSummitTestData
             $event->setSubmissionSource( $i < 10 ? SummitEvent::SOURCE_ADMIN : SummitEvent::SOURCE_SUBMISSION);
             $event->setOverflowStreamingUrl(sprintf("https://testoverflowurl_%s.org", $i));
             $event->setOverflowStreamIsSecure(true);
+            $event->addTag(new Tag('TEST TAG'));
             self::$summit->addEvent($event);
             self::$presentations[] = $event;
         }

@@ -18,11 +18,10 @@ use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SelectionPlan_AllowedMembers")
- * Class SelectionPlanAllowedMember
  * @package App\Models\Foundation\Summit
  */
+#[ORM\Table(name: 'SelectionPlan_AllowedMembers')]
+#[ORM\Entity]
 class SelectionPlanAllowedMember extends BaseEntity
 {
     use One2ManyPropertyTrait;
@@ -36,23 +35,23 @@ class SelectionPlanAllowedMember extends BaseEntity
     ];
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var String
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     private $email;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $member;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_members", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'allowed_members', fetch: 'EXTRA_LAZY')]
     private $selection_plan;
 
     /**

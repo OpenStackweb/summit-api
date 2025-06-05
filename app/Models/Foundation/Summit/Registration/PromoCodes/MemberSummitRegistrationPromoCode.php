@@ -15,11 +15,10 @@ use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 /**
- * @ORM\Entity
- * @ORM\Table(name="MemberSummitRegistrationPromoCode")
- * Class MemberSummitRegistrationPromoCode
  * @package models\summit
  */
+#[ORM\Table(name: 'MemberSummitRegistrationPromoCode')]
+#[ORM\Entity]
 class MemberSummitRegistrationPromoCode
     extends SummitRegistrationPromoCode
     implements IOwnablePromoCode

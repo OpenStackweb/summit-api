@@ -22,91 +22,90 @@ use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRoomReservationRepository")
- * @ORM\Table(name="SummitRoomReservation")
- * Class SummitRoomReservation
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRoomReservation')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRoomReservationRepository::class)]
 class SummitRoomReservation extends SilverstripeBaseModel
 {
     /**
      * @var \DateTime
-     * @ORM\Column(name="StartDateTime", type="datetime")
      */
+    #[ORM\Column(name: 'StartDateTime', type: 'datetime')]
     private $start_datetime;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="EndDateTime", type="datetime")
      */
+    #[ORM\Column(name: 'EndDateTime', type: 'datetime')]
     private $end_datetime;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="ApprovedPaymentDate", type="datetime")
      */
+    #[ORM\Column(name: 'ApprovedPaymentDate', type: 'datetime')]
     private $approved_payment_date;
 
     /**
      * @var string
-     * @ORM\Column(name="Status", type="string")
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
     /**
      * @var string
-     * @ORM\Column(name="LastError", type="string")
      */
+    #[ORM\Column(name: 'LastError', type: 'string')]
     private $last_error;
 
     /**
      * @var string
-     * @ORM\Column(name="PaymentGatewayCartId", type="string")
      */
+    #[ORM\Column(name: 'PaymentGatewayCartId', type: 'string')]
     private $payment_gateway_cart_id;
 
     /**
      * @var string
-     * @ORM\Column(name="PaymentGatewayClientToken", type="string")
      */
+    #[ORM\Column(name: 'PaymentGatewayClientToken', type: 'string')]
     private $payment_gateway_client_token;
 
     /**
      * @var string
-     * @ORM\Column(name="Currency", type="string")
      */
+    #[ORM\Column(name: 'Currency', type: 'string')]
     private $currency;
 
     /**
      * @var float
-     * @ORM\Column(name="Amount", type="integer")
      */
+    #[ORM\Column(name: 'Amount', type: 'integer')]
     private $amount;
 
     /**
-     * @ORM\Column(name="PaymentMethod", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'PaymentMethod', type: 'string')]
     private $payment_method;
 
     /**
      * @var float
-     * @ORM\Column(name="RefundedAmount", type="integer")
      */
+    #[ORM\Column(name: 'RefundedAmount', type: 'integer')]
     private $refunded_amount;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="reservations")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, inversedBy: 'reservations')]
     private $owner;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBookableVenueRoom", inversedBy="reservations")
-     * @ORM\JoinColumn(name="RoomID", referencedColumnName="ID")
      * @var SummitBookableVenueRoom
      */
+    #[ORM\JoinColumn(name: 'RoomID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitBookableVenueRoom::class, inversedBy: 'reservations')]
     private $room;
 
     const ReservedStatus         = "Reserved";

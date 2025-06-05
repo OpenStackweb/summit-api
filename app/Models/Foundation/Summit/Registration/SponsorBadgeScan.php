@@ -23,11 +23,10 @@ use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="SponsorBadgeScan")
- * Class SponsorBadgeScan
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorBadgeScan')]
+#[ORM\Entity]
 class SponsorBadgeScan extends SponsorUserInfoGrant
 {
 
@@ -52,41 +51,41 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     ];
 
     /**
-     * @ORM\Column(name="QRCode", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'QRCode', type: 'string')]
     private $qr_code;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="ScanDate", type="datetime")
      */
+    #[ORM\Column(name: 'ScanDate', type: 'datetime')]
     private $scan_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="UserID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'UserID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $user;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendeeBadge")
-     * @ORM\JoinColumn(name="BadgeID", referencedColumnName="ID")
      * @var SummitAttendeeBadge
      */
+    #[ORM\JoinColumn(name: 'BadgeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendeeBadge::class)]
     private $badge;
 
     /**
-     * @ORM\Column(name="Notes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Notes', type: 'string')]
     private $notes;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsorBadgeScanExtraQuestionAnswer", mappedBy="badge_scan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SponsorBadgeScanExtraQuestionAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \SponsorBadgeScanExtraQuestionAnswer::class, mappedBy: 'badge_scan', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $extra_question_answers;
 
     public function __construct()

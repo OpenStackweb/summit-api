@@ -16,11 +16,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorSocialNetworkRepository")
- * @ORM\Table(name="SponsorSocialNetwork")
- * Class SponsorSocialNetwork
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorSocialNetwork')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorSocialNetworkRepository::class)]
 class SponsorSocialNetwork extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -34,28 +33,28 @@ class SponsorSocialNetwork extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="social_networks", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Sponsor::class, inversedBy: 'social_networks', fetch: 'EXTRA_LAZY')]
     private $sponsor;
 
     /**
-     * @ORM\Column(name="Link", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**
-     * @ORM\Column(name="IconCSSClass", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'IconCSSClass', type: 'string')]
     private $icon_css_class;
 
     /**
-     * @ORM\Column(name="IsEnable", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsEnable', type: 'boolean')]
     private $is_enabled;
 
     /**

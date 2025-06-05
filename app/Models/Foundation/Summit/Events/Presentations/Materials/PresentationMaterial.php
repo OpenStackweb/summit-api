@@ -16,17 +16,14 @@ use App\Models\Foundation\Summit\ScheduleEntity;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationMaterial")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap(
- *     {"PresentationSlide" = "PresentationSlide", "PresentationVideo" = "PresentationVideo",
- *      "PresentationLink" = "PresentationLink", "PresentationMediaUpload" = "PresentationMediaUpload" })
- * @ORM\HasLifecycleCallbacks
- * Class PresentationMaterial
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationMaterial')]
+#[ORM\Entity]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['PresentationSlide' => 'PresentationSlide', 'PresentationVideo' => 'PresentationVideo', 'PresentationLink' => 'PresentationLink', 'PresentationMediaUpload' => 'PresentationMediaUpload'])]
+#[ORM\HasLifecycleCallbacks] // Class PresentationMaterial
 abstract class PresentationMaterial
     extends SilverstripeBaseModel implements IOrderable
 {
@@ -39,10 +36,10 @@ abstract class PresentationMaterial
     }
 
     /**
-    * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="materials")
-    * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
-    * @var Presentation
-    */
+     * @var Presentation
+     */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'materials')]
     protected $presentation;
 
     /**
@@ -141,27 +138,27 @@ abstract class PresentationMaterial
     }
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     protected $description;
 
     /**
-     * @ORM\Column(name="DisplayOnSite", type="boolean")
      * @var string
      */
+    #[ORM\Column(name: 'DisplayOnSite', type: 'boolean')]
     protected $display_on_site;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     protected $order;
 
     /**
@@ -181,9 +178,9 @@ abstract class PresentationMaterial
     }
 
     /**
-     * @ORM\Column(name="Featured", type="boolean")
      * @var string
      */
+    #[ORM\Column(name: 'Featured', type: 'boolean')]
     protected $featured;
 
     public function __construct()

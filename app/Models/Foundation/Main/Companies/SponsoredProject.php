@@ -20,67 +20,66 @@ use Doctrine\ORM\Mapping AS ORM;
 use Cocur\Slugify\Slugify;
 use App\Models\Foundation\Main\OrderableChilds;
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineSponsoredProjectRepository")
- * @ORM\Table(name="SponsoredProject")
- * Class SponsoredProject
  * @package models\main
  */
+#[ORM\Table(name: 'SponsoredProject')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineSponsoredProjectRepository::class)]
 class SponsoredProject extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
     /**
-     * @ORM\Column(name="IsActive", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsActive', type: 'boolean')]
     private $is_active;
 
     /**
-     * @ORM\Column(name="Slug", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Slug', type: 'string')]
     private $slug;
 
     /**
-     * @ORM\Column(name="ShouldShowOnNavBar", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'ShouldShowOnNavBar', type: 'boolean')]
     private $should_show_on_nav_bar;
 
     /**
-     * @ORM\Column(name="SiteURL", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SiteURL', type: 'string')]
     private $site_url;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
-     * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'LogoID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
     protected $logo;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project", cascade={"persist"})
      * @var ArrayCollection
      */
+    #[ORM\OneToMany(targetEntity: \SponsoredProject::class, mappedBy: 'parent_project', cascade: ['persist'])]
     private $sub_projects;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SponsoredProject", inversedBy="sub_projects", cascade={"persist"})
-     * @ORM\JoinColumn(name="ParentProjectID", referencedColumnName="ID")
      * @var SponsoredProject
      */
+    #[ORM\JoinColumn(name: 'ParentProjectID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SponsoredProject::class, inversedBy: 'sub_projects', cascade: ['persist'])]
     private $parent_project;
 
     /**
@@ -225,10 +224,10 @@ class SponsoredProject extends SilverstripeBaseModel
     use OrderableChilds;
 
     /**
-     * @ORM\OneToMany(targetEntity="ProjectSponsorshipType", mappedBy="sponsored_project", cascade={"persist"}, orphanRemoval=true)
-     * @ORM\OrderBy({"order" = "ASC"})
      * @var ArrayCollection
      */
+    #[ORM\OneToMany(targetEntity: \ProjectSponsorshipType::class, mappedBy: 'sponsored_project', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['order' => 'ASC'])]
     private $sponsorship_types;
 
     /**

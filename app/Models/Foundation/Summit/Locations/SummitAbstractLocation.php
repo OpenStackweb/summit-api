@@ -29,32 +29,16 @@ use Doctrine\ORM\Mapping AS ORM;
  * //     )
  * // })
  */
-
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitLocationRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="locations"
- *     )
- * })
- * @ORM\Table(name="SummitAbstractLocation")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "SummitAbstractLocation" = "SummitAbstractLocation",
- *     "SummitGeoLocatedLocation" = "SummitGeoLocatedLocation",
- *     "SummitExternalLocation" = "SummitExternalLocation",
- *     "SummitVenue" = "SummitVenue",
- *     "SummitHotel" = "SummitHotel",
- *     "SummitAirport" = "SummitAirport",
- *     "SummitVenueRoom" = "SummitVenueRoom",
- *     "SummitBookableVenueRoom" = "SummitBookableVenueRoom"
- * })
- * @ORM\HasLifecycleCallbacks
- * Class SummitAbstractLocation
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAbstractLocation')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitLocationRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'locations')])]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitAbstractLocation' => 'SummitAbstractLocation', 'SummitGeoLocatedLocation' => 'SummitGeoLocatedLocation', 'SummitExternalLocation' => 'SummitExternalLocation', 'SummitVenue' => 'SummitVenue', 'SummitHotel' => 'SummitHotel', 'SummitAirport' => 'SummitAirport', 'SummitVenueRoom' => 'SummitVenueRoom', 'SummitBookableVenueRoom' => 'SummitBookableVenueRoom'])]
+#[ORM\HasLifecycleCallbacks] // Class SummitAbstractLocation
 class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
 {
     const TypeExternal = 'External';
@@ -62,57 +46,57 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     const TypeNone     = 'None';
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="ShortName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ShortName', type: 'string')]
     protected $short_name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     protected $description;
 
     /**
-     * @ORM\Column(name="LocationType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LocationType', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     protected $order;
 
     /**
-     * @ORM\Column(name="OpeningHour", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'OpeningHour', type: 'integer')]
     protected $opening_hour;
 
     /**
-     * @ORM\Column(name="ClosingHour", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'ClosingHour', type: 'integer')]
     protected $closing_hour;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner", mappedBy="location", cascade={"persist"}, orphanRemoval=true)
      * @var SummitLocationBanner[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner::class, mappedBy: 'location', cascade: ['persist'], orphanRemoval: true)]
     protected $banners;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEvent", mappedBy="location", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var SummitEvent[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitEvent::class, mappedBy: 'location', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     protected $events;
 
 

@@ -14,11 +14,10 @@
 use models\main\File;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationSlide")
- * Class PresentationSlide
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationSlide')]
+#[ORM\Entity]
 class PresentationSlide extends PresentationMaterial
 {
     const ClassName = 'PresentationSlide';
@@ -31,16 +30,16 @@ class PresentationSlide extends PresentationMaterial
     }
 
     /**
-     * @ORM\Column(name="Link", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="SlideID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'SlideID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     private $slide;
 
     /**

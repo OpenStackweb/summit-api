@@ -13,11 +13,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrinePrivateCloudServiceRepository")
- * @ORM\Table(name="PrivateCloudService")
- * Class PrivateCloudService
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'PrivateCloudService')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Marketplace\DoctrinePrivateCloudServiceRepository::class)]
 class PrivateCloudService extends CloudService
 {
     const ClassName = 'PrivateCloudService';

@@ -40,17 +40,11 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Events\SummitAttendeeCheckInStateUpdated;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="attendees"
- *     )
- * })
- * @ORM\Table(name="SummitAttendee")
- * Class SummitAttendee
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitAttendee')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitAttendeeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'attendees')])]
 class SummitAttendee extends SilverstripeBaseModel
 {
     use ExtraQuestionAnswerHolder;
@@ -60,119 +54,119 @@ class SummitAttendee extends SilverstripeBaseModel
     const AllowedStatus = [self::StatusComplete, self::StatusIncomplete];
 
     /**
-     * @ORM\Column(name="FirstName", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'FirstName', type: 'string')]
     private $first_name;
 
     /**
-     * @ORM\Column(name="Surname", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Surname', type: 'string')]
     private $surname;
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     private $email;
 
     /**
-     * @ORM\Column(name="SharedContactInfo", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'SharedContactInfo', type: 'boolean')]
     private $share_contact_info;
 
     /**
-     * @ORM\Column(name="DisclaimerAcceptedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'DisclaimerAcceptedDate', type: 'datetime')]
     private $disclaimer_accepted_date;
 
     /**
-     * @ORM\Column(name="SummitHallCheckedInDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SummitHallCheckedInDate', type: 'datetime')]
     private $summit_hall_checked_in_date;
 
     /**
-     * @ORM\Column(name="SummitVirtualCheckedInDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'SummitVirtualCheckedInDate', type: 'datetime')]
     private $summit_virtual_checked_in_date;
 
     /**
-     * @ORM\Column(name="InvitationEmailSentDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'InvitationEmailSentDate', type: 'datetime')]
     private $invitation_email_sent_date;
 
     /**
-     * @ORM\Column(name="PublicEditionEmailSentDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'PublicEditionEmailSentDate', type: 'datetime')]
     private $public_edition_email_sent_date;
 
     /**
-     * @ORM\Column(name="LastReminderEmailSentDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'LastReminderEmailSentDate', type: 'datetime')]
     private $last_reminder_email_sent_date;
 
     /**
-     * @ORM\Column(name="SummitHallCheckedIn", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'SummitHallCheckedIn', type: 'boolean')]
     private $summit_hall_checked_in;
 
     /**
-     * @ORM\Column(name="ExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
     private $external_id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", nullable=true)
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $member;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitOrderExtraQuestionAnswer", mappedBy="attendee", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitOrderExtraQuestionAnswer[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitOrderExtraQuestionAnswer::class, mappedBy: 'attendee', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $extra_question_answers;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationAttendeeVote", mappedBy="voter", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationAttendeeVote[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationAttendeeVote::class, mappedBy: 'voter', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $presentation_votes;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeNote", mappedBy="owner", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitAttendeeNote[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeNote::class, mappedBy: 'owner', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $notes;
 
     /**
-     * @ORM\Column(name="Company", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Company', type: 'string')]
     private $company_name;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", nullable=true)
      * @var Company
      */
+    #[ORM\JoinColumn(name: 'CompanyID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\main\Company::class)]
     private $company;
 
     /**
-     * @ORM\Column(name="Status", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
 
 
@@ -182,16 +176,14 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     private $admin_notes;
 
-    /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitAttendee", mappedBy="manager")
-     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitAttendee::class, mappedBy: 'manager')]
     protected $managed_attendees;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAttendee", inversedBy="managed_attendees")
-     * @ORM\JoinColumn(name="ManagedByID", referencedColumnName="ID", nullable=true)
      * @var SummitAttendee
      */
+    #[ORM\JoinColumn(name: 'ManagedByID', referencedColumnName: 'ID', nullable: true)]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendee::class, inversedBy: 'managed_attendees')]
     private $manager;
 
     /**
@@ -211,13 +203,12 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitAttendee_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="SummitAttendeeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
      * @var Tag[]
      */
+    #[ORM\JoinTable(name: 'SummitAttendee_Tags')]
+    #[ORM\JoinColumn(name: 'SummitAttendeeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $tags;
 
     /**
@@ -283,9 +274,9 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeTicket", mappedBy="owner", cascade={"persist"})
      * @var SummitAttendeeTicket[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeTicket::class, mappedBy: 'owner', cascade: ['persist'])]
     private $tickets;
 
     /**

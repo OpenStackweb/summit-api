@@ -16,12 +16,10 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="ChatTeamInvitation")
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineChatTeamInvitationRepository")
- * Class ChatTeamInvitation
  * @package models\main
  */
+#[ORM\Table(name: 'ChatTeamInvitation')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineChatTeamInvitationRepository::class)] // Class ChatTeamInvitation
 class ChatTeamInvitation extends SilverstripeBaseModel
 {
 
@@ -32,9 +30,9 @@ class ChatTeamInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Permission", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Permission', type: 'string')]
     private $permission;
 
     /**
@@ -138,15 +136,15 @@ class ChatTeamInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Accepted", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Accepted', type: 'boolean')]
     private $is_accepted;
 
     /**
-     * @ORM\Column(name="AcceptedDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'AcceptedDate', type: 'datetime')]
     private $accepted_date;
 
     /**
@@ -195,23 +193,23 @@ class ChatTeamInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\ChatTeam", inversedBy="invitations")
-     * @ORM\JoinColumn(name="TeamID", referencedColumnName="ID")
      * @var ChatTeam
      */
+    #[ORM\JoinColumn(name: 'TeamID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\ChatTeam::class, inversedBy: 'invitations')]
     private $team;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="InviteeID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'InviteeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $invitee;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="InviterID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'InviterID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $inviter;
 }

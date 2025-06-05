@@ -22,164 +22,148 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRegistrationPromoCodeRepository")
- * @ORM\Table(name="SummitRegistrationPromoCode")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"SummitRegistrationPromoCode" = "SummitRegistrationPromoCode",
- *     "SpeakerSummitRegistrationPromoCode" = "SpeakerSummitRegistrationPromoCode",
- *     "MemberSummitRegistrationPromoCode" = "MemberSummitRegistrationPromoCode",
- *     "SponsorSummitRegistrationPromoCode" = "SponsorSummitRegistrationPromoCode",
- *     "SummitRegistrationDiscountCode" = "SummitRegistrationDiscountCode",
- *     "MemberSummitRegistrationDiscountCode" = "MemberSummitRegistrationDiscountCode",
- *     "SpeakerSummitRegistrationDiscountCode" = "SpeakerSummitRegistrationDiscountCode",
- *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode",
- *     "SpeakersRegistrationDiscountCode" = "SpeakersRegistrationDiscountCode",
- *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode",
- *     "PrePaidSummitRegistrationPromoCode" = "PrePaidSummitRegistrationPromoCode",
- *     "PrePaidSummitRegistrationDiscountCode" = "PrePaidSummitRegistrationDiscountCode"
- * })
- * Class SummitRegistrationPromoCode
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitRegistrationPromoCode')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRegistrationPromoCodeRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitRegistrationPromoCode' => 'SummitRegistrationPromoCode', 'SpeakerSummitRegistrationPromoCode' => 'SpeakerSummitRegistrationPromoCode', 'MemberSummitRegistrationPromoCode' => 'MemberSummitRegistrationPromoCode', 'SponsorSummitRegistrationPromoCode' => 'SponsorSummitRegistrationPromoCode', 'SummitRegistrationDiscountCode' => 'SummitRegistrationDiscountCode', 'MemberSummitRegistrationDiscountCode' => 'MemberSummitRegistrationDiscountCode', 'SpeakerSummitRegistrationDiscountCode' => 'SpeakerSummitRegistrationDiscountCode', 'SponsorSummitRegistrationDiscountCode' => 'SponsorSummitRegistrationDiscountCode', 'SpeakersRegistrationDiscountCode' => 'SpeakersRegistrationDiscountCode', 'SpeakersSummitRegistrationPromoCode' => 'SpeakersSummitRegistrationPromoCode', 'PrePaidSummitRegistrationPromoCode' => 'PrePaidSummitRegistrationPromoCode', 'PrePaidSummitRegistrationDiscountCode' => 'PrePaidSummitRegistrationDiscountCode'])] // Class SummitRegistrationPromoCode
 class SummitRegistrationPromoCode extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Code", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Code', type: 'string')]
     protected $code;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     protected $description;
 
     /**
-     * @ORM\Column(name="ExternalId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
     protected $external_id;
 
     /**
-     * @ORM\Column(name="EmailSent", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'EmailSent', type: 'boolean')]
     protected $email_sent;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="SentDate", type="datetime", nullable=false)
      */
+    #[ORM\Column(name: 'SentDate', type: 'datetime', nullable: false)]
     protected $sent_date;
 
     /**
-     * @ORM\Column(name="Redeemed", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'Redeemed', type: 'boolean')]
     protected $redeemed;
 
     /**
-     * @ORM\Column(name="Source", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Source', type: 'string')]
     protected $source;
 
     /**
-     * @ORM\Column(name="QuantityAvailable", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'QuantityAvailable', type: 'integer')]
     protected $quantity_available;
 
     /**
-     * @ORM\Column(name="Notes", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Notes', type: 'string')]
     protected $notes;
 
     /**
-     * @ORM\Column(name="QuantityUsed", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'QuantityUsed', type: 'integer')]
     protected $quantity_used;
 
     /**
-     * @ORM\Column(name="ValidSinceDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ValidSinceDate', type: 'datetime')]
     protected $valid_since_date;
 
     /**
-     * @ORM\Column(name="ValidUntilDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ValidUntilDate', type: 'datetime')]
     protected $valid_until_date;
 
     /**
-     * @ORM\Column(name="AllowsToDelegate", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsToDelegate', type: 'boolean')]
     protected $allows_to_delegate;
 
 
     protected $allows_reassign_related_tickets;
 
     /**
-     * @ORM\Column(name="AllowsReassign", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'AllowsReassign', type: 'boolean')]
     protected $allows_to_reassign;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Summit", inversedBy="promo_codes")
-     * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
      */
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Summit::class, inversedBy: 'promo_codes')]
     protected $summit;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="CreatorID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatorID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     protected $creator;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitBadgeFeatureType")
-     * @ORM\JoinTable(name="SummitRegistrationPromoCode_BadgeFeatures",
-     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationPromoCodeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBadgeFeatureTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitBadgeFeatureType[]
      */
+    #[ORM\JoinTable(name: 'SummitRegistrationPromoCode_BadgeFeatures')]
+    #[ORM\JoinColumn(name: 'SummitRegistrationPromoCodeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitBadgeFeatureTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitBadgeFeatureType::class)]
     protected $badge_features;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitTicketType")
-     * @ORM\JoinTable(name="SummitRegistrationPromoCode_AllowedTicketTypes",
-     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationPromoCodeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitTicketType[]
      */
+    #[ORM\JoinTable(name: 'SummitRegistrationPromoCode_AllowedTicketTypes')]
+    #[ORM\JoinColumn(name: 'SummitRegistrationPromoCodeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitTicketType::class)]
     protected $allowed_ticket_types;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitRegistrationPromoCode_Tags",
-     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationPromoCodeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
-     *      )
      * @var Tag[]
      */
+    #[ORM\JoinTable(name: 'SummitRegistrationPromoCode_Tags')]
+    #[ORM\JoinColumn(name: 'SummitRegistrationPromoCodeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'TagID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Tag::class, cascade: ['persist'], inversedBy: 'events', fetch: 'EXTRA_LAZY')]
     private $tags;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitAttendeeTicket", mappedBy="promo_code", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitAttendeeTicket[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitAttendeeTicket::class, mappedBy: 'promo_code', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $tickets;
 
     public function setSummit($summit)

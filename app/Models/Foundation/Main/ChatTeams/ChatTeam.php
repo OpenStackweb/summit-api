@@ -16,12 +16,10 @@ use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="ChatTeam")
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineChatTeamRepository")
- * Class ChatTeam
  * @package models\main
  */
+#[ORM\Table(name: 'ChatTeam')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineChatTeamRepository::class)] // Class ChatTeam
 class ChatTeam extends SilverstripeBaseModel
 {
     public function __construct()
@@ -81,41 +79,41 @@ class ChatTeam extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
 
     /**
-     * @ORM\OneToMany(targetEntity="ChatTeamMember", mappedBy="team", cascade={"persist"}, orphanRemoval=true)
      * @var ChatTeamMember[]
      */
+    #[ORM\OneToMany(targetEntity: \ChatTeamMember::class, mappedBy: 'team', cascade: ['persist'], orphanRemoval: true)]
     private $members;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $owner;
 
     /**
-     * @ORM\OneToMany(targetEntity="ChatTeamPushNotificationMessage", mappedBy="team", cascade={"persist"}, orphanRemoval=true)
      * @var ChatTeamPushNotificationMessage[]
      */
+    #[ORM\OneToMany(targetEntity: \ChatTeamPushNotificationMessage::class, mappedBy: 'team', cascade: ['persist'], orphanRemoval: true)]
     private $messages;
 
     /**
-     * @ORM\OneToMany(targetEntity="ChatTeamInvitation", mappedBy="team", cascade={"persist"}, orphanRemoval=true)
      * @var ChatTeamInvitation[]
      */
+    #[ORM\OneToMany(targetEntity: \ChatTeamInvitation::class, mappedBy: 'team', cascade: ['persist'], orphanRemoval: true)]
     private $invitations;
 
     /**

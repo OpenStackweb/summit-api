@@ -19,43 +19,42 @@ use Doctrine\ORM\Mapping AS ORM;
 use function Psy\debug;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="StripePaymentProfile")
- * @ORM\HasLifecycleCallbacks
- * Class StripePaymentProfile
  * @package models\summit
  */
+#[ORM\Table(name: 'StripePaymentProfile')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class StripePaymentProfile
 class StripePaymentProfile extends PaymentGatewayProfile
 {
 
     /**
-     * @ORM\Column(name="LiveWebHookId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LiveWebHookId', type: 'string')]
     protected $live_webhook_id;
 
     /**
-     * @ORM\Column(name="LiveWebHookSecretKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'LiveWebHookSecretKey', type: 'string')]
     protected $live_webhook_secret_key;
 
     /**
-     * @ORM\Column(name="TestWebHookId", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TestWebHookId', type: 'string')]
     protected $test_webhook_id;
 
     /**
-     * @ORM\Column(name="TestWebHookSecretKey", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TestWebHookSecretKey', type: 'string')]
     protected $test_webhook_secret_key;
 
     /**
-     * @ORM\Column(name="SendEmailReceipt", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'SendEmailReceipt', type: 'boolean')]
     protected $send_email_receipt;
 
     /**
@@ -290,9 +289,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
         $this->clearTestWebHook();
     }
 
-    /**
-     * @ORM\PreRemove
-     */
+    #[ORM\PreRemove]
     public function deleting($args)
     {
         // remove web hooks

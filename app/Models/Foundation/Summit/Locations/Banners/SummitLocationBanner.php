@@ -15,15 +15,13 @@ use models\summit\SummitAbstractLocation;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitLocationBannerRepository")
- * @ORM\Table(name="SummitLocationBanner")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"SummitLocationBanner" = "SummitLocationBanner",
- *     "ScheduledSummitLocationBanner" = "ScheduledSummitLocationBanner"})
- * Class SummitLocationBanner
  * @package App\Models\Foundation\Summit\Locations\Banners
  */
+#[ORM\Table(name: 'SummitLocationBanner')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitLocationBannerRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitLocationBanner' => 'SummitLocationBanner', 'ScheduledSummitLocationBanner' => 'ScheduledSummitLocationBanner'])] // Class SummitLocationBanner
 class SummitLocationBanner extends SilverstripeBaseModel
 {
     const TypePrimary   = 'Primary';
@@ -38,34 +36,34 @@ class SummitLocationBanner extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="Title", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Title', type: 'string')]
     protected $title;
 
     /**
-     * @ORM\Column(name="Content", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Content', type: 'string')]
     protected $content;
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="Enabled", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Enabled', type: 'boolean')]
     protected $enabled;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY", inversedBy="banners")
-     * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
+    #[ORM\JoinColumn(name: 'LocationID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitAbstractLocation::class, fetch: 'EXTRA_LAZY', inversedBy: 'banners')]
     protected $location;
 
     /**

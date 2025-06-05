@@ -14,11 +14,10 @@
 use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Table(name="RSVPDropDownQuestionTemplate")
- * @ORM\Entity
- * Class RSVPDropDownQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPDropDownQuestionTemplate')]
+#[ORM\Entity] // Class RSVPDropDownQuestionTemplate
 class RSVPDropDownQuestionTemplate extends RSVPMultiValueQuestionTemplate
 {
     const ClassName = 'RSVPDropDownQuestionTemplate';
@@ -30,21 +29,21 @@ class RSVPDropDownQuestionTemplate extends RSVPMultiValueQuestionTemplate
     }
 
     /**
-     * @ORM\Column(name="IsMultiSelect", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsMultiSelect', type: 'boolean')]
     protected $is_multiselect;
 
     /**
-     * @ORM\Column(name="IsCountrySelector", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsCountrySelector', type: 'boolean')]
     protected $is_country_selector;
 
     /**
-     * @ORM\Column(name="UseChosenPlugin", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'UseChosenPlugin', type: 'boolean')]
     protected $use_chosen_plugin;
 
     /**

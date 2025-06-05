@@ -16,11 +16,10 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * Class SummitSchedulePreFilterElementConfig
- * @ORM\Table(name="SummitSchedulePreFilterElementConfig")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitSchedulePreFilterElementConfig')]
+#[ORM\Entity] // Class SummitSchedulePreFilterElementConfig
 class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -34,22 +33,22 @@ class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**
-     * @ORM\Column(name="Values", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Values', type: 'string')]
     private $values;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="pre_filters")
-     * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
      * @var SummitScheduleConfig
      */
+    #[ORM\JoinColumn(name: 'SummitScheduleConfigID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitScheduleConfig::class, fetch: 'EXTRA_LAZY', inversedBy: 'pre_filters')]
     protected $config;
 
     /**

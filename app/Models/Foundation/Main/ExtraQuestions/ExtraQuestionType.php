@@ -27,81 +27,75 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="ExtraQuestionType")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\HasLifecycleCallbacks
- * @ORM\DiscriminatorMap({
- *     "ExtraQuestionType" = "ExtraQuestionType",
- *     "SummitSelectionPlanExtraQuestionType" = "App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType",
- *     "SummitOrderExtraQuestionType" = "models\summit\SummitOrderExtraQuestionType",
- *     "SummitSponsorExtraQuestionType" = "App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType",
- * })
- * Class ExtraQuestionType
  * @package App\Models\Foundation\ExtraQuestions
  */
+#[ORM\Table(name: 'ExtraQuestionType')]
+#[ORM\Entity]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\HasLifecycleCallbacks]
+#[ORM\DiscriminatorMap(['ExtraQuestionType' => 'ExtraQuestionType', 'SummitSelectionPlanExtraQuestionType' => 'App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType', 'SummitOrderExtraQuestionType' => 'models\summit\SummitOrderExtraQuestionType', 'SummitSponsorExtraQuestionType' => 'App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType'])] // Class ExtraQuestionType
 abstract class ExtraQuestionType extends SilverstripeBaseModel
     implements IOrderable
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     protected $type;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     protected $label;
 
     /**
-     * @ORM\Column(name="CustomOrder", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'CustomOrder', type: 'integer')]
     protected $order;
 
     /**
-     * @ORM\Column(name="Mandatory", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'Mandatory', type: 'boolean')]
     protected $mandatory;
 
     /**
-     * @ORM\Column(name="Placeholder", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Placeholder', type: 'string')]
     protected $placeholder;
 
     /**
-     * @ORM\Column(name="`MaxSelectedValues`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`MaxSelectedValues`', type: 'integer')]
     protected $max_selected_values;
 
     /**
-     * @ORM\OneToMany(targetEntity="ExtraQuestionTypeValue", mappedBy="question", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ExtraQuestionTypeValue[]
      */
+    #[ORM\OneToMany(targetEntity: \ExtraQuestionTypeValue::class, mappedBy: 'question', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $values;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule", mappedBy="parent_question", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SubQuestionRule[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule::class, mappedBy: 'parent_question', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $sub_question_rules;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule", mappedBy="sub_question", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SubQuestionRule[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule::class, mappedBy: 'sub_question', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     protected $parent_rules;
 
     public function __construct()

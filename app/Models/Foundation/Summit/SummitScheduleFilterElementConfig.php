@@ -17,11 +17,10 @@ use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * Class SummitScheduleFilterElementConfig
- * @ORM\Table(name="SummitScheduleFilterElementConfig")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitScheduleFilterElementConfig')]
+#[ORM\Entity] // Class SummitScheduleFilterElementConfig
 class SummitScheduleFilterElementConfig
     extends SilverstripeBaseModel
     implements IOrderable
@@ -90,34 +89,34 @@ class SummitScheduleFilterElementConfig
     ];
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**
-     * @ORM\Column(name="CustomOrder", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'CustomOrder', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="IsEnabled", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsEnabled', type: 'boolean')]
     private $is_enabled;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="filters")
-     * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
      * @var SummitScheduleConfig
      */
+    #[ORM\JoinColumn(name: 'SummitScheduleConfigID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitScheduleConfig::class, fetch: 'EXTRA_LAZY', inversedBy: 'filters')]
     protected $config;
 
     public function __construct()

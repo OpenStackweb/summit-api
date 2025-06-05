@@ -13,7 +13,7 @@ return [
     | paths setting to the appropriate path and replace App namespace
     | by your own namespace.
     |
-    | Available meta drivers: fluent|annotations|yaml|xml|config|static_php|php
+    | Available meta drivers: attributes|fluent|annotations|yaml|xml|config|static_php|php
     |
     | Available connections: mysql|oracle|pgsql|sqlite|sqlsrv
     | (Connections can be configured in the database config)
@@ -25,7 +25,7 @@ return [
         'config' => [
             'dev'        => env('APP_DEBUG', true),
             'quote_strategy' => EscapingQuoteStrategy::class,
-            'meta'       => env('DOCTRINE_METADATA', 'annotations'),
+            'meta'       => env('DOCTRINE_METADATA', 'attributes'),
             'connection' => env('DB_CONNECTION', 'config'),
             'namespaces' => [
                 'App'
@@ -88,7 +88,7 @@ return [
         ],
         'model' => [
             'dev'        => env('APP_DEBUG'),
-            'meta'       => env('DOCTRINE_METADATA', 'annotations'),
+            'meta'       => env('DOCTRINE_METADATA', 'attributes'),
             'quote_strategy' => EscapingQuoteStrategy::class,
             'connection' => 'model',
             'namespaces' => [

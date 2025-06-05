@@ -15,36 +15,35 @@ use App\Models\Foundation\Main\IOrderable;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackQuestionValueTemplate")
- * Class TrackQuestionValueTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackQuestionValueTemplate')]
+#[ORM\Entity]
 class TrackQuestionValueTemplate extends SilverstripeBaseModel implements IOrderable
 {
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     private $value;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="TrackMultiValueQuestionTemplate", fetch="EXTRA_LAZY", inversedBy="values")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="SET NULL")
      * @var TrackMultiValueQuestionTemplate
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \TrackMultiValueQuestionTemplate::class, fetch: 'EXTRA_LAZY', inversedBy: 'values')]
     private $owner;
 
     /**

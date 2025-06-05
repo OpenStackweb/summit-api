@@ -15,71 +15,57 @@ use App\Models\Foundation\Main\IOrderable;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="RSVPQuestionTemplate")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "RSVPQuestionTemplate" = "RSVPQuestionTemplate",
- *     "RSVPLiteralContentQuestionTemplate"= "RSVPLiteralContentQuestionTemplate",
- *     "RSVPMultiValueQuestionTemplate" = "RSVPMultiValueQuestionTemplate",
- *     "RSVPSingleValueTemplateQuestion" = "RSVPSingleValueTemplateQuestion",
- *     "RSVPTextBoxQuestionTemplate" = "RSVPTextBoxQuestionTemplate",
- *     "RSVPTextAreaQuestionTemplate" = "RSVPTextAreaQuestionTemplate",
- *     "RSVPMemberEmailQuestionTemplate"     = "RSVPMemberEmailQuestionTemplate",
- *     "RSVPMemberFirstNameQuestionTemplate" = "RSVPMemberFirstNameQuestionTemplate",
- *     "RSVPMemberLastNameQuestionTemplate"  = "RSVPMemberLastNameQuestionTemplate",
- *     "RSVPCheckBoxListQuestionTemplate"    = "RSVPCheckBoxListQuestionTemplate",
- *     "RSVPRadioButtonListQuestionTemplate" = "RSVPRadioButtonListQuestionTemplate",
- *     "RSVPDropDownQuestionTemplate" = "RSVPDropDownQuestionTemplate"
- *     })
- * Class RSVPQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\RSVP
  */
+#[ORM\Table(name: 'RSVPQuestionTemplate')]
+#[ORM\Entity]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['RSVPQuestionTemplate' => 'RSVPQuestionTemplate', 'RSVPLiteralContentQuestionTemplate' => 'RSVPLiteralContentQuestionTemplate', 'RSVPMultiValueQuestionTemplate' => 'RSVPMultiValueQuestionTemplate', 'RSVPSingleValueTemplateQuestion' => 'RSVPSingleValueTemplateQuestion', 'RSVPTextBoxQuestionTemplate' => 'RSVPTextBoxQuestionTemplate', 'RSVPTextAreaQuestionTemplate' => 'RSVPTextAreaQuestionTemplate', 'RSVPMemberEmailQuestionTemplate' => 'RSVPMemberEmailQuestionTemplate', 'RSVPMemberFirstNameQuestionTemplate' => 'RSVPMemberFirstNameQuestionTemplate', 'RSVPMemberLastNameQuestionTemplate' => 'RSVPMemberLastNameQuestionTemplate', 'RSVPCheckBoxListQuestionTemplate' => 'RSVPCheckBoxListQuestionTemplate', 'RSVPRadioButtonListQuestionTemplate' => 'RSVPRadioButtonListQuestionTemplate', 'RSVPDropDownQuestionTemplate' => 'RSVPDropDownQuestionTemplate'])] // Class RSVPQuestionTemplate
 class RSVPQuestionTemplate extends SilverstripeBaseModel implements IOrderable
 {
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     protected $name;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     protected $label;
 
     /**
-     * @ORM\Column(name="Mandatory", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'Mandatory', type: 'boolean')]
     protected $is_mandatory;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     protected $order;
 
     /**
-     * @ORM\Column(name="ReadOnly", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'ReadOnly', type: 'boolean')]
     protected $is_read_only;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RSVPTemplate", fetch="EXTRA_LAZY", inversedBy="questions")
-     * @ORM\JoinColumn(name="RSVPTemplateID", referencedColumnName="ID", onDelete="CASCADE")
      * @var RSVPTemplate
      */
+    #[ORM\JoinColumn(name: 'RSVPTemplateID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \RSVPTemplate::class, fetch: 'EXTRA_LAZY', inversedBy: 'questions')]
     protected $template;
 
     /**
-     * @ORM\OneToMany(targetEntity="RSVPQuestionDependsOn", mappedBy="parent", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var RSVPQuestionDependsOn[]
      */
+    #[ORM\OneToMany(targetEntity: \RSVPQuestionDependsOn::class, mappedBy: 'parent', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $depends_on;
 
     /**

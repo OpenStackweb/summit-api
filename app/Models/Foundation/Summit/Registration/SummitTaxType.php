@@ -17,17 +17,11 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTaxTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="tax_types"
- *     )
- * })
- * @ORM\Table(name="SummitTaxType")
- * Class SummitTaxType
  * @package models\summitSummitTicketType_Taxes
  */
+#[ORM\Table(name: 'SummitTaxType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitTaxTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'tax_types')])]
 class SummitTaxType extends SilverstripeBaseModel
 {
     use TaxTrait;
@@ -35,31 +29,30 @@ class SummitTaxType extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="TaxID", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'TaxID', type: 'string')]
     private $tax_id;
 
     /**
-     * @ORM\Column(name="Rate", type="float")
      * @var double
      */
+    #[ORM\Column(name: 'Rate', type: 'float')]
     private $rate;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitTicketType", inversedBy="applied_taxes")
-     * @ORM\JoinTable(name="SummitTicketType_Taxes",
-     *      joinColumns={@ORM\JoinColumn(name="SummitTaxTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitTicketType[]
      */
+    #[ORM\JoinTable(name: 'SummitTicketType_Taxes')]
+    #[ORM\JoinColumn(name: 'SummitTaxTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitTicketType::class, inversedBy: 'applied_taxes')]
     private $ticket_types;
 
     /**

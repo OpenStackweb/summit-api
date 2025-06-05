@@ -21,10 +21,10 @@ use Doctrine\ORM\Mapping AS ORM;
 trait SummitOwned
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Summit")
-     * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
      */
+    #[ORM\JoinColumn(name: 'SummitID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Summit::class)]
     protected $summit;
 
     /**

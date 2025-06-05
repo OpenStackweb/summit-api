@@ -20,49 +20,49 @@ use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * Class SpeakerRegistrationRequest
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerRegistrationRequestRepository")
- * @ORM\Table(name="SpeakerRegistrationRequest")
  * @package models\summit
  */
+#[ORM\Table(name: 'SpeakerRegistrationRequest')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSpeakerRegistrationRequestRepository::class)]
 class SpeakerRegistrationRequest extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Email", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Email', type: 'string')]
     private $email;
 
     /**
-     * @ORM\Column(name="IsConfirmed", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'IsConfirmed', type: 'boolean')]
     private $is_confirmed;
 
     /**
-     * @ORM\Column(name="ConfirmationDate", type="datetime")
      * @var \DateTime
      */
+    #[ORM\Column(name: 'ConfirmationDate', type: 'datetime')]
     private $confirmation_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker")
-     * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'SpeakerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationSpeaker::class)]
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="ProposerID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'ProposerID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     private $proposer;
 
     /**
-     * @ORM\Column(name="ConfirmationHash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ConfirmationHash', type: 'string')]
     private $confirmation_hash;
 
     /**

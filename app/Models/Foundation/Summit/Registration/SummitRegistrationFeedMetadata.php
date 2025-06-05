@@ -17,17 +17,11 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRegistrationFeedMetadataRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="registration_feed_metadata"
- *     )
- * })
- * @ORM\Table(name="SummitRegistrationFeedMetadata")
- * Class SummitRegistrationFeedMetadata
  * @package App\Models\Foundation\Summit\Registration
  */
+#[ORM\Table(name: 'SummitRegistrationFeedMetadata')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitRegistrationFeedMetadataRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'registration_feed_metadata')])]
 class SummitRegistrationFeedMetadata extends SilverstripeBaseModel
 {
     /**
@@ -48,15 +42,15 @@ class SummitRegistrationFeedMetadata extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="`Key`", type="string")
      * @var string
      */
+    #[ORM\Column(name: '`Key`', type: 'string')]
     private $key;
 
     /**
-     * @ORM\Column(name="Value", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Value', type: 'string')]
     private $value;
 
     /**

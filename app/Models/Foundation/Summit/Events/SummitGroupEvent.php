@@ -18,23 +18,16 @@ use models\main\Group;
 
 /**
  * Class SummitGroupEvent
- * @ORM\Entity
- * @ORM\Table(name="SummitGroupEvent")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitGroupEvent')]
+#[ORM\Entity]
 class SummitGroupEvent extends SummitEvent
 {
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Group")
-     * @ORM\JoinTable(name="SummitGroupEvent_Groups",
-     *  joinColumns={
-     *      @ORM\JoinColumn(name="`SummitGroupEventID`", referencedColumnName="ID")
-     * },
-     * inverseJoinColumns={
-     *      @ORM\JoinColumn(name="GroupID", referencedColumnName="ID")
-     * }
-     * )
-     */
+    #[ORM\JoinTable(name: 'SummitGroupEvent_Groups')]
+    #[ORM\JoinColumn(name: '`SummitGroupEventID`', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'GroupID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Group::class)]
     private $groups;
 
     const ClassName = 'SummitGroupEvent';

@@ -21,17 +21,11 @@ use models\summit\SummitOwned;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="featured_speakers"
- *     )
- * })
- * @ORM\Table(name="Summit_FeaturedSpeakers")
- * Class FeaturedSpeaker
  * @package App\Models\Foundation\Summit\Speakers
  */
+#[ORM\Table(name: 'Summit_FeaturedSpeakers')]
+#[ORM\Entity]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'featured_speakers')])]
 class FeaturedSpeaker extends BaseEntity implements IOrderable
 {
     use SummitOwned;
@@ -47,16 +41,16 @@ class FeaturedSpeaker extends BaseEntity implements IOrderable
     ];
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
      */
+    #[ORM\JoinColumn(name: 'PresentationSpeakerID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationSpeaker::class, fetch: 'EXTRA_LAZY')]
     private $speaker;
 
     /**

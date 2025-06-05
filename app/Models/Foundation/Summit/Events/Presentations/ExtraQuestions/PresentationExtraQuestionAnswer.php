@@ -17,20 +17,19 @@ use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationExtraQuestionAnswer")
- * Class PresentationExtraQuestionAnswer
  * @package App\ModelSerializers\Summit\Presentation\ExtraQuestions
  */
+#[ORM\Table(name: 'PresentationExtraQuestionAnswer')]
+#[ORM\Entity]
 class PresentationExtraQuestionAnswer
     extends ExtraQuestionAnswer
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="extra_question_answers")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\Presentation::class, inversedBy: 'extra_question_answers')]
     private $presentation;
 
     /**

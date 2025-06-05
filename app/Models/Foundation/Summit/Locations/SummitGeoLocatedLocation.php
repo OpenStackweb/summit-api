@@ -18,12 +18,11 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitGeoLocatedLocation")
- * @ORM\HasLifecycleCallbacks
- * Class SummitGeoLocatedLocation
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitGeoLocatedLocation')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class SummitGeoLocatedLocation
 class SummitGeoLocatedLocation extends SummitAbstractLocation
 {
     /**
@@ -33,70 +32,46 @@ class SummitGeoLocatedLocation extends SummitAbstractLocation
         return 'SummitGeoLocatedLocation';
     }
 
-    /**
-     * @ORM\Column(name="Address1", type="string")
-     */
+    #[ORM\Column(name: 'Address1', type: 'string')]
     protected $address1;
 
-    /**
-     * @ORM\Column(name="Address2", type="string")
-     */
+    #[ORM\Column(name: 'Address2', type: 'string')]
     protected $address2;
 
-    /**
-     * @ORM\Column(name="ZipCode", type="string")
-     */
+    #[ORM\Column(name: 'ZipCode', type: 'string')]
     protected $zip_code;
 
-    /**
-     * @ORM\Column(name="City", type="string")
-     */
+    #[ORM\Column(name: 'City', type: 'string')]
     protected $city;
 
-    /**
-     * @ORM\Column(name="State", type="string")
-     */
+    #[ORM\Column(name: 'State', type: 'string')]
     protected $state;
 
-    /**
-     * @ORM\Column(name="Country", type="string")
-     */
+    #[ORM\Column(name: 'Country', type: 'string')]
     protected $country;
 
-    /**
-     * @ORM\Column(name="WebSiteUrl", type="string")
-     */
+    #[ORM\Column(name: 'WebSiteUrl', type: 'string')]
     protected $website_url;
 
-    /**
-     * @ORM\Column(name="Lng", type="string")
-     */
+    #[ORM\Column(name: 'Lng', type: 'string')]
     protected $lng;
 
-    /**
-     * @ORM\Column(name="Lat", type="string")
-     */
+    #[ORM\Column(name: 'Lat', type: 'string')]
     protected $lat;
 
-    /**
-     * @ORM\Column(name="DisplayOnSite", type="boolean")
-     */
+    #[ORM\Column(name: 'DisplayOnSite', type: 'boolean')]
     protected $display_on_site;
 
-    /**
-     * @ORM\Column(name="DetailsPage", type="boolean")
-     */
+    #[ORM\Column(name: 'DetailsPage', type: 'boolean')]
     protected $details_page;
 
-    /**
-     * @ORM\Column(name="LocationMessage", type="string")
-     */
+    #[ORM\Column(name: 'LocationMessage', type: 'string')]
     protected $location_message;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitLocationImage", mappedBy="location", cascade={"persist"}, orphanRemoval=true)
      * @var SummitLocationImage[]
      */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitLocationImage::class, mappedBy: 'location', cascade: ['persist'], orphanRemoval: true)]
     protected $images;
 
     public static $metadata = [

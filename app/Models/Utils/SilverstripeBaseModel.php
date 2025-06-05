@@ -23,25 +23,25 @@ use LaravelDoctrine\ORM\Facades\Registry;
 use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 
 /***
- * @ORM\MappedSuperclass
- * @ORM\HasLifecycleCallbacks
  * Class SilverstripeBaseModel
  * @package models\utils
  */
+#[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 class SilverstripeBaseModel extends BaseEntity
 {
     const DefaultTimeZone = 'America/Chicago';
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="Created", type="datetime", nullable=false)
      */
+    #[ORM\Column(name: 'Created', type: 'datetime', nullable: false)]
     protected $created;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="LastEdited", type="datetime", nullable=false)
      */
+    #[ORM\Column(name: 'LastEdited', type: 'datetime', nullable: false)]
     protected $last_edited;
 
     /**
@@ -182,9 +182,7 @@ class SilverstripeBaseModel extends BaseEntity
         $this->last_edited = $now;
     }
 
-    /**
-     * @ORM\PreUpdate:
-     */
+    #[ORM\PreUpdate] // :
     public function updating(PreUpdateEventArgs $args)
     {
         $this->updateLastEdited();

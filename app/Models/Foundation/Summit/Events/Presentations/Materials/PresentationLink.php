@@ -14,10 +14,10 @@
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class PresentationLink
- * @ORM\Entity
- * @ORM\Table(name="PresentationLink")
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationLink')]
+#[ORM\Entity]
 class PresentationLink extends PresentationMaterial
 {
     const ClassName = 'PresentationLink';
@@ -45,9 +45,9 @@ class PresentationLink extends PresentationMaterial
         $this->link = $link;
     }
     /**
-     * @ORM\Column(name="Link", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**

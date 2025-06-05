@@ -22,10 +22,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\main\Member;
 /**
  * Class SummitSelectedPresentationList
- * @ORM\Entity
- * @ORM\Table(name="SummitSelectedPresentationList")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitSelectedPresentationList')]
+#[ORM\Entity]
 class SummitSelectedPresentationList extends SilverstripeBaseModel
 {
     // list type
@@ -39,54 +39,54 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
     const Lightning  = 'Lightning';
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="ListType", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ListType', type: 'string')]
     private $list_type;
 
     /**
-     * @ORM\Column(name="ListClass", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ListClass', type: 'string')]
     private $list_class;
 
     /**
-     * @ORM\Column(name="Hash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $hash;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationCategory", inversedBy="selection_lists", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CategoryID", referencedColumnName="ID")
      * @var PresentationCategory
      */
+    #[ORM\JoinColumn(name: 'CategoryID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \PresentationCategory::class, inversedBy: 'selection_lists', fetch: 'EXTRA_LAZY')]
     private $category = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="selection_lists", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'selection_lists', fetch: 'EXTRA_LAZY')]
     private $selection_plan;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     private $owner = null;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitSelectedPresentation", mappedBy="list", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var SummitSelectedPresentation[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitSelectedPresentation::class, mappedBy: 'list', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $selected_presentations;
 
     /**

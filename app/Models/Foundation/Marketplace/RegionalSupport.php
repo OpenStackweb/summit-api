@@ -15,41 +15,39 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
- * @ORM\Table(name="RegionalSupport")
- * Class RegionalSupport
  * @package App\Models\Foundation\Marketplace
  */
+#[ORM\Table(name: 'RegionalSupport')]
+#[ORM\Entity]
 class RegionalSupport extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Order", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'Order', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Marketplace\Region", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="RegionID", referencedColumnName="ID")
      * @var Region
      */
+    #[ORM\JoinColumn(name: 'RegionID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Marketplace\Region::class, fetch: 'EXTRA_LAZY')]
     private $region;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RegionalSupportedCompanyService",inversedBy="regional_supports", fetch="LAZY")
-     * @ORM\JoinColumn(name="ServiceID", referencedColumnName="ID")
      * @var RegionalSupportedCompanyService
      */
+    #[ORM\JoinColumn(name: 'ServiceID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \RegionalSupportedCompanyService::class, inversedBy: 'regional_supports', fetch: 'LAZY')]
     private $company_service;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SupportChannelType", cascade={"persist"})
-     * @ORM\JoinTable(name="`RegionalSupport_SupportChannelTypes`",
-     *      joinColumns={@ORM\JoinColumn(name="RegionalSupportID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SupportChannelTypeID", referencedColumnName="ID")}
-     *      )
      * @var SupportChannelType[]
      */
+    #[ORM\JoinTable(name: '`RegionalSupport_SupportChannelTypes`')]
+    #[ORM\JoinColumn(name: 'RegionalSupportID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SupportChannelTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SupportChannelType::class, cascade: ['persist'])]
     private $supported_channel_types;
 
     public function __construct()

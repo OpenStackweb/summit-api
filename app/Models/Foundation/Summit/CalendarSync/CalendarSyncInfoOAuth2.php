@@ -15,22 +15,22 @@ use Doctrine\ORM\Mapping AS ORM;
 use services\utils\Facades\Encryption;
 /**
  * Class CalendarSyncInfoOAuth2
- * @ORM\Entity
- * @ORM\Table(name="CalendarSyncInfoOAuth2")
  * @package models\summit\CalendarSync
  */
+#[ORM\Table(name: 'CalendarSyncInfoOAuth2')]
+#[ORM\Entity]
 class CalendarSyncInfoOAuth2 extends CalendarSyncInfo
 {
     /**
-     * @ORM\Column(name="AccessToken", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'AccessToken', type: 'string')]
     protected $access_token;
 
     /**
-     * @ORM\Column(name="RefreshToken", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'RefreshToken', type: 'string')]
     protected $refresh_token;
 
     /**

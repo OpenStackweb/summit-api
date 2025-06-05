@@ -13,17 +13,16 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackSingleValueTemplateQuestion")
- * Class TrackSingleValueTemplateQuestion
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackSingleValueTemplateQuestion')]
+#[ORM\Entity]
 class TrackSingleValueTemplateQuestion extends TrackQuestionTemplate
 {
     /**
-     * @ORM\Column(name="InitialValue", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'InitialValue', type: 'string')]
     protected $initial_value;
 
     const ClassName = 'TrackSingleValueTemplateQuestion';

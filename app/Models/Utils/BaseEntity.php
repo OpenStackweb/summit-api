@@ -18,18 +18,16 @@ use Doctrine\ORM\Mapping AS ORM;
 use ReflectionClass;
 
 /***
- * @ORM\MappedSuperclass
- * @ORM\HasLifecycleCallbacks
  * Class BaseEntity
  * @package App\Models\Utils
  */
+#[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 class BaseEntity implements IEntity
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="ID", type="integer", unique=true, nullable=false)
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'ID', type: 'integer', unique: true, nullable: false)]
     protected $id;
 
     /**
@@ -64,9 +62,7 @@ class BaseEntity implements IEntity
         return "{$class_name}@{$this->getIdentifier()}";
     }
 
-    /**
-     * @ORM\PreUpdate:
-     */
+    #[ORM\PreUpdate] // :
     public function updating(PreUpdateEventArgs $args)
     {
     }

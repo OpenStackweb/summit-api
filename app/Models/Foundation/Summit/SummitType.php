@@ -16,16 +16,13 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitType")
- * Class SummitType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitType')]
+#[ORM\Entity]
 class SummitType extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="FriendlyName", type="string")
-     */
+    #[ORM\Column(name: 'FriendlyName', type: 'string')]
     private $friendly_name;
 
     /**
@@ -108,23 +105,15 @@ class SummitType extends SilverstripeBaseModel
         $this->audience = $audience;
     }
 
-    /**
-     * @ORM\Column(name="Color", type="string")
-     */
+    #[ORM\Column(name: 'Color', type: 'string')]
     private $color;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
-    /**
-     * @ORM\Column(name="Description", type="string")
-     */
+    #[ORM\Column(name: 'Description', type: 'string')]
     private $description;
 
-    /**
-     * @ORM\Column(name="Audience", type="string")
-     */
+    #[ORM\Column(name: 'Audience', type: 'string')]
     private $audience;
 }

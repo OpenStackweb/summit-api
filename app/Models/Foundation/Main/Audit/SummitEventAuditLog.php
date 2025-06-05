@@ -17,11 +17,10 @@ use models\summit\SummitEvent;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitEventAuditLog")
- * Class SummitEventAuditLog
  * @package models\main
  */
+#[ORM\Table(name: 'SummitEventAuditLog')]
+#[ORM\Entity]
 class SummitEventAuditLog extends SummitAuditLog
 {
     const ClassName = 'SummitEventAuditLog';
@@ -38,16 +37,16 @@ class SummitEventAuditLog extends SummitAuditLog
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'EventID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class)]
     private $related_entity;
 
     /**
-     * @ORM\Column(name="EventID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'EventID', type: 'integer')]
     private  $related_entity_id;
 
     public function getClassName(): string

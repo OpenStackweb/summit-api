@@ -19,10 +19,10 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 /**
  * Class SummitSelectedPresentation
- * @ORM\Entity
- * @ORM\Table(name="SummitSelectedPresentation")
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitSelectedPresentation')]
+#[ORM\Entity]
 class SummitSelectedPresentation extends SilverstripeBaseModel implements IOrderable
 {
 
@@ -37,36 +37,36 @@ class SummitSelectedPresentation extends SilverstripeBaseModel implements IOrder
     ];
 
     /**
-     * @ORM\Column(name="Collection", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Collection', type: 'string')]
     private $collection;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitSelectedPresentationList", inversedBy="selected_presentations")
-     * @ORM\JoinColumn(name="SummitSelectedPresentationListID", referencedColumnName="ID")
      * @var SummitSelectedPresentationList
      */
+    #[ORM\JoinColumn(name: 'SummitSelectedPresentationListID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \SummitSelectedPresentationList::class, inversedBy: 'selected_presentations')]
     private $list;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Presentation", inversedBy="selected_presentations")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID")
      * @var Presentation
      */
+    #[ORM\JoinColumn(name: 'PresentationID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \Presentation::class, inversedBy: 'selected_presentations')]
     private $presentation;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     private $member = null;
 
     /**

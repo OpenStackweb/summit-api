@@ -18,31 +18,25 @@ use models\exceptions\ValidationException;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBookableVenueRoomAttributeTypeRepository")
- * @ORM\Table(name="SummitBookableVenueRoomAttributeType")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="meeting_booking_room_allowed_attributes"
- *     )
- * })
- * Class SummitBookableVenueRoomAttributeType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitBookableVenueRoomAttributeType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitBookableVenueRoomAttributeTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'meeting_booking_room_allowed_attributes')])] // Class SummitBookableVenueRoomAttributeType
 class SummitBookableVenueRoomAttributeType extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     use SummitOwned;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitBookableVenueRoomAttributeValue", mappedBy="type", cascade={"persist"}, orphanRemoval=true)
      * @var ArrayCollection
      */
+    #[ORM\OneToMany(targetEntity: \SummitBookableVenueRoomAttributeValue::class, mappedBy: 'type', cascade: ['persist'], orphanRemoval: true)]
     private $values;
 
     public function __construct()

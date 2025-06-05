@@ -29,17 +29,11 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="summit_sponsors"
- *     )
- * })
- * @ORM\Table(name="Sponsor")
- * Class Sponsor
  * @package models\summit
  */
+#[ORM\Table(name: 'Sponsor')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'summit_sponsors')])]
 class Sponsor extends SilverstripeBaseModel implements IOrderable
 {
     use SummitOwned;
@@ -71,170 +65,169 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     ];
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Company
      */
+    #[ORM\JoinColumn(name: 'CompanyID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Company::class)]
     protected $company;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
-     * @ORM\JoinColumn(name="FeaturedEventID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitEvent
      */
+    #[ORM\JoinColumn(name: 'FeaturedEventID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\SummitEvent::class)]
     protected $featured_event;
 
     /**
-     * @ORM\Column(name="IsPublished", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'IsPublished', type: 'boolean')]
     protected $is_published;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitSponsorshipType")
-     * @ORM\JoinColumn(name="SummitSponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitSponsorshipType
      */
+    #[ORM\JoinColumn(name: 'SummitSponsorshipTypeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \SummitSponsorshipType::class)]
     protected $sponsorship;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsorUserInfoGrant", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
      * @var SponsorUserInfoGrant[]
      */
+    #[ORM\OneToMany(targetEntity: \SponsorUserInfoGrant::class, mappedBy: 'sponsor', cascade: ['persist'], orphanRemoval: true)]
     protected $user_info_grants;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsorAd", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
      * @var SponsorAd[]
      */
+    #[ORM\OneToMany(targetEntity: \SponsorAd::class, mappedBy: 'sponsor', cascade: ['persist'], orphanRemoval: true)]
     protected $ads;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsorMaterial", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
      * @var SponsorMaterial[]
      */
+    #[ORM\OneToMany(targetEntity: \SponsorMaterial::class, mappedBy: 'sponsor', cascade: ['persist'], orphanRemoval: true)]
     protected $materials;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsorSocialNetwork", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
      * @var SponsorSocialNetwork[]
      */
+    #[ORM\OneToMany(targetEntity: \SponsorSocialNetwork::class, mappedBy: 'sponsor', cascade: ['persist'], orphanRemoval: true)]
     protected $social_networks;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", inversedBy="sponsor_memberships")
-     * @ORM\JoinTable(name="Sponsor_Users",
-     *      joinColumns={@ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
-     *      )
      * @var Member[]
      */
+    #[ORM\JoinTable(name: 'Sponsor_Users')]
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'MemberID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \models\main\Member::class, inversedBy: 'sponsor_memberships')]
     protected $members;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
-     * @ORM\JoinColumn(name="SideImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'SideImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     protected $side_image;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="HeaderImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'HeaderImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     protected $header_image;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="HeaderImageMobileID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'HeaderImageMobileID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     protected $header_image_mobile;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
-     * @ORM\JoinColumn(name="CarouselAdvertiseImageID", referencedColumnName="ID")
      * @var File
      */
+    #[ORM\JoinColumn(name: 'CarouselAdvertiseImageID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist'])]
     protected $carousel_advertise_image;
 
     /**
-     * @ORM\Column(name="Marquee", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Marquee', type: 'string')]
     private $marquee;
 
     /**
-     * @ORM\Column(name="HeaderImageAltText", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'HeaderImageAltText', type: 'string')]
     private $header_image_alt_text;
 
     /**
-     * @ORM\Column(name="SideImageAltText", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'SideImageAltText', type: 'string')]
     private $side_image_alt_text;
 
     /**
-     * @ORM\Column(name="HeaderImageMobileAltText", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'HeaderImageMobileAltText', type: 'string')]
     private $header_image_mobile_alt_text;
 
     /**
-     * @ORM\Column(name="CarouselAdvertiseImageAltText", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'CarouselAdvertiseImageAltText', type: 'string')]
     private $carousel_advertise_image_alt_text;
 
     /**
-     * @ORM\Column(name="Intro", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Intro', type: 'string')]
     private $intro;
 
     /**
-     * @ORM\Column(name="ExternalLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ExternalLink', type: 'string')]
     private $external_link;
 
     /**
-     * @ORM\Column(name="VideoLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'VideoLink', type: 'string')]
     private $video_link;
 
     /**
-     * @ORM\Column(name="ChatLink", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'ChatLink', type: 'string')]
     private $chat_link;
 
     /**
-     * @ORM\Column(name="ShowLogoInEventPage", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'ShowLogoInEventPage', type: 'boolean')]
     private $show_logo_in_event_page;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType", mappedBy="sponsor",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitSponsorExtraQuestionType[]
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $extra_questions;
 
     /**
      * @var SummitLeadReportSetting
-     * @ORM\OneToOne(targetEntity="models\summit\SummitLeadReportSetting", mappedBy="sponsor", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
+    #[ORM\OneToOne(targetEntity: \models\summit\SummitLeadReportSetting::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $lead_report_setting;
 
     /**

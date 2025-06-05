@@ -18,30 +18,29 @@ use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PresentationActionType_SelectionPlan")
- * Class AllowedPresentationActionType
  * @package models\summit
  */
+#[ORM\Table(name: 'PresentationActionType_SelectionPlan')]
+#[ORM\Entity]
 class AllowedPresentationActionType extends BaseEntity implements IOrderable
 {
     use One2ManyPropertyTrait;
     /**
-     * @ORM\Column(name="CustomOrder", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'CustomOrder', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\Column(name="PresentationActionTypeID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'PresentationActionTypeID', type: 'integer')]
     private $type_id;
 
     /**
-     * @ORM\Column(name="SelectionPlanID", type="integer")
      * @var int
      */
+    #[ORM\Column(name: 'SelectionPlanID', type: 'integer')]
     private $selection_plan_id;
 
     protected $getIdMappings = [
@@ -67,17 +66,17 @@ class AllowedPresentationActionType extends BaseEntity implements IOrderable
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationActionType", inversedBy="assigned_selection_plans", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationActionTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationActionType
      */
+    #[ORM\JoinColumn(name: 'PresentationActionTypeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationActionType::class, inversedBy: 'assigned_selection_plans', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_presentation_action_types", cascade={"persist"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'allowed_presentation_action_types', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     private $selection_plan;
 
     /**

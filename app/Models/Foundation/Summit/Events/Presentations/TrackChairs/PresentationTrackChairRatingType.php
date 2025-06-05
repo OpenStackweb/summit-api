@@ -23,11 +23,10 @@ use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationTrackChairRatingTypeRepository")
- * @ORM\Table(name="PresentationTrackChairRatingType")
- * Class PresentationTrackChairRatingType
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs
  */
+#[ORM\Table(name: 'PresentationTrackChairRatingType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrinePresentationTrackChairRatingTypeRepository::class)]
 class PresentationTrackChairRatingType
     extends SilverstripeBaseModel
     implements IOrderable
@@ -46,34 +45,34 @@ class PresentationTrackChairRatingType
     ];
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Weight", type="float")
      * @var float
      */
+    #[ORM\Column(name: 'Weight', type: 'float')]
     private $weight;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="track_chair_rating_types", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
+    #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, inversedBy: 'track_chair_rating_types', fetch: 'EXTRA_LAZY')]
     private $selection_plan;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType", mappedBy="type", cascade={"persist","remove"}, orphanRemoval=true)
      * @var
      */
+    #[ORM\OneToMany(targetEntity: \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType::class, mappedBy: 'type', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private $score_types;
 
     public function __construct()

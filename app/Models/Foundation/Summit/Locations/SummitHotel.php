@@ -15,12 +15,11 @@
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="SummitHotel")
- * @ORM\HasLifecycleCallbacks
- * Class SummitHotel
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitHotel')]
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks] // Class SummitHotel
 class SummitHotel extends SummitExternalLocation
 {
 
@@ -51,9 +50,7 @@ class SummitHotel extends SummitExternalLocation
     {
         $this->booking_link = $booking_link;
     }
-    /**
-     * @ORM\Column(name="BookingLink", type="string")
-     */
+    #[ORM\Column(name: 'BookingLink', type: 'string')]
     private $booking_link;
 
     /**
@@ -88,14 +85,10 @@ class SummitHotel extends SummitExternalLocation
         $this->hotel_type = $hotel_type;
     }
 
-    /**
-     * @ORM\Column(name="SoldOut", type="boolean")
-     */
+    #[ORM\Column(name: 'SoldOut', type: 'boolean')]
     private $sold_out;
 
-    /**
-     * @ORM\Column(name="Type", type="string")
-     */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $hotel_type;
 
     public static $metadata = [

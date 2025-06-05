@@ -26,44 +26,43 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleRepository")
- * @ORM\Table(name="SummitProposedSchedule")
- * Class SummitProposedSchedule
  * @package App\Models\Foundation\Summit\ProposedSchedule
  */
+#[ORM\Table(name: 'SummitProposedSchedule')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitProposedScheduleRepository::class)]
 class SummitProposedSchedule extends SilverstripeBaseModel
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Source", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Source', type: 'string')]
     private $source;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'CreatedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
     protected $created_by = null;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitProposedScheduleSummitEvent", mappedBy="summit_proposed_schedule", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitProposedScheduleSummitEvent[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitProposedScheduleSummitEvent::class, mappedBy: 'summit_proposed_schedule', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $scheduled_summit_events;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitProposedScheduleLock", mappedBy="summit_proposed_schedule", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitProposedScheduleLock[]
      */
+    #[ORM\OneToMany(targetEntity: \SummitProposedScheduleLock::class, mappedBy: 'summit_proposed_schedule', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $locks;
 
     public function __construct()

@@ -19,11 +19,10 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorMaterialRepository")
- * @ORM\Table(name="SponsorMaterial")
- * Class SponsorMaterial
  * @package models\summit
  */
+#[ORM\Table(name: 'SponsorMaterial')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSponsorMaterialRepository::class)]
 class SponsorMaterial extends SilverstripeBaseModel
     implements IOrderable
 {
@@ -48,34 +47,34 @@ class SponsorMaterial extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`CustomOrder`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Sponsor", inversedBy="materials", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Sponsor
      */
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Sponsor::class, inversedBy: 'materials', fetch: 'EXTRA_LAZY')]
     private $sponsor;
 
     /**
-     * @ORM\Column(name="Type", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Type', type: 'string')]
     private $type;
 
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Link", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Link', type: 'string')]
     private $link;
 
     /**

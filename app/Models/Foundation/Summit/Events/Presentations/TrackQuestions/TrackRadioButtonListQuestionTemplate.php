@@ -14,11 +14,10 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackRadioButtonListQuestionTemplate")
- * Class TrackRadioButtonListQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackRadioButtonListQuestionTemplate')]
+#[ORM\Entity]
 class TrackRadioButtonListQuestionTemplate extends TrackMultiValueQuestionTemplate
 {
     const ClassName = 'TrackRadioButtonListQuestionTemplate';

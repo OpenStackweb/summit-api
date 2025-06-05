@@ -13,18 +13,17 @@
  **/
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="TrackLiteralContentQuestionTemplate")
- * Class TrackLiteralContentQuestionTemplate
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackQuestions
  */
+#[ORM\Table(name: 'TrackLiteralContentQuestionTemplate')]
+#[ORM\Entity]
 class TrackLiteralContentQuestionTemplate extends TrackQuestionTemplate
 {
 
     /**
-     * @ORM\Column(name="Content", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Content', type: 'string')]
     private $content;
 
     /**

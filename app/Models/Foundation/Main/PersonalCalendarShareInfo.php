@@ -15,40 +15,33 @@ use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
- * @ORM\Table(name="PersonalCalendarShareInfo")
- * @ORM\Entity
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="schedule_shareable_links"
- *     )
- * })
- * Class PersonalCalendarShareInfo
  * @package models\main
  */
+#[ORM\Table(name: 'PersonalCalendarShareInfo')]
+#[ORM\Entity]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'schedule_shareable_links')])] // Class PersonalCalendarShareInfo
 class PersonalCalendarShareInfo extends SilverstripeBaseModel
 {
 
     /**
-     * @ORM\Column(name="Hash", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Hash', type: 'string')]
     private $cid;
 
     /**
-     * @ORM\Column(name="Revoked", type="boolean")
      * @var bool
      */
+    #[ORM\Column(name: 'Revoked', type: 'boolean')]
     private $revoked;
 
     use SummitOwned;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Member", inversedBy="schedule_shareable_links")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'OwnerID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: \Member::class, inversedBy: 'schedule_shareable_links')]
     private $owner;
 
     public function __construct()

@@ -15,41 +15,40 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineDefaultTrackTagGroupRepository")
- * @ORM\Table(name="DefaultTrackTagGroup")
- * Class DefaultTrackTagGroup
  * @package models\summit\DefaultTrackTagGroup
  */
+#[ORM\Table(name: 'DefaultTrackTagGroup')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineDefaultTrackTagGroupRepository::class)]
 class DefaultTrackTagGroup extends SilverstripeBaseModel
 {
     /**
-     * @ORM\Column(name="Name", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     /**
-     * @ORM\Column(name="Label", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
+    #[ORM\Column(name: '`Order`', type: 'integer')]
     private $order;
 
     /**
-     * @ORM\Column(name="Mandatory", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'Mandatory', type: 'boolean')]
     private $is_mandatory;
 
     /**
-     * @ORM\OneToMany(targetEntity="DefaultTrackTagGroupAllowedTag", mappedBy="track_tag_group", cascade={"persist"}, orphanRemoval=true)
      * @var DefaultTrackTagGroupAllowedTag[]
      */
+    #[ORM\OneToMany(targetEntity: \DefaultTrackTagGroupAllowedTag::class, mappedBy: 'track_tag_group', cascade: ['persist'], orphanRemoval: true)]
     private $allowed_tags;
 
     /**

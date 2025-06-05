@@ -19,15 +19,13 @@ use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * Class Team
- * @ORM\Entity
- * @ORM\Table(name="Team")
  * @package Models\Foundation\Main\CCLA
  */
+#[ORM\Table(name: 'Team')]
+#[ORM\Entity]
 class Team extends SilverstripeBaseModel
 {
-    /**
-     * @ORM\Column(name="Name", type="string")
-     */
+    #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
     public function __construct(){
@@ -35,16 +33,14 @@ class Team extends SilverstripeBaseModel
         $this->members  = new ArrayCollection();
     }
 
-    /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="ccla_teams")
-     */
+    #[ORM\ManyToMany(targetEntity: \models\main\Member::class, mappedBy: 'ccla_teams')]
     private $members;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")
      * @var Company
      */
+    #[ORM\JoinColumn(name: 'CompanyID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Company::class)]
     private $company;
 
     /**

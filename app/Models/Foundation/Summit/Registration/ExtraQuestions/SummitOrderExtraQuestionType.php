@@ -18,58 +18,50 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitOrderExtraQuestionTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="order_extra_questions"
- *     )
- * })
- * @ORM\HasLifecycleCallbacks
- * @ORM\Table(name="SummitOrderExtraQuestionType")
- * Class SummitOrderExtraQuestionType
  * @package models\summit
  */
+#[ORM\Table(name: 'SummitOrderExtraQuestionType')]
+#[ORM\Entity(repositoryClass: \App\Repositories\Summit\DoctrineSummitOrderExtraQuestionTypeRepository::class)]
+#[ORM\AssociationOverrides([new ORM\AssociationOverride(name: 'summit', inversedBy: 'order_extra_questions')])]
+#[ORM\HasLifecycleCallbacks]
 class SummitOrderExtraQuestionType extends ExtraQuestionType
 {
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="`Usage`", type="string")
      * @var string
      */
+    #[ORM\Column(name: '`Usage`', type: 'string')]
     private $usage;
 
     /**
-     * @ORM\Column(name="Printable", type="boolean")
      * @var boolean
      */
+    #[ORM\Column(name: 'Printable', type: 'boolean')]
     private $printable;
 
     /**
-     * @ORM\Column(name="`ExternalId`", type="string")
      * @var string
      */
+    #[ORM\Column(name: '`ExternalId`', type: 'string')]
     private $external_id;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitTicketType", inversedBy="extra_question_types", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitOrderExtraQuestionType_SummitTicketType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitOrderExtraQuestionTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitTicketType[]
      */
+    #[ORM\JoinTable(name: 'SummitOrderExtraQuestionType_SummitTicketType')]
+    #[ORM\JoinColumn(name: 'SummitOrderExtraQuestionTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitTicketTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitTicketType::class, inversedBy: 'extra_question_types', fetch: 'EXTRA_LAZY')]
     private $allowed_ticket_types;
 
     /**
-     * @ORM\ManyToMany(targetEntity="SummitBadgeFeatureType", inversedBy="extra_question_types", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitOrderExtraQuestionType_SummitBadgeFeatureType",
-     *      joinColumns={@ORM\JoinColumn(name="SummitOrderExtraQuestionTypeID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBadgeFeatureTypeID", referencedColumnName="ID")}
-     *      )
      * @var SummitBadgeFeatureType[]
      */
+    #[ORM\JoinTable(name: 'SummitOrderExtraQuestionType_SummitBadgeFeatureType')]
+    #[ORM\JoinColumn(name: 'SummitOrderExtraQuestionTypeID', referencedColumnName: 'ID')]
+    #[ORM\InverseJoinColumn(name: 'SummitBadgeFeatureTypeID', referencedColumnName: 'ID')]
+    #[ORM\ManyToMany(targetEntity: \SummitBadgeFeatureType::class, inversedBy: 'extra_question_types', fetch: 'EXTRA_LAZY')]
     private $allowed_badge_features_types;
 
     /**

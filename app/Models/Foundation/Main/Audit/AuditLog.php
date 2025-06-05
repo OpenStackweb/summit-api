@@ -16,18 +16,13 @@ use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * @ORM\Entity(repositoryClass="repositories\main\DoctrineAuditLogRepository")
- * @ORM\Table(name="AuditLog")
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({
- *     "SummitAuditLog" = "SummitAuditLog",
- *     "SummitEventAuditLog" = "SummitEventAuditLog",
- *     "SummitAttendeeBadgeAuditLog" = "SummitAttendeeBadgeAuditLog"
- * })
- * Class AuditLog
  * @package models\main
  */
+#[ORM\Table(name: 'AuditLog')]
+#[ORM\Entity(repositoryClass: \repositories\main\DoctrineAuditLogRepository::class)]
+#[ORM\InheritanceType('JOINED')]
+#[ORM\DiscriminatorColumn(name: 'ClassName', type: 'string')]
+#[ORM\DiscriminatorMap(['SummitAuditLog' => 'SummitAuditLog', 'SummitEventAuditLog' => 'SummitEventAuditLog', 'SummitAttendeeBadgeAuditLog' => 'SummitAttendeeBadgeAuditLog'])] // Class AuditLog
 abstract class AuditLog extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -41,16 +36,16 @@ abstract class AuditLog extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="UserID", referencedColumnName="ID")
      * @var Member
      */
+    #[ORM\JoinColumn(name: 'UserID', referencedColumnName: 'ID')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class)]
     protected $user;
 
     /**
-     * @ORM\Column(name="Action", type="string")
      * @var string
      */
+    #[ORM\Column(name: 'Action', type: 'string')]
     private $action;
 
     public function getUser(): ?Member

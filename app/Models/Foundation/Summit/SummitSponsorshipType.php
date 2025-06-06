@@ -185,7 +185,7 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
         $this->sponsor_page_use_banner_widget = true;
         $this->should_display_on_expo_hall_page = true;
         $this->should_display_on_lobby_page = true;
-        $this->is_public = false;
+        $this->is_public = true;
     }
 
     /**

@@ -62,6 +62,7 @@ use models\summit\SummitMediaUploadType;
 use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
+use models\summit\SummitSponsorship;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
 use models\summit\SummitVenue;
@@ -820,7 +821,12 @@ trait InsertSummitTestData
             $s->setVideoLink(sprintf("https://%s.%s.video.com", $i, str_random(16)));
             $s->setChatLink(sprintf("https://%s.%s.chat.com", $i, str_random(16)));
             $s->setExternalLink(sprintf("https://%s.%s.exterma;.com", $i, str_random(16)));
-            $s->setSponsorship(self::$default_summit_sponsor_type);
+
+            $sps = new SummitSponsorship();
+            $sps->setType(self::$default_summit_sponsor_type);
+            self::$em->persist($sps);
+
+            $s->addSponsorship($sps);
 
             for($j = 0; $j < 10; $j ++){
 

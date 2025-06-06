@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\ValidationException;
 use models\summit\Sponsor;
 /**
  * Class SponsorFactory
@@ -30,6 +32,7 @@ final class SponsorFactory
      * @param Sponsor $sponsor
      * @param array $data
      * @return Sponsor
+     * @throws ValidationException
      */
     public static function populate(Sponsor $sponsor, array $data):Sponsor{
 
@@ -37,7 +40,7 @@ final class SponsorFactory
             $sponsor->setCompany($data['company']);
 
         if(isset($data['sponsorship']))
-            $sponsor->setSponsorship($data['sponsorship']);
+            $sponsor->addSponsorship($data['sponsorship']);
 
         if(isset($data['featured_event']))
             $sponsor->setFeaturedEvent($data['featured_event']);

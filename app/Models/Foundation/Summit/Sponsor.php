@@ -52,7 +52,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'getCarouselAdvertiseImageId' => 'carousel_advertise_image',
         'getFeaturedEventId' => 'featured_event',
         'getCompanyId' => 'company',
-        'getSponsorshipId' => 'sponsorship',
     ];
 
     protected $hasPropertyMappings = [
@@ -62,7 +61,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'hasCarouselAdvertiseImage' => 'carousel_advertise_image',
         'hasFeaturedEvent' => 'featured_event',
         'hasCompany' => 'company',
-        'hasSponsorship' => 'sponsorship',
     ];
 
     /**
@@ -288,22 +286,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function setCompany(Company $company): void
     {
         $this->company = $company;
-    }
-
-    /**
-     * @return SummitSponsorshipType
-     */
-    public function getSponsorship(): ?SummitSponsorshipType
-    {
-        return $this->sponsorship;
-    }
-
-    /**
-     * @param SummitSponsorshipType $sponsorship
-     */
-    public function setSponsorship(SummitSponsorshipType $sponsorship): void
-    {
-        $this->sponsorship = $sponsorship;
     }
 
     /**
@@ -988,7 +970,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     /**
      * @return SummitSponsorship[]
      */
-    public function getSponsorships(): array|ArrayCollection
+    public function getSponsorships()
     {
         return $this->sponsorships;
     }

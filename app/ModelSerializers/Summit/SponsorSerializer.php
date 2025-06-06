@@ -125,6 +125,14 @@ final class SponsorSerializer extends SilverStripeSerializer
             $values['members'] = $members;
         }
 
+        if (in_array('sponsorships', $relations)) {
+            $sponsorships = [];
+            foreach ($sponsor->getSponsorships() as $sponsorship) {
+                $sponsorships[] = $sponsorship->getType()->getId();
+            }
+            $values['sponsorships'] = $sponsorships;
+        }
+
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
@@ -207,17 +215,22 @@ final class SponsorSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
-                    case 'sponsorship':
+                    case 'sponsorships':
                         {
-                            if ($sponsor->hasSponsorship()) {
-                                unset($values['sponsorship_id']);
-                                $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSponsorship())->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
+                            $sponsorships = $sponsor->getSponsorships();
+                            if (count($sponsorships) > 0) {
+                                unset($values['sponsorships']);
+                                $sponsorship_types = [];
+                                foreach ($sponsorships as $sponsorship) {
+                                    $sponsorship_types[] = SerializerRegistry::getInstance()->getSerializer($sponsorship->getType())->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
+                                }
+                                $values['sponsorships'] = $sponsorship_types;
                             }
                         }
                         break;

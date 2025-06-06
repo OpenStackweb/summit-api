@@ -11,28 +11,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Database\Utils\DBHelpers;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
-/**
- * Class Version20250604135127
- * @package Database\Migrations\Model
- */
-final class Version20250604135127 extends AbstractMigration
+
+final class Version20250606154038 extends AbstractMigration
 {
-    const TableName = "Summit_SponsorshipType";
+    const TableName = "Sponsor";
 
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
+        $db_name = DB::connection("model")->getDatabaseName();
+
+        $sql = <<<SQL
+INSERT INTO SummitSponsorship(Created, LastEdited, ClassName, SponsorID, TypeID)
+SELECT NOW(), NOW(),'SummitSponsorship', s.ID, st.ID
+FROM Sponsor s INNER JOIN Summit_SponsorshipType st ON s.SummitSponsorshipTypeID = st.ID;
+SQL;
+
+        $this->addSql($sql);
+
+        if(DBHelpers::existsFK($db_name, self::TableName, 'FK_Sponsor_SummitSponsorshipType')) {
+            DBHelpers::dropFK($db_name, self::TableName, 'FK_Sponsor_SummitSponsorshipType');
+        }
+
         $builder = new Builder($schema);
-        if($schema->hasTable(self::TableName) && !$builder->hasColumn(self::TableName, "IsPublic")) {
-            $builder->table(self::TableName, function (Table $table) {
-                $table->boolean("IsPublic")->setNotnull(true)->setDefault(true);
-            });
+        if ($builder->hasTable(self::TableName) && $builder->hasColumn(self::TableName, "SummitSponsorshipTypeID")) {
+           $builder->table(self::TableName, function (Table $table) {
+                $table->dropColumn("SummitSponsorshipTypeID");
+           });
         }
     }
 
@@ -41,11 +55,6 @@ final class Version20250604135127 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        $builder = new Builder($schema);
-        if($schema->hasTable(self::TableName) && $builder->hasColumn(self::TableName, "IsPublic")) {
-            $builder->table(self::TableName, function (Table $table) {
-                $table->dropColumn("IsPublic");
-            });
-        }
+
     }
 }

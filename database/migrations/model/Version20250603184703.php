@@ -53,6 +53,8 @@ class Version20250603184703 extends AbstractMigration
                 $table->integer("TypeID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("TypeID", "TypeID");
                 $table->foreign("Summit_SponsorshipType", "TypeID", "ID", ["onDelete" => "SET NULL"], 'FK_Summit_SponsorshipType_SummitSponsorship');
+
+                $table->unique(['SponsorID', 'TypeID'], "SponsorID_TypeID");
             });
         }
     }

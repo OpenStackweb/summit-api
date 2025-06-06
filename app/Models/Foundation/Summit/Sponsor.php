@@ -92,13 +92,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     protected $is_published;
 
     /**
-     * @var SummitSponsorshipType
-     */
-    #[ORM\JoinColumn(name: 'SummitSponsorshipTypeID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
-    #[ORM\ManyToOne(targetEntity: \SummitSponsorshipType::class)]
-    protected $sponsorship;
-
-    /**
      * @var SponsorUserInfoGrant[]
      */
     #[ORM\OneToMany(targetEntity: \SponsorUserInfoGrant::class, mappedBy: 'sponsor', cascade: ['persist'], orphanRemoval: true)]
@@ -1002,10 +995,18 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @param SummitSponsorship $sponsorship
+     * @throws ValidationException
      */
     public function addSponsorship(SummitSponsorship $sponsorship): void
     {
-        if ($this->sponsorship->contains($sponsorship)) return;
+        $sponsorship_type = $sponsorship->getType();
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $sponsorship_type));
+        if ($this->sponsorships->matching($criteria)->count() > 0) {
+            throw new ValidationException(
+                sprintf('Sponsor %s already has a sponsorship of the same type (%s).',
+                    $this->id, $sponsorship_type->getId()));
+        }
         $sponsorship->setSponsor($this);
         $this->sponsorships->add($sponsorship);
     }

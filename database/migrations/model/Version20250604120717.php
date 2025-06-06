@@ -42,7 +42,7 @@ class Version20250604120717 extends AbstractMigration
                 $table->timestamp('Created');
                 $table->timestamp('LastEdited');
                 $table->string('ClassName')->setDefault('SummitSponsorshipAddOn');
-                $table->string('Type')->setNotnull(false)->setLength(255)->setDefault(null);
+                $table->string('Type')->setNotnull(true)->setLength(255);
                 $table->string('Name')->setNotnull(false)->setLength(1024)->setDefault(null);
 
                 // FK

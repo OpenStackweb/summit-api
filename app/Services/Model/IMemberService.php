@@ -155,4 +155,11 @@ interface IMemberService
      * @return Member|null
      */
     public function updateMyMember(Member $me, array $payload):?Member;
+
+    /**
+     * @param array $user_data
+     * @return Member
+     * @throws \Exception
+     */
+    public function registerExternalUserByPayload(array $user_data):Member;
 }

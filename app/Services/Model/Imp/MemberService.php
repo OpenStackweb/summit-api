@@ -329,6 +329,106 @@ final class MemberService
     }
 
     /**
+     * @param array $user_data
+     * @return Member
+     * @throws \Exception
+     */
+    public function registerExternalUserByPayload(array $user_data):Member{
+        Log::debug(sprintf("MemberService::registerExternalUserByPayload user_data %s", json_encode($user_data)));
+        $email = trim($user_data['email']);
+        $user_external_id = $user_data['id'];
+        // first by external id due email could be updated
+        Log::debug(sprintf("MemberService::registerExternalUserByPayload trying to get user by external id %s", $user_external_id));
+        $member = $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+        // if we dont registered yet a member with that external id try to get by email
+        if(is_null($member)) {
+            Log::debug(sprintf("MemberService::registerExternalUserByPayload trying to get user by email %s", $email));
+            $member = $this->member_repository->getByEmail($email);
+        }
+        $is_new = false;
+        if(is_null($member)) {
+            Log::debug(sprintf("MemberService::registerExternalUserByPayload %s does not exists , creating it ...", $email));
+            $member = MemberFactory::createFromExternalProfile($user_external_id, $user_data);
+            $this->member_repository->add($member, true);
+            $is_new = true;
+        }
+        else {
+            Log::debug(sprintf("MemberService::registerExternalUserByPayload %s already exists", $email));
+            $member = MemberFactory::populateFromExternalProfile($member, $user_external_id, $user_data);
+        }
+
+        $this->synchronizeGroups($member, $user_data['groups']);
+
+        // check speaker registration request by email and no member set
+        Log::debug(sprintf("MemberService::registerExternalUserByPayload trying to get former registration request by email %s", $email));
+        $request = $this->speaker_registration_request_repository->getByEmail($email);
+        if(!is_null($request) && $request->hasSpeaker()){
+            Log::debug(sprintf("MemberService::registerExternalUserByPayload got former registration request by email %s", $email));
+            $speaker = $request->getSpeaker();
+            if(!is_null($speaker))
+                if(!$speaker->hasMember()) {
+                    if($member->hasSpeaker()){
+                        // member has a former speaker
+                        $former_speaker  = $member->getSpeaker();
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "MemberService::registerExternalUserByPayload Member %s (%s) has a former speaker profile %s",
+                                $member->getEmail(),
+                                $member->getFirstName(),
+                                $former_speaker->getId(),
+                            )
+                        );
+                        foreach($former_speaker->getAllPresentations() as $presentation){
+                            if(!$presentation instanceof Presentation) continue;
+                            Log:debug
+                            (
+                                sprintf
+                                (
+                                    "MemberService::registerExternalUserByPayload Member %s (%s) moving presentation %s from speaker %s to speaker %s",
+                                    $member->getEmail(),
+                                    $member->getFirstName(),
+                                    $presentation->getId(),
+                                    $former_speaker->getId(),
+                                    $speaker->getId()
+                                )
+                            );
+                            $presentation->removeSpeaker($former_speaker);
+                            $presentation->addSpeaker($speaker);
+                        }
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "MemberService::registerExternalUserByPayload Member %s (%s) former speaker %s will be deleted",
+                                $member->getEmail(),
+                                $member->getFirstName(),
+                                $former_speaker->getId()
+                            )
+                        );
+                    }
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "MemberService::registerExternalUserByPayload setting Member %s (%s) to speaker %s",
+                            $member->getEmail(),
+                            $member->getFirstName(),
+                            $speaker->getId()
+                        )
+                    );
+                    // after this , former speaker will be deleted
+                    $speaker->setMember($member);
+                }
+        }
+
+        if($is_new)
+            Event::dispatch(new NewMember($member->getId()));
+
+        return $member;
+    }
+    /**
      * @param $user_external_id
      * @return Member
      * @throws \Exception
@@ -342,97 +442,7 @@ final class MemberService
                 Log::warning(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
                 throw new EntityNotFoundException(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
             }
-            $email = trim($user_data['email']);
-            // first by external id due email could be updated
-            Log::debug(sprintf("MemberService::registerExternalUserById trying to get user by external id %s", $user_external_id));
-            $member = $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
-            // if we dont registered yet a member with that external id try to get by email
-            if(is_null($member)) {
-                Log::debug(sprintf("MemberService::registerExternalUserById trying to get user by email %s", $email));
-                $member = $this->member_repository->getByEmail($email);
-            }
-            $is_new = false;
-            if(is_null($member)) {
-                Log::debug(sprintf("MemberService::registerExternalUserById %s does not exists , creating it ...", $email));
-                $member = MemberFactory::createFromExternalProfile($user_external_id, $user_data);
-                $this->member_repository->add($member, true);
-                $is_new = true;
-            }
-            else {
-                Log::debug(sprintf("MemberService::registerExternalUserById %s already exists", $email));
-                $member = MemberFactory::populateFromExternalProfile($member, $user_external_id, $user_data);
-            }
-
-            $this->synchronizeGroups($member, $user_data['groups']);
-
-            // check speaker registration request by email and no member set
-            Log::debug(sprintf("MemberService::registerExternalUserById trying to get former registration request by email %s", $email));
-            $request = $this->speaker_registration_request_repository->getByEmail($email);
-            if(!is_null($request) && $request->hasSpeaker()){
-                Log::debug(sprintf("MemberService::registerExternalUserById got former registration request by email %s", $email));
-                $speaker = $request->getSpeaker();
-                if(!is_null($speaker))
-                    if(!$speaker->hasMember()) {
-                        if($member->hasSpeaker()){
-                            // member has a former speaker
-                            $former_speaker  = $member->getSpeaker();
-                            Log::debug
-                            (
-                                sprintf
-                                (
-                                    "MemberService::registerExternalUserById Member %s (%s) has a former speaker profile %s",
-                                    $member->getEmail(),
-                                    $member->getFirstName(),
-                                    $former_speaker->getId(),
-                                )
-                            );
-                            foreach($former_speaker->getAllPresentations() as $presentation){
-                                if(!$presentation instanceof Presentation) continue;
-                                Log:debug
-                                (
-                                    sprintf
-                                    (
-                                        "MemberService::registerExternalUserById Member %s (%s) moving presentation %s from speaker %s to speaker %s",
-                                        $member->getEmail(),
-                                        $member->getFirstName(),
-                                        $presentation->getId(),
-                                        $former_speaker->getId(),
-                                        $speaker->getId()
-                                    )
-                                );
-                                $presentation->removeSpeaker($former_speaker);
-                                $presentation->addSpeaker($speaker);
-                            }
-                            Log::debug
-                            (
-                                sprintf
-                                (
-                                    "MemberService::registerExternalUserById Member %s (%s) former speaker %s will be deleted",
-                                    $member->getEmail(),
-                                    $member->getFirstName(),
-                                    $former_speaker->getId()
-                                )
-                            );
-                        }
-                        Log::debug
-                        (
-                            sprintf
-                            (
-                                "MemberService::registerExternalUserById setting Member %s (%s) to speaker %s",
-                                $member->getEmail(),
-                                $member->getFirstName(),
-                                $speaker->getId()
-                            )
-                        );
-                        // after this , former speaker will be deleted
-                        $speaker->setMember($member);
-                    }
-            }
-
-            if($is_new)
-                Event::dispatch(new NewMember($member->getId()));
-
-            return $member;
+            return $this->registerExternalUserByPayload($user_data);
         });
 
         Event::dispatch(new MemberDataUpdatedExternally($member->getId()));

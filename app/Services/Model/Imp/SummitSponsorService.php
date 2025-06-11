@@ -214,12 +214,6 @@ final class SummitSponsorService
             if (!is_null($company))
                 $payload['company'] = $company;
 
-            if (!is_null($sponsorship_type)) {
-                $sponsorship = new SummitSponsorship();
-                $sponsorship->setType($sponsorship_type);
-                $payload['sponsorship'] = $sponsorship;
-            }
-
             $sponsor = SponsorFactory::populate($summit_sponsor, $payload);
 
             if (isset($payload['order']) && intval($payload['order']) != $sponsor->getOrder()) {

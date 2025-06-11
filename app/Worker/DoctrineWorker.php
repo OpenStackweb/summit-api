@@ -118,7 +118,7 @@ class DoctrineWorker extends IlluminateWorker
             $con->executeQuery($con->getDatabasePlatform()->getDummySelectSQL());
             return true;
         } catch (\Exception $e) {
-            Log::error($e);
+            Log::warning($e);
             return false;
         }
     }

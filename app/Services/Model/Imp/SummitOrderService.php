@@ -1883,7 +1883,6 @@ final class SummitOrderService
     {
         Log::debug("SummitOrderService::ownerAssignTicket");
 
-
         return $this->tx_service->transaction(function () use ($current_user, $order_id, $ticket_id, $payload) {
 
             Log::debug
@@ -1951,6 +1950,16 @@ final class SummitOrderService
             $member = $this->member_repository->getByEmail($email);
             $attendee = $summit->getAttendeeByEmail($email);
 
+            if(is_null($member)){
+                $user = $this->member_service->checkExternalUser($email);
+
+                //If user exists => update it
+                if (!is_null($user))
+                {
+                    $member = $this->member_service->registerExternalUserByPayload($user);
+                }
+            }
+
             if (is_null($attendee) && !is_null($member)) {
                 // if we have a member, try to get attendee by member
                 Log::debug
@@ -1965,7 +1974,7 @@ final class SummitOrderService
             }
 
             if (is_null($attendee)) {
-                // if attendee did not exist , create a new one
+                // if attendee did not exists... create a new one
                 Log::debug
                 (
                     sprintf
@@ -2017,6 +2026,16 @@ final class SummitOrderService
             $ticket->generateQRCode();
             $ticket->generateHash();
             $attendee->updateStatus();
+            $member_company = !is_null($member) ? $member->getCompany() : null;
+            if(!$attendee->hasCompany() && !empty($member_company)){
+                $company = $this->company_repository->getByName($member_company);
+                if(!is_null($company)){
+                    $attendee->setCompany($company);
+                } else {
+                    $company = $this->company_service->addCompany(['name' => $member_company]);
+                    $attendee->setCompany($company);
+                }
+            }
             if ($summit->isRegistrationSendTicketEmailAutomatically())
                 $attendee->sendInvitationEmail($ticket, false, $payload);
 

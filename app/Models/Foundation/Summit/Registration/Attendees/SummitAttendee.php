@@ -774,7 +774,11 @@ SQL;
     {
         if ($this->hasCompany())
             return $this->company->getName();
-        return $this->company_name;
+        $res = $this->company_name;
+        if (empty($res) && $this->hasMember()) {
+            $res = $this->member->getCompany();
+        }
+        return $res;
     }
 
     /**

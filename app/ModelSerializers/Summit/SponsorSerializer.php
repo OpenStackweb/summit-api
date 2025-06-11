@@ -49,6 +49,7 @@ final class SponsorSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'extra_questions',
         'members',
+        'sponsorships',
     ];
 
     /**
@@ -83,7 +84,7 @@ final class SponsorSerializer extends SilverStripeSerializer
         if (in_array('sponsorships', $relations)) {
             $sponsorships = [];
             foreach ($sponsor->getSponsorships() as $sponsorship) {
-                $sponsorships[] = $sponsorship->getType()->getId();
+                $sponsorships[] = $sponsorship->getId();
             }
             $values['sponsorships'] = $sponsorships;
         }
@@ -176,9 +177,9 @@ final class SponsorSerializer extends SilverStripeSerializer
                             $sponsorships = $sponsor->getSponsorships();
                             if (count($sponsorships) > 0) {
                                 unset($values['sponsorships']);
-                                $sponsorship_types = [];
+                                $summit_sponsorships = [];
                                 foreach ($sponsorships as $sponsorship) {
-                                    $sponsorship_types[] = SerializerRegistry::getInstance()->getSerializer($sponsorship->getType())->serialize
+                                    $summit_sponsorships[] = SerializerRegistry::getInstance()->getSerializer($sponsorship)->serialize
                                     (
                                         AbstractSerializer::filterExpandByPrefix($expand, $relation),
                                         AbstractSerializer::filterFieldsByPrefix($fields, $relation),
@@ -186,7 +187,7 @@ final class SponsorSerializer extends SilverStripeSerializer
                                         $params
                                     );
                                 }
-                                $values['sponsorships'] = $sponsorship_types;
+                                $values['sponsorships'] = $summit_sponsorships;
                             }
                         }
                         break;

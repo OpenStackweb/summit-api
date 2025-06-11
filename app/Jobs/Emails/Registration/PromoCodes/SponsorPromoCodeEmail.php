@@ -54,12 +54,7 @@ class SponsorPromoCodeEmail extends AbstractSummitEmailJob
         $summit = $promo_code->getSummit();
         $payload = [];
         $sponsor = $promo_code->getSponsor();
-        $sponsorships = $sponsor->getSponsorships();
-        $sponsor_tier_names = [];
-        foreach ($sponsorships as $sponsorship) {
-            $sponsor_tier_names[] = $sponsorship->getType()->getType()->getName();
-        }
-        $payload[IMailTemplatesConstants::sponsor_tier_name] = implode(',', $sponsor_tier_names);
+        $payload[IMailTemplatesConstants::sponsor_tier_name] = implode(',', $sponsor->getSponsorshipTierNames());
         $payload[IMailTemplatesConstants::promo_code] = $promo_code->getCode();
         $payload[IMailTemplatesConstants::company_name] = '';
         $company = $sponsor->getCompany();

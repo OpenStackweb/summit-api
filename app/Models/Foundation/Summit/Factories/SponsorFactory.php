@@ -32,15 +32,11 @@ final class SponsorFactory
      * @param Sponsor $sponsor
      * @param array $data
      * @return Sponsor
-     * @throws ValidationException
      */
     public static function populate(Sponsor $sponsor, array $data):Sponsor{
 
         if(isset($data['company']))
             $sponsor->setCompany($data['company']);
-
-        if(isset($data['sponsorship']))
-            $sponsor->addSponsorship($data['sponsorship']);
 
         if(isset($data['featured_event']))
             $sponsor->setFeaturedEvent($data['featured_event']);

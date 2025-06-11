@@ -976,4 +976,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->sponsorships->clear();
         $this->sponsorships = null;
     }
+
+    /**
+     * @return array
+     */
+    public function getSponsorshipTierNames(): array
+    {
+        return array_map(fn($sponsorship) => $sponsorship->getType()->getType()->getName(), $this->sponsorships);
+    }
 }

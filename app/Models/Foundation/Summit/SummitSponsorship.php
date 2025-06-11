@@ -27,6 +27,14 @@ class SummitSponsorship extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
 
+    protected $getIdMappings = [
+        'getTypeId' => 'type',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasType' => 'type',
+    ];
+
     /**
      * @var Sponsor
      */

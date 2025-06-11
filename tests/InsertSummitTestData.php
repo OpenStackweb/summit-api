@@ -65,6 +65,7 @@ use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitSponsorship;
+use models\summit\SummitSponsorshipAddOn;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
 use models\summit\SummitVenue;
@@ -829,6 +830,14 @@ trait InsertSummitTestData
             self::$em->persist($sps);
 
             $s->addSponsorship($sps);
+
+            for($j = 0; $j < 5; $j ++){
+                $a = new SummitSponsorshipAddOn();
+                $a->setType($j < 3 ? SummitSponsorshipAddOn::Booth_Type : SummitSponsorshipAddOn::MeetingRoom_Type);
+                $a->setName(sprintf("AddOn %s %s", $j, str_random(4)));
+                $sps->addAddOn($a);
+                self::$em->persist($a);
+            }
 
             for($j = 0; $j < 10; $j ++){
 

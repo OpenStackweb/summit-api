@@ -14,6 +14,7 @@
 
 use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**

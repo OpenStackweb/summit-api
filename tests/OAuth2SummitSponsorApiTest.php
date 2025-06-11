@@ -133,7 +133,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $params = [
             'id' => self::$summit->getId(),
             'filter'=> 'company_name=@'.substr(self::$companies[0]->getName(),0,3),
-            'expand' => 'company,sponsorships,sponsorships.type,extra_questions',
+            'expand' => 'company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions',
             'order' => '-sponsorship_name'
         ];
 

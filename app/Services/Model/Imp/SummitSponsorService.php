@@ -39,6 +39,7 @@ use models\summit\SponsorMaterial;
 use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
 use models\summit\SummitLeadReportSetting;
+use models\summit\SummitSponsorship;
 use services\model\ISummitSponsorService;
 
 /**
@@ -189,9 +190,6 @@ final class SummitSponsorService
 
             if (!is_null($company))
                 $payload['company'] = $company;
-
-            if (!is_null($sponsorship_type))
-                $payload['sponsorship'] = $sponsorship_type;
 
             $sponsor = SponsorFactory::populate($summit_sponsor, $payload);
 

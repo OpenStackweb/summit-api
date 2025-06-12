@@ -49,6 +49,7 @@ final class SponsorSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'extra_questions',
         'members',
+        'sponsorships',
     ];
 
     /**
@@ -78,6 +79,14 @@ final class SponsorSerializer extends SilverStripeSerializer
                 $members[] = $member->getId();
             }
             $values['members'] = $members;
+        }
+
+        if (in_array('sponsorships', $relations)) {
+            $sponsorships = [];
+            foreach ($sponsor->getSponsorships() as $sponsorship) {
+                $sponsorships[] = $sponsorship->getId();
+            }
+            $values['sponsorships'] = $sponsorships;
         }
 
         if (!empty($expand)) {
@@ -163,17 +172,22 @@ final class SponsorSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
-                    case 'sponsorship':
+                    case 'sponsorships':
                         {
-                            if ($sponsor->hasSponsorship()) {
-                                unset($values['sponsorship_id']);
-                                $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSponsorship())->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
+                            $sponsorships = $sponsor->getSponsorships();
+                            if (count($sponsorships) > 0) {
+                                unset($values['sponsorships']);
+                                $summit_sponsorships = [];
+                                foreach ($sponsorships as $sponsorship) {
+                                    $summit_sponsorships[] = SerializerRegistry::getInstance()->getSerializer($sponsorship)->serialize
+                                    (
+                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                        $params
+                                    );
+                                }
+                                $values['sponsorships'] = $summit_sponsorships;
                             }
                         }
                         break;

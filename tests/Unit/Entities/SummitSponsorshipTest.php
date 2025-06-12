@@ -17,6 +17,7 @@ namespace Tests\Unit\Entities;
 
 use models\summit\SummitSponsorship;
 use models\summit\SummitSponsorshipAddOn;
+use models\summit\SummitSponsorshipType;
 use Tests\InsertSummitTestData;
 use Tests\TestCase;
 
@@ -49,12 +50,14 @@ class SummitSponsorshipTest extends TestCase
         
         // Set the sponsor (ManyToOne relationship)
         $sponsorship->setSponsor($sponsor);
-        
-        // Get an existing sponsorship type from the test data
-        $sponsorship_type = self::$default_summit_sponsor_type;
+
+        $summit_sponsorship_type = new SummitSponsorshipType();
+        $summit_sponsorship_type->setType(self::$default_sponsor_ship_type);
+        self::$em->persist($summit_sponsorship_type);
+        self::$summit->addSponsorshipType(self::$default_summit_sponsor_type);
         
         // Set the type (ManyToOne relationship)
-        $sponsorship->setType($sponsorship_type);
+        $sponsorship->setType($summit_sponsorship_type);
         
         // Create a new add-on
         $add_on = new SummitSponsorshipAddOn();
@@ -78,7 +81,7 @@ class SummitSponsorshipTest extends TestCase
         
         // Test ManyToOne relationship with type
         $found_type = $found_sponsorship->getType();
-        $this->assertEquals($sponsorship_type->getId(), $found_type->getId());
+        $this->assertEquals($summit_sponsorship_type->getId(), $found_type->getId());
         
         // Test OneToMany relationship with add-ons
         $found_add_ons = $found_sponsorship->getAddOns()->toArray();
@@ -104,11 +107,13 @@ class SummitSponsorshipTest extends TestCase
         // Set the sponsor (ManyToOne relationship)
         $sponsorship->setSponsor($sponsor);
         
-        // Get an existing sponsorship type from the test data
-        $sponsorship_type = self::$default_summit_sponsor_type;
+        $summit_sponsorship_type = new SummitSponsorshipType();
+        $summit_sponsorship_type->setType(self::$default_sponsor_ship_type);
+        self::$em->persist($summit_sponsorship_type);
+        self::$summit->addSponsorshipType(self::$default_summit_sponsor_type);
         
         // Set the type (ManyToOne relationship)
-        $sponsorship->setType($sponsorship_type);
+        $sponsorship->setType($summit_sponsorship_type);
         
         // Create a new add-on
         $add_on = new SummitSponsorshipAddOn();

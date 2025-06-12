@@ -1,6 +1,8 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\AuditLog;
+use models\main\Member;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
 use models\summit\Summit;
@@ -28,17 +30,32 @@ use utils\PagingInfo;
  */
 class AuditModelTest extends ProtectedApiTestCase
 {
+      use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
+
     public function testAuditSummitChange(){
         $audit_repository = EntityManager::getRepository(AuditLog::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
-
-        $user = 'test_user';
-        $summit = $summit_repository->find(3315);
 
         $summit_audit = new SummitAuditLog(
-            $user,
+            self::$defaultMember,
             'from Summit [SNAPSHOT N] to Summit [SNAPSHOT N + 1]',
-            $summit
+            self::$summit
         );
 
         self::$em->persist($summit_audit);
@@ -57,22 +74,19 @@ class AuditModelTest extends ProtectedApiTestCase
             $audit_repository->getAllByPage(new PagingInfo(1, 5), $filter, $order)->getItems()[0];
         self::assertNotEmpty($retrieved_summit_audit->getAction());
         self::assertEquals(SummitAuditLog::ClassName, $retrieved_summit_audit->getClassName());
-        self::assertEquals($retrieved_summit_audit->getUser(), $user);
-        self::assertEquals($retrieved_summit_audit->getSummit()->getId(), $summit->getId());
+        self::assertEquals(self::$defaultMember->getId(), $retrieved_summit_audit->getUser()->getId());
+        self::assertEquals(self::$summit->getId(), $retrieved_summit_audit->getSummit()->getId());
     }
 
     public function testAuditSummitEventChange(){
         $audit_repository = EntityManager::getRepository(AuditLog::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
 
-        $user = 'test_user';
-        $summit = $summit_repository->find(3315);
-        $summit_event = $summit->getEvents()[0];
+        $summit_event = self::$summit->getEvents()[0];
 
         $summit_audit = new SummitEventAuditLog(
-            $user,
+            self::$defaultMember,
             'from SummitEvent [SNAPSHOT N] to SummitEvent [SNAPSHOT N + 1]',
-            $summit,
+            self::$summit,
             $summit_event
         );
 
@@ -92,6 +106,6 @@ class AuditModelTest extends ProtectedApiTestCase
             $audit_repository->getAllByPage(new PagingInfo(1, 5), $filter, $order)->getItems()[0];
         self::assertNotEmpty($retrieved_summit_audit->getAction());
         self::assertEquals(SummitEventAuditLog::ClassName, $retrieved_summit_audit->getClassName());
-        self::assertEquals($retrieved_summit_audit->getUser(), $user);
+        self::assertEquals(self::$defaultMember->getId(), $retrieved_summit_audit->getUser()->getId());
     }
 }

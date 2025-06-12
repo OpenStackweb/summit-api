@@ -23,8 +23,9 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
  */
 class AuditEventListener {
 
-    public function onFlush(OnFlushEventArgs $eventArgs) {
-        $em = $eventArgs->getEntityManager();
+    public function onFlush(OnFlushEventArgs $eventArgs): void
+    {
+        $em = $eventArgs->getObjectManager();
         $uow = $em->getUnitOfWork();
 
         $strategy = new AuditLogStrategy($em);

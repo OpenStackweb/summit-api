@@ -14,6 +14,7 @@
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\LazyCriteriaCollection;
 use Doctrine\ORM\NativeQuery;
@@ -21,6 +22,8 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Common\Collections\AbstractLazyCollection;
+use Doctrine\Common\Collections\Selectable;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\IBaseRepository;
@@ -45,7 +48,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
     /**
      * @return EntityManager
      */
-    protected function getEntityManager()
+    protected function getEntityManager():EntityManagerInterface
     {
         return Registry::getManager($this->manager_name);
     }
@@ -341,11 +344,11 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return QueryBuilder
      */
-    public function createQueryBuilder($alias, $indexBy = null)
+    public function createQueryBuilder($alias, $indexBy = null): QueryBuilder
     {
         return $this->getEntityManager()->createQueryBuilder()
             ->select($alias)
-            ->from($this->_entityName, $alias, $indexBy);
+            ->from($this->getEntityName(), $alias, $indexBy);
     }
 
     /**
@@ -357,10 +360,10 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return ResultSetMappingBuilder
      */
-    public function createResultSetMappingBuilder($alias)
+    public function createResultSetMappingBuilder($alias): ResultSetMappingBuilder
     {
         $rsm = new ResultSetMappingBuilder($this->getEntityManager(), ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
-        $rsm->addRootEntityFromClassMetadata($this->_entityName, $alias);
+        $rsm->addRootEntityFromClassMetadata($this->getEntityName(), $alias);
 
         return $rsm;
     }
@@ -414,10 +417,10 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return object|null The entity instance or NULL if the entity can not be found.
      */
-    public function find($id, $lockMode = null, $lockVersion = null, $refresh = false)
+    public function find($id, $lockMode = null, $lockVersion = null, $refresh = false): ?object
     {
         $em = $this->getEntityManager();
-        $res = $em->find($this->_entityName, $id, $lockMode, $lockVersion);
+        $res = $em->find($this->getEntityName(), $id, $lockMode, $lockVersion);
         if($refresh)
             $em->refresh($res);
         return $res;
@@ -433,9 +436,9 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return array The objects.
      */
-    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null): array
     {
-        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
+        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->getEntityName());
 
         return $persister->loadAll($criteria, $orderBy, $limit, $offset);
     }
@@ -448,9 +451,9 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return object|null The entity instance or NULL if the entity can not be found.
      */
-    public function findOneBy(array $criteria, array $orderBy = null)
+    public function findOneBy(array $criteria, array $orderBy = null): ?object
     {
-        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
+        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->getEntityName());
 
         return $persister->load($criteria, null, null, [], null, 1, $orderBy);
     }
@@ -464,22 +467,22 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return int The cardinality of the objects that match the given criteria.
      */
-    public function count(array $criteria)
+    public function count(array $criteria = []): int
     {
-        return $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName)->count($criteria);
+        return $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->getEntityName())->count($criteria);
     }
 
     /**
      * Select all elements from a selectable that match the expression and
      * return a new collection containing these elements.
      *
-     * @param \Doctrine\Common\Collections\Criteria $criteria
+     * @param Criteria $criteria
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return AbstractLazyCollection&Selectable
      */
-    public function matching(Criteria $criteria)
+    public function matching(Criteria $criteria): AbstractLazyCollection&Selectable
     {
-        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
+        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->getEntityName());
 
         return new LazyCriteriaCollection($persister, $criteria);
     }

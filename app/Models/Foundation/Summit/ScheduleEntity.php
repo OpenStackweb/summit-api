@@ -56,7 +56,7 @@ trait ScheduleEntity
         return 0;
     }
 
-    #[ORM\PreRemove] // :
+    #[ORM\PreRemove]
     public function deleting($args)
     {
         Event::dispatch(new ScheduleEntityLifeCycleEvent('DELETE',
@@ -65,21 +65,19 @@ trait ScheduleEntity
             $this->_getClassName()));
     }
 
-    /**
-     * @ORM\preRemove:
-     */
+    #[ORM\PostRemove]
     public function deleted($args)
     {
         $this->cachedDeleted($args);
     }
 
-    #[ORM\PreUpdate] // :
+    #[ORM\PreUpdate]
     public function updating(PreUpdateEventArgs $args)
     {
         parent::updating($args);
     }
 
-    #[ORM\PostUpdate] // :
+    #[ORM\PostUpdate]
     public function updated($args)
     {
         Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));

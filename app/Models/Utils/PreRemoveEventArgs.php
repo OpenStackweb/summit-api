@@ -13,7 +13,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 
 /**
  * Class PreRemoveEventArgs

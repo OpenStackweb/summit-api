@@ -15,6 +15,8 @@
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\JoinColumnMapping;
+use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
 
 /**
  * A set of rules for determining the physical column, alias and table quotes and automatically escape database reserved
@@ -26,7 +28,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getColumnName($fieldName, ClassMetadata $class, AbstractPlatform $platform)
+    public function getColumnName($fieldName, ClassMetadata $class, AbstractPlatform $platform): string
     {
         if (isset($class->fieldMappings[$fieldName]['quoted'])) {
             return $platform->quoteIdentifier($class->fieldMappings[$fieldName]['columnName']);
@@ -42,7 +44,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getTableName(ClassMetadata $class, AbstractPlatform $platform)
+    public function getTableName(ClassMetadata $class, AbstractPlatform $platform): string
     {
         if (isset($class->table['quoted'])) {
             return $platform->quoteIdentifier($class->table['name']);
@@ -58,7 +60,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getSequenceName(array $definition, ClassMetadata $class, AbstractPlatform $platform)
+    public function getSequenceName(array $definition, ClassMetadata $class, AbstractPlatform $platform): string
     {
         if (isset($definition['quoted'])) {
             return $platform->quoteIdentifier($class->table['name']);
@@ -74,7 +76,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getJoinColumnName(array $joinColumn, ClassMetadata $class, AbstractPlatform $platform)
+    public function getJoinColumnName(array|JoinColumnMapping $joinColumn, ClassMetadata $class, AbstractPlatform $platform): string
     {
         if (isset($joinColumn['quoted'])) {
             return $platform->quoteIdentifier($joinColumn['name']);
@@ -90,7 +92,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getReferencedJoinColumnName(array $joinColumn, ClassMetadata $class, AbstractPlatform $platform)
+    public function getReferencedJoinColumnName(array|JoinColumnMapping $joinColumn, ClassMetadata $class, AbstractPlatform $platform): string
     {
         if (isset($joinColumn['quoted'])) {
             return $platform->quoteIdentifier($joinColumn['referencedColumnName']);
@@ -106,7 +108,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getJoinTableName(array $association, ClassMetadata $class, AbstractPlatform $platform)
+    public function getJoinTableName(array|ManyToManyOwningSideMapping $association, ClassMetadata $class, AbstractPlatform $platform): string
     {
         if (isset($association['joinTable']['quoted'])) {
             return $platform->quoteIdentifier($association['joinTable']['name']);
@@ -122,7 +124,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getIdentifierColumnNames(ClassMetadata $class, AbstractPlatform $platform)
+    public function getIdentifierColumnNames(ClassMetadata $class, AbstractPlatform $platform): array
     {
         $quotedColumnNames = array();
 
@@ -159,7 +161,7 @@ class EscapingQuoteStrategy implements QuoteStrategy
     /**
      * {@inheritdoc}
      */
-    public function getColumnAlias($columnName, $counter, AbstractPlatform $platform, ClassMetadata $class = null)
+    public function getColumnAlias($columnName, $counter, AbstractPlatform $platform, ClassMetadata $class = null): string
     {
         // 1 ) Concatenate column name and counter
         // 2 ) Trim the column alias to the maximum identifier length of the platform.

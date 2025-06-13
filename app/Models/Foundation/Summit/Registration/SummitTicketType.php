@@ -14,12 +14,12 @@
 use App\Models\Foundation\Summit\AllowedCurrencies;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Utils\Traits\FinancialTrait;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**

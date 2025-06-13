@@ -105,12 +105,8 @@ class OAuth2BearerAccessTokenRequestValidator
             }
 
             Log::debug($request->headers->__toString());
-            // http://tools.ietf.org/id/draft-abarth-origin-03.html
-            $origin = $request->headers->has('Origin') ? $request->headers->get('Origin') : null;
-            if (!empty($origin)) {
-                $nm     = new Normalizer($origin);
-                $origin = $nm->normalize();
-            }
+
+            $origin = RequestUtils::getOrigin($request);
 
             //check first http basic auth header
             $auth_header = isset($this->headers['authorization']) ? $this->headers['authorization'] : null;

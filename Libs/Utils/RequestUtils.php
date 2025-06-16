@@ -61,7 +61,7 @@ final class RequestUtils {
         if (!empty($origin) && !empty($referer) &&
             parse_url($origin, PHP_URL_HOST) != parse_url($referer, PHP_URL_HOST))
         {
-            Log::warning('OAuth2BearerAccessTokenRequestValidator::handle Origin and Referrer mismatch');
+            Log::warning("OAuth2BearerAccessTokenRequestValidator::getOrigin - Origin: \"$origin\" and Referrer: \"$referer\" mismatch");
             throw new OAuth2ResourceServerException(
                 403,
                 OAuth2Protocol::OAuth2Protocol_Error_InvalidRequest,
@@ -73,7 +73,7 @@ final class RequestUtils {
             $referer_parts = parse_url($referer);
             $origin = $referer_parts['scheme'] . '://' . $referer_parts['host'];
             if (!empty($origin)) {
-                Log::warning('OAuth2BearerAccessTokenRequestValidator::Origin header not present. Using normalized Referer as fallback: ' . $origin);
+                Log::info('OAuth2BearerAccessTokenRequestValidator::getOrigin - Origin header not present. Using normalized Referer as fallback: ' . $origin);
             }
         }
 

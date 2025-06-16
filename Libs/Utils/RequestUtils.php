@@ -11,8 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
+use libs\oauth2\OAuth2Protocol;
+use libs\oauth2\OAuth2ResourceServerException;
+use URL\Normalizer;
+
 /**
  * Class RequestUtils
  * @package libs\utils
@@ -20,7 +25,7 @@ use Illuminate\Support\Facades\Log;
 final class RequestUtils {
 
     /**
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return bool|string
      */
     public static function getCurrentRoutePath($request)
@@ -42,4 +47,39 @@ final class RequestUtils {
         return false;
     }
 
+    /**
+     * @param Request $request
+     * @return string|null
+     * @throws OAuth2ResourceServerException
+     */
+    public static function getOrigin(Request $request): ?string
+    {
+        // http://tools.ietf.org/id/draft-abarth-origin-03.html
+        $origin = $request->headers->get('Origin');
+        $referer = $request->headers->get('Referer');
+
+        if (!empty($origin) && !empty($referer) &&
+            parse_url($origin, PHP_URL_HOST) != parse_url($referer, PHP_URL_HOST))
+        {
+            Log::warning("OAuth2BearerAccessTokenRequestValidator::getOrigin - Origin: \"$origin\" and Referrer: \"$referer\" mismatch");
+            throw new OAuth2ResourceServerException(
+                403,
+                OAuth2Protocol::OAuth2Protocol_Error_InvalidRequest,
+                'Origin and Referrer mismatch'
+            );
+        }
+
+        if (empty($origin) && !empty($referer)) {
+            $referer_parts = parse_url($referer);
+            $origin = $referer_parts['scheme'] . '://' . $referer_parts['host'];
+            if (!empty($origin)) {
+                Log::info('OAuth2BearerAccessTokenRequestValidator::getOrigin - Origin header not present. Using normalized Referer as fallback: ' . $origin);
+            }
+        }
+
+        if (!empty($origin)) {
+            $origin = (new Normalizer($origin))->normalize();
+        }
+        return $origin;
+    }
 }

@@ -582,9 +582,17 @@ final class SummitPromoCodeService
      */
     public function importPromoCodes(Summit $summit, UploadedFile $csv_file, ?Member $current_user = null): void
     {
-        Log::debug(sprintf("SummitPromoCodeService::importPromoCodes - summit %s", $summit->getId()));
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitPromoCodeService::importPromoCodes - summit %s ext %s",
+                $summit->getId(),
+                $csv_file->extension()
+            )
+        );
 
-        $allowed_extensions = ['txt'];
+        $allowed_extensions = ['txt', 'csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             throw new ValidationException("File does not has a valid extension ('csv').");

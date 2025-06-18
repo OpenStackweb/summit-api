@@ -124,7 +124,7 @@ final class SummitSubmissionInvitationService
     {
         Log::debug(sprintf("SummitSubmissionInvitationService::importInvitationData - summit %s", $summit->getId()));
 
-        $allowed_extensions = ['txt'];
+        $allowed_extensions = ['txt','csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             throw new ValidationException("File does not has a valid extension ('csv').");

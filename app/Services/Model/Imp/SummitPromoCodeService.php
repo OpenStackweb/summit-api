@@ -144,14 +144,19 @@ final class SummitPromoCodeService
      */
     private function getPromoCodeParams(Summit $summit, array $data)
     {
+        Log::debug(sprintf("SummitPromoCodeService::getPromoCodeParams summit %s data %s", $summit->getId(), json_encode($data)));
         $params = [];
 
         if (isset($data['allowed_ticket_types'])) {
             $allowed_ticket_types = [];
             foreach ($data['allowed_ticket_types'] as $ticket_type_id) {
+                Log::debug(sprintf("SummitPromoCodeService::getPromoCodeParams processing ticket type %s", $ticket_type_id));
                 if(empty($ticket_type_id)) continue;
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
-                if (is_null($ticket_type)) continue;
+                if (is_null($ticket_type)) {
+                    Log::warning(sprintf("SummitPromoCodeService::getPromoCodeParams ticket type %s not found", $ticket_type_id));
+                    continue;
+                }
                 $allowed_ticket_types[] = $ticket_type;
             }
             $params['allowed_ticket_types'] = $allowed_ticket_types;
@@ -160,9 +165,13 @@ final class SummitPromoCodeService
         if (isset($data['badge_features'])) {
             $badge_features = [];
             foreach ($data['badge_features'] as $feature_id) {
+                Log::debug(sprintf("SummitPromoCodeService::getPromoCodeParams processing badge feature %s", $feature_id));
                 if(empty($feature_id)) continue;
                 $feature = $summit->getFeatureTypeById(intval($feature_id));
-                if (is_null($feature)) continue;
+                if (is_null($feature)) {
+                    Log::warning(sprintf("SummitPromoCodeService::getPromoCodeParams badge feature %s not found", $feature_id));
+                    continue;
+                }
                 $badge_features[] = $feature;
 
             }
@@ -671,7 +680,7 @@ final class SummitPromoCodeService
     public function importSponsorPromoCodes(Summit $summit, UploadedFile $csv_file, ?Member $current_user = null):void{
         Log::debug(sprintf("SummitPromoCodeService::importSponsorPromoCodes - summit %s", $summit->getId()));
 
-        $allowed_extensions = ['txt'];
+        $allowed_extensions = ['txt','csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             throw new ValidationException("File does not has a valid extension ('csv').");

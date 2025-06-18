@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
 use models\summit\PrePaidSummitRegistrationDiscountCode;
@@ -114,6 +116,7 @@ final class SummitPromoCodeFactory
 
         if(isset($params['badge_features'])){
             foreach ($params['badge_features'] as $feature){
+                Log::debug(sprintf("SummitPromoCodeFactory::populate adding badge feature %s to promo code %s", $feature->getId(), $promo_code->getId()));
                 $promo_code->addBadgeFeatureType($feature);
             }
         }

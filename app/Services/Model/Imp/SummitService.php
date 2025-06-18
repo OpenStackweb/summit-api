@@ -2869,7 +2869,7 @@ final class SummitService
     {
         Log::debug(sprintf("SummitService::importEventData summit %s", $summit->getId()));
 
-        $allowed_extensions = ['txt'];
+        $allowed_extensions = ['txt','csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             Log::warning
@@ -3637,7 +3637,7 @@ final class SummitService
     {
         Log::debug(sprintf("SummitService::importRegistrationCompanies summit %s", $summit->getId()));
 
-        $allowed_extensions = ['txt'];
+        $allowed_extensions = ['txt','csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             Log::warning

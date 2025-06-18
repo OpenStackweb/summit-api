@@ -3905,7 +3905,7 @@ final class SummitOrderService
     {
         Log::debug(sprintf("SummitOrderService::importTicketData - summit %s", $summit->getId()));
 
-        $allowed_extensions = ['txt'];
+        $allowed_extensions = ['txt','csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             throw new ValidationException("file does not has a valid extension ('csv').");

@@ -1530,4 +1530,40 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             return $this->ok();
         });
     }
+
+    public function getAllCompanies(){
+        return $this->_getAll(
+            function () {
+                return [
+                    'company' => ['=@', '@@'],
+                ];
+            },
+            function () {
+                return [
+                    'company' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'company',
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->speaker_repository->getAllCompaniesByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
 }

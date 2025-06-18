@@ -72,6 +72,11 @@ Route::group(['prefix' => 'legal-documents'], function () {
 
 // speakers
 Route::group(['prefix' => 'speakers'], function () {
+    Route::group(['prefix' => 'all'], function () {
+        Route::group(['prefix' => 'companies'], function () {
+            Route::get('', 'OAuth2SummitSpeakersApiController@getAllCompanies');
+        });
+    });
     Route::group(['prefix' => '{speaker_id}'], function () {
         Route::group(['prefix' => 'edit-permission'], function () {
             Route::group(['prefix' => '{token}'], function () {

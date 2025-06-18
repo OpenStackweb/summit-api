@@ -19,12 +19,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
 
     protected function setUp(): void
     {
         parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
@@ -1385,4 +1383,52 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $speaker = json_decode($content);
         $this->assertTrue(!is_null($speaker));
     }
+
+    public function testGetSpeakersCompanies(){
+        $params = [
+
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAllCompanies",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $companies = json_decode($content);
+        $this->assertNotNull($companies);
+        $this->assertEquals(2, $companies->total);
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetSpeakersCompaniesWithFilterAndOrdering(){
+        $params = [
+            'filter' => ['company=@LLC'],
+            'order'  => '+company',
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAllCompanies",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $companies = json_decode($content);
+        $this->assertNotNull($companies);
+        $this->assertEquals(1, $companies->total);
+        $this->assertResponseStatus(200);
+    }
+
 }

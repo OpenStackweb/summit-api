@@ -1384,4 +1384,65 @@ SQL;
 
         return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $speakers);
     }
+
+    public function getAllCompaniesByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+        $bindings = [];
+        $extra_filters = " WHERE COALESCE(LOWER(SP.Company), LOWER(M.Company)) IS NOT NULL ";
+        $extra_orders = '';
+        if ($filter instanceof Filter) {
+            $where_conditions = $filter->toRawSQL([
+                'company'   => [
+                                "LOWER(SP.Company) :operator LOWER(:value)",
+                                "LOWER(M.Company) :operator LOWER(:value)"
+                ]
+            ]);
+
+            if (!empty($where_conditions)) {
+                $extra_filters .= " AND {$where_conditions} ";
+                $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+        }
+        if (!is_null($order)) {
+            $extra_orders = $order->toRawSQL([
+                'company'   => 'COALESCE(LOWER(SP.Company), LOWER(M.Company))'
+            ]);
+        }
+
+        $query_from = <<<SQL
+FROM PresentationSpeaker SP LEFT JOIN Member M ON M.ID = SP.MemberID
+SQL;
+
+
+        $query_count = <<<SQL
+SELECT COUNT(DISTINCT(COALESCE(SP.Company, M.Company))) AS QTY
+{$query_from}
+{$extra_filters}
+SQL;
+
+        $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
+
+        $total = intval($stm->fetchOne());
+
+        $limit = $paging_info->getPerPage();
+        $offset = $paging_info->getOffset();
+
+        $query = <<<SQL
+        SELECT DISTINCT(COALESCE(SP.Company, M.Company)) AS company
+        {$query_from}
+        {$extra_filters}
+        {$extra_orders} LIMIT {$limit} OFFSET {$offset};
+SQL;
+
+        $res = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $res->fetchAllAssociative(),
+        );
+    }
 }

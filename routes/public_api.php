@@ -55,6 +55,11 @@ Route::group(['prefix' => 'files'], function () {
 // members
 Route::group(['prefix' => 'members'], function () {
     Route::get('', 'OAuth2MembersApiController@getAll');
+    Route::group(['prefix' => 'all'], function () {
+        Route::group(['prefix' => 'companies'], function () {
+            Route::get('', 'OAuth2MembersApiController@getAllCompanies');
+        });
+    });
     Route::group(['prefix' => '{member_id}'], function () {
         Route::get('', 'OAuth2MembersApiController@getById');
     });

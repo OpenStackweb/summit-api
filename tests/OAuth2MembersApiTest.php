@@ -41,6 +41,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
     {
         self::clearSummitTestData();
         Mockery::close();
+        parent::tearDown();
     }
 
     public function testGetMembers()
@@ -449,5 +450,52 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(204);
         return $member;
+    }
+
+    public function testGetMemberCompanies(){
+        $params = [
+
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getAllCompanies",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $companies = json_decode($content);
+        $this->assertTrue(!is_null($companies));
+        $this->assertTrue($companies->total == 2 );
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetMemberCompaniesFilterByName(){
+        $params = [
+            'filter' => ['company@@FN'],
+            'order'  => '+company',
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getAllCompanies",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $companies = json_decode($content);
+        $this->assertTrue(!is_null($companies));
+        $this->assertTrue($companies->total == 1 );
+        $this->assertResponseStatus(200);
     }
 }

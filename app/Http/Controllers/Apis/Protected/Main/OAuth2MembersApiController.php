@@ -19,6 +19,7 @@ use models\main\IMemberRepository;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
+use utils\PagingInfo;
 use utils\PagingResponse;
 
 /**
@@ -121,6 +122,45 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         );
     }
 
+    /**
+     * @return mixed
+     */
+    public function getAllCompanies(){
+        return $this->_getAll(
+            function () {
+                return [
+                    'company' => ['=@', '@@'],
+                ];
+            },
+            function () {
+                return [
+                    'company' => 'sometimes|string',
+               ];
+            },
+            function () {
+                return [
+                    'company',
+                    'last_name',
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->repository->getAllCompaniesByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */

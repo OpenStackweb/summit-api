@@ -111,10 +111,7 @@ final class PagingResponse
         {
             if($i instanceof IEntity)
             {
-                $start = microtime(true);
                 $i = SerializerRegistry::getInstance()->getSerializer($i, $serializer_type)->serialize($expand, $fields, $relations, $params);
-                $end = microtime(true);
- //               Log::debug(sprintf("PagingResponse::toArray serialization delta %s", $end - $start));
             }
             $items[] = $i;
         }

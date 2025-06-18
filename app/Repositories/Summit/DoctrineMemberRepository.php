@@ -14,6 +14,8 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\Http\Utils\Filters\SQL\SQLInFilterMapping;
+use App\Http\Utils\Filters\SQL\SQLNotInFilterMapping;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\Log;
@@ -632,5 +634,70 @@ SQL,
                 //default order
                 return $query->addOrderBy("e.id", 'ASC');
             });
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getAllCompaniesByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+        $bindings = [];
+        $extra_filters = " WHERE Company IS NOT NULL ";
+        $extra_orders = '';
+        if ($filter instanceof Filter) {
+            $where_conditions = $filter->toRawSQL([
+                'company'   => 'Company'
+            ]);
+
+           if (!empty($where_conditions)) {
+               $extra_filters .= " AND {$where_conditions} ";
+               $bindings = array_merge($bindings, $filter->getSQLBindings());
+           }
+        }
+        if (!is_null($order)) {
+            $extra_orders = $order->toRawSQL([
+                'company'   => 'Company',
+            ]);
+        }
+
+        $query_from = <<<SQL
+FROM `Member`
+SQL;
+
+
+        $query_count = <<<SQL
+SELECT COUNT(DISTINCT(Company)) AS QTY
+{$query_from}
+{$extra_filters}
+SQL;
+
+        $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
+
+        $total = intval($stm->fetchOne());
+
+        $limit = $paging_info->getPerPage();
+        $offset = $paging_info->getOffset();
+
+        $query = <<<SQL
+        SELECT DISTINCT(Company) AS company
+        {$query_from}
+        {$extra_filters}
+        {$extra_orders} LIMIT {$limit} OFFSET {$offset};
+SQL;
+
+        $res = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings);
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $res->fetchAllAssociative(0, 0, \PDO::FETCH_ASSOC),
+        );
     }
 }

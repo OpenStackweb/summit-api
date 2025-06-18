@@ -124,6 +124,7 @@ trait InsertMemberTestData
         self::$member->setEmailVerified(true);
         self::$member->setUserExternalId(mt_rand());
         self::$member->add2Group(self::$group);
+        self::$member->setCompany("Tipit");
 
         if ($current_group_slug == IGroup::FoundationMembers) {
             $legal = new LegalAgreement();
@@ -138,7 +139,7 @@ trait InsertMemberTestData
         self::$member2->setEmailVerified(true);
         self::$member2->setUserExternalId(mt_rand());
         self::$member2->add2Group(self::$group2);
-
+        self::$member2->setCompany("FNTECH");
         self::$speaker = new PresentationSpeaker();
         self::$speaker->setFirstName("Sebastian");
         self::$speaker->setLastName("Marcet");

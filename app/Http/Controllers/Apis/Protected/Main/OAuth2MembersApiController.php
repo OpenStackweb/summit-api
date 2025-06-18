@@ -140,7 +140,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'company',
-                    'last_name',
                 ];
             },
             function ($filter) {

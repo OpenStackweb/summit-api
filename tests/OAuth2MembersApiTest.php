@@ -470,8 +470,8 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
 
         $content = $response->getContent();
         $companies = json_decode($content);
-        $this->assertTrue(!is_null($companies));
-        $this->assertTrue($companies->total == 2 );
+        $this->assertNotNull($companies);
+        $this->assertEquals(2, $companies->total);
         $this->assertResponseStatus(200);
     }
 

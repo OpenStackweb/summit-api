@@ -697,7 +697,7 @@ SQL;
             $paging_info->getPerPage(),
             $paging_info->getCurrentPage(),
             $paging_info->getLastPage($total),
-            $res->fetchAllAssociative(0, 0, \PDO::FETCH_ASSOC),
+            $res->fetchAllAssociative(),
         );
     }
 }

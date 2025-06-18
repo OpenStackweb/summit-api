@@ -2117,6 +2117,10 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
+        //qr-code-enc-keys
+
+        Route::get('qr-codes-enc-key', ['middleware' => 'service.account', 'uses' => 'OAuth2SummitApiController@getQREncKey']);
+
         // registration-feed-metadata
 
         Route::group(['prefix' => 'registration-feed-metadata'], function(){

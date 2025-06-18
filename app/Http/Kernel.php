@@ -87,5 +87,6 @@ class Kernel extends HttpKernel
         'cache'            => \App\Http\Middleware\CacheMiddleware::class,
         'ssl'              => \App\Http\Middleware\SSLMiddleware::class,
         'auth.user'        => \App\Http\Middleware\UserAuthEndpoint::class,
+        'service.account'  => \App\Http\Middleware\EnsureServiceAccount::class,
     ];
 }

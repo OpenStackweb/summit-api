@@ -1149,4 +1149,28 @@ final class OAuth2SummitApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(412);
         $this->assertStringContainsString('there are paid tickets', $content);
     }
+
+    public function testGetQREncKey(){
+
+        App::singleton('App\Models\ResourceServer\IAccessTokenService', AccessTokenServiceStub2::class);
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getQREncKey",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $summit_enc_key = json_decode($content);
+        self::assertNotEmpty($summit_enc_key->qr_codes_enc_key);
+    }
 }

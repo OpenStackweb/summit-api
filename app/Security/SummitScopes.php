@@ -117,4 +117,6 @@ final class SummitScopes
 
     const WriteAttendeeNotesData = '%s/attendee/notes/write';
     const ReadAttendeeNotesData = '%s/attendee/notes/read';
+
+    const ReadSummitsEncKey = '%s/summits/read-enc-key';
 }

@@ -84,4 +84,13 @@ interface ISpeakerRepository extends IBaseRepository
      * @throws \Doctrine\DBAL\Exception
      */
     public function getSpeakersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllCompaniesByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 }

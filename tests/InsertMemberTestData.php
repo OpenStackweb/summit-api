@@ -140,11 +140,13 @@ trait InsertMemberTestData
         self::$member2->setUserExternalId(mt_rand());
         self::$member2->add2Group(self::$group2);
         self::$member2->setCompany("FNTECH");
+
         self::$speaker = new PresentationSpeaker();
         self::$speaker->setFirstName("Sebastian");
         self::$speaker->setLastName("Marcet");
         self::$speaker->setBio("Lorep Ip Sum");
         self::$speaker->setMember(self::$member);
+        self::$speaker->setCompany("Tipit LLC");
 
         self::$em->persist(self::$member);
         self::$em->persist(self::$speaker);

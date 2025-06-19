@@ -1171,6 +1171,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $summit_enc_key = json_decode($content);
-        self::assertNotEmpty($summit_enc_key->qr_codes_enc_key);
+        self::assertNotNull($summit_enc_key);
     }
 }

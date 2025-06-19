@@ -8825,12 +8825,6 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitsEncKey, $current_realm)
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::SummitAdministrators,
-                    IGroup::Administrators,
-                    IGroup::Sponsors,
                 ]
             ],
             [

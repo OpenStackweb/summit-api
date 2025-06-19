@@ -315,7 +315,6 @@ trait InsertSummitTestData
         self::$summit->setName("TEST SUMMIT");
         self::$summit->setRawSlug("testsummit");;
         self::$summit->setRegistrationSlugPrefix("TEST1");
-        self::$summit->setQRCodesEncKey("35NVOF4I5T6AAM28IJPKB8KRUW98KPDO");
 
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");

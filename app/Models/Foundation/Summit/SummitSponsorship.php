@@ -13,8 +13,10 @@
  **/
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
+use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
@@ -76,9 +78,19 @@ class SummitSponsorship extends SilverstripeBaseModel
         return $this->add_ons;
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function addAddOn(SummitSponsorshipAddOn $add_on): void
     {
         if ($this->add_ons->contains($add_on)) return;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($add_on->getType())));
+        $criteria->andWhere(Criteria::expr()->eq('name', trim($add_on->getName())));
+        if ($this->add_ons->matching($criteria)->count() > 0) {
+            throw new ValidationException(sprintf("An add-on with the same name (%s) and type (%s) already exists",
+                $add_on->getName(), $add_on->getType()));
+        }
         $add_on->setSponsorship($this);
         $this->add_ons->add($add_on);
     }

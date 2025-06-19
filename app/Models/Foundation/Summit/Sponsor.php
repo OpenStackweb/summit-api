@@ -51,6 +51,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'getCarouselAdvertiseImageId' => 'carousel_advertise_image',
         'getFeaturedEventId' => 'featured_event',
         'getCompanyId' => 'company',
+        'getLeadReportSettingId' => 'lead_report_setting',
     ];
 
     protected $hasPropertyMappings = [
@@ -60,6 +61,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'hasCarouselAdvertiseImage' => 'carousel_advertise_image',
         'hasFeaturedEvent' => 'featured_event',
         'hasCompany' => 'company',
+        'hasLeadReportSetting' => 'lead_report_setting',
     ];
 
     /**
@@ -928,6 +930,26 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         $lead_report_setting->setSponsor($this);
         $this->lead_report_setting = $lead_report_setting;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasLeadReportSetting(): bool
+    {
+        return $this->getLeadReportSettingId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLeadReportSettingId(): int
+    {
+        try {
+            return is_null($this->lead_report_setting) ? 0 : $this->lead_report_setting->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
     }
 
     /**

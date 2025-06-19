@@ -43,12 +43,14 @@ class Version20250604120717 extends AbstractMigration
                 $table->timestamp('LastEdited');
                 $table->string('ClassName')->setDefault('SummitSponsorshipAddOn');
                 $table->string('Type')->setNotnull(true)->setLength(255);
-                $table->string('Name')->setNotnull(false)->setLength(1024)->setDefault(null);
+                $table->string('Name')->setNotnull(false)->setLength(255)->setDefault(null);
 
                 // FK
                 $table->integer("SponsorshipID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SponsorshipID", "SponsorshipID");
                 $table->foreign("SummitSponsorship", "SponsorshipID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitSponsorship_SummitSponsorshipAddOn');
+
+                $table->unique(['Type', 'Name', 'SponsorshipID'], "Type_Name_SponsorshipID");
             });
         }
     }

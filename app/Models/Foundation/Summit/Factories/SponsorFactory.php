@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\ValidationException;
 use models\summit\Sponsor;
 /**
  * Class SponsorFactory
@@ -35,9 +37,6 @@ final class SponsorFactory
 
         if(isset($data['company']))
             $sponsor->setCompany($data['company']);
-
-        if(isset($data['sponsorship']))
-            $sponsor->setSponsorship($data['sponsorship']);
 
         if(isset($data['featured_event']))
             $sponsor->setFeaturedEvent($data['featured_event']);

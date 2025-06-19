@@ -57,11 +57,14 @@ use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
+use models\summit\SummitLeadReportSetting;
 use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
+use models\summit\SummitSponsorship;
+use models\summit\SummitSponsorshipAddOn;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
 use models\summit\SummitVenue;
@@ -820,7 +823,27 @@ trait InsertSummitTestData
             $s->setVideoLink(sprintf("https://%s.%s.video.com", $i, str_random(16)));
             $s->setChatLink(sprintf("https://%s.%s.chat.com", $i, str_random(16)));
             $s->setExternalLink(sprintf("https://%s.%s.exterma;.com", $i, str_random(16)));
-            $s->setSponsorship(self::$default_summit_sponsor_type);
+
+            $lrs = new SummitLeadReportSetting();
+            $lrs->setSummit(self::$summit);
+            $lrs->setColumns([]);
+            self::$em->persist($lrs);
+
+            $s->setLeadReportSetting($lrs);
+
+            $sps = new SummitSponsorship();
+            $sps->setType(self::$default_summit_sponsor_type);
+            self::$em->persist($sps);
+
+            $s->addSponsorship($sps);
+
+            for($j = 0; $j < 5; $j ++){
+                $a = new SummitSponsorshipAddOn();
+                $a->setType($j < 3 ? SummitSponsorshipAddOn::Booth_Type : SummitSponsorshipAddOn::MeetingRoom_Type);
+                $a->setName(sprintf("AddOn %s %s", $j, str_random(4)));
+                $sps->addAddOn($a);
+                self::$em->persist($a);
+            }
 
             for($j = 0; $j < 10; $j ++){
 

@@ -59,6 +59,7 @@ use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
+use models\summit\SummitLeadReportSetting;
 use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitOrder;
@@ -824,6 +825,13 @@ trait InsertSummitTestData
             $s->setVideoLink(sprintf("https://%s.%s.video.com", $i, str_random(16)));
             $s->setChatLink(sprintf("https://%s.%s.chat.com", $i, str_random(16)));
             $s->setExternalLink(sprintf("https://%s.%s.exterma;.com", $i, str_random(16)));
+
+            $lrs = new SummitLeadReportSetting();
+            $lrs->setSummit(self::$summit);
+            $lrs->setColumns([]);
+            self::$em->persist($lrs);
+
+            $s->setLeadReportSetting($lrs);
 
             $sps = new SummitSponsorship();
             $sps->setType(self::$default_summit_sponsor_type);

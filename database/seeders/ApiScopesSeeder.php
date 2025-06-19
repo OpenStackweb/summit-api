@@ -387,7 +387,12 @@ final class ApiScopesSeeder extends Seeder
                 'name' => sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm),
                 'short_description' => 'Write Attendee Notes Data',
                 'description' => 'Grants write access for Attendee Notes Data',
-            ]
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadSummitsEncKey, $current_realm),
+                'short_description' => 'Read Summit QR Codes Enc Key',
+                'description' => 'Grants read only access for Summit QR Codes Encryption Key',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {

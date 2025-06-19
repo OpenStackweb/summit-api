@@ -8820,6 +8820,14 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'retrieve-qr-enc-key',
+                'route' => '/api/v1/summits/{id}/qr-codes-enc-key',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitsEncKey, $current_realm)
+                ]
+            ],
+            [
                 'name' => 'get-registration-feed-metadata',
                 'route' => '/api/v1/summits/{id}/registration-feed-metadata',
                 'http_method' => 'GET',

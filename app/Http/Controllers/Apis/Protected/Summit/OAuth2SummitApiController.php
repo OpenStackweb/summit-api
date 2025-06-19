@@ -983,4 +983,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getQREncKey($summit_id) {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($summit, SummitQREncKeySerializer::SerializerType)
+                ->serialize()
+            );
+        });
+    }
 }

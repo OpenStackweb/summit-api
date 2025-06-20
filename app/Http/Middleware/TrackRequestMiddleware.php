@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Closure;
+use \OpenTelemetry\API\Trace\SpanInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Log\LogManager;
 use Keepsuit\LaravelOpenTelemetry\Facades\Tracer;
@@ -12,13 +13,19 @@ use Keepsuit\LaravelOpenTelemetry\Facades\Tracer;
 class TrackRequestMiddleware
 {
     /**
-     * @var LogManager|Logger
+     * @var LogManager
      */
-    protected $logger;
+    protected LogManager $logger;
 
-    protected $startTime;
+    /**
+     * @var float
+     */
+    protected float $startTime = 0;
 
-    protected $span;
+    /**
+     * @var SpanInterface
+     */
+    protected SpanInterface $span;
 
     /**
      * Constructor del middleware.
@@ -40,8 +47,7 @@ class TrackRequestMiddleware
     {
         try {
             $this->startTime = microtime(true);
-            $this->span = Tracer::newSpan('sample trace');
-            $this->span->start();
+            $this->span = Tracer::newSpan('sample trace')->start();
 
             $this->logger->channel('otlp')->info('Request started.', [
                 'endpoint' => $request->url(),
@@ -49,7 +55,7 @@ class TrackRequestMiddleware
                 'timestamp_utc' => now()->toIso8601String(),
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error("Error on request tracking" . $e->getMessage());
+            $this->logger->channel('single')->error("Error on request tracking" . $e->getMessage());
         }
 
         $response = $next($request);
@@ -70,10 +76,12 @@ class TrackRequestMiddleware
                 'response_time' => $responseTime,
             ]);
 
-            $this->span->end();
+            if (isset($this->span)) {
+                $this->span->end();
+            }
 
         } catch (\Throwable $e) {
-            $this->logger->channel('sadsadasd')->error("Error on request tracking: " . $e->getMessage());
+            $this->logger->channel('single')->error("Error on request tracking: " . $e->getLine() . " - " . $e->getMessage());
         }
     }
 }

@@ -79,6 +79,11 @@ return [
             'driver' => 'errorlog',
             'level' =>  env('LOG_LEVEL', 'error'),
         ],
+        'otlp' => [
+            'driver' => 'monolog',
+            'handler' => \Keepsuit\LaravelOpenTelemetry\Support\OpenTelemetryMonologHandler::class,
+            'level' => 'debug',
+        ]
     ],
 
 ];

@@ -13,11 +13,11 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use models\main\SummitAuditLog;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use Tests\BrowserKitTestCase;
-use models\main\Member;
-use models\summit\Summit;
+use Tests\InsertMemberTestData;
+use Tests\InsertSummitTestData;
 
 /**
  * Class SummitAuditLogTest
@@ -25,26 +25,49 @@ use models\summit\Summit;
  */
 class SummitAuditLogTest extends BrowserKitTestCase
 {
+    use InsertMemberTestData;
+
+    use InsertSummitTestData;
+
+
+    /**
+     * @throws \Exception
+     */
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::FoundationMembers);
+        self::insertSummitTestData();
+    }
+
+    public function tearDown():void
+    {
+        parent::tearDown();
+        self::clearMemberTestData();
+        self::clearSummitTestData();
+    }
+
     public function test()
     {
-        $member_repo = EntityManager::getRepository(Member::class);
-        $member = $member_repo->find(3);
 
-        $summit_repo = EntityManager::getRepository(Summit::class);
-        $summit = $summit_repo->find(56);
+        $member = self::$member;
+
+        $summit = self::$summit;
 
         $log = new SummitAuditLog($member, "UNIT_TEST", $summit);
 
-        EntityManager::persist($log);
-        EntityManager::flush();
-        EntityManager::clear();
+        self::$em->persist($log);
+        self::$em->flush();
 
-        $repo = EntityManager::getRepository(SummitAuditLog::class);
+        $repo = self::$em->getRepository(SummitAuditLog::class);
         $found_log = $repo->find($log->getId());
 
         $this->assertInstanceOf(SummitAuditLog::class, $found_log);
-        $this->assertEquals($member->getEmail(), $found_log->getUser()->getEmail());
+        $this->assertEquals($member->getEmail(),
+            $found_log->getUser()->getEmail());
         $this->assertEquals($summit->getName(), $found_log->getSummit()->getName());
         $this->assertEquals("UNIT_TEST", $found_log->getAction());
+
+        self::$em->remove($found_log);
     }
 }

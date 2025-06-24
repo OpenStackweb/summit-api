@@ -24,6 +24,10 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 class AuditEventListener {
 
     public function onFlush(OnFlushEventArgs $eventArgs) {
+
+        if (env('APP_ENV') === 'testing') {
+            return;
+        }
         $em = $eventArgs->getEntityManager();
         $uow = $em->getUnitOfWork();
 

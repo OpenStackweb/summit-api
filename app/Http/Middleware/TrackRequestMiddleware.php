@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Closure;
+use Illuminate\Support\Str;
 use \OpenTelemetry\API\Trace\SpanInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Log\LogManager;
@@ -46,8 +47,10 @@ class TrackRequestMiddleware
     public function handle(Request $request, Closure $next)
     {
         try {
+            // generating dynamic id for span with configurable prefix
+            $spanId = env('TRACE_SPAN_PREFIX') . '_' . Str::uuid();
             $this->startTime = microtime(true);
-            $this->span = Tracer::newSpan('sample trace')->start();
+            $this->span = Tracer::newSpan($spanId)->start();
 
             $this->logger->channel('otlp')->info('Request started.', [
                 'endpoint' => $request->url(),
@@ -55,6 +58,7 @@ class TrackRequestMiddleware
                 'timestamp_utc' => now()->toIso8601String(),
             ]);
         } catch (\Throwable $e) {
+            // forcing 'single' channel in case otlp log fails
             $this->logger->channel('single')->error("Error on request tracking" . $e->getMessage());
         }
 
@@ -81,7 +85,8 @@ class TrackRequestMiddleware
             }
 
         } catch (\Throwable $e) {
-            $this->logger->channel('single')->error("Error on request tracking: " . $e->getLine() . " - " . $e->getMessage());
+            // forcing 'single' channel in case otlp log fails
+            $this->logger->channel('single')->error("Error on request tracking: " . $e->getMessage());
         }
     }
 }

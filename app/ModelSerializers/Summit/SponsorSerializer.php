@@ -105,6 +105,7 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 ((!is_null($summit) && $current_member->isSummitAllowed($summit))
                                     || $current_member->hasSponsorMembershipsFor($sponsor->getSummit(), $sponsor))) {
                                 $serializer_type = SerializerRegistry::SerializerType_Private;
+                                $fields[] = 'qr_codes_enc_key';
                             }
                             unset($values['summit_id']);
                             $values['summit'] = SerializerRegistry::getInstance()

@@ -250,7 +250,7 @@ return [
     */
     'cache'                     => [
         'default'                => env('DOCTRINE_CACHE', 'redis'),
-        'namespace'              => null,
+        'namespace'              => "summit_api",
         'second_level'           => [
             'enabled'                => true,
             'region_lifetime'        => 180,

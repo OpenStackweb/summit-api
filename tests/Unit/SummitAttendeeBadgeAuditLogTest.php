@@ -13,12 +13,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\Log;
 use models\main\SummitAttendeeBadgeAuditLog;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use Tests\BrowserKitTestCase;
-use models\main\Member;
-use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
+use Tests\InsertMemberTestData;
+use Tests\InsertSummitTestData;
 
 /**
  * Class SummitAttendeeBadgeAuditLogTest
@@ -26,31 +27,40 @@ use models\summit\SummitAttendeeBadge;
  */
 class SummitAttendeeBadgeAuditLogTest extends BrowserKitTestCase
 {
+    use InsertMemberTestData;
+    use InsertSummitTestData;
+
+    /**
+     * @throws \Exception
+     */
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::FoundationMembers);
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+    }
+
+    public function tearDown():void
+    {
+        parent::tearDown();
+        self::clearMemberTestData();
+        self::clearSummitTestData();
+    }
+
     public function test()
     {
-        $member_repo = EntityManager::getRepository(Member::class);
-        $member = $member_repo->find(3);
+        $member = self::$member;
+        $summit = self::$summit;
 
-        $summit_repo = EntityManager::getRepository(Summit::class);
-        $summit = $summit_repo->find(56);
-
-        $badge_repo = EntityManager::getRepository(SummitAttendeeBadge::class);
-        $badge = $badge_repo
-            ->createQueryBuilder('b')
-            ->join('b.ticket', 't')
-            ->join('t.owner', 'm')
-            ->where('m.id = :memberId')
-            ->setParameter('memberId', $member->getId())
-            ->getQuery()
-            ->getOneOrNullResult();
+        $badge = $summit->getAttendees()[0]->getTickets()[0]->getBadge();
 
         $log = new SummitAttendeeBadgeAuditLog($member, "UNIT_TEST", $summit, $badge);
 
-        EntityManager::persist($log);
-        EntityManager::flush();
-        EntityManager::clear();
+        self::$em->persist($log);
+        self::$em->flush();
 
-        $repo = EntityManager::getRepository(SummitAttendeeBadgeAuditLog::class);
+        $repo = self::$em->getRepository(SummitAttendeeBadgeAuditLog::class);
         $found_log = $repo->find($log->getId());
 
         $this->assertInstanceOf(SummitAttendeeBadgeAuditLog::class, $found_log);
@@ -58,5 +68,7 @@ class SummitAttendeeBadgeAuditLogTest extends BrowserKitTestCase
         $this->assertEquals($summit->getName(), $found_log->getSummit()->getName());
         $this->assertEquals("UNIT_TEST", $found_log->getAction());
         $this->assertEquals($badge->getId(), $found_log->getAttendeeBadge()->getId());
+
+        self::$em->remove($found_log);
     }
 }

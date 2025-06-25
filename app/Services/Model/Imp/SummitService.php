@@ -51,6 +51,7 @@ use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\IMemberService;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
+use App\Utils\AES;
 use DateInterval;
 use DateTime;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -4272,5 +4273,35 @@ final class SummitService
 
         return $event;
 
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $badge_qr_code
+     * @return SummitAttendeeBadge
+     * @throws ValidationException
+     */
+    public function validateBadge(Summit $summit, string $badge_qr_code): SummitAttendeeBadge
+    {
+        Log::debug(
+            sprintf("SummitService::validateBadge summit %s badge qr code %s", $summit->getId(), $badge_qr_code));
+
+        $qr_code = base64_decode($badge_qr_code);
+        $key = $summit->getQRCodesEncKey();
+
+        //check if qrcode is encrypted
+        if (!str_starts_with($qr_code, $summit->getBadgeQRPrefix()) && !empty($key)) {
+            $qr_code = AES::decrypt($key, $qr_code);
+        }
+
+        $qr_code_components = explode($summit->getQRRegistryFieldDelimiter(), $qr_code);
+        $ticket_number = $qr_code_components[1];
+
+        $badge = $this->summit_attendee_badge_repository->getBadgeByTicketNumber($ticket_number);
+
+        if (is_null($badge))
+            throw new ValidationException(sprintf("Badge for ticket number %s does not exists,", $ticket_number));
+
+        return $badge;
     }
 }

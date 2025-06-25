@@ -13,13 +13,15 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use models\main\ChatTeam;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\ChatTeamInvitation;
+use models\main\ChatTeamMember;
 use models\main\ChatTeamPushNotificationMessage;
 use Tests\BrowserKitTestCase;
 use models\main\Member;
-use models\summit\Summit;
+use Tests\InsertMemberTestData;
 
 /**
  * Class ChatTeamTest
@@ -27,32 +29,47 @@ use models\summit\Summit;
  */
 class ChatTeamTest extends BrowserKitTestCase
 {
+
+    use InsertMemberTestData;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::FoundationMembers);
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
+
     public function test()
     {
-        $member_repo = EntityManager::getRepository(Member::class);
-        $member = $member_repo->find(3);
+        $member = self::$member;
+        $member2 = self::$member2;
 
-        $message_repo = EntityManager::getRepository(ChatTeamPushNotificationMessage::class);
-        $message = $message_repo->findAll()[0];
-
-        $invitation_repo = EntityManager::getRepository(ChatTeamInvitation::class);
-        $invitation = $invitation_repo->findAll()[0];
+        $message = new ChatTeamPushNotificationMessage();
+        $invitation = new ChatTeamInvitation();
+        $invitation->setInvitee($member2);
+        $chat_member = new ChatTeamMember();
+        $chat_member->setMember($member);
 
         $team = new ChatTeam();
-        $team->addMember($member);
+        $team->addMember($chat_member);
         $team->addMessage($message);
         $team->addInvitation($invitation);
 
-        EntityManager::persist($team);
-        EntityManager::flush();
-        EntityManager::clear();
+        self::$em->persist($team);
+        self::$em->flush();
 
-        $repo = EntityManager::getRepository(ChatTeam::class);
+        $repo = self::$em->getRepository(ChatTeam::class);
         $found = $repo->find($team->getId());
 
         $this->assertInstanceOf(ChatTeam::class, $found);
         $this->assertEquals($found->isMember($member), true);
         $this->assertEquals($found->isAlreadyInvited($invitation->getInvitee()), true);
-        $this->assertEquals($found->getMessages()->contains($invitation), true);
+        $this->assertEquals($found->getMessages()->contains($message), true);
+
+        self::$em->remove($team);
     }
 }

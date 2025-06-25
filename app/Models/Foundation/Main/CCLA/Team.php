@@ -51,6 +51,14 @@ class Team extends SilverstripeBaseModel
     }
 
     /**
+     * @param Company $company
+     */
+    public function setCompany(Company $company): void
+    {
+        $this->company = $company;
+    }
+
+    /**
      * @return Member[]
      */
     public function getMembers(){
@@ -58,10 +66,26 @@ class Team extends SilverstripeBaseModel
     }
 
     /**
+     * @param mixed $members
+     */
+    public function setMembers($members)
+    {
+        $this->members = $members;
+    }
+
+    /**
      * @return string
      */
     public function getName(){
         return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 
     /**

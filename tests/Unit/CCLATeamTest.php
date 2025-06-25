@@ -13,11 +13,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use Models\Foundation\Main\CCLA\Team;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Tests\BrowserKitTestCase;
 use models\main\Member;
 use models\main\Company;
+use Tests\InsertMemberTestData;
 
 /**
  * Class CCLATest
@@ -25,14 +27,31 @@ use models\main\Company;
  */
 class CCLATeamTest extends BrowserKitTestCase
 {
+    use InsertMemberTestData;
+
+    /**
+     * @throws \Exception
+     */
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::FoundationMembers);
+    }
+
+    public function tearDown():void
+    {
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
+
     public function test()
     {
-        $member_repo = EntityManager::getRepository(Member::class);
-        $member_a = $member_repo->find(3);
-        $member_b = $member_repo->find(5);
+        $member_a = self::$member;
+        $member_b = self::$member;
 
-        $company_repo = EntityManager::getRepository(Company::class);
-        $company = $company_repo->find(56);
+        $company = new Company();
+        $company->setName("A Company");
+        self::$em->persist($company);
 
         $team = new Team();
 
@@ -40,16 +59,18 @@ class CCLATeamTest extends BrowserKitTestCase
         $team->setMembers([$member_a, $member_b]);
         $team->setName("A-Team");
 
-        EntityManager::persist($team);
-        EntityManager::flush();
-        EntityManager::clear();
+        self::$em->persist($team);
+        self::$em->flush();
 
-        $repo = EntityManager::getRepository(Team::class);
+        $repo = self::$em->getRepository(Team::class);
         $found_team = $repo->find($team->getId());
 
         $this->assertInstanceOf(Team::class, $found_team);
         $this->assertEquals($member_a->getEmail(), $found_team->getMembers()[0]->getEmail());
         $this->assertEquals($company->getName(), $found_team->getCompany()->getName());
         $this->assertEquals("A-Team", $found_team->getName());
+
+        self::$em->remove($team);
+        self::$em->remove($company);
     }
 }

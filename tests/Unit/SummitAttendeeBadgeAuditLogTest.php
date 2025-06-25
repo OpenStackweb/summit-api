@@ -14,10 +14,8 @@
  **/
 
 use App\Models\Foundation\Main\IGroup;
-use Illuminate\Support\Facades\Log;
 use models\main\SummitAttendeeBadgeAuditLog;
 use Tests\BrowserKitTestCase;
-use models\summit\SummitAttendeeBadge;
 use Tests\InsertMemberTestData;
 use Tests\InsertSummitTestData;
 
@@ -43,9 +41,9 @@ class SummitAttendeeBadgeAuditLogTest extends BrowserKitTestCase
 
     public function tearDown():void
     {
-        parent::tearDown();
-        self::clearMemberTestData();
         self::clearSummitTestData();
+        self::clearMemberTestData();
+        parent::tearDown();
     }
 
     public function test()

@@ -41,9 +41,9 @@ class SummitAuditLogTest extends BrowserKitTestCase
 
     public function tearDown():void
     {
-        parent::tearDown();
         self::clearMemberTestData();
         self::clearSummitTestData();
+        parent::tearDown();
     }
 
     public function test()

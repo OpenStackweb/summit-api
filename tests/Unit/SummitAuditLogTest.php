@@ -26,7 +26,6 @@ use Tests\InsertSummitTestData;
 class SummitAuditLogTest extends BrowserKitTestCase
 {
     use InsertMemberTestData;
-
     use InsertSummitTestData;
 
 

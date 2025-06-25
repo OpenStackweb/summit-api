@@ -13,12 +13,12 @@
  * limitations under the License.
  **/
 
-use LaravelDoctrine\ORM\Facades\EntityManager;
+use App\Models\Foundation\Main\IGroup;
 use models\main\SummitEventAuditLog;
 use Tests\BrowserKitTestCase;
-use models\main\Member;
-use models\summit\Summit;
 use models\summit\SummitEvent;
+use Tests\InsertMemberTestData;
+use Tests\InsertSummitTestData;
 
 /**
  * Class SummitEventAuditLogTest
@@ -26,24 +26,40 @@ use models\summit\SummitEvent;
  */
 class SummitEventAuditLogTest extends BrowserKitTestCase
 {
+    use InsertMemberTestData;
+    use InsertSummitTestData;
+
+    /**
+     * @throws \Exception
+     */
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::FoundationMembers);
+        self::insertSummitTestData();
+    }
+
+    public function tearDown():void
+    {
+        parent::tearDown();
+        self::clearMemberTestData();
+        self::clearSummitTestData();
+    }
+
     public function test()
     {
-        $member_repo = EntityManager::getRepository(Member::class);
-        $member = $member_repo->find(3);
+        $member = self::$member;
+        $summit = self::$summit;
 
-        $summit_repo = EntityManager::getRepository(Summit::class);
-        $summit = $summit_repo->find(56);
-
-        $event_repo = EntityManager::getRepository(SummitEvent::class);
-        $event = $event_repo->findOneBy(["summitId" => 56]);
+        $event_repo = self::$em->getRepository(SummitEvent::class);
+        $event = $event_repo->findOneBy(["summit" => $summit]);
 
         $log = new SummitEventAuditLog($member, "UNIT_TEST", $summit, $event);
 
-        EntityManager::persist($log);
-        EntityManager::flush();
-        EntityManager::clear();
+        self::$em->persist($log);
+        self::$em->flush();
 
-        $repo = EntityManager::getRepository(SummitEventAuditLog::class);
+        $repo = self::$em->getRepository(SummitEventAuditLog::class);
         $found_log = $repo->find($log->getId());
 
         $this->assertInstanceOf(SummitEventAuditLog::class, $found_log);
@@ -51,5 +67,7 @@ class SummitEventAuditLogTest extends BrowserKitTestCase
         $this->assertEquals($summit->getName(), $found_log->getSummit()->getName());
         $this->assertEquals("UNIT_TEST", $found_log->getAction());
         $this->assertEquals($event->getId(), $found_log->getEvent()->getId());
+
+        self::$em->remove($found_log);
     }
 }

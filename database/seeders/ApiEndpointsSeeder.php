@@ -8956,6 +8956,19 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'validate-badge',
+                'route' => '/api/v1/summits/{id}/badge/{badge}/validate',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SponsorExternalUsers,
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                ]
+            ],
         ]);
 
     }

@@ -59,6 +59,9 @@ trait ScheduleEntity
     #[ORM\PreRemove]
     public function deleting($args)
     {
+        if (env('APP_ENV') === 'testing') {
+            return;
+        }
         Event::dispatch(new ScheduleEntityLifeCycleEvent('DELETE',
             $this->_getSummitId(),
             $this->id,
@@ -80,6 +83,9 @@ trait ScheduleEntity
     #[ORM\PostUpdate]
     public function updated($args)
     {
+        if (env('APP_ENV') === 'testing') {
+            return;
+        }
         Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
         $this->cachedUpdated($args);
         Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
@@ -92,6 +98,9 @@ trait ScheduleEntity
     #[ORM\PostPersist]
     public function inserted($args)
     {
+        if (env('APP_ENV') === 'testing') {
+            return;
+        }
         Event::dispatch(new ScheduleEntityLifeCycleEvent('INSERT',
             $this->_getSummitId(),
             $this->id,

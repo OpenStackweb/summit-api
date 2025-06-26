@@ -91,6 +91,7 @@
     "extra": {
         "laravel": {
             "dont-discover": [
+                "keepsuit/laravel-opentelemetry"
             ]
         }
     },

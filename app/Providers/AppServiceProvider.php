@@ -685,6 +685,13 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
 
+        // phpunit.xml sets APP_ENV=testing during tests
+        if (! App::environment('testing')) {
+            App::register(
+                \Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class
+            );
+        }
+
         App::singleton(IResourceServerContext::class, ResourceServerContext::class);
 
         App::bind('resource_server_context', function ($app) {

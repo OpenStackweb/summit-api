@@ -46,6 +46,10 @@ class TrackRequestMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
+        if(env('APP_ENV') === 'testing') {
+            // Skip tracking in testing environment
+            return $next($request);
+        }
         try {
             // generating dynamic id for span with configurable prefix
             $spanId = env('TRACE_SPAN_PREFIX', 'SPAN') . '_' . Str::uuid();
@@ -73,6 +77,10 @@ class TrackRequestMiddleware
      */
     public function terminate(Request $request, Response $response): void
     {
+        if(env('APP_ENV') === 'testing') {
+            // Skip tracking in testing environment
+            return;
+        }
         try {
             $endTime = microtime(true);
             $responseTime = intval(($endTime - $this->startTime) * 1000);

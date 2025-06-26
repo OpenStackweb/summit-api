@@ -48,7 +48,7 @@ class TrackRequestMiddleware
     {
         try {
             // generating dynamic id for span with configurable prefix
-            $spanId = env('TRACE_SPAN_PREFIX') . '_' . Str::uuid();
+            $spanId = env('TRACE_SPAN_PREFIX', 'SPAN') . '_' . Str::uuid();
             $this->startTime = microtime(true);
             $this->span = Tracer::newSpan($spanId)->start();
 

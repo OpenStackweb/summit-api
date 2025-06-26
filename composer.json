@@ -15,14 +15,8 @@
         "ext-openssl": "*",
         "ext-pdo": "*",
         "ext-zlib": "*",
-        "laravel/framework": "12.1.1",
-        "laravel/helpers": "^1.7.0",
-        "laravel/tinker": "2.10.1",
-        "laravel-doctrine/orm": "3.1.1",
-        "laravel-doctrine/extensions": "2.0.1",
-        "laravel-doctrine/migrations": "3.4.0",
-        "beberlei/doctrineextensions": "1.5.0",
         "affinipay/chargeio-php": "dev-master",
+        "beberlei/doctrineextensions": "1.5.0",
         "behat/transliterator": "^1.2",
         "caseyamcl/guzzle_retry_middleware": "^2.6",
         "cocur/slugify": "^2.3",
@@ -33,6 +27,14 @@
         "google/apiclient": "^2.2",
         "guzzlehttp/guzzle": "7.8.2",
         "guzzlehttp/uri-template": "^1.0",
+        "keepsuit/laravel-opentelemetry": "^1.6",
+        "laminas/laminas-math": "^3.7",
+        "laravel-doctrine/extensions": "2.0.1",
+        "laravel-doctrine/migrations": "3.4.0",
+        "laravel-doctrine/orm": "3.1.1",
+        "laravel/framework": "12.1.1",
+        "laravel/helpers": "^1.7.0",
+        "laravel/tinker": "2.10.1",
         "league/csv": "^9.6",
         "league/flysystem-aws-s3-v3": "3.8.0",
         "league/oauth2-client": "^2.4",
@@ -48,8 +50,7 @@
         "stripe/stripe-php": "^7.95.0",
         "symfony/yaml": "^7.1.1",
         "tecnickcom/tcpdf": "^6.2",
-        "vladimir-yuldashev/laravel-queue-rabbitmq": "v14.2.0",
-        "laminas/laminas-math": "^3.7"
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "v14.2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -114,7 +115,9 @@
         "sort-packages": true,
         "optimize-autoloader": true,
         "allow-plugins": {
-            "composer/package-versions-deprecated": true
+            "composer/package-versions-deprecated": true,
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     },
     "minimum-stability": "dev",

@@ -32,6 +32,10 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         'MaxAttendeeVotes' => 'max_attendee_votes:json_int'
     ];
 
+    protected static $allowed_relations = [
+        'tracks',
+    ];
+
     protected static $expand_mappings = [
         'tracks' => [
             'type' => Many2OneExpandSerializer::class,

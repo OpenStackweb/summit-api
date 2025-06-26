@@ -28,6 +28,10 @@ final class PrivatePresentationCategoryGroupSerializer
         'MaxSubmissionAllowedPerUser' => 'max_submission_allowed_per_user:json_int',
     ];
 
+    protected static $allowed_relations = [
+        'allowed_groups',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields

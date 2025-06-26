@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "b28b6edd01139eb7e3bdc23d5cf8f699",
-=======
-    "content-hash": "2ea57acedf565d3b2ec3ee8ebc03d7fe",
->>>>>>> 2596b751 (chore: move doctrine meta config from annotation to attributes engine)
     "packages": [
         {
             "name": "affinipay/chargeio-php",
@@ -11674,11 +11670,7 @@
                     "type": "github"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-05-21T20:55:28+00:00"
-=======
-            "time": "2025-05-14T11:16:08+00:00"
->>>>>>> 2596b751 (chore: move doctrine meta config from annotation to attributes engine)
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -12170,65 +12162,6 @@
                 }
             ],
             "time": "2025-06-11T11:19:37+00:00"
-        },
-        {
-            "name": "rector/rector",
-            "version": "2.0.16",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/rectorphp/rector.git",
-                "reference": "f1366d1f8c7490541c8f7af6e5c7cef7cca1b5a2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/f1366d1f8c7490541c8f7af6e5c7cef7cca1b5a2",
-                "reference": "f1366d1f8c7490541c8f7af6e5c7cef7cca1b5a2",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.4|^8.0",
-                "phpstan/phpstan": "^2.1.14"
-            },
-            "conflict": {
-                "rector/rector-doctrine": "*",
-                "rector/rector-downgrade-php": "*",
-                "rector/rector-phpunit": "*",
-                "rector/rector-symfony": "*"
-            },
-            "suggest": {
-                "ext-dom": "To manipulate phpunit.xml via the custom-rule command"
-            },
-            "bin": [
-                "bin/rector"
-            ],
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Instant Upgrade and Automated Refactoring of any PHP code",
-            "keywords": [
-                "automation",
-                "dev",
-                "migration",
-                "refactoring"
-            ],
-            "support": {
-                "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/2.0.16"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/tomasvotruba",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-05-12T16:37:16+00:00"
         },
         {
             "name": "sebastian/cli-parser",

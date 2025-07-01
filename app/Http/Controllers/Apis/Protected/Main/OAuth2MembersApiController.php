@@ -496,4 +496,26 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
+    public function signIndividualMembership()
+    {
+        return $this->processRequest(function () {
+
+            $member = $this->resource_server_context->getCurrentUser();
+
+            if (is_null($member)) return $this->error404();
+
+            $member = $this->member_service->signIndividualMembership($member);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer
+            (
+                $member,
+                SerializerRegistry::SerializerType_Private
+            )->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
 }

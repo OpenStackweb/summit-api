@@ -162,4 +162,11 @@ interface IMemberService
      * @throws \Exception
      */
     public function registerExternalUserByPayload(array $user_data):Member;
+
+    /**
+     * @param Member $member
+     * @return Member
+     * @throws \Exception
+     */
+    public function signIndividualMembership(Member $member): Member;
 }

@@ -9063,6 +9063,12 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
                 ],
                 [
+                    'name' => 'sign-individual-membership',
+                    'route' => '/api/v1/members/me/membership/individual',
+                    'http_method' => 'PUT',
+                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                ],
+                [
                     'name' => 'sign-community-membership',
                     'route' => '/api/v1/members/me/membership/community',
                     'http_method' => 'PUT',

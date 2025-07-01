@@ -704,4 +704,22 @@ final class MemberService
             return $me;
         });
     }
+
+    /**
+     * @param Member $member
+     * @return Member
+     * @throws \Exception
+     */
+    public function signIndividualMembership(Member $member): Member
+    {
+        return $this->tx_service->transaction(function() use($member){
+            if($member->isIndividualMember()) {
+                throw new ValidationException(sprintf("Member %s is already an individual member", $member->getId()));
+            }
+
+            $member->signIndividualMembership();
+            return $member;
+        });
+    }
+
 }

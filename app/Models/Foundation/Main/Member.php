@@ -66,6 +66,8 @@ class Member extends SilverstripeBaseModel
 
     const MembershipTypeNone = 'None';
 
+    Const MemberShipType_IndividualMember = 'Individual';
+
     /**
      * @ORM\Column(name="FirstName", type="string")
      * @var string
@@ -221,6 +223,12 @@ class Member extends SilverstripeBaseModel
      * @var \DateTime
      */
     private $email_verified_date;
+
+    /**
+     * @ORM\Column(name="IndividualMemberJoinDate", type="datetime")
+     * @var \DateTime
+     */
+    private $individual_member_join_date;
 
     /**
      *
@@ -473,6 +481,7 @@ class Member extends SilverstripeBaseModel
         $this->public_profile_show_social_media_info = false;
         $this->public_profile_show_bio = true;
         $this->public_profile_show_telephone_number = false;
+        $this->individual_member_join_date = null;
     }
 
     /**
@@ -3338,4 +3347,18 @@ SQL;
         $this->public_profile_show_telephone_number = $public_profile_show_telephone_number;
     }
 
+    public function signIndividualMembership():void{
+        $this->individual_member_join_date =  new \DateTime('now', new \DateTimeZone("UTC"));
+        $this->membership_type = self::MemberShipType_IndividualMember;
+    }
+
+    public function isIndividualMember(): bool
+    {
+        return $this->membership_type === self::MemberShipType_IndividualMember;
+    }
+
+    public function getIndividualMemberJoinDate(): ?\DateTime
+    {
+        return $this->individual_member_join_date;
+    }
 }

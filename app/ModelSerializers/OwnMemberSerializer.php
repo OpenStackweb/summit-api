@@ -41,6 +41,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'ShirtSize' => 'shirt_size:json_string',
         'FoodPreference' => 'food_preference:json_string_array',
         'OtherFoodPreference' => 'other_food_preference:json_string',
+        'IndividualMemberJoinDate' => 'individual_member_join_date:datetime_epoch',
     ];
 
     protected static $allowed_relations = [

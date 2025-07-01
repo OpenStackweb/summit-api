@@ -155,4 +155,13 @@ interface IMemberService
      * @return Member|null
      */
     public function updateMyMember(Member $me, array $payload):?Member;
+
+
+    /**
+     * @param Member $member
+     * @return Member
+     * @throws \Exception
+     */
+    public function signIndividualMembership(Member $member): Member;
+
 }

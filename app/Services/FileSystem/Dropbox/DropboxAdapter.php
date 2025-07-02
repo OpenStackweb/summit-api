@@ -21,6 +21,10 @@ use Exception;
  */
 final class DropboxAdapter extends BaseDropboxAdapter
 {
+    /*
+     * This method returns a public URL for the given path in Dropbox.
+     * this is overloaded to retrieve a URL with the preview mode enabled.
+     */
     public function getUrl(string $path): string
     {
         Log::debug(sprintf("DropboxAdapter::getUrl %s", $path));

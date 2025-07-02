@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use Spatie\Dropbox\Client as DropboxClient;
-use App\Services\FileSystem\Dropbox\DropboxAdapter;
+use App\Services\FileSystem\Dropbox\DropboxAdapter as CustomDropboxAdapter;
 
 /**
  * Class DropboxServiceProvider
@@ -43,7 +43,9 @@ class DropboxServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Storage::extend('dropbox', function ($app, $config) {
-            $adapter = new DropboxAdapter(
+            // use our custom dropbox adapter to override getUrl method
+            // do not remove !
+            $adapter = new CustomDropboxAdapter(
                 new DropboxClient($config['authorization_token'] ?? '')
             );
 

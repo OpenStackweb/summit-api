@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use Spatie\Dropbox\Client as DropboxClient;
-use Spatie\FlysystemDropbox\DropboxAdapter;
+use App\Services\FileSystem\Dropbox\DropboxAdapter;
 
 /**
  * Class DropboxServiceProvider

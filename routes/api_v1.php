@@ -1286,6 +1286,16 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addLeadReportSettings']);
                     Route::put('', ['uses' => 'OAuth2SummitSponsorApiController@updateLeadReportSettings']);
                 });
+
+                // sponsorships
+                Route::group(['prefix' => 'sponsorships'], function(){
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getAll']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@addFromTypes']);
+                    Route::group(['prefix' => '{sponsorship_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getById']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@remove']);
+                    });
+                });
             });
         });
 

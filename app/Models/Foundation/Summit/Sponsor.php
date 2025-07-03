@@ -998,6 +998,18 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
+     * @param int $sponsorship_id
+     * @return SummitSponsorship|null
+     */
+    public function getSponsorshipById(int $sponsorship_id): ?SummitSponsorship
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $sponsorship_id));
+        $sponsorship = $this->sponsorships->matching($criteria)->first();
+        return $sponsorship === false ? null : $sponsorship;
+    }
+
+    /**
      * @param SummitSponsorship $sponsorship
      * @throws ValidationException
      */
@@ -1013,6 +1025,18 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         }
         $sponsorship->setSponsor($this);
         $this->sponsorships->add($sponsorship);
+    }
+
+    /**
+     * @param SummitSponsorship $sponsorship
+     * @return void
+     */
+    public function removeSponsorship(SummitSponsorship $sponsorship): void
+    {
+        if (is_null($this->sponsorships)) return;
+        if (!$this->sponsorships->contains($sponsorship)) return;
+        $this->sponsorships->removeElement($sponsorship);
+        $sponsorship->clearSponsor();
     }
 
     /**

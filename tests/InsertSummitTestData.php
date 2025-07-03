@@ -251,6 +251,11 @@ trait InsertSummitTestData
     static $default_summit_sponsor_type;
 
     /**
+     * @var SummitSponsorshipType
+     */
+    static $default_summit_sponsor_type2;
+
+    /**
      * @var array | SummitTicketType
      */
     static $ticket_types = [];
@@ -808,6 +813,11 @@ trait InsertSummitTestData
         self::$default_summit_sponsor_type = new SummitSponsorshipType();
         self::$default_summit_sponsor_type->setType(self::$default_sponsor_ship_type);
         self::$summit->addSponsorshipType(self::$default_summit_sponsor_type);
+
+        self::$default_summit_sponsor_type2 = new SummitSponsorshipType();
+        self::$default_summit_sponsor_type2->setType(self::$default_sponsor_ship_type2);
+        self::$summit->addSponsorshipType(self::$default_summit_sponsor_type2);
+
         self::$companies = [];
         self::$sponsors = [];
         for($i = 0 ; $i < 20; $i++){

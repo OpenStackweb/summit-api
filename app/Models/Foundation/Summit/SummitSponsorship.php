@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Repositories\Summit\DoctrineSummitSponsorshipRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
@@ -24,7 +25,7 @@ use models\utils\SilverstripeBaseModel;
  * @package models\summit
  */
 #[ORM\Table(name: 'SummitSponsorship')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: DoctrineSummitSponsorshipRepository::class)]
 class SummitSponsorship extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
@@ -71,6 +72,11 @@ class SummitSponsorship extends SilverstripeBaseModel
     public function setSponsor(Sponsor $sponsor): void
     {
         $this->sponsor = $sponsor;
+    }
+
+    public function clearSponsor(): void
+    {
+        $this->sponsor = null;
     }
 
     public function getAddOns(): ArrayCollection|PersistentCollection|array

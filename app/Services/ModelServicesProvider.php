@@ -93,6 +93,7 @@ use App\Services\Model\ISummitScheduleSettingsService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
 use App\Services\Model\ISummitSignService;
+use App\Services\Model\ISummitSponsorshipService;
 use App\Services\Model\ISummitSponsorshipTypeService;
 use App\Services\Model\ISummitSubmissionInvitationService;
 use App\Services\Model\ISummitTaxTypeService;
@@ -132,6 +133,7 @@ use App\Services\SummitEventTypeService;
 use App\Services\SummitOrderExtraQuestionTypeService;
 use App\Services\SummitRefundPolicyTypeService;
 use App\Services\SummitSponsorService;
+use App\Services\SummitSponsorshipService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use services\model\ChatTeamService;
@@ -323,6 +325,11 @@ final class ModelServicesProvider extends ServiceProvider
         App::singleton(
             ISponsorshipTypeService::class,
             SponsorshipTypeService::class
+        );
+
+        App::singleton(
+            ISummitSponsorshipService::class,
+            SummitSponsorshipService::class
         );
 
         App::singleton(ISummitOrderService::class, SummitOrderService::class);

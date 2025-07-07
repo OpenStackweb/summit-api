@@ -2235,7 +2235,7 @@ SQL;
     }
 
 
-    public function resignFoundationMembership()
+    public function resignIndividualMembership():void
     {
         // Remove member from Foundation group
         foreach ($this->groups as $g) {
@@ -2248,6 +2248,7 @@ SQL;
         // Remove Member's Legal Agreements
         $this->legal_agreements->clear();
         $this->membership_type = self::MembershipTypeCommunity;
+        $this->individual_member_join_date = null;
         $this->resign_date = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
     }
 

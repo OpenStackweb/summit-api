@@ -651,9 +651,9 @@ final class MemberService
     public function signCommunityMembership(Member $member): Member
     {
         return $this->tx_service->transaction(function() use($member){
-            if($member->isIndividualMember()) {
-                $member->resignIndividualMembership();
-            }
+
+            $member->resignIndividualMembership();
+
             $group = $this->group_repository->getBySlug(IGroup::CommunityMembers);
             if(is_null($group))
                 throw new EntityNotFoundException(sprintf("Group %s not found", IGroup::CommunityMembers));

@@ -32,6 +32,7 @@ use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SummitQREncKeySerializer;
 use services\model\ISummitService;
+use Symfony\Component\Serializer\Serializer;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
@@ -928,11 +929,26 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      */
     public function getLeadReportSettingsMetadata($summit_id) {
         return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            return $this->ok($summit->getLeadReportSettingsMetadata());
+        });
+    }
 
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getLeadReportSettings($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            return $this->ok($summit->getLeadReportSettingsMetadata());
+            $lead_report_settings = [];
+            foreach ($summit->getLeadReportSettings() as $config) {
+                $lead_report_settings[] = SerializerRegistry::getInstance()->getSerializer($config)->serialize();
+            }
+            return $this->ok($lead_report_settings);;
         });
     }
 

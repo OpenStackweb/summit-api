@@ -1262,6 +1262,7 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSocialNetwork']);
                     });
                 });
+
                 // extra questions
                 Route::group(['prefix' => 'extra-questions'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getExtraQuestions']);
@@ -1281,7 +1282,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
-                // lead repport settings
+                // lead report settings
                 Route::group(['prefix' => 'lead-report-settings'], function(){
                     Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getLeadReportSettingsMetadata']);
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addLeadReportSettings']);
@@ -2130,9 +2131,10 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
-        // lead repport settings
+        // lead report settings
 
         Route::group(['prefix' => 'lead-report-settings'], function(){
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@getLeadReportSettings']);
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@getLeadReportSettingsMetadata']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addLeadReportSettings']);
             Route::put('', ['uses' => 'OAuth2SummitApiController@updateLeadReportSettings']);

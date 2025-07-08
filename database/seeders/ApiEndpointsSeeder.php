@@ -8891,10 +8891,25 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators
                 ],
             ],
-            // lead repport settings
+            // lead report settings
             [
                 'name' => 'get-summit-report-settings-metadata',
                 'route' => '/api/v1/summits/{id}/lead-report-settings/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                ]
+            ],
+            [
+                'name' => 'get-summit-report-settings',
+                'route' => '/api/v1/summits/{id}/lead-report-settings',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm),

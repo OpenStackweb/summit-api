@@ -32,4 +32,5 @@ interface IGroup
     const SummitRegistrationAdmins = 'summit-registration-administrators';
     const Testers                  = 'tester-groups';
     const Sponsors                 = 'sponsors';
+    const SponsorExternalUsers = 'sponsor-external-users';
 }

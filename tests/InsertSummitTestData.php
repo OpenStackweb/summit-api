@@ -12,11 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use DateInterval;
@@ -861,6 +863,13 @@ trait InsertSummitTestData
                 $ad->setOrder($j);
 
                 $s->addAd($ad);
+                if($j < 5) {
+                    $q = new SummitSponsorExtraQuestionType();
+                    $q->setType(ExtraQuestionTypeConstants::TextQuestionType);
+                    $q->setLabel(sprintf("Sponsor Extra Question %s %s", $i, $j));
+                    $q->setName(sprintf("Sponsor Extra Question %s %s", $i, $j));
+                    $s->addExtraQuestion($q);
+                }
             }
 
             self::$em->persist($s);

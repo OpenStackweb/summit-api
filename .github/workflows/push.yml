@@ -114,8 +114,12 @@ jobs:
           vendor/bin/phpunit tests/Unit/Entities/ --log-junit results_model_unit_tests.xml
           echo "running OAuth2SummitBadgeScanApiControllerTest"
           vendor/bin/phpunit --filter "OAuth2SummitBadgeScanApiControllerTest" --log-junit results_badge_scan_api_test.xml
+<<<<<<< HEAD
           echo "running SummitOrderService tests"
           vendor/bin/phpunit --filter "SummitOrderServiceTest" --log-junit results_summitorder_service_unit_tests.xml
+=======
+
+>>>>>>> 67c4a307 (feat: update add badge scan logic to accept encrypted qr code (#332))
       - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
         uses: actions/upload-artifact@v4
         with:

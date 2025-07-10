@@ -95,6 +95,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSignRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipAddOnRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSubmissionInvitationRepository;
@@ -176,6 +177,7 @@ use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitScheduleConfig;
 use models\summit\SummitSponsorship;
+use models\summit\SummitSponsorshipAddOn;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitSubmissionInvitation;
 use models\summit\SummitTaxType;
@@ -613,6 +615,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitSponsorshipRepository::class,
             function () {
                 return EntityManager::getRepository(SummitSponsorship::class);
+            }
+        );
+
+        App::singleton(
+            ISummitSponsorshipAddOnRepository::class,
+            function () {
+                return EntityManager::getRepository(SummitSponsorshipAddOn::class);
             }
         );
 

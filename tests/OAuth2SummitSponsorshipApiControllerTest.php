@@ -47,11 +47,6 @@ final class OAuth2SummitSponsorshipApiControllerTest
             'filter' => ['name==Default'],
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitSponsorshipsApiController@getAll",
@@ -59,7 +54,7 @@ final class OAuth2SummitSponsorshipApiControllerTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -76,11 +71,6 @@ final class OAuth2SummitSponsorshipApiControllerTest
             'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitSponsorshipsApiController@getById",
@@ -88,7 +78,7 @@ final class OAuth2SummitSponsorshipApiControllerTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -109,11 +99,6 @@ final class OAuth2SummitSponsorshipApiControllerTest
             'type_ids' => [self::$default_summit_sponsor_type2->getId()],
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitSponsorshipsApiController@addFromTypes",
@@ -121,7 +106,7 @@ final class OAuth2SummitSponsorshipApiControllerTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -139,11 +124,6 @@ final class OAuth2SummitSponsorshipApiControllerTest
             'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $this->action(
             "DELETE",
             "OAuth2SummitSponsorshipsApiController@remove",
@@ -151,7 +131,171 @@ final class OAuth2SummitSponsorshipApiControllerTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    //Add-Ons
+
+    public function testGetAllAddOns(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+            'filter' => ['type==Booth'],
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorshipsApiController@getAllAddOns",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+        $this->assertNotEmpty($page->data);
+    }
+
+    public function testGetAddOnById(){
+        $add_on = self::$sponsors[0]->getSponsorships()[0]->getAddOns()[0];
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+            'add_on_id' => $add_on->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorshipsApiController@getAddOnById",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $retrieved_add_on = json_decode($content);
+        $this->assertNotNull($retrieved_add_on);
+        $this->assertEquals($add_on->getId(), $retrieved_add_on->id);
+    }
+
+    public function testAddNewAddOn(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+        ];
+
+        $data = [
+            'name' => 'Added AddOn',
+            'type' => 'Booth',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorshipsApiController@addNewAddOn",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $add_on = json_decode($content);
+        $this->assertNotNull($add_on);
+    }
+
+    public function testUpdateAddOn(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+            'add_on_id' => self::$sponsors[0]->getSponsorships()[0]->getAddOns()[0]->getId()
+        ];
+
+        $new_name = 'Updated AddOn';
+
+        $data = [
+            'name' => $new_name,
+            'type' => 'Booth',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorshipsApiController@updateAddOn",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $add_on = json_decode($content);
+        $this->assertEquals($new_name, $add_on->name);
+    }
+
+    public function testUpdateAddOnInvalidType(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+            'add_on_id' => self::$sponsors[0]->getSponsorships()[0]->getAddOns()[0]->getId()
+        ];
+
+        $new_name = 'Updated AddOn';
+
+        $data = [
+            'name' => $new_name,
+            'type' => 'TestInvalidType',
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSponsorshipsApiController@updateAddOn",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testRemoveAddOn(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+            'add_on_id' => self::$sponsors[0]->getSponsorships()[0]->getAddOns()[0]->getId()
+        ];
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSponsorshipsApiController@removeAddOn",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $this->assertResponseStatus(204);

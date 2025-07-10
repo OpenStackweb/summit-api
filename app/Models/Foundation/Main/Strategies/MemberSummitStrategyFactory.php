@@ -23,7 +23,7 @@ class MemberSummitStrategyFactory
      */
     public static function getMemberSummitStrategy(Member $member): IMemberSummitStrategy
     {
-        if ($member->isSponsorUser()) {
+        if ($member->isSponsorUser() || $member->isExternalSponsorUser()) {
             return new SponsorMemberSummitStrategy($member->getId());
         }
         return new MemberSummitStrategy($member->getId());

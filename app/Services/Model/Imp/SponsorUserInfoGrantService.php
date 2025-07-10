@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Factories\SponsorUserInfoGrantFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserInfoGrantService;
+use App\Utils\AES;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -104,7 +105,7 @@ final class SponsorUserInfoGrantService
     {
         return $this->tx_service->transaction(function() use($summit, $current_member, $data){
 
-            $qr_code         = trim($data['qr_code']);
+            $qr_code         = SummitAttendeeBadge::decodeQRCodeFor($summit, $data['qr_code']);
             $fields          = SummitAttendeeBadge::parseQRCode($qr_code);
             $prefix          = $fields['prefix'];
             $scan_date_epoch = intval($data['scan_date']);

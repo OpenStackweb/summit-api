@@ -401,4 +401,39 @@ SQL;
     {
         return $this->prints->clear();
     }
+
+    /**
+     * @param Summit $summit
+     * @param string $qr_code
+     * @return string
+     */
+    public static function decodeQRCodeFor(Summit $summit, string $qr_code): string
+    {
+        $val = trim($qr_code);
+        if(base64_decode($val, true) !== false){
+            // if qr_code is base64 encoded, decode it
+            Log::debug(sprintf("SummitAttendeeBadge::decodeQRCodeFor summit %s qr_code %s with base64 decode", $summit->getId(), $val));
+            $val = base64_decode($val, true);
+        }
+
+        // check first for encryption ...
+        if(
+            !str_starts_with($val, $summit->getTicketQRPrefix()) &&
+            !str_starts_with($val, $summit->getBadgeQRPrefix()) &&
+            $summit->hasQRCodesEncKey()){
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitAttendeeBadge::decodeQRCodeFor summit %s qr_code %s with encryption",
+                    $summit->getId(),
+                    $val
+                )
+            );
+
+            $val = AES::decrypt($summit->getQRCodesEncKey(), $val)->getData();
+        }
+
+        return $val;
+    }
 }

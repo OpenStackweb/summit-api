@@ -361,6 +361,11 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         return $grant === false ? null : $grant;
     }
 
+    const AllowedMemberGroups = [
+        IGroup::Sponsors,
+        IGroup::SponsorExternalUsers,
+    ];
+
     /**
      * @param Member $user
      * @throws ValidationException
@@ -368,14 +373,15 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function addUser(Member $user)
     {
         if ($this->members->contains($user)) return;
-        if (!$user->isSponsorUser()) {
+
+        if (!count(array_intersect(self::AllowedMemberGroups, $user->getGroupsCodes()))) {
             throw new ValidationException
             (
                 sprintf
                 (
-                    "Member %s does not belong to group %s",
+                    "Member %s does not belong to any of allowed groups %s",
                     $user->getId(),
-                    IGroup::Sponsors
+                    implode(', ', self::AllowedMemberGroups)
                 )
             );
         }
@@ -390,8 +396,14 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
                     $this->getSummit()->getId()
                 )
             );
-
+        // see https://www.doctrine-project.org/projects/doctrine-orm/en/3.5/reference/working-with-associations.html#synchronizing-bidirectional-collections
         $this->members->add($user);
+        $user->addSponsorMembership($this);
+    }
+
+    public function hasUser(Member $member): bool
+    {
+        return $this->members->contains($member);
     }
 
     /**
@@ -400,7 +412,9 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function removeUser(Member $user)
     {
         if (!$this->members->contains($user)) return;
+        // see https://www.doctrine-project.org/projects/doctrine-orm/en/3.5/reference/working-with-associations.html#synchronizing-bidirectional-collections
         $this->members->removeElement($user);
+        $user->removeSponsorMembership($this);
     }
 
     /**

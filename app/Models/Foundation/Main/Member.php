@@ -962,7 +962,14 @@ class Member extends SilverstripeBaseModel
         return false;
     }
 
-
+    public function isExternalSponsorUser(): bool
+    {
+        if($this->belongsToGroup(IGroup::SponsorExternalUsers))
+            return true;
+        if ($this->isOnExternalGroup(IGroup::SponsorExternalUsers))
+            return true;
+        return false;
+    }
 
     /**
      * @param string $code
@@ -1829,7 +1836,8 @@ SQL;
     public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
     {
         try {
-            if(!$this->isSponsorUser()) return false;
+           $canHaveSponsorMemberships = $this->isSponsorUser() || $this->isExternalSponsorUser();
+           if(!$canHaveSponsorMemberships) return false;
         $sql = <<<SQL
 SELECT COUNT(Sponsor_Users.SponsorID)
 FROM Sponsor_Users
@@ -3281,7 +3289,7 @@ SQL;
         // authz check
         if ($this->isSummitAdmin() && $this->isSummitAllowed($summit))
             return true;
-        if ($this->isSponsorUser() && !is_null($sponsor) && $this->hasSponsorMembershipsFor($summit, $sponsor))
+        if (!is_null($sponsor) && $this->hasSponsorMembershipsFor($summit, $sponsor))
             return true;
         return false;
     }
@@ -3369,5 +3377,17 @@ SQL;
     public function getIndividualMemberJoinDate(): ?\DateTime
     {
         return $this->individual_member_join_date;
+    }
+
+    public function addSponsorMembership(Sponsor $sponsor):void
+    {
+        if($this->sponsor_memberships->contains($sponsor)) return;
+        $this->sponsor_memberships->add($sponsor);
+    }
+
+    public function removeSponsorMembership(Sponsor $sponsor):void
+    {
+        if(!$this->sponsor_memberships->contains($sponsor)) return;
+        $this->sponsor_memberships->removeElement($sponsor);
     }
 }

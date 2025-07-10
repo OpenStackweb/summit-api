@@ -240,7 +240,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         // authz check
         $current_member = $this->resource_server_context->getCurrentUser();
         if(!$current_member->isAuthzFor($summit))
-            throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+            throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
 
         $this->service->deleteSponsor($summit, $child_id);
     }
@@ -1165,7 +1165,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             // authz check
             $current_member = $this->resource_server_context->getCurrentUser();
             if(!$current_member->isAuthzFor($summit, $sponsor))
-                throw new HTTP403ForbiddenException("You are not allowed to perform this action");
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
 
             $payload = $this->getJsonPayload(SponsorExtraQuestionValidationRulesFactory::buildForAdd(), true);
 

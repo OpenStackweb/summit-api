@@ -14,6 +14,7 @@
 
 use models\summit\Summit;
 use models\summit\SummitSponsorship;
+use models\summit\SummitSponsorshipAddOn;
 
 /**
  * Interface ISummitSponsorshipService
@@ -35,6 +36,35 @@ interface ISummitSponsorshipService
      * @param int $sponsor_id
      * @param int $sponsorship_id
      * @return void
+     * @throws \Exception
      */
     public function removeSponsorship(Summit $summit, int $sponsor_id, int $sponsorship_id): void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $sponsorship_id
+     * @param array $payload
+     * @return SummitSponsorshipAddOn
+     */
+    public function addNewAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, array $payload): SummitSponsorshipAddOn;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $sponsorship_id
+     * @param int $add_on_id
+     * @param array $payload
+     * @return SummitSponsorshipAddOn
+     */
+    public function updateAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id, array $payload): SummitSponsorshipAddOn;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $sponsorship_id
+     * @param int $add_on_id
+     * @return void
+     */
+    public function removeAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id): void;
 }

@@ -12,12 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Factories\SummitSponsorshipAddOnFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitSponsorshipService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\summit\Summit;
 use models\summit\SummitSponsorship;
+use models\summit\SummitSponsorshipAddOn;
 
 /**
  * Class SummitSponsorshipService
@@ -58,7 +60,6 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
 
     /**
      * @inheritDoc
-     * @throws \Exception
      */
     public function removeSponsorship(Summit $summit, int $sponsor_id, int $sponsorship_id): void
     {
@@ -73,6 +74,74 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 throw new EntityNotFoundException("Sponsorship {$sponsorship_id} not found in sponsor {$sponsor_id}.");
 
             $summit_sponsor->removeSponsorship($sponsorship);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     * @throws \Exception
+     */
+    public function addNewAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, array $payload): SummitSponsorshipAddOn
+    {
+         return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $payload) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $sponsorship = $summit_sponsor->getSponsorshipById($sponsorship_id);
+            if (is_null($sponsorship))
+                throw new EntityNotFoundException("Sponsorship {$sponsorship_id} not found for sponsor {$sponsor_id}.");
+
+            $add_on = SummitSponsorshipAddOnFactory::build($payload);
+            $sponsorship->addAddOn($add_on);
+            return $add_on;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     * @throws \Exception
+     */
+    public function updateAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id, array $payload): SummitSponsorshipAddOn
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id, $payload) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $sponsorship = $summit_sponsor->getSponsorshipById($sponsorship_id);
+            if (is_null($sponsorship))
+                throw new EntityNotFoundException("Sponsorship {$sponsorship_id} not found for sponsor {$sponsor_id}.");
+
+            $add_on = $sponsorship->getAddOnById($add_on_id);
+            if (is_null($add_on))
+                throw new EntityNotFoundException("AddOn {$add_on_id} not found for sponsorship {$sponsorship_id}.");
+
+            return SummitSponsorshipAddOnFactory::populate($add_on, $payload);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     * @throws \Exception
+     */
+    public function removeAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id) {
+
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $sponsorship = $summit_sponsor->getSponsorshipById($sponsorship_id);
+            if (is_null($sponsorship))
+                throw new EntityNotFoundException("Sponsorship {$sponsorship_id} not found in sponsor {$sponsor_id}.");
+
+            $add_on = $sponsorship->getAddOnById($add_on_id);
+            if (is_null($add_on))
+                throw new EntityNotFoundException("AddOn {$add_on_id} not found for sponsorship {$sponsorship_id}.");
+
+            $sponsorship->removeAddOn($add_on);
         });
     }
 }

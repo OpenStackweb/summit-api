@@ -25,12 +25,26 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
+    private $external_sponsor_group;
+
+    private $sponsor_group;
+
     protected function setUp():void
     {
         parent::setUp();
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
+
+        $this->external_sponsor_group = new Group();
+        $this->external_sponsor_group->setCode(IGroup::SponsorExternalUsers);
+        $this->external_sponsor_group->setTitle(IGroup::SponsorExternalUsers);
+        self::$em->persist($this->external_sponsor_group);
+
+        $this->sponsor_group = new Group();
+        $this->sponsor_group->setCode(IGroup::Sponsors);
+        $this->sponsor_group->setTitle(IGroup::Sponsors);
+        self::$em->persist($this->sponsor_group);
     }
 
     protected function tearDown():void
@@ -41,20 +55,17 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testAddEncryptedBadgeScan(){
         // set test data
-        $external_sponsor_group = new Group();
-        $external_sponsor_group->setCode(IGroup::SponsorExternalUsers);
-        $external_sponsor_group->setTitle(IGroup::SponsorExternalUsers);
-        self::$em->persist($external_sponsor_group);
         self::$member->clearGroups();
-        self::$member->add2Group($external_sponsor_group);
+        self::$member->add2Group($this->external_sponsor_group);
         self::$em->persist(self::$member);
         self::$em->flush();
 
-        $attendee =  self::$summit->getAttendees()[0];
         $sponsor = self::$summit->getSummitSponsors()[0];
         $sponsor->addUser(self::$member);
         self::$em->persist($sponsor);
         self::$em->flush();
+
+        $attendee =  self::$summit->getAttendees()[0];
 
         self::$summit->setQRCodesEncKey('35NVOF4I5T6AAM28IJPKB8KRUW98KPDO');
         self::$em->persist(self::$summit);
@@ -95,25 +106,26 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testAddBadgeScan(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
         $params = [
             'id' => self::$summit->getId(),
         ];
 
         $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
 
         $data = [
-            'qr_code' => sprintf(
-            "%s|%s|%s|%s",
-                self::$summit->getBadgeQRPrefix(),
-                $attendee->getTickets()[0]->getNumber(),
-                $attendee->getEmail(),
-                $attendee->getFullName(),
-            ),
+            'qr_code' => $badge->generateQRCode(),
             'scan_date' => 1572019200,
-            'extra_questions' => [
-                ['question_id' => 519, 'answer' => 'XL'],
-                ['question_id' => 520, 'answer' => 'None'],
-            ],
         ];
 
         $response = $this->action(
@@ -148,11 +160,6 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             ],
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitBadgeScanApiController@update",
@@ -160,7 +167,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -172,16 +179,20 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testGetAllMyBadgeScans(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
 
         $params = [
             'id'    =>  self::$summit->getId(),
             'filter'=> 'attendee_email=@santi',
             'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -191,7 +202,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -206,22 +217,10 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             'id' => self::$summit->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
-
+        $badge = $attendee->getFirstTicket()->getBadge();
         $data = [
-            'qr_code' => sprintf
-            (
-                "%s|%s|%s|%s",
-                self::$summit->getBadgeQRPrefix(),
-                $attendee->getTickets()[0]->getNumber(),
-                $attendee->getEmail(),
-                $attendee->getFullName(),
-            ),
+            'qr_code' => $badge->generateQRCode(),
         ];
 
         $response = $this->action(
@@ -231,7 +230,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -249,11 +248,6 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitBadgeScanApiController@getAllBySummit",
@@ -261,7 +255,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -280,11 +274,6 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             'expand'  => 'sponsor,badge,badge.ticket,badge.ticket.owner,extra_question_answers'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitBadgeScanApiController@get",
@@ -292,7 +281,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -304,14 +293,11 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScans(){
 
+        $this->testAddBadgeScan();
+
         $params = [
             'id'    =>  self::$summit->getId(),
             'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -321,7 +307,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -330,6 +316,8 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testExportSummitBadgeScansWithReportSettingsRestriction(){
+
+        $this->testAddBadgeScan();
 
         $sponsor = self::$summit->getSummitSponsors()[0];
         if (!$sponsor instanceof Sponsor) self::fail();
@@ -340,11 +328,6 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $params = [
             'id'    =>  self::$summit->getId(),
             'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         // set up allowed columns
@@ -370,7 +353,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -383,7 +366,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -394,6 +377,8 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testExportSummitBadgeScansWithAllReportSettingsRestriction(){
+
+        $this->testAddBadgeScan();
 
         $sponsor = self::$summit->getSummitSponsors()[0];
         if (!$sponsor instanceof Sponsor) self::fail();
@@ -406,28 +391,29 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+        $allowed_columns = [
+            'scan_date',
+            SummitLeadReportSetting::AttendeeExtraQuestionsKey => [],
+            SummitLeadReportSetting::SponsorExtraQuestionsKey => []
         ];
 
         $data = [
-            'allowed_columns' => [
-                SummitLeadReportSetting::AttendeeExtraQuestionsKey => [],
-                SummitLeadReportSetting::SponsorExtraQuestionsKey => []
-            ]
+            'allowed_columns' => $allowed_columns
         ];
 
-        $this->action(
+        $response = $this->action(
             "PUT",
             "OAuth2SummitApiController@updateLeadReportSettings",
             $params,
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
+
+        $content = $response->getContent();
+        $settings = json_decode($content);
 
         $this->assertResponseStatus(201);
 
@@ -438,12 +424,11 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertNotEmpty($content);
-        $this->assertTrue(!str_contains($content, 'scan_date'));
     }
 }

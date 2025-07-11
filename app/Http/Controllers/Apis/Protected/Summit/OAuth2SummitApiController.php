@@ -999,4 +999,35 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $badge
+     * @return mixed
+     */
+    public function validateBadge($summit_id, $badge) {
+        return $this->processRequest(function () use ($summit_id, $badge) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $summitAttendeeBadge = $this->summit_service->validateBadge($summit, $badge);
+
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($summitAttendeeBadge)
+                ->serialize(
+                    'features,ticket,ticket.owner',
+                    [
+                        'id',
+                        'features.id',
+                        'features.name',
+                        'features.description',
+                        'ticket.id',
+                        'ticket.number',
+                        'ticket.owner.first_name',
+                        'ticket.owner.last_name'
+                    ]
+                )
+            );
+        });
+    }
 }

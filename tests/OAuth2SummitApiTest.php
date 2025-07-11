@@ -15,11 +15,15 @@
 use App\Models\Foundation\Summit\IStatsConstants;
 use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use App\Models\ResourceServer\IAccessTokenService;
+use App\Utils\AES;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\App;
 use App\Models\Foundation\Main\IGroup;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitLeadReportSetting;
 use services\apis\IEventbriteAPI;
+use utils\PagingInfo;
 
 /**
  * Class OAuth2SummitApiTest
@@ -1148,5 +1152,36 @@ final class OAuth2SummitApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(412);
         $this->assertStringContainsString('there are paid tickets', $content);
+    }
+
+    public function testValidateBadge(){
+
+        $badge_repository = EntityManager::getRepository(SummitAttendeeBadge::class);
+        $ticket = self::$summit_orders[0]->getTickets()->first();
+        $badge = $badge_repository->getBadgeByTicketNumber($ticket->getNumber());
+        $badge_qr_code = $badge->generateQRCode();
+
+        //$key = '35NVOF4I5T6AAM28IJPKB8KRUW98KPDO';
+
+        $params = [
+            'id' => self::$summit->getId(),
+            //'badge' => base64_encode(AES::encrypt($key, $badge_qr_code)),
+            'badge' => base64_encode($badge_qr_code),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@validateBadge",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $content = $response->getContent();
+        $attendee_badge = json_decode($content);
+        $this->assertNotNull($attendee_badge);
     }
 }

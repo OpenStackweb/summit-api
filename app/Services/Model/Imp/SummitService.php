@@ -4287,14 +4287,19 @@ final class SummitService
             sprintf("SummitService::validateBadge summit %s badge qr code %s", $summit->getId(), $badge_qr_code));
 
         $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $badge_qr_code);
+        $qr_code_components = SummitAttendeeBadge::parseQRCode($qr_code);
 
-        $qr_code_components = explode($summit->getQRRegistryFieldDelimiter(), $qr_code);
-        $ticket_number = $qr_code_components[1];
+        $prefix = $qr_code_components['prefix'];
+
+        if($summit->getBadgeQRPrefix() != $prefix)
+            throw new ValidationException(sprintf("%s qr code is not valid for summit %s.", $qr_code, $summit->getId()));
+
+        $ticket_number = $qr_code_components['ticket_number'];
 
         $badge = $this->summit_attendee_badge_repository->getBadgeByTicketNumber($ticket_number);
 
         if (is_null($badge))
-            throw new ValidationException(sprintf("Badge for ticket number %s does not exists,", $ticket_number));
+            throw new ValidationException(sprintf("Badge for ticket number %s does not exists.", $ticket_number));
 
         return $badge;
     }

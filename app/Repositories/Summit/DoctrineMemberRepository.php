@@ -135,6 +135,7 @@ final class DoctrineMemberRepository
             'member_user_external_id' => new DoctrineFilterMapping(
                 "( e.user_external_id :operator :value )"
             ),
+            'membership_type'   => 'e.membership_type:json_string',
             'irc'               => 'e.irc_handle:json_string',
             'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
@@ -466,6 +467,7 @@ SQL,
             'email' => 'e.email',
             'created' => 'e.created',
             'last_edited' => 'e.last_edited',
+            'membership_type' => 'e.membership_type',
         ];
     }
 

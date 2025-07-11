@@ -66,7 +66,14 @@ class Member extends SilverstripeBaseModel
 
     const MembershipTypeNone = 'None';
 
-    Const MemberShipType_IndividualMember = 'Individual';
+    const MemberShipType_IndividualMember = 'Individual';
+
+    const AllowedMembershipTypes = [
+        self::MembershipTypeFoundation,
+        self::MembershipTypeCommunity,
+        self::MembershipTypeNone,
+        self::MemberShipType_IndividualMember
+    ];
 
     /**
      * @ORM\Column(name="FirstName", type="string")

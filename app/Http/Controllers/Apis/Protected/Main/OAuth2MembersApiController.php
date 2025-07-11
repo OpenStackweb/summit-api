@@ -79,6 +79,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'full_name' => ['=@', '==', '@@'],
                     'created' => ['>', '<', '<=', '>=', '==','[]'],
                     'last_edited' => ['>', '<', '<=', '>=', '==','[]'],
+                    'membership_type' => ['==', '=@', '@@'],
                 ];
             },
             function () {
@@ -96,6 +97,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'full_name' => 'sometimes|required|string',
                     'created' => 'sometimes|required|date_format:U|epoch_seconds',
                     'last_edited' => 'sometimes|required|date_format:U|epoch_seconds',
+                    'membership_type' => 'sometimes|required|string|in:' . implode(',', Member::AllowedMembershipTypes),
                 ];
             },
             function () {
@@ -105,6 +107,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'id',
                     'created',
                     'last_edited',
+                    'membership_type',
                 ];
             },
             function ($filter) {

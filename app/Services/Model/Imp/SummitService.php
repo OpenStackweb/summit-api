@@ -4286,13 +4286,7 @@ final class SummitService
         Log::debug(
             sprintf("SummitService::validateBadge summit %s badge qr code %s", $summit->getId(), $badge_qr_code));
 
-        $qr_code = base64_decode($badge_qr_code);
-        $key = $summit->getQRCodesEncKey();
-
-        //check if qrcode is encrypted
-        if (!str_starts_with($qr_code, $summit->getBadgeQRPrefix()) && !empty($key)) {
-            $qr_code = AES::decrypt($key, $qr_code);
-        }
+        $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $badge_qr_code);
 
         $qr_code_components = explode($summit->getQRRegistryFieldDelimiter(), $qr_code);
         $ticket_number = $qr_code_components[1];

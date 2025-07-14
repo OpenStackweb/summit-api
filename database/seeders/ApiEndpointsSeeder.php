@@ -2030,6 +2030,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2058,6 +2059,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2204,6 +2206,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2451,6 +2454,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2466,6 +2470,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2480,6 +2485,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2494,6 +2500,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2509,6 +2516,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2523,6 +2531,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2537,6 +2546,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2551,9 +2561,10 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
-            // lead repport settings
+            // lead report settings
             [
                 'name' => 'get-sponsor-report-settings-metadata',
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings/metadata',
@@ -2567,6 +2578,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -8905,6 +8917,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -8920,6 +8933,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -9801,7 +9815,8 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
                         IGroup::SummitAdministrators,
-                        IGroup::Sponsors
+                        IGroup::Sponsors,
+                        IGroup::SponsorExternalUsers,
                     ]
                 ],
                 [
@@ -9817,7 +9832,8 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
                         IGroup::SummitAdministrators,
-                        IGroup::Sponsors
+                        IGroup::Sponsors,
+                        IGroup::SponsorExternalUsers,
                     ]
                 ],
                 [
@@ -9840,7 +9856,8 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
                         IGroup::SummitAdministrators,
-                        IGroup::Sponsors
+                        IGroup::Sponsors,
+                        IGroup::SponsorExternalUsers,
                     ]
                 ],
                 [
@@ -9855,7 +9872,8 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
                         IGroup::SummitAdministrators,
-                        IGroup::Sponsors
+                        IGroup::Sponsors,
+                        IGroup::SponsorExternalUsers,
                     ]
                 ],
                 [

@@ -374,7 +374,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function addUser(Member $user)
     {
         if ($this->members->contains($user)) return;
-
+        $user_groups = $user->getGroupsCodes();
         Log::debug
         (
             sprintf
@@ -382,12 +382,11 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
                 "Sponsor::addUser adding user %s to sponsor %s user groups %s",
                 $user->getId(),
                 $this->getId(),
-                implode(',', $user->getGroupsCodes()
-                )
+                implode(',', $user_groups)
             )
         );
 
-        if (!count(array_intersect(self::AllowedMemberGroups, $user->getGroupsCodes()))) {
+        if (!count(array_intersect(self::AllowedMemberGroups, $user_groups))) {
             throw new ValidationException
             (
                 sprintf

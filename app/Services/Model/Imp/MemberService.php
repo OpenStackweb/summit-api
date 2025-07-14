@@ -477,7 +477,7 @@ final class MemberService
     {
         return $this->tx_service->transaction(function () use ($member, $groups) {
 
-            $val = $this->cache_service->getSingleValue(sprintf("member_%s_sync_groups", $member->getId()));
+            $val = $this->cache_service->getSingleValue(sprintf("member_%s_%s_sync_groups", $member->getId(), implode("_", $groups)));
 
             if(!empty($val)){
                 Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s synch already done", $member->getId(), $member->getEmail()));

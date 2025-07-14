@@ -21,6 +21,7 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -373,6 +374,18 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function addUser(Member $user)
     {
         if ($this->members->contains($user)) return;
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Sponsor::addUser adding user %s to sponsor %s user groups %s",
+                $user->getId(),
+                $this->getId(),
+                implode(',', $user->getGroupsCodes()
+                )
+            )
+        );
 
         if (!count(array_intersect(self::AllowedMemberGroups, $user->getGroupsCodes()))) {
             throw new ValidationException

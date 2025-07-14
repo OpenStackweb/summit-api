@@ -102,8 +102,10 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'qr_registry_field_delimiter'
                             ];
                             if ($current_member instanceof Member &&
+                                ( $current_member->isSponsorUser() || $current_member->isAdmin() ) &&
                                 ((!is_null($summit) && $current_member->isSummitAllowed($summit))
                                     || $current_member->hasSponsorMembershipsFor($sponsor->getSummit(), $sponsor))) {
+                                // this field is only for admin and sponsor users
                                 $serializer_type = SerializerRegistry::SerializerType_Private;
                                 $fields[] = 'qr_codes_enc_key';
                             }

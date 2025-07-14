@@ -986,7 +986,10 @@ class Member extends SilverstripeBaseModel
     {
         Log::debug(sprintf("Member::isOnExternalGroup id %s code %s", $this->id, $code));
         $resource_server_ctx = App::make(IResourceServerContext::class);
-        if ($resource_server_ctx instanceof IResourceServerContext) {
+        if ($resource_server_ctx instanceof IResourceServerContext
+            && !is_null($this->getUserExternalId())
+            && $this->getUserExternalId() > 0
+            && $resource_server_ctx->getCurrentUserExternalId() == $this->getUserExternalId()) {
             foreach ($resource_server_ctx->getCurrentUserGroups() as $group) {
                 Log::debug(sprintf("Member::isOnExternalGroup id %s code %s external group %s", $this->id, $code, $group['slug']));
                 if
@@ -1104,7 +1107,11 @@ SQL;
         }
         // from IDP
         $resource_server_ctx = App::make(IResourceServerContext::class);
-        if ($resource_server_ctx instanceof IResourceServerContext) {
+        if ($resource_server_ctx instanceof IResourceServerContext
+            && !is_null($this->getUserExternalId())
+            && $this->getUserExternalId() > 0
+            && $resource_server_ctx->getCurrentUserExternalId() == $this->getUserExternalId()) {
+
             foreach ($resource_server_ctx->getCurrentUserGroups() as $group) {
                 if (isset($group['slug']))
                     $codes[] = trim($group['slug']);

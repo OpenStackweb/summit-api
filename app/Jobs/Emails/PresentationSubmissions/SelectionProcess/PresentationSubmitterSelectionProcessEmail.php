@@ -68,8 +68,23 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractSummit
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SubmitterEmails)->serialize();
         }
 
-        $payload[IMailTemplatesConstants::submitter_full_name] = $submitter->getFullName();
-        $payload[IMailTemplatesConstants::submitter_email] = $submitter->getEmail();
+        $submitter_email = $submitter->getEmail();
+        $submitter_full_name = $submitter->getFullName();
+
+        // set to email if fullname is empty
+        if(empty($submitter_full_name)){
+            // check if we have a first and last name at speaker level
+            if($submitter->hasSpeaker()){
+                $submitter_full_name = $submitter->getSpeaker()->getFullName();
+            }
+            if(empty($submitter_full_name)) {
+                // fallback to email
+                $submitter_full_name = $submitter_email;
+            }
+        }
+
+        $payload[IMailTemplatesConstants::submitter_full_name] = $submitter_full_name;
+        $payload[IMailTemplatesConstants::submitter_email] = $submitter_email;
 
         if (!empty($test_email_recipient)) {
             Log::debug

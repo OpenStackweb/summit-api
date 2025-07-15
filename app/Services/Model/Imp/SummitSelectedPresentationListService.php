@@ -249,7 +249,7 @@ final class SummitSelectedPresentationListService
             if ($selection_list->getCategoryId() !== $track_id)
                 throw new EntityNotFoundException("List not found.");
 
-            $shouldApplySelectionPlanValidationRules = !$current_member->isAdmin();
+            $shouldApplySelectionPlanValidationRules = !$current_member->isSummitAllowed($summit);
             if($shouldApplySelectionPlanValidationRules) {
                 if (!$selectionPlan->isSelectionOpen())
                     throw new ValidationException

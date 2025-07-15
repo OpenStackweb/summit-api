@@ -129,8 +129,16 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
             $payload[IMailTemplatesConstants::cc_email] = implode(',', $cc_email);
         }
 
-        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName();
-        $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
+        $speaker_email = $speaker->getEmail();
+        $speaker_full_name = $speaker->getFullName();
+
+        // set to email if fullname is empty
+        if(empty($speaker_full_name)){
+            $speaker_full_name = $speaker_email;
+        }
+
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker_full_name;
+        $payload[IMailTemplatesConstants::speaker_email] = $speaker_email;
 
         if (!empty($test_email_recipient)) {
             Log::debug

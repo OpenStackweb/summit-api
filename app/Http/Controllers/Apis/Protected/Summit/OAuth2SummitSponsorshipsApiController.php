@@ -82,6 +82,10 @@ final class OAuth2SummitSponsorshipsApiController
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+            return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
         $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
         if (is_null($sponsor)) return $this->error404();
 
@@ -135,6 +139,10 @@ final class OAuth2SummitSponsorshipsApiController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
 
@@ -163,6 +171,10 @@ final class OAuth2SummitSponsorshipsApiController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
@@ -197,6 +209,10 @@ final class OAuth2SummitSponsorshipsApiController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $this->service->removeSponsorship($summit, $sponsor_id, $sponsorship_id);
 
             return $this->deleted();
@@ -216,6 +232,10 @@ final class OAuth2SummitSponsorshipsApiController
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+            return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
         $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
         if (is_null($sponsor)) return $this->error404();
 
@@ -226,7 +246,7 @@ final class OAuth2SummitSponsorshipsApiController
             function () {
                 return [
                     'name' => Filter::buildStringDefaultOperators(),
-                    'type' => Filter::buildEpochDefaultOperators(),
+                    'type' => Filter::buildStringDefaultOperators(),
                 ];
             },
             function () {
@@ -279,6 +299,10 @@ final class OAuth2SummitSponsorshipsApiController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $payload = $this->getJsonPayload(SummitSponsorshipAddOnsValidationRulesFactory::buildForAdd(), true);
 
             $add_on = $this->service->addNewAddOn($summit, $sponsor_id, $sponsorship_id, $payload);
@@ -305,6 +329,10 @@ final class OAuth2SummitSponsorshipsApiController
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id, $add_on_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
             if (is_null($sponsor)) return $this->error404();
@@ -338,6 +366,10 @@ final class OAuth2SummitSponsorshipsApiController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $payload = $this->getJsonPayload(SummitSponsorshipAddOnsValidationRulesFactory::buildForUpdate(), true);
 
             $add_on = $this->service->updateAddOn($summit, $sponsor_id, $sponsorship_id, $add_on_id, $payload);
@@ -366,6 +398,10 @@ final class OAuth2SummitSponsorshipsApiController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $this->service->removeAddOn($summit, $sponsor_id, $sponsorship_id, $add_on_id);
 

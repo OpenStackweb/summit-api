@@ -24,7 +24,7 @@ final class SummitSponsorshipAddOnsValidationRulesFactory extends AbstractValida
     public static function buildForAdd(array $payload = []): array
     {
         return [
-            'name' => 'required|string',
+            'name' => 'required|string|max:255',
             'type' => 'required|string|in:'.join(',', SummitSponsorshipAddOn::ValidTypes),
         ];
     }
@@ -32,7 +32,7 @@ final class SummitSponsorshipAddOnsValidationRulesFactory extends AbstractValida
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'name' => 'sometimes|string',
+            'name' => 'sometimes|string|max:255',
             'type' => 'sometimes|string|required_with:name|in:'.join(',', SummitSponsorshipAddOn::ValidTypes),
         ];
     }

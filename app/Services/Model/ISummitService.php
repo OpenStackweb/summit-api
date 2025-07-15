@@ -28,6 +28,7 @@ use models\summit\Presentation;
 use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitBookableVenueRoomAttributeType;
 use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitEvent;
@@ -704,4 +705,12 @@ interface ISummitService
      * @return SummitEvent|null
      */
     public function getEventForStreamingInfo(Summit $summit, Member $current_user, int $event_id): ?SummitEvent;
+
+    /**
+     * @param Summit $summit
+     * @param string $badge_qr_code
+     * @return SummitAttendeeBadge
+     * @throws ValidationException
+     */
+    public function validateBadge(Summit $summit, string $badge_qr_code): SummitAttendeeBadge;
 }

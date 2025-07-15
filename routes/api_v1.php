@@ -2138,6 +2138,12 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addLeadReportSettings']);
             Route::put('', ['uses' => 'OAuth2SummitApiController@updateLeadReportSettings']);
         });
+
+        Route::group(['prefix' => 'badge'], function(){
+            Route::group(['prefix' => '{badge}'], function(){
+                Route::get('validate', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@validateBadge']);
+            });
+        });
     });
 });
 

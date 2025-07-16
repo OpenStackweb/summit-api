@@ -102,6 +102,7 @@ final class OAuth2SummitSponsorshipApiControllerTest
         $params = [
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
+            'expand' => 'type'
         ];
 
         $data = [
@@ -126,8 +127,8 @@ final class OAuth2SummitSponsorshipApiControllerTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $summit_sponsorships = json_decode($content);
-        $this->assertNotNull($summit_sponsorships);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
     }
 
     public function testDelete(){

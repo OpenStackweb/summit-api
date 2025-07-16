@@ -15,6 +15,7 @@
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipAddOnRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
+use models\summit\Summit;
 use models\summit\SummitSponsorshipAddOn;
 use utils\DoctrineFilterMapping;
 use utils\Filter;

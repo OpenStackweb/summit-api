@@ -2728,6 +2728,20 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            // Add-On types
+            [
+                'name' => 'get-add-ons-metadata',
+                'route' => '/api/v1/summits/{id}/add-ons/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //
             [
                 'name' => 'add-sponsor-user',

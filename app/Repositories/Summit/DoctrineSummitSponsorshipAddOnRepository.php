@@ -15,6 +15,7 @@
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipAddOnRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
+use models\summit\Summit;
 use models\summit\SummitSponsorshipAddOn;
 use utils\DoctrineFilterMapping;
 use utils\Filter;
@@ -74,5 +75,14 @@ implements ISummitSponsorshipAddOnRepository
     protected function getBaseEntity(): string
     {
        return SummitSponsorshipAddOn::class;
+    }
+
+    /**
+     * @param Summit $summit
+     * @return array
+     */
+    public function getMetadata(Summit $summit): array
+    {
+        return SummitSponsorshipAddOn::getMetadata();
     }
 }

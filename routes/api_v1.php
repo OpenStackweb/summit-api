@@ -2157,6 +2157,12 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addLeadReportSettings']);
             Route::put('', ['uses' => 'OAuth2SummitApiController@updateLeadReportSettings']);
         });
+
+        // add-ons types
+
+        Route::group(['prefix' => 'add-ons'], function(){
+            Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getMetadata']);
+        });
     });
 });
 

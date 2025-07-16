@@ -299,4 +299,25 @@ final class OAuth2SummitSponsorshipApiControllerTest
 
         $this->assertResponseStatus(204);
     }
+
+    public function testGetAddsMetadata(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorshipsApiController@getMetadata",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $metadata = json_decode($content);
+        $this->assertNotNull($metadata);
+    }
 }

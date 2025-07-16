@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\Summit;
 use models\utils\IBaseRepository;
 /**
  * Interface ISummitSponsorshipAddOnRepository
@@ -18,5 +20,9 @@ use models\utils\IBaseRepository;
  */
 interface ISummitSponsorshipAddOnRepository extends IBaseRepository
 {
-
+    /**
+     * @param Summit $summit
+     * @return array
+     */
+    public function getMetadata(Summit $summit): array;
 }

@@ -408,4 +408,21 @@ final class OAuth2SummitSponsorshipsApiController
             return $this->deleted();
         });
     }
+
+    //Add-Ons metadata
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getMetadata($summit_id): mixed
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->ok
+        (
+            $this->sponsorship_add_on_repository->getMetadata($summit)
+        );
+    }
 }

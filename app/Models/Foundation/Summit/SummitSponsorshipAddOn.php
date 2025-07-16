@@ -55,6 +55,11 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
     #[ORM\JoinColumn(name: 'SponsorshipID', referencedColumnName: 'ID')]
     protected $sponsorship;
 
+    public static function getMetadata(): array
+    {
+        return self::ValidTypes;
+    }
+
     public function getType(): string
     {
         return $this->type;

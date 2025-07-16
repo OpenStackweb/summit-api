@@ -208,8 +208,14 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getScheduledEvents($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
             $params = [
-                'summit_id' => $summit_id,
+                'summit_id'    => $summit_id,
+                'summit'       => $summit,
+                'published'    => true,
                 'current_user' => $this->resource_server_context->getCurrentUser(true)
             ];
 

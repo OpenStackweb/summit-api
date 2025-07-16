@@ -51,6 +51,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         'member_id',
         'member_external_id',
     ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -83,17 +84,18 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
                 $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
         }
 
-        if (in_array('member', $relations) && $speaker->hasMember())
+        if ($speaker->hasMember())
         {
-            $member              = $speaker->getMember();
+            $member = $speaker->getMember();
 
             if(in_array("gender", $fields))
-                $values['gender']    = $member->getGender();
+                $values['gender'] = $member->getGender();
+
             if(in_array("member_id", $fields))
                 $values['member_id'] = intval($member->getId());
+
             if(in_array("member_external_id", $fields))
                 $values['member_external_id'] = intval($member->getUserExternalId());
-
 
             if(!is_null($summit_id)) {
                 if(in_array('badge_features', $relations)) {

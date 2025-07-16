@@ -84,6 +84,14 @@ class SummitSponsorship extends SilverstripeBaseModel
         return $this->add_ons;
     }
 
+    public function getAddOnById(int $add_on_id): ?SummitSponsorshipAddOn
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $add_on_id));
+        $add_on = $this->add_ons->matching($criteria)->first();
+        return $add_on === false ? null : $add_on;
+    }
+
     /**
      * @throws ValidationException
      */
@@ -107,6 +115,14 @@ class SummitSponsorship extends SilverstripeBaseModel
         $this->add_ons->clear();
         $this->add_ons = null;
     }
+    public function removeAddOn(SummitSponsorshipAddOn $add_on): void
+    {
+        if (is_null($this->add_ons)) return;
+        if (!$this->add_ons->contains($add_on)) return;
+        $this->add_ons->removeElement($add_on);
+        $add_on->clearSponsorship();
+    }
+
 
     public function getType(): SummitSponsorshipType
     {

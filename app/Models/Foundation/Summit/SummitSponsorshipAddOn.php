@@ -12,16 +12,16 @@
  * limitations under the License.
  **/
 
+use App\Repositories\Summit\DoctrineSummitSponsorshipAddOnRepository;
 use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
-use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
  * @package models\summit
  */
 #[ORM\Table(name: 'SummitSponsorshipAddOn')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: DoctrineSummitSponsorshipAddOnRepository::class)]
 class SummitSponsorshipAddOn extends SilverstripeBaseModel
 {
     const Booth_Type = 'Booth';
@@ -54,6 +54,11 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
     #[ORM\ManyToOne(targetEntity: SummitSponsorship::class, fetch: 'EXTRA_LAZY', inversedBy: 'add_ons')]
     #[ORM\JoinColumn(name: 'SponsorshipID', referencedColumnName: 'ID')]
     protected $sponsorship;
+
+    public static function getMetadata(): array
+    {
+        return self::ValidTypes;
+    }
 
     public function getType(): string
     {
@@ -88,5 +93,10 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
     public function setSponsorship(SummitSponsorship $sponsorship): void
     {
         $this->sponsorship = $sponsorship;
+    }
+
+    public function clearSponsorship(): void
+    {
+        $this->sponsorship = null;
     }
 }

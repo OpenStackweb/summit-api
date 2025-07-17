@@ -23,7 +23,7 @@ use Doctrine\ORM\Query\SqlWalker;
 class ReviewStatus extends FunctionNode
 {
     public $activityId;
-    public function getSql(SqlWalker $sqlWalker)
+    public function getSql(SqlWalker $sqlWalker): string
     {
         return sprintf(
             'REVIEW_STATUS(%s)',

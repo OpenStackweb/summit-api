@@ -196,9 +196,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'custom_datetime_functions' => [
-        'DATEADD'  => DoctrineExtensions\Query\Mysql\DateAdd::class,
-        'DATEDIFF' => DoctrineExtensions\Query\Mysql\DateDiff::class,
-        'UTC_TIMESTAMP' => \App\Models\Utils\UTCTimestamp::class,
+        'DATEADD'           => DoctrineExtensions\Query\Mysql\DateAdd::class,
+        'DATEDIFF'          => DoctrineExtensions\Query\Mysql\DateDiff::class,
+        'UTC_TIMESTAMP'     => DoctrineExtensions\Query\Mysql\UtcTimestamp::class,
         'DATE'              =>  DoctrineExtensions\Query\Mysql\Date::class,
         'DATE_FORMAT'       => DoctrineExtensions\Query\Mysql\DateFormat::class,
         'DATESUB'           => DoctrineExtensions\Query\Mysql\DateSub::class,

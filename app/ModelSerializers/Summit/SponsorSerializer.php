@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Member;
 use models\summit\Sponsor;
+use models\summit\Summit;
 
 /**
  * Class SponsorSerializer
@@ -50,6 +52,49 @@ final class SponsorSerializer extends SilverStripeSerializer
         'extra_questions',
         'members',
     ];
+
+    /**
+     * @param Summit|null $summit
+     * @param Sponsor $sponsor
+     * @param Member $current_member
+     * @return bool
+     */
+    private static function isQREncKeyFieldAllowed(?Summit $summit, Sponsor $sponsor,Member $current_member, ):bool {
+        $is_member_authz = $current_member->isSponsorUser() || $current_member->isAdmin();
+        Log::debug
+        (
+            sprintf
+            (
+                "SponsorSerializer::isQREncKeyFieldAllowed summit %s sponsor %s current member %s(%s) is_member_authz %b.",
+                is_null($summit) ? 'N/A': $summit->getId(),
+                $sponsor->getId(),
+                $current_member->getEmail(),
+                $current_member->getId(),
+                $is_member_authz
+            )
+        );
+
+
+        $res = $is_member_authz &&
+            ( (!is_null($summit) && $current_member->isSummitAllowed($summit))
+        || $current_member->hasSponsorMembershipsFor($sponsor->getSummit(), $sponsor) );
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SponsorSerializer::isQREncKeyFieldAllowed summit %s sponsor %s current member %s(%s) is_member_authz %b res %b.",
+                is_null($summit) ? 'N/A': $summit->getId(),
+                $sponsor->getId(),
+                $current_member->getEmail(),
+                $current_member->getId(),
+                $is_member_authz,
+                $res
+            )
+        );
+        return $res;
+
+    }
 
     /**
      * @param null $expand
@@ -101,10 +146,7 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'badge_qr_prefix',
                                 'qr_registry_field_delimiter'
                             ];
-                            if ($current_member instanceof Member &&
-                                ( $current_member->isSponsorUser() || $current_member->isAdmin() ) &&
-                                ((!is_null($summit) && $current_member->isSummitAllowed($summit))
-                                    || $current_member->hasSponsorMembershipsFor($sponsor->getSummit(), $sponsor))) {
+                            if ($current_member instanceof Member && self::isQREncKeyFieldAllowed($summit, $sponsor, $current_member)) {
                                 // this field is only for admin and sponsor users
                                 $serializer_type = SerializerRegistry::SerializerType_Private;
                                 $fields[] = 'qr_codes_enc_key';

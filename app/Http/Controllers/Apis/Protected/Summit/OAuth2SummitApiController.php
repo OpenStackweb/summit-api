@@ -16,9 +16,11 @@ use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\IStatsConstants;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Utils\FilterUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -32,18 +34,32 @@ use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SummitQREncKeySerializer;
 use services\model\ISummitService;
-use Symfony\Component\Serializer\Serializer;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
 use utils\PagingInfo;
+use OpenApi\Attributes as OA;
 
-/**
- * Class OAuth2SummitApiController
- * @package App\Http\Controllers
- */
+#[
+    OA\Info(version: "1.0.0", description: "Summit API", title: "Summit API Documentation"),
+    OA\Server(url: L5_SWAGGER_CONST_HOST, description: "server"),
+    OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'summit_badges_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadBadgeScanValidate => 'Validate Badge Scan',
+                ],
+            ),
+        ],
+    )
+]
 final class OAuth2SummitApiController extends OAuth2ProtectedController
 {
 
@@ -1000,11 +1016,85 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge
-     * @return mixed
-     */
+
+    #[OA\Get(
+        path: "/api/v1/summits/{summit_id}/badge/{badge}/validate",
+        summary: 'Validate Scanned Badges',
+        operationId: 'validateBadge',
+        tags: ['Badges'],
+        x: [
+            ' x-required-groups' => [ IGroup::SponsorExternalUsers,
+                                     IGroup::SuperAdmins,
+                                     IGroup::Administrators
+            ]
+        ],
+        security: [['summit_badges_oauth2' => [
+            SummitScopes::ReadBadgeScanValidate
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'RAW Badge QR scan encoded on BASE 64'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "badge validation success",
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'id',
+                            type: 'integer',
+                        ),
+                        new OA\Property(
+                            property: 'features',
+                            type: 'array',
+                            items: new OA\Items(
+                                type: 'object',
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer'),
+                                    new OA\Property(property: 'name', type: 'string'),
+                                    new OA\Property(property: 'description', type: 'string'),
+                                ]
+                            )
+                        ),
+                        new OA\Property(
+                            property: 'ticket',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'number', type: 'string'),
+                                new OA\Property(
+                                    property: 'owner',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'first_name', type: 'string'),
+                                        new OA\Property(property: 'last_name', type: 'string'),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
     public function validateBadge($summit_id, $badge) {
         return $this->processRequest(function () use ($summit_id, $badge) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);

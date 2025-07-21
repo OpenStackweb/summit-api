@@ -63,19 +63,19 @@ final class SummitPushNotificationSerializer extends PushNotificationMessageSeri
                 $relation = trim($relation);
                 switch ($relation) {
                     case 'event': {
-                        if($notification->getChannel() != SummitPushNotificationChannel::Event) continue;
+                        if($notification->getChannel() != SummitPushNotificationChannel::Event) break;
                             unset($values['event_id']);
                             $values['event'] = SerializerRegistry::getInstance()->getSerializer($notification->getSummitEvent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                         break;
                     case 'group': {
-                        if($notification->getChannel() != SummitPushNotificationChannel::Group) continue;
+                        if($notification->getChannel() != SummitPushNotificationChannel::Group) break;
                         unset($values['group_id']);
                         $values['group'] = SerializerRegistry::getInstance()->getSerializer($notification->getGroup())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                         break;
                     case 'recipients': {
-                        if($notification->getChannel() != SummitPushNotificationChannel::Members) continue;
+                        if($notification->getChannel() != SummitPushNotificationChannel::Members) break;
                         $values['recipients'] = [];
                         foreach ($notification->getRecipients() as $recipient)
                             $values['recipients'][] = SerializerRegistry::getInstance()->getSerializer($recipient)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));

@@ -188,7 +188,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        URL::forceScheme('https');
+        if (app()->environment('production') || app()->environment('dev')  ) {
+            URL::forceScheme('https');
+        }
 
         $logger = Log::getLogger();
         foreach ($logger->getHandlers() as $handler) {

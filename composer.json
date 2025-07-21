@@ -20,6 +20,7 @@
         "behat/transliterator": "^1.2",
         "caseyamcl/guzzle_retry_middleware": "^2.6",
         "cocur/slugify": "^2.3",
+        "darkaonline/l5-swagger": "^9.0",
         "eluceo/ical": "^0.15.0",
         "ezyang/htmlpurifier": "v4.17.0",
         "firebase/php-jwt": "^6.8",
@@ -50,7 +51,8 @@
         "stripe/stripe-php": "^7.95.0",
         "symfony/yaml": "^7.1.1",
         "tecnickcom/tcpdf": "^6.2",
-        "vladimir-yuldashev/laravel-queue-rabbitmq": "v14.2.0"
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "v14.2.0",
+        "zircote/swagger-php": "^5.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

@@ -53,6 +53,8 @@ final class SummitScopes
     const WriteBadgeScan = '%s/summits/badge-scans/write';
     const WriteMyBadgeScan = '%s/summits/badge-scans/write/me';
     const ReadBadgeScan = '%s/summits/badge-scans/read';
+
+    const ReadBadgeScanValidate = '%s/summits/badge-scans/validate';
     const ReadMyBadgeScan = '%s/summits/badge-scans/read/me';
     const WriteRegistrationData = '%s/summits/registration/write';
     const ReadPaymentProfiles = '%s/summits/payment-gateway-profiles/read';

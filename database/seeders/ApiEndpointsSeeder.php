@@ -8990,7 +8990,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge/{badge}/validate',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadBadgeScanValidate, $current_realm),
                 ],
                 'authz_groups' => [
                     IGroup::SponsorExternalUsers,

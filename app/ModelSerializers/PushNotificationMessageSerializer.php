@@ -53,13 +53,13 @@ class PushNotificationMessageSerializer extends SilverStripeSerializer
                 switch ($relation) {
 
                     case 'owner': {
-                         if(!$notification->hasOwner()) continue;
+                         if(!$notification->hasOwner()) break;
                          unset($values['owner_id']);
                          $values['owner'] = SerializerRegistry::getInstance()->getSerializer($notification->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                     case 'approved_by': {
-                        if(!$notification->hasApprovedBy()) continue;
+                        if(!$notification->hasApprovedBy()) break;
                         unset($values['approved_by_id']);
                         $values['approved_by'] = SerializerRegistry::getInstance()->getSerializer($notification->getApprovedBy())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }

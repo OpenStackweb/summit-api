@@ -138,6 +138,7 @@ class AccessTokenServiceStub implements IAccessTokenService
             ElectionScopes::WriteMyCandidateProfile,
             sprintf(SummitScopes::ReadAuditLogs, $url),
             sprintf(SummitScopes::ReadMyBadgeScan, $url),
+            sprintf(SummitScopes::ReadBadgeScanValidate, $url),
         );
 
         return AccessToken::createFromParams(
@@ -228,6 +229,7 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(CompanyScopes::Read, $url),
             sprintf(SponsoredProjectScope::Write, $url),
             sprintf(SponsoredProjectScope::Read, $url),
+            sprintf(SummitScopes::ReadBadgeScanValidate, $url),
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
             sprintf(SummitScopes::Allow2PresentationAttendeeVote, $url),

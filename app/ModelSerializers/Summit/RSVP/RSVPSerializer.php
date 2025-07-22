@@ -53,13 +53,13 @@ final class RSVPSerializer extends SilverStripeSerializer
                 $relation = trim($relation);
                 switch ($relation) {
                     case 'owner': {
-                        if(!$rsvp->hasOwner()) continue;
+                        if(!$rsvp->hasOwner()) break;
                         unset($values['owner_id']);
                         $values['owner'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                         break;
                     case 'event': {
-                        if(!$rsvp->hasEvent()) continue;
+                        if(!$rsvp->hasEvent()) break;
                         unset($values['event_id']);
                         $values['event'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getEvent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }

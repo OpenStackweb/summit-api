@@ -202,8 +202,10 @@ final class AES256GCM
      *
      * @return null|string
      */
-    public function __toString(): ?string
+    public function __toString(): string
     {
-        return $this->getData();
+        $res =  $this->getData();
+        if(is_null($res)) return  "";
+        return $res;
     }
 }

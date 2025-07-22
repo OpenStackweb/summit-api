@@ -1049,45 +1049,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
-                description: "badge validation success",
-                content: new OA\JsonContent(
-                    type: 'object',
-                    properties: [
-                        new OA\Property(
-                            property: 'id',
-                            type: 'integer',
-                        ),
-                        new OA\Property(
-                            property: 'features',
-                            type: 'array',
-                            items: new OA\Items(
-                                type: 'object',
-                                properties: [
-                                    new OA\Property(property: 'id', type: 'integer'),
-                                    new OA\Property(property: 'name', type: 'string'),
-                                    new OA\Property(property: 'description', type: 'string'),
-                                ]
-                            )
-                        ),
-                        new OA\Property(
-                            property: 'ticket',
-                            type: 'object',
-                            properties: [
-                                new OA\Property(property: 'id', type: 'integer'),
-                                new OA\Property(property: 'number', type: 'string'),
-                                new OA\Property(
-                                    property: 'owner',
-                                    type: 'object',
-                                    properties: [
-                                        new OA\Property(property: 'first_name', type: 'string'),
-                                        new OA\Property(property: 'last_name', type: 'string'),
-                                    ]
-                                ),
-                            ]
-                        ),
-                    ]
-                )
+                response: 200,
+                description: 'Badge validation success',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidateBadgeResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),

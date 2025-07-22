@@ -182,6 +182,13 @@ class AppServiceProvider extends ServiceProvider
         'name' => 'sometimes|string',
     ];
 
+    static $sponsorship_dto_fields = [
+        'type_id',
+    ];
+    static $sponsorship_validation_rules = [
+        'type_id' => 'required|integer',
+    ];
+
     /**
      * Bootstrap any application services.
      * @return void
@@ -407,6 +414,29 @@ class AppServiceProvider extends ServiceProvider
 
                     if ($validation->fails()) return false;
                 }
+            }
+            return true;
+        });
+
+        Validator::extend('sponsorship_dto_array', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('sponsorship_dto_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf
+                (
+                    "%s should be an array of sponsorship data {type_id : int}",
+                    $attribute);
+            });
+
+            if (!is_array($value)) return false;
+
+            foreach ($value as $element) {
+                foreach ($element as $key => $element_val) {
+                    if (!in_array($key, self::$sponsorship_dto_fields)) return false;
+                }
+
+                // Creates a Validator instance and validates the data.
+                $validation = Validator::make($element, self::$sponsorship_validation_rules);
+
+                if ($validation->fails()) return false;
             }
             return true;
         });

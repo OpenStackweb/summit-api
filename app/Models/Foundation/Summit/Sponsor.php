@@ -983,6 +983,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         return $sponsorship === false ? null : $sponsorship;
     }
 
+
     /**
      * @param SummitSponsorship $sponsorship
      * @throws ValidationException
@@ -991,7 +992,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         $sponsorship_type = $sponsorship->getType();
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('type', $sponsorship_type));
+        $criteria->where(Criteria::expr()->eq('type_id', $sponsorship_type->getId()));
         if ($this->sponsorships->matching($criteria)->count() > 0) {
             throw new ValidationException(
                 sprintf('Sponsor %s already has a sponsorship of the same type (%s).',
@@ -1020,7 +1021,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         if (is_null($this->sponsorships)) return;
         $this->sponsorships->clear();
-        $this->sponsorships = null;
+        $this->sponsorships = new ArrayCollection();
     }
 
     /**

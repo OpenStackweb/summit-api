@@ -4583,22 +4583,35 @@ final class SummitOrderService
      */
     public function processOrderReminder(SummitOrder $order): void
     {
-        $this->tx_service->transaction(function () use ($order) {
+        $res = $this->tx_service->transaction(function () use ($order) {
+
+            Log::debug(sprintf("SummitOrderService::processOrderReminder order %s", $order->getId()));
 
             $summit = $order->getSummit();
+
             if ($summit->isEnded()) {
                 Log::warning(sprintf("SummitOrderService::processOrderReminder - summit %s has ended already", $summit->getId()));
-                return;
+                return false;
             }
 
             if (!$order->isPaid()) {
                 Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s no need email reminder", $order->getId()));
-                return;
+                return false;
             }
 
             $needs_action = false;
 
             foreach ($order->getTickets() as $ticket) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processOrderReminder order %s checking ticket %s",
+                        $order->getId(),
+                        $ticket->getId()
+                    )
+                );
+
                 if (!$ticket->isActive()) {
                     Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s skipping ticket %s ( NOT ACTIVE ).", $order->getId(), $ticket->getId()));
                     continue;
@@ -4607,6 +4620,7 @@ final class SummitOrderService
                     $needs_action = true;
                     break;
                 }
+
                 $attendee = $ticket->getOwner();
                 $attendee->updateStatus();
                 if (!$attendee->isComplete()) {
@@ -4617,26 +4631,71 @@ final class SummitOrderService
 
             if (!$needs_action) {
                 Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s no need email reminder", $order->getId()));
-                return;
+                return false;
             }
 
-            $last_action_date = $order->getLastReminderEmailSentDate();
-            $summit = $order->getSummit();
+            // clone to avoid mutating the entity's field directly
+            $last_action_date = clone $order->getLastReminderEmailSentDate();
             $days_interval = $summit->getRegistrationReminderEmailDaysInterval();
 
-            if ($days_interval <= 0) return;
+            if ($days_interval <= 0) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processOrderReminder order %s summit %s has not days_interval set ",
+                        $order->getId(),
+                        $summit->getId()
+                    )
+                );
+                return false;
+            }
+
             $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
-            Log::debug(sprintf("SummitOrderService::processOrderReminder - last_action_date %s  utc_now %s", $last_action_date->format("Y-m-d H:i:s"), $utc_now->format("Y-m-d H:i:s")));
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::processOrderReminder order %s last_action_date %s  utc_now %s",
+                    $order->getId(),
+                    $last_action_date->format("Y-m-d H:i:s"),
+                    $utc_now->format("Y-m-d H:i:s")
+                )
+            );
+
             $last_action_date->add(new \DateInterval("P" . $days_interval . 'D'));
-            Log::debug(sprintf("SummitOrderService::processOrderReminder - last action date plus %s days %s  utc_now %s", $days_interval, $last_action_date->format("Y-m-d H:i:s"), $utc_now->format("Y-m-d H:i:s")));
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::processOrderReminder order %s last_action_date plus %s days %s utc_now %s",
+                    $order->getId(),
+                    $days_interval,
+                    $last_action_date->format("Y-m-d H:i:s"),
+                    $utc_now->format("Y-m-d H:i:s")
+                )
+            );
 
             if ($last_action_date <= $utc_now) {
-
-                $order->setLastReminderEmailSentDate($utc_now);
-                Log::debug(sprintf("SummitOrderService::processOrderReminder - sending reminder email for order %s", $order->getId()));
-                SummitOrderReminderEmail::dispatch($order);
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processOrderReminder order %s should send reminder email",
+                        $order->getId(),
+                    )
+                );
+                $order->updateLastReminderEmailSentDate();
+                return true;
             }
+            return false;
         });
+
+        if($res){
+            Log::debug(sprintf("SummitOrderService::processOrderReminder sending reminder email for order %s", $order->getId()));
+            SummitOrderReminderEmail::dispatch($order);
+        }
     }
 
     /**

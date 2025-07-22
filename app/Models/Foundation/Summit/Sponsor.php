@@ -983,4 +983,74 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         $this->lead_report_setting->clearSponsor();
         $this->lead_report_setting = null;
     }
+
+
+    /**
+     * @return SummitSponsorship[]
+     */
+    public function getSponsorships()
+    {
+        return $this->sponsorships;
+    }
+
+    /**
+     * @param int $sponsorship_id
+     * @return SummitSponsorship|null
+     */
+    public function getSponsorshipById(int $sponsorship_id): ?SummitSponsorship
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $sponsorship_id));
+        $sponsorship = $this->sponsorships->matching($criteria)->first();
+        return $sponsorship === false ? null : $sponsorship;
+    }
+
+
+    /**
+     * @param SummitSponsorship $sponsorship
+     * @throws ValidationException
+     */
+    public function addSponsorship(SummitSponsorship $sponsorship): void
+    {
+        $sponsorship_type = $sponsorship->getType();
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type_id', $sponsorship_type->getId()));
+        if ($this->sponsorships->matching($criteria)->count() > 0) {
+            throw new ValidationException(
+                sprintf('Sponsor %s already has a sponsorship of the same type (%s).',
+                    $this->id, $sponsorship_type->getId()));
+        }
+        $sponsorship->setSponsor($this);
+        $this->sponsorships->add($sponsorship);
+    }
+
+    /**
+     * @param SummitSponsorship $sponsorship
+     * @return void
+     */
+    public function removeSponsorship(SummitSponsorship $sponsorship): void
+    {
+        if (is_null($this->sponsorships)) return;
+        if (!$this->sponsorships->contains($sponsorship)) return;
+        $this->sponsorships->removeElement($sponsorship);
+        $sponsorship->clearSponsor();
+    }
+
+    /**
+     * @return void
+     */
+    public function clearSponsorships(): void
+    {
+        if (is_null($this->sponsorships)) return;
+        $this->sponsorships->clear();
+        $this->sponsorships = new ArrayCollection();
+    }
+
+    /**
+     * @return array
+     */
+    public function getSponsorshipTierNames(): array
+    {
+        return array_map(fn($sponsorship) => $sponsorship->getType()->getType()->getName(), $this->sponsorships);
+    }
 }

@@ -112,6 +112,8 @@ jobs:
           vendor/bin/phpunit --filter "OAuth2EventTypesApiTest" --log-junit results_event_types_api_test.xml
           echo "running model unit tests"
           vendor/bin/phpunit tests/Unit/Entities/ --log-junit results_model_unit_tests.xml
+          echo "running SummitOrderService tests"
+          vendor/bin/phpunit --filter "SummitOrderServiceTest" -log-junit results_summitorder_service_unit_tests.xml
       - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
         uses: actions/upload-artifact@v4
         with:

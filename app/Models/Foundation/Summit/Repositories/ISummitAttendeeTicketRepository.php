@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use models\utils\IBaseRepository;
+use utils\PagingInfo;
+
 /**
  * Interface ISummitAttendeeTicketRepository
  * @package models\summit
@@ -84,5 +86,6 @@ interface ISummitAttendeeTicketRepository extends IBaseRepository
      */
     public function getByExternalAttendeeId(Summit $summit, string $external_attendee_id):?SummitAttendeeTicket;
 
+    public function getAllTicketsIdsByOrder(int $order_id, PagingInfo $paging_info): array;
 
 }

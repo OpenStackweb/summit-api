@@ -310,6 +310,7 @@ trait InsertSummitTestData
         self::$summit->setActive(true);
         self::$summit->setAvailableOnApi(true);
         self::$summit->setExternalSummitId("123456");
+        self::$summit->setSupportEmail("summit@test.com");
         // set feed type (sched)
         self::$summit->setApiFeedUrl("");
         self::$summit->setApiFeedKey("");
@@ -469,17 +470,24 @@ trait InsertSummitTestData
 
         if (self::$defaultMember != null) {
             $attendee = new SummitAttendee();
+
             $attendee->setMember(self::$defaultMember);
             $attendee->setEmail(self::$defaultMember->getEmail());
             $attendee->setFirstName(self::$defaultMember->getFirstName());
-            $attendee->setSurname(self::$defaultMember->getLastName());
+            $attendee->setSurname(self::$defaultMember->getLastName());$reminder_set_date = new \DateTime('now', new \DateTimeZone('UTC'));
+            $reminder_set_date->sub(new \DateInterval("P20D"));
+            $attendee->setLastReminderEmailSentDate($reminder_set_date);
 
             $summitAttendeeBadge = new SummitAttendeeBadge();
             $summitAttendeeBadge->setType(self::$default_badge_type);
 
             for($i = 0; $i < 5; $i++) {
                 $order = new SummitOrder();
+                $reminder_set_date = new \DateTime('now', new \DateTimeZone('UTC'));
+                $reminder_set_date->sub(new \DateInterval("P20D"));
+                $order->setLastReminderEmailSentDate($reminder_set_date);
                 $order->setOwner(self::$defaultMember);
+
                 $ticket = new SummitAttendeeTicket();
                 $ticket->setTicketType(self::$default_ticket_type);
                 $ticket->setBadge($summitAttendeeBadge);
@@ -493,6 +501,15 @@ trait InsertSummitTestData
 
                 self::$summit->addAttendee($attendee);
                 self::$summit->addOrder($order);
+
+                for ($j = 0; $j < 5; $j++) {
+                    $unassigned_ticket = new SummitAttendeeTicket();
+                    $unassigned_ticket->setTicketType(self::$default_ticket_type);
+                    $unassigned_ticket->activate();
+                    $order->addTicket($unassigned_ticket);
+                    $unassigned_ticket->generateNumber();
+                    $unassigned_ticket->generateQRCode();
+                }
                 $order->setPaid();
                 $order->generateNumber();
 

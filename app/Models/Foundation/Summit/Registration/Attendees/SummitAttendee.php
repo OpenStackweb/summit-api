@@ -927,12 +927,13 @@ SQL;
         return $last_action_date;
     }
 
-    /**
-     * @param \DateTime $last_reminder_email_sent_date
-     */
-    public function setLastReminderEmailSentDate(\DateTime $last_reminder_email_sent_date): void
+
+    public function updateLastReminderEmailSentDate(): void
     {
-        $this->last_reminder_email_sent_date = $last_reminder_email_sent_date;
+        // This avoids cases where the same object instance (or nearly same timestamp) is mistaken by Doctrine as "unchanged".
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        // force value to differ from any cached clone in memory
+        $this->last_reminder_email_sent_date = \DateTime::createFromFormat('Y-m-d H:i:s', $now->format('Y-m-d H:i:s'));
     }
 
     public function getExternalId(): ?string
@@ -1576,5 +1577,9 @@ SQL;
             )
         );
         return false;
+    }
+
+    public function setLastReminderEmailSentDate(?\DateTime $last_reminder_email_sent_date): void{
+        $this->last_reminder_email_sent_date = $last_reminder_email_sent_date;
     }
 }

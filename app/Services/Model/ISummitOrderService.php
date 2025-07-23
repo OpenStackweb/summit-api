@@ -336,22 +336,25 @@ interface ISummitOrderService extends IProcessPaymentService
     public function processAllOrderReminder():void;
 
     /**
-     * @param SummitOrder $order
+     * @param int $order_id
      * @throws \Exception
+     * @return bool
      */
-    public function processOrderReminder(SummitOrder $order): void;
+    public function processOrderReminder(int $order_id): bool;
 
     /**
-     * @param SummitAttendeeTicket $ticket
+     * @param int $ticket_id
      * @throws \Exception
+     * @return bool
      */
-    public function processTicketReminder(SummitAttendeeTicket $ticket):void;
+    public function processTicketReminder(int $ticket_id):bool;
 
     /**
      * @param Summit $summit
      * @throws \Exception
+     * @return int
      */
-    public function processSummitOrderReminders(Summit $summit):void;
+    public function processSummitOrderReminders(Summit $summit):array;
 
     /**
      * @param Summit $summit

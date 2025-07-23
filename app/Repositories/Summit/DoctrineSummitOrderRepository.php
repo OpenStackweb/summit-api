@@ -405,4 +405,30 @@ SQL;
             Log::error($ex);
         }
     }
+
+    public function getAllOrderIdsThatNeedsEmailActionReminder(Summit $summit, PagingInfo $paging_info): array
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->join("e.tickets","t")
+            ->join("e.summit","s")
+            ->leftJoin("t.owner","o")
+            ->where('e.status = :order_status')
+            ->andWhere('s.id = :summit_id')
+            ->andWhere("o is null OR o.status = :attendee_status");
+
+        $query->setParameter("order_status", IOrderConstants::PaidStatus);
+        $query->setParameter("summit_id", $summit->getId());
+        $query->setParameter("attendee_status", SummitAttendee::StatusIncomplete);
+
+        $query= $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
 }

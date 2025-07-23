@@ -90,7 +90,7 @@ class Kernel extends ConsoleKernel
 
         // reminder emails
 
-        $schedule->command('summit:registration-order-reminder-action-email')->everyThirtyMinutes()->timezone(new \DateTimeZone('UTC'))->withoutOverlapping()->onOneServer();
+        $schedule->command('summit:registration-order-reminder-action-email')->dailyAt("04:00")->timezone(new \DateTimeZone('UTC'))->withoutOverlapping()->onOneServer();
 
         if ($env == 'production') {
             // FNTECH production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)

@@ -1126,6 +1126,9 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $last_action_date;
     }
 
+    public function setLastReminderEmailSentDate(?\DateTime $last_reminder_email_sent_date): void{
+        $this->last_reminder_email_sent_date = $last_reminder_email_sent_date;
+    }
 
     public function updateLastReminderEmailSentDate(): void
     {

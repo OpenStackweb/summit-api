@@ -13,6 +13,7 @@
  **/
 use Database\Seeders\ConfigSeeder;
 use Database\Seeders\MainDataSeeder;
+use Database\Seeders\SummitEmailFlowTypeSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
@@ -67,5 +68,6 @@ abstract class BrowserKitTestCase extends BaseTestCase {
 
         $this->seed(ConfigSeeder::class);
         $this->seed(MainDataSeeder::class);
+        $this->seed(SummitEmailFlowTypeSeeder::class);
     }
 }

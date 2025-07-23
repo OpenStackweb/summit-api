@@ -1372,4 +1372,5 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
        if(!$allow_delegation) return false;
        return $this->isPaid() && $this->isActive();
     }
+
 }

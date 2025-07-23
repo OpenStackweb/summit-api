@@ -27,13 +27,10 @@ use App\Services\Model\ISummitOrderService;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Model\SummitOrderService;
 use App\Services\Utils\ILockManagerService;
-use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Queue;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
 use Mockery;
-use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\ITagRepository;
@@ -46,7 +43,6 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitOrder;
-use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 
 /**
@@ -87,133 +83,6 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         Queue::assertPushed(SummitOrderReminderEmail::class);
         Queue::assertPushed(SummitTicketReminderEmail::class);
     }
-
-/*
-    todo : fix these tests
-
-    public function testAutoAssignPrePaidTicket() {
-
-        $order = self::$summit->getOrders()[0];
-        $owner = $order->getOwner();
-
-        $service = App::make(ISummitOrderService::class);
-
-        $payload = [
-            "owner_email"      => $owner->getEmail(),
-            "owner_first_name" => $owner->getFirstName(),
-            "owner_last_name"  => $owner->getLastName(),
-            "owner_company"    => $owner->getCompany(),
-            "tickets" => [
-                [
-                    "type_id"    => self::$summit->getTicketTypes()[0]->getId(),
-                    "promo_code" => self::$default_prepaid_discount_code->getCode()
-                ],
-            ]
-        ];
-
-        $order = $service->reserve($owner, self::$summit, $payload);
-        $this->assertNotNull($order);
-    }
-
-    public function testAutoAssignPrePaidTicketWithoutAvailableTickets() {
-
-        $order = self::$summit->getOrders()[0];
-        $owner = $order->getOwner();
-
-        self::$default_prepaid_discount_code->clearTickets();
-        self::$em->persist(self::$default_prepaid_discount_code);
-        self::$em->flush();
-
-        $service = App::make(ISummitOrderService::class);
-
-        $payload = [
-            "owner_email"      => $owner->getEmail(),
-            "owner_first_name" => $owner->getFirstName(),
-            "owner_last_name"  => $owner->getLastName(),
-            "owner_company"    => $owner->getCompany(),
-            "tickets" => [
-                [
-                    "type_id"    => self::$summit->getTicketTypes()[0]->getId(),
-                    "promo_code" => self::$default_prepaid_discount_code->getCode()
-                ],
-            ]
-        ];
-
-        try {
-            $service->reserve($owner, self::$summit, $payload);
-        } catch (Exception $ex) {
-            $this->assertInstanceOf(ValidationException::class, $ex);
-            $this->assertTrue(str_starts_with($ex->getMessage(), 'No more available PrePaid Tickets for Promo Code'));
-        }
-    }
-
-    public function testAutoAssignDifferentPrePaidTicketsUntilEmpty() {
-
-        $summit_repository = EntityManager::getRepository(Summit::class);
-        $pc_repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
-        self::$summit = $summit_repository->find(3800);
-        self::$default_prepaid_discount_code = $pc_repository->find(488);
-
-
-
-        $order1 = self::$summit->getOrders()[0];
-        $ticket1 = $order1->getTickets()[0];
-        $owner1 = $order1->getOwner();
-        $ticket_type1 = $ticket1->getTicketType();
-
-        $service = App::make(ISummitOrderService::class);
-
-        $payload1 = [
-            "owner_email"      => $owner1->getEmail(),
-            "owner_first_name" => $owner1->getFirstName(),
-            "owner_last_name"  => $owner1->getLastName(),
-            "owner_company"    => $owner1->getCompany(),
-            "tickets" => [
-                [
-                    "type_id"    => $ticket_type1->getId(),
-                    "promo_code" => self::$default_prepaid_discount_code->getCode()
-                ],
-            ]
-        ];
-
-        $order2 = self::$summit->getOrders()[1];
-        $ticket2 = $order2->getTickets()[0];
-        $owner2 = $order2->getOwner();
-        $ticket_type2 = $ticket2->getTicketType();
-
-        $payload2 = [
-            "owner_email"      => $owner2->getEmail(),
-            "owner_first_name" => $owner2->getFirstName(),
-            "owner_last_name"  => $owner2->getLastName(),
-            "owner_company"    => $owner2->getCompany(),
-            "tickets" => [
-                [
-                    "type_id"    => $ticket_type2->getId(),
-                    "promo_code" => self::$default_prepaid_discount_code->getCode()
-                ],
-            ]
-        ];
-
-        self::$default_prepaid_discount_code->clearTickets();
-        self::$em->persist(self::$default_prepaid_discount_code);
-
-        self::$default_prepaid_discount_code->addTicket($ticket1);
-        self::$default_prepaid_discount_code->addTicket($ticket2);
-        self::$em->flush();
-
-        try {
-            $order1 = $service->reserve($owner1, self::$summit, $payload1);
-            $order2 = $service->reserve($owner2, self::$summit, $payload2);
-
-            $this->assertTrue($order1->getTickets()->first()->getId() != $order2->getTickets()->first()->getId());
-
-            $service->reserve($owner1, self::$summit, $payload1);
-        } catch (Exception $ex) {
-            $this->assertInstanceOf(ValidationException::class, $ex);
-            $this->assertTrue(str_starts_with($ex->getMessage(), 'No more available PrePaid Tickets for Promo Code'));
-        }
-    }
-*/
 
     public function testProcessSummitOrderRemindersReturnsEmptyIfSummitEnded()
     {
@@ -322,7 +191,6 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         $ticket2->shouldReceive('isPaid')->andReturn(true);
         $ticket2->shouldReceive('hasTicketType')->andReturn(true);
         $ticket2->shouldReceive('getOwner')->andReturn(null);
-        $ticket2->shouldReceive('generateHash')->once();
         $ticket2->shouldReceive('getOrder')->andReturn($order);
         $ticket2->shouldReceive("getNumber")->andReturn("TICKET_NUMBER2");
         $ticket2->shouldReceive("getTicketType")->andReturn($ticket_type);
@@ -339,8 +207,9 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
 
         $order_repository->shouldReceive('getAllOrderIdsThatNeedsEmailActionReminder')->andReturn([100], []);
         $order_repository->shouldReceive('getById')->andReturn($order);
-        $ticket_repository->shouldReceive('getAllTicketsIdsByOrder')->andReturn([200], [201]);
-        $ticket_repository->shouldReceive('getById')->andReturn($ticket);
+        $ticket_repository->shouldReceive('getAllTicketsIdsByOrder')->andReturn([200, 201], []);
+        $ticket_repository->shouldReceive('getById')->with(200)->andReturn($ticket);
+        $ticket_repository->shouldReceive('getById')->with(201)->andReturn($ticket2);
         $summit_repository->shouldReceive("getByIdRefreshed")->andReturn($summit);
         $this->app->instance(ISummitRepository::class, $summit_repository);
 
@@ -374,4 +243,129 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         Queue::assertPushed(SummitTicketReminderEmail::class);
     }
 
+    public function testAutoAssignPrePaidTicket() {
+
+        $this->markTestSkipped('broken test.');
+        $order = self::$summit->getOrders()[0];
+        $owner = $order->getOwner();
+
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email"      => $owner->getEmail(),
+            "owner_first_name" => $owner->getFirstName(),
+            "owner_last_name"  => $owner->getLastName(),
+            "owner_company"    => $owner->getCompany(),
+            "tickets" => [
+                [
+                    "type_id"    => self::$summit->getTicketTypes()[0]->getId(),
+                    "promo_code" => self::$default_prepaid_discount_code->getCode()
+                ],
+            ]
+        ];
+
+        $order = $service->reserve($owner, self::$summit, $payload);
+        $this->assertNotNull($order);
+    }
+
+    public function testAutoAssignPrePaidTicketWithoutAvailableTickets() {
+
+        $this->markTestSkipped('broken test.');
+        $order = self::$summit->getOrders()[0];
+        $owner = $order->getOwner();
+
+        self::$default_prepaid_discount_code->clearTickets();
+        self::$em->persist(self::$default_prepaid_discount_code);
+        self::$em->flush();
+
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email"      => $owner->getEmail(),
+            "owner_first_name" => $owner->getFirstName(),
+            "owner_last_name"  => $owner->getLastName(),
+            "owner_company"    => $owner->getCompany(),
+            "tickets" => [
+                [
+                    "type_id"    => self::$summit->getTicketTypes()[0]->getId(),
+                    "promo_code" => self::$default_prepaid_discount_code->getCode()
+                ],
+            ]
+        ];
+
+        try {
+            $service->reserve($owner, self::$summit, $payload);
+        } catch (Exception $ex) {
+            $this->assertInstanceOf(ValidationException::class, $ex);
+            $this->assertTrue(str_starts_with($ex->getMessage(), 'No more available PrePaid Tickets for Promo Code'));
+        }
+    }
+
+    public function testAutoAssignDifferentPrePaidTicketsUntilEmpty() {
+
+        $this->markTestSkipped('broken test.');
+        $summit_repository = EntityManager::getRepository(Summit::class);
+        $pc_repository = EntityManager::getRepository(SummitRegistrationPromoCode::class);
+        self::$summit = $summit_repository->find(3800);
+        self::$default_prepaid_discount_code = $pc_repository->find(488);
+
+
+
+        $order1 = self::$summit->getOrders()[0];
+        $ticket1 = $order1->getTickets()[0];
+        $owner1 = $order1->getOwner();
+        $ticket_type1 = $ticket1->getTicketType();
+
+        $service = App::make(ISummitOrderService::class);
+
+        $payload1 = [
+            "owner_email"      => $owner1->getEmail(),
+            "owner_first_name" => $owner1->getFirstName(),
+            "owner_last_name"  => $owner1->getLastName(),
+            "owner_company"    => $owner1->getCompany(),
+            "tickets" => [
+                [
+                    "type_id"    => $ticket_type1->getId(),
+                    "promo_code" => self::$default_prepaid_discount_code->getCode()
+                ],
+            ]
+        ];
+
+        $order2 = self::$summit->getOrders()[1];
+        $ticket2 = $order2->getTickets()[0];
+        $owner2 = $order2->getOwner();
+        $ticket_type2 = $ticket2->getTicketType();
+
+        $payload2 = [
+            "owner_email"      => $owner2->getEmail(),
+            "owner_first_name" => $owner2->getFirstName(),
+            "owner_last_name"  => $owner2->getLastName(),
+            "owner_company"    => $owner2->getCompany(),
+            "tickets" => [
+                [
+                    "type_id"    => $ticket_type2->getId(),
+                    "promo_code" => self::$default_prepaid_discount_code->getCode()
+                ],
+            ]
+        ];
+
+        self::$default_prepaid_discount_code->clearTickets();
+        self::$em->persist(self::$default_prepaid_discount_code);
+
+        self::$default_prepaid_discount_code->addTicket($ticket1);
+        self::$default_prepaid_discount_code->addTicket($ticket2);
+        self::$em->flush();
+
+        try {
+            $order1 = $service->reserve($owner1, self::$summit, $payload1);
+            $order2 = $service->reserve($owner2, self::$summit, $payload2);
+
+            $this->assertTrue($order1->getTickets()->first()->getId() != $order2->getTickets()->first()->getId());
+
+            $service->reserve($owner1, self::$summit, $payload1);
+        } catch (Exception $ex) {
+            $this->assertInstanceOf(ValidationException::class, $ex);
+            $this->assertTrue(str_starts_with($ex->getMessage(), 'No more available PrePaid Tickets for Promo Code'));
+        }
+    }
 }

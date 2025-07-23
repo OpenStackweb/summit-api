@@ -29,6 +29,7 @@ use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
+use utils\PagingInfo;
 
 /**
  * Class DoctrineSummitAttendeeTicketRepository
@@ -562,4 +563,22 @@ SQL,
         return $query;
     }
 
+    public function getAllTicketsIdsByOrder(int $order_id, PagingInfo $paging_info): array
+    {
+
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->join("e.order", "o")
+            ->where('o.id = :order_id')
+            ->setParameter("order_id", $order_id);
+
+        $query= $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
 }

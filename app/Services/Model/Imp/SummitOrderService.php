@@ -4521,82 +4521,123 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @throws \Exception
+     * @return array
      */
-    public function processSummitOrderReminders(Summit $summit): void
+    public function processSummitOrderReminders(Summit $summit): array
     {
 
         Log::debug(sprintf("SummitOrderService::processSummitOrderReminders summit %s", $summit->getId()));
 
         if ($summit->isEnded()) {
             Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s has ended already", $summit->getId()));
-            return;
+            return [0,0];
         }
 
         $page = 1;
-        $has_more_items = true;
-
+        $qty_order_sent = 0;
+        $qty_ticket_sent = 0;
         do {
             // done in this way to avoid db lock contention
 
-            $orders = $this->tx_service->transaction(function () use ($summit, $page) {
-                return $this->order_repository->getAllOrderThatNeedsEmailActionReminder($summit, new PagingInfo($page, 100));
+            $orders_ids = $this->tx_service->transaction(function () use ($summit, $page) {
+                return $this->order_repository->getAllOrderIdsThatNeedsEmailActionReminder($summit, new PagingInfo($page, 100));
             });
 
-            $has_more_items = $orders->hasMoreItems();
+            $has_more_items = count($orders_ids) > 0;
 
-            foreach ($orders->getItems() as $order) {
-                if (!$order instanceof SummitOrder) continue;
-                Log::debug(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s", $summit->getId(), $order->getId()));
-
-                $order_tickets = $order->getTickets();
+            foreach ($orders_ids as $order_id) {
+                Log::debug(sprintf("SummitOrderService::processSummitOrderReminders processing summit %s order %s", $summit->getId(), $order_id));
 
                 try {
-                    //specific case check: don't send order reminder if there is one ticket per order and is the same owner
-                    if ($order_tickets->count() != 1 || $order_tickets->first()->getOwnerEmail() !== $order->getOwnerEmail()) {
-                        $this->processOrderReminder($order);
-                    }
+                    if($this->processOrderReminder($order_id))
+                        ++$qty_order_sent;
                 } catch (\Exception $ex) {
                     Log::error($ex);
                 }
 
-                foreach ($order_tickets as $ticket) {
-                    try {
-                        if (!$ticket->isActive()) {
-                            Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s skipping ticket %s (not active)", $summit->getId(), $order->getId(), $ticket->getId()));
-                            continue;
+                $tickets_page = 1;
+                do {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::processSummitOrderReminders processing ticket page %s for order %s",
+                            $tickets_page,
+                            $order_id
+                        )
+                    );
+
+                    $tickets_ids = $this->tx_service->transaction(function () use ($order_id, $tickets_page) {
+                        return $this->ticket_repository->getAllTicketsIdsByOrder($order_id, new PagingInfo($tickets_page, 100));
+                    });
+
+                    $has_more_tickets_items = count($tickets_ids) > 0;
+
+                    foreach ($tickets_ids as $ticket_id) {
+                        try {
+                            if($this->processTicketReminder($ticket_id))
+                                ++$qty_ticket_sent;
+                        } catch (\Exception $ex) {
+                            Log::error($ex);
                         }
-                        $this->processTicketReminder($ticket);
-                    } catch (\Exception $ex) {
-                        Log::error($ex);
                     }
-                }
+
+                    ++$tickets_page;
+
+                } while ($has_more_tickets_items);
+
             }
 
             ++$page;
 
         } while ($has_more_items);
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::processSummitOrderReminders summit %s order emails sent %s ticket emails sent %s",
+                $summit->getId(),
+                $qty_order_sent,
+                $qty_ticket_sent
+            )
+        );
+
+        return [$qty_order_sent, $qty_ticket_sent];
     }
 
     /**
-     * @param SummitOrder $order
+     * @param int $order_id
      * @throws \Exception
+     * @return bool
      */
-    public function processOrderReminder(SummitOrder $order): void
+    public function processOrderReminder(int $order_id): bool
     {
-        $res = $this->tx_service->transaction(function () use ($order) {
+        $order = $this->tx_service->transaction(function () use ($order_id) {
 
-            Log::debug(sprintf("SummitOrderService::processOrderReminder order %s", $order->getId()));
+            Log::debug(sprintf("SummitOrderService::processOrderReminder order %s", $order_id));
+
+            $order = $this->order_repository->getById($order_id);
+            if(!$order instanceof SummitOrder) {
+                return  null;
+            }
+            $order_tickets = $order->getTickets();
+            //specific case check: don't send order reminder if there is one ticket per order and is the same owner
+            if ($order_tickets->count() == 1 && $order_tickets->first()->getOwnerEmail() === $order->getOwnerEmail()) {
+                Log::debug(sprintf("SummitOrderService::processOrderReminder skipping order %s bc it has 1 ticket and ticket owner == order owner", $order_id));
+                return null;
+            }
 
             $summit = $order->getSummit();
 
             if ($summit->isEnded()) {
-                Log::warning(sprintf("SummitOrderService::processOrderReminder - summit %s has ended already", $summit->getId()));
-                return false;
+                Log::warning(sprintf("SummitOrderService::processOrderReminder summit %s has ended already", $summit->getId()));
+                return null;
             }
 
             if (!$order->isPaid()) {
-                Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s no need email reminder", $order->getId()));
-                return false;
+                Log::warning(sprintf("SummitOrderService::processOrderReminder order %s no need email reminder", $order->getId()));
+                return null;
             }
 
             $needs_action = false;
@@ -4613,25 +4654,19 @@ final class SummitOrderService
                 );
 
                 if (!$ticket->isActive()) {
-                    Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s skipping ticket %s ( NOT ACTIVE ).", $order->getId(), $ticket->getId()));
+                    Log::warning(sprintf("SummitOrderService::processOrderReminder order %s skipping ticket %s ( NOT ACTIVE ).", $order->getId(), $ticket->getId()));
                     continue;
                 }
-                if (!$ticket->hasOwner()) {
-                    $needs_action = true;
-                    break;
-                }
 
-                $attendee = $ticket->getOwner();
-                $attendee->updateStatus();
-                if (!$attendee->isComplete()) {
+                if (!$ticket->hasOwner()) {
                     $needs_action = true;
                     break;
                 }
             }
 
             if (!$needs_action) {
-                Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s no need email reminder", $order->getId()));
-                return false;
+                Log::warning(sprintf("SummitOrderService::processOrderReminder order %s no need email reminder", $order->getId()));
+                return null;
             }
 
             // clone to avoid mutating the entity's field directly
@@ -4648,7 +4683,7 @@ final class SummitOrderService
                         $summit->getId()
                     )
                 );
-                return false;
+                return null;
             }
 
             $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
@@ -4687,71 +4722,125 @@ final class SummitOrderService
                     )
                 );
                 $order->updateLastReminderEmailSentDate();
-                return true;
+                return $order;
             }
-            return false;
+            return null;
         });
 
-        if($res){
+        if(!is_null($order)){
             Log::debug(sprintf("SummitOrderService::processOrderReminder sending reminder email for order %s", $order->getId()));
             SummitOrderReminderEmail::dispatch($order);
+            return true;
         }
+        return false;
     }
 
     /**
-     * @param SummitAttendeeTicket $ticket
+     * @param int $ticket_id
      * @throws \Exception
+     * @return bool
      */
-    public function processTicketReminder(SummitAttendeeTicket $ticket): void
+    public function processTicketReminder(int $ticket_id): bool
     {
-        $this->tx_service->transaction(function () use ($ticket) {
+        $ticket = $this->tx_service->transaction(function () use ($ticket_id) {
+
+            Log::debug(sprintf("SummitOrderService::processTicketReminder processing ticket %s", $ticket_id));
+
+            $ticket = $this->ticket_repository->getById($ticket_id);
+            if(!$ticket instanceof SummitAttendeeTicket) return null;
+
+            if (!$ticket->isActive()) {
+                Log::warning(sprintf("SummitOrderService::processTicketReminder %s is not active.", $ticket_id));
+                return null;
+            }
 
             if (!$ticket->hasOwner()) {
                 Log::warning(sprintf("SummitOrderService::processTicketReminder ticket %s no need email reminder ( no owner )", $ticket->getId()));
-                return;
+                return null;
             }
 
             if (!$ticket->isPaid()) {
                 Log::warning(sprintf("SummitOrderService::processTicketReminder ticket %s no need email reminder (not paid )", $ticket->getId()));
-                return;
+                return null;
             }
 
             if (!$ticket->hasTicketType()) {
-                Log::warning(sprintf("SummitOrderService::processTicketReminder  ticket %s no need email reminder ( no type )", $ticket->getId()));
-                return;
+                Log::warning(sprintf("SummitOrderService::processTicketReminder ticket %s no need email reminder ( no type )", $ticket->getId()));
+                return null;
             }
 
             $attendee = $ticket->getOwner();
 
             if ($attendee->isComplete()) {
-                Log::warning(sprintf("SummitOrderService::processTicketReminder  ticket %s no need email reminder", $ticket->getId()));
-                return;
+                Log::warning(sprintf("SummitOrderService::processTicketReminder ticket %s no need email reminder", $ticket->getId()));
+                return null;
             }
 
-            $last_action_date = $attendee->getLastReminderEmailSentDate();
+
             $order = $ticket->getOrder();
             $summit = $order->getSummit();
 
             if ($summit->isEnded()) {
-                Log::warning(sprintf("SummitOrderService::processTicketReminder - summit %s has ended already", $summit->getId()));
-                return;
+                Log::warning(sprintf("SummitOrderService::processTicketReminder summit %s has ended already", $summit->getId()));
+                return null;
             }
 
             $days_interval = $summit->getRegistrationReminderEmailDaysInterval();
             Log::debug(sprintf("SummitOrderService::processTicketReminder days_interval is %s for summit %s", $days_interval, $summit->getId()));
-            if ($days_interval <= 0) return;
-            $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
-            $last_action_date->add(new \DateInterval("P" . $days_interval . 'D'));
-            Log::debug(sprintf("SummitOrderService::processTicketReminder last_action_date %s now %s", $last_action_date->format("Y-m-d H:i:s"), $utc_now->format("Y-m-d H:i:s")));
-            if ($last_action_date <= $utc_now) {
+            if ($days_interval <= 0) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processTicketReminder ticket %s summit %s has not days_interval set ",
+                        $ticket->getId(),
+                        $summit->getId()
+                    )
+                );
+                return null;
+            }
 
-                $attendee->setLastReminderEmailSentDate($utc_now);
-                Log::debug(sprintf("SummitOrderService::processTicketReminder sending reminder email for ticket %s", $ticket->getId()));
+            $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
+
+            $last_action_date = clone $attendee->getLastReminderEmailSentDate();
+            Log::debug(sprintf("SummitOrderService::processTicketReminder last_action_date %s now %s", $last_action_date->format("Y-m-d H:i:s"), $utc_now->format("Y-m-d H:i:s")));
+            $last_action_date->add(new \DateInterval("P" . $days_interval . 'D'));
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::processTicketReminder ticket %s last_action_date plus %s days %s utc_now %s",
+                    $ticket->getId(),
+                    $days_interval,
+                    $last_action_date->format("Y-m-d H:i:s"),
+                    $utc_now->format("Y-m-d H:i:s")
+                )
+            );
+
+            if ($last_action_date <= $utc_now) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processTicketReminder ticket %s should send reminder email",
+                        $ticket->getId(),
+                    )
+                );
+                $attendee->updateLastReminderEmailSentDate();
                 // regenerate hash
                 $ticket->generateHash();
-                SummitTicketReminderEmail::dispatch($ticket);
+                return $ticket;
             }
+            return null;
         });
+
+        if(!is_null($ticket)) {
+            Log::debug(sprintf("SummitOrderService::processTicketReminder sending reminder email for ticket %s", $ticket->getId()));
+            SummitTicketReminderEmail::dispatch($ticket);
+            return true;
+        }
+        return false;
     }
 
     /**

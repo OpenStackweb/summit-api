@@ -67,8 +67,9 @@ implements ISponsorRepository
             (!is_null($order) && $order->hasOrder("sponsorship_name")) ||
             (!is_null($order) && $order->hasOrder("sponsorship_size"))
         )
-            $query = $query->leftJoin("e.sponsorship", "sp")
-                            ->leftJoin("sp.type", "st");
+            $query = $query->leftJoin("e.sponsorships", "sp")
+                            ->leftJoin("sp.type", "ssp")
+                            ->leftJoin("ssp.type", "st");
 
         return $query;
     }

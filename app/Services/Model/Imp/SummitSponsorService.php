@@ -23,6 +23,7 @@ use App\Models\Foundation\Summit\Factories\SponsorFactory;
 use App\Models\Foundation\Summit\Factories\SponsorMaterialFactory;
 use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
 use Illuminate\Http\UploadedFile;
 use libs\utils\ITransactionService;
@@ -39,6 +40,7 @@ use models\summit\SponsorMaterial;
 use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
 use models\summit\SummitLeadReportSetting;
+use models\summit\SummitSponsorship;
 use services\model\ISummitSponsorService;
 
 /**
@@ -59,6 +61,11 @@ final class SummitSponsorService
      */
     private $company_repository;
 
+     /**
+     * @var ISummitSponsorshipRepository
+     */
+    private $sponsorship_repository;
+
     /**
      * @var IFileUploader
      */
@@ -68,6 +75,7 @@ final class SummitSponsorService
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISponsorExtraQuestionTypeRepository $repository
+     * @param ISummitSponsorshipRepository $sponsorship_repository
      * @param IFileUploader $file_uploader
      * @param ITransactionService $tx_service
      */
@@ -76,6 +84,7 @@ final class SummitSponsorService
         IMemberRepository          $member_repository,
         ICompanyRepository         $company_repository,
         ISponsorExtraQuestionTypeRepository $repository,
+        ISummitSponsorshipRepository $sponsorship_repository,
         IFileUploader              $file_uploader,
         ITransactionService        $tx_service
     )
@@ -83,6 +92,7 @@ final class SummitSponsorService
         parent::__construct($tx_service);
         $this->member_repository = $member_repository;
         $this->company_repository = $company_repository;
+        $this->sponsorship_repository = $sponsorship_repository;
         $this->file_uploader = $file_uploader;
         $this->repository = $repository;
     }
@@ -98,7 +108,6 @@ final class SummitSponsorService
     {
         return $this->tx_service->transaction(function () use ($summit, $payload) {
             $company_id = intval($payload['company_id']);
-            $sponsorship_id = intval($payload['sponsorship_id']);
             $featured_event_id = isset($payload['featured_event_id']) ? intval($payload['featured_event_id']) : 0;
 
             $company = $this->company_repository->getById($company_id);
@@ -106,17 +115,12 @@ final class SummitSponsorService
             if (!$company instanceof Company)
                 throw new EntityNotFoundException("Company not found.");
 
-            $sponsorship_type = $summit->getSummitSponsorshipTypeById($sponsorship_id);
-            if (is_null($sponsorship_type))
-                throw new EntityNotFoundException("Sponsorship type not found.");
-
             $former_sponsor = $summit->getSummitSponsorByCompany($company);
             if (!is_null($former_sponsor)) {
                 throw new ValidationException("Company already is sponsor on summit.");
             }
 
             $payload['company'] = $company;
-            $payload['sponsorship'] = $sponsorship_type;
 
             if($featured_event_id && $featured_event_id > 0){
 
@@ -128,6 +132,19 @@ final class SummitSponsorService
             }
 
             $sponsor = SponsorFactory::build($payload);
+
+            if(isset($payload['sponsorships'])) {
+                foreach ($payload['sponsorships'] as $sponsorship_payload) {
+                    $type_id = intval($sponsorship_payload['type_id']);
+                    $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
+                    if(is_null($summit_sponsorship_type))
+                        throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
+
+                    $sponsorship = new SummitSponsorship();
+                    $sponsorship->setType($summit_sponsorship_type);
+                    $sponsor->addSponsorship($sponsorship);
+                }
+            }
 
             $summit->addSummitSponsor($sponsor);
 
@@ -150,20 +167,12 @@ final class SummitSponsorService
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
             $company = null;
-            $sponsorship_type = null;
 
             if (isset($payload['company_id'])) {
                 $company_id = intval($payload['company_id']);
                 $company = $this->company_repository->getById($company_id);
                 if (!$company instanceof Company)
                     throw new EntityNotFoundException("Company not found.");
-            }
-
-            if (isset($payload['sponsorship_id'])) {
-                $sponsorship_id = intval($payload['sponsorship_id']);
-                $sponsorship_type = $summit->getSummitSponsorshipTypeById($sponsorship_id);
-                if (is_null($sponsorship_type))
-                    throw new EntityNotFoundException("Sponsorship type not found.");
             }
 
             if (!is_null($company)) {
@@ -187,11 +196,23 @@ final class SummitSponsorService
                 }
             }
 
+            if(isset($payload['sponsorships'])) {
+
+                $summit_sponsor->clearSponsorships();
+                foreach ($payload['sponsorships'] as $sponsorship_payload) {
+                    $type_id = intval($sponsorship_payload['type_id']);
+                    $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
+                    if(is_null($summit_sponsorship_type))
+                        throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
+
+                    $sponsorship = new SummitSponsorship();
+                    $sponsorship->setType($summit_sponsorship_type);
+                    $summit_sponsor->addSponsorship($sponsorship);
+                }
+            }
+
             if (!is_null($company))
                 $payload['company'] = $company;
-
-            if (!is_null($sponsorship_type))
-                $payload['sponsorship'] = $sponsorship_type;
 
             $sponsor = SponsorFactory::populate($summit_sponsor, $payload);
 

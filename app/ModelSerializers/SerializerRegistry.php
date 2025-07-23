@@ -115,6 +115,8 @@ use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
 use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
 use App\ModelSerializers\Summit\SummitSignSerializer;
+use App\ModelSerializers\Summit\SummitSponsorshipAddOnSerializer;
+use App\ModelSerializers\Summit\SummitSponsorshipSerializer;
 use App\ModelSerializers\Summit\SummitSponsorshipTypeSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
@@ -566,6 +568,8 @@ final class SerializerRegistry
         // summit sponsors
 
         $this->registry['SponsorshipType'] = SponsorshipTypeSerializer::class;
+        $this->registry['SummitSponsorship'] = SummitSponsorshipSerializer::class;
+        $this->registry['SummitSponsorshipAddOn'] = SummitSponsorshipAddOnSerializer::class;
         $this->registry['SummitSponsorshipType'] = SummitSponsorshipTypeSerializer::class;
         $this->registry['Sponsor'] = SponsorSerializer::class;
         $this->registry['SponsorAd'] = SponsorAdSerializer::class;

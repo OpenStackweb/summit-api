@@ -29,7 +29,6 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
         return [
             'company_id' => 'required|integer',
             'featured_event_id' => 'sometimes|integer',
-            'sponsorship_id' => 'required|integer',
             'is_published'   => 'sometimes|boolean',
             'show_logo_in_event_page'   => 'sometimes|boolean',
             'marquee' => 'sometimes|string|max:150',
@@ -41,6 +40,7 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
             'header_image_alt_text' => 'sometimes|string|max:255',
             'header_image_mobile_alt_text' => 'sometimes|string|max:255',
             'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
+            'sponsorships' => 'sometimes|sponsorship_dto_array',
         ];
     }
 
@@ -53,7 +53,6 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
         return [
             'company_id'     => 'sometimes|integer',
             'featured_event_id' => 'sometimes|integer',
-            'sponsorship_id' => 'sometimes|integer',
             'order'          => 'sometimes|integer|min:1',
             'is_published'   => 'sometimes|boolean',
             'show_logo_in_event_page'   => 'sometimes|boolean',
@@ -66,6 +65,7 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
             'header_image_alt_text' => 'sometimes|string|max:255',
             'header_image_mobile_alt_text' => 'sometimes|string|max:255',
             'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
+            'sponsorships' => 'sometimes|sponsorship_dto_array',
         ];
     }
 }

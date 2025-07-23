@@ -1288,6 +1288,27 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addLeadReportSettings']);
                     Route::put('', ['uses' => 'OAuth2SummitSponsorApiController@updateLeadReportSettings']);
                 });
+
+                // sponsorships
+                Route::group(['prefix' => 'sponsorships'], function(){
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getAll']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@addFromTypes']);
+                    Route::group(['prefix' => '{sponsorship_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getById']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@remove']);
+
+                        //Add-ons
+                        Route::group(['prefix' => 'add-ons'], function(){
+                            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getAllAddOns']);
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@addNewAddOn']);
+                            Route::group(['prefix' => '{add_on_id}'], function(){
+                                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getAddOnById']);
+                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@updateAddOn']);
+                                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@removeAddOn']);
+                            });
+                        });
+                    });
+                });
             });
         });
 
@@ -2144,6 +2165,12 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::group(['prefix' => '{badge}'], function(){
                 Route::get('validate', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@validateBadge']);
             });
+        });
+
+        // add-ons types
+
+        Route::group(['prefix' => 'add-ons'], function(){
+            Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipsApiController@getMetadata']);
         });
     });
 });

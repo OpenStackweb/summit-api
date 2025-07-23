@@ -2607,6 +2607,141 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            // sponsorships
+            [
+                'name' => 'get-sponsorships',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsorship',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsorship',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsorship',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            //Add-Ons
+            [
+                'name' => 'get-sponsorship-add-ons',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsorship-add-on',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsorship-add-on',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsorship-add-on',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsorship-add-on',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // Add-On types
+            [
+                'name' => 'get-add-ons-metadata',
+                'route' => '/api/v1/summits/{id}/add-ons/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //
             [
                 'name' => 'add-sponsor-user',

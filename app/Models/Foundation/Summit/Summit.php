@@ -849,7 +849,7 @@ class Summit extends SilverstripeBaseModel
     /**
      * @var SummitLeadReportSetting[]
      */
-    #[ORM\OneToMany(targetEntity: \SummitLeadReportSetting::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitLeadReportSetting::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $lead_report_settings;
 
     /**

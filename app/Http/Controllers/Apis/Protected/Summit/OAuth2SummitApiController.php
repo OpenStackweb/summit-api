@@ -1019,13 +1019,15 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/summits/{summit_id}/badge/{badge}/validate",
+        description: "required-groups ".IGroup::SponsorExternalUsers.", ".IGroup::SuperAdmins.", ".IGroup::Administrators,
         summary: 'Validate Scanned Badges',
         operationId: 'validateBadge',
         tags: ['Badges'],
         x: [
-            ' x-required-groups' => [ IGroup::SponsorExternalUsers,
-                                     IGroup::SuperAdmins,
-                                     IGroup::Administrators
+            'required-groups' => [
+                IGroup::SponsorExternalUsers,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
             ]
         ],
         security: [['summit_badges_oauth2' => [

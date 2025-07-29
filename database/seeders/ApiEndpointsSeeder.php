@@ -2047,6 +2047,19 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'add-sponsor-v2',
+                'route' => '/api/v2/summits/{id}/sponsors',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'get-sponsor',
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'GET',
@@ -2065,6 +2078,19 @@ class ApiEndpointsSeeder extends Seeder
             [
                 'name' => 'update-sponsor',
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-v2',
+                'route' => '/api/v2/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),

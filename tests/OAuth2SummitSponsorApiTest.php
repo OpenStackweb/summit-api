@@ -133,6 +133,47 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'chat_link' => 'https://chat.com',
             'video_link' => 'https://video.com',
             'sponsorships' => [
+                self::$default_summit_sponsor_type->getId(),
+                self::$default_summit_sponsor_type2->getId(),
+            ]
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsor = json_decode($content);
+        $this->assertNotNull($sponsor);
+        $this->assertTrue($sponsor->marquee === 'this is a marquee');
+        $this->assertTrue($sponsor->external_link === 'https://external.com');
+        return $sponsor;
+    }
+
+     public function testAddSponsorV2(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'sponsorships,sponsorships.type',
+        ];
+
+        $data = [
+            'company_id'  => self::$companies_without_sponsor[0]->getId(),
+            'marquee' => 'this is a marquee',
+            'intro' => 'this is an intro',
+            'is_published' => false,
+            'external_link' => 'https://external.com',
+            'chat_link' => 'https://chat.com',
+            'video_link' => 'https://video.com',
+            'sponsorships' => [
                 ['type_id' => self::$default_summit_sponsor_type->getId()],
                 ['type_id' => self::$default_summit_sponsor_type2->getId()],
             ]
@@ -140,7 +181,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
         $response = $this->action(
             "POST",
-            "OAuth2SummitSponsorApiController@add",
+            "OAuth2SummitSponsorApiController@addV2",
             $params,
             [],
             [],
@@ -175,6 +216,49 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'chat_link' => 'https://chat.com',
             'video_link' => 'https://video.com',
             'sponsorships' => [
+                self::$default_summit_sponsor_type->getId(),
+                self::$default_summit_sponsor_type2->getId(),
+            ]
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsor = json_decode($content);
+        $this->assertNotNull($sponsor);
+        $this->assertTrue($sponsor->marquee === 'this is a marquee');
+        $this->assertTrue($sponsor->external_link === 'https://external.com');
+        $this->assertCount(2, $sponsor->sponsorships);
+        return $sponsor;
+    }
+
+    public function testUpdateSponsorV2(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id'=> self::$sponsors[0]->getId(),
+            'expand' => 'sponsorships,sponsorships.type',
+        ];
+
+        $data = [
+            'company_id'  => self::$companies_without_sponsor[0]->getId(),
+            'marquee' => 'this is a marquee',
+            'intro' => 'this is an intro',
+            'is_published' => false,
+            'external_link' => 'https://external.com',
+            'chat_link' => 'https://chat.com',
+            'video_link' => 'https://video.com',
+            'sponsorships' => [
                 ['type_id' => self::$default_summit_sponsor_type->getId()],
                 ['type_id' => self::$default_summit_sponsor_type2->getId()],
             ]
@@ -182,7 +266,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
         $response = $this->action(
             "PUT",
-            "OAuth2SummitSponsorApiController@update",
+            "OAuth2SummitSponsorApiController@updateV2",
             $params,
             [],
             [],

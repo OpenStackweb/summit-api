@@ -1046,7 +1046,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         if (is_null($this->sponsorships)) return;
         $this->sponsorships->clear();
-        $this->sponsorships = null;
     }
 
     /**

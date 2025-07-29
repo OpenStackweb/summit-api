@@ -40,8 +40,20 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
             'header_image_alt_text' => 'sometimes|string|max:255',
             'header_image_mobile_alt_text' => 'sometimes|string|max:255',
             'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
-            'sponsorships' => 'sometimes|sponsorship_dto_array',
+            'sponsorship_id' => 'required|integer',
         ];
+    }
+
+     /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForAddV2(array $payload = []): array
+    {
+        $rules = self::buildForAdd($payload);
+        unset($rules['sponsorship_id']);
+        $rules['sponsorships'] = 'sometimes|sponsorship_dto_array';
+        return $rules;
     }
 
     /**
@@ -65,7 +77,19 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
             'header_image_alt_text' => 'sometimes|string|max:255',
             'header_image_mobile_alt_text' => 'sometimes|string|max:255',
             'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
-            'sponsorships' => 'sometimes|sponsorship_dto_array',
+            'sponsorship_id' => 'required|integer',
         ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdateV2(array $payload = []): array
+    {
+        $rules = self::buildForUpdate($payload);
+        unset($rules['sponsorship_id']);
+        $rules['sponsorships'] = 'sometimes|sponsorship_dto_array';
+        return $rules;
     }
 }

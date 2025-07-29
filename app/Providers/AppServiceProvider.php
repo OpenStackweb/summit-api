@@ -431,6 +431,7 @@ class AppServiceProvider extends ServiceProvider
             if (!is_array($value)) return false;
 
             foreach ($value as $element) {
+                if (!is_array($element)) return false;
                 foreach ($element as $key => $element_val) {
                     if (!in_array($key, self::$sponsorship_dto_fields)) return false;
                 }

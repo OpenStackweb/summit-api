@@ -114,6 +114,12 @@ interface IPaymentGatewayAPI
     public function isSucceeded(string $status):bool;
 
     /**
+     * @param string $status
+     * @return bool
+     */
+    public function isDeclined(string $status):bool;
+
+    /**
      * @param string $webhook_endpoint_url
      * @return array
      */

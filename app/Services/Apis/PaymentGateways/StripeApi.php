@@ -391,6 +391,10 @@ final class StripeApi implements IPaymentGatewayAPI
         return $status == PaymentIntent::STATUS_SUCCEEDED;
     }
 
+    public function isDeclined(string $status):bool{
+        return $status == PaymentIntent::STATUS_CANCELED;
+    }
+
     /**
      * @param string $cart_id
      * @return string|null

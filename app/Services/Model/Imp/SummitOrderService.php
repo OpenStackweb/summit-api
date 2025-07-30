@@ -2576,21 +2576,50 @@ final class SummitOrderService
                     $cart_id = $order->getPaymentGatewayCartId();
                     if (!empty($cart_id)) {
                         $status = $payment_gateway->getCartStatus($cart_id);
-                        if (!is_null($status) && $payment_gateway->isSucceeded($status)) {
+                        if (!is_null($status)) {
 
-                            Log::info
+                            Log::debug
                             (
                                 sprintf
                                 (
-                                    "SummitOrderService::confirmOrdersOlderThanNMinutes marking as paid order %s create at %s",
+                                    "SummitOrderService::confirmOrdersOlderThanNMinutes order %s created at %s status %x",
                                     $order->getNumber(),
-                                    $order->getCreated()->format("Y-m-d h:i:sa")
+                                    $order->getCreated()->format("Y-m-d h:i:sa"),
+                                    $status
                                 )
                             );
 
-                            $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
-                            // invoke now to avoid delays
-                            $this->processInvitation($order);
+                            if($payment_gateway->isSucceeded($status)) {
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "SummitOrderService::confirmOrdersOlderThanNMinutes marking as paid order %s created at %s",
+                                        $order->getNumber(),
+                                        $order->getCreated()->format("Y-m-d h:i:sa")
+                                    )
+                                );
+                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                // invoke now to avoid delays
+                                $this->processInvitation($order);
+                            }
+                            else if($payment_gateway->isDeclined($status)) {
+                                Log::warning
+                                (
+                                    sprintf
+                                    (
+                                        "SummitOrderService::confirmOrdersOlderThanNMinutes marking as canceled order %s created at %s",
+                                        $order->getNumber(),
+                                        $order->getCreated()->format("Y-m-d h:i:sa")
+                                    )
+                                );
+
+                                list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+                                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
+                                $order->setCancelled();
+                            }
                         }
 
                     }

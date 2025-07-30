@@ -402,6 +402,7 @@ final class StripeApi implements IPaymentGatewayAPI
     public function getCartStatus(string $cart_id): ?string
     {
 
+        Log::debug(sprintf("StripeApi::getCartStatus calling cart_id %s", $cart_id));
         if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
@@ -414,6 +415,7 @@ final class StripeApi implements IPaymentGatewayAPI
             if (is_null($intent))
                 throw new \InvalidArgumentException();
 
+            Log::debug(sprintf("StripeApi::getCartStatus calling cart_id %s intent %s", $cart_id, json_encode($intent)));
             return $intent->status;
         }
         catch(Exception $ex){

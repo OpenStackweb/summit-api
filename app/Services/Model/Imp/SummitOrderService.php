@@ -2582,7 +2582,7 @@ final class SummitOrderService
                             (
                                 sprintf
                                 (
-                                    "SummitOrderService::confirmOrdersOlderThanNMinutes order %s created at %s status %x",
+                                    "SummitOrderService::confirmOrdersOlderThanNMinutes order %s created at %s status %s",
                                     $order->getNumber(),
                                     $order->getCreated()->format("Y-m-d h:i:sa"),
                                     $status

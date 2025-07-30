@@ -1046,7 +1046,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         if (is_null($this->sponsorships)) return;
         $this->sponsorships->clear();
-        $this->sponsorships = null;
     }
 
     /**
@@ -1055,5 +1054,17 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function getSponsorshipTierNames(): array
     {
         return array_map(fn($sponsorship) => $sponsorship->getType()->getType()->getName(), $this->sponsorships);
+    }
+
+    public function hasSponsorships():bool{
+        return $this->sponsorships->count() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSponsorshipId():int{
+        if(!$this->hasSponsorships()) return 0;
+        return $this->sponsorships->first()->getType()->getId();
     }
 }

@@ -68,6 +68,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     private $sponsor_extra_question_repository;
 
+    private $serializer_version = 1;
+
+    private $add_validation_rules_version = 1;
+
+    private $update_validation_rules_version = 1;
+
     /**
      * @param ISponsorRepository $repository
      * @param ISummitRepository $summit_repository
@@ -201,7 +207,52 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     function getAddValidationRules(array $payload): array
     {
-        return SponsorValidationRulesFactory::buildForAdd($payload);
+        return $this->add_validation_rules_version == 1 ?
+            SponsorValidationRulesFactory::buildForAdd($payload) :
+            SponsorValidationRulesFactory::buildForAddV2($payload);
+    }
+
+    protected function serializerType():string{
+        return $this->serializer_version == 1 ?
+            SerializerRegistry::SerializerType_Public :
+            SerializerRegistry::SerializerType_PublicV2;
+    }
+
+    public function getChildSerializer():string{
+        return $this->serializer_version == 1 ?
+            SerializerRegistry::SerializerType_Public :
+            SerializerRegistry::SerializerType_PublicV2;
+    }
+
+    protected function addSerializerType():string{
+        return $this->serializer_version == 1 ?
+            SerializerRegistry::SerializerType_Public :
+            SerializerRegistry::SerializerType_PublicV2;
+    }
+
+    protected function updateSerializerType(): string{
+        return $this->serializer_version == 1 ?
+            SerializerRegistry::SerializerType_Public :
+            SerializerRegistry::SerializerType_PublicV2;
+    }
+
+     /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllBySummitV2($summit_id){
+        $this->serializer_version = 2;
+        return $this->getAllBySummit($summit_id);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $child_id
+     * @return mixed
+     */
+    public function getV2($summit_id, $child_id){
+        $this->serializer_version = 2;
+        return $this->get($summit_id, $child_id);
     }
 
     /**
@@ -220,6 +271,16 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         if(!$is_authz)
             throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
         return $this->service->addSponsor($summit, $payload);
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addV2($summit_id){
+        $this->serializer_version = 2;
+        $this->add_validation_rules_version = 2;
+        return $this->add($summit_id);
     }
 
     /**
@@ -266,7 +327,9 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
      */
     function getUpdateValidationRules(array $payload): array
     {
-        return SponsorValidationRulesFactory::buildForUpdate($payload);
+        return $this->add_validation_rules_version == 1 ?
+            SponsorValidationRulesFactory::buildForUpdate($payload) :
+            SponsorValidationRulesFactory::buildForUpdateV2($payload);
     }
 
     /**
@@ -283,6 +346,17 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
         return $this->service->updateSponsor($summit, $child_id, $payload);
+    }
+
+     /**
+     * @param $summit_id
+     * @param $child_id
+     * @return mixed
+     */
+    public function updateV2($summit_id, $child_id){
+        $this->serializer_version = 2;
+        $this->add_validation_rules_version = 2;
+        return $this->update($summit_id, $child_id);
     }
 
     /**

@@ -60,13 +60,42 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $params = [
             'id' => self::$summit->getId(),
             'filter'=> 'company_name=@'.substr(self::$companies[0]->getName(),0,3),
-            'expand' => 'summit,company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions,featured_event,lead_report_setting',
+            'expand' => 'summit,company,extra_questions,featured_event,lead_report_setting',
             'order' => '-sponsorship_name'
         ];
 
         $response = $this->action(
             "GET",
             "OAuth2SummitSponsorApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertNotNull($page);
+        $this->assertGreaterThan(0, $page->total);
+        $sponsor = $page->data[0];
+        $this->assertNotNull($sponsor);
+        $this->assertNotNull($sponsor->sponsorship_id);
+        return $page;
+    }
+
+     public function testGetAllSponsorsBySummitV2(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter'=> 'company_name=@'.substr(self::$companies[0]->getName(),0,3),
+            'expand' => 'summit,company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions,featured_event,lead_report_setting',
+            'order' => '-sponsorship_name'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorApiController@getAllBySummitV2",
             $params,
             [],
             [],
@@ -94,12 +123,36 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $params = [
             'id' => self::$summit->getId(),
             'sponsor_id'=> self::$sponsors[0]->getId(),
-            'expand' => 'summit,company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions,featured_event,lead_report_setting',
+            'expand' => 'summit,company,extra_questions,featured_event,lead_report_setting',
         ];
 
         $response = $this->action(
             "GET",
             "OAuth2SummitSponsorApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $sponsor = json_decode($content);
+        $this->assertNotNull($sponsor);
+        $this->assertNotNull($sponsor->sponsorship_id);
+    }
+
+    public function testGetSponsorV2()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id'=> self::$sponsors[0]->getId(),
+            'expand' => 'summit,company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions,featured_event,lead_report_setting',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorApiController@getV2",
             $params,
             [],
             [],
@@ -132,10 +185,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'external_link' => 'https://external.com',
             'chat_link' => 'https://chat.com',
             'video_link' => 'https://video.com',
-            'sponsorships' => [
-                self::$default_summit_sponsor_type->getId(),
-                self::$default_summit_sponsor_type2->getId(),
-            ]
+            'sponsorship_id' => self::$default_summit_sponsor_type2->getId()
         ];
 
         $response = $this->action(
@@ -215,10 +265,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'external_link' => 'https://external.com',
             'chat_link' => 'https://chat.com',
             'video_link' => 'https://video.com',
-            'sponsorships' => [
-                self::$default_summit_sponsor_type->getId(),
-                self::$default_summit_sponsor_type2->getId(),
-            ]
+            'sponsorship_id' => self::$default_summit_sponsor_type2->getId(),
         ];
 
         $response = $this->action(
@@ -238,7 +285,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertNotNull($sponsor);
         $this->assertTrue($sponsor->marquee === 'this is a marquee');
         $this->assertTrue($sponsor->external_link === 'https://external.com');
-        $this->assertCount(2, $sponsor->sponsorships);
+        $this->assertNotNull($sponsor->sponsorship_id);
         return $sponsor;
     }
 
@@ -259,7 +306,6 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'chat_link' => 'https://chat.com',
             'video_link' => 'https://video.com',
             'sponsorships' => [
-                ['type_id' => self::$default_summit_sponsor_type->getId()],
                 ['type_id' => self::$default_summit_sponsor_type2->getId()],
             ]
         ];
@@ -281,7 +327,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertNotNull($sponsor);
         $this->assertTrue($sponsor->marquee === 'this is a marquee');
         $this->assertTrue($sponsor->external_link === 'https://external.com');
-        $this->assertCount(2, $sponsor->sponsorships);
+        $this->assertCount(1, $sponsor->sponsorships);
         return $sponsor;
     }
 

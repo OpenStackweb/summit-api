@@ -102,6 +102,7 @@ use App\ModelSerializers\Summit\SponsorAdSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanCSVSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanSerializer;
 use App\ModelSerializers\Summit\SponsorMaterialSerializer;
+use App\ModelSerializers\Summit\SponsorSerializerV2;
 use App\ModelSerializers\Summit\SponsorSocialNetworkSerializer;
 use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
@@ -157,6 +158,7 @@ final class SerializerRegistry
     private $resource_server_context;
 
     const SerializerType_Public = 'PUBLIC';
+    const SerializerType_PublicV2 = 'PUBLIC_V2';
     const SerializerType_Private = 'PRIVATE';
     const SerializerType_Admin = 'ADMIN';
     const SerializerType_Admin_Voteable = 'ADMIN_VOTEABLE';
@@ -571,7 +573,10 @@ final class SerializerRegistry
         $this->registry['SummitSponsorship'] = SummitSponsorshipSerializer::class;
         $this->registry['SummitSponsorshipAddOn'] = SummitSponsorshipAddOnSerializer::class;
         $this->registry['SummitSponsorshipType'] = SummitSponsorshipTypeSerializer::class;
-        $this->registry['Sponsor'] = SponsorSerializer::class;
+        $this->registry['Sponsor'] = [
+            self::SerializerType_Public => SponsorSerializer::class,
+            self::SerializerType_PublicV2 => SponsorSerializerV2::class,
+        ];
         $this->registry['SponsorAd'] = SponsorAdSerializer::class;
         $this->registry['SponsorMaterial'] = SponsorMaterialSerializer::class;
         $this->registry['SponsorSocialNetwork'] = SponsorSocialNetworkSerializer::class;

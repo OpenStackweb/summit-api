@@ -52,8 +52,10 @@ Route::group(['prefix' => 'summits'], function () {
         });
         // sponsors
         Route::group(['prefix' => 'sponsors'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAllBySummitV2']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addV2']);
             Route::group(['prefix' => '{sponsor_id}'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getV2']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateV2']);
             });
         });

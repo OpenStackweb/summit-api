@@ -1,4 +1,4 @@
-<?php namespace ModelSerializers;
+<?php namespace App\ModelSerializers\Summit;
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +12,20 @@
  * limitations under the License.
  **/
 
-use App\ModelSerializers\Summit\SponsorBaseSerializer;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\Sponsor;
 
 /**
- * Class SponsorSerializer
+ * Class SponsorSerializerV2
  * @package ModelSerializers
  */
-final class SponsorSerializer extends SponsorBaseSerializer
+final class SponsorSerializerV2 extends SponsorBaseSerializer
 {
     protected static $array_mappings = [
         'Order' => 'order:json_int',
         'SummitId' => 'summit_id:json_int',
         'CompanyId' => 'company_id:json_int',
-        'SponsorshipId' => 'sponsorship_id:json_int',
         'Published' => 'is_published:json_boolean',
         'SideImageUrl' => 'side_image:json_url',
         'HeaderImageUrl' => 'header_image:json_url',
@@ -50,9 +48,10 @@ final class SponsorSerializer extends SponsorBaseSerializer
     protected static $allowed_relations = [
         'extra_questions',
         'members',
+        'sponsorships',
     ];
 
-     /**
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations
@@ -65,10 +64,12 @@ final class SponsorSerializer extends SponsorBaseSerializer
         if (!$sponsor instanceof Sponsor) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $sponsorships = $sponsor->getSponsorships();
-        if (count($sponsorships) > 0) {
-            $type = $sponsorships[0]->getType();
-            $values['sponsorship_id'] = !is_null($type) ? $type->getId() : null;
+        if (in_array('sponsorships', $relations) && !isset($values['sponsorships'])) {
+            $sponsorships = [];
+            foreach ($sponsor->getSponsorships() as $sponsorship) {
+                $sponsorships[] = $sponsorship->getId();
+            }
+            $values['sponsorships'] = $sponsorships;
         }
 
         return $values;
@@ -82,6 +83,10 @@ final class SponsorSerializer extends SponsorBaseSerializer
         'members' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getMembers',
+        ],
+        'sponsorships' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSponsorships',
         ],
         'company' => [
             'type' => One2ManyExpandSerializer::class,

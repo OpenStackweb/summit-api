@@ -133,7 +133,16 @@ final class SummitSponsorService
 
             $sponsor = SponsorFactory::build($payload);
 
-            if(isset($payload['sponsorships'])) {
+            if(isset($payload['sponsorship_id'])) {
+                $type_id = intval($payload['sponsorship_id']);
+                $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
+                if(is_null($summit_sponsorship_type))
+                    throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
+
+                $sponsorship = new SummitSponsorship();
+                $sponsorship->setType($summit_sponsorship_type);
+                $sponsor->addSponsorship($sponsorship);
+            } else if(isset($payload['sponsorships'])) {
                 foreach ($payload['sponsorships'] as $sponsorship_payload) {
                     $type_id = isset($sponsorship_payload['type_id']) ?
                         intval($sponsorship_payload['type_id']) :
@@ -198,8 +207,17 @@ final class SummitSponsorService
                 }
             }
 
-            if(isset($payload['sponsorships'])) {
+            if(isset($payload['sponsorship_id'])) {
+                $summit_sponsor->clearSponsorships();
+                $type_id = intval($payload['sponsorship_id']);
+                $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
+                if(is_null($summit_sponsorship_type))
+                    throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
 
+                $sponsorship = new SummitSponsorship();
+                $sponsorship->setType($summit_sponsorship_type);
+                $summit_sponsor->addSponsorship($sponsorship);
+            } else if(isset($payload['sponsorships'])) {
                 $summit_sponsor->clearSponsorships();
                 foreach ($payload['sponsorships'] as $sponsorship_payload) {
                     $type_id = isset($sponsorship_payload['type_id']) ?

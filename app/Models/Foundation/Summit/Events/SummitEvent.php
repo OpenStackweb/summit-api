@@ -13,7 +13,6 @@
  **/
 
 use App\Jobs\CreateMUXURLSigningKeyForSummit;
-use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
@@ -24,12 +23,10 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\CacheRegions;
-use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -38,7 +35,7 @@ use models\main\Tag;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Random\RandomException;
-
+use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 /**
  * @package models\summit
  */
@@ -171,6 +168,22 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     #[ORM\Column(name: 'HeadCount', type: 'integer')]
     protected $head_count;
 
+
+    public const string RSVPType_None = 'None';
+    public const string RSVPType_Public = 'Public';
+    public const string RSVPType_Private = 'Private';
+
+    public const array AllowedRSVPTypes = [
+        self::RSVPType_None,
+        self::RSVPType_Public,
+        self::RSVPType_Private,
+    ];
+
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'RSVPType', type: 'string')]
+    protected $rsvp_type;
     /**
      * @var int
      */
@@ -396,6 +409,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->overflow_stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
         $this->submission_source = SummitEvent::SOURCE_ADMIN;
+        $this->rsvp_type = self::RSVPType_None;
     }
 
     use SummitOwned;
@@ -609,7 +623,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function hasRSVP()
     {
-        return !empty($this->rsvp_link) || $this->hasRSVPTemplate();
+        return $this->rsvp_type !== self::RSVPType_None;
     }
 
     /**
@@ -1883,4 +1897,13 @@ SQL;
     public function isOnOverflow():bool{
         return $this->occupancy == self::OccupancyOverflow;
     }
+
+    public function setRSVPType(string $rsvp_type): void{
+        if(!in_array($rsvp_type, self::AllowedRSVPTypes)){
+            throw new ValidationException("Invalid rsvp type.");
+        }
+        $this->rsvp_type = $rsvp_type;
+    }
+
+
 }

@@ -14,6 +14,8 @@
 
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\main\Member;
 use models\summit\Sponsor;
 use models\summit\Summit;
@@ -26,6 +28,36 @@ use ModelSerializers\SilverStripeSerializer;
  */
 abstract class SponsorBaseSerializer extends SilverStripeSerializer
 {
+
+    protected static $array_mappings = [
+        'Order' => 'order:json_int',
+        'SummitId' => 'summit_id:json_int',
+        'CompanyId' => 'company_id:json_int',
+        'Published' => 'is_published:json_boolean',
+        'SideImageUrl' => 'side_image:json_url',
+        'HeaderImageUrl' => 'header_image:json_url',
+        'HeaderImageMobileUrl' => 'header_image_mobile:json_url',
+        'CarouselAdvertiseImageUrl' => 'carousel_advertise_image:json_url',
+        'Marquee' => 'marquee:json_string',
+        'Intro' => 'intro:json_string',
+        'ExternalLink' => 'external_link:json_string',
+        'VideoLink' => 'video_link:json_string',
+        'ChatLink' => 'chat_link:json_string',
+        'FeaturedEventId' => 'featured_event_id:json_int',
+        'HeaderImageAltText' => 'header_image_alt_text:json_string',
+        'SideImageAltText'   => 'side_image_alt_text:json_string',
+        'HeaderImageMobileAltText' => 'header_image_mobile_alt_text:json_string',
+        'CarouselAdvertiseImageAltText' => 'carousel_advertise_image_alt_text:json_string',
+        'ShowLogoInEventPage' => 'show_logo_in_event_page:json_boolean',
+        'LeadReportSettingId' => 'lead_report_setting_id:json_int',
+    ];
+
+
+    protected static $allowed_relations = [
+        'extra_questions',
+        'members',
+    ];
+
     /**
      * @param Summit|null $summit
      * @param Sponsor $sponsor
@@ -38,7 +70,7 @@ abstract class SponsorBaseSerializer extends SilverStripeSerializer
         (
             sprintf
             (
-                "SponsorSerializer::isQREncKeyFieldAllowed summit %s sponsor %s current member %s(%s) is_member_authz %b.",
+                "SponsorBaseSerializer::isQREncKeyFieldAllowed summit %s sponsor %s current member %s(%s) is_member_authz %b.",
                 is_null($summit) ? 'N/A': $summit->getId(),
                 $sponsor->getId(),
                 $current_member->getEmail(),
@@ -56,7 +88,7 @@ abstract class SponsorBaseSerializer extends SilverStripeSerializer
         (
             sprintf
             (
-                "SponsorSerializer::isQREncKeyFieldAllowed summit %s sponsor %s current member %s(%s) is_member_authz %b res %b.",
+                "SponsorBaseSerializer::isQREncKeyFieldAllowed summit %s sponsor %s current member %s(%s) is_member_authz %b res %b.",
                 is_null($summit) ? 'N/A': $summit->getId(),
                 $sponsor->getId(),
                 $current_member->getEmail(),
@@ -133,4 +165,33 @@ abstract class SponsorBaseSerializer extends SilverStripeSerializer
         }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'extra_questions' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getExtraQuestions',
+        ],
+        'members' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getMembers',
+        ],
+        'company' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'company_id',
+            'getter' => 'getCompany',
+            'has' => 'hasCompany'
+        ],
+        'featured_event' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'featured_event_id',
+            'getter' => 'getFeaturedEvent',
+            'has' => 'hasFeaturedEvent'
+        ],
+        'lead_report_setting' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'lead_report_setting_id',
+            'getter' => 'getLeadReportSetting',
+            'has' => 'hasLeadReportSetting'
+        ],
+    ];
 }

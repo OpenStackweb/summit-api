@@ -115,7 +115,7 @@ jobs:
           echo "running OAuth2SummitBadgeScanApiControllerTest"
           vendor/bin/phpunit --filter "OAuth2SummitBadgeScanApiControllerTest" --log-junit results_badge_scan_api_test.xml
           echo "running SummitOrderService tests"
-          vendor/bin/phpunit --filter "SummitOrderServiceTest" -log-junit results_summitorder_service_unit_tests.xml
+          vendor/bin/phpunit --filter "SummitOrderServiceTest" --log-junit results_summitorder_service_unit_tests.xml
       - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
         uses: actions/upload-artifact@v4
         with:

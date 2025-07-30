@@ -548,4 +548,9 @@ final class LawPayApi implements IPaymentGatewayAPI
     {
         return [];
     }
+
+    public function isDeclined(string $status): bool
+    {
+        return false;
+    }
 }

@@ -345,27 +345,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setPaid();
         }
 
-        if (!is_null($payload) && isset($payload[IPaymentGatewayAPI::PaymentInfo])) {
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitOrder::setPaid order %s setting payment info %s",
-                    $this->id,
-                    json_encode($payload)
-                )
-            );
-
-            $this->payment_info_type = $payload[IPaymentGatewayAPI::PaymentInfo][IPaymentGatewayAPI::PaymentInfo_Type] ?? null;
-            $this->payment_info_details = $payload[IPaymentGatewayAPI::PaymentInfo][IPaymentGatewayAPI::PaymentInfo_Details] ?? [];
-
-            if($this->payment_info_type === IPaymentGatewayAPI::PaymentInfo_Type_Card){
-                // back compat
-                $this->credit_card_type = $this->payment_info_details[IPaymentGatewayAPI::PaymentInfo_Type_Card_Brand] ?? null;
-                $this->credit_card_4numbers = $this->payment_info_details[IPaymentGatewayAPI::PaymentInfo_Type_Card_Last4] ?? null;
-            }
-        }
+        $this->setPaymentInfo($payload);
 
         Event::dispatch(new PaymentSummitRegistrationOrderConfirmed($this->getId()));
     }
@@ -1278,19 +1258,37 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->payment_info_type;
     }
 
-    public function setPaymentInfoType(?string $payment_info_type): void
-    {
-        $this->payment_info_type = $payment_info_type;
-    }
 
     public function getPaymentInfoDetails(): ?array
     {
         return $this->payment_info_details;
     }
 
-    public function setPaymentInfoDetails(array $payment_info_details): void
-    {
-        $this->payment_info_details = $payment_info_details;
-    }
+    /**
+     * @param array|null $payment_info
+     * @return void
+     */
+    public function setPaymentInfo(array $payment_info = null): void{
+        if (!is_null($payment_info) && isset($payment_info[IPaymentGatewayAPI::PaymentInfo])) {
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrder::setPaymentInfo order %s setting payment info %s",
+                    $this->id,
+                    json_encode($payment_info)
+                )
+            );
+
+            $this->payment_info_type = $payment_info[IPaymentGatewayAPI::PaymentInfo][IPaymentGatewayAPI::PaymentInfo_Type] ?? null;
+            $this->payment_info_details = $payment_info[IPaymentGatewayAPI::PaymentInfo][IPaymentGatewayAPI::PaymentInfo_Details] ?? [];
+
+            if($this->payment_info_type === IPaymentGatewayAPI::PaymentInfo_Type_Card){
+                // back compat
+                $this->credit_card_type = $this->payment_info_details[IPaymentGatewayAPI::PaymentInfo_Type_Card_Brand] ?? null;
+                $this->credit_card_4numbers = $this->payment_info_details[IPaymentGatewayAPI::PaymentInfo_Type_Card_Last4] ?? null;
+            }
+        }
+    }
 }

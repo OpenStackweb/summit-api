@@ -29,6 +29,19 @@ class CartAlreadyPaidException extends Exception {
  */
 interface IPaymentGatewayAPI
 {
+    public const string PaymentInfo = 'payment_info';
+    public const string PaymentInfo_Type = 'type';
+
+    public const string PaymentInfo_Details = 'details';
+
+    public const string PaymentInfo_Type_Card = 'card';
+
+    public const string PaymentInfo_Type_Card_Brand = 'brand';
+    public const string PaymentInfo_Type_Card_Last4 = 'last4';
+    public const string PaymentInfo_Type_ACH = 'us_bank_account';
+
+    public const string PaymentInfo_Type_Link = 'link';
+
     /**
      * @param SummitOrder $order
      * @throws ValidationException

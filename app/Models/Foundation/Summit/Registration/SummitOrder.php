@@ -15,6 +15,7 @@
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
 use App\libs\Utils\PunnyCodeHelper;
 use App\Models\Utils\Traits\FinancialTrait;
+use App\Services\Apis\IPaymentGatewayAPI;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -26,6 +27,7 @@ use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use function Psy\debug;
 
 /**
  * @package models\summit
@@ -319,13 +321,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->status;
     }
 
-    public function setPaidStatus()
+    public function setPaidStatus():void
     {
         $this->status = IOrderConstants::PaidStatus;
         $this->approved_payment_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
-    public function setPaid(array $payload = null)
+    /**
+     * @param array|null $payload
+     * @return void
+     */
+    public function setPaid(array $payload = null):void
     {
         Log::debug(sprintf("SummitOrder::setPaid order %s", $this->id));
         if ($this->isPaid()) {
@@ -339,7 +345,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setPaid();
         }
 
-        if (!is_null($payload) && isset($payload['payment_info'])) {
+        if (!is_null($payload) && isset($payload[IPaymentGatewayAPI::PaymentInfo])) {
 
             Log::debug
             (
@@ -351,8 +357,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
                 )
             );
 
-            $this->payment_info_type = $payload['payment_info']['type'] ?? null;
-            $this->payment_info_details = $payload['payment_info']['details'] ?? [];
+            $this->payment_info_type = $payload[IPaymentGatewayAPI::PaymentInfo][IPaymentGatewayAPI::PaymentInfo_Type] ?? null;
+            $this->payment_info_details = $payload[IPaymentGatewayAPI::PaymentInfo][IPaymentGatewayAPI::PaymentInfo_Details] ?? [];
+
+            if($this->payment_info_type === IPaymentGatewayAPI::PaymentInfo_Type_Card){
+                // back compat
+                $this->credit_card_type = $this->payment_info_details[IPaymentGatewayAPI::PaymentInfo_Type_Card_Brand] ?? null;
+                $this->credit_card_4numbers = $this->payment_info_details[IPaymentGatewayAPI::PaymentInfo_Type_Card_Last4] ?? null;
+            }
         }
 
         Event::dispatch(new PaymentSummitRegistrationOrderConfirmed($this->getId()));

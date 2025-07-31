@@ -103,10 +103,10 @@ final class StripeApi implements IPaymentGatewayAPI
                 $charge = $stripeObject['charges']['data'][0];
             } else {
                 // fallback: cannot extract payment method from payment_intent alone
-                return  [ 'payment_info' => [
+                return  [ IPaymentGatewayAPI::PaymentInfo => [
 
-                    'type' => null,
-                    'details' => [
+                    IPaymentGatewayAPI::PaymentInfo_Type => null,
+                    IPaymentGatewayAPI::PaymentInfo_Details => [
                         'payment_method_id' => $stripeObject['payment_method'] ?? null,
                         'note' => 'Payment method details unavailable in payment_intent; retrieve latest_charge separately'
                     ]
@@ -121,19 +121,18 @@ final class StripeApi implements IPaymentGatewayAPI
         $type = $methodDetails['type'] ?? null;
 
         $result = [
-
-            'type' => $type,
-            'details' => [
+            IPaymentGatewayAPI::PaymentInfo_Type => $type,
+            IPaymentGatewayAPI::PaymentInfo_Details  => [
                 'payment_method_id' => $charge['payment_method'] ?? null,
             ]
         ];
 
         switch ($type) {
-            case 'card':
+            case IPaymentGatewayAPI::PaymentInfo_Type_Card:
                 $card = $methodDetails['card'];
-                $result['details'] += [
-                    'brand' => $card['brand'] ?? null,
-                    'last4' => $card['last4'] ?? null,
+                $result[IPaymentGatewayAPI::PaymentInfo_Details] += [
+                    IPaymentGatewayAPI::PaymentInfo_Type_Card_Brand => $card['brand'] ?? null,
+                    IPaymentGatewayAPI::PaymentInfo_Type_Card_Last4 => $card['last4'] ?? null,
                     'exp_month' => $card['exp_month'] ?? null,
                     'exp_year' => $card['exp_year'] ?? null,
                     'funding' => $card['funding'] ?? null,
@@ -142,16 +141,16 @@ final class StripeApi implements IPaymentGatewayAPI
                 ];
                 break;
 
-            case 'link':
-                $result['details'] += [
+            case IPaymentGatewayAPI::PaymentInfo_Type_Link:
+                $result[IPaymentGatewayAPI::PaymentInfo_Details] += [
                     'country' => $methodDetails['link']['country'] ?? null,
                     'email' => $charge['billing_details']['email'] ?? null,
                 ];
                 break;
 
-            case 'us_bank_account':
+            case IPaymentGatewayAPI::PaymentInfo_Type_ACH:
                 $bank = $methodDetails['us_bank_account'];
-                $result['details'] += [
+                $result[IPaymentGatewayAPI::PaymentInfo_Details] += [
                     'bank_name' => $bank['bank_name'] ?? null,
                     'last4' => $bank['last4'] ?? null,
                     'routing_number' => $bank['routing_number'] ?? null,
@@ -161,7 +160,7 @@ final class StripeApi implements IPaymentGatewayAPI
                 break;
         }
 
-        return [ 'payment_info' => $result ];
+        return [ IPaymentGatewayAPI::PaymentInfo => $result ];
     }
 
 
@@ -574,6 +573,8 @@ final class StripeApi implements IPaymentGatewayAPI
                 "metadata" => [
                     "type" => IPaymentConstants::ApplicationTypeRegistration,
                     "summit_id" => $summit_id,
+                    "order_id" => $order->getId(),
+                    "order_owner_email" => $order->getOwnerEmail(),
                 ]
             ]
         );

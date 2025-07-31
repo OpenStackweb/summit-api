@@ -215,6 +215,19 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     private $credit_card_4numbers;
 
     /**
+     * @var string
+     */
+    #[ORM\Column(name: 'PaymentInfoType', type: 'string')]
+    private $payment_info_type;
+
+    /**
+     * @var array
+     */
+    #[ORM\Column(name: 'PaymentInfoDetails', type: 'json')]
+    private $payment_info_details;
+
+
+    /**
      * SummitOrder constructor.
      */
     public function __construct()
@@ -224,6 +237,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $this->extra_question_answers = new ArrayCollection();
         $this->status = IOrderConstants::ReservedStatus;
         $this->payment_method = IOrderConstants::OnlinePaymentMethod;
+        $this->payment_info_details = [];
+        $this->payment_info_type = null;
     }
 
     public function setPaymentMethodOffline()
@@ -324,20 +339,20 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setPaid();
         }
 
-        if (!is_null($payload) && isset($payload['order_credit_card_type']) && isset($payload['order_credit_card_4numbers'])) {
+        if (!is_null($payload) && isset($payload['payment_info'])) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "SummitOrder::setPaid order %s setting credit card info %s",
+                    "SummitOrder::setPaid order %s setting payment info %s",
                     $this->id,
                     json_encode($payload)
                 )
             );
 
-            $this->credit_card_type = $payload['order_credit_card_type'];
-            $this->credit_card_4numbers = $payload['order_credit_card_4numbers'];
+            $this->payment_info_type = $payload['payment_info']['type'] ?? null;
+            $this->payment_info_details = $payload['payment_info']['details'] ?? [];
         }
 
         Event::dispatch(new PaymentSummitRegistrationOrderConfirmed($this->getId()));
@@ -1245,4 +1260,25 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     {
         return $this->credit_card_4numbers;
     }
+
+    public function getPaymentInfoType(): ?string
+    {
+        return $this->payment_info_type;
+    }
+
+    public function setPaymentInfoType(?string $payment_info_type): void
+    {
+        $this->payment_info_type = $payment_info_type;
+    }
+
+    public function getPaymentInfoDetails(): array
+    {
+        return $this->payment_info_details;
+    }
+
+    public function setPaymentInfoDetails(array $payment_info_details): void
+    {
+        $this->payment_info_details = $payment_info_details;
+    }
+
 }

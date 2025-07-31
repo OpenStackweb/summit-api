@@ -100,12 +100,7 @@ interface IPaymentGatewayAPI
      * @param string $cart_id
      * @return array|null
      */
-    public function getCartCreditCardInfo(string $cart_id):?array;
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public function getCreditCardInfo(array $payload): array;
+    public function getPaymentDetailsInfo(string $cart_id):?array;
 
     /**
      * @param string $status

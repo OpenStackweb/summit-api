@@ -2599,7 +2599,7 @@ final class SummitOrderService
                                         $order->getCreated()->format("Y-m-d h:i:sa")
                                     )
                                 );
-                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                $order->setPaid($payment_gateway->getPaymentDetailsInfo($cart_id));
                                 // invoke now to avoid delays
                                 $this->processInvitation($order);
                             }
@@ -2725,7 +2725,7 @@ final class SummitOrderService
                         if (!$payment_gateway->canAbandon($status)) {
                             Log::warning(sprintf("SummitOrderService::processOrder2Revoke reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
                             if ($payment_gateway->isSucceeded($status)) {
-                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                $order->setPaid($payment_gateway->getPaymentDetailsInfo($cart_id));
                                 // invoke now to avoid delays
                                 $this->processInvitation($order);
                             }

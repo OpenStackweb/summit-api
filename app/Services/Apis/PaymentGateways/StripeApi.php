@@ -86,29 +86,84 @@ final class StripeApi implements IPaymentGatewayAPI
         $this->webhook_secret_key = $webhook_secret_key;
     }
 
-    public function getCreditCardInfo(array $payload): array
+    /**
+     * @param array $stripeObject
+     * @return array[]
+     */
+    private function extractPaymentMethodInfo(array $stripeObject): array
     {
-        Log::debug(sprintf("StripeApi::getCreditCardInfo payload %s", json_encode($payload)));
+        Log::debug(sprintf("StripeApi::extractPaymentMethodInfo %s", json_encode($stripeObject)));
 
-        if (!isset($payload['charges']) || !isset($payload['charges']['data'])) return [];
+        $isIntent = $stripeObject['object'] === 'payment_intent';
+        $charge = null;
 
-        $charges = $payload['charges']['data'];
+        if ($isIntent) {
+            // Check if charges are present
+            if (!empty($stripeObject['charges']['data'][0])) {
+                $charge = $stripeObject['charges']['data'][0];
+            } else {
+                // fallback: cannot extract payment method from payment_intent alone
+                return  [ 'payment_info' => [
 
-        if (count($charges) == 0) return [];
-
-        $charge = $charges[0];
-        if (!isset($charge['payment_method_details'])) return [];
-
-        $payment_method_details = $charge['payment_method_details'];
-        if (!is_null($payment_method_details) && isset($payment_method_details['card'])) {
-            $card = $payment_method_details['card'];
-            return [
-                "order_credit_card_type"     => $card['brand'],
-                "order_credit_card_4numbers" => $card['last4'],
-            ];
+                    'type' => null,
+                    'details' => [
+                        'payment_method_id' => $stripeObject['payment_method'] ?? null,
+                        'note' => 'Payment method details unavailable in payment_intent; retrieve latest_charge separately'
+                    ]
+                ]];
+            }
+        } else {
+            // Treat as a Charge object
+            $charge = $stripeObject;
         }
-        return [];
+
+        $methodDetails = $charge['payment_method_details'] ?? [];
+        $type = $methodDetails['type'] ?? null;
+
+        $result = [
+
+            'type' => $type,
+            'details' => [
+                'payment_method_id' => $charge['payment_method'] ?? null,
+            ]
+        ];
+
+        switch ($type) {
+            case 'card':
+                $card = $methodDetails['card'];
+                $result['details'] += [
+                    'brand' => $card['brand'] ?? null,
+                    'last4' => $card['last4'] ?? null,
+                    'exp_month' => $card['exp_month'] ?? null,
+                    'exp_year' => $card['exp_year'] ?? null,
+                    'funding' => $card['funding'] ?? null,
+                    'wallet_type' => $card['wallet']['type'] ?? null,
+                    'wallet_dynamic_last4' => $card['wallet']['dynamic_last4'] ?? null,
+                ];
+                break;
+
+            case 'link':
+                $result['details'] += [
+                    'country' => $methodDetails['link']['country'] ?? null,
+                    'email' => $charge['billing_details']['email'] ?? null,
+                ];
+                break;
+
+            case 'us_bank_account':
+                $bank = $methodDetails['us_bank_account'];
+                $result['details'] += [
+                    'bank_name' => $bank['bank_name'] ?? null,
+                    'last4' => $bank['last4'] ?? null,
+                    'routing_number' => $bank['routing_number'] ?? null,
+                    'account_holder_type' => $bank['account_holder_type'] ?? null,
+                    'account_type' => $bank['account_type'] ?? null,
+                ];
+                break;
+        }
+
+        return [ 'payment_info' => $result ];
     }
+
 
     /**
      * @param array $payload
@@ -207,14 +262,14 @@ final class StripeApi implements IPaymentGatewayAPI
 
             $intent = $event->data->object;
 
-            $creditcard_info = $this->getCreditCardInfo($intent->toArray());
+            $payment_info = $this->extractPaymentMethodInfo($intent->toArray());
 
             if ($event->type == "payment_intent.succeeded") {
                 Log::debug("StripeApi::processCallback: payment_intent.succeeded");
                 return array_merge([
                     "event_type" => $event->type,
                     "cart_id" => $intent->id
-                ], $creditcard_info);
+                ], $payment_info);
             }
 
             if ($event->type == "payment_intent.payment_failed") {
@@ -227,7 +282,7 @@ final class StripeApi implements IPaymentGatewayAPI
                         "last_payment_error" => $intent->last_payment_error,
                         "message" => $intent->last_payment_error->message
                     ]
-                ], $creditcard_info);
+                ], $payment_info);
             }
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));
@@ -551,9 +606,9 @@ final class StripeApi implements IPaymentGatewayAPI
         // TODO: Implement clearWebHooks() method.
     }
 
-    public function getCartCreditCardInfo(string $cart_id): ?array
+    public function getPaymentDetailsInfo(string $cart_id): ?array
     {
-        Log::debug(sprintf("StripeApi::getCartCreditCardInfo cart_id %s", $cart_id));
+        Log::debug(sprintf("StripeApi::getPaymentDetailsInfo cart_id %s", $cart_id));
 
         if (empty($this->secret_key))
             throw new \InvalidArgumentException();
@@ -567,7 +622,9 @@ final class StripeApi implements IPaymentGatewayAPI
             if (is_null($intent))
                 throw new \InvalidArgumentException();
 
-            return $this->getCreditCardInfo($intent->toArray());
+            Log::debug(sprintf("StripeApi::getPaymentDetailsInfo pi %s ", json_encode($intent)));
+
+            return $this->extractPaymentMethodInfo($intent->toArray());
         }
         catch(Exception $ex){
             Log::warning(sprintf("StripeApi::getCartCreditCardInfo cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));

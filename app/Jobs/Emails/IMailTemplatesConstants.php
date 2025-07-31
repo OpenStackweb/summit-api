@@ -86,6 +86,8 @@ interface IMailTemplatesConstants
     const order_purchase_date= 'order_purchase_date';
     const order_credit_card_type = 'order_credit_card_type';
     const order_credit_card_4number = 'order_credit_card_4number';
+    const order_payment_info_type = 'order_payment_info_type';
+    const order_payment_info_details = 'order_payment_info_details';
     const order_currency = 'order_currency';
     const order_currency_symbol = 'order_currency_symbol';
     const order_discount = 'order_discount';

@@ -431,4 +431,9 @@ interface ISummitOrderService extends IProcessPaymentService
      * @return SummitAttendeeTicket
      */
     public function delegateTicket(Summit $summit, int $order_id, int $ticket_id,Member $current_user, array $payload):SummitAttendeeTicket;
+
+    /**
+     * @return void
+     */
+    public function ingestPaymentInfoForRegistrationOrders():void;
 }

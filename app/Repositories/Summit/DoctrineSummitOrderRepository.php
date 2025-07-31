@@ -431,4 +431,32 @@ SQL;
         $res = $query->getQuery()->getArrayResult();
         return array_column($res, 'id');
     }
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @return array
+     */
+    public function getAllOrderIdsThatNeedsPaymentInfo(Summit $summit, PagingInfo $paging_info): array
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->join("e.summit","s")
+            ->where('e.status = :order_status')
+            ->andWhere('s.id = :summit_id')
+            ->andWhere("e.payment_info_type is null");
+
+        $query->setParameter("order_status", IOrderConstants::PaidStatus);
+        $query->setParameter("summit_id", $summit->getId());
+
+        $query= $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
 }

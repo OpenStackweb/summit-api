@@ -93,4 +93,12 @@ interface ISummitOrderRepository extends IBaseRepository
      * @throws \Doctrine\DBAL\Driver\Exception
      */
     public function deleteAllBySummit(int $summit_id):bool;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @return array
+     */
+    public function getAllOrderIdsThatNeedsPaymentInfo(Summit $summit, PagingInfo $paging_info):array;
+
 }

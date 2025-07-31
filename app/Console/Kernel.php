@@ -50,7 +50,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CreateTestDBCommand::class,
         \App\Console\Commands\SeedTestDataCommand::class,
         \App\Console\Commands\PublishStreamUpdatesCommand::class,
-        \App\Console\Commands\PurgeSummitsMarkAsDeletedCommand::class
+        \App\Console\Commands\PurgeSummitsMarkAsDeletedCommand::class,
+        \App\Console\Commands\IngestSummitOrderPaymentInfoCommand::class,
     ];
 
     /**
@@ -104,6 +105,10 @@ class Kernel extends ConsoleKernel
         //$schedule->command('summit:publish-stream-updates')->everyMinute()->withoutOverlapping()->onOneServer();
 
         $schedule->command('summit:purge-mark-as-deleted')->everyTwoHours()->withoutOverlapping()->onOneServer();
+
+        // ingest missing payment info
+
+        $schedule->command('summit:registration-orders-payment-info-ingest')->everySixHours()->withoutOverlapping()->onOneServer();
 
     }
 }

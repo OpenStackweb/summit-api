@@ -29,6 +29,21 @@ class CartAlreadyPaidException extends Exception {
  */
 interface IPaymentGatewayAPI
 {
+    public const string PaymentInfo = 'payment_info';
+    public const string PaymentInfo_Type = 'type';
+
+    public const string PaymentInfo_Details = 'details';
+
+    public const string PaymentInfo_Type_Card = 'card';
+
+    public const string PaymentInfo_Type_Card_Brand = 'brand';
+    public const string PaymentInfo_Type_Card_Last4 = 'last4';
+    public const string PaymentInfo_Type_ACH = 'us_bank_account';
+
+    public const string PaymentInfo_Type_AliPay = 'alipay';
+
+    public const string PaymentInfo_Type_Link = 'link';
+
     /**
      * @param SummitOrder $order
      * @throws ValidationException
@@ -100,12 +115,7 @@ interface IPaymentGatewayAPI
      * @param string $cart_id
      * @return array|null
      */
-    public function getCartCreditCardInfo(string $cart_id):?array;
-    /**
-     * @param array $payload
-     * @return array
-     */
-    public function getCreditCardInfo(array $payload): array;
+    public function getPaymentDetailsInfo(string $cart_id):?array;
 
     /**
      * @param string $status

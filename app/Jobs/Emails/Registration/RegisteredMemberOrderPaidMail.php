@@ -57,8 +57,12 @@ class RegisteredMemberOrderPaidMail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::order_number] = $order->getNumber();
         $payload[IMailTemplatesConstants::order_qr_value] = $order->getQRCode();
         $payload[IMailTemplatesConstants::order_purchase_date] = FormatUtils::getNiceDateMonthDayYearTextual($summit->convertDateFromUTC2TimeZone($order->getCreatedUTC()));
+
+        // payment details
         $payload[IMailTemplatesConstants::order_credit_card_type] = $order->getCreditCardType();
         $payload[IMailTemplatesConstants::order_credit_card_4number] = $order->getCreditCard4Number();
+        $payload[IMailTemplatesConstants::order_payment_info_type] = $order->getPaymentInfoType();
+        $payload[IMailTemplatesConstants::order_payment_info_details] = $order->getPaymentInfoDetails();
 
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
         if(!is_null($summit_reassign_ticket_till_date)) {
@@ -133,6 +137,8 @@ class RegisteredMemberOrderPaidMail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::order_credit_card_type]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_purchase_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_credit_card_4number]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_payment_info_type]['type'] = 'string';
+        $payload[IMailTemplatesConstants::order_payment_info_details]['type'] = 'array';
         $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_raw_amount]['type'] = 'string';

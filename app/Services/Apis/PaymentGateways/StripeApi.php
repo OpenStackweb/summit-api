@@ -129,7 +129,7 @@ final class StripeApi implements IPaymentGatewayAPI
 
         switch ($type) {
             case IPaymentGatewayAPI::PaymentInfo_Type_Card:
-                $card = $methodDetails['card'];
+                $card = $methodDetails[IPaymentGatewayAPI::PaymentInfo_Type_Card];
                 $result[IPaymentGatewayAPI::PaymentInfo_Details] += [
                     IPaymentGatewayAPI::PaymentInfo_Type_Card_Brand => $card['brand'] ?? null,
                     IPaymentGatewayAPI::PaymentInfo_Type_Card_Last4 => $card['last4'] ?? null,
@@ -138,6 +138,12 @@ final class StripeApi implements IPaymentGatewayAPI
                     'funding' => $card['funding'] ?? null,
                     'wallet_type' => $card['wallet']['type'] ?? null,
                     'wallet_dynamic_last4' => $card['wallet']['dynamic_last4'] ?? null,
+                ];
+                break;
+            case IPaymentGatewayAPI::PaymentInfo_Type_AliPay:
+                $result[IPaymentGatewayAPI::PaymentInfo_Details] += [
+                    'fingerprint' => $methodDetails[IPaymentGatewayAPI::PaymentInfo_Type_AliPay]['fingerprint'] ?? null,
+                    'transaction_id' => $methodDetails[IPaymentGatewayAPI::PaymentInfo_Type_AliPay]['transaction_id'] ?? null,
                 ];
                 break;
 
@@ -149,7 +155,7 @@ final class StripeApi implements IPaymentGatewayAPI
                 break;
 
             case IPaymentGatewayAPI::PaymentInfo_Type_ACH:
-                $bank = $methodDetails['us_bank_account'];
+                $bank = $methodDetails[IPaymentGatewayAPI::PaymentInfo_Type_ACH];
                 $result[IPaymentGatewayAPI::PaymentInfo_Details] += [
                     'bank_name' => $bank['bank_name'] ?? null,
                     'last4' => $bank['last4'] ?? null,

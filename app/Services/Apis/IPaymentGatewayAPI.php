@@ -40,6 +40,8 @@ interface IPaymentGatewayAPI
     public const string PaymentInfo_Type_Card_Last4 = 'last4';
     public const string PaymentInfo_Type_ACH = 'us_bank_account';
 
+    public const string PaymentInfo_Type_AliPay = 'alipay';
+
     public const string PaymentInfo_Type_Link = 'link';
 
     /**

@@ -1283,7 +1283,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $this->payment_info_type = $payment_info_type;
     }
 
-    public function getPaymentInfoDetails(): array
+    public function getPaymentInfoDetails(): ?array
     {
         return $this->payment_info_details;
     }

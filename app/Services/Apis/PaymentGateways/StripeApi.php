@@ -627,7 +627,7 @@ final class StripeApi implements IPaymentGatewayAPI
             return $this->extractPaymentMethodInfo($intent->toArray());
         }
         catch(Exception $ex){
-            Log::warning(sprintf("StripeApi::getCartCreditCardInfo cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
+            Log::warning(sprintf("StripeApi::getPaymentDetailsInfo cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
             return null;
         }
     }

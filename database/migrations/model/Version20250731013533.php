@@ -24,7 +24,7 @@ final class Version20250731013533 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return '';
+        return 'Add PaymentInfoType and PaymentInfoDetails columns to SummitOrder table for generic payment method storage.';
     }
 
     public function up(Schema $schema): void

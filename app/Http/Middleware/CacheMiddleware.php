@@ -107,6 +107,8 @@ final class CacheMiddleware
                 }
             }
         }
+        Log::debug("CacheMiddleware: key={$key} — hasData?=" . (empty($data)? 'no':'yes') . " — hasTime?=" . (empty($time)? 'no':'yes'));
+
         if (empty($data) || empty($time) || $evict_cache) {
             $time = $current_time;
             Log::debug(sprintf("CacheMiddleware::handle cache value not found for key %s , getting from api...", $key));
@@ -133,6 +135,7 @@ final class CacheMiddleware
                 ]
             );
         }
+
         /**
          * CacheMiddleware marks responses with
          * Cache-Control: public, max-age=0, must-revalidate

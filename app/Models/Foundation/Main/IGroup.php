@@ -33,4 +33,5 @@ interface IGroup
     const Testers                  = 'tester-groups';
     const Sponsors                 = 'sponsors';
     const SponsorExternalUsers     = 'sponsors-external-users';
+    const SponsorServices          = 'sponsors-services';
 }

@@ -349,6 +349,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     const AllowedMemberGroups = [
         IGroup::Sponsors,
         IGroup::SponsorExternalUsers,
+        IGroup::SponsorServices,
     ];
 
     /**

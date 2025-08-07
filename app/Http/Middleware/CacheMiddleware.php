@@ -133,6 +133,18 @@ final class CacheMiddleware
                 ]
             );
         }
+        /**
+         * CacheMiddleware marks responses with
+         * Cache-Control: public, max-age=0, must-revalidate
+         * so browsers always re-validate rather than blindly re-use a stale body.
+         */
+        // 1) mark it cacheable...
+        $response->setPublic();
+
+        // 2) immediately stale, but revalidate
+        $response->setMaxAge(0);
+        $response->headers->addCacheControlDirective('must-revalidate', true);
+        $response->headers->addCacheControlDirective('proxy-revalidate', true);
 
         return $response;
     }

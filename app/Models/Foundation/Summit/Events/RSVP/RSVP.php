@@ -86,10 +86,10 @@ class RSVP extends SilverstripeBaseModel
     protected string $status;
 
     /**
-     * @var \DateTime
+     * @var ?\DateTime
      */
     #[ORM\Column(name: 'ActionDate', type: 'datetime')]
-    private \DateTime $action_date;
+    private ?\DateTime $action_date;
 
     /**
      * RSVP constructor.

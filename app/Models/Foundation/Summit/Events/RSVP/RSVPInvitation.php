@@ -13,11 +13,15 @@
  **/
 
 use App\Models\Utils\Traits\InvitationTrait;
+use App\Repositories\Summit\DoctrineRSVPInvitationRepository;
 use Doctrine\ORM\Mapping AS ORM;
+use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 
+#[ORM\Entity(repositoryClass: DoctrineRSVPInvitationRepository::class)]
 #[ORM\Table(name: 'RSVPInvitation')]
 class RSVPInvitation extends SilverstripeBaseModel
 {
@@ -59,7 +63,6 @@ class RSVPInvitation extends SilverstripeBaseModel
      */
     #[ORM\Column(name: 'SentDate', type: 'datetime')]
     private ?\DateTime $sent_date;
-
 
     /**
      * @var SummitAttendee
@@ -110,5 +113,22 @@ class RSVPInvitation extends SilverstripeBaseModel
         return $seed;
     }
 
+    /**
+     * @param Member $member
+     * @return void
+     * @throws ValidationException
+     */
+    public function checkOwnership(Member $member):void{
+        if (strtolower($this->invitee->getEmail()) !== strtolower($member->getEmail()))
+            throw new ValidationException(sprintf(
+                "This invitation was sent to %s but you logged in as %s."
+                . " To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
+                . " Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
+                ,
+                $member->getEmail(),
+                $member->getEmail(),
+                $this->getEvent()->getSummit()->getSupportEmail(),
+                $this->getEvent()->getSummit()->getSupportEmail()));
+    }
 
 }

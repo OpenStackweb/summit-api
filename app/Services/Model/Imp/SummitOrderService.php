@@ -2548,7 +2548,7 @@ final class SummitOrderService
      */
     public function confirmOrdersOlderThanNMinutes(int $minutes, int $max = 100): void
     {
-        // done in this way to avoid db lock contention
+        // done in this way to avoid revokeReservedOrdersOlderThanNMinutesdb lock contention
         $orders = $this->tx_service->transaction(function () use ($minutes, $max) {
             return $this->order_repository->getAllConfirmedOlderThanXMinutes($minutes, $max);
         });
@@ -2599,7 +2599,7 @@ final class SummitOrderService
                                         $order->getCreated()->format("Y-m-d h:i:sa")
                                     )
                                 );
-                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                $order->setPaid($payment_gateway->getPaymentDetailsInfo($cart_id));
                                 // invoke now to avoid delays
                                 $this->processInvitation($order);
                             }
@@ -2725,7 +2725,7 @@ final class SummitOrderService
                         if (!$payment_gateway->canAbandon($status)) {
                             Log::warning(sprintf("SummitOrderService::processOrder2Revoke reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
                             if ($payment_gateway->isSucceeded($status)) {
-                                $order->setPaid($payment_gateway->getCartCreditCardInfo($cart_id));
+                                $order->setPaid($payment_gateway->getPaymentDetailsInfo($cart_id));
                                 // invoke now to avoid delays
                                 $this->processInvitation($order);
                             }
@@ -5378,6 +5378,70 @@ final class SummitOrderService
             $attendee->addTicket($ticket);
             $ticket->generateQRCode();
             return $ticket;
+        });
+    }
+
+    public function ingestPaymentInfoForRegistrationOrders(): void
+    {
+        $summits = $this->tx_service->transaction(function () {
+            return $this->summit_repository->getNotEnded();
+        });
+
+        foreach ($summits as $summit) {
+            $page = 1;
+            Log::debug(sprintf("SummitOrderService::ingestPaymentInfoForRegistrationOrders processing summit %s", $summit->getId()));
+
+            do {
+                // done in this way to avoid db lock contention
+
+                $orders_ids = $this->tx_service->transaction(function () use ($summit, $page) {
+                    return $this->order_repository->getAllOrderIdsThatNeedsPaymentInfo($summit, new PagingInfo($page, 100));
+                });
+
+                $has_more_items = count($orders_ids) > 0;
+
+                foreach ($orders_ids as $order_id) {
+                    Log::debug(sprintf("SummitOrderService::ingestPaymentInfoForRegistrationOrders processing summit %s order %s", $summit->getId(), $order_id));
+
+                    try {
+                        $this->getOrderPaymentInfo($order_id);
+                    } catch (\Exception $ex) {
+                        Log::error($ex);
+                    }
+                }
+                ++$page;
+
+            } while ($has_more_items);
+
+        }
+    }
+
+    /**
+     * @param int $order_id
+     * @return void
+     * @throws \Exception
+     */
+    private function getOrderPaymentInfo(int $order_id):void{
+        $this->tx_service->transaction(function() use($order_id){
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+            if (!$order instanceof SummitOrder) return;
+
+            $summit = $order->getSummit();
+            $payment_gateway = $summit->getPaymentGateWayPerApp
+            (
+                IPaymentConstants::ApplicationTypeRegistration,
+                $this->default_payment_gateway_strategy
+            );
+            if (is_null($payment_gateway)) {
+                Log::warning(sprintf("SummitOrderService::getOrderPaymentInfo Payment configuration is not set for summit %s", $summit->getId()));
+                return;
+            }
+
+            $cart_id = $order->getPaymentGatewayCartId();
+            if (!empty($cart_id)) {
+                $order->setPaymentInfo($payment_gateway->getPaymentDetailsInfo($cart_id));
+            }
+
         });
     }
 }

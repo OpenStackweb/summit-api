@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\CreateMUXURLSigningKeyForSummit;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
@@ -384,6 +385,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     #[ORM\Column(name: 'OverflowStreamKey', type: 'string')]
     protected $overflow_stream_key;
 
+    #[ORM\OneToMany(targetEntity: RSVPInvitation::class, mappedBy: 'event', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $rsvp_invitations;
+
     /**
      * SummitEvent constructor.
      */
@@ -410,6 +414,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->allowed_ticket_types = new ArrayCollection();
         $this->submission_source = SummitEvent::SOURCE_ADMIN;
         $this->rsvp_type = self::RSVPType_None;
+        $this->rsvp_invitations = new ArrayCollection();
     }
 
     use SummitOwned;
@@ -1102,12 +1107,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function getCurrentRSVPSubmissionSeatType(): string
     {
 
-        if (!$this->hasRSVPTemplate())
+        if (!$this->hasRSVP())
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
-
-        if (!$this->getRSVPTemplate()->isEnabled()) {
-            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
-        }
 
         $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
         if ($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
@@ -1905,5 +1906,40 @@ SQL;
         $this->rsvp_type = $rsvp_type;
     }
 
+    /**
+     * @param SummitAttendee $invitee
+     * @return RSVPInvitation
+     * @throws ValidationException
+     */
+    public function addRSVPInvitation(SummitAttendee $invitee): RSVPInvitation{
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('invitee', $invitee));
+        $already_invited = $this->rsvp_invitations->matching($criteria)->count() > 0;
+        if($already_invited)
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) is already invited to RSVP for Activity %s",
+                    $invitee->getFullName(),
+                    $invitee->getEmail(),
+                    $this->getId()
+                )
+            );
 
+        $invitation = new RSVPInvitation($this, $invitee);
+        $invitation->generateConfirmationToken();
+
+        $this->rsvp_invitations->add($invitation);
+
+        return $invitation;
+    }
+
+    public function clearRSVPInvitations(): void{
+        $this->rsvp_invitations->clear();
+    }
+
+    public function getRSVPInvitations(){
+        return $this->rsvp_invitations;
+    }
 }

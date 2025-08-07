@@ -1,139 +1,113 @@
 <?php namespace App\Http\Middleware;
-/**
- * Copyright 2015 OpenStack Foundation
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- **/
 
 use Closure;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Http\JsonResponse;
-use libs\utils\CacheRegions;
-use libs\utils\ICacheService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\CacheRegions;
 use models\oauth2\IResourceServerContext;
 
-/**
- * Class CacheMiddleware
- * @package App\Http\Middleware
- */
 final class CacheMiddleware
 {
-    /**
-     * @var ICacheService
-     */
-    private $cache_service;
+    private IResourceServerContext $context;
 
-    /**
-     * @var IResourceServerContext
-     */
-    private $context;
-
-    public function __construct(IResourceServerContext $context, ICacheService $cache_service)
+    public function __construct(IResourceServerContext $context)
     {
         $this->context = $context;
-        $this->cache_service = $cache_service;
     }
 
-
     /**
-     * @param $request
-     * @param Closure $next
-     * @param $cache_lifetime
-     * @param null $cache_region
-     * @param null $param_id
+     * @param  \Illuminate\Http\Request  $request
+     * @param  Closure                   $next
+     * @param  int                       $cache_lifetime    seconds
+     * @param  string|null               $cache_region      one of CacheRegions::*
+     * @param  string|null               $param_id          route parameter name (e.g. "event_id")
      * @return JsonResponse|mixed
      */
     public function handle($request, Closure $next, $cache_lifetime, $cache_region = null, $param_id = null)
     {
         Log::debug('CacheMiddleware::handle');
-        $cache_lifetime = intval($cache_lifetime);
-        if ($request->getMethod() !== 'GET') {
-            // short circuit
-            Log::debug('CacheMiddleware::handle method is not GET');
+
+        // Only cache GETs:
+        if ($request->method() !== 'GET') {
+            Log::debug('CacheMiddleware::handle skipping non-GET');
             return $next($request);
         }
 
-        $key = $request->getPathInfo();
-        $query = $request->getQueryString();
-        $current_time = time();
-        $evict_cache = false;
-        if (!empty($query)) {
-            Log::debug(sprintf('CacheMiddleware::handle query %s', $query));
-            $query = explode('&', $query);
-            foreach ($query as $q) {
-                $q = explode('=', $q);
-                /*
-                if(strtolower($q[0]) === "evict_cache"){
-                    if(strtolower($q[1]) === '1') {
-                        Log::debug('CacheMiddleware::handle cache will be evicted');
-                        $evict_cache = true;
-                    }
-                    continue;
-                }
-                */
-                if(in_array(strtolower($q[0]), ['access_token', 'token_type', 'q', 't','evict_cache'])) continue;
-                $key .= "." . implode("=", $q);
-            }
-        }
+        $cache_lifetime = intval($cache_lifetime);
+        $key            = $this->buildKey($request);
+        $regionTag      = null;
 
-        if (str_contains($request->getPathInfo(), '/me')) {
-            $current_member = $this->context->getCurrentUser();
-            if (!is_null($current_member))
-                $key .= ':' . $current_member->getId();
-        }
-
-        $data = $this->cache_service->getSingleValue($key);
-        $time = $this->cache_service->getSingleValue($key . ".generated");
-        $region = [];
-        $cache_region_key = null;
-        if(!empty($cache_region) && !empty($param_id)){
+        // If we have a region (e.g. summits/69 → CacheRegionEvents:69):
+        if ($cache_region && $param_id) {
             $id = $request->route($param_id);
-            $cache_region_key = CacheRegions::getCacheRegionFor($cache_region, $id);
-            if(!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
-                //
-                Log::debug(sprintf("CacheMiddleware::handle trying to get region %s data ...", $cache_region_key));
-                $region_data = $this->cache_service->getSingleValue($cache_region_key);
-                if(!empty($region_data)){
-                    $region = json_decode(gzinflate($region_data), true);
-                    Log::debug(sprintf("CacheMiddleware::handle got payload %s for region %s", json_encode($region), $cache_region_key));
-                }
+            if ($id) {
+                $regionTag = CacheRegions::getCacheRegionFor($cache_region, $id);
             }
         }
-        if (empty($data) || empty($time) || $evict_cache) {
-            $time = $current_time;
-            Log::debug(sprintf("CacheMiddleware::handle cache value not found for key %s , getting from api...", $key));
-            // normal flow ...
-            $response = $next($request);
-            if ($response instanceof JsonResponse && $response->getStatusCode() === 200) {
-                // and if its json, store it on cache ..).
-                $data = $response->getData(true);
-                Log::debug(sprintf("CacheMiddleware::handle storing data for key %s", $key));
-                $this->cache_service->setSingleValue($key, gzdeflate(json_encode($data), 9), $cache_lifetime);
-                $this->cache_service->setSingleValue($key . ".generated", $time, $cache_lifetime);
-                if(!empty($cache_region_key)){
-                    $region[$key] = $key;
-                    Log::debug(sprintf("CacheMiddleware::handle storing data for region %s", $cache_region_key));
-                    $this->cache_service->setSingleValue($cache_region_key, gzdeflate(json_encode($region), 9));
-                }
-            }
+
+        if ($regionTag) {
+            Log::debug("CacheMiddleware: using region tag {$regionTag}");
+            $data = Cache::tags($regionTag)
+                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime) {
+                    Log::debug("CacheMiddleware: cache miss for {$key} in tag {$regionTag}");
+                    $resp = $next($request);
+                    if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
+                        return $resp->getData(true);
+                    }
+                    // don’t cache non-200 or non-JSON
+                    return Cache::get($key);
+                });
         } else {
-            $ttl = $this->cache_service->ttl($key);
-            // cache hit ...
-            Log::debug(sprintf("CacheMiddleware::handle cache hit for %s - ttl %s ...", $key, $ttl));
-            $response = new JsonResponse(json_decode(gzinflate($data), true), 200, [
-                    'content-type' => 'application/json',
-                ]
-            );
+            Log::debug("CacheMiddleware: using global cache");
+            $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key) {
+                Log::debug("CacheMiddleware: cache miss for {$key}");
+                $resp = $next($request);
+                if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
+                    return $resp->getData(true);
+                }
+                return Cache::get($key);
+            });
         }
+
+        // Build the JsonResponse (either from cache or fresh)
+        $response = new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
+
+        // Mark for revalidation so your ETag middleware can return 304 when unchanged
+        $response->setPublic();
+        $response->setMaxAge(0);
+        $response->headers->addCacheControlDirective('must-revalidate', true);
+        $response->headers->addCacheControlDirective('proxy-revalidate', true);
 
         return $response;
+    }
+
+    /**
+     * Build a cache key based on path + sorted query params
+     */
+    private function buildKey($request): string
+    {
+        $path   = $request->getPathInfo();
+        $params = collect($request->query())
+            ->except(['access_token','token_type','q','t','evict_cache'])
+            ->sortKeys()
+            ->map(function($v) {
+                return is_array($v) ? implode(',', $v) : $v;
+            })
+            ->all();
+
+        if (str_contains($path, '/me') && $user = $this->context->getCurrentUser()) {
+            // per-user cache on /me routes
+            $path .= ":{$user->getId()}";
+        }
+
+        if (empty($params)) {
+            return $path;
+        }
+
+        // build a normalized query string
+        $qs = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+        return "{$path}.{$qs}";
     }
 }

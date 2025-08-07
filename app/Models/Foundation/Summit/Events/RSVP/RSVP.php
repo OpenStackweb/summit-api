@@ -69,6 +69,28 @@ class RSVP extends SilverstripeBaseModel
     #[ORM\OneToMany(targetEntity: \models\summit\RSVPAnswer::class, mappedBy: 'rsvp', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $answers;
 
+
+    public const string Status_Active = 'Active';
+    public const string Status_Inactive = 'Inactive';
+
+    public const string Status_TicketReassigned = 'TicketReassigned';
+
+
+    public const array AllowedStatus = [
+        self::Status_Active,
+        self::Status_Inactive,
+        self::Status_TicketReassigned
+    ];
+
+    #[ORM\Column(name: 'Status', type: 'string')]
+    protected string $status;
+
+    /**
+     * @var \DateTime
+     */
+    #[ORM\Column(name: 'ActionDate', type: 'datetime')]
+    private \DateTime $action_date;
+
     /**
      * RSVP constructor.
      */
@@ -79,6 +101,8 @@ class RSVP extends SilverstripeBaseModel
         $this->answers      = new ArrayCollection();
         $this->been_emailed = false;
         $this->event_uri    = null;
+        $this->status       = self::Status_Active;
+        $this->action_date  = null;
     }
 
     /**
@@ -270,5 +294,18 @@ class RSVP extends SilverstripeBaseModel
         $this->event_uri = $event_uri;
     }
 
+    public function getStatus(): string{
+        return $this->status;
+    }
+
+    public function deactivate():void{
+        $this->status = self::Status_Inactive;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function ticketReassigned():void{
+        $this->status = self::Status_TicketReassigned;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
 
 }

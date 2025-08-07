@@ -13,12 +13,12 @@
  **/
 
 use App\Jobs\RevokeSummitOrder;
+use App\Models\Utils\Traits\InvitationTrait;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\main\Tag;
-use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -77,15 +77,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         self::AcceptanceCriteria_AllTicketTypes
     ];
 
-    const Status_Pending = 'Pending';
-    const Status_Accepted = 'Accepted';
-    const Status_Rejected = 'Rejected';
-
-    const AllowedStatus = [
-        self::Status_Pending,
-        self::Status_Accepted,
-        self::Status_Rejected
-    ];
 
     /**
      * @deprecated moved to action_date
@@ -141,6 +132,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     #[ORM\Column(name: 'ActionDate', type: 'datetime')]
     private $action_date;
 
+    use InvitationTrait;
 
     public function __construct()
     {
@@ -203,27 +195,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
-     */
-    public function getHash(): ?string
-    {
-        return $this->hash;
-    }
-
-    /**
-     * @param string $hash
-     */
-    public function setHash(string $hash): void
-    {
-        $this->hash = $hash;
-    }
-
-    public function isSent(): bool
-    {
-        return !empty($this->hash);
-    }
-
-    /**
      * @return Member
      */
     public function getMember(): ?Member
@@ -265,22 +236,9 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * transient variable
-     * @var string
-     */
-    private $token;
-
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    /**
      * @return string
      */
-    public function generateConfirmationToken(): string
-    {
-        $generator = new RandomGenerator();
+    protected  function generateTokenSeed():string{
         // build seed
         $seed = '';
         if (!is_null($this->first_name))
@@ -289,16 +247,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             $seed .= $this->last_name;
         if (!is_null($this->email))
             $seed .= $this->email;
-        $seed .= $generator->randomToken();
-        $this->token = md5($seed);
-        $this->hash = self::HashConfirmationToken($this->token);
-        Log::debug(sprintf("SummitRegistrationInvitation::generateConfirmationToken id %s token %s hash %s", $this->id, $this->token, $this->hash));
-        return $this->token;
-    }
-
-    public static function HashConfirmationToken(string $token): string
-    {
-        return md5($token);
+        return $seed;
     }
 
     /**
@@ -526,10 +475,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     }
 
-    public function markAsRejected(): void {
-        $this->setStatus(SummitRegistrationInvitation::Status_Rejected);
-    }
-
     public function addOrder(SummitOrder $order){
         if ($this->orders->contains($order)) return;
         $this->orders->add($order);
@@ -708,62 +653,5 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         if(!in_array($acceptance_criteria,self::AllowedAcceptanceCriteria))
             throw new ValidationException(sprintf("acceptance_criteria %s is not allowed.", $acceptance_criteria));
         $this->acceptance_criteria = $acceptance_criteria;
-    }
-
-    /**
-     * @return string
-     */
-    public function getStatus(): string
-    {
-        return $this->status;
-    }
-
-    /**
-     * @param string $status
-     * @throws ValidationException
-     */
-    public function setStatus(string $status): void
-    {
-        if(!in_array($status,self::AllowedStatus))
-            throw new ValidationException(sprintf("status %s is not allowed.", $status));
-
-        $this->action_date = $status == self::Status_Pending ?
-            null : new \DateTime('now', new \DateTimeZone('UTC'));
-
-        $this->status = $status;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isAccepted(): bool
-    {
-        return $this->status === self::Status_Accepted;
-    }
-
-    public function isPending():bool{
-        return $this->status === self::Status_Pending;
-    }
-
-    public function isRejected():bool{
-        return $this->status === self::Status_Rejected;
-    }
-
-    /**
-     * @param bool $accepted
-     * @throws \Exception
-     */
-    public function setAccepted(bool $accepted)
-    {
-        $this->status = $accepted ? self::Status_Accepted : self::Status_Rejected;
-        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
-    }
-
-    /**
-     * @return \DateTime|null
-     */
-    public function getActionDate(): ?\DateTime
-    {
-        return $this->action_date;
     }
 }

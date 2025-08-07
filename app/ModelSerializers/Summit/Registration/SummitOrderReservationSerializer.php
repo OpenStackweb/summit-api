@@ -39,6 +39,8 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         'TotalRefundedAmountInCents' => 'total_refunded_amount_in_cents:json_int',
         'CreditCardType' => 'credit_card_type:json_string',
         'CreditCard4Number' => 'credit_card_4number:json_string',
+        'PaymentInfoType' => 'payment_info_type:json_string',
+        'PaymentInfoDetails' => 'payment_info_details:json_string',
     ];
 
     protected static $allowed_relations = [

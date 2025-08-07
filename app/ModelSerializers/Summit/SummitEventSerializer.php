@@ -37,13 +37,6 @@ class SummitEventSerializer extends SilverStripeSerializer
         'Published' => 'is_published:json_boolean',
         'PublishedDate' => 'published_date:datetime_epoch',
         'HeadCount' => 'head_count:json_int',
-        'RSVPLink' => 'rsvp_link:json_string',
-        'RSVPTemplateId' => 'rsvp_template_id:json_int',
-        'RSVPMaxUserNumber' => 'rsvp_max_user_number:json_int',
-        'RSVPMaxUserWaitListNumber' => 'rsvp_max_user_wait_list_number:json_int',
-        'RSVPRegularCount' => 'rsvp_regular_count:json_int',
-        'RSVPWaitCount' => 'rsvp_wait_count:json_int',
-        'ExternalRSVP' => 'rsvp_external:json_boolean',
         'CategoryId' => 'track_id:json_int',
         'MeetingUrl' => 'meeting_url:json_string',
         'TotalAttendanceCount' => 'attendance_count:json_int',
@@ -57,6 +50,15 @@ class SummitEventSerializer extends SilverStripeSerializer
         'Duration' => 'duration:json_int',
         'SecureStream' => 'stream_is_secure:json_boolean',
         'SubmissionSource' => 'submission_source:json_string',
+        // RSVP Fields
+        'RSVPLink' => 'rsvp_link:json_string',
+        'RSVPTemplateId' => 'rsvp_template_id:json_int',
+        'RSVPMaxUserNumber' => 'rsvp_max_user_number:json_int',
+        'RSVPMaxUserWaitListNumber' => 'rsvp_max_user_wait_list_number:json_int',
+        'RSVPRegularCount' => 'rsvp_regular_count:json_int',
+        'RSVPWaitCount' => 'rsvp_wait_count:json_int',
+        'ExternalRSVP' => 'rsvp_external:json_boolean',
+        'RSVPType' => 'rsvp_type:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -100,6 +102,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'duration',
         'stream_is_secure',
         'submission_source',
+        'rsvp_type',
     ];
 
     protected static $allowed_relations = [

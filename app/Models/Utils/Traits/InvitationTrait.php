@@ -53,6 +53,15 @@ trait InvitationTrait
     }
 
     /**
+     * @return void
+     * @throws ValidationException
+     * @throws \DateMalformedStringException
+     */
+    public function markAsAccepted(): void {
+        $this->setStatus(self::Status_Accepted);
+    }
+
+    /**
      * @param string $status
      * @return void
      * @throws ValidationException

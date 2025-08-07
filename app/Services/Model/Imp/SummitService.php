@@ -2333,7 +2333,7 @@ final class SummitService
 
             $event = $this->event_repository->getByIdExclusiveLock($event_id);
 
-            if (is_null($event) || !$event instanceof SummitEvent) {
+            if (!$event instanceof SummitEvent) {
                 throw new EntityNotFoundException('Event not found on summit.');
             }
 
@@ -2344,7 +2344,7 @@ final class SummitService
             if (!Summit::allowToSee($event, $member))
                 throw new EntityNotFoundException('Event not found on summit.');
 
-            if (!$event->hasRSVPTemplate()) {
+            if (!$event->hasRSVP()) {
                 throw new EntityNotFoundException('Event not found on summit.');
             }
 

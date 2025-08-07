@@ -626,7 +626,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return bool
      */
-    public function hasRSVP()
+    public function hasRSVP():bool
     {
         return $this->rsvp_type !== self::RSVPType_None;
     }
@@ -1118,9 +1118,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     }
 
     /**
-     * @return RSVPTemplate
+     * @return ?RSVPTemplate
      */
-    public function getRSVPTemplate()
+    public function getRSVPTemplate():?RSVPTemplate
     {
         return $this->rsvp_template;
     }
@@ -1906,6 +1906,10 @@ SQL;
         $this->rsvp_type = $rsvp_type;
     }
 
+    public function getRSVPType(): string{
+        return $this->rsvp_type;
+    }
+
     /**
      * @param SummitAttendee $invitee
      * @return RSVPInvitation
@@ -1928,8 +1932,6 @@ SQL;
             );
 
         $invitation = new RSVPInvitation($this, $invitee);
-        $invitation->generateConfirmationToken();
-
         $this->rsvp_invitations->add($invitation);
 
         return $invitation;
@@ -1941,5 +1943,16 @@ SQL;
 
     public function getRSVPInvitations(){
         return $this->rsvp_invitations;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
+     * @return RSVPInvitation|null
+     */
+    public function getRSVPInvitationByInvitee(SummitAttendee $invitee): ?RSVPInvitation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('invitee', $invitee ));
+        $invitation = $this->rsvp_invitations->matching($criteria)->first();
+        return $invitation === false ? null : $invitation;
     }
 }

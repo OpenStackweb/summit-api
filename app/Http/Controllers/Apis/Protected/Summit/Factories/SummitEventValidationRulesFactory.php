@@ -70,6 +70,7 @@ final class SummitEventValidationRulesFactory
                 'duration' => 'sometimes|integer|min:0',
                 'stream_is_secure' =>  'sometimes|boolean',
                 'allowed_ticket_types' => 'sometimes|int_array',
+                'rsvp_type' => 'sometimes|string|in:' . implode(',', SummitEvent::AllowedRSVPTypes),
             ];
         }
 
@@ -114,6 +115,7 @@ final class SummitEventValidationRulesFactory
             'duration' => 'sometimes|integer|min:0',
             'stream_is_secure' =>  'sometimes|boolean',
             'allowed_ticket_types' => 'sometimes|int_array',
+            'rsvp_type' => 'sometimes|string|in:' . implode(',', SummitEvent::AllowedRSVPTypes),
         ];
     }
 

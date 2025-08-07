@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate;
 use models\main\Member;
 use models\summit\RSVP;
@@ -46,56 +45,58 @@ final class SummitRSVPFactory
      */
     public static function populate(RSVP $rsvp, SummitEvent $summitEvent, Member $owner, array $data):RSVP {
 
-
-
         $rsvp->setOwner($owner);
 
         if(!$rsvp->hasSeatTypeSet())
             $rsvp->setSeatType($summitEvent->getCurrentRSVPSubmissionSeatType());
 
-        $template = $summitEvent->getRSVPTemplate();
-
         if(isset($data['event_uri']) && !empty($data['event_uri'])){
             $rsvp->setEventUri($data['event_uri']);
         }
 
-        $answers = $data['answers'] ?? [];
+        $template = $summitEvent->getRSVPTemplate();
 
-        // restructuring for a quick search
-        if(count($answers)){
-            $bucket = [];
-            foreach ($answers as $answer_dto){
-                $bucket[intval($answer_dto['question_id'])] = $answer_dto;
+        if(!is_null($template)) {
+            // template is optional
+            $answers = $data['answers'] ?? [];
+
+            // restructuring for a quick search
+            if (count($answers)) {
+                $bucket = [];
+                foreach ($answers as $answer_dto) {
+                    $bucket[intval($answer_dto['question_id'])] = $answer_dto;
+                }
+                $answers = $bucket;
             }
-            $answers = $bucket;
-        }
 
-        foreach($template->getQuestions() as $question){
+            foreach ($template->getQuestions() as $question) {
 
-            if(!$question instanceof RSVPQuestionTemplate) continue;
-            $answer_dto = $answers[$question->getId()] ?? null;
-            $value      = $answer_dto['value'] ?? null;
+                if (!$question instanceof RSVPQuestionTemplate) continue;
+                $answer_dto = $answers[$question->getId()] ?? null;
+                $value = $answer_dto['value'] ?? null;
 
-            if($question->isMandatory() &&
-                (
-                    is_null($value) ||
-                    (is_string($value) && empty($value)) ||
-                    (is_array($value)) && count($value) == 0
+                if ($question->isMandatory() &&
+                    (
+                        is_null($value) ||
+                        (is_string($value) && empty($value)) ||
+                        (is_array($value)) && count($value) == 0
+                    )
                 )
-            )
-                throw new ValidationException(sprintf("Question '%s' is mandatory.", $question->getLabel()));
+                    throw new ValidationException(sprintf("Question '%s' is mandatory.", $question->getLabel()));
 
                 $answer = $rsvp->findAnswerByQuestion($question);
-                if(is_null($answer))
+                if (is_null($answer))
                     $answer = new RSVPAnswer();
 
-                if(!$question->isValidValue($value))
+                if (!$question->isValidValue($value))
                     throw new ValidationException(sprintf("Value is not valid for Question '%s'.", $question->getLabel()));
 
                 $answer->setValue($value);
                 $answer->setQuestion($question);
                 $rsvp->addAnswer($answer);
             }
+
+        }
 
         $summitEvent->addRSVPSubmission($rsvp);
 

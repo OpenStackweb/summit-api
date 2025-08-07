@@ -447,7 +447,8 @@ SQL;
             ->join("e.summit","s")
             ->where('e.status = :order_status')
             ->andWhere('s.id = :summit_id')
-            ->andWhere("e.payment_info_type is null");
+            ->andWhere("e.payment_info_type is null")
+            ->andWhere("e.payment_gateway_cart_id is not null");
 
         $query->setParameter("order_status", IOrderConstants::PaidStatus);
         $query->setParameter("summit_id", $summit->getId());

@@ -583,6 +583,16 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function hasTicketsPaidTickets():bool
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', IOrderConstants::PaidStatus ));
+        return $this->tickets->matching($criteria)->count() > 0;
+    }
+
+    /**
      * @return string
      */
     public function getFirstName(): ?string

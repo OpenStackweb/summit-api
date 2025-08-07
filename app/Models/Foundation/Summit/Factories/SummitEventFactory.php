@@ -137,6 +137,10 @@ final class SummitEventFactory
             $event->setSubmissionSource(trim($payload['submission_source']));
         }
 
+        if (isset($payload['rsvp_type'])) {
+            $event->setRSVPType(trim($payload['rsvp_type']));
+        }
+
         return $event;
     }
 }

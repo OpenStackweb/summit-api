@@ -215,6 +215,10 @@ class RSVP extends SilverstripeBaseModel
         $this->seat_type = $seat_type;
     }
 
+    public function upgradeToRegularSeatType():void{
+        $this->setSeatType(self::SeatTypeRegular);
+    }
+
     /**
      * @return bool
      */

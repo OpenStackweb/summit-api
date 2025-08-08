@@ -1,6 +1,6 @@
-<?php namespace App\Events;
+<?php namespace App\Events\RSVP;
 /**
- * Copyright 2016 OpenStack Foundation
+ * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,34 +12,42 @@
  * limitations under the License.
  **/
 
-
-use Illuminate\Queue\SerializesModels;
+use App\Events\SummitEventAction;
+use models\summit\RSVP;
 
 /**
- * Class SummitEventAction
+ * Class RSVPAction
  * @package App\Events
  */
-class SummitEventAction extends Event
+class RSVPAction extends SummitEventAction
 {
-
-    use SerializesModels;
-
     /**
      * @var int
      */
-    protected int $event_id;
+    protected int $rsvp_id;
 
-    /**
-     * SummitEventAction constructor.
-     * @param int $event_id
-     */
-    function __construct(int $event_id)
-    {
-        $this->event_id = $event_id;
+    protected int $member_id;
+
+    public function __construct(RSVP $rsvp){
+
+        $this->rsvp_id = $rsvp->getId();
+        $this->member_id = $rsvp->getOwnerId();
+        parent::__construct($rsvp->getEventId());
     }
 
     /**
      * @return int
      */
-    public function getEventId(){ return $this->event_id;}
+    public function getRsvpId(): int
+    {
+        return $this->rsvp_id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMemberId(): int{
+        return $this->member_id;
+    }
+
 }

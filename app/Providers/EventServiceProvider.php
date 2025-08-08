@@ -17,8 +17,10 @@ use App\Events\NewMember;
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
 use App\Events\Registration\MemberDataUpdatedExternally;
 use App\Events\RequestedBookableRoomReservationRefund;
-use App\Events\RSVPCreated;
-use App\Events\RSVPUpdated;
+use App\Events\RSVP\RSVPCreated;
+use App\Events\RSVP\RSVPDeleted;
+use App\Events\RSVP\RSVPUpdated;
+use App\Events\ScheduleEntityLifeCycleEvent;
 use App\Events\SummitAttendeeCheckInStateUpdated;
 use App\Events\TicketUpdated;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
@@ -35,19 +37,22 @@ use App\Jobs\ProcessSummitAttendeeCheckInStateUpdated;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
+use App\Listeners\QueryExecutedListener;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\main\Member;
 use models\summit\RSVP;
+use models\summit\SummitEvent;
 use models\summit\SummitRoomReservation;
-use App\Events\ScheduleEntityLifeCycleEvent;
-use Illuminate\Database\Events\QueryExecuted;
-use App\Listeners\QueryExecutedListener;
+use services\model\ISummitService;
+
 /**
  * Class EventServiceProvider
  * @package App\Providers
@@ -182,16 +187,113 @@ final class EventServiceProvider extends ServiceProvider
 
             $rsvp_id = $event->getRsvpId();
 
+            $summit_event_id = $event->getEventId();
+
+            $member_id = $event->getMemberId();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "Event::listen RSVPCreated rsvp_id %s summit_event_id %s member_id %s",
+                    $event->getRsvpId(),
+                    $summit_event_id,
+                    $member_id
+                )
+            );
+
             $rsvp_repository = EntityManager::getRepository(RSVP::class);
 
+            $summit_event_repository = EntityManager::getRepository(SummitEvent::class);
+
+            $member_repository = EntityManager::getRepository(Member::class);
+
+            $summit_service = App::make(ISummitService::class);
+
+            if($summit_service instanceof ISummitService){
+
+                $member = $member_repository->find($member_id);
+                $summit_event = $summit_event_repository->find($summit_event_id);
+
+                if($summit_event instanceof SummitEvent && $member instanceof Member){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "Event::listen RSVPCreated adding event id %s to user %s schedule",
+                            $event->getEventId(),
+                            $member->getId()
+                        )
+                    );
+
+                    $summit_service->addEventToMemberSchedule(
+                        $summit_event->getSummit(),
+                        $member,
+                        $summit_event_id,
+                        false
+                    );
+                }
+            }
+
             $rsvp = $rsvp_repository->find($rsvp_id);
-            if (is_null($rsvp) || !$rsvp instanceof RSVP) return;
+            if (!$rsvp instanceof RSVP) return;
 
             if ($rsvp->getSeatType() == RSVP::SeatTypeRegular)
                 RSVPRegularSeatMail::dispatch($rsvp);
 
             if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
                 RSVPWaitListSeatMail::dispatch($rsvp);
+        });
+
+        Event::listen(RSVPDeleted::class, function ($event) {
+            if (!$event instanceof RSVPDeleted) return;
+
+            $member_id = $event->getMemberId();
+
+            $summit_event_id = $event->getEventId();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "Event::listen RSVPDeleted summit_event_id %s member_id %s",
+                    $event->getRsvpId(),
+                    $summit_event_id,
+                    $member_id
+                )
+            );
+
+            $summit_event_repository = EntityManager::getRepository(SummitEvent::class);
+
+            $member_repository = EntityManager::getRepository(Member::class);
+
+            $summit_service = App::make(ISummitService::class);
+
+            if($summit_service instanceof ISummitService) {
+
+                $member = $member_repository->find($member_id);
+                $summit_event = $summit_event_repository->find($summit_event_id);
+
+                if ($summit_event instanceof SummitEvent && $member instanceof Member) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "Event::listen RSVPDeleted removing event id %s from user %s schedule",
+                            $event->getEventId(),
+                            $member->getId()
+                        )
+                    );
+
+                    $summit_service->removeEventFromMemberSchedule(
+                        $summit_event->getSummit(),
+                        $member,
+                        $summit_event_id,
+                        false
+                    );
+                }
+            }
+
         });
 
         Event::listen(RSVPUpdated::class, function ($event) {
@@ -202,7 +304,7 @@ final class EventServiceProvider extends ServiceProvider
             $rsvp_repository = EntityManager::getRepository(RSVP::class);
 
             $rsvp = $rsvp_repository->find($rsvp_id);
-            if (is_null($rsvp) || !$rsvp instanceof RSVP) return;
+            if (!$rsvp instanceof RSVP) return;
 
             if ($rsvp->getSeatType() == RSVP::SeatTypeRegular)
                 RSVPRegularSeatMail::dispatch($rsvp);

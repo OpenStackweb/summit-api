@@ -6999,7 +6999,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'add-rsvp-member',
+                'name' => 'rsvp',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'POST',
                 'scopes' => [
@@ -7008,16 +7008,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'update-rsvp-member',
-                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
-                'http_method' => 'PUT',
-                'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyRSVP, $current_realm)
-                ],
-            ],
-            [
-                'name' => 'delete-rsvp-member',
+                'name' => 'unrsvp',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [

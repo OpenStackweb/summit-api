@@ -13,7 +13,7 @@
  **/
 
 use App\Jobs\CreateMUXURLSigningKeyForSummit;
-use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
@@ -24,12 +24,10 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\CacheRegions;
-use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -38,7 +36,7 @@ use models\main\Tag;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Random\RandomException;
-
+use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 /**
  * @package models\summit
  */
@@ -171,6 +169,22 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     #[ORM\Column(name: 'HeadCount', type: 'integer')]
     protected $head_count;
 
+
+    public const string RSVPType_None = 'None';
+    public const string RSVPType_Public = 'Public';
+    public const string RSVPType_Private = 'Private';
+
+    public const array AllowedRSVPTypes = [
+        self::RSVPType_None,
+        self::RSVPType_Public,
+        self::RSVPType_Private,
+    ];
+
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'RSVPType', type: 'string')]
+    protected $rsvp_type;
     /**
      * @var int
      */
@@ -371,6 +385,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     #[ORM\Column(name: 'OverflowStreamKey', type: 'string')]
     protected $overflow_stream_key;
 
+    #[ORM\OneToMany(targetEntity: RSVPInvitation::class, mappedBy: 'event', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $rsvp_invitations;
+
     /**
      * SummitEvent constructor.
      */
@@ -396,6 +413,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->overflow_stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
         $this->submission_source = SummitEvent::SOURCE_ADMIN;
+        $this->rsvp_type = self::RSVPType_None;
+        $this->rsvp_invitations = new ArrayCollection();
     }
 
     use SummitOwned;
@@ -607,9 +626,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return bool
      */
-    public function hasRSVP()
+    public function hasRSVP():bool
     {
-        return !empty($this->rsvp_link) || $this->hasRSVPTemplate();
+        return $this->rsvp_type !== self::RSVPType_None;
     }
 
     /**
@@ -1088,12 +1107,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function getCurrentRSVPSubmissionSeatType(): string
     {
 
-        if (!$this->hasRSVPTemplate())
+        if (!$this->hasRSVP())
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
-
-        if (!$this->getRSVPTemplate()->isEnabled()) {
-            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
-        }
 
         $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
         if ($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
@@ -1103,9 +1118,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     }
 
     /**
-     * @return RSVPTemplate
+     * @return ?RSVPTemplate
      */
-    public function getRSVPTemplate()
+    public function getRSVPTemplate():?RSVPTemplate
     {
         return $this->rsvp_template;
     }
@@ -1128,6 +1143,18 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $criteria = Criteria::create();
         $criteria = $criteria->where(Criteria::expr()->eq('seat_type', $seat_type));
         return $this->rsvp->matching($criteria)->count();
+    }
+
+
+    /**
+     * @return RSVP|null
+     */
+    public function getFirstRSVPOnWaitList(): ?RSVP
+    {
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('seat_type', RSVP::SeatTypeWaitList));
+        $criteria = $criteria->orderBy(['created' => Criteria::ASC]);
+        return $this->rsvp->matching($criteria)->first();
     }
 
     /**
@@ -1882,5 +1909,62 @@ SQL;
 
     public function isOnOverflow():bool{
         return $this->occupancy == self::OccupancyOverflow;
+    }
+
+    public function setRSVPType(string $rsvp_type): void{
+        if(!in_array($rsvp_type, self::AllowedRSVPTypes)){
+            throw new ValidationException("Invalid rsvp type.");
+        }
+        $this->rsvp_type = $rsvp_type;
+    }
+
+    public function getRSVPType(): string{
+        return $this->rsvp_type;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
+     * @return RSVPInvitation
+     * @throws ValidationException
+     */
+    public function addRSVPInvitation(SummitAttendee $invitee): RSVPInvitation{
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('invitee', $invitee));
+        $already_invited = $this->rsvp_invitations->matching($criteria)->count() > 0;
+        if($already_invited)
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) is already invited to RSVP for Activity %s",
+                    $invitee->getFullName(),
+                    $invitee->getEmail(),
+                    $this->getId()
+                )
+            );
+
+        $invitation = new RSVPInvitation($this, $invitee);
+        $this->rsvp_invitations->add($invitation);
+
+        return $invitation;
+    }
+
+    public function clearRSVPInvitations(): void{
+        $this->rsvp_invitations->clear();
+    }
+
+    public function getRSVPInvitations(){
+        return $this->rsvp_invitations;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
+     * @return RSVPInvitation|null
+     */
+    public function getRSVPInvitationByInvitee(SummitAttendee $invitee): ?RSVPInvitation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('invitee', $invitee ));
+        $invitation = $this->rsvp_invitations->matching($criteria)->first();
+        return $invitation === false ? null : $invitation;
     }
 }

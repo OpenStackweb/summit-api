@@ -137,8 +137,6 @@ class RegisteredMemberOrderPaidMail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::order_credit_card_type]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_purchase_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_credit_card_4number]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_payment_info_type]['type'] = 'string';
-        $payload[IMailTemplatesConstants::order_payment_info_details]['type'] = 'array';
         $payload[IMailTemplatesConstants::order_currency]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_currency_symbol]['type'] = 'string';
         $payload[IMailTemplatesConstants::order_raw_amount]['type'] = 'string';
@@ -178,6 +176,38 @@ class RegisteredMemberOrderPaidMail extends AbstractSummitEmailJob
 
         $payload[IMailTemplatesConstants::tickets]['type'] = 'array';
         $payload[IMailTemplatesConstants::tickets]['items'] = $ticket_schema;
+
+        $order_payment_info_details_schema_card = [];
+        $order_payment_info_details_schema_card['type'] = 'object';
+        $order_payment_info_details_schema_card['properties']['brand']['type'] = 'string';
+        $order_payment_info_details_schema_card['properties']['last4']['type'] = 'string';
+        $order_payment_info_details_schema_card['properties']['funding']['type'] = 'string';
+        $order_payment_info_details_schema_card['properties']['exp_year']['type'] = 'number';
+        $order_payment_info_details_schema_card['properties']['exp_month']['type'] = 'number';
+        $order_payment_info_details_schema_card['properties']['wallet_type']['type'] = 'string';
+        $order_payment_info_details_schema_card['properties']['wallet_dynamic_last4']['type'] = 'string';
+
+        $order_payment_info_details_schema_link = [];
+        $order_payment_info_details_schema_link['type'] = 'object';
+        $order_payment_info_details_schema_link['properties']['email']['type'] = 'string';
+        $order_payment_info_details_schema_link['properties']['country']['type'] = 'string';
+
+        $order_payment_info_details_schema_ach = [];
+        $order_payment_info_details_schema_ach['type'] = 'object';
+        $order_payment_info_details_schema_ach['properties']['last4']['type'] = 'string';
+        $order_payment_info_details_schema_ach['properties']['bank_name']['type'] = 'string';
+        $order_payment_info_details_schema_ach['properties']['account_type']['type'] = 'string';
+        $order_payment_info_details_schema_ach['properties']['routing_number']['type'] = 'string';
+        $order_payment_info_details_schema_ach['properties']['account_holder_type']['type'] = 'string';
+
+        $order_payment_info_details_schema = [];
+        $order_payment_info_details_schema['type'] = 'object';
+        $order_payment_info_details_schema['properties']['card'] = $order_payment_info_details_schema_card;
+        $order_payment_info_details_schema['properties']['us_bank_account'] = $order_payment_info_details_schema_ach;
+        $order_payment_info_details_schema['properties']['link'] = $order_payment_info_details_schema_link;
+
+        $payload[IMailTemplatesConstants::order_payment_info_type]['type'] = 'enum(card, us_bank_account, link)';
+        $payload[IMailTemplatesConstants::order_payment_info_details] = $order_payment_info_details_schema;
 
         return $payload;
     }

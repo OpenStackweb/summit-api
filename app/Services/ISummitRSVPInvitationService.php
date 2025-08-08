@@ -56,27 +56,24 @@ interface ISummitRSVPInvitationService
     public function update(SummitEvent $summit_event, int $invitation_id, array $payload):RSVPInvitation;
 
     /**
-     * @param Member $current_member
      * @param string $token
      * @return RSVPInvitation
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function getInvitationByToken(Member $current_member, string $token):RSVPInvitation;
+    public function getInvitationByToken(string $token):RSVPInvitation;
 
     /**
-     * @param Member $current_member
      * @param string $token
      * @return RSVPInvitation
      */
-    public function acceptInvitationBySummitAndToken(Member $current_member, string $token): RSVPInvitation;
+    public function acceptInvitationBySummitAndToken(string $token): RSVPInvitation;
 
     /**
-     * @param Member $current_member
      * @param string $token
      * @return RSVPInvitation
      */
-    public function rejectInvitationBySummitAndToken(Member $current_member, string $token): RSVPInvitation;
+    public function rejectInvitationBySummitAndToken(string $token): RSVPInvitation;
 
 
     /**

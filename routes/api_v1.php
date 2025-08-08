@@ -1713,9 +1713,8 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::group(array('prefix' => '{event_id}'), function () {
 
                         Route::group(['prefix' => 'rsvp'], function () {
-                            Route::post('', 'OAuth2SummitMembersApiController@addEventRSVP')->where('member_id', 'me');
-                            Route::put('', 'OAuth2SummitMembersApiController@updateEventRSVP')->where('member_id', 'me');
-                            Route::delete('', 'OAuth2SummitMembersApiController@deleteEventRSVP')->where('member_id', 'me');
+                            Route::post('', 'OAuth2SummitMembersApiController@rsvp')->where('member_id', 'me');
+                            Route::delete('', 'OAuth2SummitMembersApiController@unrsvp')->where('member_id', 'me');
                         });
 
                         Route::group(['prefix' => 'feedback'], function () {

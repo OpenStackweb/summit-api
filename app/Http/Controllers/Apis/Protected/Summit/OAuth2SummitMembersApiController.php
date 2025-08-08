@@ -12,11 +12,10 @@
  * limitations under the License.
  **/
 
-use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\CurrentAffiliationsCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\ModelSerializers\SerializerUtils;
-use Exception;
+use App\Services\Model\ISummitRSVPService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -52,10 +51,16 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
     private $summit_service;
 
     /**
+     * @var ISummitRSVPService
+     */
+    private $rsvp_service;
+
+    /**
      * OAuth2SummitMembersApiController constructor.
      * @param IMemberRepository $member_repository
      * @param ISummitRepository $summit_repository
      * @param ISummitService $summit_service
+     * @param ISummitRSVPService $rsvp_service
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -63,6 +68,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         IMemberRepository      $member_repository,
         ISummitRepository      $summit_repository,
         ISummitService         $summit_service,
+        ISummitRSVPService $rsvp_service,
         IResourceServerContext $resource_server_context
     )
     {
@@ -70,6 +76,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         $this->summit_repository = $summit_repository;
         $this->repository = $member_repository;
         $this->summit_service = $summit_service;
+        $this->rsvp_service = $rsvp_service;
     }
 
     use RequestProcessor;
@@ -165,7 +172,6 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $this->summit_service->addEventToMemberFavorites($summit, $current_member, intval($event_id));
 
             return $this->created();
-
         });
     }
 
@@ -518,11 +524,11 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @param $member_id
      * @param $event_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
-    public function addEventRSVP($summit_id, $member_id, $event_id)
+    public function rsvo($summit_id, $member_id, $event_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -540,39 +546,27 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            $rsvp = $this->summit_service->addRSVP($summit, $current_member, $event_id, $this->validateEventUri($payload));
+            $rsvp = $this->rsvp_service->addRSVP($summit, $current_member, $event_id, $this->validateEventUri($payload));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
             (
-                Request::input('expand', '')
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
      * @param $summit_id
      * @param $member_id
      * @param $event_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
-    public function updateEventRSVP($summit_id, $member_id, $event_id)
+    public function unrsvp($summit_id, $member_id, $event_id)
     {
-        try {
+
+        return $this->processRequest(function () use ($summit_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -590,71 +584,12 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            $rsvp = $this->summit_service->updateRSVP($summit, $current_member, $event_id, $this->validateEventUri($payload));
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
-            (
-                Request::input('expand', '')
-            ));
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param $summit_id
-     * @param $member_id
-     * @param $event_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function deleteEventRSVP($summit_id, $member_id, $event_id)
-    {
-        try {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $event = $summit->getScheduleEvent(intval($event_id));
-
-            if (is_null($event)) {
-                return $this->error404();
-            }
-
-            $this->summit_service->unRSVPEvent($summit, $current_member, $event_id);
+            $this->rsvp_service->unRSVPEvent($summit, $current_member, $event_id);
 
             return $this->deleted();
-
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-
+        });
     }
+
 
     /**
      * @param $summit_id
@@ -663,7 +598,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      */
     public function createScheduleShareableLink($summit_id, $member_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $member_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -675,22 +610,11 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($link)->serialize
             (
-                Request::input('expand', '')
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-
+        });
     }
 
     /**
@@ -700,7 +624,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      */
     public function revokeScheduleShareableLink($summit_id, $member_id)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $member_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -712,20 +636,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
             return $this->deleted();
 
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-
+        });
     }
 
     /**
@@ -735,7 +646,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      */
     public function getCalendarFeedICS($summit_id, $cid)
     {
-        try {
+        return $this->processRequest(function () use ($summit_id, $cid) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -744,19 +655,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             return $this->rawContent($feedBody, [
                 'Content-type' => 'text/calendar',
             ]);
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
 }

@@ -579,7 +579,7 @@ final class StripeApi implements IPaymentGatewayAPI
                 "metadata" => [
                     "type" => IPaymentConstants::ApplicationTypeRegistration,
                     "summit_id" => $summit_id,
-                    "order_id" => $order->getId(),
+                    "order_number" => $order->getNumber(),
                     "order_owner_email" => $order->getOwnerEmail(),
                 ]
             ]

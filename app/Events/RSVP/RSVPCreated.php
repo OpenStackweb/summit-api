@@ -1,4 +1,5 @@
-<?php namespace App\Events;
+<?php namespace App\Events\RSVP;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +14,10 @@
  **/
 
 /**
- * Class RSVPUpdated
+ * Class RSVPAdd
  * @package App\Events
  */
-class RSVPUpdated extends RSVPAction
+class RSVPCreated extends RSVPAction
 {
 
 }

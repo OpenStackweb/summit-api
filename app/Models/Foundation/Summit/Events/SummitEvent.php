@@ -1145,6 +1145,18 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->rsvp->matching($criteria)->count();
     }
 
+
+    /**
+     * @return RSVP|null
+     */
+    public function getFirstRSVPOnWaitList(): ?RSVP
+    {
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('seat_type', RSVP::SeatTypeWaitList));
+        $criteria = $criteria->orderBy(['created' => Criteria::ASC]);
+        return $this->rsvp->matching($criteria)->first();
+    }
+
     /**
      * @param string $seat_type
      * @return bool

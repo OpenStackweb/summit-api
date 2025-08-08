@@ -9,9 +9,9 @@ use App\Services\Utils\CSVReader;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\Member;
 use models\summit\ISummitEventRepository;
 use models\summit\SummitEvent;
 use utils\Filter;
@@ -26,6 +26,24 @@ class SummitRSVPInvitationService
     private IRSVPInvitationRepository $invitation_repository;
 
     private ISummitRSVPService $rsvp_service;
+
+    /**
+     * @param ISummitEventRepository $summit_event_repository
+     * @param IRSVPInvitationRepository $invitation_repository
+     * @param ISummitRSVPService $rsvp_service
+     * @param ITransactionService $transaction_service
+     */
+    public function __construct(
+        ISummitEventRepository $summit_event_repository,
+        IRSVPInvitationRepository $invitation_repository,
+        ISummitRSVPService $rsvp_service,
+        ITransactionService $transaction_service
+    ){
+        parent::__construct($transaction_service);
+        $this->summit_event_repository = $summit_event_repository;
+        $this->invitation_repository = $invitation_repository;
+        $this->rsvp_service = $rsvp_service;
+    }
     /**
      * @param SummitEvent $summit_event
      * @param UploadedFile $csv_file
@@ -138,10 +156,10 @@ class SummitRSVPInvitationService
     /**
      * @inheritDoc
      */
-    public function getInvitationByToken(Member $current_member, string $token): RSVPInvitation
+    public function getInvitationByToken(string $token): RSVPInvitation
     {
 
-        return $this->tx_service->transaction(function () use ($current_member, $token) {
+        return $this->tx_service->transaction(function () use ($token) {
 
             $invitation = $this->invitation_repository->getByHashExclusiveLock(RSVPInvitation::HashConfirmationToken($token));
 
@@ -151,9 +169,7 @@ class SummitRSVPInvitationService
             $invitee = $invitation->getInvitee();
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitee->getEmail()));
 
-            $invitation->checkOwnership($current_member);
-
-            if ($invitation->isAccepted()) {
+            if (!$invitation->isPending()) {
                 throw new ValidationException("This Invitation is already accepted.");
             }
 
@@ -164,9 +180,9 @@ class SummitRSVPInvitationService
     /**
      * @inheritDoc
      */
-    public function acceptInvitationBySummitAndToken(Member $current_member, string $token): RSVPInvitation
+    public function acceptInvitationBySummitAndToken(string $token): RSVPInvitation
     {
-        return $this->tx_service->transaction(function () use ($current_member, $token) {
+        return $this->tx_service->transaction(function () use ($token) {
 
             $invitation = $this->invitation_repository->getByHashExclusiveLock(RSVPInvitation::HashConfirmationToken($token));
 
@@ -176,7 +192,8 @@ class SummitRSVPInvitationService
             $invitee = $invitation->getInvitee();
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitee->getEmail()));
 
-            $invitation->checkOwnership($current_member);
+            if(!$invitee->hasMember())
+                throw new EntityNotFoundException("Attendee has not Member associated with it");
 
             if (!$invitation->isPending()) {
                 throw new ValidationException("This Invitation is already accepted.");
@@ -189,7 +206,7 @@ class SummitRSVPInvitationService
 
             $rsvp = $this->rsvp_service->addRSVP(
                 $invitation->getEvent()->getSummit(),
-                $current_member,
+                $invitee->getMember(),
                 $invitation->getEvent()->getId(),
             );
             // associate invitation with RSVP
@@ -200,9 +217,9 @@ class SummitRSVPInvitationService
     /**
      * @inheritDoc
      */
-    public function rejectInvitationBySummitAndToken(Member $current_member, string $token): RSVPInvitation
+    public function rejectInvitationBySummitAndToken(string $token): RSVPInvitation
     {
-        return $this->tx_service->transaction(function () use ($current_member, $token) {
+        return $this->tx_service->transaction(function () use ($token) {
 
             $invitation = $this->invitation_repository->getByHashExclusiveLock(RSVPInvitation::HashConfirmationToken($token));
 
@@ -212,7 +229,8 @@ class SummitRSVPInvitationService
             $invitee = $invitation->getInvitee();
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitee->getEmail()));
 
-            $invitation->checkOwnership($current_member);
+            if(!$invitee->hasMember())
+                throw new EntityNotFoundException("Attendee has not Member associated with it");
 
             if (!$invitation->isPending()) {
                 throw new ValidationException("This Invitation is already accepted.");

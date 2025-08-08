@@ -22,6 +22,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
+use App\Services\ISummitRSVPInvitationService;
 use App\Services\Model\AttendeeService;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\IBadgeViewTypeService;
@@ -50,6 +51,8 @@ use App\Services\Model\Imp\SummitPresentationActionService;
 use App\Services\Model\Imp\SummitPresentationActionTypeService;
 use App\Services\Model\Imp\SummitProposedScheduleAllowedLocationService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
+use App\Services\Model\Imp\SummitRSVPInvitationService;
+use App\Services\Model\Imp\SummitRSVPService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
 use App\Services\Model\Imp\SummitSignService;
@@ -89,6 +92,7 @@ use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
 use App\Services\Model\ISummitRegistrationInvitationService;
+use App\Services\Model\ISummitRSVPService;
 use App\Services\Model\ISummitScheduleSettingsService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
@@ -506,6 +510,15 @@ final class ModelServicesProvider extends ServiceProvider
             ISponsorUserSyncService::class,
             SponsorUserSyncService::class
         );
+
+        App::singleton(
+            ISummitRSVPInvitationService::class,
+            SummitRSVPInvitationService::class
+        );
+        App::singleton(
+            ISummitRSVPService::class,
+            SummitRSVPService::class
+        );
     }
 
     /**
@@ -576,7 +589,9 @@ final class ModelServicesProvider extends ServiceProvider
             ITicketFinderStrategyFactory::class,
             IPromoCodeStrategyFactory::class,
             ISummitAttendeeBadgePrintService::class,
-            ISponsorUserSyncService::class
+            ISponsorUserSyncService::class,
+            ISummitRSVPService::class,
+            ISummitRSVPInvitationService::class,
         ];
     }
 }

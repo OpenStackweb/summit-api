@@ -1,6 +1,6 @@
 <?php namespace App\Services\Model\Imp\Traits;
 /**
- * Copyright 2023 OpenStack Foundation
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,37 +30,55 @@ const MaxPageSize = 100;
 trait ParametrizedSendEmails
 {
 
+
     /**
-     * @param int $summit_id
+     * @param int $root_entity_id
      * @param array $payload
      * @param string $subject
-     * @param callable $getIdsBySummit
+     * @param callable $getIdsByRootEntity
      * @param callable $processCurrentId
      * @param callable|null $sendEmailExcerpt
      * @param Filter|null $filter
+     * @param callable|null $getRootEntityName
+     * @param callable|null $getRootEntity
+     * @return void
      * @throws ValidationException
      */
     private function _sendEmails(
-        int $summit_id,
+        int $root_entity_id,
         array $payload,
         string $subject,
-        callable $getIdsBySummit,
+        callable $getIdsByRootEntity,
         callable $processCurrentId,
         callable $sendEmailExcerpt = null,
-        Filter $filter = null
+        Filter $filter = null,
+        callable $getRootEntityName = null,
+        callable $getRootEntity = null,
     ): void
     {
         $caller = (new ReflectionClass($this))->getShortName();
         $subject_ids_key = $subject . '_ids';   //We assume that the payload key for the ids array starts with the prefix that contains $subject
         $exclude_subject_ids_key = 'excluded_' . $subject_ids_key;
+        if(is_null($getRootEntityName)) {
+            $getRootEntityName = function () {
+                return "Summit";
+            };
+        }
+        if(is_null($getRootEntity)) {
+            $getRootEntity = function ($root_entity_id) {
+                $summit = $this->summit_repository->getById($root_entity_id);
+                if (!$summit instanceof Summit) return null;
+                return $summit;
+            };
+        }
 
         Log::debug
         (
             sprintf
             (
-                "%s::send summit %s payload %s filter %s INIT",
+                "%s::send root entity id %s payload %s filter %s INIT",
                 $caller,
-                $summit_id,
+                $root_entity_id,
                 json_encode($payload),
                 is_null($filter) ? "NOT SET" : $filter->__toString()
             )
@@ -96,9 +114,9 @@ trait ParametrizedSendEmails
         (
             sprintf
             (
-                "%s::send summit id %s flow_event %s filter %s",
+                "%s::send root entity id %s flow_event %s filter %s",
             $caller,
-                $summit_id,
+                $root_entity_id,
                 $flow_event,
                 is_null($filter) ? '' : $filter->__toString()
             )
@@ -106,48 +124,49 @@ trait ParametrizedSendEmails
 
         EmailExcerpt::addInfoMessage
         (
-            sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit_id)
+            sprintf("Processing EMAIL %s for %s %s", $flow_event, $getRootEntityName(), $root_entity_id)
         );
 
-        $summit = $this->tx_service->transaction(function () use($summit_id){
-            $summit = $this->summit_repository->getById($summit_id);
-            if (!$summit instanceof Summit) return null;
-            return $summit;
+        $root_entity = $this->tx_service->transaction(function () use($root_entity_id, $getRootEntity){
+            return $getRootEntity($root_entity_id);
         });
 
-        if(is_null($summit)){
-            Log::debug(sprintf("%s::send summit is null", $caller));
+        if(is_null($root_entity)){
+            Log::debug(sprintf("%s::send %s is null", $getRootEntityName(), $caller));
             return;
         }
 
         do {
-            $ids = $this->tx_service->transaction(function () use ($summit,
+            $ids = $this->tx_service->transaction(function () use (
+                $root_entity,
+                $getRootEntityName,
                 $caller,
                 $payload,
                 $subject_ids_key,
                 $filter,
                 &$page,
-                $getIdsBySummit,
+                $getIdsByRootEntity,
                 $processCurrentId
             ) {
                 if (isset($payload[$subject_ids_key])) {
                     $res = $payload[$subject_ids_key];
-                    Log::debug(sprintf("%s::send summit id %s %s %s",
+                    Log::debug(sprintf("%s::send %s id %s %s %s",
                         $caller,
-                        $summit->getId(),
+                        $getRootEntityName(),
+                        $root_entity->getId(),
                         $subject_ids_key,
                         json_encode($res)));
                     return $res;
                 }
 
-                Log::debug(sprintf("%s::send summit id %s getting by filter", $caller, $summit->getId()));
+                Log::debug(sprintf("%s::send %s id %s getting by filter", $caller, $getRootEntityName(), $root_entity->getId()));
                 if (is_null($filter)) {
                     $filter = new Filter();
                 }
 
                 Log::debug(sprintf("%s::send page %s", $caller, $page));
 
-                return $getIdsBySummit($summit, new PagingInfo($page, MaxPageSize), $filter, function() use($caller, &$page){
+                return $getIdsByRootEntity($root_entity, new PagingInfo($page, MaxPageSize), $filter, function() use($caller, &$page){
                     $page = 0;
                     Log::debug(sprintf("%s::send page has been reset to zero...", $caller));
                 });
@@ -158,9 +177,10 @@ trait ParametrizedSendEmails
             (
                 sprintf
                 (
-                    "%s::send summit id %s flow_event %s filter %s page %s got %s records",
+                    "%s::send %s id %s flow_event %s filter %s page %s got %s records",
                 $caller,
-                    $summit_id,
+                    $getRootEntityName(),
+                    $root_entity_id,
                     $flow_event,
                     is_null($filter) ? '' : $filter->__toString(),
                     $page,
@@ -170,7 +190,7 @@ trait ParametrizedSendEmails
 
             if (!count($ids)) {
                 // if we are processing a page, then break it
-                Log::debug(sprintf("%s::send summit id %s page is empty, ending processing.", $caller, $summit_id));
+                Log::debug(sprintf("%s::send %s id %s page is empty, ending processing.", $caller,$getRootEntityName(), $root_entity_id));
                 break;
             }
             // explicit exclude ids
@@ -181,9 +201,10 @@ trait ParametrizedSendEmails
                 (
                     sprintf
                     (
-                        "%s::send summit id %s excluded ids %s",
+                        "%s::send %s id %s excluded ids %s",
                         $caller,
-                        $summit->getId(),
+                        $getRootEntityName(),
+                        $root_entity->getId(),
                         json_encode($exclude_ids)
                     )
                 );
@@ -192,9 +213,10 @@ trait ParametrizedSendEmails
             foreach ($ids as $subject_id) {
                 try {
                     if (in_array($subject_id, $exclude_ids)) {
-                        Log::debug(sprintf("%s::send summit id %s %s id %s is excluded",
+                        Log::debug(sprintf("%s::send %s id %s %s id %s is excluded",
                             $caller,
-                            $summit->getId(),
+                            $getRootEntityName(),
+                            $root_entity->getId(),
                             $subject,
                             $subject_id));
                         continue;
@@ -202,7 +224,7 @@ trait ParametrizedSendEmails
 
                     $processCurrentId
                     (
-                        $summit,
+                        $root_entity,
                         $flow_event,
                         $subject_id,
                         $test_email_recipient,
@@ -245,16 +267,17 @@ trait ParametrizedSendEmails
         EmailExcerpt::generateEmailCountLine();
 
         if (!empty($outcome_email_recipient) && !is_null($sendEmailExcerpt) && is_callable($sendEmailExcerpt)) {
-            $sendEmailExcerpt($summit, $outcome_email_recipient, EmailExcerpt::getReport());
+            $sendEmailExcerpt($root_entity, $outcome_email_recipient, EmailExcerpt::getReport());
         }
 
         Log::debug
         (
             sprintf
             (
-                "%s::send summit id %s flow_event %s filter %s had processed %s records",
+                "%s::send %s id %s flow_event %s filter %s had processed %s records",
             $caller,
-                $summit_id,
+                $getRootEntityName(),
+                $root_entity->getId(),
                 $flow_event,
                 is_null($filter) ? '' : $filter->__toString(),
                 $count

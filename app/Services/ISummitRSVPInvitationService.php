@@ -15,7 +15,6 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\Member;
 use models\summit\SummitEvent;
 use utils\Filter;
 
@@ -23,7 +22,7 @@ use utils\Filter;
 interface ISummitRSVPInvitationService
 {
 
-    public function importInvitationData(SummitEvent $summit_event, UploadedFile $csv_file, array $payload=[]):void;
+    public function importInvitationData(SummitEvent $summit_event, UploadedFile $csv_file):void;
 
     /**
      * @param SummitEvent $summit_event
@@ -56,24 +55,25 @@ interface ISummitRSVPInvitationService
     public function update(SummitEvent $summit_event, int $invitation_id, array $payload):RSVPInvitation;
 
     /**
+     * @param SummitEvent $event
      * @param string $token
      * @return RSVPInvitation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
      */
-    public function getInvitationByToken(string $token):RSVPInvitation;
+    public function getInvitationBySummitEventAndToken(SummitEvent $event,string $token):RSVPInvitation;
 
     /**
+     * @param SummitEvent $event
      * @param string $token
      * @return RSVPInvitation
      */
-    public function acceptInvitationBySummitAndToken(string $token): RSVPInvitation;
+    public function acceptInvitationBySummitEventAndToken(SummitEvent $event,string $token): RSVPInvitation;
 
     /**
+     * @param SummitEvent $event
      * @param string $token
      * @return RSVPInvitation
      */
-    public function rejectInvitationBySummitAndToken(string $token): RSVPInvitation;
+    public function rejectInvitationBySummitEventAndToken(SummitEvent $event, string $token): RSVPInvitation;
 
 
     /**

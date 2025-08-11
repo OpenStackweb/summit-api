@@ -19,6 +19,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 #[ORM\Entity(repositoryClass: DoctrineRSVPInvitationRepository::class)]
@@ -27,6 +28,18 @@ class RSVPInvitation extends SilverstripeBaseModel
 {
 
     use InvitationTrait;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getInviteeId' => 'invitee',
+        'getEventId' => 'event',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasInvitee' => 'invitee',
+        'hasEvent' => 'event',
+    ];
 
     #[ORM\Column(name: 'Status', type: 'string')]
     protected string $status;

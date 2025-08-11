@@ -57,7 +57,7 @@ class SummitRSVPInvitationService
      * @return void
      * @throws ValidationException
      */
-    public function importInvitationData(SummitEvent $summit_event, UploadedFile $csv_file, array $payload = []): void
+    public function importInvitationData(SummitEvent $summit_event, UploadedFile $csv_file): void
     {
         Log::debug(sprintf("SummitRSVPInvitationService::importInvitationData - event %s", $summit_event->getId()));
 
@@ -172,14 +172,17 @@ class SummitRSVPInvitationService
     }
 
     /**
-     * @inheritDoc
+     * @param SummitEvent $event
+     * @param string $token
+     * @return RSVPInvitation
+     * @throws \Exception
      */
-    public function getInvitationByToken(string $token): RSVPInvitation
+    public function getInvitationBySummitEventAndToken(SummitEvent $event, string $token): RSVPInvitation
     {
 
-        return $this->tx_service->transaction(function () use ($token) {
+        return $this->tx_service->transaction(function () use ($event, $token) {
 
-            $invitation = $this->invitation_repository->getByHashExclusiveLock(RSVPInvitation::HashConfirmationToken($token));
+            $invitation = $this->invitation_repository->getByHashAndSummitEvent($event, RSVPInvitation::HashConfirmationToken($token));
 
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
@@ -196,13 +199,16 @@ class SummitRSVPInvitationService
     }
 
     /**
-     * @inheritDoc
+     * @param SummitEvent $event
+     * @param string $token
+     * @return RSVPInvitation
+     * @throws \Exception
      */
-    public function acceptInvitationBySummitAndToken(string $token): RSVPInvitation
+    public function acceptInvitationBySummitEventAndToken(SummitEvent $event,string $token): RSVPInvitation
     {
-        return $this->tx_service->transaction(function () use ($token) {
+        return $this->tx_service->transaction(function () use ($event, $token) {
 
-            $invitation = $this->invitation_repository->getByHashExclusiveLock(RSVPInvitation::HashConfirmationToken($token));
+            $invitation = $this->invitation_repository->getByHashAndSummitEvent($event, RSVPInvitation::HashConfirmationToken($token));
 
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
@@ -233,13 +239,16 @@ class SummitRSVPInvitationService
     }
 
     /**
-     * @inheritDoc
+     * @param SummitEvent $event
+     * @param string $token
+     * @return RSVPInvitation
+     * @throws \Exception
      */
-    public function rejectInvitationBySummitAndToken(string $token): RSVPInvitation
+    public function rejectInvitationBySummitEventAndToken(SummitEvent $event, string $token): RSVPInvitation
     {
-        return $this->tx_service->transaction(function () use ($token) {
+        return $this->tx_service->transaction(function () use ($event, $token) {
 
-            $invitation = $this->invitation_repository->getByHashExclusiveLock(RSVPInvitation::HashConfirmationToken($token));
+            $invitation = $this->invitation_repository->getByHashAndSummitEvent($event, RSVPInvitation::HashConfirmationToken($token));
 
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");

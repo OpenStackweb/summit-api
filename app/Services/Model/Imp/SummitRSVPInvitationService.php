@@ -1,11 +1,16 @@
 <?php namespace App\Services\Model\Imp;
 
+use App\Jobs\Emails\Schedule\RSVP\ProcessRSVPInvitationsJob;
+use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
+use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Services\ISummitRSVPInvitationService;
 use App\Services\Model\AbstractService;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\ISummitRSVPService;
 use App\Services\Utils\CSVReader;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +20,7 @@ use models\exceptions\ValidationException;
 use models\summit\ISummitEventRepository;
 use models\summit\SummitEvent;
 use utils\Filter;
+use utils\FilterElement;
 
 class SummitRSVPInvitationService
     extends AbstractService
@@ -114,11 +120,23 @@ class SummitRSVPInvitationService
     }
 
     /**
-     * @inheritDoc
+     * @param SummitEvent $summit_event
+     * @param int $invitation_id
+     * @return void
+     * @throws \Exception
      */
     public function delete(SummitEvent $summit_event, int $invitation_id): void
     {
-        // TODO: Implement delete() method.
+        $this->tx_service->transaction(function () use ($summit_event, $invitation_id) {
+            $invitation = $this->invitation_repository->getById($invitation_id);
+            if (!$invitation instanceof RSVPInvitation) {
+                throw new EntityNotFoundException("Invitation not found.");
+            }
+            if(!$invitation->isPending()){
+                throw new ValidationException("Invitation is not pending.");
+            }
+            $this->invitation_repository->delete($invitation);
+        });
     }
 
     /**
@@ -247,14 +265,127 @@ class SummitRSVPInvitationService
      */
     public function triggerSend(SummitEvent $summit_event, array $payload, $filter = null): void
     {
-        // TODO: Implement triggerSend() method.
+        ProcessRSVPInvitationsJob::dispatch($summit_event, $payload, $filter);
     }
 
+    use ParametrizedSendEmails;
+
     /**
-     * @inheritDoc
+     * @param int $event_id
+     * @param array $payload
+     * @param Filter|null $filter
+     * @return void
+     * @throws ValidationException
      */
     public function send(int $event_id, array $payload, Filter $filter = null): void
     {
-        // TODO: Implement send() method.
+        $this->_sendEmails(
+            $event_id,
+            $payload,
+            "invitations",
+            function ($root_entity, $paging_info, $filter, $resetPage) {
+
+                if (!$filter->hasFilter("event_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('event_id', $root_entity->getId()));
+
+                if ($filter->hasFilter("is_sent")) {
+                    $isSentFilter = $filter->getUniqueFilter("is_sent");
+                    $is_sent = $isSentFilter->getBooleanValue();
+                    Log::debug(sprintf("SummitRSVPInvitationService::send is_sent filter value %b", $is_sent));
+                    if (!$is_sent && is_callable($resetPage)) {
+                        // we need to reset the page bc the page processing will mark the current page as "sent"
+                        // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
+                        Log::debug("SummitRSVPInvitationService::send resetting page bc is_sent filter is false");
+                        $resetPage();
+                    }
+                }
+                return $this->invitation_repository->getAllIdsByPage($paging_info, $filter);
+            },
+            function
+            (
+                $root_entity,
+                $flow_event,
+                $invitation_id,
+                $test_email_recipient,
+                $announcement_email_config,
+                $filter,
+                $onDispatchSuccess,
+                $onDispatchError
+            ) use ($payload) {
+                try {
+                    $this->tx_service->transaction(function () use (
+                        $root_entity,
+                        $flow_event,
+                        $invitation_id,
+                        $test_email_recipient,
+                        $filter,
+                        $onDispatchSuccess,
+                        $onDispatchError,
+                        $payload
+                    ) {
+                        $invitation = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
+
+                            Log::debug(sprintf("SummitRSVPInvitationService::send processing invitation id  %s", $invitation_id));
+
+                            $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
+
+                            if (!$invitation instanceof RSVPInvitation)
+                                return null;
+
+                            if($invitation->isRejected()) {
+                                Log::warning(sprintf("SummitRSVPInvitationService::send invitation %s is already rejected", $invitation_id));
+                                return null;
+                            }
+
+                            $summit_event = $invitation->getEvent();
+
+                            while (true) {
+                                $invitation->generateConfirmationToken();
+                                $former_invitation = $this->invitation_repository->getByHashAndSummitEvent($invitation->getHash(), $summit_event);
+                                if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
+                            }
+
+                            return $invitation;
+                        });
+
+                        $add_excerpt = false;
+
+                        // send email
+
+                        if ($flow_event == RSVPInviteEmail::EVENT_SLUG && !is_null($invitation)) {
+                            RSVPInviteEmail::dispatch($invitation, $test_email_recipient);
+                            $add_excerpt = true;
+                        }
+
+
+                        if ($flow_event == ReRSVPInviteEmail::EVENT_SLUG && !is_null($invitation)) {
+                            ReRSVPInviteEmail::dispatch($invitation, $test_email_recipient);
+                            $add_excerpt = true;
+                        }
+
+
+                        if ($add_excerpt) {
+                            $onDispatchSuccess(
+                                $invitation->getEmail(), IEmailExcerptService::EmailLineType, $flow_event);
+                        }
+                    });
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                    $onDispatchError($ex->getMessage());
+                }
+            },
+            function($root_entity, $outcome_email_recipient, $report){
+                //InvitationExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+            },
+            $filter,
+            function(){
+                return "SummitEvent";
+            },
+            functioN($root_entity_id){
+                $summit_event = $this->summit_event_repository->getById($root_entity_id);
+                if (!$summit_event instanceof SummitEvent) return null;
+                return $summit_event;
+            }
+        );
     }
 }

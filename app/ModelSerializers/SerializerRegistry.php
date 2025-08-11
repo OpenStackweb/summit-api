@@ -90,6 +90,7 @@ use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitRegistrationFeedMetadataSerializer;
+use App\ModelSerializers\Summit\RSVP\RSVPInvitationSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPLiteralContentQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPMultiValueQuestionTemplateSerializer;
@@ -687,6 +688,8 @@ final class SerializerRegistry
         $this->registry['UserStoriesIndustry'] = UserStoriesIndustrySerializer::class;
 
         $this->registry['Continent'] = ContinentSerializer::class;
+
+        $this->registry['RSVPInvitation'] = RSVPInvitationSerializer::class;
     }
 
     /**

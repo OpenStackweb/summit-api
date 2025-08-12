@@ -866,7 +866,9 @@ SQL,
                 ->select("e")
                 ->from($this->getBaseEntity(), "e")
                 ->where('e.overflow_stream_key = :overflow_stream_key')
+                ->andWhere("e.published = 1 and e.overflow_streaming_url is not null and e.occupancy = :occupancy")
                 ->setParameter('overflow_stream_key', trim($overflow_key))
+                ->setParameter('occupancy', SummitEvent::OccupancyOverflow)
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();

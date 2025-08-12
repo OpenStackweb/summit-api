@@ -180,8 +180,8 @@ Route::group(['prefix' => 'summits'], function () {
                 Route::group(array('prefix' => 'rsvp-invitations'), function () {
                     Route::group(array('prefix' => '{token}'), function () {
                         Route::get('', [ 'uses' => 'OAuth2RSVPInvitationApiController@getInvitationByToken']);
-                        Route::put('', [ 'uses' => 'OAuth2RSVPInvitationApiController@acceptByToken']);
-                        Route::delete('', [ 'uses' => 'OAuth2RSVPInvitationApiController@rejectByToken']);
+                        Route::put('accept', [ 'uses' => 'OAuth2RSVPInvitationApiController@acceptByToken']);
+                        Route::delete('decline', [ 'uses' => 'OAuth2RSVPInvitationApiController@rejectByToken']);
                     });
                 });
             });

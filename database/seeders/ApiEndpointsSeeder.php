@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\RSVPInvitationsScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
 use App\Models\ResourceServer\ApiEndpoint;
@@ -48,6 +49,7 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedSummitAdministratorGroupsEndpoints();
         $this->seedSummitMediaFileTypeEndpoints();
         $this->seedElectionsEndpoints();
+        $this->seedRSVPInvitationsEndpoints();
     }
 
     private function seedAttendeeBadgesEndpoints()
@@ -10608,6 +10610,77 @@ class ApiEndpointsSeeder extends Seeder
                         ElectionScopes::NominatesCandidates
                     ],
                 ],
+            ]
+        );
+    }
+
+    public function seedRSVPInvitationsEndpoints():void{
+        $this->seedApiEndpoints('rsvp-invitations', [
+                [
+                    'name' => 'get-all-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Read
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'import-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'send-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/send',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Send
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'send-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/{invitation_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ]
             ]
         );
     }

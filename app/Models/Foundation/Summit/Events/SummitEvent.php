@@ -1018,7 +1018,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return int
      */
-    public function getRSVPMaxUserNumber()
+    public function getRSVPMaxUserNumber():int
     {
         return $this->rsvp_max_user_number;
     }
@@ -1111,9 +1111,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
 
         $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
-        if ($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
+        if ($count_regular < intval($this->getRSVPMaxUserNumber())) return RSVP::SeatTypeRegular;
         $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
-        if ($count_wait < intval($this->rsvp_max_user_wait_list_number)) return RSVP::SeatTypeWaitList;
+        if ($count_wait < intval($this->getRSVPMaxUserWaitListNumber())) return RSVP::SeatTypeWaitList;
         throw new ValidationException(sprintf("Event %s is Full.", $this->id));
     }
 
@@ -1167,12 +1167,12 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             case RSVP::SeatTypeRegular:
             {
                 $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
-                return $count_regular < intval($this->rsvp_max_user_number);
+                return $count_regular < intval($this->getRSVPMaxUserNumber());
             }
             case RSVP::SeatTypeWaitList:
             {
                 $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
-                return $count_wait < intval($this->rsvp_max_user_wait_list_number);
+                return $count_wait < intval($this->getRSVPMaxUserWaitListNumber());
             }
         }
         return false;
@@ -1194,14 +1194,15 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function addRSVPSubmission(RSVP $rsvp)
     {
-        if (!$this->hasRSVPTemplate()) {
+        if(!$this->hasRSVP()){
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
         }
 
-        if (!$this->getRSVPTemplate()->isEnabled()) {
-            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+        if ($this->hasRSVPTemplate()) {
+            if (!$this->getRSVPTemplate()->isEnabled()) {
+                throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+            }
         }
-
         if ($this->rsvp->contains($rsvp)) return;
         $this->rsvp->add($rsvp);
         $rsvp->setEvent($this);

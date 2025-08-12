@@ -17,6 +17,7 @@ use App\Repositories\Summit\DoctrineRSVPInvitationRepository;
 use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\RSVP;
 use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
 use models\utils\One2ManyPropertyTrait;
@@ -91,6 +92,13 @@ class RSVPInvitation extends SilverstripeBaseModel
     #[ORM\ManyToOne(targetEntity: SummitEvent::class, inversedBy: 'rsvp_invitations')]
     private SummitEvent $event;
 
+    /**
+     * @var RSVP
+     */
+    #[ORM\JoinColumn(name: 'RSVPID', referencedColumnName: 'ID', nullable: false, onDelete: 'CASCADE' )]
+    #[ORM\OneToOne(targetEntity: RSVP::class)]
+    private RSVP $rsvp;
+
     public function getEvent(): SummitEvent
     {
         return $this->event;
@@ -142,6 +150,20 @@ class RSVPInvitation extends SilverstripeBaseModel
                 $member->getEmail(),
                 $this->getEvent()->getSummit()->getSupportEmail(),
                 $this->getEvent()->getSummit()->getSupportEmail()));
+    }
+
+    public function getRSVP():RSVP{
+        return $this->rsvp;
+    }
+
+    /**
+     * @param RSVP $rsvp
+     * @return void
+     * @throws ValidationException
+     */
+    public function markAsAcceptedWithRSVP(RSVP $rsvp):void{
+        $this->markAsAccepted();
+        $this->rsvp = $rsvp;
     }
 
 }

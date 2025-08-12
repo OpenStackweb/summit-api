@@ -289,46 +289,51 @@ class SummitRSVPInvitationServiceTest extends TestCase
 
     public function testGetInvitationByTokenReturnsPendingInvitation(): void
     {
+        $event = Mockery::mock(SummitEvent::class)->makePartial();
+
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('isPending')->andReturnTrue();
         $inv->shouldReceive('getInvitee->getEmail')->andReturn('e@example.org');
 
         $this->invitation_repository
-            ->shouldReceive('getByHashExclusiveLock')
+            ->shouldReceive('getByHashAndSummitEvent')
             ->once()
-            ->withArgs(function($hash){ return is_string($hash) && $hash !== ''; })
+            ->withArgs(function($hash, $eventArg) use($event){
+                $this->assertEquals($eventArg, $event);
+                return is_string($hash) && $hash !== '';
+            })
             ->andReturn($inv);
 
-        $res = $this->service->getInvitationByToken('token123');
+        $res = $this->service->getInvitationBySummitEventAndToken($event, 'token123');
         $this->assertSame($inv, $res);
     }
 
     public function testGetInvitationByTokenAlreadyAccepted(): void
     {
         $this->expectException(ValidationException::class);
-
+        $event = Mockery::mock(SummitEvent::class)->makePartial();
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('isPending')->andReturnFalse();
         $inv->shouldReceive('getInvitee->getEmail')->andReturn('e@example.org');
 
         $this->invitation_repository
-            ->shouldReceive('getByHashExclusiveLock')
+            ->shouldReceive('getByHashAndSummitEvent')
             ->once()
             ->andReturn($inv);
 
-        $this->service->getInvitationByToken('token123');
+        $this->service->getInvitationBySummitEventAndToken($event,'token123');
     }
 
     public function testGetInvitationByTokenNotFound(): void
     {
         $this->expectException(EntityNotFoundException::class);
-
+        $event = Mockery::mock(SummitEvent::class)->makePartial();
         $this->invitation_repository
-            ->shouldReceive('getByHashExclusiveLock')
+            ->shouldReceive('getByHashAndSummitEvent')
             ->once()
             ->andReturnNull();
 
-        $this->service->getInvitationByToken('token123');
+        $this->service->getInvitationBySummitEventAndToken($event,'token123');
     }
 
     /** -------------------- acceptInvitationBySummitAndToken -------------------- */
@@ -358,26 +363,26 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv->shouldReceive('markAsAccepted')->once();
         $inv->shouldReceive('getEvent')->andReturn($event);
 
-        $this->invitation_repository->shouldReceive('getByHashExclusiveLock')->once()->andReturn($inv);
+        $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->once()->andReturn($inv);
 
         // Ensure addRSVP gets the exact summit/member/eventId we expect
         $this->rsvp_service->shouldReceive('addRSVP')
             ->once()
-            ->withArgs(function ($summitArg, $memberArg, $eventId) use ($summit, $member) {
+            ->withArgs(function ($summitArg, $memberArg, $eventId) use ($summit, $member, $event) {
                 $this->assertSame($summit, $summitArg);
                 $this->assertSame($member,  $memberArg);
-                $this->assertSame(50,       $eventId);
+                $this->assertSame($event->getId(),       $eventId);
                 return true;
             });
 
-        $res = $this->service->acceptInvitationBySummitAndToken('tkn');
+        $res = $this->service->acceptInvitationBySummitEventAndToken($event, 'tkn');
         $this->assertSame($inv, $res);
     }
 
     public function testAcceptInvitationFailsNoMember(): void
     {
         $this->expectException(EntityNotFoundException::class);
-
+        $event  = Mockery::mock(SummitEvent::class)->makePartial();
         // Invitee (partial mock of SummitAttendee)
         $invitee = Mockery::mock(SummitAttendee::class)->makePartial();
         $invitee->shouldReceive('hasMember')->andReturn(false);
@@ -388,15 +393,15 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
 
-        $this->invitation_repository->shouldReceive('getByHashExclusiveLock')->andReturn($inv);
+        $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->andReturn($inv);
 
-        $this->service->acceptInvitationBySummitAndToken('tkn');
+        $this->service->acceptInvitationBySummitEventAndToken($event, 'tkn');
     }
 
     public function testAcceptInvitationFailsAlreadyAccepted(): void
     {
         $this->expectException(ValidationException::class);
-
+        $event  = Mockery::mock(SummitEvent::class)->makePartial();
         // Invitee (partial mock of SummitAttendee)
         $invitee = Mockery::mock(SummitAttendee::class)->makePartial();
         $invitee->shouldReceive('hasMember')->andReturn(true);
@@ -411,15 +416,15 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
         $inv->shouldReceive('isPending')->andReturnFalse();
 
-        $this->invitation_repository->shouldReceive('getByHashExclusiveLock')->andReturn($inv);
+        $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->andReturn($inv);
 
-        $this->service->acceptInvitationBySummitAndToken('tkn');
+        $this->service->acceptInvitationBySummitEventAndToken($event, 'tkn');
     }
 
     public function testAcceptInvitationFailsNoPaidTickets(): void
     {
         $this->expectException(ValidationException::class);
-
+        $event  = Mockery::mock(SummitEvent::class)->makePartial();
         // Invitee (partial mock of SummitAttendee)
         $invitee = Mockery::mock(SummitAttendee::class)->makePartial();
         $invitee->shouldReceive('hasMember')->andReturn(true);
@@ -434,15 +439,16 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
         $inv->shouldReceive('isPending')->andReturnTrue();
 
-        $this->invitation_repository->shouldReceive('getByHashExclusiveLock')->andReturn($inv);
+        $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->andReturn($inv);
 
-        $this->service->acceptInvitationBySummitAndToken('tkn');
+        $this->service->acceptInvitationBySummitEventAndToken($event, 'tkn');
     }
 
     /** -------------------- rejectInvitationBySummitAndToken -------------------- */
 
     public function testRejectInvitationHappyPath(): void
     {
+        $event  = Mockery::mock(SummitEvent::class)->makePartial();
         // Invitee (partial mock of SummitAttendee)
         $invitee = Mockery::mock(SummitAttendee::class)->makePartial();
         $invitee->shouldReceive('hasMember')->andReturn(true);
@@ -458,9 +464,9 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv->shouldReceive('isPending')->andReturnTrue();
         $inv->shouldReceive('markAsRejected')->once();
 
-        $this->invitation_repository->shouldReceive('getByHashExclusiveLock')->andReturn($inv);
+        $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->andReturn($inv);
 
-        $res = $this->service->rejectInvitationBySummitAndToken('tkn');
+        $res = $this->service->rejectInvitationBySummitEventAndToken($event, 'tkn');
         $this->assertSame($inv, $res);
     }
 

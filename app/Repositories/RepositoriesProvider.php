@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\IElectionsRepository;
 use App\Models\Foundation\Main\Language;
@@ -31,6 +33,8 @@ use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
+use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
@@ -966,5 +970,9 @@ final class RepositoriesProvider extends ServiceProvider
                 return EntityManager::getRepository(UserStory::class);
             }
         );
+
+        App::singleton(IRSVPINvitationRepository::class, function () {
+            return EntityManager::getRepository(RSVPInvitation::class);
+        });
     }
 }

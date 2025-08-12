@@ -34,6 +34,7 @@ use models\summit\SummitAttendee;
 use models\main\Member;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Services\Utils\Facades\EmailExcerpt;
+use models\summit\RSVP;
 /**
  * @covers \App\Services\Model\Imp\SummitRSVPInvitationService
  */
@@ -363,6 +364,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv->shouldReceive('markAsAccepted')->once();
         $inv->shouldReceive('getEvent')->andReturn($event);
 
+        $rsvp = Mockery::mock(RSVP::class)->makePartial();
         $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->once()->andReturn($inv);
 
         // Ensure addRSVP gets the exact summit/member/eventId we expect
@@ -373,10 +375,11 @@ class SummitRSVPInvitationServiceTest extends TestCase
                 $this->assertSame($member,  $memberArg);
                 $this->assertSame($event->getId(),       $eventId);
                 return true;
-            });
+            })->andReturn($rsvp);
 
         $res = $this->service->acceptInvitationBySummitEventAndToken($event, 'tkn');
         $this->assertSame($inv, $res);
+        $this->assertSame($rsvp, $inv->getRSVP());
     }
 
     public function testAcceptInvitationFailsNoMember(): void

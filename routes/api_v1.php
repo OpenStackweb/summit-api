@@ -703,6 +703,17 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@setOverflow']);
                     Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@clearOverflow']);
                 });
+
+                Route::group(['prefix' => 'rsvp-invitations'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@getAllByEventId']);
+                    // import from csv
+                    Route::put('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@ingestInvitations']);
+                    Route::put('send',  ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@send']);
+                    Route::post("",   ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@addInvitation']);
+                    Route::group(['prefix' => '{invitation_id}'], function () {
+                        Route::delete("",   ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@deleteInvitation']);
+                    });
+                });
             });
         });
 

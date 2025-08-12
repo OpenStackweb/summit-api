@@ -33,23 +33,24 @@ final class SummitEventStreamingInfoSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        return $this->cache(CacheRegions::getCacheRegionForSummitEvent($this->object->getIdentifier()),sprintf("SummitEventStreamingInfoSerializer_%s", $this->object->getIdentifier()),
+        return $this->cache(
+            CacheRegions::getCacheRegionForSummitEvent($this->object->getIdentifier()),
+            sprintf("SummitEventStreamingInfoSerializer_%s", $this->object->getIdentifier()),
             function () use ($expand, $fields, $relations, $params) {
 
-        $event = $this->object;
-        if (!$event instanceof SummitEvent) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+                $event = $this->object;
+                if (!$event instanceof SummitEvent) return [];
+                $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $values['streaming_url'] = $event->getStreamingUrl();
-        $values['streaming_type'] = $event->getStreamingType();
-        $values['etherpad_link'] = $event->getEtherpadLink();
-        $values['stream_thumbnail'] = $event->getStreamThumbnailUrl();
-        $values['tokens'] = [];
-        if($event->IsSecureStream()){
-            $values['tokens'] = $event->getRegularStreamingTokens();
-        }
-        return $values;
-        });
-
+                $values['streaming_url'] = $event->getStreamingUrl();
+                $values['streaming_type'] = $event->getStreamingType();
+                $values['etherpad_link'] = $event->getEtherpadLink();
+                $values['stream_thumbnail'] = $event->getStreamThumbnailUrl();
+                $values['tokens'] = [];
+                if($event->IsSecureStream()){
+                    $values['tokens'] = $event->getRegularStreamingTokens();
+                }
+                return $values;
+                });
     }
 }

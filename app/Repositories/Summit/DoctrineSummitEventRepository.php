@@ -857,16 +857,19 @@ SQL,
 
 
     /**
+     * @param Summit $summit
      * @param string $overflow_key
      * @return SummitEvent|null
      */
-    public function getByOverflowStreamKey(string $overflow_key): ?SummitEvent
+    public function getBySummitAndOverflowStreamKey(Summit $summit, string $overflow_key): ?SummitEvent
     {
             return $this->getEntityManager()->createQueryBuilder()
                 ->select("e")
                 ->from($this->getBaseEntity(), "e")
                 ->where('e.overflow_stream_key = :overflow_stream_key')
                 ->andWhere("e.published = 1 and e.overflow_streaming_url is not null and e.occupancy = :occupancy")
+                ->andWhere('e.summit = :summit')
+                ->setParameter('summit', $summit)
                 ->setParameter('overflow_stream_key', trim($overflow_key))
                 ->setParameter('occupancy', SummitEvent::OccupancyOverflow)
                 ->setMaxResults(1)

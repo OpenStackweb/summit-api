@@ -1857,7 +1857,7 @@ SQL;
     public function generateOverflowKey(): string
     {
          $salt = random_bytes(16);
-         return hash('sha256', $this->getId() . $salt . time());
+         return hash('sha256', $this->getId() . $this->getTitle(). $salt . time());
     }
 
     /**

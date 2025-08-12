@@ -1590,7 +1590,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 )
             );
 
-            $event = $this->event_repository->getByOverflowStreamKey($overflow_stream_key);
+            $event = $this->event_repository->getBySummitAndOverflowStreamKey($summit, $overflow_stream_key);
             if(is_null($event)){
                 Log::debug(sprintf("OAuth2SummitEventsApiController::getOverflowStreamingInfo Event %s not found.", $overflow_stream_key));
             }

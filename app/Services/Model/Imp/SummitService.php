@@ -4187,7 +4187,7 @@ final class SummitService
 
             do {
                 $overflow_key = $event->generateOverflowKey();
-            } while (!is_null($this->event_repository->getByOverflowStreamKey($overflow_key)));
+            } while (!is_null($this->event_repository->getBySummitAndOverflowStreamKey($summit, $overflow_key)));
 
             $event->setOverflowStreamKey($overflow_key);
             $event->setOverflow(

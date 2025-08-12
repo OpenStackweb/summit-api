@@ -55,7 +55,6 @@ trait InvitationTrait
     /**
      * @return void
      * @throws ValidationException
-     * @throws \DateMalformedStringException
      */
     public function markAsAccepted(): void {
         $this->setStatus(self::Status_Accepted);
@@ -65,7 +64,6 @@ trait InvitationTrait
      * @param string $status
      * @return void
      * @throws ValidationException
-     * @throws \DateMalformedStringException
      */
     public function setStatus(string $status): void
     {

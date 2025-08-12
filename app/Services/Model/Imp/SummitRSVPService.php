@@ -88,7 +88,6 @@ class SummitRSVPService extends AbstractService
                 throw new EntityNotFoundException('Event not found on summit.');
             }
 
-
             $old_rsvp = $member->getRsvpByEvent($event_id);
 
             if (!is_null($old_rsvp))
@@ -215,6 +214,7 @@ class SummitRSVPService extends AbstractService
             $current_seat_type = $rsvp->getSeatType();
 
             if($current_seat_type === RSVP::SeatTypeRegular) {
+                Log::debug(sprintf("SummitRSVPService::unRSVPEvent rsvp %s is of type REGULAR", $rsvp->getId()));
                 // we need to get the first on WAIT list and move it to REGULAR LIST
                 // get the first one on SeatTypeWaitList
                 $rsvp_on_wait = $summit_event->getFirstRSVPOnWaitList();

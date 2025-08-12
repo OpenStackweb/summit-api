@@ -2,6 +2,7 @@
 
 use App\Jobs\Emails\Schedule\RSVP\ProcessRSVPInvitationsJob;
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
+use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
@@ -182,7 +183,7 @@ class SummitRSVPInvitationService
 
         return $this->tx_service->transaction(function () use ($event, $token) {
 
-            $invitation = $this->invitation_repository->getByHashAndSummitEvent($event, RSVPInvitation::HashConfirmationToken($token));
+            $invitation = $this->invitation_repository->getByHashAndSummitEvent(RSVPInvitation::HashConfirmationToken($token), $event);
 
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
@@ -208,7 +209,7 @@ class SummitRSVPInvitationService
     {
         return $this->tx_service->transaction(function () use ($event, $token) {
 
-            $invitation = $this->invitation_repository->getByHashAndSummitEvent($event, RSVPInvitation::HashConfirmationToken($token));
+            $invitation = $this->invitation_repository->getByHashAndSummitEvent(RSVPInvitation::HashConfirmationToken($token), $event);
 
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
@@ -226,13 +227,16 @@ class SummitRSVPInvitationService
             if(!$invitee->hasTicketsPaidTickets())
                 throw new ValidationException("Attendee has no valid tickets.");
 
-            $invitation->markAsAccepted();
 
+            $event = $invitation->getEvent();
+            $summit = $event->getSummit();
             $rsvp = $this->rsvp_service->addRSVP(
-                $invitation->getEvent()->getSummit(),
+                $summit,
                 $invitee->getMember(),
-                $invitation->getEvent()->getId(),
+                $event->getId(),
             );
+
+            $invitation->markAsAcceptedWithRSVP($rsvp);
             // associate invitation with RSVP
             return $invitation;
         });
@@ -248,7 +252,7 @@ class SummitRSVPInvitationService
     {
         return $this->tx_service->transaction(function () use ($event, $token) {
 
-            $invitation = $this->invitation_repository->getByHashAndSummitEvent($event, RSVPInvitation::HashConfirmationToken($token));
+            $invitation = $this->invitation_repository->getByHashAndSummitEvent(RSVPInvitation::HashConfirmationToken($token), $event);
 
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
@@ -384,7 +388,8 @@ class SummitRSVPInvitationService
                 }
             },
             function($root_entity, $outcome_email_recipient, $report){
-                //InvitationExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+                if(!$root_entity instanceof SummitEvent) return;
+                RSVPInvitationExcerptEmail::dispatch($root_entity->getSummit(), $outcome_email_recipient, $report);
             },
             $filter,
             function(){

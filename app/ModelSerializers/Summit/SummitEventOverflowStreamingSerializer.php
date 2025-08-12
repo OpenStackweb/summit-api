@@ -12,7 +12,10 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Traits\RequestCache;
 use Libs\ModelSerializers\AbstractSerializer;
+use libs\utils\CacheRegions;
+use models\summit\SummitEvent;
 
 /**
  * Class SummitEventOverflowStreamingSerializer
@@ -20,13 +23,35 @@ use Libs\ModelSerializers\AbstractSerializer;
  */
 class SummitEventOverflowStreamingSerializer extends AbstractSerializer
 {
-    protected static $array_mappings = [
-        'Id' => 'id:json_int',
-        'Title' => 'title:json_string',
-        'StartDate' => 'start_date:datetime_epoch',
-        'EndDate' => 'end_date:datetime_epoch',
-        'OverflowStreamingUrl' => 'overflow_streaming_url:json_url',
-        'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
-        'OverflowStreamingTokens' => 'overflow_tokens:json_string_array',
-    ];
+    use RequestCache;
+    /**
+     * @param $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        return $this->cache(
+            CacheRegions::getCacheRegionForSummitEvent($this->object->getIdentifier()),
+            sprintf("SummitEventOverflowStreamingSerializer_%s", $this->object->getIdentifier()),
+            function () use ($expand, $fields, $relations, $params) {
+
+                $event = $this->object;
+                if (!$event instanceof SummitEvent) return [];
+
+                $values['id'] = $event->getId();
+                $values['title'] = $event->getTitle();
+                $values['start_date'] = $event->getStartDate()->getTimestamp();
+                $values['end_date'] = $event->getEndDate()->getTimestamp();
+                $values['overflow_streaming_url'] = $event->getOverflowStreamingUrl();
+                $values['overflow_stream_is_secure'] = $event->getOverflowStreamIsSecure();
+                $values['overflow_tokens'] = [];
+                if($event->getOverflowStreamIsSecure()){
+                    $values['overflow_tokens'] = $event->getOverflowStreamingTokens();
+                }
+                return $values;
+            });
+    }
 }

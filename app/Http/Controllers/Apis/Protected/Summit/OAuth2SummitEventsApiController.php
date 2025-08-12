@@ -1573,14 +1573,17 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit))
-                return $this->error404();
+                return $this->error404("Summit not found.");
 
             $overflow_stream_key = Request::get($query_string_key);
 
             $event = $this->event_repository->getByOverflowStreamKey($overflow_stream_key);
 
-            if (!$event instanceof SummitEvent || !$event->isOnOverflow())
-                return $this->error404();
+            if (!$event instanceof SummitEvent)
+                return $this->error404("Summit event not found.");
+
+            if(!$event->isOnOverflow())
+                return $this->error412("Summit event has not overflow set.");
 
             return $this->ok(SerializerRegistry::getInstance()
                 ->getSerializer($event, IPresentationSerializerTypes::OverflowStream)

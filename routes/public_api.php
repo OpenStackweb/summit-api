@@ -175,6 +175,15 @@ Route::group(['prefix' => 'summits'], function () {
                         ),
                         'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                 });
+
+                // rsvp invitations
+                Route::group(array('prefix' => 'rsvp-invitations'), function () {
+                    Route::group(array('prefix' => '{token}'), function () {
+                        Route::get('', [ 'uses' => 'OAuth2RSVPInvitationApiController@getInvitationByToken']);
+                        Route::put('', [ 'uses' => 'OAuth2RSVPInvitationApiController@acceptByToken']);
+                        Route::delete('', [ 'uses' => 'OAuth2RSVPInvitationApiController@rejectByToken']);
+                    });
+                });
             });
 
             Route::group(['prefix' => 'all'], function () {
@@ -183,6 +192,8 @@ Route::group(['prefix' => 'summits'], function () {
                     Route::get('overflow', [ 'uses' =>'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
                 });
             });
+
+
         });
 
 

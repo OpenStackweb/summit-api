@@ -1569,16 +1569,31 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id) {
             $query_string_key = config("overflow.query_string_key", "k");
-            if (!Request::has($query_string_key)) return $this->error400();
+            if (!Request::has($query_string_key))
+                return $this->error400(sprintf("Missing overflow query string key in %s", $query_string_key));
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit))
                 return $this->error404("Summit not found.");
 
+
             $overflow_stream_key = Request::get($query_string_key);
 
-            $event = $this->event_repository->getByOverflowStreamKey($overflow_stream_key);
+            Log::debug
+            (
+                sprintf
+                (
+                    "OAuth2SummitEventsApiController::getOverflowStreamingInfo summit %s %s %s",
+                    $summit_id,
+                    $overflow_stream_key,
+                    $query_string_key
+                )
+            );
 
+            $event = $this->event_repository->getByOverflowStreamKey($overflow_stream_key);
+            if(is_null($event)){
+                Log::debug(sprintf("OAuth2SummitEventsApiController::getOverflowStreamingInfo Event %s not found.", $overflow_stream_key));
+            }
             if (!$event instanceof SummitEvent)
                 return $this->error404("Summit event not found.");
 

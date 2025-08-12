@@ -862,18 +862,14 @@ SQL,
      */
     public function getByOverflowStreamKey(string $overflow_key): ?SummitEvent
     {
-        try {
             return $this->getEntityManager()->createQueryBuilder()
                 ->select("e")
                 ->from($this->getBaseEntity(), "e")
                 ->where('e.overflow_stream_key = :overflow_stream_key')
                 ->setParameter('overflow_stream_key', trim($overflow_key))
+                ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();
-        } catch (\Exception $ex) {
-            Log::warning($ex);
-            return null;
-        }
     }
 
     /**

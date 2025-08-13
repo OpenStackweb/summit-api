@@ -31,6 +31,8 @@ final class Version20250812201257 extends AbstractMigration
         $flow = $repository->findOneBy([
             "name" => "Registration"
         ]);
+        if(is_null($flow)) return;
+        // insert the new email flow type
         SummitEmailFlowTypeSeeder::createEventsTypes(
             [
                 [

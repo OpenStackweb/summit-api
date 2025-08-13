@@ -12,9 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\DoctrineInFilterMapping;
+use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
 use models\summit\IRSVPRepository;
 use models\summit\RSVP;
-use App\Repositories\SilverStripeDoctrineRepository;
+use utils\Filter;
+use utils\Order;
 
 /**
  * Class DoctrineRSVPRepository
@@ -30,6 +35,50 @@ final class DoctrineRSVPRepository
      */
     protected function getBaseEntity()
     {
-       return RSVP::class;
+        return RSVP::class;
     }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
+    {
+        $query = $query->join('e.owner', 'm');
+        $query = $query->join('e.event', 'evt');
+        return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings()
+    {
+        return [
+            'id' => new DoctrineInFilterMapping('e.id'),
+            'not_id' => new DoctrineNotInFilterMapping('e.id'),
+            'seat_type' => 'a.seat_type:json_string',
+            'summit_event_id' => "evt.id",
+            'owner_email' => Filter::buildLowerCaseStringField('m.email'),
+            'owner_first_name' => Filter::buildLowerCaseStringField('m.first_name'),
+            'owner_last_name' => Filter::buildLowerCaseStringField('m.last_name'),
+            'owner_full_name' => Filter::buildConcatStringFields(['m.first_name', 'm.last_name']),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'id' => 'e.id',
+            'owner_email' => 'm.email',
+            'owner_first_name' => 'm.first_name',
+            'owner_last_name' => 'm.last_name',
+            'owner_full_name' => Filter::buildConcatStringFields(['m.first_name', 'm.last_name']),
+            'seat_type' => 'e.seat_type',
+        ];
+    }
+
 }

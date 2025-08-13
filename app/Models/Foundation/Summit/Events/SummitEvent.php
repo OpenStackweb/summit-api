@@ -1154,7 +1154,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $criteria = Criteria::create();
         $criteria = $criteria->where(Criteria::expr()->eq('seat_type', RSVP::SeatTypeWaitList));
         $criteria = $criteria->orderBy(['created' => Criteria::ASC]);
-        return $this->rsvp->matching($criteria)->first();
+        $res = $this->rsvp->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 
     /**
@@ -1925,14 +1926,22 @@ SQL;
 
     /**
      * @param SummitAttendee $invitee
+     * @return bool
+     */
+    public function hasInvitationFor(SummitAttendee $invitee):bool{
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('invitee', $invitee));
+        return $this->rsvp_invitations->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
      * @return RSVPInvitation
      * @throws ValidationException
      */
     public function addRSVPInvitation(SummitAttendee $invitee): RSVPInvitation{
-        $criteria = Criteria::create();
-        $criteria = $criteria->where(Criteria::expr()->eq('invitee', $invitee));
-        $already_invited = $this->rsvp_invitations->matching($criteria)->count() > 0;
-        if($already_invited)
+
+        if($this->hasInvitationFor($invitee))
             throw new ValidationException
             (
                 sprintf
@@ -1943,6 +1952,7 @@ SQL;
                     $this->getId()
                 )
             );
+
         if(!$invitee->hasTicketsPaidTickets())
             throw new ValidationException("Attendee does not has any Paid ticket.");
 

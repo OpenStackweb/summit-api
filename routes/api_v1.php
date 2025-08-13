@@ -653,11 +653,12 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEvent']);
             Route::group(['prefix' => '{event_id}'], function () {
 
-                Route::group(['prefix' => 'rsvp'], function () {
+                Route::group(['prefix' => 'rsvps'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@getAllByEvent']);
-                    Route::post('', 'OAuth2RSVPApiController@rsvp');
-                    Route::delete('', 'OAuth2RSVPApiController@unrsvp');
+
                 });
+                Route::post('rsvp', 'OAuth2RSVPApiController@rsvp');
+                Route::delete('unrsvp', 'OAuth2RSVPApiController@unrsvp');
 
                 Route::post('/clone', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@cloneEvent']);
                 Route::get('', 'OAuth2SummitEventsApiController@getEvent');

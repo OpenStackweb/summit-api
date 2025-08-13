@@ -25,6 +25,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\ISummitEventRepository;
+use models\summit\ISummitRepository;
 use models\summit\SummitEvent;
 use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
 use App\Services\Model\ISummitRSVPService;
@@ -35,6 +36,7 @@ use models\main\Member;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Services\Utils\Facades\EmailExcerpt;
 use models\summit\RSVP;
+use Illuminate\Support\Facades\App;
 /**
  * @covers \App\Services\Model\Imp\SummitRSVPInvitationService
  */
@@ -79,6 +81,15 @@ class SummitRSVPInvitationServiceTest extends TestCase
             $this->rsvp_service,
             $this->tx_service
         );
+
+
+        $summit_repository = Mockery::mock(ISummitRepository::class)->makePartial();
+
+        $summit_mock = Mockery::mock(Summit::class)->makePartial();
+        $summit_mock->shouldReceive('getMainVenues')->andReturn([]);
+        $summit_mock->shouldReceive('getId')->andReturn(1);
+        $summit_repository->shouldReceive('getByIdRefreshed')->andReturn($summit_mock);
+        App::instance(ISummitRepository::class, $summit_repository);
 
         Log::swap(Mockery::mock(\Psr\Log\LoggerInterface::class)->shouldIgnoreMissing());
     }
@@ -274,7 +285,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
 
         $event->shouldReceive('addRSVPInvitation')->once()->andReturn(Mockery::mock(RSVPInvitation::class));
 
-        $result = $this->service->add($event, ['attendee_id' => 123]);
+        $result = $this->service->add($event, ['invitee_id' => 123]);
         $this->assertInstanceOf(RSVPInvitation::class, $result);
     }
 
@@ -283,7 +294,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $this->expectException(EntityNotFoundException::class);
 
         [$event] = $this->makeSummitEventGraph();
-        $this->service->add($event, ['attendee_id' => 999]);
+        $this->service->add($event, ['invitee_id' => 999]);
     }
 
     /** -------------------- getInvitationByToken -------------------- */

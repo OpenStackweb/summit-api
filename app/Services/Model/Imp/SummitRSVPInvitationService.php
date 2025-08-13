@@ -108,7 +108,7 @@ class SummitRSVPInvitationService
                 }
 
                 $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
-                $row['attendee_id'] = $attendee->getId();
+                $row['invitee_id'] = $attendee->getId();
                 if (!is_null($former_invitation)) {
                     $this->update($summit_event, $former_invitation->getId(), $row);
                 } else {

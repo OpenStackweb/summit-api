@@ -654,7 +654,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::group(['prefix' => '{event_id}'], function () {
 
                 Route::group(['prefix' => 'rsvps'], function () {
-                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@getAllByEvent']);
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@getAllBySummitEvent']);
 
                 });
                 Route::post('rsvp', 'OAuth2RSVPApiController@rsvp');

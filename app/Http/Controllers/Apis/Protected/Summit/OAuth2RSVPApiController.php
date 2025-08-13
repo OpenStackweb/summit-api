@@ -72,6 +72,9 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
 
     use RequestProcessor;
 
+    use GetAndValidateJsonPayload;
+
+    use ValidateEventUri;
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvp",
@@ -116,7 +119,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
     )]
-    public function rsvo($summit_id, $event_id)
+    public function rsvp($summit_id, $event_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -209,6 +212,29 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
             $this->service->unRSVPEvent($summit, $current_member, $event_id);
 
             return $this->deleted();
+        });
+    }
+
+    // CRUD Operations
+
+    public function add($summit_id, $event_id){
+        return $this->processRequest(function () use ($summit_id, $event_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404("Summit not found.");
+
+            $summit_event = $summit->getEvent(intval($event_id));
+            if (is_null($summit_event)) return $this->error404("Summit event not found.");
+
+            $payload = $this->getJsonPayload([
+                'seat_type' => 'required|string|in:' . join(',', [
+                        RSVP::SeatTypeRegular,
+                        RSVP::SeatTypeWaitList,
+                    ]),
+                'answers' => 'sometimes|rsvp_answer_dto_array',
+                'attendee_id' => 'required|integer',
+            ]);
+
+            $this->service->createFromPayload($summit, $event_id, $payload);
         });
     }
 

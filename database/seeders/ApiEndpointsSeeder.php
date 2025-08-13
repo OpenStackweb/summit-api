@@ -7002,7 +7002,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'rsvp',
-                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -7011,7 +7011,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'unrsvp',
-                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -10669,8 +10669,21 @@ class ApiEndpointsSeeder extends Seeder
                     ]
                 ],
                 [
-                    'name' => 'send-rsvp-invitations',
+                    'name' => 'delete-rsvp-invitation',
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/{invitation_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-all-rsvp-invitation',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/all',
                     'http_method' => 'DELETE',
                     'scopes' => [
                         RSVPInvitationsScopes::Write

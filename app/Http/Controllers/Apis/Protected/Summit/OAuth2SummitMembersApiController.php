@@ -14,8 +14,12 @@
 
 use App\Http\Utils\CurrentAffiliationsCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\RSVPInvitationsScopes;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitRSVPService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -33,7 +37,7 @@ use utils\FilterParserException;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2SummitMembersApiController
  * @package App\Http\Controllers
@@ -520,13 +524,51 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
     use GetAndValidateJsonPayload;
 
-    /**
-     * @param $summit_id
-     * @param $member_id
-     * @param $event_id
-     * @return mixed
-     */
-    public function rsvo($summit_id, $member_id, $event_id)
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvp",
+        description: "",
+        summary: 'Perform RSVP',
+        operationId: 'doRSVP',
+        tags: ['RSVP'],
+        security: [['summit_rsvp_oauth2' => [
+            SummitScopes::AddMyRSVP,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'RSVP Created',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function rsvo($summit_id, $event_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -557,23 +599,55 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $member_id
-     * @param $event_id
-     * @return mixed
-     */
-    public function unrsvp($summit_id, $member_id, $event_id)
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvp",
+        description: "",
+        summary: 'UnRSVP',
+        operationId: 'unRSVP',
+        tags: ['RSVP'],
+        security: [['summit_rsvp_oauth2' => [
+            SummitScopes::DeleteMyRSVP,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'UnRSVP success',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function unrsvp($summit_id, $event_id)
     {
 
         return $this->processRequest(function () use ($summit_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-
-            $payload = $this->getJsonPayload([
-                'answers' => 'sometimes|rsvp_answer_dto_array',
-                'event_uri' => 'sometimes|url',
-            ]);
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();

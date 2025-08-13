@@ -1943,6 +1943,8 @@ SQL;
                     $this->getId()
                 )
             );
+        if(!$invitee->hasTicketsPaidTickets())
+            throw new ValidationException("Attendee does not has any Paid ticket.");
 
         $invitation = new RSVPInvitation($this, $invitee);
         $this->rsvp_invitations->add($invitation);

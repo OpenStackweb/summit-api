@@ -7002,7 +7002,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'get-all-rsvp-by-event',
-                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
@@ -7026,7 +7026,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'unrsvp',
-                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/unrsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),

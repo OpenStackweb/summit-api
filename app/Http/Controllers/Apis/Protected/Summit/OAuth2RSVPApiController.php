@@ -148,7 +148,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: "/api/v1/summits/{id}/events/{event_id}/rsvp",
+        path: "/api/v1/summits/{id}/events/{event_id}/unrsvp",
         description: "",
         summary: 'UnRSVP',
         operationId: 'unRSVP',
@@ -213,7 +213,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: "/api/v1/summits/{id}/events/{event_id}/rsvp",
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: 'Read RSVPS from event',
         operationId: 'readRSVP',

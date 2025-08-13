@@ -403,11 +403,14 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 schema: new OA\Schema(type: 'string', example: 'id,-status')
             ),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SendRSVPInvitationsRequest")
+        ),
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'RSVP Invitation send success',
-                content: new OA\JsonContent(ref: '#/components/schemas/SendRSVPInvitationsResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
@@ -530,6 +533,10 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 description: 'The event id'
             )
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/RSVPInvitationRequest")
+        ),
         responses: [
             new OA\Response(
                 response: 200,
@@ -555,7 +562,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             if (is_null($current_member)) return $this->error403();
 
             $payload = $this->getJsonPayload([
-                'attendee_id' => 'required:integer',
+                'invitee_id' => 'required:integer',
             ], true);
 
             $invitation = $this->service->add($summit_event, $payload);

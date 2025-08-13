@@ -170,10 +170,10 @@ class SummitRSVPInvitationService
     public function add(SummitEvent $summit_event, array $payload): RSVPInvitation
     {
         return $this->tx_service->transaction(function () use ($summit_event, $payload) {
-            $attendee_id = intval($payload['attendee_id']);
-            Log::debug(sprintf("SummitRSVPInvitationService::add trying to add process attendee id %s.", $attendee_id));
+            $invitee_id = intval($payload['invitee_id']);
+            Log::debug(sprintf("SummitRSVPInvitationService::add trying to add process invitee id %s.", $invitee_id));
             $summit = $summit_event->getSummit();
-            $attendee = $summit->getAttendeeById($attendee_id);
+            $attendee = $summit->getAttendeeById($invitee_id);
             if(is_null($attendee))
                 throw new EntityNotFoundException("Attendee not found.");
             return $summit_event->addRSVPInvitation($attendee);

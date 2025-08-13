@@ -1,5 +1,6 @@
 <?php namespace App\Swagger\schemas;
 
+use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
@@ -128,10 +129,10 @@ class SummitAttendeeSchema {}
 class SummitEventSchema {}
 
 #[OA\Schema(
-    schema: 'SendRSVPInvitationsResponse',
+    schema: 'SendRSVPInvitationsRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'email_flow_event', type: 'string', example: 'rsvp_invitation_send'),
+        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG),
         new OA\Property(
             property: 'invitations_ids',
             type: 'array',
@@ -148,7 +149,7 @@ class SummitEventSchema {}
         new OA\Property(property: 'outcome_email_recipient', type: 'string', example: 'result@test.com'),
     ]
 )]
-class SendRSVPInvitationsResponseSchema {}
+class SendRSVPInvitationsRequestSchema {}
 
 
 #[
@@ -217,3 +218,12 @@ class RSVPSchema {}
     ]
 )]
 class PaginatedRSVPsResponseSchema {}
+
+#[OA\Schema(
+    schema: 'RSVPInvitationRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
+    ]
+)]
+class RSVPInvitationRequestSchema {}

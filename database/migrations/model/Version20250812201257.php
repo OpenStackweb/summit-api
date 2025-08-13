@@ -4,6 +4,7 @@
 
 
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
+use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use Database\Seeders\SummitEmailFlowTypeSeeder;
@@ -46,9 +47,9 @@ final class Version20250812201257 extends AbstractMigration
                     'default_email_template' => ReRSVPInviteEmail::DEFAULT_TEMPLATE
                 ],
                 [
-                    'name' => ReRSVPInviteEmail::EVENT_NAME,
-                    'slug' => ReRSVPInviteEmail::EVENT_SLUG,
-                    'default_email_template' => ReRSVPInviteEmail::DEFAULT_TEMPLATE
+                    'name' => RSVPInvitationExcerptEmail::EVENT_NAME,
+                    'slug' => RSVPInvitationExcerptEmail::EVENT_SLUG,
+                    'default_email_template' => RSVPInvitationExcerptEmail::DEFAULT_TEMPLATE
                 ]
             ],
             $flow

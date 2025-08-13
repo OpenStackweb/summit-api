@@ -3,6 +3,7 @@
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
+use models\summit\RSVP;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
@@ -162,9 +163,57 @@ class SendRSVPInvitationsResponseSchema {}
                 scopes: [
                     SummitScopes::AddMyRSVP => 'RSVP',
                     SummitScopes::DeleteMyRSVP => 'UnRSVP',
+                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                    SummitScopes::ReadSummitData => 'Read Summit Data',
                 ],
             ),
         ],
     )
 ]
 class RSVPAuthSchema{}
+
+#[OA\Schema(
+    schema: 'Member',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer'),
+        new OA\Property(property: 'created', type: 'integer', example: 1630500518),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
+        new OA\Property(property: 'first_name', type: 'string', example: 'John'),
+        new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
+    ]
+)]
+class MemberSchema {}
+
+#[OA\Schema(
+    schema: 'RSVP',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer'),
+        new OA\Property(property: 'created', type: 'integer', example: 1630500518),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
+        new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular),
+        new OA\Property(property: 'owner', ref: '#/components/schemas/Member'),
+        new OA\Property(property: 'event', ref: '#/components/schemas/SummitEvent'),
+
+    ]
+)]
+class RSVPSchema {}
+
+#[OA\Schema(
+    schema: 'PaginatedRSVPsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/RSVP')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedRSVPsResponseSchema {}

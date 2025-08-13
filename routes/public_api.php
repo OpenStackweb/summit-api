@@ -185,15 +185,12 @@ Route::group(['prefix' => 'summits'], function () {
                     });
                 });
             });
-
             Route::group(['prefix' => 'all'], function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
                     Route::get('overflow', [ 'uses' =>'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
                 });
             });
-
-
         });
 
 

@@ -224,6 +224,7 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'slug' => SponsorPromoCodeEmail::EVENT_SLUG,
                 'default_email_template' => SponsorPromoCodeEmail::DEFAULT_TEMPLATE
             ],
+            // RSVP
             [
                 'name' => RSVPInviteEmail::EVENT_NAME,
                 'slug' => RSVPInviteEmail::EVENT_SLUG,
@@ -234,6 +235,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'slug' => ReRSVPInviteEmail::EVENT_SLUG,
                 'default_email_template' => ReRSVPInviteEmail::DEFAULT_TEMPLATE
             ],
+            [
+                'name' => ReRSVPInviteEmail::EVENT_NAME,
+                'slug' => ReRSVPInviteEmail::EVENT_SLUG,
+                'default_email_template' => ReRSVPInviteEmail::DEFAULT_TEMPLATE
+            ]
         ], $flow);
 
         $em->persist($flow);

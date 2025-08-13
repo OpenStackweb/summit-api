@@ -20,20 +20,19 @@ use App\ModelSerializers\SerializerUtils;
 use App\Security\RSVPInvitationsScopes;
 use App\Services\ISummitRSVPInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
-use App\Services\Model\ISummitRSVPService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
-use models\summit\ISummitEventRepository;
-use models\summit\ISummitRepository;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
+use models\summit\ISummitEventRepository;
+use models\summit\ISummitRepository;
 use models\summit\SummitRegistrationInvitation;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
-use OpenApi\Attributes as OA;
 
 #[
     OA\SecurityScheme(
@@ -58,7 +57,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     use RequestProcessor;
 
     /**
-     * @var ISummitRSVPService
+     * @var ISummitRSVPInvitationService
      */
     private ISummitRSVPInvitationService $service;
 
@@ -70,13 +69,21 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
 
     private ISummitEventRepository $summit_event_repository;
 
+    /**
+     * @param ISummitEventRepository $summit_event_repository
+     * @param IRSVPInvitationRepository $repository
+     * @param ISummitRepository $summit_repository
+     * @param ISummitRSVPInvitationService $service
+     * @param IResourceServerContext $resource_server_context
+     */
     public function __construct(
-        ISummitEventRepository $summit_event_repository,
-        IRSVPINvitationRepository $repository,
-        ISummitRepository $summit_repository,
+        ISummitEventRepository       $summit_event_repository,
+        IRSVPINvitationRepository    $repository,
+        ISummitRepository            $summit_repository,
         ISummitRSVPInvitationService $service,
-        IResourceServerContext $resource_server_context
-    ){
+        IResourceServerContext       $resource_server_context
+    )
+    {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -86,7 +93,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv",
-        description: "required-groups ".IGroup::SummitAdministrators.", ".IGroup::SuperAdmins.", ".IGroup::Administrators,
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: 'Import RSVP Invitations',
         requestBody: new OA\RequestBody(
             required: true,
@@ -118,6 +125,13 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         ]]],
         parameters: [
             new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
                 name: 'summit_id',
                 in: 'path',
                 required: true,
@@ -143,7 +157,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
     )]
-    public function ingestInvitations(LaravelRequest $request, $summit_id, $event_id){
+    public function ingestInvitations(LaravelRequest $request, $summit_id, $event_id)
+    {
         return $this->processRequest(function () use ($request, $summit_id, $event_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
@@ -181,7 +196,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations",
-        description: "required-groups ".IGroup::SummitAdministrators.", ".IGroup::SuperAdmins.", ".IGroup::Administrators,
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: 'Read Invitations',
         operationId: 'readInvitations',
         tags: ['RSVP Invitations'],
@@ -197,6 +212,13 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         ]]],
         parameters: [
             new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
                 name: 'summit_id',
                 in: 'path',
                 required: true,
@@ -209,12 +231,54 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 required: true,
                 schema: new OA\Schema(type: 'string'),
                 description: 'The event id'
-            )
+            ),
+            // query string params
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'attendee_email@@email@test.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-status')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'invitee,event')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to load eagerly',
+                schema: new OA\Schema(type: 'string', example: 'invitee,event')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of fields to return',
+                schema: new OA\Schema(type: 'string', example: 'id,status,invitee.first_name,invitee.last_name')
+            ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Badge validation success',
+                description: 'get all paginated RSVP invitations',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedRSVPInvitationsResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
@@ -222,7 +286,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
     )]
-    public function getAllByEventId($summit_id, $event_id){
+    public function getAllByEventId($summit_id, $event_id)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -235,10 +300,10 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 return [
                     'id' => ['=='],
                     'not_id' => ['=='],
-                    'attendee_email' => ['@@','=@', '=='],
-                    'attendee_first_name' => ['@@','=@', '=='],
-                    'attendee_last_name' => ['@@','=@', '=='],
-                    'attendee_full_name' => ['@@','=@', '=='],
+                    'attendee_email' => ['@@', '=@', '=='],
+                    'attendee_first_name' => ['@@', '=@', '=='],
+                    'attendee_last_name' => ['@@', '=@', '=='],
+                    'attendee_full_name' => ['@@', '=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
                     'status' => ['=='],
@@ -254,7 +319,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                     'attendee_full_name' => 'sometimes|required|string',
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
-                    'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
+                    'status' => 'sometimes|required|string|in:' . join(",", SummitRegistrationInvitation::AllowedStatus),
                 ];
             },
             function () {
@@ -279,11 +344,77 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         );
     }
 
-    /**
-     * @param $summit_id
-     * @param $summit_event_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/send",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Send Invitations',
+        operationId: 'sendInvitations',
+        tags: ['RSVP Invitations'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_badges_oauth2' => [
+            RSVPInvitationsScopes::Send
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            // query string params
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'attendee_email@@email@test.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-status')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP Invitation send success',
+                content: new OA\JsonContent(ref: '#/components/schemas/SendRSVPInvitationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
     public function send($summit_id, $event_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_id) {
@@ -307,8 +438,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                     ]),
                 'invitations_ids' => 'sometimes|int_array',
                 'excluded_invitations_ids' => 'sometimes|int_array',
-                'test_email_recipient'     => 'sometimes|email',
-                'outcome_email_recipient'  => 'sometimes|email',
+                'test_email_recipient' => 'sometimes|email',
+                'outcome_email_recipient' => 'sometimes|email',
             ]);
 
             if ($validation->fails()) {
@@ -326,10 +457,10 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 $filter = FilterParser::parse(Request::input('filter'), [
                     'id' => ['=='],
                     'not_id' => ['=='],
-                    'attendee_email' => ['@@','=@', '=='],
-                    'attendee_first_name' => ['@@','=@', '=='],
-                    'attendee_last_name' => ['@@','=@', '=='],
-                    'attendee_full_name' => ['@@','=@', '=='],
+                    'attendee_email' => ['@@', '=@', '=='],
+                    'attendee_first_name' => ['@@', '=@', '=='],
+                    'attendee_last_name' => ['@@', '=@', '=='],
+                    'attendee_full_name' => ['@@', '=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
                     'status' => ['=='],
@@ -348,7 +479,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 'attendee_full_name' => 'sometimes|required|string',
                 'is_accepted' => 'sometimes|required|string|in:true,false',
                 'is_sent' => 'sometimes|required|string|in:true,false',
-                'status' => 'sometimes|required|string|in:'.join(",", SummitRegistrationInvitation::AllowedStatus),
+                'status' => 'sometimes|required|string|in:' . join(",", SummitRegistrationInvitation::AllowedStatus),
             ]);
 
             $this->service->triggerSend($summit_event, $payload, Request::input('filter'));
@@ -360,7 +491,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
 
     use GetAndValidateJsonPayload;
 
-    public function addInvitation($summit_id, $event_id){
+    public function addInvitation($summit_id, $event_id)
+    {
         return $this->processRequest(function () use ($summit_id, $event_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
@@ -386,7 +518,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         });
     }
 
-    public function deleteInvitation($summit_id, $event_id, $invitation_id ){
+    public function delete($summit_id, $event_id, $invitation_id)
+    {
         return $this->processRequest(function () use ($summit_id, $event_id, $invitation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
@@ -403,16 +536,59 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         });
     }
 
+    public function deleteAll($summit_id, $event_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $event_id) {
+            return $this->deleted();
+        });
+    }
 
     // public endpoints
 
-    /**
-     * @param $summit_id
-     * @param $summit_event_id
-     * @param $token
-     * @return mixed
-     */
-    public function getInvitationByToken($summit_id, $event_id, $token){
+    #[OA\Get(
+        path: "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}",
+        description: "",
+        summary: 'Get RSVP Invitation By Token',
+        operationId: 'gettByToken',
+        tags: ['RSVP Invitations (Public)'],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            new OA\Parameter(
+                name: 'token',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Invitation Token'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP Invitation',
+                content: new OA\JsonContent(ref: '#/components/schemas/RSVPInvitation')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function getInvitationByToken($summit_id, $event_id, $token)
+    {
         return $this->processRequest(function () use ($summit_id, $event_id, $token) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
@@ -430,13 +606,50 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $summit_event_id
-     * @param $token
-     * @return mixed
-     */
-    public function acceptByToken($summit_id, $event_id, $token){
+    #[OA\Put(
+        path: "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}/accept",
+        description: "",
+        summary: 'Accept RSVP Invitation',
+        operationId: 'acceptByToken',
+        tags: ['RSVP Invitations (Public)'],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            new OA\Parameter(
+                name: 'token',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Invitation Token'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP Invitation Acccept success',
+                content: new OA\JsonContent(ref: '#/components/schemas/RSVPInvitation')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function acceptByToken($summit_id, $event_id, $token)
+    {
         return $this->processRequest(function () use ($summit_id, $event_id, $token) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
@@ -454,19 +667,56 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $summit_event_id
-     * @param $token
-     * @return mixed
-     */
-    public function rejectByToken($summit_id, $event_id, $token){
+    #[OA\Delete(
+        path: "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}/decline",
+        description: "",
+        summary: 'Decline RSVP Invitation',
+        operationId: 'rejectByToken',
+        tags: ['RSVP Invitations (Public)'],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            new OA\Parameter(
+                name: 'token',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Invitation Token'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP Invitation Decline success',
+                content: new OA\JsonContent(ref: '#/components/schemas/RSVPInvitation')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function rejectByToken($summit_id, $event_id, $token)
+    {
         return $this->processRequest(function () use ($summit_id, $event_id, $token) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
             $summit_event = $summit->getEvent(intval($event_id));
             if (is_null($summit_event)) return $this->error404();
-
+            if(empty($token)) return $this->error401();
             $invitation = $this->service->rejectInvitationBySummitEventAndToken($summit_event, $token);
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize

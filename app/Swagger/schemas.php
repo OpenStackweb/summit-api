@@ -1,6 +1,8 @@
 <?php namespace App\Swagger\schemas;
 
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
+use App\Security\RSVPInvitationsScopes;
+use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
@@ -146,3 +148,23 @@ class SummitEventSchema {}
     ]
 )]
 class SendRSVPInvitationsResponseSchema {}
+
+
+#[
+    OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'summit_rsvp_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::AddMyRSVP => 'RSVP',
+                    SummitScopes::DeleteMyRSVP => 'UnRSVP',
+                ],
+            ),
+        ],
+    )
+]
+class RSVPAuthSchema{}

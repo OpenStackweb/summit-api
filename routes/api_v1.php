@@ -653,6 +653,10 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEvent']);
             Route::group(['prefix' => '{event_id}'], function () {
 
+                Route::group(['prefix' => 'rsvp'], function () {
+                    Route::post('', 'OAuth2SummitMembersApiController@rsvp');
+                    Route::delete('', 'OAuth2SummitMembersApiController@unrsvp');
+                });
                 Route::post('/clone', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@cloneEvent']);
                 Route::get('', 'OAuth2SummitEventsApiController@getEvent');
 
@@ -1726,11 +1730,6 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
 
                     Route::group(array('prefix' => '{event_id}'), function () {
-
-                        Route::group(['prefix' => 'rsvp'], function () {
-                            Route::post('', 'OAuth2SummitMembersApiController@rsvp')->where('member_id', 'me');
-                            Route::delete('', 'OAuth2SummitMembersApiController@unrsvp')->where('member_id', 'me');
-                        });
 
                         Route::group(['prefix' => 'feedback'], function () {
                             Route::get('', 'OAuth2SummitEventsApiController@getMyEventFeedback')->where('member_id', 'me');

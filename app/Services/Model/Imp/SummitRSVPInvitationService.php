@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\ISummitEventRepository;
 use models\summit\SummitEvent;
 use utils\Filter;
@@ -141,11 +142,26 @@ class SummitRSVPInvitationService
     }
 
     /**
-     * @inheritDoc
+     * @param SummitEvent $summit_event
+     * @param Member $current_member
+     * @return void
+     * @throws \Exception
      */
-    public function deleteAll(SummitEvent $summit_event): void
+    public function deleteAll(SummitEvent $summit_event, Member $current_member): void
     {
-        // TODO: Implement deleteAll() method.
+        $this->tx_service->transaction(function () use ($summit_event, $current_member) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRSVPInvitationService::deleteAll event %s by user %s(%s)",
+                    $summit_event->getId(),
+                    $current_member->getEmail(),
+                    $current_member->getId()
+                )
+            );
+            $summit_event->clearRSVPInvitations();
+        });
     }
 
     /**

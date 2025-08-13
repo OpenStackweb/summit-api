@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\SummitEvent;
 use utils\Filter;
 
@@ -34,8 +35,10 @@ interface ISummitRSVPInvitationService
 
     /**
      * @param SummitEvent $summit_event
+     * @param Member $current_member
+     * @return void
      */
-    public function deleteAll(SummitEvent $summit_event):void;
+    public function deleteAll(SummitEvent $summit_event, Member $current_member): void;
 
     /**
      * @param SummitEvent $summit_event

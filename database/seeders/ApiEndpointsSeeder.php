@@ -7001,6 +7001,21 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-all-rsvp-by-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
                 'name' => 'rsvp',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'POST',

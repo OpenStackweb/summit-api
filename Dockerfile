@@ -31,19 +31,14 @@ RUN apt-get install -y \
     gettext \
     libmagickwand-dev
 
-# node / npm
-RUN apt install -y nodejs npm
 
 # nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
-RUN  \. ~/.nvm/nvm.sh && nvm install $NODE_VERSION
 
-# yarn
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN  apt update && apt install -y yarn
-
+# nvm + node + yarn via corepack
 ENV NVM_DIR=/root/.nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
+# Install Node, enable Corepack (Yarn)
+RUN bash -lc "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && corepack enable && corepack prepare yarn@stable --activate"
 
 RUN apt clean && rm -rf /var/lib/apt/lists/*
 

@@ -124,7 +124,7 @@ final class OAuth2RSVPApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(412);
         $json_error = json_decode($response->getContent(), false);
-        $this->assertEquals("Attendee does not has invitation for this Private RSVP activity.", $json_error->errors[0]);
+        $this->assertEquals("Attendee does not have invitation for this Private RSVP activity.", $json_error->errors[0]);
     }
 
     public function testDoRSVP404Summit()

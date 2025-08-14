@@ -10630,13 +10630,15 @@ class ApiEndpointsSeeder extends Seeder
     }
 
     public function seedRSVPInvitationsEndpoints():void{
+        $current_realm = Config::get('app.scope_base_realm');
         $this->seedApiEndpoints('rsvp-invitations', [
                 [
                     'name' => 'get-all-rsvp-invitations',
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations',
                     'http_method' => 'GET',
                     'scopes' => [
-                        RSVPInvitationsScopes::Read
+                        RSVPInvitationsScopes::Read,
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10649,7 +10651,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations',
                     'http_method' => 'POST',
                     'scopes' => [
-                        RSVPInvitationsScopes::Write
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10662,7 +10665,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        RSVPInvitationsScopes::Write
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10675,7 +10679,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/send',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        RSVPInvitationsScopes::Send
+                        RSVPInvitationsScopes::Send,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10688,7 +10693,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/{invitation_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        RSVPInvitationsScopes::Write
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10701,7 +10707,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/all',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        RSVPInvitationsScopes::Write
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,

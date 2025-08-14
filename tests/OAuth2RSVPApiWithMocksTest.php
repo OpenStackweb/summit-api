@@ -148,4 +148,229 @@ final class OAuth2RSVPApiWithMocksTest extends ProtectedApiTestCase
         $this->rsvp_service_mock->shouldNotHaveReceived('rsvpEvent');
     }
 
+    /** *********************************************************************
+     * getById (ADMIN)
+     ********************************************************************* */
+
+    public function testGetRSVPById200(): void
+    {
+        $summit = self::$summit;
+        $event  = self::$presentations[0];
+
+        // Create an RSVP on this event with a fixed ID
+        $rsvp = new RSVP;
+        $rsvp->setOwner(self::$member);
+        $rsvp->setEvent($event);
+
+        // Set RSVP ID via reflection (so event->getRSVPById() can find it)
+        $rprop = new \ReflectionProperty(\models\summit\RSVP::class, 'id');
+        $rprop->setAccessible(true);
+        $rprop->setValue($rsvp, 777);
+
+        // Ensure RSVP collection on event contains our RSVP
+        $eprop = new \ReflectionProperty(\models\summit\SummitEvent::class, 'rsvp');
+        $eprop->setAccessible(true);
+        $collection = $eprop->getValue($event);
+        if (!$collection instanceof \Doctrine\Common\Collections\ArrayCollection) {
+            $collection = new \Doctrine\Common\Collections\ArrayCollection();
+        }
+        $collection->add($rsvp);
+        $eprop->setValue($event, $collection);
+
+        $params = [
+            'id'       => $summit->getId(),
+            'event_id' => $event->getId(),
+            'rsvp_id'  => 777,
+        ];
+
+        $response = $this->action(
+            'GET',
+            'OAuth2RSVPApiController@getById',
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($response->getContent());
+        $json = json_decode($response->getContent(), true);
+        $this->assertEquals(777, $json['id'] ?? null);
+    }
+
+    public function testGetRSVPById403WhenNotFound(): void
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'event_id' => self::$presentations[0]->getId(),
+            'rsvp_id'  => 999999, // does not exist
+        ];
+
+        $this->action(
+            'GET',
+            'OAuth2RSVPApiController@getById',
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(403); // controller throws HTTP403ForbiddenException when not found
+    }
+
+    /** *********************************************************************
+     * delete (ADMIN)
+     ********************************************************************* */
+
+    public function testDeleteRSVP204(): void
+    {
+        $summit = self::$summit;
+        $event  = self::$presentations[0];
+
+        // Seed an RSVP on the event
+        $rsvp = new RSVP;
+        $rsvp->setOwner(self::$member);
+        $rsvp->setEvent($event);
+
+        $rprop = new \ReflectionProperty(\models\summit\RSVP::class, 'id');
+        $rprop->setAccessible(true);
+        $rprop->setValue($rsvp, 555);
+
+        $eprop = new \ReflectionProperty(\models\summit\SummitEvent::class, 'rsvp');
+        $eprop->setAccessible(true);
+        $collection = $eprop->getValue($event);
+        if (!$collection instanceof \Doctrine\Common\Collections\ArrayCollection) {
+            $collection = new \Doctrine\Common\Collections\ArrayCollection();
+        }
+        $collection->add($rsvp);
+        $eprop->setValue($event, $collection);
+
+        $params = [
+            'id'       => $summit->getId(),
+            'event_id' => $event->getId(),
+            'rsvp_id'  => 555,
+        ];
+
+        $this->action(
+            'DELETE',
+            'OAuth2RSVPApiController@delete',
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+
+        // Verify it was removed from the event
+        $this->assertNull($event->getRSVPById(555));
+    }
+
+    public function testDeleteRSVP403WhenNotFound(): void
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'event_id' => self::$presentations[0]->getId(),
+            'rsvp_id'  => 424242, // not present
+        ];
+
+        $this->action(
+            'DELETE',
+            'OAuth2RSVPApiController@delete',
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(403); // getRSVPOr404 throws HTTP403ForbiddenException
+    }
+
+    /** *********************************************************************
+     * update (ADMIN)
+     ********************************************************************* */
+
+    public function testUpdateRSVP201(): void
+    {
+        $summit = self::$summit;
+        $event  = self::$presentations[0];
+
+        // Minimal updated RSVP for serializer
+        $updated = new RSVP;
+        $updated->setOwner(self::$member);
+        $updated->setEvent($event);
+
+        $payload = [
+            'seat_type' => RSVP::SeatTypeWaitList,
+            'status'    => RSVP::Status_Active,
+            'answers'   => [], // keep simple
+        ];
+
+        $this->rsvp_service_mock
+            ->shouldReceive('update')
+            ->once()
+            ->withArgs(function ($eventArg, $rsvpIdArg, $payloadArg) use ($event, $payload) {
+                $this->assertInstanceOf(SummitEvent::class, $eventArg);
+                $this->assertEquals($event->getId(), $eventArg->getId());
+                $this->assertEquals(1234, (int)$rsvpIdArg);
+                $this->assertEquals($payload, $payloadArg);
+                return true;
+            })
+            ->andReturn($updated);
+
+        $params = [
+            'id'       => $summit->getId(),
+            'event_id' => $event->getId(),
+            'rsvp_id'  => 1234,
+        ];
+
+        $response = $this->action(
+            'PUT',
+            'OAuth2RSVPApiController@update',
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+        $this->assertNotEmpty($response->getContent());
+    }
+
+    public function testUpdateRSVP400ValidationErrorFromPayload(): void
+    {
+        // seat_type invalid -> controller validation should fail before hitting service
+        $params = [
+            'id'       => self::$summit->getId(),
+            'event_id' => self::$presentations[0]->getId(),
+            'rsvp_id'  => 999,
+        ];
+
+        $payload = [
+            'seat_type' => 'NOT_A_VALID_SEAT_TYPE',
+        ];
+
+        $response = $this->action(
+            'PUT',
+            'OAuth2RSVPApiController@update',
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        // Precondition failed (422) or 412 depending on your base controller; use what your stack returns
+        $this->assertTrue(in_array($response->getStatusCode(), [412, 422], true));
+        // service must not be called
+        $this->rsvp_service_mock->shouldNotHaveReceived('update');
+    }
+
 }

@@ -18,6 +18,7 @@ use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\RSVPInvitationsScopes;
+use App\Security\SummitScopes;
 use App\Services\ISummitRSVPInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -47,6 +48,8 @@ use utils\FilterParser;
                     RSVPInvitationsScopes::Read => 'Read RSVP Invitations Data',
                     RSVPInvitationsScopes::Write => 'Write RSVP Invitations Data',
                     RSVPInvitationsScopes::Send => 'Send RSVP Invitations',
+                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                    SummitScopes::WriteSummitData => 'Write Summit Data',
                 ],
             ),
         ],
@@ -124,7 +127,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             ]
         ],
         security: [['summit_rsvp_invitations_oauth2' => [
-            RSVPInvitationsScopes::Write
+            RSVPInvitationsScopes::Write,
+            SummitScopes::WriteSummitData
         ]]],
         parameters: [
             new OA\Parameter(
@@ -208,7 +212,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             ]
         ],
         security: [['summit_badges_oauth2' => [
-            RSVPInvitationsScopes::Read
+            RSVPInvitationsScopes::Read,
+            SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
             new OA\Parameter(
@@ -358,7 +363,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             ]
         ],
         security: [['summit_badges_oauth2' => [
-            RSVPInvitationsScopes::Send
+            RSVPInvitationsScopes::Send,
+            SummitScopes::WriteSummitData,
         ]]],
         parameters: [
             new OA\Parameter(
@@ -508,7 +514,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             ]
         ],
         security: [['summit_badges_oauth2' => [
-            RSVPInvitationsScopes::Write
+            RSVPInvitationsScopes::Write,
+            SummitScopes::WriteSummitData
         ]]],
         parameters: [
             new OA\Parameter(
@@ -590,7 +597,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             ]
         ],
         security: [['summit_badges_oauth2' => [
-            RSVPInvitationsScopes::Write
+            RSVPInvitationsScopes::Write,
+            SummitScopes::WriteSummitData
         ]]],
         parameters: [
             new OA\Parameter(
@@ -665,7 +673,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             ]
         ],
         security: [['summit_badges_oauth2' => [
-            RSVPInvitationsScopes::Write
+            RSVPInvitationsScopes::Write,
+            SummitScopes::WriteSummitData
         ]]],
         parameters: [
             new OA\Parameter(

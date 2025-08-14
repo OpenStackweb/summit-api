@@ -12,16 +12,21 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitRSVPService;
 use Illuminate\Http\Response;
+use models\exceptions\EntityNotFoundException;
+use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\IRSVPRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\RSVP;
+use models\summit\Summit;
+use models\summit\SummitEvent;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use utils\Filter;
@@ -32,12 +37,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
 {
     use RequestProcessor;
 
-
-    /**
-     * @var ISummitRepository
-     */
     private ISummitRepository $summit_repository;
-
 
     private ISummitEventRepository $summit_event_repository;
 
@@ -122,24 +122,19 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     public function rsvp($summit_id, $event_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+
+            $summit = $this->getSummitOr404($summit_id);
+
+            $event = $this->getScheduleEventOr404($summit, $event_id);
+
+            $current_member = $this->getCurrentMemberOr403();
 
             $payload = $this->getJsonPayload([
                 'answers' => 'sometimes|rsvp_answer_dto_array',
                 'event_uri' => 'sometimes|url',
             ]);
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $event = $summit->getScheduleEvent(intval($event_id));
-
-            if (is_null($event)) {
-                return $this->error404();
-            }
-
-            $rsvp = $this->service->rsvpEvent($summit, $current_member, $event_id, $this->validateEventUri($payload));
+            $rsvp = $this->service->rsvpEvent($summit, $current_member, $event->getId(), $this->validateEventUri($payload));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
             (
@@ -195,21 +190,15 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     )]
     public function unrsvp($summit_id, $event_id)
     {
-
         return $this->processRequest(function () use ($summit_id, $event_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            $summit = $this->getSummitOr404($summit_id);
 
-            $event = $summit->getScheduleEvent(intval($event_id));
+            $event = $this->getScheduleEventOr404($summit, $event_id);
 
-            if (is_null($event)) {
-                return $this->error404();
-            }
+            $current_member = $this->getCurrentMemberOr403();
 
-            $this->service->unRSVPEvent($summit, $current_member, $event_id);
+            $this->service->unRSVPEvent($summit, $current_member, $event->getId());
 
             return $this->deleted();
         });
@@ -267,11 +256,10 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     )]
     public function add($summit_id, $event_id){
         return $this->processRequest(function () use ($summit_id, $event_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404("Summit not found.");
 
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404("Summit event not found.");
+            $summit = $this->getSummitOr404($summit_id);
+
+            $event = $this->getScheduleEventOr404($summit, $event_id);
 
             $payload = $this->getJsonPayload([
                 'seat_type' => 'required|string|in:' . join(',', [
@@ -282,7 +270,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 'attendee_id' => 'required|integer',
             ]);
 
-            $this->service->createRSVPFromPayload($summit, $event_id, $payload);
+            $this->service->createRSVPFromPayload($summit, $event->getId(), $payload);
         });
     }
 
@@ -380,11 +368,9 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
         ]
     )]
     public function getAllBySummitEvent($summit_id, $event_id){
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404("Summit not found.");
+        $summit = $this->getSummitOr404($summit_id);
 
-        $summit_event = $summit->getEvent(intval($event_id));
-        if (is_null($summit_event)) return $this->error404("Summit event not found.");
+        $event = $this->getScheduleEventOr404($summit, $event_id);
 
         return $this->_getAll(
             function () {
@@ -419,9 +405,9 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                     'seat_type',
                 ];
             },
-            function ($filter) use ($summit_event) {
+            function ($filter) use ($event) {
                 if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $summit_event->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $event->getId()));
                 }
                 return $filter;
             },
@@ -429,5 +415,273 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 return SerializerRegistry::SerializerType_Public;
             }
         );
+    }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Read RSVP by UD',
+        operationId: 'readRSVPById',
+        tags: ['RSVP'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_badges_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            new OA\Parameter(
+                name: 'rsvp_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The rsvp id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP From Summit Event',
+                content: new OA\JsonContent(ref: '#/components/schemas/RSVP')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function getById($summit_id, $event_id, $rsvp_id){
+        return $this->processRequest(function() use($summit_id, $event_id, $rsvp_id){
+
+            $summit = $this->getSummitOr404($summit_id);
+            $event = $this->getScheduleEventOr404($summit, $event_id);
+            $rsvp = $this->getRSVPOr404($event, $rsvp_id);
+
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($rsvp)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Delete RSVP by id',
+        operationId: 'deleteRSVPById',
+        tags: ['RSVP'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_badges_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            new OA\Parameter(
+                name: 'rsvp_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The rsvp id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,description: "Deleted"
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function delete($summit_id, $event_id, $rsvp_id){
+        return $this->processRequest(function() use($summit_id, $event_id, $rsvp_id){
+            $summit = $this->getSummitOr404($summit_id);
+            $event = $this->getScheduleEventOr404($summit, $event_id);
+            $rsvp = $this->getRSVPOr404($event, $rsvp_id);
+            $event->removeRSVPSubmission($rsvp);
+            return $this->deleted();
+        });
+    }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Update RSVP by id',
+        operationId: 'updateRVPById',
+        tags: ['RSVP'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_badges_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            new OA\Parameter(
+                name: 'rsvp_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The rsvp id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Updated RSVP From Summit Event',
+                content: new OA\JsonContent(ref: '#/components/schemas/RSVP')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function update($summit_id, $event_id, $rsvp_id){
+        return $this->processRequest(function() use($summit_id, $event_id, $rsvp_id){
+
+            $summit = $this->getSummitOr404($summit_id);
+            $event = $this->getScheduleEventOr404($summit, $event_id);
+
+            $payload = $this->getJsonPayload([
+                'seat_type' => 'sometimes|string|in:' . join(',', [
+                        RSVP::SeatTypeRegular,
+                        RSVP::SeatTypeWaitList,
+                    ]),
+                'status' => 'sometimes|string|in:' . join(',', [
+                        RSVP::Status_Active,
+                        RSVP::Status_Inactive,
+                        RSVP::Status_TicketReassigned,
+                    ]),
+                'answers' => 'sometimes|rsvp_answer_dto_array',
+            ]);
+
+            $rsvp = $this->service->update($event, $rsvp_id,  $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($rsvp)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
+
+    // helper methods
+    private function getSummitOr404(int $summit_id):Summit{
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit))
+            throw new EntityNotFoundException("Summit not found.");
+        return $summit;
+    }
+
+    private function getScheduleEventOr404(Summit $summit, int $event_id):SummitEvent{
+        $summit_event = $summit->getScheduleEvent(intval($event_id));
+        if (is_null($summit_event))
+            throw new EntityNotFoundException("Summit event not found.");
+        return $summit_event;
+    }
+
+    private function getCurrentMemberOr403():Member{
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException("Current member is not Present");
+        return $current_member;
+    }
+
+    /**
+     * @param SummitEvent $summit_event
+     * @param int $rsvp_id
+     * @return RSVP
+     * @throws HTTP403ForbiddenException
+     */
+    private function getRSVPOr404(SummitEvent $summit_event, int $rsvp_id):RSVP{
+        $rsvp = $summit_event->getRSVPById($rsvp_id);
+        if (is_null($rsvp))
+            throw new HTTP403ForbiddenException("RSVP not found.");
+        return $rsvp;
     }
 }

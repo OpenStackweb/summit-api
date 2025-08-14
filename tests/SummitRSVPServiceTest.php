@@ -112,7 +112,8 @@ class SummitRSVPServiceTest extends TestCase
         $event_type = Mockery::mock(\models\summit\SummitEventType::class)->makePartial();
         $event_type->shouldReceive('isPrivate')->andReturn(false);
         $event->shouldReceive('getType')->andReturn($event_type);
-
+        $invitation = Mockery::mock(\App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation::class)->makePartial();
+        $event->shouldReceive('getRSVPInvitationByInvitee')->andReturn($invitation);
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(1)->andReturn($event);
         $member->shouldReceive('getRsvpByEvent')->once()->with(1)->andReturnNull();
 
@@ -127,7 +128,7 @@ class SummitRSVPServiceTest extends TestCase
         $rsvp->shouldReceive("getOwnerId")->andReturn(1);
         $rsvp->shouldReceive("getEventId")->andReturn(1);
 
-        $res = $this->service->addRSVP($summit, $member, 1);
+        $res = $this->service->rsvpEvent($summit, $member, 1);
         $this->assertTrue($res instanceof RSVP);
 
         Event::assertDispatched(RSVPCreated::class, function ($event) use ($rsvp) {
@@ -144,7 +145,7 @@ class SummitRSVPServiceTest extends TestCase
 
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturnNull();
 
-        $this->service->addRSVP($summit, $member, 100, []);
+        $this->service->rsvpEvent($summit, $member, 100, []);
     }
 
     public function testAddRSVPSummitMismatch(): void
@@ -158,7 +159,7 @@ class SummitRSVPServiceTest extends TestCase
 
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
 
-        $this->service->addRSVP($summit, $member, 100, []);
+        $this->service->rsvpEvent($summit, $member, 100, []);
     }
 
     public function testAddRSVPNoRSVPOnEvent(): void
@@ -177,7 +178,7 @@ class SummitRSVPServiceTest extends TestCase
 
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
 
-        $this->service->addRSVP($summit, $member, 100, []);
+        $this->service->rsvpEvent($summit, $member, 100, []);
     }
 
     public function testAddRSVPAlreadyExists(): void
@@ -200,7 +201,7 @@ class SummitRSVPServiceTest extends TestCase
         $existing = Mockery::mock(RSVP::class)->makePartial();
         $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturn($existing);
 
-        $this->service->addRSVP($summit, $member, 100, []);
+        $this->service->rsvpEvent($summit, $member, 100, []);
     }
 
     /** *********************************************************************
@@ -302,4 +303,245 @@ class SummitRSVPServiceTest extends TestCase
         $this->service->unRSVPEvent($summit, $member, 100);
     }
 
+    ////////
+
+    /** *********************************************************************
+     * createRSVPFromPayload
+     ********************************************************************* */
+
+    public function testCreateRSVPFromPayloadHappyPath(): void
+    {
+        Event::fake();
+
+        $summit  = $this->mockSummit(1);
+        $event   = $this->mockEvent(100, 1);
+        $member  = $this->mockMember(10);
+
+        // event has RSVP and is already in regular mode -> no capacity bump
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+        $event->shouldReceive('getCurrentRSVPSubmissionSeatType')->andReturn(\models\summit\RSVP::SeatTypeRegular);
+        $event->shouldReceive('increaseRSVPMaxUserNumber')->never();
+
+        // attendee with paid tickets and a member
+        $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
+        $attendee->shouldReceive('getMember')->andReturn($member);
+
+        // lookups
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(999)->andReturn($attendee);
+        $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturnNull();
+
+        // factory returns our RSVP so we can assert identity
+        $rsvp = Mockery::mock(\models\summit\RSVP::class)->makePartial();
+        $rsvp->shouldReceive("getId")->andReturn(1);
+        $rsvp->shouldReceive("getOwnerId")->andReturn(1);
+        $rsvp->shouldReceive("getEventId")->andReturn(1);
+
+        Mockery::mock('alias:App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory')
+            ->shouldReceive('build')
+            ->once()
+            ->with($event, $member, Mockery::on(fn($p) => $p['attendee_id'] === 999 && $p['seat_type'] === \models\summit\RSVP::SeatTypeRegular))
+            ->andReturn($rsvp);
+
+        $result = $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 999,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+
+        $this->assertTrue($result instanceof \models\summit\RSVP);
+
+        Event::assertDispatched(\App\Events\RSVP\RSVPCreated::class, function ($e) use ($rsvp) {
+            // if your event exposes ID via getRsvpId(), you can assert that here
+            return method_exists($e, 'getRsvpId') ? $e->getRsvpId() === $rsvp->getId() : true;
+        });
+    }
+
+    public function testCreateRSVPFromPayloadExpandsCapacityWhenWaitlistButRegularRequested(): void
+    {
+        Event::fake();
+
+        $summit  = $this->mockSummit(1);
+        $event   = $this->mockEvent(100, 1);
+        $member  = $this->mockMember(10);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+        // event is in WAITLIST mode but payload asks for REGULAR -> bump capacity
+        $event->shouldReceive('getCurrentRSVPSubmissionSeatType')->andReturn(\models\summit\RSVP::SeatTypeWaitList);
+        $event->shouldReceive('increaseRSVPMaxUserNumber')->once();
+
+        $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
+        $attendee->shouldReceive('getMember')->andReturn($member);
+
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(123)->andReturn($attendee);
+        $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturnNull();
+
+        $rsvp = Mockery::mock(\models\summit\RSVP::class)->makePartial();
+        $rsvp->shouldReceive("getId")->andReturn(1);
+        $rsvp->shouldReceive("getOwnerId")->andReturn(1);
+        $rsvp->shouldReceive("getEventId")->andReturn(1);
+
+        Mockery::mock('alias:App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory')
+            ->shouldReceive('build')
+            ->once()
+            ->andReturn($rsvp);
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 123,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+
+        Event::assertDispatched(\App\Events\RSVP\RSVPCreated::class);
+    }
+
+    public function testCreateRSVPFromPayloadMissingAttendeeId(): void
+    {
+        $this->expectException(\models\exceptions\ValidationException::class);
+        $this->expectExceptionMessage('Attendee ID is required.');
+
+        $summit = $this->mockSummit(1);
+        $event  = $this->mockEvent(100, 1);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'seat_type' => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+    }
+
+    public function testCreateRSVPFromPayloadAttendeeNotFound(): void
+    {
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+        $this->expectExceptionMessage('Attendee not found.');
+
+        $summit = $this->mockSummit(1);
+        $event  = $this->mockEvent(100, 1);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(999)->andReturnNull();
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 999,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+    }
+
+    public function testCreateRSVPFromPayloadAttendeeWithoutPaidTickets(): void
+    {
+        $this->expectException(\models\exceptions\ValidationException::class);
+        $this->expectExceptionMessage('Attendee has not any paid ticket at Summit.');
+
+        $summit  = $this->mockSummit(1);
+        $event   = $this->mockEvent(100, 1);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+
+        $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(false);
+
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(10)->andReturn($attendee);
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 10,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+    }
+
+    public function testCreateRSVPFromPayloadMemberMissing(): void
+    {
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+        $this->expectExceptionMessage('Member not found.');
+
+        $summit  = $this->mockSummit(1);
+        $event   = $this->mockEvent(100, 1);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+
+        $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
+        $attendee->shouldReceive('getMember')->andReturnNull();
+
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(10)->andReturn($attendee);
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 10,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+    }
+
+    public function testCreateRSVPFromPayloadFormerRSVPExists(): void
+    {
+        $this->expectException(\models\exceptions\ValidationException::class);
+        $this->expectExceptionMessage('already submitted an rsvp');
+
+        $summit  = $this->mockSummit(1);
+        $event   = $this->mockEvent(100, 1);
+        $member  = $this->mockMember(10);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+
+        $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
+        $attendee->shouldReceive('getMember')->andReturn($member);
+
+        $existing = Mockery::mock(\models\summit\RSVP::class)->makePartial();
+
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(10)->andReturn($attendee);
+        $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturn($existing);
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 10,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+    }
+
+    public function testCreateRSVPFromPayloadMissingSeatType(): void
+    {
+        $this->expectException(\models\exceptions\ValidationException::class);
+        $this->expectExceptionMessage('Seat type is required.');
+
+        $summit  = $this->mockSummit(1);
+        $event   = $this->mockEvent(100, 1);
+        $member  = $this->mockMember(10);
+
+        $event->shouldReceive('hasRSVP')->andReturn(true);
+
+        $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
+        $attendee->shouldReceive('getMember')->andReturn($member);
+
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+        $summit->shouldReceive('getAttendeeById')->once()->with(10)->andReturn($attendee);
+        $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturnNull();
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 10,
+            // seat_type missing
+        ]);
+    }
+
+    public function testCreateRSVPFromPayloadEventHasNoRSVP(): void
+    {
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+        $this->expectExceptionMessage('Event not found on summit.');
+
+        $summit = $this->mockSummit(1);
+        $event  = $this->mockEvent(100, 1);
+
+        $event->shouldReceive('hasRSVP')->andReturn(false);
+
+        $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
+
+        $this->service->createRSVPFromPayload($summit, 100, [
+            'attendee_id' => 10,
+            'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
+        ]);
+    }
 }

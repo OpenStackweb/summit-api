@@ -139,7 +139,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            $rsvp = $this->service->addRSVP($summit, $current_member, $event_id, $this->validateEventUri($payload));
+            $rsvp = $this->service->rsvpEvent($summit, $current_member, $event_id, $this->validateEventUri($payload));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
             (
@@ -217,6 +217,54 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
 
     // CRUD Operations
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps",
+        description: "",
+        summary: 'Perform RSVP Creation ( ADMIN )',
+        operationId: 'addRSVP',
+        tags: ['RSVP'],
+        security: [['summit_rsvp_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/RSVPAdminAddRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'RSVP Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/RSVP')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
     public function add($summit_id, $event_id){
         return $this->processRequest(function () use ($summit_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -234,7 +282,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 'attendee_id' => 'required|integer',
             ]);
 
-            $this->service->createFromPayload($summit, $event_id, $payload);
+            $this->service->createRSVPFromPayload($summit, $event_id, $payload);
         });
     }
 

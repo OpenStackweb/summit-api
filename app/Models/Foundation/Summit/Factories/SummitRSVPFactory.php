@@ -18,47 +18,41 @@ use models\summit\RSVP;
 use models\summit\RSVPAnswer;
 use models\summit\SummitEvent;
 use models\exceptions\ValidationException;
-/**
- * Class SummitRSVPFactory
- * @package App\Models\Foundation\Summit\Factories
- */
-final class SummitRSVPFactory
-{
+
+
+abstract class BaseSummitRSVPFactory {
     /**
-     * @param SummitEvent $summitEvent
+     * @param SummitEvent $summit_event
      * @param Member $owner
-     * @param array $data
+     * @param array $payload
      * @return RSVP
      * @throws ValidationException
      */
-    public static function build(SummitEvent $summitEvent, Member $owner, array $data):RSVP{
-        return self::populate(new RSVP, $summitEvent, $owner, $data);
+    public static function build(SummitEvent $summit_event, Member $owner, array $payload):RSVP{
+        return self::populate(new RSVP, $summit_event, $owner, $payload);
     }
 
     /**
      * @param RSVP $rsvp
-     * @param SummitEvent $summitEvent
+     * @param SummitEvent $summit_event
      * @param Member $owner
-     * @param array $data
+     * @param array $payload
      * @return RSVP
      * @throws ValidationException
      */
-    public static function populate(RSVP $rsvp, SummitEvent $summitEvent, Member $owner, array $data):RSVP {
+    public static function populate(RSVP $rsvp, SummitEvent $summit_event, Member $owner, array $payload):RSVP {
 
         $rsvp->setOwner($owner);
 
-        if(!$rsvp->hasSeatTypeSet())
-            $rsvp->setSeatType($summitEvent->getCurrentRSVPSubmissionSeatType());
-
-        if(isset($data['event_uri']) && !empty($data['event_uri'])){
-            $rsvp->setEventUri($data['event_uri']);
+        if(isset($payload['event_uri']) && !empty($payload['event_uri'])){
+            $rsvp->setEventUri($payload['event_uri']);
         }
 
-        $template = $summitEvent->getRSVPTemplate();
+        $template = $summit_event->getRSVPTemplate();
 
         if(!is_null($template)) {
             // template is optional
-            $answers = $data['answers'] ?? [];
+            $answers = $payload['answers'] ?? [];
 
             // restructuring for a quick search
             if (count($answers)) {
@@ -98,8 +92,50 @@ final class SummitRSVPFactory
 
         }
 
-        $summitEvent->addRSVPSubmission($rsvp);
+        $summit_event->addRSVPSubmission($rsvp);
 
+        return $rsvp;
+    }
+}
+
+/**
+ * Class SummitRSVPFactory
+ * @package App\Models\Foundation\Summit\Factories
+ */
+final class SummitRSVPFactory extends BaseSummitRSVPFactory
+{
+
+    /**
+     * @param RSVP $rsvp
+     * @param SummitEvent $summit_event
+     * @param Member $owner
+     * @param array $payload
+     * @return RSVP
+     * @throws ValidationException
+     */
+    public static function populate(RSVP $rsvp, SummitEvent $summit_event, Member $owner, array $payload):RSVP {
+        $rsvp = parent::populate($rsvp, $summit_event, $owner, $payload);
+        if(!$rsvp->hasSeatTypeSet())
+            $rsvp->setSeatType($summit_event->getCurrentRSVPSubmissionSeatType());
+        return $rsvp;
+    }
+}
+
+
+final class AdminSummitRSVPFactory extends BaseSummitRSVPFactory{
+    /**
+     * @param RSVP $rsvp
+     * @param SummitEvent $summit_event
+     * @param Member $owner
+     * @param array $payload
+     * @return RSVP
+     * @throws ValidationException
+     */
+    public static function populate(RSVP $rsvp, SummitEvent $summit_event, Member $owner, array $payload):RSVP {
+        $rsvp = parent::populate($rsvp, $summit_event, $owner, $payload);
+        if(isset($payload['seat_type']) && !empty($payload['seat_type'])){
+            $rsvp->setSeatType($payload['seat_type']);
+        }
         return $rsvp;
     }
 }

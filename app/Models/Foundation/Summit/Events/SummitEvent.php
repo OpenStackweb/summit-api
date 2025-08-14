@@ -1023,6 +1023,10 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->rsvp_max_user_number;
     }
 
+    public function increaseRSVPMaxUserNumber():int{
+        $this->rsvp_max_user_number = $this->rsvp_max_user_number + 1;
+        return $this->rsvp_max_user_number;
+    }
     /**
      * @param int $rsvp_max_user_number
      */

@@ -31,7 +31,7 @@ interface ISummitRSVPService
      * @param Summit $summit
      * @param Member $member
      * @param int $event_id
-     * @throws Exception
+     * @throws \Exception
      */
     public function unRSVPEvent(Summit $summit, Member $member, int $event_id):void;
 

@@ -12,21 +12,17 @@
  * limitations under the License.
  **/
 
-use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Http\Controllers\Utils\Assertions;
 use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitRSVPService;
 use Illuminate\Http\Response;
-use models\exceptions\EntityNotFoundException;
-use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\IRSVPRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\RSVP;
-use models\summit\Summit;
-use models\summit\SummitEvent;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use utils\Filter;
@@ -36,6 +32,8 @@ use utils\FilterElement;
 class OAuth2RSVPApiController extends OAuth2ProtectedController
 {
     use RequestProcessor;
+
+    use Assertions;
 
     private ISummitRepository $summit_repository;
 
@@ -653,45 +651,4 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
         });
     }
 
-    // helper methods
-    private function getSummitOr404(int $summit_id):Summit{
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit))
-            throw new EntityNotFoundException("Summit not found.");
-        return $summit;
-    }
-
-    private function getScheduleEventOr404(Summit $summit, int $event_id):SummitEvent{
-        $summit_event = $summit->getScheduleEvent(intval($event_id));
-        if (is_null($summit_event))
-            throw new EntityNotFoundException("Summit event not found or not published.");
-        return $summit_event;
-    }
-
-    private function getEventOr404(Summit $summit, int $event_id):SummitEvent{
-        $summit_event = $summit->getEvent(intval($event_id));
-        if (is_null($summit_event))
-            throw new EntityNotFoundException("Summit event not found.");
-        return $summit_event;
-    }
-
-    private function getCurrentMemberOr403():Member{
-        $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member))
-            throw new HTTP403ForbiddenException("Current member is not Present");
-        return $current_member;
-    }
-
-    /**
-     * @param SummitEvent $summit_event
-     * @param int $rsvp_id
-     * @return RSVP
-     * @throws HTTP403ForbiddenException
-     */
-    private function getRSVPOr404(SummitEvent $summit_event, int $rsvp_id):RSVP{
-        $rsvp = $summit_event->getRSVPById($rsvp_id);
-        if (is_null($rsvp))
-            throw new HTTP403ForbiddenException("RSVP not found.");
-        return $rsvp;
-    }
 }

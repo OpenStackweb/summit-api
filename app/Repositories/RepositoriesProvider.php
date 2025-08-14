@@ -971,7 +971,7 @@ final class RepositoriesProvider extends ServiceProvider
             }
         );
 
-        App::singleton(IRSVPINvitationRepository::class, function () {
+        App::singleton(IRSVPInvitationRepository::class, function () {
             return EntityManager::getRepository(RSVPInvitation::class);
         });
     }

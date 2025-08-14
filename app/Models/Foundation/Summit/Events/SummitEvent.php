@@ -1027,6 +1027,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->rsvp_max_user_number = $this->rsvp_max_user_number + 1;
         return $this->rsvp_max_user_number;
     }
+
     /**
      * @param int $rsvp_max_user_number
      */
@@ -1983,5 +1984,16 @@ SQL;
         $criteria->where(Criteria::expr()->eq('invitee', $invitee ));
         $invitation = $this->rsvp_invitations->matching($criteria)->first();
         return $invitation === false ? null : $invitation;
+    }
+
+    /**
+     * @param int $rsvp_id
+     * @return RSVP|null
+     */
+    public function getRSVPById(int $rsvp_id): ?RSVP{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $rsvp_id ));
+        $rsvp = $this->rsvp->matching($criteria)->first();
+        return $rsvp === false ? null : $rsvp;
     }
 }

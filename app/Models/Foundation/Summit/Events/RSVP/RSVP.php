@@ -344,4 +344,15 @@ class RSVP extends SilverstripeBaseModel
     public function getActionDate():?\DateTime{
         return $this->action_date;
     }
+
+    /**
+     * @param string $status
+     * @return void
+     * @throws ValidationException
+     */
+    public function setStatus(string $status):void{
+        if(!in_array($status, self::AllowedStatus))
+            throw new ValidationException(sprintf("Status %s is not valid.", $status), $status);
+        $this->status = $status;
+    }
 }

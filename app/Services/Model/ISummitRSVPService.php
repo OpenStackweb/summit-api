@@ -14,6 +14,7 @@
 use models\main\Member;
 use models\summit\RSVP;
 use models\summit\Summit;
+use models\summit\SummitEvent;
 
 interface ISummitRSVPService
 {
@@ -34,6 +35,14 @@ interface ISummitRSVPService
      * @throws \Exception
      */
     public function unRSVPEvent(Summit $summit, Member $member, int $event_id):void;
+
+    /**
+     * @param SummitEvent $event
+     * @param int $rsvp_id
+     * @param array $payload
+     * @return RSVP
+     */
+    public function update(SummitEvent $event, int $rsvp_id, array $payload): RSVP;
 
     /**
      * @param Summit $summit

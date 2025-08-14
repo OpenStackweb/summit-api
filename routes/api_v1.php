@@ -656,6 +656,11 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::group(['prefix' => 'rsvps'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@getAllBySummitEvent']);
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@add']);
+                    Route::group(['prefix' => '{rsvp_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@getById']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@delete']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPApiController@update']);
+                    });
                 });
                 Route::post('rsvp', 'OAuth2RSVPApiController@rsvp');
                 Route::delete('unrsvp', 'OAuth2RSVPApiController@unrsvp');

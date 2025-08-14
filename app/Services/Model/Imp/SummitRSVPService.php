@@ -118,48 +118,23 @@ class SummitRSVPService extends AbstractService
     }
 
     /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $event_id
-     * @param array $data
+     * @param SummitEvent $event
+     * @param int $rsvp_id
+     * @param array $payload
      * @return RSVP
      * @throws \Exception
      */
-    public function updateRSVP(Summit $summit, Member $member, int $event_id, array $data): RSVP
+    public function update(SummitEvent $event, int $rsvp_id, array $payload): RSVP
     {
-        return $this->tx_service->transaction(function () use ($summit, $member, $event_id, $data) {
+        return $this->tx_service->transaction(function () use ($event, $rsvp_id, $payload) {
 
-            $event = $this->loadEventOrFail($summit, $event_id);
-
-            if (!Summit::allowToSee($event, $member))
-                throw new EntityNotFoundException('Event not found on summit.');
-
-            if (!$event->hasRSVPTemplate()) {
-                throw new EntityNotFoundException('Event not found on summit.');
-            }
-
-            // add to schedule the RSVP event
-            if (!$member->isOnSchedule($event)) {
-                throw new EntityNotFoundException('Event not found on summit.');
-            }
-
-            $rsvp = $member->getRsvpByEvent($event->getId());
-
+            $rsvp = $event->getRSVPById($rsvp_id);
             if (is_null($rsvp))
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "Member %s did not submitted an rsvp for event %s on summit %s.",
-                        $member->getId(),
-                        $event_id,
-                        $summit->getId()
-                    )
-                );
+               throw new EntityNotFoundException("RSVP not found.");
 
             // update RSVP
 
-            $rsvp = SummitRSVPFactory::populate($rsvp, $event, $member, $data);
+            $rsvp = AdminSummitRSVPFactory::populate($rsvp, $event, null, $payload);
 
             Event::dispatch(new RSVPUpdated($rsvp));
 

@@ -544,4 +544,66 @@ class SummitRSVPServiceTest extends TestCase
             'seat_type'   => \models\summit\RSVP::SeatTypeRegular,
         ]);
     }
+
+    /** *********************************************************************
+     * update
+     ********************************************************************* */
+
+    public function testUpdateRSVPHappyPath(): void
+    {
+        Event::fake();
+
+        $event   = $this->mockEvent(100, 1);
+        $rsvpId  = 55;
+        $payload = [
+            'seat_type' => RSVP::SeatTypeWaitList,
+            'status' => RSVP::Status_Inactive,
+        ];
+
+        $existing = Mockery::mock(\models\summit\RSVP::class)->makePartial();
+
+        $updated  = Mockery::mock(\models\summit\RSVP::class)->makePartial();
+        $updated->shouldReceive('getId')->andReturn($rsvpId);
+        $updated->shouldReceive('getOwnerId')->andReturn(1);
+        $updated->shouldReceive('getEventId')->andReturn(1);
+
+        // event->getRSVPById returns existing RSVP
+        $event->shouldReceive('getRSVPById')->once()->with($rsvpId)->andReturn($existing);
+
+        // static factory populate -> returns updated RSVP
+        Mockery::mock('alias:App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory')
+            ->shouldReceive('populate')
+            ->once()
+            ->with($existing, $event, null, Mockery::on(fn($p) => $p === $payload))
+            ->andReturn($updated);
+
+        $res = $this->service->update($event, $rsvpId, $payload);
+
+        $this->assertTrue($res instanceof \models\summit\RSVP);
+        $this->assertSame($updated, $res);
+
+        Event::assertDispatched(\App\Events\RSVP\RSVPUpdated::class, function ($e) {
+            // If your event exposes RSVP/ID, assert here; otherwise just accept dispatch.
+            return true;
+        });
+    }
+
+    public function testUpdateRSVPNotFound(): void
+    {
+        Event::fake();
+
+        $event  = $this->mockEvent(100, 1);
+        $rsvpId = 999;
+
+        $event->shouldReceive('getRSVPById')->once()->with($rsvpId)->andReturnNull();
+
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+        $this->expectExceptionMessage('RSVP not found.');
+
+        // No factory call should happen; no events dispatched
+        $this->service->update($event, $rsvpId, ['anything' => 'here']);
+
+        Event::assertNotDispatched(\App\Events\RSVP\RSVPUpdated::class);
+    }
+
 }

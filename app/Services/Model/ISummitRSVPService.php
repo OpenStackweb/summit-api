@@ -25,7 +25,7 @@ interface ISummitRSVPService
      * @return RSVP
      * @throws \Exception
      */
-    public function addRSVP(Summit $summit, Member $member, int $event_id, array $payload = []): RSVP;
+    public function rsvpEvent(Summit $summit, Member $member, int $event_id, array $payload = []): RSVP;
 
     /**
      * @param Summit $summit
@@ -41,5 +41,5 @@ interface ISummitRSVPService
      * @param array $payload
      * @return RSVP
      */
-    public function createFromPayload(Summit $summit, int $event_id, array $payload):RSVP;
+    public function createRSVPFromPayload(Summit $summit, int $event_id, array $payload):RSVP;
 }

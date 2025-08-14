@@ -7016,6 +7016,20 @@ class ApiEndpointsSeeder extends Seeder
 
             ],
             [
+                'name' => 'add-rsvp-2-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
                 'name' => 'rsvp',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'POST',

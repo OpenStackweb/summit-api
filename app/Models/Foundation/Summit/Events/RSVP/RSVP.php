@@ -91,6 +91,19 @@ class RSVP extends SilverstripeBaseModel
     #[ORM\Column(name: 'ActionDate', type: 'datetime')]
     private ?\DateTime $action_date;
 
+    public const string ActionSource_Schedule = 'Schedule';
+    public const string ActionSource_Invitation = 'Invitation';
+
+    public const array Valid_ActionSources = [
+        self::ActionSource_Schedule,
+        self::ActionSource_Invitation
+    ];
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'ActionSource', type: 'string', nullable: true)]
+    private ?string $action_source;
+
     /**
      * RSVP constructor.
      */
@@ -103,6 +116,7 @@ class RSVP extends SilverstripeBaseModel
         $this->event_uri    = null;
         $this->status       = self::Status_Active;
         $this->action_date  = null;
+        $this->action_source = null;
     }
 
     /**
@@ -307,9 +321,27 @@ class RSVP extends SilverstripeBaseModel
         $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
+    public function activate():void{
+        $this->status = self::Status_Active;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
     public function ticketReassigned():void{
         $this->status = self::Status_TicketReassigned;
         $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
+    public function getActionSource():?string{
+        return $this->action_source;
+    }
+
+    public function setActionSource(string $action_source):void{
+        if(!in_array($action_source, self::Valid_ActionSources))
+            throw new ValidationException(sprintf("Action Source %s is not valid.", $action_source), $action_source);
+        $this->action_source = $action_source;
+    }
+
+    public function getActionDate():?\DateTime{
+        return $this->action_date;
+    }
 }

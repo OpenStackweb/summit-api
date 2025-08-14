@@ -379,7 +379,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->once()->andReturn($inv);
 
         // Ensure addRSVP gets the exact summit/member/eventId we expect
-        $this->rsvp_service->shouldReceive('addRSVP')
+        $this->rsvp_service->shouldReceive('rsvpEvent')
             ->once()
             ->withArgs(function ($summitArg, $memberArg, $eventId) use ($summit, $member, $event) {
                 $this->assertSame($summit, $summitArg);

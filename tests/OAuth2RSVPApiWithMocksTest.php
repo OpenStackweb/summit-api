@@ -86,7 +86,7 @@ final class OAuth2RSVPApiWithMocksTest extends ProtectedApiTestCase
         $rsvp->setEvent($event);
 
         $this->rsvp_service_mock
-            ->shouldReceive('addRSVP')
+            ->shouldReceive('rsvpEvent')
             ->once()
             ->withArgs(function ($s, $member, $eventId, $payload) use ($summit, $event) {
                 $this->assertSame($summit->getId(), $s->getId());
@@ -145,7 +145,7 @@ final class OAuth2RSVPApiWithMocksTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(403);
         // service must not be called
-        $this->rsvp_service_mock->shouldNotHaveReceived('addRSVP');
+        $this->rsvp_service_mock->shouldNotHaveReceived('rsvpEvent');
     }
 
 }

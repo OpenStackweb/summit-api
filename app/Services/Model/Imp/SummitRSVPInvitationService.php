@@ -20,6 +20,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\ISummitEventRepository;
+use models\summit\RSVP;
 use models\summit\SummitEvent;
 use utils\Filter;
 use utils\FilterElement;
@@ -246,13 +247,14 @@ class SummitRSVPInvitationService
 
             $event = $invitation->getEvent();
             $summit = $event->getSummit();
-            $rsvp = $this->rsvp_service->addRSVP(
+            $rsvp = $this->rsvp_service->rsvpEvent(
                 $summit,
                 $invitee->getMember(),
                 $event->getId(),
             );
 
             $invitation->markAsAcceptedWithRSVP($rsvp);
+            $rsvp->setActionSource(RSVP::ActionSource_Invitation);
             // associate invitation with RSVP
             return $invitation;
         });

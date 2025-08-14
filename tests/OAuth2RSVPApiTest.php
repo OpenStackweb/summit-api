@@ -83,6 +83,7 @@ final class OAuth2RSVPApiTest extends ProtectedApiTestCase
         $json_rsvp = json_decode($response->getContent(), false);
         $this->assertNotEmpty($json_rsvp->seat_type, RSVP::SeatTypeRegular);
         $this->assertNotEmpty($json_rsvp->event_id, $event->getId());
+        $this->assertNotEmpty($json_rsvp->action_date,);
         $this->assertNotEmpty($json_rsvp->owner_id, self::$member->getId());
         Event::assertDispatched(RSVPCreated::class);
     }

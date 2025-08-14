@@ -411,7 +411,7 @@ class SummitRSVPInvitationService
             function(){
                 return "SummitEvent";
             },
-            functioN($root_entity_id){
+            function($root_entity_id){
                 $summit_event = $this->summit_event_repository->getById($root_entity_id);
                 if (!$summit_event instanceof SummitEvent) return null;
                 return $summit_event;

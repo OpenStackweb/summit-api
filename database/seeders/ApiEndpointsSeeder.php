@@ -7030,6 +7030,48 @@ class ApiEndpointsSeeder extends Seeder
 
             ],
             [
+                'name' => 'get-rsvp-by-id',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'delete-rsvp-by-id',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'update-rsvp-by-id',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'rsvp',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'POST',

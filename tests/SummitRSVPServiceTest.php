@@ -127,7 +127,7 @@ class SummitRSVPServiceTest extends TestCase
         $rsvp->shouldReceive("getOwnerId")->andReturn(1);
         $rsvp->shouldReceive("getEventId")->andReturn(1);
 
-        $res = $this->service->addRSVP($summit, $member, 1, );
+        $res = $this->service->addRSVP($summit, $member, 1);
         $this->assertTrue($res instanceof RSVP);
 
         Event::assertDispatched(RSVPCreated::class, function ($event) use ($rsvp) {

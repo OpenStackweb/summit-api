@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Controllers\Utils\Assertions;
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Main\IGroup;
@@ -61,6 +62,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     use ParametrizedGetAll;
 
     use RequestProcessor;
+
+    use Assertions;
 
     /**
      * @var ISummitRSVPInvitationService
@@ -168,13 +171,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($request, $summit_id, $event_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
 
             $payload = $request->all();
 
@@ -294,59 +293,59 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     public function getAllByEventId($summit_id, $event_id)
     {
 
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        return $this->processRequest(function () use ($summit_id, $event_id) {
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
 
-        $summit_event = $summit->getEvent(intval($event_id));
-        if (is_null($summit_event)) return $this->error404();
-
-        return $this->_getAll(
-            function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'attendee_email' => ['@@', '=@', '=='],
-                    'attendee_first_name' => ['@@', '=@', '=='],
-                    'attendee_last_name' => ['@@', '=@', '=='],
-                    'attendee_full_name' => ['@@', '=@', '=='],
-                    'is_accepted' => ['=='],
-                    'is_sent' => ['=='],
-                    'status' => ['=='],
-                ];
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'attendee_email' => 'sometimes|required|string',
-                    'attendee_first_name' => 'sometimes|required|string',
-                    'attendee_last_name' => 'sometimes|required|string',
-                    'attendee_full_name' => 'sometimes|required|string',
-                    'is_accepted' => 'sometimes|required|string|in:true,false',
-                    'is_sent' => 'sometimes|required|string|in:true,false',
-                    'status' => 'sometimes|required|string|in:' . join(",", SummitRegistrationInvitation::AllowedStatus),
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'attendee_email',
-                    'attendee_first_name',
-                    'attendee_last_name',
-                    'attendee_full_name',
-                    'status',
-                ];
-            },
-            function ($filter) use ($summit_event) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $summit_event->getId()));
+            return $this->_getAll(
+                function () {
+                    return [
+                        'id' => ['=='],
+                        'not_id' => ['=='],
+                        'attendee_email' => ['@@', '=@', '=='],
+                        'attendee_first_name' => ['@@', '=@', '=='],
+                        'attendee_last_name' => ['@@', '=@', '=='],
+                        'attendee_full_name' => ['@@', '=@', '=='],
+                        'is_accepted' => ['=='],
+                        'is_sent' => ['=='],
+                        'status' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' => 'sometimes|integer',
+                        'attendee_email' => 'sometimes|required|string',
+                        'attendee_first_name' => 'sometimes|required|string',
+                        'attendee_last_name' => 'sometimes|required|string',
+                        'attendee_full_name' => 'sometimes|required|string',
+                        'is_accepted' => 'sometimes|required|string|in:true,false',
+                        'is_sent' => 'sometimes|required|string|in:true,false',
+                        'status' => 'sometimes|required|string|in:' . join(",", SummitRegistrationInvitation::AllowedStatus),
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'attendee_email',
+                        'attendee_first_name',
+                        'attendee_last_name',
+                        'attendee_full_name',
+                        'status',
+                    ];
+                },
+                function ($filter) use ($summit_event) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $summit_event->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_Public;
                 }
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
+            );
+        });
     }
 
     #[OA\Put(
@@ -431,11 +430,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
 
             $payload = $data->all();
 
@@ -560,13 +557,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $event_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
 
             $payload = $this->getJsonPayload([
                 'invitee_id' => 'required:integer',
@@ -645,13 +638,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $event_id, $invitation_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
 
             $this->service->delete($summit_event, intval($invitation_id));
 
@@ -715,13 +704,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $event_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $current_member = $this->getCurrentMemberOr403();
 
             $this->service->deleteAll($summit_event, $current_member);
 
@@ -776,11 +761,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     public function getInvitationByToken($summit_id, $event_id, $token)
     {
         return $this->processRequest(function () use ($summit_id, $event_id, $token) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getScheduleEventOr404($summit, $event_id);
+            if (empty($token)) return $this->error401();
             $invitation = $this->service->getInvitationBySummitEventAndToken($summit_event, $token);
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize
@@ -837,11 +820,9 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     public function acceptByToken($summit_id, $event_id, $token)
     {
         return $this->processRequest(function () use ($summit_id, $event_id, $token) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getScheduleEventOr404($summit, $event_id);
+            if (empty($token)) return $this->error401();
             $invitation = $this->service->acceptInvitationBySummitEventAndToken($summit_event, $token);
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize
@@ -898,11 +879,10 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
     public function rejectByToken($summit_id, $event_id, $token)
     {
         return $this->processRequest(function () use ($summit_id, $event_id, $token) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
-            $summit_event = $summit->getEvent(intval($event_id));
-            if (is_null($summit_event)) return $this->error404();
-            if(empty($token)) return $this->error401();
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getScheduleEventOr404($summit, $event_id);
+
+            if (empty($token)) return $this->error401();
             $invitation = $this->service->rejectInvitationBySummitEventAndToken($summit_event, $token);
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize

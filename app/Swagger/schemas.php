@@ -2,7 +2,6 @@
 
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
-use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
 use models\summit\RSVP;
 use OpenApi\Attributes as OA;
@@ -194,9 +193,10 @@ class MemberSchema {}
         new OA\Property(property: 'created', type: 'integer', example: 1630500518),
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
         new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular),
+        new OA\Property(property: 'status', type: 'string', example: RSVP::Status_Active),
+        new OA\Property(property: 'action_source', type: 'string', example: RSVP::ActionSource_Schedule),
         new OA\Property(property: 'owner', ref: '#/components/schemas/Member'),
         new OA\Property(property: 'event', ref: '#/components/schemas/SummitEvent'),
-
     ]
 )]
 class RSVPSchema {}
@@ -227,3 +227,15 @@ class PaginatedRSVPsResponseSchema {}
     ]
 )]
 class RSVPInvitationRequestSchema {}
+
+
+#[OA\Schema(
+    schema: 'RSVPAdminAddRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
+        new OA\Property(property: 'seet_type', type: 'string', example: RSVP::SeatTypeRegular),
+
+    ]
+)]
+class RSVPAdminAddRequestSchema {}

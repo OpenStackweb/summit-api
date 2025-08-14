@@ -26,6 +26,9 @@ final class RSVPSerializer extends SilverStripeSerializer
         'Created'             => 'created:datetime_epoch',
         'ConfirmationNumber'  => 'confirmation_number:json_string',
         'EventUri'            => 'event_uri:json_string',
+        'ActionSource'        => 'action_source:json_string',
+        'ActionDate'          => 'action_date:datetime_epoch',
+        'Status'              => 'status:json_string',
     ];
 
     /**

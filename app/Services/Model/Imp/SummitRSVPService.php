@@ -107,7 +107,7 @@ class SummitRSVPService extends AbstractService
                 throw new EntityNotFoundException('Event not found on summit.');
 
 
-            if($event->getRSVPType() === SummitEvent::RSVPType_Private && !$event->hasInvitationFor($attendee)){
+            if($event->getRSVPType() == SummitEvent::RSVPType_Private && !$event->hasInvitationFor($attendee)){
                 throw new ValidationException("Attendee does not has invitation for this Private RSVP activity.");
             }
 

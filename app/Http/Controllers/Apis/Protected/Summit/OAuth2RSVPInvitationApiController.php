@@ -425,7 +425,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $summit_event = $summit->getEvent(intval($event_id));

@@ -368,53 +368,56 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
         ]
     )]
     public function getAllBySummitEvent($summit_id, $event_id){
-        $summit = $this->getSummitOr404($summit_id);
 
-        $event = $this->getScheduleEventOr404($summit, $event_id);
+        return $this->processRequest(function() use($summit_id, $event_id) {
+            $summit = $this->getSummitOr404($summit_id);
 
-        return $this->_getAll(
-            function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'owner_email' => ['@@', '=@', '=='],
-                    'owner_first_name' => ['@@', '=@', '=='],
-                    'owner_last_name' => ['@@', '=@', '=='],
-                    'owner_full_name' => ['@@', '=@', '=='],
-                    'seat_type' => ['=='],
-                ];
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'owner_email' => 'sometimes|required|string',
-                    'owner_first_name' => 'sometimes|required|string',
-                    'owner_last_name' => 'sometimes|required|string',
-                    'owner_full_name' => 'sometimes|required|string',
-                    'seat_type' => 'sometimes|required|string|in:' . join(",", RSVP::ValidSeatTypes),
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'owner_email',
-                    'owner_first_name',
-                    'owner_last_name',
-                    'owner_full_name',
-                    'seat_type',
-                ];
-            },
-            function ($filter) use ($event) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $event->getId()));
+            $event = $this->getScheduleEventOr404($summit, $event_id);
+
+            return $this->_getAll(
+                function () {
+                    return [
+                        'id' => ['=='],
+                        'not_id' => ['=='],
+                        'owner_email' => ['@@', '=@', '=='],
+                        'owner_first_name' => ['@@', '=@', '=='],
+                        'owner_last_name' => ['@@', '=@', '=='],
+                        'owner_full_name' => ['@@', '=@', '=='],
+                        'seat_type' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' => 'sometimes|integer',
+                        'owner_email' => 'sometimes|required|string',
+                        'owner_first_name' => 'sometimes|required|string',
+                        'owner_last_name' => 'sometimes|required|string',
+                        'owner_full_name' => 'sometimes|required|string',
+                        'seat_type' => 'sometimes|required|string|in:' . join(",", RSVP::ValidSeatTypes),
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'owner_email',
+                        'owner_first_name',
+                        'owner_last_name',
+                        'owner_full_name',
+                        'seat_type',
+                    ];
+                },
+                function ($filter) use ($event) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $event->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_Public;
                 }
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
+            );
+        });
     }
 
     #[OA\Get(
@@ -661,7 +664,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     private function getScheduleEventOr404(Summit $summit, int $event_id):SummitEvent{
         $summit_event = $summit->getScheduleEvent(intval($event_id));
         if (is_null($summit_event))
-            throw new EntityNotFoundException("Summit event not found.");
+            throw new EntityNotFoundException("Summit event not found or not published.");
         return $summit_event;
     }
 

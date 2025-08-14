@@ -95,8 +95,6 @@ class RSVPInvitation extends SilverstripeBaseModel
     /**
      * @var RSVP
      */
-    #[ORM\JoinColumn(name: 'RSVPID', referencedColumnName: 'ID', nullable: false, onDelete: 'CASCADE' )]
-    #[ORM\OneToOne(targetEntity: RSVP::class)]
     #[ORM\JoinColumn(name: 'RSVPID', referencedColumnName: 'ID', nullable: true, onDelete: 'CASCADE' )]
     #[ORM\OneToOne(targetEntity: RSVP::class)]
     private ?RSVP $rsvp;

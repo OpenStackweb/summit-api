@@ -372,7 +372,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
         return $this->processRequest(function() use($summit_id, $event_id) {
             $summit = $this->getSummitOr404($summit_id);
 
-            $event = $this->getScheduleEventOr404($summit, $event_id);
+            $event = $this->getEventOr404($summit, $event_id);
 
             return $this->_getAll(
                 function () {
@@ -665,6 +665,13 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
         $summit_event = $summit->getScheduleEvent(intval($event_id));
         if (is_null($summit_event))
             throw new EntityNotFoundException("Summit event not found or not published.");
+        return $summit_event;
+    }
+
+    private function getEventOr404(Summit $summit, int $event_id):SummitEvent{
+        $summit_event = $summit->getEvent(intval($event_id));
+        if (is_null($summit_event))
+            throw new EntityNotFoundException("Summit event not found.");
         return $summit_event;
     }
 

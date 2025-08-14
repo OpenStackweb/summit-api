@@ -120,8 +120,12 @@ jobs:
           vendor/bin/phpunit --filter "SummitRSVPServiceTest" --log-junit results_rsvp_service_unit_tests.xml
           echo "running SummitRSVPInvitationServiceTest tests"
           vendor/bin/phpunit --filter "SummitRSVPInvitationServiceTest" --log-junit results_rsvp_invitation_service_unit_tests.xml
-           echo "running OAuth2RSVPApiTest tests"
+          echo "running OAuth2RSVPApiTest tests"
           vendor/bin/phpunit --filter "OAuth2RSVPApiTest" --log-junit results_rsvp_api_test_unit_tests.xml
+          echo "running OAuth2RSVPApiWithMocksTest tests"
+          vendor/bin/phpunit --filter "OAuth2RSVPApiWithMocksTest" --log-junit results_rsvp_api_with_mocks_test_unit_tests.xml
+          echo "running OAuth2RSVPInvitationApiTest tests"
+          vendor/bin/phpunit --filter "OAuth2RSVPInvitationApiTest" --log-junit results_rsvp_invitations_api_test_unit_tests.xml
 
       - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
         uses: actions/upload-artifact@v4

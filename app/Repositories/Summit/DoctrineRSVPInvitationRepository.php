@@ -28,7 +28,7 @@ implements IRSVPInvitationRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
-        $query = $query->join('e.summit_event', 'se');
+        $query = $query->join('e.event', 'se');
         $query = $query->join('e.invitee', 'a');
         return $query;
     }
@@ -97,7 +97,7 @@ implements IRSVPInvitationRepository
             ->createQueryBuilder()
             ->select("e.id")
             ->from($this->getBaseEntity(), "e")
-            ->join("e.summit_event","se")
+            ->join("e.event","se")
             ->where('e.accepted_date is null')
             ->andWhere('se.id = :event_id')->setParameter("event_id", $summit_event->getId());
         return $query->getQuery()->getResult();
@@ -114,7 +114,7 @@ implements IRSVPInvitationRepository
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
-            ->join("e.summit_event","se")
+            ->join("e.event","se")
             ->where('e.hash = :hash')
             ->andWhere('se.id = :event_id')
             ->setParameter("event_id", $summit_event->getId())

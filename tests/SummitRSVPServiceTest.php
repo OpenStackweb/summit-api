@@ -87,14 +87,20 @@ class SummitRSVPServiceTest extends TestCase
     {
 
         Event::fake();
+        $summit_attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $summit_attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
         $summit = $this->mockSummit(1);
+        $summit->shouldReceive("getAttendeeByMember")->andReturn($summit_attendee);
         $member = $this->mockMember(10);
+
         $event  = $this->mockEvent(100, 1);
         $event->shouldReceive('getSummit')->andReturn($summit);
         $event->shouldReceive('getId')->andReturn(1);
         $event->shouldReceive('hasRSVP')->andReturn(true);
         $event->shouldReceive('getRSVPSeatTypeCount')->with(RSVP::SeatTypeRegular)->andReturn(10);
         $event->shouldReceive('getRSVPMaxUserNumber')->andReturn(11);
+        $event->shouldReceive("getRSVPType")->andReturn(SummitEvent::RSVPType_Private);
+        $event->shouldReceive("hasInvitationFor")->andReturn(true);
         // init the collection used by addRSVPSubmission()
         $prop = new \ReflectionProperty(\models\summit\SummitEvent::class, 'rsvp');
         $prop->setAccessible(true);
@@ -112,7 +118,6 @@ class SummitRSVPServiceTest extends TestCase
 
         // Factory returns OUR $rsvp so we can match identity in the event
         $rsvp = Mockery::mock(RSVP::class)->makePartial();
-       // $rsvp->shouldReceive('getId')->andReturn(1);
         Mockery::mock('alias:App\Models\Foundation\Summit\Factories\SummitRSVPFactory')
             ->shouldReceive('build')
             ->once()
@@ -178,8 +183,10 @@ class SummitRSVPServiceTest extends TestCase
     public function testAddRSVPAlreadyExists(): void
     {
         $this->expectException(ValidationException::class);
-
+        $summit_attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
+        $summit_attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
         $summit = $this->mockSummit(1);
+        $summit->shouldReceive("getAttendeeByMember")->andReturn($summit_attendee);
         $member = $this->mockMember(10);
         $event  = $this->mockEvent(100, 1);
 
@@ -187,7 +194,7 @@ class SummitRSVPServiceTest extends TestCase
         $event_type->shouldReceive('isPrivate')->andReturn(false);
         $event->shouldReceive('getType')->andReturn($event_type);
         $event->shouldReceive('hasRSVP')->andReturn(true);
-
+        $event->shouldReceive("getRSVPType")->andReturn(SummitEvent::RSVPType_Public);
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
 
         $existing = Mockery::mock(RSVP::class)->makePartial();

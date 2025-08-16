@@ -4235,6 +4235,21 @@ final class SummitService
 
             $event->clearOverflow($occupancy);
 
+
+            // clear overflow url
+            $params = [
+                'overflow_url' => ''
+            ];
+
+            ProcessScheduleEntityLifeCycleEvent::dispatch
+            (
+                "UPDATE",
+                $summit->getId(),
+                $event->getId(),
+                Presentation::PresentationOverflowEntityType,
+                $params
+            );
+
             return $event;
         });
     }

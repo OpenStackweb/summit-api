@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\RSVPInvitationsScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;;
 use App\Models\ResourceServer\ApiScope;
@@ -43,6 +44,7 @@ final class ApiScopesSeeder extends Seeder
         $this->seedSummitAdminGroupScopes();
         $this->seedSummitMediaFileTypes();
         $this->seedElectionsScopes();
+        $this->seedRSVPInvitationScopes();
     }
 
     private function seedSummitScopes()
@@ -757,6 +759,42 @@ final class ApiScopesSeeder extends Seeder
         }
 
         EntityManager::flush();
+    }
+
+    public function seedRSVPInvitationScopes():void{
+        $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'rsvp-invitations']);
+
+        $scopes = [
+            [
+                'name' => RSVPInvitationsScopes::Read,
+                'short_description' => 'Read RSVP Invitations Data',
+                'description' => 'Read RSVP Invitations Data',
+            ],
+            [
+                'name' => RSVPInvitationsScopes::Write,
+                'short_description' => 'Write RSVP Invitations Data',
+                'description' => 'Write RSVP Invitations Data',
+            ],
+            [
+                'name' => RSVPInvitationsScopes::Send,
+                'short_description' => 'Send RSVP Invitations',
+                'description' => 'Send RSVP Invitations',
+            ],
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
+
     }
 
 }

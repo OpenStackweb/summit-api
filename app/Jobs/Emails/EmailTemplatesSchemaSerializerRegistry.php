@@ -71,6 +71,7 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
+use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVPMail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
@@ -196,6 +197,9 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[RSVPRegularSeatMail::EVENT_SLUG] = RSVPMail::class;
         $this->registry[RSVPWaitListSeatMail::EVENT_SLUG] = RSVPMail::class;
         $this->registry[ShareEventEmail::EVENT_SLUG] = ShareEventEmail::class;
+        $this->registry[RSVPInviteEmail::EVENT_SLUG] = RSVPInviteEmail::class;
+        $this->registry[InvitationExcerptEmail::EVENT_SLUG] = InvitationExcerptEmail::class;
+        $this->registry[ReInviteSummitRegistrationEmail::EVENT_SLUG] = ReInviteSummitRegistrationEmail::class;
     }
 
     /**

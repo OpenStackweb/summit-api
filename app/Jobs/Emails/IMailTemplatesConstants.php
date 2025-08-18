@@ -50,6 +50,8 @@ interface IMailTemplatesConstants
     const election_title = 'election_title';
     const error_message = 'error_message';
     const event_date = 'event_date';
+
+    const event_location = 'event_location';
     const event_description = 'event_description';
     const event_title = 'event_title';
     const event_uri = 'event_uri';

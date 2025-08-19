@@ -85,6 +85,24 @@ class PaginateDataSchemaResponseSchema {}
 class PaginatedRSVPInvitationsResponseSchema {}
 
 #[OA\Schema(
+    schema: 'PaginatedCSVRSVPInvitationsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/RSVPInvitationCSV')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedCSVRSVPInvitationsResponseSchema {}
+
+#[OA\Schema(
     schema: 'RSVPInvitation',
     type: 'object',
     properties: [
@@ -99,6 +117,23 @@ class PaginatedRSVPInvitationsResponseSchema {}
     ]
 )]
 class RSVPInvitationSchema {}
+
+
+#[OA\Schema(
+    schema: 'RSVPInvitationCSV',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', example: 1630500518),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
+        new OA\Property(property: 'status', type: 'string', example: RSVPInvitation::Status_Pending),
+        new OA\Property(property: 'is_accepted', type: 'boolean', example: false),
+        new OA\Property(property: 'is_sent', type: 'boolean', example: false),
+        new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
+        new OA\Property(property: 'event_id',  type: 'integer', example: 123),
+    ]
+)]
+class RSVPInvitationCSVSchema {}
 
 #[OA\Schema(
     schema: 'SummitAttendee',

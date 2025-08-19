@@ -13,6 +13,8 @@
  **/
 
 use App\Http\Controllers\Utils\Assertions;
+use App\Http\Utils\BooleanCellFormatter;
+use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Main\IGroup;
@@ -344,6 +346,170 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 function () {
                     return SerializerRegistry::SerializerType_Public;
                 }
+            );
+        });
+    }
+
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'get CSV Invitations',
+        operationId: 'csvInvitations',
+        tags: ['RSVP Invitations'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_badges_oauth2' => [
+            RSVPInvitationsScopes::Read,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            // query string params
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'attendee_email@@email@test.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-status')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'invitee,event')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to load eagerly',
+                schema: new OA\Schema(type: 'string', example: 'invitee,event')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of fields to return',
+                schema: new OA\Schema(type: 'string', example: 'id,status,invitee.first_name,invitee.last_name')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'CSV RSVP invitations',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedCSVRSVPInvitationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function getAllByEventIdCSV($summit_id, $event_id)
+    {
+
+        return $this->processRequest(function () use ($summit_id, $event_id) {
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
+
+            return $this->_getAllCSV(
+                function () {
+                    return [
+                        'id' => ['=='],
+                        'not_id' => ['=='],
+                        'attendee_email' => ['@@', '=@', '=='],
+                        'attendee_first_name' => ['@@', '=@', '=='],
+                        'attendee_last_name' => ['@@', '=@', '=='],
+                        'attendee_full_name' => ['@@', '=@', '=='],
+                        'is_accepted' => ['=='],
+                        'is_sent' => ['=='],
+                        'status' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' => 'sometimes|integer',
+                        'attendee_email' => 'sometimes|required|string',
+                        'attendee_first_name' => 'sometimes|required|string',
+                        'attendee_last_name' => 'sometimes|required|string',
+                        'attendee_full_name' => 'sometimes|required|string',
+                        'is_accepted' => 'sometimes|required|string|in:true,false',
+                        'is_sent' => 'sometimes|required|string|in:true,false',
+                        'status' => 'sometimes|required|string|in:' . join(",", SummitRegistrationInvitation::AllowedStatus),
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'attendee_email',
+                        'attendee_first_name',
+                        'attendee_last_name',
+                        'attendee_full_name',
+                        'status',
+                    ];
+                },
+                function ($filter) use ($summit_event) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $summit_event->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_CSV;
+                },
+                function () {
+                    return [
+                        'created' => new EpochCellFormatter(),
+                        'last_edited' => new EpochCellFormatter(),
+                        'is_accepted' => new BooleanCellFormatter(),
+                        'is_sent' => new BooleanCellFormatter(),
+                    ];
+                },
+                function () {
+                    return [];
+                },
+                'rsvp-invitations-'
             );
         });
     }

@@ -1996,4 +1996,35 @@ SQL;
         $rsvp = $this->rsvp->matching($criteria)->first();
         return $rsvp === false ? null : $rsvp;
     }
+
+    public const string RSVP_Capacity_Regular = 'Regular';
+    public const string RSVP_Capacity_WaitList = 'Waitlist';
+    public const string RSVP_Capacity_Full= 'Full';
+
+    public function getRSVPCapacity():?string{
+
+        if(!$this->hasRSVP()) return null;
+        $max_regular = $this->getRSVPMaxUserNumber();
+        $regular_count = $this->getRSVPMaxUserNumber();
+        $max_wait_list = $this->getRSVPWaitCount();
+        $wait_list_count = $this->getRSVPWaitCount();
+
+        $regularHasRoom   = ($regular_count < $max_regular);
+
+        if ( $regularHasRoom) {
+            return self::RSVP_Capacity_Regular;
+        }
+
+        // Regular full. If waitlist enabled and has room -> waitlist only
+        $waitlistEnabled = ($max_wait_list > 0);
+        $waitlistHasRoom = ($wait_list_count < $max_wait_list);
+
+        if ($waitlistEnabled && $waitlistHasRoom) {
+            return self::RSVP_Capacity_WaitList;
+        }
+
+        // Both regular and waitlist are full (or no waitlist)
+        return self::RSVP_Capacity_Full;
+
+    }
 }

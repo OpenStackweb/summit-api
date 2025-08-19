@@ -59,6 +59,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'RSVPWaitCount' => 'rsvp_wait_count:json_int',
         'ExternalRSVP' => 'rsvp_external:json_boolean',
         'RSVPType' => 'rsvp_type:json_string',
+        'RSVPCapacity' => 'rsvp_capacity:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -103,6 +104,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'stream_is_secure',
         'submission_source',
         'rsvp_type',
+        'rsvp_capacity',
     ];
 
     protected static $allowed_relations = [

@@ -15,6 +15,7 @@
 use App\Events\RSVP\RSVPCreated;
 use App\Events\RSVP\RSVPDeleted;
 use App\Events\RSVP\RSVPUpdated;
+use App\Events\ScheduleEntityLifeCycleEvent;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
@@ -28,6 +29,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\IRSVPRepository;
 use models\summit\ISummitEventRepository;
+use models\summit\Presentation;
 use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
@@ -108,14 +110,15 @@ class SummitRSVPService extends AbstractService
             $rsvp = SummitRSVPFactory::build($event, $member, $payload);
             $rsvp->setActionSource(RSVP::ActionSource_Schedule);
             $rsvp->activate();
-            if(!is_null($invitation)) $invitation->markAsAcceptedWithRSVP($rsvp);
+            if (!is_null($invitation)) $invitation->markAsAcceptedWithRSVP($rsvp);
             return $rsvp;
         });
 
         Event::dispatch(new RSVPCreated($rsvp));
-
+        $this->emitSummitEventDomainEvent($rsvp->getEvent());
         return $rsvp;
     }
+
 
     /**
      * @param SummitEvent $event
@@ -130,7 +133,7 @@ class SummitRSVPService extends AbstractService
 
             $rsvp = $event->getRSVPById($rsvp_id);
             if (is_null($rsvp))
-               throw new EntityNotFoundException("RSVP not found.");
+                throw new EntityNotFoundException("RSVP not found.");
 
             // update RSVP
 
@@ -151,7 +154,7 @@ class SummitRSVPService extends AbstractService
      */
     public function unRSVPEvent(Summit $summit, Member $member, int $event_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $member, $event_id) {
+        $event = $this->tx_service->transaction(function () use ($summit, $member, $event_id) {
 
             Log::debug
             (
@@ -181,12 +184,12 @@ class SummitRSVPService extends AbstractService
             $current_seat_type = $rsvp->getSeatType();
 
             // if removing a regular seat, try to promote first waitlisted
-            if($current_seat_type === RSVP::SeatTypeRegular) {
+            if ($current_seat_type === RSVP::SeatTypeRegular) {
                 Log::debug(sprintf("SummitRSVPService::unRSVPEvent rsvp %s is of type REGULAR", $rsvp->getId()));
                 // we need to get the first on WAIT list and move it to REGULAR LIST
                 // get the first one on SeatTypeWaitList
                 $candidate = $event->getFirstRSVPOnWaitList();
-                if(!is_null($candidate)) {
+                if (!is_null($candidate)) {
                     Log::debug
                     (
                         sprintf
@@ -204,7 +207,10 @@ class SummitRSVPService extends AbstractService
             $this->rsvp_repository->delete($rsvp);
 
             Event::dispatch(new RSVPDeleted($rsvp));
+            return $event;
         });
+
+        $this->emitSummitEventDomainEvent($event);
     }
 
     /**
@@ -242,21 +248,21 @@ class SummitRSVPService extends AbstractService
 
             $member = $attendee->getMember();
 
-            if(is_null($member)) {
+            if (is_null($member)) {
                 throw new EntityNotFoundException('Member not found.');
             }
 
-            $this->assertDoesNotHaveFormerRSVP($member,  $event_id);
+            $this->assertDoesNotHaveFormerRSVP($member, $event_id);
 
             // create RSVP
 
             $seat_type = $payload['seat_type'] ?? null;
-            if(is_null($seat_type)) {
+            if (is_null($seat_type)) {
                 throw new ValidationException('Seat type is required.');
             }
             $current_seat_type = $event->getCurrentRSVPSubmissionSeatType();
             // If admin wants REGULAR but event is in WAITLIST mode, expand capacity to keep invariants
-            if($seat_type  == RSVP::SeatTypeRegular && $current_seat_type == RSVP::SeatTypeWaitList) {
+            if ($seat_type == RSVP::SeatTypeRegular && $current_seat_type == RSVP::SeatTypeWaitList) {
                 Log::debug(sprintf("SummitRSVPService::createFromPayload current seat type %s .. need to increase chairs", $current_seat_type));
                 // we need to increase the size to dont break the model
                 $event->increaseRSVPMaxUserNumber();
@@ -265,7 +271,7 @@ class SummitRSVPService extends AbstractService
         });
 
         Event::dispatch(new RSVPCreated($rsvp));
-
+        $this->emitSummitEventDomainEvent($rsvp->getEvent());
         return $rsvp;
     }
 
@@ -275,7 +281,7 @@ class SummitRSVPService extends AbstractService
      * @return SummitEvent
      * @throws EntityNotFoundException
      */
-    private function loadEventOrFail(Summit $summit, int $event_id, ): SummitEvent
+    private function loadEventOrFail(Summit $summit, int $event_id): SummitEvent
     {
         Log::debug(sprintf(
             'SummitRSVPService::loadEventOrFail summit %d event_id %d',
@@ -299,7 +305,8 @@ class SummitRSVPService extends AbstractService
      * @return void
      * @throws ValidationException
      */
-    private function assertDoesNotHaveFormerRSVP(Member $member, int $event_id): void{
+    private function assertDoesNotHaveFormerRSVP(Member $member, int $event_id): void
+    {
         $old_rsvp = $member->getRsvpByEvent($event_id);
 
         if (!is_null($old_rsvp))
@@ -337,7 +344,7 @@ class SummitRSVPService extends AbstractService
         }
     }
 
-    private function getAttendeeForMemberOrFail(Summit $summit, Member $member):SummitAttendee
+    private function getAttendeeForMemberOrFail(Summit $summit, Member $member): SummitAttendee
     {
         $attendee = $summit->getAttendeeByMember($member);
         if (!$attendee instanceof SummitAttendee) {
@@ -360,7 +367,7 @@ class SummitRSVPService extends AbstractService
      * @return RSVPInvitation|null
      * @throws ValidationException
      */
-    private function checkIfAttendeeNeedIRSVPInvitation(SummitEvent $event, SummitAttendee $attendee):?RSVPInvitation
+    private function checkIfAttendeeNeedIRSVPInvitation(SummitEvent $event, SummitAttendee $attendee): ?RSVPInvitation
     {
         if ($event->getRSVPType() !== SummitEvent::RSVPType_Private) {
             return null;
@@ -390,19 +397,32 @@ class SummitRSVPService extends AbstractService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    private function getAttendeeFromPayloadOrFail(Summit $summit,array $payload):SummitAttendee{
+    private function getAttendeeFromPayloadOrFail(Summit $summit, array $payload): SummitAttendee
+    {
         $attendee_id = $payload['attendee_id'] ?? null;
-        if(is_null($attendee_id)) {
+        if (is_null($attendee_id)) {
             throw new ValidationException('Attendee ID is required.');
         }
 
         $attendee = $summit->getAttendeeById($attendee_id);
 
-        if(is_null($attendee)) {
+        if (is_null($attendee)) {
             throw new EntityNotFoundException('Attendee not found.');
         }
         return $attendee;
     }
 
+    /**
+     * @param SummitEvent $event
+     * @return void
+     */
+    private function emitSummitEventDomainEvent(SummitEvent $event): void
+    {
+        Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
+            $event->getSummitId(),
+            $event->getId(),
+            Presentation::ClassName,
+        ));
+    }
 
 }

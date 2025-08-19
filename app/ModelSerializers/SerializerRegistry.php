@@ -90,6 +90,7 @@ use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitRegistrationFeedMetadataSerializer;
+use App\ModelSerializers\Summit\RSVP\RSVPInvitationCSVSerializer;
 use App\ModelSerializers\Summit\RSVP\RSVPInvitationSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPLiteralContentQuestionTemplateSerializer;
@@ -126,7 +127,6 @@ use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
 use App\ModelSerializers\UserStoriesIndustrySerializer;
 use App\ModelSerializers\UserStorySerializer;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\IModelSerializer;
 use models\oauth2\IResourceServerContext;
@@ -141,7 +141,6 @@ use ModelSerializers\Locations\SummitLocationImageSerializer;
 use ModelSerializers\Locations\SummitVenueFloorSerializer;
 use ModelSerializers\Locations\SummitVenueRoomSerializer;
 use ModelSerializers\Locations\SummitVenueSerializer;
-
 /**
  * Class SerializerRegistry
  * @package ModelSerializers
@@ -689,7 +688,10 @@ final class SerializerRegistry
 
         $this->registry['Continent'] = ContinentSerializer::class;
 
-        $this->registry['RSVPInvitation'] = RSVPInvitationSerializer::class;
+        $this->registry['RSVPInvitation'] = [
+            self::SerializerType_Public => RSVPInvitationSerializer::class,
+              self::SerializerType_CSV => RSVPInvitationCSVSerializer::class,
+        ];
     }
 
     /**

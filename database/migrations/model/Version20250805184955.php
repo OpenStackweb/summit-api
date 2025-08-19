@@ -1,4 +1,5 @@
-<?php
+<?php namespace Database\Migrations\Model;
+
 /**
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-declare(strict_types=1);
-
-namespace Database\Migrations\Model;
 
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use Doctrine\DBAL\Schema\Schema;

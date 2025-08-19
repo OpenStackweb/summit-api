@@ -39,6 +39,12 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         'ManagerId'               => 'manager_id:json_int',
     ];
 
+    protected function getMemberSerializer(array $params):string{
+        if(isset($params['serializer_type']))
+           return $params['serializer_type'];
+        return SerializerRegistry::SerializerType_Public;
+    }
+
     protected static $allowed_relations = [
         'extra_questions',
         'tickets',
@@ -281,7 +287,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                             {
                                 unset($values['member_id']);
                                 $values['member']    = SerializerRegistry::getInstance()
-                                    ->getSerializer($attendee->getMember(), $serializer_type)
+                                    ->getSerializer($attendee->getMember(), $this->getMemberSerializer($params))
                                     ->serialize(
                                         AbstractSerializer::filterExpandByPrefix($expand, $relation),
                                         AbstractSerializer::filterFieldsByPrefix($fields, $relation),

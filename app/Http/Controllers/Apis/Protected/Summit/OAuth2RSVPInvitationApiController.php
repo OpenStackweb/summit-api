@@ -103,7 +103,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         $this->summit_event_repository = $summit_event_repository;
     }
 
-    #[OA\Put(
+    #[OA\Post(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: 'Import RSVP Invitations',

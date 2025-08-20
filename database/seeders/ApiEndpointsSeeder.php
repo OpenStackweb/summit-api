@@ -10733,7 +10733,7 @@ class ApiEndpointsSeeder extends Seeder
                 [
                     'name' => 'import-rsvp-invitations',
                     'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv',
-                    'http_method' => 'PUT',
+                    'http_method' => 'POST',
                     'scopes' => [
                         RSVPInvitationsScopes::Write,
                         sprintf(SummitScopes::WriteSummitData, $current_realm)

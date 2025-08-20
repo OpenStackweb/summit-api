@@ -722,7 +722,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::group(['prefix' => 'csv'], function () {
                         Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@getAllByEventIdCSV']);
                         // import from csv
-                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@ingestInvitations']);
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@ingestInvitations']);
                     });
                     Route::put('send',  ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@send']);
                     Route::post("",   ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@addInvitation']);

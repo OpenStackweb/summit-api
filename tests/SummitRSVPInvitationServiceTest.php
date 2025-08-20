@@ -599,6 +599,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $event   = Mockery::mock(\models\summit\SummitEvent::class)->makePartial();
         $event->shouldReceive('getId')->andReturn($eventId)->byDefault();
         $event->shouldReceive('getSummit')->andReturn($summit);
+        $event->shouldReceive('getTitle')->andReturn("Title");
+        $event->shouldReceive('getLocationName')->andReturn("Location");
 
         $this->summit_event_repository->shouldReceive('getById')->once()->with($eventId)->andReturn($event);
 

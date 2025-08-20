@@ -127,6 +127,7 @@ class SummitRSVPServiceTest extends TestCase
         $rsvp->shouldReceive("getId")->andReturn(1);
         $rsvp->shouldReceive("getOwnerId")->andReturn(1);
         $rsvp->shouldReceive("getEventId")->andReturn(1);
+        $rsvp->shouldReceive("getEvent")->andReturn($event);
 
         $res = $this->service->rsvpEvent($summit, $member, 1);
         $this->assertTrue($res instanceof RSVP);
@@ -337,7 +338,7 @@ class SummitRSVPServiceTest extends TestCase
         $rsvp->shouldReceive("getId")->andReturn(1);
         $rsvp->shouldReceive("getOwnerId")->andReturn(1);
         $rsvp->shouldReceive("getEventId")->andReturn(1);
-
+        $rsvp->shouldReceive("getEvent")->andReturn($event);
         Mockery::mock('alias:App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory')
             ->shouldReceive('build')
             ->once()
@@ -382,7 +383,7 @@ class SummitRSVPServiceTest extends TestCase
         $rsvp->shouldReceive("getId")->andReturn(1);
         $rsvp->shouldReceive("getOwnerId")->andReturn(1);
         $rsvp->shouldReceive("getEventId")->andReturn(1);
-
+        $rsvp->shouldReceive("getEvent")->andReturn($event);
         Mockery::mock('alias:App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory')
             ->shouldReceive('build')
             ->once()

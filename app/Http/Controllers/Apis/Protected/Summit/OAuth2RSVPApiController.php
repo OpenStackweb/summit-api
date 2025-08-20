@@ -13,6 +13,8 @@
  **/
 
 use App\Http\Controllers\Utils\Assertions;
+use App\Http\Utils\BooleanCellFormatter;
+use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
@@ -285,7 +287,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_oauth2' => [
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadSummitData,
         ]]],
@@ -365,7 +367,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
     )]
-    public function getAllBySummitEvent($summit_id, $event_id){
+    public function getAllByEventId($summit_id, $event_id){
 
         return $this->processRequest(function() use($summit_id, $event_id) {
             $summit = $this->getSummitOr404($summit_id);
@@ -419,6 +421,180 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps/csv",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'get CSV RSVP',
+        operationId: 'csvRspvs',
+        tags: ['RSVP'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_rsvp_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            // query string params
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'owner_email@@email@test.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-seat_type')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'event,owner')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to load eagerly',
+                schema: new OA\Schema(type: 'string', example: 'event,owner')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of fields to return',
+                schema: new OA\Schema(type: 'string', example: 'id,seat_type,owner.first_name,owner.last_name')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'CSV RSVP',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(
+                        type: 'string',
+                        format: 'binary' // file download
+                    ),
+                    // Optional: example CSV shown in UI (some UIs ignore it for binary)
+                    example: "id,owner_id,event_id,seat_type,created,confirmation_number,action_source,action_date,status\n1,1,2,Active,1,0\n"
+                ),
+                headers: [
+                    new OA\Header(
+                        header: 'Content-Disposition',
+                        description: 'Attachment filename',
+                        schema: new OA\Schema(type: 'string'),
+                    )
+                ]
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function getAllByEventIdCSV($summit_id, $event_id)
+    {
+
+        return $this->processRequest(function () use ($summit_id, $event_id) {
+            $summit = $this->getSummitOr404($summit_id);
+            $event  = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
+
+            return $this->_getAllCSV(
+                function () {
+                    return [
+                        'id' => ['=='],
+                        'not_id' => ['=='],
+                        'owner_email' => ['@@', '=@', '=='],
+                        'owner_first_name' => ['@@', '=@', '=='],
+                        'owner_last_name' => ['@@', '=@', '=='],
+                        'owner_full_name' => ['@@', '=@', '=='],
+                        'seat_type' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' => 'sometimes|integer',
+                        'owner_email' => 'sometimes|required|string',
+                        'owner_first_name' => 'sometimes|required|string',
+                        'owner_last_name' => 'sometimes|required|string',
+                        'owner_full_name' => 'sometimes|required|string',
+                        'seat_type' => 'sometimes|required|string|in:' . join(",", RSVP::ValidSeatTypes),
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'owner_email',
+                        'owner_first_name',
+                        'owner_last_name',
+                        'owner_full_name',
+                        'seat_type',
+                    ];
+                },
+                function ($filter) use ($event) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $event->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_CSV;
+                },
+                function () {
+                    return [
+                        'created' => new EpochCellFormatter(),
+                        'last_edited' => new EpochCellFormatter(),
+                        'action_date' => new EpochCellFormatter(),
+                    ];
+                },
+                function () {
+                    return [];
+                },
+                'rsvp-'
+            );
+        });
+    }
+
+
+    #[OA\Get(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: 'Read RSVP by id',
@@ -431,7 +607,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_oauth2' => [
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadSummitData,
         ]]],
@@ -508,7 +684,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
         parameters: [
@@ -574,7 +750,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
         parameters: [

@@ -2,6 +2,7 @@
 
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
+use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
 use models\summit\RSVP;
 use OpenApi\Attributes as OA;
@@ -200,12 +201,36 @@ class SendRSVPInvitationsRequestSchema {}
                     SummitScopes::DeleteMyRSVP => 'UnRSVP',
                     SummitScopes::ReadAllSummitData => 'Read All Summit Data',
                     SummitScopes::ReadSummitData => 'Read Summit Data',
+                    SummitScopes::WriteSummitData => 'Write Summit Data',
                 ],
             ),
         ],
     )
 ]
 class RSVPAuthSchema{}
+
+
+#[
+    OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'summit_rsvp_invitations_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    RSVPInvitationsScopes::Read => 'Read RSVP Invitations Data',
+                    RSVPInvitationsScopes::Write => 'Write RSVP Invitations Data',
+                    RSVPInvitationsScopes::Send => 'Send RSVP Invitations',
+                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                    SummitScopes::WriteSummitData => 'Write Summit Data',
+                ],
+            ),
+        ],
+    )
+]
+class RSVPInvitationsAuthSchema{}
 
 #[OA\Schema(
     schema: 'Member',

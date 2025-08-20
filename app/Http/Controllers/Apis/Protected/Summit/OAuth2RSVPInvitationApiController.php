@@ -39,26 +39,7 @@ use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
 
-#[
-    OA\SecurityScheme(
-        type: 'oauth2',
-        securityScheme: 'summit_rsvp_invitations_oauth2',
-        flows: [
-            new OA\Flow(
-                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-                flow: 'authorizationCode',
-                scopes: [
-                    RSVPInvitationsScopes::Read => 'Read RSVP Invitations Data',
-                    RSVPInvitationsScopes::Write => 'Write RSVP Invitations Data',
-                    RSVPInvitationsScopes::Send => 'Send RSVP Invitations',
-                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
-                    SummitScopes::WriteSummitData => 'Write Summit Data',
-                ],
-            ),
-        ],
-    )
-]
+
 class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
 {
     // traits
@@ -213,6 +194,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 };
                 throw new ValidationException("Upload error ({$errorCode}): {$errorMsg}");
             }
+
             Log::debug("OAuth2RSVPInvitationApiController::ingestInvitations file is valid, calling service");
             $this->service->importInvitationData($summit_event, $file);
             return $this->ok();
@@ -232,7 +214,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_invitations_oauth2' => [
             RSVPInvitationsScopes::Read,
             SummitScopes::ReadAllSummitData,
         ]]],
@@ -370,7 +352,6 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         });
     }
 
-
     #[OA\Get(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
@@ -384,7 +365,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_invitations_oauth2' => [
             RSVPInvitationsScopes::Read,
             SummitScopes::ReadAllSummitData,
         ]]],
@@ -562,7 +543,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_invitations_oauth2' => [
             RSVPInvitationsScopes::Send,
             SummitScopes::WriteSummitData,
         ]]],
@@ -711,7 +692,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_invitations_oauth2' => [
             RSVPInvitationsScopes::Write,
             SummitScopes::WriteSummitData
         ]]],
@@ -790,7 +771,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_invitations_oauth2' => [
             RSVPInvitationsScopes::Write,
             SummitScopes::WriteSummitData
         ]]],
@@ -862,7 +843,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_rsvp_invitations_oauth2' => [
             RSVPInvitationsScopes::Write,
             SummitScopes::WriteSummitData
         ]]],

@@ -166,4 +166,8 @@ class RSVPInvitation extends SilverstripeBaseModel
         $this->rsvp = $rsvp;
     }
 
+    public function getEmail():string{
+        return $this->getInvitee()->getEmail();
+    }
+
 }

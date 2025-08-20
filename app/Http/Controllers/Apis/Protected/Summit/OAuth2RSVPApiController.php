@@ -421,7 +421,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
-        summary: 'Read RSVP by UD',
+        summary: 'Read RSVP by id',
         operationId: 'readRSVPById',
         tags: ['RSVP'],
         x: [

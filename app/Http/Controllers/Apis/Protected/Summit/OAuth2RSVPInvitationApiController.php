@@ -456,7 +456,22 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: 200,
                 description: 'CSV RSVP invitations',
-                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedCSVRSVPInvitationsResponse')
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(
+                        type: 'string',
+                        format: 'binary' // file download
+                    ),
+                    // Optional: example CSV shown in UI (some UIs ignore it for binary)
+                    example: "id,invitee_id,event_id,status,is_accepted,is_sent\n1,1,2,Active,1,0\n"
+                ),
+                headers: [
+                    new OA\Header(
+                        header: 'Content-Disposition',
+                        description: 'Attachment filename',
+                        schema: new OA\Schema(type: 'string'),
+                    )
+                ]
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),

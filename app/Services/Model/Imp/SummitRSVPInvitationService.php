@@ -397,7 +397,8 @@ class SummitRSVPInvitationService
 
                         if ($add_excerpt) {
                             $onDispatchSuccess(
-                                $invitation->getEmail(), IEmailExcerptService::EmailLineType, $flow_event);
+                                $invitation->getEmail(), IEmailExcerptService::EmailLineType, $flow_event
+                            );
                         }
                     });
                 } catch (\Exception $ex) {

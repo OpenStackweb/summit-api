@@ -662,7 +662,7 @@ class SummitAttendee extends SilverstripeBaseModel
         // fallback
         if (empty($fullname) && $this->hasMember()) {
             Log::debug(sprintf("SummitAttendee::getFullName id %s hasMember", $this->id));
-            $fullname = $this->member->getFullName();
+            $fullname = $this->getMember()->getFullName();
             Log::debug(sprintf("SummitAttendee::getFullName id %s Member Full Name %s", $this->id, $fullname));
             if (!empty($fullname))
                 return $fullname;

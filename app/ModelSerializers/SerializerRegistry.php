@@ -90,6 +90,7 @@ use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitRegistrationFeedMetadataSerializer;
+use App\ModelSerializers\Summit\RSVP\RSVPCSVSerializer;
 use App\ModelSerializers\Summit\RSVP\RSVPInvitationCSVSerializer;
 use App\ModelSerializers\Summit\RSVP\RSVPInvitationSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
@@ -141,6 +142,7 @@ use ModelSerializers\Locations\SummitLocationImageSerializer;
 use ModelSerializers\Locations\SummitVenueFloorSerializer;
 use ModelSerializers\Locations\SummitVenueRoomSerializer;
 use ModelSerializers\Locations\SummitVenueSerializer;
+
 /**
  * Class SerializerRegistry
  * @package ModelSerializers
@@ -391,7 +393,10 @@ final class SerializerRegistry
         $this->registry['SpeakerEditPermissionRequest'] = SpeakerEditPermissionRequestSerializer::class;
 
         // RSVP
-        $this->registry['RSVP'] = RSVPSerializer::class;
+        $this->registry['RSVP'] = [
+           self::SerializerType_Public => RSVPSerializer::class,
+           self::SerializerType_CSV => RSVPCSVSerializer::class ,
+        ];
         $this->registry['RSVPAnswer'] = RSVPAnswerSerializer::class;
         $this->registry['RSVPTemplate'] = RSVPTemplateSerializer::class;
         $this->registry['RSVPQuestionValueTemplate'] = RSVPQuestionValueTemplateSerializer::class;
@@ -690,7 +695,7 @@ final class SerializerRegistry
 
         $this->registry['RSVPInvitation'] = [
             self::SerializerType_Public => RSVPInvitationSerializer::class,
-              self::SerializerType_CSV => RSVPInvitationCSVSerializer::class,
+            self::SerializerType_CSV => RSVPInvitationCSVSerializer::class,
         ];
     }
 

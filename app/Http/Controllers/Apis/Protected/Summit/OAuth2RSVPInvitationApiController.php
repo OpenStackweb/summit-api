@@ -25,6 +25,7 @@ use App\Security\SummitScopes;
 use App\Services\ISummitRSVPInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
@@ -180,7 +181,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             $payload = $request->all();
 
             $rules = [
-                'file' => 'required',
+                'file' => 'required|file|mimes:csv,txt',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -194,6 +195,23 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
 
             $file = $request->file('file');
 
+            // Extra diagnostics: surface the underlying PHP upload error if invalid
+            if (!$file || !$file->isValid()) {
+                Log::debug("OAuth2RSVPInvitationApiController::ingestInvitations file is not valid");
+                $errorCode = $file?->getError();
+                $errorMsg  = match ($errorCode) {
+                    UPLOAD_ERR_INI_SIZE   => 'File exceeds upload_max_filesize in php.ini',
+                    UPLOAD_ERR_FORM_SIZE  => 'File exceeds MAX_FILE_SIZE in the form',
+                    UPLOAD_ERR_PARTIAL    => 'The file was only partially uploaded',
+                    UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder (upload_tmp_dir)',
+                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk (permissions)',
+                    UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload',
+                    default               => 'Unknown upload error',
+                };
+                throw new ValidationException("Upload error ({$errorCode}): {$errorMsg}");
+            }
+            Log::debug("OAuth2RSVPInvitationApiController::ingestInvitations file is valid, calling service");
             $this->service->importInvitationData($summit_event, $file);
             return $this->ok();
         });

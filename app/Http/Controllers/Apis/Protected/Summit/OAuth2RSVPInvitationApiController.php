@@ -113,11 +113,13 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 mediaType: "multipart/form-data",
                 schema: new OA\Schema(
                     type: "object",
+                    required:["file"],
                     properties: [
                         new OA\Property(
                             property: "file",
                             type: "string",
-                            format: "binary"
+                            format: "binary",
+                            description: "Invitation file (CSV) [Columns: email ]"
                         )
                     ]
                 )

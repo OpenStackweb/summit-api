@@ -87,7 +87,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
         ];
 
         $response = $this->action(
-            'PUT',
+            'POST',
             'OAuth2RSVPInvitationApiController@ingestInvitations',
             $params,
             [], // params
@@ -107,7 +107,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
         ];
 
         $response = $this->action(
-            'PUT',
+            'POST',
             'OAuth2RSVPInvitationApiController@ingestInvitations',
             $params,
             [], // post
@@ -132,7 +132,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
         $file = UploadedFile::fake()->create('invitations.csv', 2, 'text/csv');
 
         $response = $this->action(
-            'PUT',
+            'POST',
             'OAuth2RSVPInvitationApiController@ingestInvitations',
             $params,
             [],
@@ -155,7 +155,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
         ];
 
         $response = $this->action(
-            'PUT',
+            'POST',
             'OAuth2RSVPInvitationApiController@ingestInvitations',
             $params,
             [],
@@ -178,7 +178,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
         ];
 
         $response = $this->action(
-            'PUT',
+            'POST',
             'OAuth2RSVPInvitationApiController@ingestInvitations',
             $params,
             [],

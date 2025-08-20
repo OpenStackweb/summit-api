@@ -14,7 +14,11 @@
 
 use App\Http\Controllers\SummitFinderStrategyFactory;
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\RSVP;
 use models\summit\Summit;
@@ -67,5 +71,33 @@ trait Assertions
         if (is_null($rsvp))
             throw new HTTP403ForbiddenException("RSVP not found.");
         return $rsvp;
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @return array|UploadedFile|UploadedFile[]|null
+     * @throws ValidationException
+     */
+    private function getFile(LaravelRequest $request): ?UploadedFile
+    {
+        $file = $request->file('file');
+
+        // Extra diagnostics: surface the underlying PHP upload error if invalid
+        if (!$file || !$file->isValid()) {
+            Log::debug("Assertions::getFile file is not valid");
+            $errorCode = $file?->getError();
+            $errorMsg = match ($errorCode) {
+                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize in php.ini',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE in the form',
+                UPLOAD_ERR_PARTIAL => 'The file was only partially uploaded',
+                UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder (upload_tmp_dir)',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk (permissions)',
+                UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload',
+                default => 'Unknown upload error',
+            };
+            throw new ValidationException("Upload error ({$errorCode}): {$errorMsg}");
+        }
+        return $file;
     }
 }

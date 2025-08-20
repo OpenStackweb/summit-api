@@ -244,7 +244,7 @@ final class OAuth2RSVPApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(404);
     }
 
-    // -------- getAllBySummitEvent (basic guards & happy path skeleton) --------
+    // -------- getAllByEventId (basic guards & happy path skeleton) --------
 
     public function testGetAllBySummitEvent404Summit()
     {
@@ -255,7 +255,7 @@ final class OAuth2RSVPApiTest extends ProtectedApiTestCase
 
         $response = $this->action(
             'GET',
-            'OAuth2RSVPApiController@getAllBySummitEvent',
+            'OAuth2RSVPApiController@getAllByEventId',
             $params,
             [],
             [],
@@ -275,7 +275,7 @@ final class OAuth2RSVPApiTest extends ProtectedApiTestCase
 
         $response = $this->action(
             'GET',
-            'OAuth2RSVPApiController@getAllBySummitEvent',
+            'OAuth2RSVPApiController@getAllByEventId',
             $params,
             [],
             [],
@@ -299,7 +299,7 @@ final class OAuth2RSVPApiTest extends ProtectedApiTestCase
 
         $response = $this->action(
             'GET',
-            'OAuth2RSVPApiController@getAllBySummitEvent',
+            'OAuth2RSVPApiController@getAllByEventId',
             $params,
             [],
             [],

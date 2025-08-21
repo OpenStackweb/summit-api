@@ -2009,17 +2009,17 @@ SQL;
         $max_wait_list = $this->getRSVPWaitCount();
         $wait_list_count = $this->getRSVPWaitCount();
 
-        $regularHasRoom   = ($regular_count < $max_regular);
+        $regular_has_room   = ($regular_count < $max_regular);
 
-        if ( $regularHasRoom) {
+        if ( $regular_has_room) {
             return self::RSVP_Capacity_Regular;
         }
 
         // Regular full. If waitlist enabled and has room -> waitlist only
-        $waitlistEnabled = ($max_wait_list > 0);
-        $waitlistHasRoom = ($wait_list_count < $max_wait_list);
+        $wait_list_enabled = ($max_wait_list > 0);
+        $waitlist_has_room = ($wait_list_count < $max_wait_list);
 
-        if ($waitlistEnabled && $waitlistHasRoom) {
+        if ($wait_list_enabled && $waitlist_has_room) {
             return self::RSVP_Capacity_WaitList;
         }
 

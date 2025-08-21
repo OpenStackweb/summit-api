@@ -1412,7 +1412,7 @@ SQL;
     {
         $builder = $this->createQueryBuilder();
         $res = $builder
-            ->select('r')
+            ->select('i')
             ->from(RSVPInvitation::class, 'i')
             ->join('i.invitee', 'a')
             ->join('a.member', 'm')

@@ -2004,9 +2004,10 @@ SQL;
     public function getRSVPCapacity():?string{
 
         if(!$this->hasRSVP()) return null;
+
         $max_regular = $this->getRSVPMaxUserNumber();
-        $regular_count = $this->getRSVPMaxUserNumber();
-        $max_wait_list = $this->getRSVPWaitCount();
+        $regular_count = $this->getRSVPRegularCount();
+        $max_wait_list = $this->getRSVPMaxUserWaitListNumber();
         $wait_list_count = $this->getRSVPWaitCount();
 
         $regular_has_room   = ($regular_count < $max_regular);

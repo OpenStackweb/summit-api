@@ -767,8 +767,6 @@ final class SummitService
 
                 $event->setRSVPTemplate($rsvp_template);
 
-                $event->setRSVPMaxUserNumber(intval($data['rsvp_max_user_number']));
-                $event->setRSVPMaxUserWaitListNumber(intval($data['rsvp_max_user_wait_list_number']));
             }
 
             if (!is_null($location)) {

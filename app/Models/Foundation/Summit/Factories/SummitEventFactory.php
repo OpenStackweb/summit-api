@@ -141,6 +141,14 @@ final class SummitEventFactory
             $event->setRSVPType(trim($payload['rsvp_type']));
         }
 
+        if (isset($payload['rsvp_max_user_number'])) {
+            $event->setRSVPMaxUserNumber(intval($payload['rsvp_max_user_number']));
+        }
+
+        if (isset($payload['rsvp_max_user_wait_list_number'])) {
+            $event->setRSVPMaxUserWaitListNumber(intval($payload['rsvp_max_user_wait_list_number']));
+        }
+
         return $event;
     }
 }

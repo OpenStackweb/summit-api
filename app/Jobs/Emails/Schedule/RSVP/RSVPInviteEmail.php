@@ -50,6 +50,7 @@ class RSVPInviteEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::owner_first_name] = $attendee->getFirstName();
         $payload[IMailTemplatesConstants::owner_last_name] = $attendee->getSurname();
         $payload[IMailTemplatesConstants::owner_fullname] = $attendee->getFullName();
+        $payload[IMailTemplatesConstants::event_id] = $summit_event->getId();
         $payload[IMailTemplatesConstants::event_title] = $summit_event->getTitle();
         $payload[IMailTemplatesConstants::event_date] = $summit_event->getDateNice();
         $payload[IMailTemplatesConstants::event_location] = $summit_event->getLocationName();
@@ -93,6 +94,7 @@ class RSVPInviteEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::owner_first_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_last_name]['type'] = 'string';
         $payload[IMailTemplatesConstants::owner_fullname]['type'] = 'string';
+        $payload[IMailTemplatesConstants::event_id]['type'] = 'numeric';
         $payload[IMailTemplatesConstants::event_title]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_date]['type'] = 'string';
         $payload[IMailTemplatesConstants::event_location]['type'] = 'string';

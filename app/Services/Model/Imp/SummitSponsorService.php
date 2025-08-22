@@ -97,6 +97,13 @@ final class SummitSponsorService
         $this->repository = $repository;
     }
 
+    public function clearSponsorships(Sponsor $sponsor)
+    {
+        $this->tx_service->transaction(function () use ($sponsor) {
+            $sponsor->clearSponsorships();
+        });
+    }
+
     /**
      * @param Summit $summit
      * @param array $payload
@@ -208,7 +215,7 @@ final class SummitSponsorService
             }
 
             if(isset($payload['sponsorship_id'])) {
-                $summit_sponsor->clearSponsorships();
+                $this->clearSponsorships($summit_sponsor);
                 $type_id = intval($payload['sponsorship_id']);
                 $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
                 if(is_null($summit_sponsorship_type))
@@ -218,7 +225,7 @@ final class SummitSponsorService
                 $sponsorship->setType($summit_sponsorship_type);
                 $summit_sponsor->addSponsorship($sponsorship);
             } else if(isset($payload['sponsorships'])) {
-                $summit_sponsor->clearSponsorships();
+                $this->clearSponsorships($summit_sponsor);
                 foreach ($payload['sponsorships'] as $sponsorship_payload) {
                     $type_id = isset($sponsorship_payload['type_id']) ?
                         intval($sponsorship_payload['type_id']) :

@@ -306,6 +306,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'chat_link' => 'https://chat.com',
             'video_link' => 'https://video.com',
             'sponsorships' => [
+                ['type_id' => self::$default_summit_sponsor_type->getId()],
                 ['type_id' => self::$default_summit_sponsor_type2->getId()],
             ]
         ];
@@ -327,7 +328,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertNotNull($sponsor);
         $this->assertTrue($sponsor->marquee === 'this is a marquee');
         $this->assertTrue($sponsor->external_link === 'https://external.com');
-        $this->assertCount(1, $sponsor->sponsorships);
+        $this->assertCount(2, $sponsor->sponsorships);
         return $sponsor;
     }
 

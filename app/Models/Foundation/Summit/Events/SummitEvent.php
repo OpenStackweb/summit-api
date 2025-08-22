@@ -1033,7 +1033,6 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function setRSVPMaxUserNumber($rsvp_max_user_number)
     {
-        Log::debug(sprintf("SummitEvent::setRSVPMaxUserNumber id %s value %s", $this->id, $rsvp_max_user_number));
         $this->rsvp_max_user_number = $rsvp_max_user_number;
     }
 
@@ -1999,7 +1998,7 @@ SQL;
     }
 
     public const string RSVP_Capacity_Regular = 'Regular';
-    public const string RSVP_Capacity_WaitList = 'Waitlist';
+    public const string RSVP_Capacity_WaitList = 'WaitList';
     public const string RSVP_Capacity_Full= 'Full';
 
     public function getRSVPCapacity():?string{

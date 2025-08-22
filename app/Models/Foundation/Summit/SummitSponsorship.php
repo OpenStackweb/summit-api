@@ -41,8 +41,8 @@ class SummitSponsorship extends SilverstripeBaseModel
     /**
      * @var Sponsor
      */
-    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID')]
-    #[ORM\ManyToOne(targetEntity: Sponsor::class)]
+    #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: Sponsor::class, inversedBy: 'sponsorships')]
     protected $sponsor;
 
     /**

@@ -13,6 +13,7 @@
  **/
 
 use App\Events\RSVP\RSVPDeleted;
+use App\Events\ScheduleEntityLifeCycleEvent;
 use App\Jobs\CreateMUXURLSigningKeyForSummit;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
@@ -1215,17 +1216,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->rsvp->add($rsvp);
         $rsvp->setEvent($this);
     }
-
-    /**
-     * @param RSVP $rsvp
-     */
-    public function removeRSVPSubmission(RSVP $rsvp)
-    {
-        if (!$this->rsvp->contains($rsvp)) return;
-        $this->rsvp->removeElement($rsvp);
-        Event::dispatch(new RSVPDeleted($rsvp));
-        $rsvp->clearEvent();
-    }
+    
 
     /**
      * @return string

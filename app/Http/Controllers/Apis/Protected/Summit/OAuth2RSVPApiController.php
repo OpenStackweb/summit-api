@@ -732,7 +732,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
             $summit = $this->getSummitOr404($summit_id);
             $event = $this->getScheduleEventOr404($summit, $event_id);
             $rsvp = $this->getRSVPOr404($event, $rsvp_id);
-            $event->removeRSVPSubmission($rsvp);
+            $this->service->unRSVPEvent($summit, $rsvp->getOwner(), $event->getId());
             return $this->deleted();
         });
     }

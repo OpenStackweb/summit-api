@@ -170,4 +170,7 @@ class RSVPInvitation extends SilverstripeBaseModel
         return $this->getInvitee()->getEmail();
     }
 
+    public function markAsSent():void{
+        $this->sent_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
 }

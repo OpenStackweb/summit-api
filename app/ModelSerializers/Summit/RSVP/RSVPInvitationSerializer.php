@@ -18,7 +18,7 @@ class RSVPInvitationSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'InviteeId' => 'invitee_id:json_int',
-        'SummitEventId' => 'event_id:json_int',
+        'EventId' => 'event_id:json_int',
         'Status' => 'status:json_string',
         'Accepted' => 'is_accepted:json_boolean',
         'Sent'     => 'is_sent:json_boolean',

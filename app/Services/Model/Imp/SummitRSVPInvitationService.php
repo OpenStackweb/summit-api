@@ -400,6 +400,8 @@ class SummitRSVPInvitationService
                                 $invitation->getEmail(), IEmailExcerptService::EmailLineType, $flow_event
                             );
                         }
+
+                        $invitation->markAsSent();
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Events\RSVP\RSVPDeleted;
 use App\Jobs\CreateMUXURLSigningKeyForSummit;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
@@ -26,6 +27,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\CacheRegions;
 use models\exceptions\ValidationException;
@@ -1221,6 +1223,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         if (!$this->rsvp->contains($rsvp)) return;
         $this->rsvp->removeElement($rsvp);
+        Event::dispatch(new RSVPDeleted($rsvp));
         $rsvp->clearEvent();
     }
 

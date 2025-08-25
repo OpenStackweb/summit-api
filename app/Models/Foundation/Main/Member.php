@@ -18,6 +18,7 @@ use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Strategies\MemberSummitStrategyFactory;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -1396,6 +1397,28 @@ SQL;
             ->join('r.event', 'e')
             ->join('e.summit', 's')
             ->where('o.id = :owner_id and s.id = :summit_id')
+            ->setParameter('owner_id', $this->getId())
+            ->setParameter('summit_id', $summit->getId())
+            ->getQuery()->getResult();
+
+        return $res;
+    }
+
+    /**
+     * @param Summit $summit
+     * @return null|RSVPInvitation[]
+     */
+    public function getRSVPInvitations(Summit $summit)
+    {
+        $builder = $this->createQueryBuilder();
+        $res = $builder
+            ->select('i')
+            ->from(RSVPInvitation::class, 'i')
+            ->join('i.invitee', 'a')
+            ->join('a.member', 'm')
+            ->join('i.event', 'e')
+            ->join('e.summit', 's')
+            ->where('m.id = :owner_id and s.id = :summit_id')
             ->setParameter('owner_id', $this->getId())
             ->setParameter('summit_id', $summit->getId())
             ->getQuery()->getResult();

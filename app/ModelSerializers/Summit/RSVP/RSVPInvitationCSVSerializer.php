@@ -1,6 +1,6 @@
-<?php namespace App\Events;
+<?php namespace App\ModelSerializers\Summit\RSVP;
 /**
- * Copyright 2020 OpenStack Foundation
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,12 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use ModelSerializers\SilverStripeSerializer;
 
-/**
- * Class RSVPAdd
- * @package App\Events
- */
-class RSVPCreated extends RSVPAction
+class RSVPInvitationCSVSerializer extends SilverStripeSerializer
 {
-
+    protected static $array_mappings = [
+        'InviteeId' => 'invitee_id:json_int',
+        'SummitEventId' => 'event_id:json_int',
+        'Status' => 'status:json_string',
+        'Accepted' => 'is_accepted:json_boolean',
+        'Sent'     => 'is_sent:json_boolean',
+    ];
 }

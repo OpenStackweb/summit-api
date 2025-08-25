@@ -24,6 +24,13 @@ class SummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer
     ];
 
     protected static $expand_mappings = [
+        'owner' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'owner_id',
+            'getter' => 'getOwner',
+            'has' => 'hasOwner',
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
+        ],
         'order' => [
             'type' => One2ManyExpandSerializer::class,
             'original_attribute' => 'order_id',

@@ -19,6 +19,7 @@ use App\libs\Utils\PunnyCodeHelper;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -186,6 +187,10 @@ class SummitAttendee extends SilverstripeBaseModel
     #[ORM\ManyToOne(targetEntity: \models\summit\SummitAttendee::class, inversedBy: 'managed_attendees')]
     private $manager;
 
+
+    #[ORM\OneToMany(targetEntity: RSVPInvitation::class, mappedBy: 'invitee', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $rsvp_invitations;
+
     /**
      * @return \DateTime|null
      */
@@ -343,6 +348,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->tags = new ArrayCollection();
         $this->managed_attendees = new ArrayCollection();
         $this->manager = null;
+        $this->rsvp_invitations = new ArrayCollection();
     }
 
     public function isVirtualCheckedIn(): bool
@@ -577,6 +583,16 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function hasTicketsPaidTickets():bool
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', IOrderConstants::PaidStatus ));
+        return $this->tickets->matching($criteria)->count() > 0;
+    }
+
+    /**
      * @return string
      */
     public function getFirstName(): ?string
@@ -646,7 +662,7 @@ class SummitAttendee extends SilverstripeBaseModel
         // fallback
         if (empty($fullname) && $this->hasMember()) {
             Log::debug(sprintf("SummitAttendee::getFullName id %s hasMember", $this->id));
-            $fullname = $this->member->getFullName();
+            $fullname = $this->getMember()->getFullName();
             Log::debug(sprintf("SummitAttendee::getFullName id %s Member Full Name %s", $this->id, $fullname));
             if (!empty($fullname))
                 return $fullname;

@@ -54,6 +54,14 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     use RequestProcessor;
 
     /**
+     * @return string
+     */
+    public function getChildSerializer()
+    {
+        return ISummitAttendeeTicketSerializerTypes::AdminType;
+    }
+
+    /**
      * @var ISummitRepository
      */
     private $summit_repository;

@@ -19,6 +19,11 @@ use Libs\ModelSerializers\Many2OneExpandSerializer;
  */
 class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer
 {
+    protected function getMemberSerializer(array $params):string{
+        if(isset($params['serializer_type']))
+            return $params['serializer_type'];
+        return SerializerRegistry::SerializerType_Admin;
+    }
     protected static $array_mappings = [
         'VirtualCheckedIn' => 'has_virtual_check_in:json_boolean',
     ];

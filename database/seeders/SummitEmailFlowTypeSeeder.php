@@ -62,6 +62,9 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
 use App\Jobs\Emails\RevocationTicketEmail;
+use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
+use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
+use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
@@ -222,6 +225,22 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'slug' => SponsorPromoCodeEmail::EVENT_SLUG,
                 'default_email_template' => SponsorPromoCodeEmail::DEFAULT_TEMPLATE
             ],
+            // RSVP
+            [
+                'name' => RSVPInviteEmail::EVENT_NAME,
+                'slug' => RSVPInviteEmail::EVENT_SLUG,
+                'default_email_template' => RSVPInviteEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => ReRSVPInviteEmail::EVENT_NAME,
+                'slug' => ReRSVPInviteEmail::EVENT_SLUG,
+                'default_email_template' => ReRSVPInviteEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => RSVPInvitationExcerptEmail::EVENT_NAME,
+                'slug' => RSVPInvitationExcerptEmail::EVENT_SLUG,
+                'default_email_template' => RSVPInvitationExcerptEmail::DEFAULT_TEMPLATE
+            ]
         ], $flow);
 
         $em->persist($flow);

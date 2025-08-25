@@ -22,6 +22,8 @@ class RSVPInvitationSerializer extends SilverStripeSerializer
         'Status' => 'status:json_string',
         'Accepted' => 'is_accepted:json_boolean',
         'Sent'     => 'is_sent:json_boolean',
+        'SentDate' => 'sent_date:datetime_epoch',
+        'ActionDate' => 'action_date:datetime_epoch',
     ];
 
     protected static $expand_mappings = [

@@ -293,7 +293,7 @@ class RSVPInvitationRequestSchema {}
     schema: 'RSVPAdminAddRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
+        new OA\Property(property: 'attendee_id', type: 'integer', example: 123),
         new OA\Property(property: 'seet_type', type: 'string', example: RSVP::SeatTypeRegular),
 
     ]

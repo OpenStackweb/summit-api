@@ -35,11 +35,13 @@ class RSVPInvitation extends SilverstripeBaseModel
     protected $getIdMappings = [
         'getInviteeId' => 'invitee',
         'getEventId' => 'event',
+        'getRSVPId' => 'rsvp',
     ];
 
     protected $hasPropertyMappings = [
         'hasInvitee' => 'invitee',
         'hasEvent' => 'event',
+        'hasRSVP' => 'rsvp',
     ];
 
     #[ORM\Column(name: 'Status', type: 'string')]
@@ -109,6 +111,7 @@ class RSVPInvitation extends SilverstripeBaseModel
         return $this->invitee;
     }
 
+
     public function __construct(SummitEvent $event, SummitAttendee $invitee)
     {
         parent::__construct();
@@ -116,6 +119,7 @@ class RSVPInvitation extends SilverstripeBaseModel
         $this->invitee = $invitee;
         $this->action_date = null;
         $this->sent_date = null;
+        $this->rsvp = null;
         $this->status = self::Status_Pending;
     }
 
@@ -152,7 +156,7 @@ class RSVPInvitation extends SilverstripeBaseModel
                 $this->getEvent()->getSummit()->getSupportEmail()));
     }
 
-    public function getRSVP():RSVP{
+    public function getRSVP():?RSVP{
         return $this->rsvp;
     }
 

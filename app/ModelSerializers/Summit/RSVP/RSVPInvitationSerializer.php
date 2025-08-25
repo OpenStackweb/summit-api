@@ -19,6 +19,7 @@ class RSVPInvitationSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'InviteeId' => 'invitee_id:json_int',
         'EventId' => 'event_id:json_int',
+        'RSVPId' => 'rsvp_id:json_int',
         'Status' => 'status:json_string',
         'Accepted' => 'is_accepted:json_boolean',
         'Sent'     => 'is_sent:json_boolean',
@@ -38,6 +39,12 @@ class RSVPInvitationSerializer extends SilverStripeSerializer
             'original_attribute' => 'event_id',
             'getter' => 'getEvent',
             'has' => 'hasEvent'
+        ],
+        'rsvp' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'rsvp_id',
+            'getter' => 'getRSVP',
+            'has' => 'hasRSVP'
         ],
     ];
 }

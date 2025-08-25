@@ -51,12 +51,12 @@ class RSVPInvitation extends SilverstripeBaseModel
     #[ORM\Column(name: 'Hash', type: 'string')]
     private string $hash;
 
-    public function getSentDate(): \DateTime
+    public function getSentDate(): ?\DateTime
     {
         return $this->sent_date;
     }
 
-    public function getActionDate(): \DateTime
+    public function getActionDate(): ?\DateTime
     {
         return $this->action_date;
     }

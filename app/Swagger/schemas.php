@@ -128,7 +128,7 @@ class RSVPInvitationSchema {}
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'created', type: 'integer', example: 1630500518),
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'status', type: 'string', example: RSVPInvitation::Status_Pending),
+        new OA\Property(property: 'status', type: 'string', example: RSVPInvitation::Status_Pending, enum: RSVPInvitation::AllowedStatus),
         new OA\Property(property: 'is_accepted', type: 'boolean', example: false),
         new OA\Property(property: 'is_sent', type: 'boolean', example: false),
         new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
@@ -168,10 +168,7 @@ class SummitEventSchema {}
     schema: 'SendRSVPInvitationsRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG, enum: [
-            RSVPInviteEmail::EVENT_SLUG,
-            ReRSVPInviteEmail::EVENT_SLUG,
-        ]),
+        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG, enum:[RSVPInviteEmail::EVENT_SLUG, ReRSVPInviteEmail::EVENT_SLUG]),
         new OA\Property(
             property: 'invitations_ids',
             type: 'array',
@@ -310,7 +307,7 @@ class RSVPUpdateRequestSchema_{
     type: 'object',
     properties: [
         new OA\Property(property: 'attendee_id', type: 'integer', example: 123),
-        new OA\Property(property: 'seet_type', type: 'string', example: RSVP::SeatTypeRegular, enum: RSVP::SeatTypeRegular),
+        new OA\Property(property: 'seet_type', type: 'string', example: RSVP::SeatTypeRegular),
 
     ]
 )]

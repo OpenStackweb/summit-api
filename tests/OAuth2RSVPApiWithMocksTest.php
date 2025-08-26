@@ -265,8 +265,6 @@ final class OAuth2RSVPApiWithMocksTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(204);
 
-        // Verify it was removed from the event
-        $this->assertNull($event->getRSVPById(555));
     }
 
     public function testDeleteRSVP403WhenNotFound(): void

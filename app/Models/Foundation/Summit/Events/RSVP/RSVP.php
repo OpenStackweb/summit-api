@@ -234,6 +234,16 @@ class RSVP extends SilverstripeBaseModel
     }
 
     /**
+     * @return void
+     * @throws ValidationException
+     */
+    public function downgradeToWaitSeatType():void{
+        if(!$this->getEvent()->hasRSVPWaitList())
+            throw new ValidationException(sprintf("Event %s does not has RSVP Wait List", $this->getEventId()));
+        $this->setSeatType(self::SeatTypeWaitList);
+    }
+
+    /**
      * @return bool
      */
     public function isBeenEmailed(): bool

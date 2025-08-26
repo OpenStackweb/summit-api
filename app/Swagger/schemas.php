@@ -1,5 +1,6 @@
 <?php namespace App\Swagger\schemas;
 
+use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Security\RSVPInvitationsScopes;
@@ -110,7 +111,7 @@ class PaginatedCSVRSVPInvitationsResponseSchema {}
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'created', type: 'integer', example: 1630500518),
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'status', type: 'string', example: RSVPInvitation::Status_Pending),
+        new OA\Property(property: 'status', type: 'string', example: RSVPInvitation::Status_Pending, enum: RSVPInvitation::AllowedStatus),
         new OA\Property(property: 'is_accepted', type: 'boolean', example: false),
         new OA\Property(property: 'is_sent', type: 'boolean', example: false),
         new OA\Property(property: 'invitee', ref: '#/components/schemas/SummitAttendee'),
@@ -167,7 +168,10 @@ class SummitEventSchema {}
     schema: 'SendRSVPInvitationsRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG),
+        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG, enum: [
+            RSVPInviteEmail::EVENT_SLUG,
+            ReRSVPInviteEmail::EVENT_SLUG,
+        ]),
         new OA\Property(
             property: 'invitations_ids',
             type: 'array',
@@ -252,9 +256,9 @@ class MemberSchema {}
         new OA\Property(property: 'id', type: 'integer'),
         new OA\Property(property: 'created', type: 'integer', example: 1630500518),
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular),
-        new OA\Property(property: 'status', type: 'string', example: RSVP::Status_Active),
-        new OA\Property(property: 'action_source', type: 'string', example: RSVP::ActionSource_Schedule),
+        new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular, enum: RSVP::ValidSeatTypes),
+        new OA\Property(property: 'status', type: 'string', example: RSVP::Status_Active, enum: RSVP::AllowedStatus),
+        new OA\Property(property: 'action_source', type: 'string', example: RSVP::ActionSource_Schedule, enum: RSVP::Valid_ActionSources),
         new OA\Property(property: 'owner', ref: '#/components/schemas/Member'),
         new OA\Property(property: 'event', ref: '#/components/schemas/SummitEvent'),
     ]
@@ -306,7 +310,7 @@ class RSVPUpdateRequestSchema_{
     type: 'object',
     properties: [
         new OA\Property(property: 'attendee_id', type: 'integer', example: 123),
-        new OA\Property(property: 'seet_type', type: 'string', example: RSVP::SeatTypeRegular),
+        new OA\Property(property: 'seet_type', type: 'string', example: RSVP::SeatTypeRegular, enum: RSVP::SeatTypeRegular),
 
     ]
 )]

@@ -374,7 +374,7 @@ class SummitRSVPService extends AbstractService
         }
 
         Log::debug(sprintf(
-            'SummitRSVPService::checkIfAttendeeNeedIRSVPInvitation event%d RSVPType=Private',
+            'SummitRSVPService::checkIfAttendeeNeedIRSVPInvitation event %d RSVPType=Private',
             $event->getId()
         ));
 
@@ -387,7 +387,12 @@ class SummitRSVPService extends AbstractService
             ));
             throw new ValidationException('Attendee does not have invitation for this Private RSVP activity.');
         }
-        return $event->getRSVPInvitationByInvitee($attendee);
+        $invitation =  $event->getRSVPInvitationByInvitee($attendee);
+        if(!$invitation->isPending()) {
+            Log::debug(sprintf("SummitRSVPService::checkIfAttendeeNeedIRSVPInvitation invitation is not pending ( %s )", $invitation->getStatus()));
+            throw new ValidationException('Attendee does not have invitation for this Private RSVP.');
+        }
+        return $invitation;
     }
 
     /**

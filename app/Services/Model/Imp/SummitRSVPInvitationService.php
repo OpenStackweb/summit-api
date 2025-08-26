@@ -135,8 +135,8 @@ class SummitRSVPInvitationService
             if (!$invitation instanceof RSVPInvitation) {
                 throw new EntityNotFoundException("Invitation not found.");
             }
-            if(!$invitation->isPending()){
-                throw new ValidationException("Invitation is not pending.");
+            if($invitation->isAccepted()){
+                throw new ValidationException("Invitation is accepted.");
             }
             $this->invitation_repository->delete($invitation);
         });

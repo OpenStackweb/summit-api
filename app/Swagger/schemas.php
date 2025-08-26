@@ -283,10 +283,22 @@ class PaginatedRSVPsResponseSchema {}
     schema: 'RSVPInvitationRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
+        new OA\Property(property: 'invitee_id', type: 'integer', example: '123'),
     ]
 )]
 class RSVPInvitationRequestSchema {}
+
+#[OA\Schema(
+    schema: 'RSVPUpdateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular,  enum: RSVP::ValidSeatTypes),
+        new OA\Property(property: 'status', type: 'string', example: RSVP::Status_Active, enum: RSVP::AllowedStatus),
+    ]
+)]
+class RSVPUpdateRequestSchema_{
+
+}
 
 
 #[OA\Schema(

@@ -382,18 +382,17 @@ class SummitRSVPInvitationService
                         $add_excerpt = false;
 
                         // send email
-
-                        if ($flow_event == RSVPInviteEmail::EVENT_SLUG && !is_null($invitation)) {
+                        if(is_null($invitation)) return;
+                        if ($flow_event == RSVPInviteEmail::EVENT_SLUG) {
                             RSVPInviteEmail::dispatch($invitation, $test_email_recipient);
                             $add_excerpt = true;
                         }
 
 
-                        if ($flow_event == ReRSVPInviteEmail::EVENT_SLUG && !is_null($invitation)) {
+                        if ($flow_event == ReRSVPInviteEmail::EVENT_SLUG) {
                             ReRSVPInviteEmail::dispatch($invitation, $test_email_recipient);
                             $add_excerpt = true;
                         }
-
 
                         if ($add_excerpt) {
                             $onDispatchSuccess(

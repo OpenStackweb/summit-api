@@ -783,6 +783,10 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 description: 'The rsvp id'
             ),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/RSVPUpdateRequest")
+        ),
         responses: [
             new OA\Response(
                 response: 201,

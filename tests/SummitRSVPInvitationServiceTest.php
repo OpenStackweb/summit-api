@@ -627,7 +627,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $inv201->shouldReceive('getToken')->andReturn('token-201');
         $inv201->shouldReceive('getEmail')->andReturn('201@example.org');
         $inv201->shouldReceive('getInvitee')->andReturn($invitee);
-
+        $inv201->shouldReceive('markAsSent');
         // ID 203 => rejected
         $inv203 = Mockery::mock(\App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation::class)->makePartial();
         $inv203->shouldReceive('isRejected')->andReturnTrue();

@@ -113,6 +113,7 @@ class SummitRSVPServiceTest extends TestCase
         $event_type->shouldReceive('isPrivate')->andReturn(false);
         $event->shouldReceive('getType')->andReturn($event_type);
         $invitation = Mockery::mock(\App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation::class)->makePartial();
+        $invitation->shouldReceive("isPending")->andReturn(true);
         $event->shouldReceive('getRSVPInvitationByInvitee')->andReturn($invitation);
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(1)->andReturn($event);
         $member->shouldReceive('getRsvpByEvent')->once()->with(1)->andReturnNull();

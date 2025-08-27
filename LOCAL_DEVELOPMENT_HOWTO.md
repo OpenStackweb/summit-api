@@ -73,3 +73,14 @@ check containers health status
 ````bash
 docker inspect --format "{{json .State.Health }}" www-openstack-model-db-local | jq '.
 ````
+
+# APC CACHE Page
+
+1. open file at /var/www/public/apc.php
+2. add following lines to the beginning 
+````php
+$AUTHENTICATION = 1;               
+define('ADMIN_USERNAME', 'apc');   
+define('ADMIN_PASSWORD', '1qaz2wsx!');
+````
+3. now you can access to http://localhost:8002/apc.php -> [ User Cache Entries ] Section

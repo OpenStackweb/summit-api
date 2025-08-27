@@ -171,6 +171,7 @@ return [
         LaravelDoctrine\Migrations\MigrationsServiceProvider::class,
         SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
         \App\Providers\DoctrineWorkerServiceProvider::class,
+        App\libs\Utils\Doctrine\DoctrineCacheServiceProvider::class,
     ],
 
     /*

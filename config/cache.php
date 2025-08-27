@@ -64,6 +64,11 @@ return [
             'lock_connection' => 'default',
         ],
 
+        'doctrine_redis' => [
+            'driver' => 'redis',
+            'connection' => env('DOCTRINE_CACHE_REDIS_CONN', 'doctrine_cache'),
+        ],
+
     ],
 
     /*

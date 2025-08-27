@@ -25,6 +25,7 @@ use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -208,29 +209,72 @@ final class SummitSponsorService
             }
 
             if(isset($payload['sponsorship_id'])) {
-                $summit_sponsor->clearSponsorships();
                 $type_id = intval($payload['sponsorship_id']);
+
                 $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
                 if(is_null($summit_sponsorship_type))
                     throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
 
-                $sponsorship = new SummitSponsorship();
-                $sponsorship->setType($summit_sponsorship_type);
-                $summit_sponsor->addSponsorship($sponsorship);
-            } else if(isset($payload['sponsorships'])) {
-                $summit_sponsor->clearSponsorships();
-                foreach ($payload['sponsorships'] as $sponsorship_payload) {
-                    $type_id = isset($sponsorship_payload['type_id']) ?
-                        intval($sponsorship_payload['type_id']) :
-                        intval($sponsorship_payload);
-                    $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
-                    if(is_null($summit_sponsorship_type))
-                        throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
-
+                // check if we have that sponsor ship type already
+                if($summit_sponsor->hasSponsorships()) {
+                    // update the first
+                    $summit_sponsor->getSponsorships()->first()->setType($summit_sponsorship_type);
+                }
+                else {
+                    // create it
                     $sponsorship = new SummitSponsorship();
                     $sponsorship->setType($summit_sponsorship_type);
                     $summit_sponsor->addSponsorship($sponsorship);
                 }
+
+            } else if(isset($payload['sponsorships'])) {
+                // do a merge
+                // create a dictionary with reduce
+                $current_sponsorships = $summit_sponsor->getSponsorships()->reduce(
+                    function (array $acc, SummitSponsorship $sp): array {
+                        $type = $sp->getType();
+                        if ($type) {
+                            $acc[$type->getId()] = $sp; // key: type_id => value: sponsorship
+                        }
+                        return $acc;
+                    },
+                    []
+                );
+
+                $new_sponsorship_types = new ArrayCollection();
+
+                foreach ($payload['sponsorships'] as $sponsorship_payload) {
+                    $type_id = isset($sponsorship_payload['type_id']) ?
+                        intval($sponsorship_payload['type_id']) :
+                        intval($sponsorship_payload);
+
+                    if ($type_id <= 0) {
+                        throw new ValidationException("Invalid sponsorship type payload.");
+                    }
+
+                    $summit_sponsorship_type = $summit->getSummitSponsorshipTypeById($type_id);
+                    if(is_null($summit_sponsorship_type))
+                        throw new EntityNotFoundException("Sponsorship Type $type_id not found.");
+
+                    $new_sponsorship_types->add($summit_sponsorship_type);
+                }
+
+                // Remove types not in the new list
+                foreach ($current_sponsorships as $type_id => $sponsorship) {
+                    if (!$new_sponsorship_types->contains($sponsorship->getType())) {
+                        $summit_sponsor->removeSponsorship($sponsorship);
+                    }
+                }
+
+                // Add new sponsorship not already in current
+                foreach ($new_sponsorship_types as $type) {
+                    if (!isset($current_sponsorships[$type->getId()])) {
+                        $sponsorship = new SummitSponsorship();
+                        $sponsorship->setType($type);
+                        $summit_sponsor->addSponsorship($sponsorship);
+                    }
+                }
+
             }
 
             if (!is_null($company))

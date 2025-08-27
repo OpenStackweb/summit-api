@@ -2137,14 +2137,15 @@ SQL;
     {
         $sql = <<<SQL
 SELECT SummitAttendeeTicket.ID 
-FROM SummitAttendeeTicket FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
-INNER JOIN SummitAttendee FORCE INDEX (IDX_SummitAttendee_Summit_Email) ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+FROM SummitAttendeeTicket
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE 
 SummitAttendee.Email = :member_email AND 
 SummitAttendee.SummitID = :summit_id AND 
 SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND
 SummitAttendeeTicket.Status = :ticket_status AND 
 SummitAttendeeTicket.IsActive = 1
+LIMIT 1
 SQL;
 
         $stmt = $this->prepareRawSQL($sql,  [
@@ -2158,14 +2159,15 @@ SQL;
 
         $sql = <<<SQL
 SELECT SummitAttendeeTicket.ID 
-FROM SummitAttendeeTicket FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active)
-INNER JOIN SummitAttendee FORCE INDEX (IDX_SummitAttendee_Summit_Member) ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+FROM SummitAttendeeTicket
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE 
 SummitAttendee.MemberID = :member_id AND 
 SummitAttendee.SummitID = :summit_id AND 
 SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND
 SummitAttendeeTicket.Status = :ticket_status AND 
 SummitAttendeeTicket.IsActive = 1
+LIMIT 1
 SQL;
 
         $stmt = $this->prepareRawSQL($sql,  [
@@ -2204,21 +2206,16 @@ SQL;
 
         $sql = <<<SQL
 SELECT DISTINCT T.* 
-FROM SummitAttendeeTicket T FORCE INDEX (IDX_SummitAttendeeTicket_Owner_Status_Active) 
-WHERE 
-    T.Status = :TICKET_STATUS
-    AND T.IsActive = 1 
-    AND T.OwnerID IN 
-    ( 
-        SELECT SummitAttendee.ID FROM SummitAttendee FORCE INDEX(IDX_SummitAttendee_SummitID_MemberID_Email) 
-        LEFT JOIN Member ON Member.ID = SummitAttendee.MemberID 
-        WHERE SummitAttendee.SummitID = :SUMMIT_ID 
-        AND 
-        ( 
-            SummitAttendee.MemberID = :MEMBER_ID OR 
-            SummitAttendee.Email = :MEMBER_EMAIL
-        ) 
-    )
+FROM SummitAttendeeTicket T
+JOIN
+(
+    SELECT SA1.ID FROM SummitAttendee AS SA1
+    WHERE SA1.SummitID = :SUMMIT_ID AND SA1.MemberID = :MEMBER_ID
+    UNION 
+    SELECT SA2.ID FROM SummitAttendee AS SA2
+    WHERE SA2.SummitID = :SUMMIT_ID AND SA2.Email = :MEMBER_EMAIL
+) AS A ON A.ID = T.OwnerID
+WHERE T.Status = :TICKET_STATUS AND T.IsActive = 1 
 SQL;
 
         $bindings = [

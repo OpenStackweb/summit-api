@@ -1011,6 +1011,19 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
+     * @param int $type_id
+     * @return SummitSponsorship|null
+     */
+    public function getSponsorshipByTypeId(int $type_id): ?SummitSponsorship
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type.iud', $type_id));
+        $sponsorship = $this->sponsorships->matching($criteria)->first();
+        return $sponsorship === false ? null : $sponsorship;
+    }
+
+
+    /**
      * @param SummitSponsorship $sponsorship
      * @throws ValidationException
      */

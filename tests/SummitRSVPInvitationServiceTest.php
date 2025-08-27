@@ -242,7 +242,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $event = Mockery::mock(SummitEvent::class);
 
         $inv = Mockery::mock(RSVPInvitation::class);
-        $inv->shouldReceive('isPending')->andReturnTrue();
+        $inv->shouldReceive('isAccepted')->andReturnFalse();
 
         $this->invitation_repository->shouldReceive('getById')->once()->with(10)->andReturn($inv);
         $this->invitation_repository->shouldReceive('delete')->once()->with($inv);
@@ -269,7 +269,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $event = Mockery::mock(SummitEvent::class);
 
         $inv = Mockery::mock(RSVPInvitation::class);
-        $inv->shouldReceive('isPending')->andReturnFalse();
+        $inv->shouldReceive('isAccepted')->andReturnTrue();
 
         $this->invitation_repository->shouldReceive('getById')->once()->with(10)->andReturn($inv);
 

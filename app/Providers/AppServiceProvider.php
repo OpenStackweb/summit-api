@@ -720,7 +720,7 @@ class AppServiceProvider extends ServiceProvider
                 }
             );
         } else {
-            // classis FPM
+            // classic FPM
             RedisClientNamer::ensure('fpm');
         }
     }

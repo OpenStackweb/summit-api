@@ -31,6 +31,18 @@ final class RSVPSerializer extends SilverStripeSerializer
         'Status'              => 'status:json_string',
     ];
 
+    protected function getSerializerType(?string $relation = null):string{
+        $serializer_type = SerializerRegistry::SerializerType_Public;
+        $current_member  = $this->resource_server_context->getCurrentUser();
+        if(!is_null($current_member)){
+            if($current_member->isAdmin()){
+                $serializer_type = SerializerRegistry::SerializerType_Private;
+            }
+        }
+        return $serializer_type;
+    }
+
+
     /**
      * @param null $expand
      * @param array $fields
@@ -58,19 +70,46 @@ final class RSVPSerializer extends SilverStripeSerializer
                     case 'owner': {
                         if(!$rsvp->hasOwner()) break;
                         unset($values['owner_id']);
-                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer
+                        (
+                            $rsvp->getOwner(),
+                            $this->getSerializerType($relation)
+                        )->serialize
+                        (
+                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                        );
                     }
                         break;
                     case 'event': {
                         if(!$rsvp->hasEvent()) break;
                         unset($values['event_id']);
-                        $values['event'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getEvent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['event'] = SerializerRegistry::getInstance()->getSerializer
+                        (
+                            $rsvp->getEvent(),
+                            $this->getSerializerType($relation)
+                        )->serialize
+                        (
+                            AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                            AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                        );
                     }
                     break;
                     case 'answers':{
                         $answers = [];
                         foreach ($rsvp->getAnswers() as $answer){
-                            $answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $answers[] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $answer,
+                                $this->getSerializerType($relation)
+                            )->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                            );
                         }
                         $values['answers'] = $answers;
                     }

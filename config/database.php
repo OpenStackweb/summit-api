@@ -155,8 +155,8 @@ return [
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
         'options' => [
-            'serializer' =>  Redis::SERIALIZER_IGBINARY,
-            'compression' => Redis::COMPRESSION_ZSTD,   // needs phpredis built w/ zstd (or LZF)
+            'serializer' => 'igbinary', //\Redis::SERIALIZER_IGBINARY
+            'compression' => 'zstd', // \Redis::COMPRESSION_ZSTD needs phpredis built w/ zstd (or LZF)
             'compression_level' => 3,
         ],
         /*

@@ -54,6 +54,23 @@ $model_db_config = array_merge(
         ]:[]
 );
 
+$model_write__db_config = [
+    'driver' =>  env('SS_DB_DRIVER', 'mysql'),
+    'database' => env('SS_DATABASE'),
+    'username' => env('SS_DB_USERNAME'),
+    'password' => env('SS_DB_PASSWORD'),
+    'port' => env('SS_DB_PORT', 3306),
+    'charset' => env('SS_DB_CHARSET', 'utf8'),
+    'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
+    'prefix' => env('SS_DB_PREFIX', ''),
+];
+
+if(env('SS_DB_WRITE_HOST', null)) {
+    $model_write__db_config['host'] = env('SS_DB_WRITE_HOST');
+} else{
+    // single server
+    $model_write__db_config['host'] = env('SS_DB_HOST');
+}
 
 return [
 
@@ -124,8 +141,8 @@ return [
                     ],
                 ] : []),
         // Model DB
-        'model' => $model_db_config
-
+        'model' => $model_db_config,
+        'model_write' => $model_write__db_config,
     ],
     /*
     |--------------------------------------------------------------------------

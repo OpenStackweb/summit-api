@@ -9,7 +9,7 @@ docker compose exec app composer install
 docker compose exec app php artisan db:create_test_db --schema=config
 docker compose exec app php artisan db:create_test_db --schema=model
 docker compose exec app php artisan doctrine:migrations:migrate --no-interaction --em=config
-docker compose exec app php artisan doctrine:migrations:migrate --no-interaction --em=model
+docker compose exec app php artisan doctrine:migrations:migrate --no-interaction --em=model_write
 docker compose exec app php artisan db:seed --force
 docker compose exec app php artisan db:seed_test_data
 docker compose exec app php artisan vendor:publish --provider "L5Swagger\L5SwaggerServiceProvider"

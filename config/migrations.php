@@ -59,7 +59,7 @@ return [
             'filter' => '/^(?!password_resets|failed_jobs).*$/'
         ]
     ],
-    'model' => [
+    'model_write' => [
         /*
         |--------------------------------------------------------------------------
         | Migration Repository Table

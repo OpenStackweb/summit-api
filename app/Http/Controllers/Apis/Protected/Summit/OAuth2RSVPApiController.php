@@ -270,7 +270,14 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                 'attendee_id' => 'required|integer',
             ]);
 
-            $this->service->createRSVPFromPayload($summit, $event->getId(), $payload);
+            $rsvp = $this->service->createRSVPFromPayload($summit, $event->getId(), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         });
     }
 

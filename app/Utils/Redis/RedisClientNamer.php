@@ -24,43 +24,63 @@ class RedisClientNamer
     public static function ensure(?string $runtimeTag = null, ?array $connections = null): void
     {
         Log::debug(sprintf("RedisClientNamer::ensure runtimeTag %s", $runtimeTag));
+
         static $done = [];
         $host = gethostname() ?: php_uname('n');
         $pid  = function_exists('getmypid') ? getmypid() : random_int(1000, 9999);
         $tag  = $runtimeTag ?? (app()->runningInConsole() ? 'cli' : 'http');
         $key  = $tag . ':' . $pid;
+
         Log::debug(sprintf("RedisClientNamer::ensure host %s pid %s key %s", $host, $pid, $key));
         if (isset($done[$key])) return;
         $done[$key] = true;
 
-        $redisConfig = config('database.redis', []);
-        if (!$redisConfig){
+        $all = config('database.redis', []);
+        if (!$all){
             Log::warning("RedisClientNamer::ensure missing database.redis config");
             return;
         }
 
         // all defined connections
-        $conns = $connections ?? array_values(array_filter(array_keys($redisConfig), fn($k) => $k !== 'options'));
+        // Build the list of REAL connection names:
+        // keep only entries that are arrays and look like a server (host/url)
+        $conns = array_values(array_filter(
+            $onlyConnections ?? array_keys($all),
+            function ($name) use ($all) {
+                if (in_array($name, ['options','client','cluster'], true)) return false;
+                $v = $all[$name] ?? null;
+                return is_array($v) && (isset($v['host']) || isset($v['url']));
+            }
+        ));
+
+
         Log::debug(sprintf("RedisClientNamer::ensure got %s connections", count($conns)));
         foreach ($conns as $conn) {
             try {
-                $cfg  = $redisConfig[$conn] ?? [];
+
+                $cx = Redis::connection($conn);
+                // Base name from config or fallback
+                $cfg  = $all[$conn] ?? [];
                 Log::debug(sprintf("RedisClientNamer::ensure processing connection %s name %s", $conn, $cfg['name']));
-                $base = $cfg['name']
-                    ?? ($redisConfig['default']['name'] ?? config('app.name', 'laravel'));
+                $base = $cfg['name'] ?? ($all['default']['name'] ?? config('app.name', 'app'));
 
-                $full = sprintf('%s:%s:%s:%d:%s', $base, $tag, $host, $pid, $conn);
+                $full = sprintf('%s:%s:%s:%d:%s', $base, $runtimeTag, $host, $pid, $conn);
 
-                $client = Redis::connection($conn);
-                $curr   = null;
-                try { $curr = $client->client('getname'); } catch (\Throwable $e) {}
+                // Use the portable way: send the CLIENT command explicitly
+                $before = null;
+                try { $before = $cx->command('client', ['getname']); } catch (\Throwable $e) {}
 
-                if ($curr !== $full) {
-                    Log::debug(sprintf("RedisClientNamer::ensure connection %s  set name %s", $conn, $full));
-                    $client->client('setname', $full);
-                }
+                $cx->command('client', ['setname', $full]);
+                $after = $cx->command('client', ['getname']);
+
+                Log::debug('RedisClientNamer::ensure setname ok', [
+                    'conn' => $conn, 'before' => $before, 'after' => $after
+                ]);
+
             } catch (\Throwable $e) {
-              Log::debug("RedisClientNamer::ensure Redis setname failed [$conn]: ".$e->getMessage());
+                Log::error('RedisClientNamer::ensure setname FAILED', [
+                    'conn' => $conn, 'err' => $e->getMessage()
+                ]);
             }
         }
     }

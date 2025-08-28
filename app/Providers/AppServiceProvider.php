@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Utils\Logs\LaravelMailerHandler;
+use App\Utils\Redis\RedisClientNamer;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -709,6 +710,19 @@ class AppServiceProvider extends ServiceProvider
 
             return is_numeric($value) && intval($value) > - strlen(strval($value)) == 10;
         });
+
+        // octane
+        if (class_exists(\Laravel\Octane\Facades\Octane::class)) {
+            \Laravel\Octane\Facades\Octane::listen(
+                \Laravel\Octane\Events\WorkerStarting::class,
+                function () {
+                    RedisClientNamer::ensure('octane');
+                }
+            );
+        } else {
+            // classic FPM
+            RedisClientNamer::ensure('fpm');
+        }
     }
 
     /**

@@ -267,7 +267,9 @@ class SummitRSVPService extends AbstractService
                 // we need to increase the size to dont break the model
                 $event->increaseRSVPMaxUserNumber();
             }
-            return AdminSummitRSVPFactory::build($event, $member, $payload);
+            $rsvp = AdminSummitRSVPFactory::build($event, $member, $payload);
+            $rsvp->activate();
+            return $rsvp;
         });
 
         Event::dispatch(new RSVPCreated($rsvp));

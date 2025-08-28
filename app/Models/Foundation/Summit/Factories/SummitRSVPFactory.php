@@ -29,7 +29,9 @@ abstract class BaseSummitRSVPFactory {
      * @throws ValidationException
      */
     public static function build(SummitEvent $summit_event, Member $owner, array $payload):RSVP{
-        return static::populate(new RSVP, $summit_event, $owner, $payload);
+        $rsvp = static::populate(new RSVP, $summit_event, $owner, $payload);
+        $rsvp->setActionSource(RSVP::ActionSource_Admin);
+        return $rsvp;
     }
 
     /**

@@ -27,7 +27,7 @@ final class Version20250819134739 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $sql = <<<SQL
-ALTER TABLE RSVP MODIFY ActionSource enum('Schedule', 'Invitation') DEFAULT 'Schedule';
+ALTER TABLE RSVP MODIFY ActionSource enum('Schedule', 'Invitation','Admin') DEFAULT 'Schedule';
 SQL;
 
         $this->addSql($sql);

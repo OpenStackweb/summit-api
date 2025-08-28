@@ -94,9 +94,12 @@ class RSVP extends SilverstripeBaseModel
     public const string ActionSource_Schedule = 'Schedule';
     public const string ActionSource_Invitation = 'Invitation';
 
+    public const string ActionSource_Admin = 'Admin';
+
     public const array Valid_ActionSources = [
         self::ActionSource_Schedule,
-        self::ActionSource_Invitation
+        self::ActionSource_Invitation,
+        self::ActionSource_Admin,
     ];
     /**
      * @var string

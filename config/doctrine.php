@@ -289,16 +289,18 @@ return [
             'file_lock_region_directory' => '/tmp'
         ],
         'metadata'         => [
-            'driver'       => env('DOCTRINE_METADATA_CACHE', env('DOCTRINE_CACHE', 'redis')),
+            'driver'       => env('DOCTRINE_METADATA_CACHE', "apc"),
             'namespace'    => null,
         ],
         'query'            => [
-            'driver'       => env('DOCTRINE_QUERY_CACHE', env('DOCTRINE_CACHE', 'redis')),
+            'driver'       => env('DOCTRINE_QUERY_CACHE', "apc"),
             'namespace'    => null,
         ],
         'result'           => [
             'driver'       => env('DOCTRINE_RESULT_CACHE', env('DOCTRINE_CACHE', 'redis')),
-            'namespace'    => null,
+            'namespace'    => 'res',
+            'store'        => env('DOCTRINE_QUERY_CACHE_STORE', 'doctrine_redis'),
+            'lifetime'     => 3600, // 1 hour
         ],
     ],
     /*

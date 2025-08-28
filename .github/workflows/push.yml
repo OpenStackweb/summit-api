@@ -91,7 +91,7 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           php-version:  ${{env.PHP_VERSION}}
-          extensions: pdo_mysql, mbstring, exif, pcntl, bcmath, sockets, gettext
+          extensions: pdo_mysql, mbstring, exif, pcntl, bcmath, sockets, gettext, apcu, redis, igbinary
       - name: Install dependencies
         uses: "ramsey/composer-install@v3"
         env:

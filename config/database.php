@@ -153,7 +153,12 @@ return [
 
     'redis' => [
 
-        'client' => env('REDIS_CLIENT', 'predis'),
+        'client' => env('REDIS_CLIENT', 'phpredis'),
+        'options' => [
+            'serializer' => 'igbinary', //\Redis::SERIALIZER_IGBINARY
+            'compression' => 'zstd', // \Redis::COMPRESSION_ZSTD needs phpredis built w/ zstd (or LZF)
+            'compression_level' => 3,
+        ],
         /*
          * @see https://github.com/predis/predis/wiki/Connection-Parameters
          */
@@ -167,6 +172,9 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_timeout'  => 1.0,
+            'persistent'    => true,
+            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
         ],
 
         'cache' => [
@@ -177,6 +185,9 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_timeout'  => 1.0,
+            'persistent'    => true,
+            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
         ],
 
         'session' => [
@@ -187,6 +198,9 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_timeout'  => 1.0,
+            'persistent'    => true,
+            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
         ],
 
         'worker' => [
@@ -197,6 +211,21 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_timeout'  => 1.0,
+            'persistent'    => true,
+            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+        ],
+        'doctrine_cache' => [
+            'host' => env('REDIS_HOST'),
+            'port' => env('REDIS_PORT'),
+            'database' => env('REDIS_DOCTRINE_CACHE_DB', 5),
+            'password' => env('REDIS_PASSWORD'),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_timeout'  => 1.0,
+            'persistent'    => true,
+            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
         ],
 
     ],

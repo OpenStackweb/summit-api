@@ -44,13 +44,17 @@ RUN apt clean && rm -rf /var/lib/apt/lists/*
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN install-php-extensions bcmath exif gettext gd imagick mbstring openssl pcntl pdo pdo_mysql sockets ${XDEBUG_VERSION} zip
+RUN install-php-extensions bcmath exif gettext gd imagick mbstring openssl pcntl pdo pdo_mysql sockets ${XDEBUG_VERSION} zip apcu redis igbinary
 
 # XDEBUG
 COPY docker-compose/php/docker-php-ext-xdebug.ini $PHP_DIR/conf.d/docker-php-ext-xdebug.ini
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 RUN echo 'memory_limit = 1024M' >> $PHP_INI_DIR/php.ini;
+# Enough shared memory for metadata/query caches
+RUN echo 'apc.shm_size=128M' >> $PHP_INI_DIR/php.ini;
+# Enable APCu in CLI if you run warmers via artisan
+RUN echo 'apc.enable_cli=1' >> $PHP_INI_DIR/php.ini;
 
 WORKDIR /var/www
 COPY . /var/www
@@ -58,3 +62,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN git config --global --add safe.directory /var/www
 RUN composer config -g github-oauth.github.com $GITHUB_OAUTH_TOKEN
 RUN chmod 777 -R storage
+
+# access to http://localhost:8002/apc.php to see APC statistics
+
+RUN cd /var/www/public && curl -LO https://raw.githubusercontent.com/krakjoe/apcu/master/apc.php

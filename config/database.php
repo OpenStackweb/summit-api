@@ -125,7 +125,6 @@ return [
                 ] : []),
         // Model DB
         'model' => $model_db_config
-
     ],
     /*
     |--------------------------------------------------------------------------
@@ -175,6 +174,7 @@ return [
             'read_timeout'  => 1.0,
             'persistent'    => true,
             'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'name'          => env('REDIS_DEFAULT_CLIENT_NAME','summit-api'),
         ],
 
         'cache' => [
@@ -188,6 +188,7 @@ return [
             'read_timeout'  => 1.0,
             'persistent'    => true,
             'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'name'          => env('REDIS_CACHE_CLIENT_NAME','summit-api-cache'),
         ],
 
         'session' => [
@@ -201,6 +202,7 @@ return [
             'read_timeout'  => 1.0,
             'persistent'    => true,
             'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'name'          => env('REDIS_SESSION_CLIENT_NAME','summit-api-session'),
         ],
 
         'worker' => [
@@ -214,6 +216,7 @@ return [
             'read_timeout'  => 1.0,
             'persistent'    => true,
             'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'name'          => env('REDIS_WORKER_CLIENT_NAME','summit-api-worker'),
         ],
         'doctrine_cache' => [
             'host' => env('REDIS_HOST'),
@@ -226,6 +229,7 @@ return [
             'read_timeout'  => 1.0,
             'persistent'    => true,
             'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'name'          => env('REDIS_DOCTRINE_CACHE_CLIENT_NAME','summit-api-doctrine-cache'),
         ],
 
     ],

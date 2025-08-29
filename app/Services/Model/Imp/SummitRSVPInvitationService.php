@@ -43,11 +43,12 @@ class SummitRSVPInvitationService
      * @param ITransactionService $transaction_service
      */
     public function __construct(
-        ISummitEventRepository $summit_event_repository,
+        ISummitEventRepository    $summit_event_repository,
         IRSVPInvitationRepository $invitation_repository,
-        ISummitRSVPService $rsvp_service,
-        ITransactionService $transaction_service
-    ){
+        ISummitRSVPService        $rsvp_service,
+        ITransactionService       $transaction_service
+    )
+    {
         parent::__construct($transaction_service);
         $this->summit_event_repository = $summit_event_repository;
         $this->invitation_repository = $invitation_repository;
@@ -64,7 +65,7 @@ class SummitRSVPInvitationService
     {
         Log::debug(sprintf("SummitRSVPInvitationService::importInvitationData - event %s", $summit_event->getId()));
 
-        $allowed_extensions = ['txt','csv'];
+        $allowed_extensions = ['txt', 'csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             throw new ValidationException("File does not has a valid extension ('csv').");
@@ -92,10 +93,10 @@ class SummitRSVPInvitationService
                 Log::debug(sprintf("SummitRSVPInvitationService::importInvitationData processing row %s", json_encode($row)));
 
                 $email = trim($row['email']);
-                $summit  = $summit_event->getSummit();
+                $summit = $summit_event->getSummit();
                 $attendee = $summit->getAttendeeByEmail($email);
 
-                if(is_null($attendee)){
+                if (is_null($attendee)) {
                     Log::warning
                     (
                         sprintf
@@ -134,7 +135,7 @@ class SummitRSVPInvitationService
                 $summit_event = $this->summit_event_repository->getById($summit_event->getId());
             }
         }
-        if(count($errors) > 0){
+        if (count($errors) > 0) {
             throw new ValidationException($errors);
         }
     }
@@ -152,7 +153,7 @@ class SummitRSVPInvitationService
             if (!$invitation instanceof RSVPInvitation) {
                 throw new EntityNotFoundException("Invitation not found.");
             }
-            if($invitation->isAccepted()){
+            if ($invitation->isAccepted()) {
                 throw new ValidationException("Invitation is accepted.");
             }
             $this->invitation_repository->delete($invitation);
@@ -185,16 +186,35 @@ class SummitRSVPInvitationService
     /**
      * @inheritDoc
      */
-    public function add(SummitEvent $summit_event, array $payload): RSVPInvitation
+    public function add(SummitEvent $summit_event, array $payload): array
     {
+
         return $this->tx_service->transaction(function () use ($summit_event, $payload) {
-            $invitee_id = intval($payload['invitee_id']);
-            Log::debug(sprintf("SummitRSVPInvitationService::add trying to add process invitee id %s.", $invitee_id));
-            $summit = $summit_event->getSummit();
-            $attendee = $summit->getAttendeeById($invitee_id);
-            if(is_null($attendee))
-                throw new EntityNotFoundException("Attendee not found.");
-            return $summit_event->addRSVPInvitation($attendee);
+            $invitee_ids = $payload['invitee_ids'] ?? [];
+            $invitations = [];
+            foreach ($invitee_ids as $invitee_id) {
+                try {
+                    Log::debug(sprintf("SummitRSVPInvitationService::add trying to add process invitee id %s.", $invitee_id));
+                    $summit = $summit_event->getSummit();
+                    $attendee = $summit->getAttendeeById($invitee_id);
+                    if (is_null($attendee))
+                        throw new EntityNotFoundException("Attendee not found.");
+                    $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
+                    if (!is_null($former_invitation))
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "Attendee %s already has a RSVP Invitation (%s).",
+                                $attendee->getId(), $former_invitation->getId()
+                            )
+                        );
+                    $invitations[] = $summit_event->addRSVPInvitation($attendee);
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                }
+            }
+            return $invitations;
         });
     }
 
@@ -239,7 +259,7 @@ class SummitRSVPInvitationService
      * @return RSVPInvitation
      * @throws \Exception
      */
-    public function acceptInvitationBySummitEventAndToken(SummitEvent $event,string $token): RSVPInvitation
+    public function acceptInvitationBySummitEventAndToken(SummitEvent $event, string $token): RSVPInvitation
     {
         return $this->tx_service->transaction(function () use ($event, $token) {
 
@@ -251,14 +271,14 @@ class SummitRSVPInvitationService
             $invitee = $invitation->getInvitee();
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitee->getEmail()));
 
-            if(!$invitee->hasMember())
+            if (!$invitee->hasMember())
                 throw new EntityNotFoundException("Attendee has not Member associated with it");
 
             if (!$invitation->isPending()) {
                 throw new ValidationException("This Invitation is already accepted.");
             }
 
-            if(!$invitee->hasTicketsPaidTickets())
+            if (!$invitee->hasTicketsPaidTickets())
                 throw new ValidationException("Attendee has no valid tickets.");
 
 
@@ -295,7 +315,7 @@ class SummitRSVPInvitationService
             $invitee = $invitation->getInvitee();
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitee->getEmail()));
 
-            if(!$invitee->hasMember())
+            if (!$invitee->hasMember())
                 throw new EntityNotFoundException("Attendee has not Member associated with it");
 
             if (!$invitation->isPending()) {
@@ -349,8 +369,7 @@ class SummitRSVPInvitationService
                 }
                 return $this->invitation_repository->getAllIdsByPage($paging_info, $filter);
             },
-            function
-            (
+            function (
                 $root_entity,
                 $flow_event,
                 $invitation_id,
@@ -380,7 +399,7 @@ class SummitRSVPInvitationService
                             if (!$invitation instanceof RSVPInvitation)
                                 return null;
 
-                            if($invitation->isRejected()) {
+                            if ($invitation->isRejected()) {
                                 Log::warning(sprintf("SummitRSVPInvitationService::send invitation %s is already rejected", $invitation_id));
                                 return null;
                             }
@@ -399,7 +418,7 @@ class SummitRSVPInvitationService
                         $add_excerpt = false;
 
                         // send email
-                        if(is_null($invitation)) return;
+                        if (is_null($invitation)) return;
                         if ($flow_event == RSVPInviteEmail::EVENT_SLUG) {
                             RSVPInviteEmail::dispatch($invitation, $test_email_recipient);
                             $add_excerpt = true;
@@ -424,15 +443,15 @@ class SummitRSVPInvitationService
                     $onDispatchError($ex->getMessage());
                 }
             },
-            function($root_entity, $outcome_email_recipient, $report){
-                if(!$root_entity instanceof SummitEvent) return;
+            function ($root_entity, $outcome_email_recipient, $report) {
+                if (!$root_entity instanceof SummitEvent) return;
                 RSVPInvitationExcerptEmail::dispatch($root_entity->getSummit(), $outcome_email_recipient, $report);
             },
             $filter,
-            function(){
+            function () {
                 return "SummitEvent";
             },
-            function($root_entity_id){
+            function ($root_entity_id) {
                 $summit_event = $this->summit_event_repository->getById($root_entity_id);
                 if (!$summit_event instanceof SummitEvent) return null;
                 return $summit_event;

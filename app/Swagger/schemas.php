@@ -284,7 +284,10 @@ class PaginatedRSVPsResponseSchema {}
     schema: 'RSVPInvitationRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'invitee_id', type: 'integer', example: '123'),
+        new OA\Property(property: 'invitee_ids',    type: 'array',
+            items: new OA\Items(type: 'integer', example: 123),
+            example: [1, 2, 3]
+        ),
     ]
 )]
 class RSVPInvitationRequestSchema {}

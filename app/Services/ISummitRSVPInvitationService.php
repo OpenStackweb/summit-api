@@ -43,9 +43,9 @@ interface ISummitRSVPInvitationService
     /**
      * @param SummitEvent $summit_event
      * @param array $payload
-     * @return RSVPInvitation
+     * @return RSVPInvitation[]
      */
-    public function add(SummitEvent $summit_event, array $payload):RSVPInvitation;
+    public function add(SummitEvent $summit_event, array $payload):array;
 
     /**
      * @param SummitEvent $summit_event

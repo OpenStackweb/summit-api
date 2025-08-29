@@ -38,6 +38,7 @@ use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
+use utils\PagingResponse;
 
 
 class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
@@ -709,8 +710,8 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'RSVP Invitation',
-                content: new OA\JsonContent(ref: '#/components/schemas/RSVPInvitation')
+                description: 'returns all added invitations',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedRSVPInvitationsResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
@@ -727,12 +728,21 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             $this->getCurrentMemberOr403();
 
             $payload = $this->getJsonPayload([
-                'invitee_id' => 'required:integer',
+                'invitee_ids' => 'sometimes|int_array',
             ], true);
 
-            $invitation = $this->service->add($summit_event, $payload);
+            $invitations = $this->service->add($summit_event, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize(
+            $response = new PagingResponse
+            (
+                count($invitations),
+                count($invitations),
+                1,
+                1,
+                $invitations
+            );
+
+            return $this->created($response->toArray(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations(),

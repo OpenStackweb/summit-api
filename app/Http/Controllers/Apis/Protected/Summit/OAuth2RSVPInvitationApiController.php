@@ -15,11 +15,18 @@
 use App\Http\Controllers\Utils\Assertions;
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Http\Utils\Filters\FiltersParams;
+use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
+use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
+use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
+use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
 use App\Services\ISummitRSVPInvitationService;
@@ -728,7 +735,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
             $this->getCurrentMemberOr403();
 
             $payload = $this->getJsonPayload([
-                'invitee_ids' => 'sometimes|int_array',
+                'invitee_ids' => 'required|int_array',
             ], true);
 
             $invitations = $this->service->add($summit_event, $payload);
@@ -1066,6 +1073,197 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations(),
             ));
+        });
+    }
+
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/invite",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Do bulk RSVP Private Invitations for Summit Attendeees ( has member / valid tickets )',
+        operationId: 'bulkInvitations',
+        tags: ['RSVP Invitations'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_rsvp_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            // query string params
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'attendee_email@@email@test.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-status')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/BulkRSVPInvitationsRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP Invitation bulk creation success',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function inviteAttendeesBulk($summit_id, $event_id)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id){
+
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getScheduleEventOr404($summit, $event_id);
+
+            if (!Request::isJson())
+                return $this->error400();
+            $data = Request::json();
+
+            $payload = $data->all();
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, [
+                'attendees_ids' => 'sometimes|int_array',
+                'excluded_attendees_ids'  => 'sometimes|int_array',
+            ]);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                    'company' => ['=@', '=='],
+                    'has_company' => ['=='],
+                    'email' => ['=@', '=='],
+                    'external_order_id' => ['=@', '=='],
+                    'external_attendee_id' => ['=@', '=='],
+                    'member_id' => ['==', '>'],
+                    'ticket_type' => ['=@', '==', '@@'],
+                    'ticket_type_id' => ['=='],
+                    'badge_type' => ['=@', '==', '@@'],
+                    'badge_type_id' => ['=='],
+                    'features' => ['=@', '==', '@@'],
+                    'features_id' => ['=='],
+                    'access_levels' => ['=@', '==', '@@'],
+                    'access_levels_id' => ['=='],
+                    'status' => ['=@', '=='],
+                    'has_member' => ['=='],
+                    'has_tickets' => ['=='],
+                    'has_virtual_checkin' => ['=='],
+                    'has_checkin' => ['=='],
+                    'tickets_count' => ['==', '>=', '<=', '>', '<'],
+                    'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
+                    'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
+                    'presentation_votes_track_group_id' => ['=='],
+                    'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
+                    'tags' => ['=@', '==', '@@'],
+                    'tags_id' => ['=='],
+                    'notes' => ['=@', '@@'],
+                    'has_notes' => ['=='],
+                    'has_manager' => ['=='],
+                ]);
+            }
+
+            if (is_null($filter))
+                $filter = new Filter();
+
+            $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
+                'first_name' => 'sometimes|string',
+                'last_name' => 'sometimes|string',
+                'full_name' => 'sometimes|string',
+                'company' => 'sometimes|string',
+                'has_company' => ['sometimes', new Boolean()],
+                'email' => 'sometimes|string',
+                'external_order_id' => 'sometimes|string',
+                'external_attendee_id' => 'sometimes|string',
+                'member_id' => 'sometimes|integer',
+                'ticket_type' => 'sometimes|string',
+                'badge_type' => 'sometimes|string',
+                'features' => 'sometimes|string',
+                'access_levels' => 'sometimes|string',
+                'status' => 'sometimes|string',
+                'has_member' => 'sometimes|required|string|in:true,false',
+                'has_tickets'=> 'sometimes|required|string|in:true,false',
+                'has_virtual_checkin'=> 'sometimes|required|string|in:true,false',
+                'has_checkin'=> 'sometimes|required|string|in:true,false',
+                'tickets_count' => 'sometimes|integer',
+                'presentation_votes_date' => 'sometimes|date_format:U|epoch_seconds',
+                'presentation_votes_count' => 'sometimes|integer',
+                'presentation_votes_track_group_id' => 'sometimes|integer',
+                'ticket_type_id' => 'sometimes|integer',
+                'badge_type_id' => 'sometimes|integer',
+                'features_id'=> 'sometimes|integer',
+                'access_levels_id' => 'sometimes|integer',
+                'summit_hall_checked_in_date' => 'sometimes|date_format:U|epoch_seconds',
+                'tags' => 'sometimes|string',
+                'tags_id' => 'sometimes|integer',
+                'notes' => 'sometimes|string',
+                'has_notes' => ['sometimes', new Boolean()],
+                'has_manager' => ['sometimes', new Boolean()],
+            ]);
+
+            $this->service->triggerIngestAttendeesAsInvitees($summit_event, $payload, FiltersParams::getFilterParam());
+
+            return $this->ok();
+
         });
     }
 }

@@ -188,6 +188,29 @@ class SummitEventSchema {}
 class SendRSVPInvitationsRequestSchema {}
 
 
+#[OA\Schema(
+    schema: 'BulkRSVPInvitationsRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(
+            property: 'attendees_ids',
+            type: 'array',
+            items: new OA\Items(type: 'integer', example: 123),
+            example: [1, 2, 3]
+        ),
+        new OA\Property(
+            property: 'excluded_attendees_ids',
+            type: 'array',
+            items: new OA\Items(type: 'integer', example: 456),
+            example: [4, 5]
+        ),
+    ]
+)]
+class BulkRSVPInvitationsRequestSchema{
+
+}
+
+
 #[
     OA\SecurityScheme(
         type: 'oauth2',

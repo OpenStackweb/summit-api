@@ -337,10 +337,10 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
             ->once()
             ->withArgs(function ($evt, $payload) use ($event) {
                 $this->assertEquals($event->getId(), $evt->getId());
-                $this->assertEquals(123, $payload['invitee_id']);
+                $this->assertEquals([123], $payload['invitee_ids']);
                 return true;
             })
-            ->andReturn($invitation);
+            ->andReturn([$invitation]);
 
         $params = [
             'id'       => $summit->getId(),
@@ -349,7 +349,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
 
         $headers = array_merge($this->getAuthHeaders(), ['CONTENT_TYPE' => 'application/json']);
 
-        $payload = ['invitee_id' => 123];
+        $payload = ['invitee_ids' => [123]];
 
         $response = $this->action(
             'POST',
@@ -383,7 +383,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
             [],
             [],
             $headers,
-            json_encode([]) // missing invitee_id
+            json_encode([]) // missing invitee_ids
         );
 
         $this->assertResponseStatus(412);
@@ -409,7 +409,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
             [],
             [],
             $headers,
-            json_encode(['invitee_id' => 1])
+            json_encode(['invitee_ids' => [1]])
         );
 
         $this->assertResponseStatus(403);
@@ -433,7 +433,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
             [],
             [],
             $headers,
-            json_encode(['invitee_id' => 1])
+            json_encode(['invitee_ids' => [1]])
         );
 
         $this->assertResponseStatus(404);
@@ -457,7 +457,7 @@ final class OAuth2RSVPInvitationApiTest extends ProtectedApiTestCase
             [],
             [],
             $headers,
-            json_encode(['invitee_id' => 1])
+            json_encode(['invitee_ids' => [1]])
         );
 
         $this->assertResponseStatus(404);

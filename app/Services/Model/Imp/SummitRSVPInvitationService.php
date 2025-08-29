@@ -1,9 +1,21 @@
 <?php namespace App\Services\Model\Imp;
-
+/**
+ * Copyright 2025 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 use App\Jobs\Emails\Schedule\RSVP\ProcessRSVPInvitationsJob;
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
+use App\Jobs\ProcessRSVPInviteesJob;
 use App\Models\Foundation\Summit\Events\RSVP\Repositories\IRSVPInvitationRepository;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Services\ISummitRSVPInvitationService;
@@ -19,11 +31,16 @@ use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\RSVP;
+use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
 use utils\Filter;
 use utils\FilterElement;
+use utils\PagingInfo;
+use const App\Services\Model\Imp\Traits\MaxPageSize;
+
 
 class SummitRSVPInvitationService
     extends AbstractService
@@ -36,16 +53,20 @@ class SummitRSVPInvitationService
 
     private ISummitRSVPService $rsvp_service;
 
+    private ISummitAttendeeRepository $attendee_repository;
+
     /**
      * @param ISummitEventRepository $summit_event_repository
      * @param IRSVPInvitationRepository $invitation_repository
      * @param ISummitRSVPService $rsvp_service
+     * @param ISummitAttendeeRepository $attendee_repository
      * @param ITransactionService $transaction_service
      */
     public function __construct(
         ISummitEventRepository    $summit_event_repository,
         IRSVPInvitationRepository $invitation_repository,
         ISummitRSVPService        $rsvp_service,
+        ISummitAttendeeRepository $attendee_repository,
         ITransactionService       $transaction_service
     )
     {
@@ -53,6 +74,7 @@ class SummitRSVPInvitationService
         $this->summit_event_repository = $summit_event_repository;
         $this->invitation_repository = $invitation_repository;
         $this->rsvp_service = $rsvp_service;
+        $this->attendee_repository = $attendee_repository;
     }
 
     /**
@@ -117,7 +139,7 @@ class SummitRSVPInvitationService
                 }
 
                 $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
-                $row['invitee_id'] = $attendee->getId();
+                $row['invitee_ids'] = [$attendee->getId()];
                 if (!is_null($former_invitation))
                     throw new ValidationException
                     (
@@ -136,7 +158,7 @@ class SummitRSVPInvitationService
             }
         }
         if (count($errors) > 0) {
-            throw new ValidationException($errors);
+                                                                                                                                                                                                                                                                                                                                                                    throw new ValidationException($errors);
         }
     }
 
@@ -338,6 +360,7 @@ class SummitRSVPInvitationService
 
     use ParametrizedSendEmails;
 
+
     /**
      * @param int $event_id
      * @param array $payload
@@ -457,5 +480,137 @@ class SummitRSVPInvitationService
                 return $summit_event;
             }
         );
+    }
+
+
+    /**
+     * @param SummitEvent $summit_event
+     * @param array $payload
+     * @param $filter
+     * @return void
+     */
+    public function triggerIngestAttendeesAsInvitees(SummitEvent $summit_event, array $payload, $filter = null): void
+    {
+        ProcessRSVPInviteesJob::dispatch($summit_event, $payload, $filter);
+    }
+
+    /**
+     * @param int $event_id
+     * @param array $payload
+     * @param $filter
+     * @return void
+     * @throws \Exception
+     */
+    public function processAttendeesForRSVPInvitation(int $event_id, array $payload, $filter = null): void
+    {
+        $event = $this->summit_event_repository->getById($event_id);
+        if (!$event instanceof SummitEvent) return;
+        if (!$event->hasPrivateRSVP()) return;
+
+        $page = 1;
+        $count = 0;
+        $subject = 'attendees';
+        $subject_ids_key = $subject . '_ids';   //We assume that the payload key for the ids array starts with the prefix that contains $subject
+        $exclude_subject_ids_key = 'excluded_' . $subject_ids_key;
+
+        $done = isset($payload[$subject_ids_key]); // we have provided only ids and not a criteria
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRSVPInvitationService::processAttendeesForRSVPInvitation event id id %s payload %s filter %s",
+                $event_id,
+                json_encode($payload),
+                is_null($filter) ? '' : $filter->__toString()
+            )
+        );
+
+        do {
+            $ids = $this->tx_service->transaction(function () use (
+                $subject_ids_key,
+                $event,
+                $payload,
+                $filter,
+                &$page,
+            ) {
+                if (isset($payload[$subject_ids_key])) {
+                    $res = $payload[$subject_ids_key];
+                    Log::debug(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation id %s %s",
+                        $event->getId(),
+                        json_encode($res)));
+                    return $res;
+                }
+
+                if (is_null($filter)) {
+                    $filter = new Filter();
+                }
+
+
+                if (!$filter->hasFilter("summit_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $event->getSummitId()));
+
+                return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, MaxPageSize), $filter);
+            });
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRSVPInvitationService::processAttendeesForRSVPInvitation event id %s filter %s page %s got %s attendees records",
+                    $event->getId(),
+                    is_null($filter) ? '' : $filter->__toString(),
+                    $page,
+                    count($ids)
+                )
+            );
+
+            if (!count($ids)) {
+                // if we are processing a page, then break it
+                Log::debug(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation event id %s page is empty, ending processing.", $event->getId()));
+                break;
+            }
+            // explicit exclude ids
+            $exclude_ids = [];
+            if (isset($payload[$exclude_subject_ids_key])) {
+                $exclude_ids = $payload[$exclude_subject_ids_key];
+            }
+
+            foreach ($ids as $subject_id) {
+                try {
+                    if (in_array($subject_id, $exclude_ids)) {
+                        Log::debug(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation event id %s %s id %s is excluded",
+                            $event->getId(),
+                            $subject,
+                            $subject_id));
+                        continue;
+                    };
+
+                    Log::debug(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation processing attendee id %s", $subject_id));
+
+                    $attendee = $this->attendee_repository->getByIdExclusiveLock(intval($subject_id));
+                    if (!$attendee instanceof SummitAttendee) {
+                        Log::warning(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation attendee id %s not found", $subject_id));
+                        return;
+                    }
+
+                    if (!$attendee->hasMember()) {
+                        Log::warning(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation attendee id %s has not member", $subject_id));
+                        return;
+                    }
+                    if (!$attendee->hasTicketsPaidTickets()) {
+                        Log::warning(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation attendee id %s has not paid tickets", $subject_id));
+                        return;
+                    }
+
+                    $event->addRSVPInvitation($attendee);
+
+                    $count++;
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                }
+            }
+            $page++;
+        } while (!$done);
+
     }
 }

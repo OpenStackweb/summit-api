@@ -637,6 +637,14 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return bool
      */
+    public function hasPrivateRSVP(): bool
+    {
+        return $this->rsvp_type === self::RSVPType_Private;
+    }
+
+    /**
+     * @return bool
+     */
     public function isExternalRSVP()
     {
         return !empty($this->rsvp_link) && !$this->hasRSVPTemplate();

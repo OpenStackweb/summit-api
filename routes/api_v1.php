@@ -720,7 +720,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'rsvp-invitations'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@getAllByEventId']);
-
+                    Route::post('invite', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@inviteAttendeesBulk']);
                     Route::group(['prefix' => 'csv'], function () {
                         Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2RSVPInvitationApiController@getAllByEventIdCSV']);
                         // import from csv

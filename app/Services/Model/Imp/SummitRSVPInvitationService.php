@@ -587,7 +587,7 @@ class SummitRSVPInvitationService
 
                     Log::debug(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation processing attendee id %s", $subject_id));
 
-                    $attendee = $this->attendee_repository->getByIdExclusiveLock(intval($subject_id));
+                    $attendee = $this->attendee_repository->getById(intval($subject_id));
                     if (!$attendee instanceof SummitAttendee) {
                         Log::warning(sprintf("SummitRSVPInvitationService::processAttendeesForRSVPInvitation attendee id %s not found", $subject_id));
                         return;
@@ -602,6 +602,16 @@ class SummitRSVPInvitationService
                         return;
                     }
 
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitRSVPInvitationService::processAttendeesForRSVPInvitation adding invitation for attendee id %s to event %s",
+                            $subject_id,
+                            $event->getId()
+                        )
+                    );
+
                     $event->addRSVPInvitation($attendee);
 
                     $count++;
@@ -612,5 +622,14 @@ class SummitRSVPInvitationService
             $page++;
         } while (!$done);
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRSVPInvitationService::processAttendeesForRSVPInvitation event id id %s processed %s records",
+                $event_id,
+                $count,
+            )
+        );
     }
 }

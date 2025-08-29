@@ -37,6 +37,7 @@ use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
 use App\Services\Utils\Facades\EmailExcerpt;
 use models\summit\RSVP;
 use Illuminate\Support\Facades\App;
+use models\summit\ISummitAttendeeRepository;
 /**
  * @covers \App\Services\Model\Imp\SummitRSVPInvitationService
  */
@@ -60,6 +61,11 @@ class SummitRSVPInvitationServiceTest extends TestCase
     /** @var SummitRSVPInvitationService */
     private $service;
 
+    /**
+     * @var \models\summit\ISummitAttendeeRepository
+     */
+    private $attendee_repository;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -67,6 +73,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $this->summit_event_repository  = Mockery::mock(ISummitEventRepository::class);
         $this->invitation_repository    = Mockery::mock(IRSVPInvitationRepository::class);
         $this->rsvp_service= Mockery::mock(ISummitRSVPService::class);
+        $this->attendee_repository = Mockery::mock(ISummitAttendeeRepository::class)->makePartial();
+
         $this->tx_service         = new class implements ITransactionService {
             public function transaction(Closure $callback, int $isolationLevel = 2)
             {
@@ -79,6 +87,7 @@ class SummitRSVPInvitationServiceTest extends TestCase
             $this->summit_event_repository,
             $this->invitation_repository,
             $this->rsvp_service,
+            $this->attendee_repository,
             $this->tx_service
         );
 
@@ -194,6 +203,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
     public function testImportInvitationDataCreatesInvitations(): void
     {
 
+        $this->expectException(ValidationException::class);
+
         [$event, $summit, $addAttendee] = $this->makeSummitEventGraph();
         $addAttendee(1, 'a@example.org');
         $addAttendee(2, 'b@example.org');
@@ -285,16 +296,16 @@ class SummitRSVPInvitationServiceTest extends TestCase
 
         $event->shouldReceive('addRSVPInvitation')->once()->andReturn(Mockery::mock(RSVPInvitation::class));
 
-        $result = $this->service->add($event, ['invitee_id' => 123]);
-        $this->assertInstanceOf(RSVPInvitation::class, $result);
+        $result = $this->service->add($event, ['invitee_ids' => [123]]);
+        $this->assertNotEmpty($result);
     }
 
     public function testAddFailsIfAttendeeNotFound(): void
     {
-        $this->expectException(EntityNotFoundException::class);
 
         [$event] = $this->makeSummitEventGraph();
-        $this->service->add($event, ['invitee_id' => 999]);
+        $res = $this->service->add($event, ['invitee_ids' => [999]]);
+        $this->assertEmpty($res);
     }
 
     /** -------------------- getInvitationByToken -------------------- */

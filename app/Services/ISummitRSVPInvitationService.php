@@ -92,4 +92,21 @@ interface ISummitRSVPInvitationService
      * @param Filter|null $filter
      */
     public function send(int $event_id, array $payload, Filter $filter = null):void;
+
+    /**
+     * @param SummitEvent $summit_event
+     * @param array $payload
+     * @param $filter
+     * @return void
+     */
+    public function triggerIngestAttendeesAsInvitees(SummitEvent $summit_event, array $payload, $filter = null): void;
+
+    /**
+     * @param int $event_id
+     * @param array $payload
+     * @param $filter
+     * @return void
+     * @throws \Exception
+     */
+    public function processAttendeesForRSVPInvitation(int $event_id, array $payload, $filter = null): void;
 }

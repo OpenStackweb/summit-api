@@ -528,6 +528,7 @@ final class DoctrineSummitEventRepository
             ),
            'review_status' => 'REVIEW_STATUS(e.id)',
            'submission_source' => 'e.submission_source:json_string',
+            'rsvp_type' => 'e.rsvp_type:json_string',
         ];
     }
 

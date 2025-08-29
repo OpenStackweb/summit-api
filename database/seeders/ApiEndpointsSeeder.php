@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\RSVPInvitationsScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
 use App\Models\ResourceServer\ApiEndpoint;
@@ -48,6 +49,7 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedSummitAdministratorGroupsEndpoints();
         $this->seedSummitMediaFileTypeEndpoints();
         $this->seedElectionsEndpoints();
+        $this->seedRSVPInvitationsEndpoints();
     }
 
     private function seedAttendeeBadgesEndpoints()
@@ -6999,8 +7001,94 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'add-rsvp-member',
-                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
+                'name' => 'get-all-rsvp-by-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'get-all-rsvp-by-event-csv',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'add-rsvp-2-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'get-rsvp-by-id',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'delete-rsvp-by-id',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+
+            ],
+            [
+                'name' => 'update-rsvp-by-id',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'rsvp',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -7008,17 +7096,8 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'update-rsvp-member',
-                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
-                'http_method' => 'PUT',
-                'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyRSVP, $current_realm)
-                ],
-            ],
-            [
-                'name' => 'delete-rsvp-member',
-                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
+                'name' => 'unrsvp',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/unrsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -10617,6 +10696,125 @@ class ApiEndpointsSeeder extends Seeder
                         ElectionScopes::NominatesCandidates
                     ],
                 ],
+            ]
+        );
+    }
+
+    public function seedRSVPInvitationsEndpoints():void{
+        $current_realm = Config::get('app.scope_base_realm');
+        $this->seedApiEndpoints('rsvp-invitations', [
+                [
+                    'name' => 'get-all-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Read,
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-all-rsvp-invitations-csv',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Read,
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-rsvp-invitations-bulk',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/invite',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'import-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/csv',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'send-rsvp-invitations',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/send',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Send,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-rsvp-invitation',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/{invitation_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-all-rsvp-invitation',
+                    'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp-invitations/all',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        RSVPInvitationsScopes::Write,
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ]
             ]
         );
     }

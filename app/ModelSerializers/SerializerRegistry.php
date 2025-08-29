@@ -90,6 +90,9 @@ use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitRegistrationFeedMetadataSerializer;
+use App\ModelSerializers\Summit\RSVP\RSVPCSVSerializer;
+use App\ModelSerializers\Summit\RSVP\RSVPInvitationCSVSerializer;
+use App\ModelSerializers\Summit\RSVP\RSVPInvitationSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPLiteralContentQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPMultiValueQuestionTemplateSerializer;
@@ -125,7 +128,6 @@ use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
 use App\ModelSerializers\UserStoriesIndustrySerializer;
 use App\ModelSerializers\UserStorySerializer;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\IModelSerializer;
 use models\oauth2\IResourceServerContext;
@@ -391,7 +393,10 @@ final class SerializerRegistry
         $this->registry['SpeakerEditPermissionRequest'] = SpeakerEditPermissionRequestSerializer::class;
 
         // RSVP
-        $this->registry['RSVP'] = RSVPSerializer::class;
+        $this->registry['RSVP'] = [
+           self::SerializerType_Public => RSVPSerializer::class,
+           self::SerializerType_CSV => RSVPCSVSerializer::class ,
+        ];
         $this->registry['RSVPAnswer'] = RSVPAnswerSerializer::class;
         $this->registry['RSVPTemplate'] = RSVPTemplateSerializer::class;
         $this->registry['RSVPQuestionValueTemplate'] = RSVPQuestionValueTemplateSerializer::class;
@@ -687,6 +692,11 @@ final class SerializerRegistry
         $this->registry['UserStoriesIndustry'] = UserStoriesIndustrySerializer::class;
 
         $this->registry['Continent'] = ContinentSerializer::class;
+
+        $this->registry['RSVPInvitation'] = [
+            self::SerializerType_Public => RSVPInvitationSerializer::class,
+            self::SerializerType_CSV => RSVPInvitationCSVSerializer::class,
+        ];
     }
 
     /**

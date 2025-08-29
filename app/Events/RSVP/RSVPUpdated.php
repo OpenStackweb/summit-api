@@ -1,4 +1,5 @@
-<?php namespace App\Events;
+<?php namespace App\Events\RSVP;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,31 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\main\Member;
-use models\summit\RSVP;
+
 /**
- * Class RSVPAction
+ * Class RSVPUpdated
  * @package App\Events
  */
-class RSVPAction extends SummitEventAction
+class RSVPUpdated extends RSVPAction
 {
-    /**
-     * @var int
-     */
-    protected $rsvp_id;
-
-    public function __construct(RSVP $rsvp){
-
-        $this->rsvp_id = $rsvp->getId();
-        parent::__construct($rsvp->getEventId());
-    }
-
-    /**
-     * @return int
-     */
-    public function getRsvpId(): int
-    {
-        return $this->rsvp_id;
-    }
 
 }

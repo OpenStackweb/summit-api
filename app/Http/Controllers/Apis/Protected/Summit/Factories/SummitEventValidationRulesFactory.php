@@ -37,8 +37,8 @@ final class SummitEventValidationRulesFactory
                 'etherpad_link' => 'nullable|sometimes|url',
                 'meeting_url' => 'nullable|sometimes|url',
                 'rsvp_template_id' => 'sometimes|integer',
-                'rsvp_max_user_number' => 'required_with:rsvp_template_id|integer|min:0',
-                'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
+                'rsvp_max_user_number' => 'sometimes|integer|min:0',
+                'rsvp_max_user_wait_list_number' => 'sometimes|integer|min:0',
                 'head_count' => 'sometimes|integer',
                 'social_description' => 'sometimes|string|max:300',
                 'location_id' => 'sometimes|integer',
@@ -70,6 +70,7 @@ final class SummitEventValidationRulesFactory
                 'duration' => 'sometimes|integer|min:0',
                 'stream_is_secure' =>  'sometimes|boolean',
                 'allowed_ticket_types' => 'sometimes|int_array',
+                'rsvp_type' => 'sometimes|string|in:' . implode(',', SummitEvent::AllowedRSVPTypes),
             ];
         }
 
@@ -87,8 +88,8 @@ final class SummitEventValidationRulesFactory
             'etherpad_link' => 'nullable|sometimes|url',
             'meeting_url' => 'nullable|sometimes|url',
             'rsvp_template_id' => 'sometimes|integer',
-            'rsvp_max_user_number' => 'required_with:rsvp_template_id|integer|min:0',
-            'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
+            'rsvp_max_user_number' => 'sometimes|integer|min:0',
+            'rsvp_max_user_wait_list_number' => 'sometimes|integer|min:0',
             'head_count' => 'sometimes|integer',
             'social_description' => 'sometimes|string|max:300',
             'allow_feedback' => 'sometimes|boolean',
@@ -114,6 +115,7 @@ final class SummitEventValidationRulesFactory
             'duration' => 'sometimes|integer|min:0',
             'stream_is_secure' =>  'sometimes|boolean',
             'allowed_ticket_types' => 'sometimes|int_array',
+            'rsvp_type' => 'sometimes|string|in:' . implode(',', SummitEvent::AllowedRSVPTypes),
         ];
     }
 

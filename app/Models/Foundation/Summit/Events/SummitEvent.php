@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 
+use App\Events\RSVP\RSVPUpdated;
 use App\Jobs\CreateMUXURLSigningKeyForSummit;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\IPublishableEvent;
@@ -24,12 +26,11 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\CacheRegions;
-use libs\utils\MUXUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -171,6 +172,22 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     #[ORM\Column(name: 'HeadCount', type: 'integer')]
     protected $head_count;
 
+
+    public const string RSVPType_None = 'None';
+    public const string RSVPType_Public = 'Public';
+    public const string RSVPType_Private = 'Private';
+
+    public const array AllowedRSVPTypes = [
+        self::RSVPType_None,
+        self::RSVPType_Public,
+        self::RSVPType_Private,
+    ];
+
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'RSVPType', type: 'string')]
+    protected $rsvp_type;
     /**
      * @var int
      */
@@ -347,19 +364,19 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 
     const ValidSubmissionSources = [self::SOURCE_SUBMISSION, self::SOURCE_ADMIN];
 
-     /**
+    /**
      * @var string
      */
     #[ORM\Column(name: 'SubmissionSource', type: 'string')]
     protected $submission_source;
 
-     /**
+    /**
      * @var string
      */
     #[ORM\Column(name: 'OverflowStreamingUrl', type: 'string')]
     protected $overflow_streaming_url;
 
-     /**
+    /**
      * @var bool
      */
     #[ORM\Column(name: 'OverflowStreamIsSecure', type: 'boolean')]
@@ -370,6 +387,9 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     #[ORM\Column(name: 'OverflowStreamKey', type: 'string')]
     protected $overflow_stream_key;
+
+    #[ORM\OneToMany(targetEntity: RSVPInvitation::class, mappedBy: 'event', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $rsvp_invitations;
 
     /**
      * SummitEvent constructor.
@@ -396,6 +416,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->overflow_stream_is_secure = false;
         $this->allowed_ticket_types = new ArrayCollection();
         $this->submission_source = SummitEvent::SOURCE_ADMIN;
+        $this->rsvp_type = self::RSVPType_None;
+        $this->rsvp_invitations = new ArrayCollection();
     }
 
     use SummitOwned;
@@ -447,7 +469,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return PresentationCategory
      */
-    public function getCategory():?PresentationCategory
+    public function getCategory(): ?PresentationCategory
     {
         return $this->category;
     }
@@ -607,9 +629,17 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return bool
      */
-    public function hasRSVP()
+    public function hasRSVP(): bool
     {
-        return !empty($this->rsvp_link) || $this->hasRSVPTemplate();
+        return $this->rsvp_type !== self::RSVPType_None;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPrivateRSVP(): bool
+    {
+        return $this->rsvp_type === self::RSVPType_Private;
     }
 
     /**
@@ -999,17 +1029,114 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return int
      */
-    public function getRSVPMaxUserNumber()
+    public function getRSVPMaxUserNumber(): int
     {
         return $this->rsvp_max_user_number;
     }
 
+    public function increaseRSVPMaxUserNumber(): int
+    {
+        $this->rsvp_max_user_number = $this->rsvp_max_user_number + 1;
+        return $this->rsvp_max_user_number;
+    }
+
     /**
-     * @param int $rsvp_max_user_number
+     * @param $rsvp_max_user_number
+     * @return void
+     * @throws ValidationException
      */
     public function setRSVPMaxUserNumber($rsvp_max_user_number)
     {
+        $rsvp_max_user_number = max(0, $rsvp_max_user_number); // guard negatives
+        $former_rsvp_max_user_number = $this->rsvp_max_user_number;
         $this->rsvp_max_user_number = $rsvp_max_user_number;
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitEvent::setRSVPMaxUserNumber former_rsvp_max_user_number %s new rsvp_max_user_number %s ",
+                $former_rsvp_max_user_number,
+                $this->rsvp_max_user_number
+            )
+        );
+
+        $current_regular_count = $this->getRSVPRegularCount();
+        $current_waitlist = $this->getRSVPWaitCount();
+
+        if ($former_rsvp_max_user_number > $this->rsvp_max_user_number) {
+            // Shrinking capacity -> downgrade last N regular RSVPs to WAIT
+            $candidates_2_downgrade = max(0, $current_regular_count - $rsvp_max_user_number);
+            if ($candidates_2_downgrade === 0)
+                return;
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitEvent::setRSVPMaxUserNumber we need to downgrade %s regular to WAITLIST ... ",
+                    $candidates_2_downgrade
+                )
+            );
+            // get the lastest regular
+            $available_waitlist = max(0, $this->getRSVPMaxUserWaitListNumber() - $current_waitlist);
+            if ($available_waitlist < $candidates_2_downgrade) {
+                throw new ValidationException(
+                    sprintf
+                    (
+                        "Event %s does not has enough room at RSVP WAITLIST ( %s ) to perform this RSVP REGULAR SEAT DOWNGRADE ( %s )",
+                        $this->id,
+                        $available_waitlist,
+                        $candidates_2_downgrade
+                    )
+                );
+            }
+
+            foreach ($this->getLatestRSVPsOnRegularList($candidates_2_downgrade) as $candidate) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitEvent::setRSVPMaxUserNumber got RSVP %s at REGULAR LIST moving it to WAIT ...",
+                        $candidate->getId()
+                    )
+                );
+                $candidate->downgradeToWaitSeatType();
+                Event::dispatch(new RSVPUpdated($candidate));
+            }
+
+
+        } else {
+            // Growing capacity -> upgrade earliest N WAITLIST to REGULAR
+            // $this->rsvp_max_user_number > $current_regular_count always BC
+            // rsvp_max_user_number > $former_rsvp_max_user_number > $current_regular_count
+            $available_regular_seats = max(0, $this->rsvp_max_user_number - $current_regular_count);
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitEvent::setRSVPMaxUserNumber we got new %s REGULAR seats ",
+                    $available_regular_seats
+                )
+            );
+            if ($available_regular_seats > 0) {
+                $to_upgrade = min($available_regular_seats, $current_waitlist);
+
+                foreach ($this->getFirstRSVPsOnWaitList($to_upgrade) as $candidate) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitEvent::setRSVPMaxUserNumber got RSVP %s at WAIT LIST moving it to REGULAR ...",
+                            $candidate->getId()
+                        )
+                    );
+                    $candidate->upgradeToRegularSeatType();
+                    Event::dispatch(new RSVPUpdated($candidate));
+                }
+
+            }
+        }
     }
 
     /**
@@ -1031,7 +1158,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return string
      */
-    public function getOccupancy():?string
+    public function getOccupancy(): ?string
     {
         return $this->occupancy;
     }
@@ -1052,15 +1179,16 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         self::OccupancyFull,
         self::OccupancyOverflow,
     ];
+
     /**
      * @param string $occupancy
      */
     public function setOccupancy(string $occupancy)
     {
         $occupancy = trim($occupancy);
-        if(empty($occupancy)) return;
+        if (empty($occupancy)) return;
 
-        if(!in_array($occupancy, self::ValidOccupanciesValues))
+        if (!in_array($occupancy, self::ValidOccupanciesValues))
             throw new ValidationException(sprintf("occupancy %s is not valid", $occupancy));
         $this->occupancy = $occupancy;
     }
@@ -1088,24 +1216,20 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function getCurrentRSVPSubmissionSeatType(): string
     {
 
-        if (!$this->hasRSVPTemplate())
+        if (!$this->hasRSVP())
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
-
-        if (!$this->getRSVPTemplate()->isEnabled()) {
-            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
-        }
 
         $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
-        if ($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
+        if ($count_regular < intval($this->getRSVPMaxUserNumber())) return RSVP::SeatTypeRegular;
         $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
-        if ($count_wait < intval($this->rsvp_max_user_wait_list_number)) return RSVP::SeatTypeWaitList;
+        if ($count_wait < intval($this->getRSVPMaxUserWaitListNumber())) return RSVP::SeatTypeWaitList;
         throw new ValidationException(sprintf("Event %s is Full.", $this->id));
     }
 
     /**
-     * @return RSVPTemplate
+     * @return ?RSVPTemplate
      */
-    public function getRSVPTemplate()
+    public function getRSVPTemplate(): ?RSVPTemplate
     {
         return $this->rsvp_template;
     }
@@ -1130,6 +1254,40 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->rsvp->matching($criteria)->count();
     }
 
+
+    public function getFirstRSVPOnWaitList(): ?RSVP
+    {
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('seat_type', RSVP::SeatTypeWaitList));
+        $criteria = $criteria->orderBy(['created' => Criteria::ASC]);
+        $res = $this->rsvp->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param int $limit
+     * @return (\Doctrine\Common\Collections\Collection&\Doctrine\Common\Collections\Selectable)
+     */
+    public function getFirstRSVPsOnWaitList(int $limit = 1)
+    {
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('seat_type', RSVP::SeatTypeWaitList));
+        $criteria = $criteria->orderBy(['created' => Criteria::ASC])->setMaxResults($limit);
+        return $this->rsvp->matching($criteria);
+    }
+
+    /**
+     * @param int $limit
+     * @return (\Doctrine\Common\Collections\Collection&\Doctrine\Common\Collections\Selectable)
+     */
+    public function getLatestRSVPsOnRegularList(int $limit = 1)
+    {
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('seat_type', RSVP::SeatTypeRegular));
+        $criteria = $criteria->orderBy(['created' => Criteria::DESC])->setMaxResults($limit);
+        return $this->rsvp->matching($criteria);
+    }
+
     /**
      * @param string $seat_type
      * @return bool
@@ -1140,12 +1298,12 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             case RSVP::SeatTypeRegular:
             {
                 $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
-                return $count_regular < intval($this->rsvp_max_user_number);
+                return $count_regular < intval($this->getRSVPMaxUserNumber());
             }
             case RSVP::SeatTypeWaitList:
             {
                 $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
-                return $count_wait < intval($this->rsvp_max_user_wait_list_number);
+                return $count_wait < intval($this->getRSVPMaxUserWaitListNumber());
             }
         }
         return false;
@@ -1167,28 +1325,20 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function addRSVPSubmission(RSVP $rsvp)
     {
-        if (!$this->hasRSVPTemplate()) {
+        if (!$this->hasRSVP()) {
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
         }
 
-        if (!$this->getRSVPTemplate()->isEnabled()) {
-            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+        if ($this->hasRSVPTemplate()) {
+            if (!$this->getRSVPTemplate()->isEnabled()) {
+                throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+            }
         }
-
         if ($this->rsvp->contains($rsvp)) return;
         $this->rsvp->add($rsvp);
         $rsvp->setEvent($this);
     }
 
-    /**
-     * @param RSVP $rsvp
-     */
-    public function removeRSVPSubmission(RSVP $rsvp)
-    {
-        if (!$this->rsvp->contains($rsvp)) return;
-        $this->rsvp->removeElement($rsvp);
-        $rsvp->clearEvent();
-    }
 
     /**
      * @return string
@@ -1218,7 +1368,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return DateTime|null
      */
-    public function getLocalStartDate():?DateTime
+    public function getLocalStartDate(): ?DateTime
     {
         $summit = $this->getSummit();
         return $this->_getLocalStartDate($summit);
@@ -1237,7 +1387,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return DateTime|null
      */
-    public function getLocalEndDate():?DateTime
+    public function getLocalEndDate(): ?DateTime
     {
         $summit = $this->getSummit();
         return $this->_getLocalEndDate($summit);
@@ -1259,7 +1409,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->streaming_url;
     }
 
-    public function getStreamDuration():int{
+    public function getStreamDuration(): int
+    {
         // TODO: Implement getStreamDuration() method.
         return 0;
     }
@@ -1271,8 +1422,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         $this->streaming_url = $streaming_url;
         $key = $this->getSecureStreamCacheKey();
-        if(Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->has($key))
-            Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->forget($key);
+        if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
+            Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->forget($key);
     }
 
     /**
@@ -1346,11 +1497,11 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function hasAccess(?Member $member): bool
     {
-        Log::debug(sprintf("SummitEvent::hasAccess event %s member %s", $this->id, is_null($member) ? 'TBD': $member->getId()));
+        Log::debug(sprintf("SummitEvent::hasAccess event %s member %s", $this->id, is_null($member) ? 'TBD' : $member->getId()));
         $ttl = Config::get("cache_api_response.event_has_access_lifetime", 600);
         $cache_key = sprintf("event_has_access_%s", $member->getId());
         $res = Cache::tags(CacheRegions::getCacheRegionForSummitEvent($this->getId()))->get($cache_key);
-        if(!is_null($res)) {
+        if (!is_null($res)) {
             Log::debug(sprintf("SummitEvent::hasAccess cache hit for member %s (%s) event %s res %b", $member->getId(), $member->getEmail(), $this->id, $res));
             return $res;
         }
@@ -1572,8 +1723,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
             throw new ValidationException(sprintf("%s is not a valid streaming type", $streaming_type));
         $this->streaming_type = $streaming_type;
         $key = $this->getSecureStreamCacheKey();
-        if(Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->has($key))
-            Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->forget($key);
+        if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
+            Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->forget($key);
     }
 
     /**
@@ -1620,11 +1771,13 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return array|string[]
      */
-    public static function getAllowedFields(): array{
+    public static function getAllowedFields(): array
+    {
         return SummitEvent::AllowedFields;
     }
 
-    public static function getAllowedEditableFields(): array{
+    public static function getAllowedEditableFields(): array
+    {
         return SummitEvent::AllowedEditableFields;
     }
 
@@ -1643,13 +1796,14 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public static function isAllowedField(string $type): bool
     {
-      return in_array($type, SummitEvent::AllowedFields);
+        return in_array($type, SummitEvent::AllowedFields);
     }
 
     /**
      * @return array
      */
-    public function getSnapshot():array{
+    public function getSnapshot(): array
+    {
         return [
             self::FieldTitle => $this->title,
             self::FieldLevel => $this->level,
@@ -1660,7 +1814,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         ];
     }
 
-    public function getTrackTransitionTime():?int{
+    public function getTrackTransitionTime(): ?int
+    {
         $track = $this->getCategory();
         if ($track === null) return null;
         return $track->getProposedScheduleTransitionTime();
@@ -1686,11 +1841,13 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $this->stream_is_secure;
     }
 
-    public function getSecureStreamCacheKey():string{
+    public function getSecureStreamCacheKey(): string
+    {
         return sprintf("event_%s_secure_stream", $this->id);
     }
 
-    public function getOverflowStreamCacheKey():string{
+    public function getOverflowStreamCacheKey(): string
+    {
         return sprintf("event_%s_overflow_stream", $this->id);
     }
 
@@ -1703,27 +1860,31 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->stream_is_secure = $stream_is_secure;
 
         $key = $this->getSecureStreamCacheKey();
-        if(Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->has($key))
-            Cache::tags(sprintf('secure_streams_%s',$this->summit->getId()))->forget($key);
+        if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
+            Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->forget($key);
 
-        if($this->hasSummit() && $this->stream_is_secure && !$this->summit->hasMuxPrivateKey())
+        if ($this->hasSummit() && $this->stream_is_secure && !$this->summit->hasMuxPrivateKey())
             CreateMUXURLSigningKeyForSummit::dispatch($this->summit->getId());
     }
 
-    public function getAllowedTicketTypes(){
+    public function getAllowedTicketTypes()
+    {
         return $this->allowed_ticket_types;
     }
 
-    public function addAllowedTicketType(SummitTicketType $ticket_type){
-        if($this->allowed_ticket_types->contains($ticket_type)) return;
+    public function addAllowedTicketType(SummitTicketType $ticket_type)
+    {
+        if ($this->allowed_ticket_types->contains($ticket_type)) return;
         $this->allowed_ticket_types->add($ticket_type);
     }
 
-    public function clearAllowedTicketTypes(){
+    public function clearAllowedTicketTypes()
+    {
         $this->allowed_ticket_types->clear();
     }
 
-    public function isPublic():bool{
+    public function isPublic(): bool
+    {
         return $this->allowed_ticket_types->isEmpty() && $this->type->isPublic();
     }
 
@@ -1747,13 +1908,14 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      * @param PresentationType $type
      * @return void
      */
-    public function promote2Presentation(PresentationType $type):void{
+    public function promote2Presentation(PresentationType $type): void
+    {
         try {
             $sql = <<<SQL
 UPDATE `SummitEvent` SET `ClassName` = 'Presentation', TypeID = :type_id WHERE `SummitEvent`.`ID` = :id;
 SQL;
 
-            $stmt = $this->prepareRawSQL($sql,   [
+            $stmt = $this->prepareRawSQL($sql, [
                 'id' => $this->getId(),
                 'type_id' => $type->getId(),
             ]);
@@ -1816,7 +1978,7 @@ SQL;
      * @return void
      */
     public function setOverflow(string $overflow_streaming_url,
-                                bool $overflow_stream_is_secure): void
+                                bool   $overflow_stream_is_secure): void
     {
         $this->overflow_streaming_url = $overflow_streaming_url;
         $this->overflow_stream_is_secure = $overflow_stream_is_secure;
@@ -1846,7 +2008,7 @@ SQL;
         return sprintf("%s%s?%s=%s",
             $this->summit->getMarketingSiteUrl(),
             config("overflow.path", "/a/overflow-player"),
-            config("overflow.query_string_key","k"),
+            config("overflow.query_string_key", "k"),
             $this->overflow_stream_key);
     }
 
@@ -1856,8 +2018,8 @@ SQL;
      */
     public function generateOverflowKey(): string
     {
-         $salt = random_bytes(16);
-         return hash('sha256', $this->getId() . $this->getTitle(). $salt . time());
+        $salt = random_bytes(16);
+        return hash('sha256', $this->getId() . $this->getTitle() . $salt . time());
     }
 
     /**
@@ -1865,7 +2027,7 @@ SQL;
      */
     public function getRegularStreamingTokens(): array
     {
-        if(empty($this->streaming_url)) return [];
+        if (empty($this->streaming_url)) return [];
         $cache_key = $this->getSecureStreamCacheKey();
         return $this->getStreamingTokens($cache_key, $this->streaming_url);
     }
@@ -1875,12 +2037,167 @@ SQL;
      */
     public function getOverflowStreamingTokens(): array
     {
-        if(empty($this->overflow_streaming_url)) return [];
+        if (empty($this->overflow_streaming_url)) return [];
         $cache_key = $this->getOverflowStreamCacheKey();
         return $this->getStreamingTokens($cache_key, $this->overflow_streaming_url);
     }
 
-    public function isOnOverflow():bool{
+    public function isOnOverflow(): bool
+    {
         return $this->occupancy == self::OccupancyOverflow;
+    }
+
+    public function setRSVPType(string $rsvp_type): void
+    {
+        if (!in_array($rsvp_type, self::AllowedRSVPTypes)) {
+            throw new ValidationException("Invalid rsvp type.");
+        }
+        $this->rsvp_type = $rsvp_type;
+    }
+
+    public function getRSVPType(): string
+    {
+        return $this->rsvp_type;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
+     * @return bool
+     */
+    public function hasInvitationFor(SummitAttendee $invitee): bool
+    {
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('invitee', $invitee));
+        return $this->rsvp_invitations->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
+     * @return RSVPInvitation
+     * @throws ValidationException
+     */
+    public function addRSVPInvitation(SummitAttendee $invitee): RSVPInvitation
+    {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitEvent::addRSVPInvitation event id %s attendee %s (%s)",
+                $this->getId(),
+                $invitee->getFullName(),
+                $invitee->getEmail()
+            )
+        );
+
+        if ($this->hasInvitationFor($invitee))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) is already invited to RSVP for Activity %s",
+                    $invitee->getFullName(),
+                    $invitee->getEmail(),
+                    $this->getId()
+                )
+            );
+
+        if (!$invitee->hasTicketsPaidTickets())
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) does not has any valid ticket.",
+                    $invitee->getFullName(),
+                    $invitee->getEmail()
+                )
+            );
+
+        if(!$invitee->hasMember())
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) does not has a valid Member.",
+                    $invitee->getFullName(),
+                    $invitee->getEmail()
+                )
+            );
+
+        $invitation = new RSVPInvitation($this, $invitee);
+        $this->rsvp_invitations->add($invitation);
+
+        return $invitation;
+    }
+
+    public function clearRSVPInvitations(): void
+    {
+        $this->rsvp_invitations->clear();
+    }
+
+    public function getRSVPInvitations()
+    {
+        return $this->rsvp_invitations;
+    }
+
+    /**
+     * @param SummitAttendee $invitee
+     * @return RSVPInvitation|null
+     */
+    public function getRSVPInvitationByInvitee(SummitAttendee $invitee): ?RSVPInvitation
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('invitee', $invitee));
+        $invitation = $this->rsvp_invitations->matching($criteria)->first();
+        return $invitation === false ? null : $invitation;
+    }
+
+    /**
+     * @param int $rsvp_id
+     * @return RSVP|null
+     */
+    public function getRSVPById(int $rsvp_id): ?RSVP
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $rsvp_id));
+        $rsvp = $this->rsvp->matching($criteria)->first();
+        return $rsvp === false ? null : $rsvp;
+    }
+
+    public const string RSVP_Capacity_Regular = 'Regular';
+    public const string RSVP_Capacity_WaitList = 'WaitList';
+    public const string RSVP_Capacity_Full = 'Full';
+
+    public function getRSVPCapacity(): ?string
+    {
+
+        if (!$this->hasRSVP()) return null;
+
+        $max_regular = $this->getRSVPMaxUserNumber();
+        $regular_count = $this->getRSVPRegularCount();
+        $max_wait_list = $this->getRSVPMaxUserWaitListNumber();
+        $wait_list_count = $this->getRSVPWaitCount();
+
+        $regular_has_room = ($regular_count < $max_regular);
+
+        if ($regular_has_room) {
+            return self::RSVP_Capacity_Regular;
+        }
+
+        // Regular full. If waitlist enabled and has room -> waitlist only
+        $wait_list_enabled = ($max_wait_list > 0);
+        $waitlist_has_room = ($wait_list_count < $max_wait_list);
+
+        if ($wait_list_enabled && $waitlist_has_room) {
+            return self::RSVP_Capacity_WaitList;
+        }
+
+        // Both regular and waitlist are full (or no waitlist)
+        return self::RSVP_Capacity_Full;
+    }
+
+    public function hasRSVPWaitList(): bool
+    {
+        return $this->rsvp_max_user_wait_list_number > 0;
     }
 }

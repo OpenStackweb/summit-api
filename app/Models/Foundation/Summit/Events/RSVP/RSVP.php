@@ -69,6 +69,44 @@ class RSVP extends SilverstripeBaseModel
     #[ORM\OneToMany(targetEntity: \models\summit\RSVPAnswer::class, mappedBy: 'rsvp', cascade: ['persist', 'remove'], orphanRemoval: true)]
     protected $answers;
 
+
+    public const string Status_Active = 'Active';
+    public const string Status_Inactive = 'Inactive';
+
+    public const string Status_TicketReassigned = 'TicketReassigned';
+
+
+    public const array AllowedStatus = [
+        self::Status_Active,
+        self::Status_Inactive,
+        self::Status_TicketReassigned
+    ];
+
+    #[ORM\Column(name: 'Status', type: 'string')]
+    protected string $status;
+
+    /**
+     * @var ?\DateTime
+     */
+    #[ORM\Column(name: 'ActionDate', type: 'datetime')]
+    private ?\DateTime $action_date;
+
+    public const string ActionSource_Schedule = 'Schedule';
+    public const string ActionSource_Invitation = 'Invitation';
+
+    public const string ActionSource_Admin = 'Admin';
+
+    public const array Valid_ActionSources = [
+        self::ActionSource_Schedule,
+        self::ActionSource_Invitation,
+        self::ActionSource_Admin,
+    ];
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'ActionSource', type: 'string', nullable: true)]
+    private ?string $action_source;
+
     /**
      * RSVP constructor.
      */
@@ -79,6 +117,9 @@ class RSVP extends SilverstripeBaseModel
         $this->answers      = new ArrayCollection();
         $this->been_emailed = false;
         $this->event_uri    = null;
+        $this->status       = self::Status_Active;
+        $this->action_date  = null;
+        $this->action_source = null;
     }
 
     /**
@@ -191,6 +232,20 @@ class RSVP extends SilverstripeBaseModel
         $this->seat_type = $seat_type;
     }
 
+    public function upgradeToRegularSeatType():void{
+        $this->setSeatType(self::SeatTypeRegular);
+    }
+
+    /**
+     * @return void
+     * @throws ValidationException
+     */
+    public function downgradeToWaitSeatType():void{
+        if(!$this->getEvent()->hasRSVPWaitList())
+            throw new ValidationException(sprintf("Event %s does not has RSVP Wait List", $this->getEventId()));
+        $this->setSeatType(self::SeatTypeWaitList);
+    }
+
     /**
      * @return bool
      */
@@ -270,5 +325,47 @@ class RSVP extends SilverstripeBaseModel
         $this->event_uri = $event_uri;
     }
 
+    public function getStatus(): string{
+        return $this->status;
+    }
 
+    public function deactivate():void{
+        $this->status = self::Status_Inactive;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function activate():void{
+        $this->status = self::Status_Active;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function ticketReassigned():void{
+        $this->status = self::Status_TicketReassigned;
+        $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function getActionSource():?string{
+        return $this->action_source;
+    }
+
+    public function setActionSource(string $action_source):void{
+        if(!in_array($action_source, self::Valid_ActionSources))
+            throw new ValidationException(sprintf("Action Source %s is not valid.", $action_source), $action_source);
+        $this->action_source = $action_source;
+    }
+
+    public function getActionDate():?\DateTime{
+        return $this->action_date;
+    }
+
+    /**
+     * @param string $status
+     * @return void
+     * @throws ValidationException
+     */
+    public function setStatus(string $status):void{
+        if(!in_array($status, self::AllowedStatus))
+            throw new ValidationException(sprintf("Status %s is not valid.", $status), $status);
+        $this->status = $status;
+    }
 }

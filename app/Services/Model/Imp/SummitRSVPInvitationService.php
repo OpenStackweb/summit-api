@@ -53,10 +53,10 @@ class SummitRSVPInvitationService
         $this->invitation_repository = $invitation_repository;
         $this->rsvp_service = $rsvp_service;
     }
+
     /**
      * @param SummitEvent $summit_event
      * @param UploadedFile $csv_file
-     * @param array $payload
      * @return void
      * @throws ValidationException
      */
@@ -85,7 +85,7 @@ class SummitRSVPInvitationService
 
         if (!$reader->hasColumn("email"))
             throw new ValidationException("File is missing email column.");
-
+        $errors = [];
         foreach ($reader as $idx => $row) {
             try {
 
@@ -105,20 +105,37 @@ class SummitRSVPInvitationService
                             $summit->getId()
                         )
                     );
+                    $errors[] =
+                        sprintf
+                        (
+                            "Attendee %s does not exists at summit %s",
+                            $email,
+                            $summit->getId()
+                        );
                     continue;
                 }
 
                 $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
                 $row['invitee_id'] = $attendee->getId();
-                if (!is_null($former_invitation)) {
-                    $this->update($summit_event, $former_invitation->getId(), $row);
-                } else {
-                    $this->add($summit_event, $row);
-                }
+                if (!is_null($former_invitation))
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Attendee %s already has a RSVP Invitation (%s).",
+                            $attendee->getId(), $former_invitation->getId()
+                        )
+                    );
+                $this->add($summit_event, $row);
+
             } catch (\Exception $ex) {
                 Log::warning($ex);
+                $errors[] = $ex->getMessage();
                 $summit_event = $this->summit_event_repository->getById($summit_event->getId());
             }
+        }
+        if(count($errors) > 0){
+            throw new ValidationException($errors);
         }
     }
 

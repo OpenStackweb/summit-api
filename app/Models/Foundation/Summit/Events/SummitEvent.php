@@ -2084,8 +2084,26 @@ SQL;
             );
 
         if (!$invitee->hasTicketsPaidTickets())
-            throw new ValidationException("Attendee does not has any Paid ticket.");
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) does not has any valid ticket.",
+                    $invitee->getFullName(),
+                    $invitee->getEmail()
+                )
+            );
 
+        if(!$invitee->hasMember())
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Attendee %s (%s) does not has a valid Member.",
+                    $invitee->getFullName(),
+                    $invitee->getEmail()
+                )
+            );
         $invitation = new RSVPInvitation($this, $invitee);
         $this->rsvp_invitations->add($invitation);
 

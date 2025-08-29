@@ -2079,6 +2079,17 @@ SQL;
     public function addRSVPInvitation(SummitAttendee $invitee): RSVPInvitation
     {
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitEvent::addRSVPInvitation event id %s attendee %s (%s)",
+                $this->getId(),
+                $invitee->getFullName(),
+                $invitee->getEmail()
+            )
+        );
+
         if ($this->hasInvitationFor($invitee))
             throw new ValidationException
             (
@@ -2112,6 +2123,7 @@ SQL;
                     $invitee->getEmail()
                 )
             );
+
         $invitation = new RSVPInvitation($this, $invitee);
         $this->rsvp_invitations->add($invitation);
 

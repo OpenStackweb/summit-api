@@ -221,7 +221,15 @@ class OAuth2BearerAccessTokenRequestValidator
 
             if (!is_null($token_info->getUserId()))
             {
-                Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle user id is not null (%s)", $token_info->getUserId()));
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "OAuth2BearerAccessTokenRequestValidator::handle user id is not null (%s) groups %s",
+                        $token_info->getUserId(),
+                        json_encode($token_info->getUserGroups())
+                    )
+                );
                 $context['user_id']          = $token_info->getUserId();
                 $context['user_external_id'] = $token_info->getUserExternalId();
                 $context['user_identifier']  = $token_info->getUserIdentifier();

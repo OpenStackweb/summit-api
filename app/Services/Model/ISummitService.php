@@ -25,7 +25,6 @@ use models\main\Member;
 use models\main\PersonalCalendarShareInfo;
 use models\summit\ConfirmationExternalOrderRequest;
 use models\summit\Presentation;
-use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -396,38 +395,6 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function deleteSummitSecondaryLogo(int $summit_id):void;
-
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $event_id
-     * @param array $data
-     * @return RSVP
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function addRSVP(Summit $summit, Member $member, int $event_id, array $data):RSVP;
-
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $event_id
-     * @param array $data
-     * @return RSVP
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updateRSVP(Summit $summit, Member $member, int $event_id, array $data):RSVP;
-
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param int $event_id
-     * @return bool
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function unRSVPEvent(Summit $summit, Member $member, int $event_id);
 
     /**
      * @param Summit $summit

@@ -8,6 +8,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     image: summit-api
+    pull_policy: never
     container_name: summit-api
     restart: unless-stopped
     working_dir: /var/www/

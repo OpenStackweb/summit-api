@@ -168,5 +168,16 @@ final class ApiSeeder extends Seeder
         EntityManager::persist($api);
 
         EntityManager::flush();
+
+        //RSVP invitations
+
+        $api = new Api();
+        $api->setName('rsvp-invitations');
+        $api->setActive(true);
+        $api->setDescription('RSVP Invitations API');
+
+        EntityManager::persist($api);
+
+        EntityManager::flush();
     }
 }

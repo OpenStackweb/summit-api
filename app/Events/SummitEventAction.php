@@ -27,13 +27,13 @@ class SummitEventAction extends Event
     /**
      * @var int
      */
-    protected $event_id;
+    protected int $event_id;
 
     /**
      * SummitEventAction constructor.
      * @param int $event_id
      */
-    function __construct($event_id)
+    function __construct(int $event_id)
     {
         $this->event_id = $event_id;
     }

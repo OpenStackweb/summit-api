@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\RSVPInvitationsScopes;
 use App\Services\Apis\AddressInfo;
 use App\Services\Apis\GeoCoordinatesInfo;
 use App\Services\Apis\IGeoCodingAPI;
@@ -139,6 +140,9 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::ReadAuditLogs, $url),
             sprintf(SummitScopes::ReadMyBadgeScan, $url),
             sprintf(SummitScopes::ReadBadgeScanValidate, $url),
+            RSVPInvitationsScopes::Write,
+            RSVPInvitationsScopes::Send,
+            RSVPInvitationsScopes::Read,
         );
 
         return AccessToken::createFromParams(
@@ -233,6 +237,9 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
             sprintf(SummitScopes::Allow2PresentationAttendeeVote, $url),
+            RSVPInvitationsScopes::Write,
+            RSVPInvitationsScopes::Send,
+            RSVPInvitationsScopes::Read,
         );
 
         return AccessToken::createFromParams(

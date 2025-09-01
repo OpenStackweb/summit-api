@@ -57,6 +57,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'track_chairs',
         'schedule_shareable_link',
         'summit_permission_groups',
+        'rsvp_invitations',
     ];
 
     private static $expand_group_events = [
@@ -307,6 +308,23 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         $values['rsvp'] = $rsvps;
                     }
                     break;
+                    case 'rsvp_invitations':{
+                        if(!in_array('rsvp_invitations', $relations)) break;
+                        if(is_null($summit)) break;
+                        $rsvp_invitations = [];
+                        foreach ($member->getRSVPInvitations($summit) as $rsvp_invitation){
+                            $rsvp_invitations[] = SerializerRegistry::getInstance()
+                                ->getSerializer($rsvp_invitation)
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
+                        }
+                        $values['rsvp_invitations'] = $rsvp_invitations;
+                    }
+                        break;
                     case 'legal_agreements':{
                         if(!in_array('legal_agreements', $relations)) break;
                         $res = [];

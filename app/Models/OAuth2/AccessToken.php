@@ -85,7 +85,7 @@ final class AccessToken extends Token
     private $user_groups;
 
     private static function getValueFromInfo(string $key, array $token_info){
-        return isset($token_info[$key])? $token_info[$key] :null;
+        return  $token_info[$key] ?? null;
     }
     /**
      * @param array $token_info

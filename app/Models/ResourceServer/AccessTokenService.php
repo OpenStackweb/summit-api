@@ -144,7 +144,10 @@ final class AccessTokenService implements IAccessTokenService
         }
 
         if(!array_key_exists("user_groups" , $token_info)){
-            $token_info['user_groups'] = null;
+            $token_info['user_groups'] = [];
+        }
+        else{
+            $token_info['user_groups'] = json_encode($token_info['user_groups']);
         }
 
         if(!array_key_exists("user_identifier" , $token_info)){
@@ -165,10 +168,6 @@ final class AccessTokenService implements IAccessTokenService
 
         if(!array_key_exists("user_last_name" , $token_info)){
             $token_info['user_last_name'] = null;
-        }
-
-        if(array_key_exists("user_groups" , $token_info)){
-           $token_info['user_groups'] = json_encode($token_info['user_groups']);
         }
 
         $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime);

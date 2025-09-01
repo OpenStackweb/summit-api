@@ -76,9 +76,10 @@ abstract class Token
     /**
      * @return null|int
      */
-    public function getUserId()
+    public function getUserId():?int
     {
-        return $this->user_id;
+        if(empty($this->user_id)) return null;
+        return intval($this->user_id);
     }
 
     public function isHashed()

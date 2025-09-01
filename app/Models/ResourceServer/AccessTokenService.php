@@ -92,6 +92,7 @@ final class AccessTokenService implements IAccessTokenService
             $cache_remaining_lifetime = intval($this->cache_service->ttl(md5($token_value)));
             $expires_in               = intval($token_info['expires_in']);
             $token_info['expires_in'] = $expires_in - ( $cache_lifetime - $cache_remaining_lifetime);
+            Log::debug(sprintf('AccessTokenService::get token %s token_info %s', $token_value, json_encode($token_info)));
             Log::debug
             (
                 sprintf
@@ -136,6 +137,14 @@ final class AccessTokenService implements IAccessTokenService
         // legacy fix
         if(!array_key_exists("user_external_id" , $token_info)){
             $token_info['user_external_id'] = null;
+        }
+
+        if(!array_key_exists("user_id" , $token_info)){
+            $token_info['user_id'] = null;
+        }
+
+        if(!array_key_exists("user_groups" , $token_info)){
+            $token_info['user_groups'] = null;
         }
 
         if(!array_key_exists("user_identifier" , $token_info)){

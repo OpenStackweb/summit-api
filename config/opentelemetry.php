@@ -7,7 +7,7 @@ return [
     /**
      * Service name
      */
-    'service_name' => env(Variables::OTEL_SERVICE_NAME, \Illuminate\Support\Str::slug((string) env('APP_NAME', 'laravel-app'))),
+    'service_name' => env(Variables::OTEL_SERVICE_NAME, \Illuminate\Support\Str::slug((string) config('app.app_name'))),
 
     /**
      * Comma separated list of propagators to use.

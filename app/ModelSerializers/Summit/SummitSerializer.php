@@ -21,6 +21,7 @@ use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
+use function Psy\debug;
 
 /**
  * Class SummitSerializer
@@ -288,6 +289,16 @@ class SummitSerializer extends SilverStripeSerializer
         if (in_array('payment_profiles', $relations)) {
             $payment_profiles = [];
             foreach ($summit->getActivePaymentGateWayProfiles() as $profile) {
+                Log:;debug
+                (
+                    sprintf
+                    (
+                        "SummitSerializer::serialize got profile %s app type %s",
+                        $profile->getId(),
+                        $profile->getApplicationType()
+                    )
+                );
+
                 $payment_profiles[] = SerializerRegistry::getInstance()->getSerializer
                 (
                     $profile,

@@ -5142,7 +5142,7 @@ DQL;
     public function getActivePaymentGateWayProfiles()
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('active', true));
+        $criteria->where(Criteria::expr()->eq('active', 1));
         return $this->payment_profiles->matching($criteria);
     }
 

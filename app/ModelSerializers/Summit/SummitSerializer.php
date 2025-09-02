@@ -324,6 +324,16 @@ class SummitSerializer extends SilverStripeSerializer
 
             $build_default_payment_gateway_profile_strategy = $params['build_default_payment_gateway_profile_strategy'] ?? null;
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitSerializer::serialize has_registration_profile %b has default strategy %b serializer type %s",
+                    $has_registration_profile,
+                    !is_null($build_default_payment_gateway_profile_strategy),
+                    $this->getSerializerType()
+                )
+            );
             if (!$has_registration_profile &&
                 !is_null($build_default_payment_gateway_profile_strategy) &&
                 $this->getSerializerType() == SerializerRegistry::SerializerType_Public

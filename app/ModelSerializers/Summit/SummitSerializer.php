@@ -210,11 +210,15 @@ class SummitSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
+        Log::debug(sprintf("SummitSerializer::serialize expand %s fields %s relations %s", $expand, json_encode($fields), json_encode($relations)));
+
         $summit = $this->object;
-        if (!$summit instanceof Summit) return [];
+        if (!$summit instanceof Summit) {
+            Log::debug(sprintf("SummitSerializer::serialize summit is not an object"));
+            return [];
+        }
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        Log::debug(sprintf("SummitSerializer::serialize expand %s fields %s relations %s", $expand, json_encode($fields), json_encode($relations)));
 
         if (in_array('dates_with_events', $relations)) {
             $values['dates_with_events'] = [];

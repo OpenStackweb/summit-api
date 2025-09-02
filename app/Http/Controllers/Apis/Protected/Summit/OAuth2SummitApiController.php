@@ -21,6 +21,7 @@ use App\Utils\FilterUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -327,6 +328,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id) {
 
+            Log::debug(sprintf("OAuth2SummitApiController::getSummit %s", $summit_id));
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (!$summit instanceof Summit || $summit->isDeleting()) return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -343,6 +345,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if(!is_null($current_member) && $current_member->isSummitAllowed($summit))
                 $serializer_type = SerializerRegistry::SerializerType_Private;
 
+            Log::debug(sprintf("OAuth2SummitApiController::getSummit %s serializer_type %s", $summit_id, $serializer_type));
             return $this->ok
             (
                 SerializerRegistry::getInstance()

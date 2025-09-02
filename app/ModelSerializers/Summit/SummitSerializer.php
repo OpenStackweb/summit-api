@@ -335,8 +335,7 @@ class SummitSerializer extends SilverStripeSerializer
                 )
             );
             if (!$has_registration_profile &&
-                !is_null($build_default_payment_gateway_profile_strategy) &&
-                $this->getSerializerType() == SerializerRegistry::SerializerType_Public
+                !is_null($build_default_payment_gateway_profile_strategy)
             ) {
 
                 $values['payment_profiles'][] =
@@ -349,8 +348,7 @@ class SummitSerializer extends SilverStripeSerializer
             }
 
             if (!$has_bookable_rooms_profile &&
-                !is_null($build_default_payment_gateway_profile_strategy) &&
-                $this->getSerializerType() == SerializerRegistry::SerializerType_Public
+                !is_null($build_default_payment_gateway_profile_strategy)
             ) {
                 $values['payment_profiles'][] =
                     SerializerRegistry::getInstance()->getSerializer

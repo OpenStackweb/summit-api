@@ -333,13 +333,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if (!$summit instanceof Summit || $summit->isDeleting()) return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
 
-            if
-            (
-                !is_null($current_member) &&
-                !$current_member->isSummitAllowed($summit)
-            )
-                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
-
             $serializer_type = SerializerRegistry::SerializerType_Public;
 
             if(!is_null($current_member) && $current_member->isSummitAllowed($summit))

@@ -27,11 +27,9 @@ final class CacheMiddleware
      */
     public function handle($request, Closure $next, $cache_lifetime, $cache_region = null, $param_id = null)
     {
-        Log::debug('CacheMiddleware::handle');
 
         // Only cache GETs:
         if ($request->method() !== 'GET') {
-            Log::debug('CacheMiddleware::handle skipping non-GET');
             return $next($request);
         }
 
@@ -60,7 +58,6 @@ final class CacheMiddleware
                     return Cache::get($key);
                 });
         } else {
-            Log::debug("CacheMiddleware: using global cache");
             $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key) {
                 Log::debug("CacheMiddleware: cache miss for {$key}");
                 $resp = $next($request);

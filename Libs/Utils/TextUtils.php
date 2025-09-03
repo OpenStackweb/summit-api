@@ -19,23 +19,35 @@
 final class TextUtils
 {
     /**
-     * @param string $str
-     * @return bool
+     * Returns true iff $str is valid UTF-8 and contains any non-ASCII codepoint.
      */
-    public static function isUnicode(string $str):bool{
-        return strlen($str) != strlen(utf8_decode($str));
+    public static function isUnicode(string $str): bool
+    {
+        if ($str === '') return false;
+
+        // 1) Check valid UTF-8 (so using /u will be safe)
+        $isUtf8 = function_exists('mb_check_encoding')
+            ? mb_check_encoding($str, 'UTF-8')
+            : (bool) @preg_match('//u', $str); // @ suppresses warning on invalid UTF-8
+
+        if (!$isUtf8) return false;
+
+        // 2) Contains any non-ASCII?
+        return (bool) preg_match('/[^\x00-\x7F]/', $str);
     }
 
     /**
-     * @param string $str
-     * @return string
+     * Trims Unicode separators and control chars when UTF-8; falls back to ASCII trim otherwise.
      */
-    public static function trim(string $str):string{
-        if(empty($str)) return $str;
-        if (self::isUnicode($str))
-        {
-            return preg_replace('/^[\pZ\pC]+|[\pZ\pC]+$/u', '', $str);
+    public static function trim(string $str): string
+    {
+        if ($str === '') return $str;
+
+        if (self::isUnicode($str)) {
+            // \pZ = separators, \pC = other controls; /u = Unicode mode
+            return (string) preg_replace('/^[\pZ\pC]+|[\pZ\pC]+$/u', '', $str);
         }
+
         return trim($str);
     }
 }

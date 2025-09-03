@@ -50,9 +50,10 @@ return [
             'driver' => 'redis',
             'connection' => 'worker',
             'queue' => env('REDIS_QUEUE', 'default'),
+            //  job max duration in seconds
             'retry_after' => (int) env('REDIS_RETRY_AFTER', 1800),
             'block_for' => null,
-            'after_commit' => false,
+            'after_commit' => true,
         ],
 
         'message_broker' => [

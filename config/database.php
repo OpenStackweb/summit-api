@@ -165,8 +165,9 @@ return [
             'database' => env('REDIS_DEFAULT_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
-            'timeout' => env('REDIS_TIMEOUT', 30),
+            // avoid infinite blocking at read / write
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
+            'timeout' => env('REDIS_TIMEOUT', 1.5),
         ],
 
         'cache' => [
@@ -175,8 +176,8 @@ return [
             'database' => env('REDIS_CACHE_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
-            'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
+            'timeout' => env('REDIS_TIMEOUT', 1.5),
         ],
 
         'session' => [
@@ -185,8 +186,8 @@ return [
             'database' => env('REDIS_SESSION_DATABASE', 1),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
-            'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
+            'timeout' => env('REDIS_TIMEOUT', 1.5),
         ],
 
         'worker' => [
@@ -195,8 +196,8 @@ return [
             'database' => env('REDIS_WORKER_DATABASE', 2),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
-            'timeout' => env('REDIS_TIMEOUT', 30),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
+            'timeout' => env('REDIS_TIMEOUT', 1.5),
         ],
 
     ],

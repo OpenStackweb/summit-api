@@ -35,6 +35,7 @@ use App\Jobs\ProcessSummitAttendeeCheckInStateUpdated;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
+use App\Jobs\Utils\DispatchWithSyncFallback;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -54,6 +55,7 @@ use App\Listeners\QueryExecutedListener;
  */
 final class EventServiceProvider extends ServiceProvider
 {
+    use DispatchWithSyncFallback;
     /**
      * The event listener mappings for the application.
      *
@@ -154,19 +156,25 @@ final class EventServiceProvider extends ServiceProvider
 
         Event::listen(NewMember::class, function ($event) {
             if (!$event instanceof NewMember) return;
-            Log::debug(sprintf("EventServiceProvider::NewMember - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
+            Log::debug(sprintf("EventServiceProvider::NewMember: firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
             MemberAssocSummitOrders::dispatch($event->getMemberId());
         });
 
         Event::listen(MemberDataUpdatedExternally::class, function ($event) {
             if (!$event instanceof MemberDataUpdatedExternally) return;
-            Log::debug(sprintf("EventServiceProvider::MemberDataUpdatedExternally - firing UpdateAttendeeInfo member id %s", $event->getMemberId()));
-            UpdateAttendeeInfo::dispatch($event->getMemberId());
+            Log::debug(sprintf("EventServiceProvider::MemberDataUpdatedExternally: firing UpdateAttendeeInfo member id %s", $event->getMemberId()));
+
+            $job = new UpdateAttendeeInfo($event->getMemberId());
+
+            $this->dispatchWithFallback(
+                job: $job,
+                logContext: ['member_id' => $event->getMemberId()]
+            );
         });
 
         Event::listen(MemberUpdated::class, function ($event) {
             if (!$event instanceof MemberUpdated) return;
-            Log::debug(sprintf("EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
+            Log::debug(sprintf("EventServiceProvider::MemberUpdated: firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
 
             UpdateIDPMemberInfo::dispatch
             (

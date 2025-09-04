@@ -14,7 +14,7 @@
 
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
-use Predis\Connection\ConnectionException;
+use Predis\Connection\ConnectionException as PredisConnectionException;
 use \Illuminate\Support\Facades\Redis;
 /**
  * Class RedisCacheService
@@ -36,10 +36,15 @@ class RedisCacheService implements ICacheService
             // try to re init the connection bc background process
             Redis::purge(self::Connection);
             $this->redis = Redis::connection(self::Connection);
-        } catch (ConnectionException $ex) {
-            $resource = $ex->getConnection()->getResource();
-            $metadata = var_export(stream_get_meta_data($resource), true);
-            Log::error(sprintf("RedisCacheService::__construct %s %s %s", $ex->getCode(), $ex->getMessage(), $metadata));
+        } catch (PredisConnectionException|\RedisException $ex) {
+            $metadata = null;
+            try {
+                if ($ex instanceof PredisConnectionException && method_exists($ex, 'getConnection')) {
+                    $res = $ex->getConnection()->getResource();
+                    if (is_resource($res)) $metadata = @stream_get_meta_data($res);
+                }
+            } catch (\Throwable $ignored) {}
+            Log::error(sprintf("RedisCacheService::__construct %s %s %s", $ex->getCode(), $ex->getMessage(),  var_export($metadata, true)));
         }
     }
 
@@ -50,10 +55,24 @@ class RedisCacheService implements ICacheService
                 $this->redis->disconnect();
                 $this->redis = null;
             }
-        } catch (ConnectionException $ex) {
-            $resource = $ex->getConnection()->getResource();
-            $metadata = var_export(stream_get_meta_data($resource), true);
-            Log::error(sprintf("RedisCacheService::__destruct %s %s %s", $ex->getCode(), $ex->getMessage(), $metadata));
+        } catch (PredisConnectionException|\RedisException $ex) {
+            $metadata = null;
+            try {
+                if ($ex instanceof PredisConnectionException && method_exists($ex, 'getConnection')) {
+                    $res = $ex->getConnection()->getResource();
+                    if (is_resource($res)) $metadata = @stream_get_meta_data($res);
+                }
+            } catch (\Throwable $ignored) {}
+            Log::error
+            (
+                sprintf
+                (
+                    "RedisCacheService::__destruct %s %s %s",
+                    $ex->getCode(),
+                    $ex->getMessage(),
+                    var_export($metadata, true)
+                )
+            );
         }
         catch(\Exception $ex){
             Log::warning($ex);
@@ -66,24 +85,63 @@ class RedisCacheService implements ICacheService
      * @param int $maxRetries
      * @return mixed|null
      */
-    private function retryOnConnectionError(callable $callback, $defaultReturn = null, int $maxRetries = self::MaxRetries)
+    private function retryOnConnectionError
+    (
+        callable $callback,
+        $defaultReturn = null,
+        int $maxRetries = self::MaxRetries,
+        int $baseDelayMs = 100
+    )
     {
-        $times = 0;
+        $attempt = 0;
         do {
             try {
-                return $callback();
-            } catch (ConnectionException $ex) {
-                $resource = $ex->getConnection()->getResource();
-                $metadata = var_export(stream_get_meta_data($resource), true);
+                // Ensure we have a connection before invoking the callback
+                if (!$this->redis) {
+                    Log::debug("RedisCacheService::retryOnConnectionError trying to get a new connection ...");
+                    $this->redis = Redis::connection(self::Connection);
+                }
+                return $callback($this->redis);
+            } catch (PredisConnectionException|\RedisException $ex) {
+                ++$attempt;
+                // Safe metadata (Predis only)
+                $metadata = null;
+                try {
+                    if ($ex instanceof PredisConnectionException && method_exists($ex, 'getConnection')) {
+                        $res = $ex->getConnection()->getResource();
+                        if (is_resource($res)) $metadata = @stream_get_meta_data($res);
+                    }
+                } catch (\Throwable $ignored) {}
                 Log::warning($ex);
-                Log::warning(sprintf("RedisCacheService::retryOnConnectionError code %s msg %s metadata %s, trying to reconnect...", $ex->getCode(), $ex->getMessage(), $metadata));
-                Redis::purge(self::Connection);
-                $this->redis = Redis::connection(self::Connection);
-                ++$times;
-                if ($times > $maxRetries) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "RedisCacheService::retryOnConnectionError code %s msg %s metadata %s attempt %s, trying to reconnect...",
+                        $ex->getCode(),
+                        $ex->getMessage(),
+                        var_export($metadata, true),
+                        $attempt
+                    )
+                );
+
+                if ($attempt > $maxRetries) {
                     Log::error(sprintf("RedisCacheService::retryOnConnectionError max retries reached %s!.", $maxRetries));
                     Log::error($ex);
                     break;
+                }
+
+                // Exponential backoff with jitter (cap at ~2s)
+
+                $delay = min(2000, (int)($baseDelayMs * (2 ** ($attempt - 1))));
+                $jitter = random_int(0, (int)($delay * 0.2));
+                usleep(1000 * ($delay + $jitter));
+
+                try { Redis::purge(self::Connection); } catch (\Throwable $ignored) {}
+                try { $this->redis = Redis::connection(self::Connection); } catch (\Throwable $e) {
+                    Log::warning('RedisCacheService::retryOnConnectionError Redis reconnection failed', ['message' => $e->getMessage()]);
+                    // keep looping; next iteration will try again
+                    $this->redis = null;
                 }
             }
         } while (true);
@@ -93,9 +151,13 @@ class RedisCacheService implements ICacheService
     public function boot()
     {
         if (is_null($this->redis)) {
-            // try to re init the connection bc background process
-            Redis::purge(self::Connection);
-            $this->redis = Redis::connection(self::Connection);
+            try {
+                Redis::purge(self::Connection);
+                $this->redis = Redis::connection(self::Connection);
+            } catch (\Throwable $e) {
+                Log::warning('RedisCacheService::retryOnConnectionError Redis boot failed', ['message' => $e->getMessage()]);
+                $this->redis = null;
+            }
         }
     }
 
@@ -105,22 +167,19 @@ class RedisCacheService implements ICacheService
      */
     public function delete($key)
     {
-        return $this->retryOnConnectionError(function () use ($key) {
-            $res = 0;
-            if ($this->redis->exists($key)) {
-                $res = $this->redis->del($key);
-            }
-            return $res;
+        return $this->retryOnConnectionError(function ($conn) use ($key) {
+            // DEL is idempotent: returns 0 if key doesn't exist
+            return (int)$conn->del($key);
         }, 0);
     }
 
     public function deleteArray(array $keys)
     {
-        return $this->retryOnConnectionError(function () use ($keys) {
-            if (count($keys) > 0) {
-                $this->redis->del($keys);
-            }
-        });
+        return $this->retryOnConnectionError(function ($conn) use ($keys) {
+            if (count($keys) === 0) return 0;
+            // Variadic is widely supported; chunk if you expect huge lists
+            return (int)$conn->del(...$keys);
+        }, 0);
     }
 
     /**
@@ -129,8 +188,8 @@ class RedisCacheService implements ICacheService
      */
     public function exists($key)
     {
-        return $this->retryOnConnectionError(function () use ($key) {
-            return $this->redis->exists($key) > 0;
+        return $this->retryOnConnectionError(function ($conn) use ($key) {
+            return $conn->exists($key) > 0;
         }, false);
     }
 
@@ -141,10 +200,10 @@ class RedisCacheService implements ICacheService
      */
     public function getHash($name, array $values)
     {
-        return $this->retryOnConnectionError(function () use ($name, $values) {
+        return $this->retryOnConnectionError(function ($conn) use ($name, $values) {
             $res = [];
-            if ($this->redis->exists($name)) {
-                $cache_values = $this->redis->hmget($name, $values);
+            if ($conn->exists($name)) {
+                $cache_values = $conn->hmget($name, $values);
                 for ($i = 0; $i < count($cache_values); $i++) {
                     $res[$values[$i]] = $cache_values[$i];
                 }
@@ -155,15 +214,15 @@ class RedisCacheService implements ICacheService
 
     public function storeHash($name, array $values, $ttl = 0)
     {
-        return $this->retryOnConnectionError(function () use ($name, $values, $ttl) {
+        return $this->retryOnConnectionError(function ($conn) use ($name, $values, $ttl) {
             $res = false;
             //stores in REDIS
-            if (!$this->redis->exists($name)) {
-                $this->redis->hmset($name, $values);
+            if (!$conn->exists($name)) {
+                $conn->hmset($name, $values);
                 $res = true;
                 //sets expiration time
                 if ($ttl > 0) {
-                    $this->redis->expire($name, $ttl);
+                    $conn->expire($name, $ttl);
                 }
             }
             return $res;
@@ -172,22 +231,21 @@ class RedisCacheService implements ICacheService
 
     public function incCounter($counter_name, $ttl = 0)
     {
-        return $this->retryOnConnectionError(function () use ($counter_name, $ttl) {
-            if ($this->redis->setnx($counter_name, 1)) {
-                $this->redis->expire($counter_name, $ttl);
+        return $this->retryOnConnectionError(function ($conn) use ($counter_name, $ttl) {
+            if ($conn->setnx($counter_name, 1)) {
+                if ($ttl > 0) $conn->expire($counter_name, (int)$ttl);
                 return 1;
-            } else {
-                return (int)$this->redis->incr($counter_name);
             }
+            return (int)$conn->incr($counter_name);
         }, 0);
     }
 
     public function incCounterIfExists($counter_name)
     {
-        return $this->retryOnConnectionError(function () use ($counter_name) {
+        return $this->retryOnConnectionError(function ($conn) use ($counter_name) {
             $res = false;
-            if ($this->redis->exists($counter_name)) {
-                $this->redis->incr($counter_name);
+            if ($conn->exists($counter_name)) {
+                $conn->incr($counter_name);
                 $res = true;
             }
             return $res;
@@ -196,29 +254,29 @@ class RedisCacheService implements ICacheService
 
     public function addMemberSet($set_name, $member)
     {
-        return $this->retryOnConnectionError(function () use ($set_name, $member) {
-            return $this->redis->sadd($set_name, $member);
+        return $this->retryOnConnectionError(function ($conn) use ($set_name, $member) {
+            return $conn->sadd($set_name, $member);
         });
     }
 
     public function deleteMemberSet($set_name, $member)
     {
-        return $this->retryOnConnectionError(function () use ($set_name, $member) {
-            return $this->redis->srem($set_name, $member);
+        return $this->retryOnConnectionError(function ($conn) use ($set_name, $member) {
+            return $conn->srem($set_name, $member);
         });
     }
 
     public function getSet($set_name)
     {
-        return $this->retryOnConnectionError(function () use ($set_name) {
-            return $this->redis->smembers($set_name);
+        return $this->retryOnConnectionError(function ($conn) use ($set_name) {
+            return $conn->smembers($set_name);
         });
     }
 
     public function getSingleValue($key)
     {
-        return $this->retryOnConnectionError(function () use ($key) {
-            return $this->redis->get($key);
+        return $this->retryOnConnectionError(function ($conn) use ($key) {
+            return $conn->get($key);
         });
     }
 
@@ -230,20 +288,20 @@ class RedisCacheService implements ICacheService
      */
     public function setSingleValue($key, $value, $ttl = 0)
     {
-        return $this->retryOnConnectionError(function () use ($key, $value, $ttl) {
+        return $this->retryOnConnectionError(function ($conn) use ($key, $value, $ttl) {
             if ($ttl > 0) {
-                return $this->redis->setex($key, $ttl, $value);
+                return $conn->setex($key, $ttl, $value);
             }
-            return $this->redis->set($key, $value);
+            return $conn->set($key, $value);
         });
     }
 
     public function addSingleValue($key, $value, $ttl = 0)
     {
-        return $this->retryOnConnectionError(function () use ($key, $value, $ttl) {
-            $res = $this->redis->setnx($key, $value);
+        return $this->retryOnConnectionError(function ($conn) use ($key, $value, $ttl) {
+            $res = $conn->setnx($key, $value);
             if ($res && $ttl > 0) {
-                $this->redis->expire($key, $ttl);
+                $conn->expire($key, $ttl);
             }
             return $res;
         });
@@ -251,8 +309,8 @@ class RedisCacheService implements ICacheService
 
     public function setKeyExpiration($key, $ttl)
     {
-        return $this->retryOnConnectionError(function () use ($key, $ttl) {
-            return $this->redis->expire($key, intval($ttl));
+        return $this->retryOnConnectionError(function ($conn) use ($key, $ttl) {
+            return $conn->expire($key, intval($ttl));
         });
     }
 
@@ -262,8 +320,8 @@ class RedisCacheService implements ICacheService
      */
     public function ttl($key)
     {
-        return $this->retryOnConnectionError(function () use ($key) {
-            return (int)$this->redis->ttl($key);
+        return $this->retryOnConnectionError(function ($conn) use ($key) {
+            return (int)$conn->ttl($key);
         }, 0);
     }
 }

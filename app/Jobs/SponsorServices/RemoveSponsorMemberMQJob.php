@@ -1,4 +1,4 @@
-<?php namespace App\Jobs;
+<?php namespace App\Jobs\SponsorServices;
 /*
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,24 +22,22 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use Throwable;
 
 /**
- * Class SyncSponsorMemberMQJob
- * @package App\Jobs
+ * Class RemoveSponsorMemberMQJob
+ * @package App\Jobs\SponsorServices
  */
-final class SyncSponsorMemberMQJob implements ShouldQueue
+final class RemoveSponsorMemberMQJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 3;
+    public int $tries = 3;
+
+    public ISponsorUserSyncService $service;
 
     /**
-     * @var ISponsorUserSyncService
-     */
-    public $service;
-
-    /**
-     * SyncSponsorMemberMQJob constructor.
+     * RemoveSponsorMemberMQJob constructor.
      * @param ISponsorUserSyncService $service
      */
     public function __construct(ISponsorUserSyncService $service)
@@ -48,25 +46,31 @@ final class SyncSponsorMemberMQJob implements ShouldQueue
     }
 
     /**
-     * @param RabbitMQJob $job
+     * @param SponsorServicesMQJob $job
      * @throws BindingResolutionException
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function handle(RabbitMQJob $job)
+    public function handle(SponsorServicesMQJob $job): void
     {
         try {
+            $event_type = $job->getRabbitMQMessage()->getRoutingKey();
             $payload = $job->payload();
             $json = json_encode($payload);
-
-            Log::debug("SyncSponsorMemberMQJob::handle payload {$json}");
+            Log::debug("RemoveSponsorMemberMQJob::handle payload {$json}");
 
             $data = $payload['data'];
-            $summit_id = intval($data['summit_id']);
-            $sponsor_id = intval($data['sponsor_id']);
-            $user_external_id = intval($data['user_external_id']);
 
-            $this->service->addSponsorUser($summit_id, $sponsor_id, $user_external_id);
+            $summit_id = intval($data['summit_id']);
+            $user_external_id = intval($data['user_external_id']);
+            $sponsor_id = null;
+            if($event_type === EventTypes::AUTH_USER_REMOVED_FROM_SPONSOR_AND_SUMMIT) {
+                if(!isset($data['sponsor_id'])) {
+                    throw new ValidationException('sponsor_id is required when event_type is auth_user_removed_from_sponsor_and_summit');
+                }
+                $sponsor_id = intval($data['sponsor_id']);
+            }
+            $this->service->removeSponsorUser($summit_id, $user_external_id, $sponsor_id);
             $job->delete();
         } catch (\Exception $ex) {
             Log::error($ex);
@@ -76,10 +80,10 @@ final class SyncSponsorMemberMQJob implements ShouldQueue
 
     /**
      * @param array $data
-     * @param \Throwable $exception
+     * @param Throwable $exception
      */
-    public function failed(array $data, \Throwable $exception)
+    public function failed(array $data, Throwable $exception): void
     {
-        Log::error("SyncSponsorMemberMQJob::failed {$exception->getMessage()}");
+        Log::error("RemoveSponsorMemberMQJob::failed {$exception->getMessage()}");
     }
 }

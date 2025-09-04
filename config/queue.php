@@ -111,13 +111,10 @@ return [
                     'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
                 ],
                 'queue' => [
-                    'exchange' =>  env('SPONSOR_USERS_EXCHANGE_NAME'),
-                    'exchange_type' =>  env('RABBITMQ_EXCHANGE_TYPE', 'fanout'),
                     'passive' => env('RABBITMQ_QUEUE_PASSIVE', false),
                     'durable' => env('RABBITMQ_QUEUE_DURABLE', true),
                     'exclusive' => env('RABBITMQ_QUEUE_EXCLUSIVE', false),
-                    'auto_delete' => env('RABBITMQ_QUEUE_AUTODELETE', true),
-                    'job' => \App\Jobs\RabbitMQJob::class,
+                    'job' => \App\Jobs\SponsorServices\SponsorServicesMQJob::class,
                 ],
             ],
         ]

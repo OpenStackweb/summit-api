@@ -34,8 +34,8 @@ class SummitAttendeeBadgeAuditLogger implements ILogger
     /**
      * @inheritDoc
      */
-    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description) {
-
+    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description): void
+    {
         if (!$entity instanceof SummitAttendeeBadge) return;
 
         $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);

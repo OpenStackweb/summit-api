@@ -2,11 +2,8 @@
 use App\Models\Foundation\Main\IGroup;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\AuditLog;
-use models\main\Member;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
-use models\summit\Summit;
-use utils\Filter;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;

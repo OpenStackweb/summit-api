@@ -20,7 +20,6 @@ use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
-use App\Audit\Loggers\SummitEventAuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;

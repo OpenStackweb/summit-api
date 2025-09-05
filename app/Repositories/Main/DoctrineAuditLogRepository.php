@@ -98,6 +98,7 @@ final class DoctrineAuditLogRepository
             'user_email'     => new DoctrineFilterMapping("u.email :operator :value"),
             'user_full_name' => new DoctrineFilterMapping("concat(u.first_name, ' ', u.last_name) :operator :value"),
             'action'         => 'e.action:json_string',
+            'metadata'       => 'e.metadata:json_string',
             'created'        => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'last_edited'    => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
         ];
@@ -111,6 +112,7 @@ final class DoctrineAuditLogRepository
         $order_mappings = [
             'id' => 'e.id',
             'created' => 'e.created',
+            'metadata' => 'e.metadata',
             'user_id' => 'u.id',
             'user_full_name' => <<<SQL
 LOWER(CONCAT(u.first_name, ' ', u.last_name))

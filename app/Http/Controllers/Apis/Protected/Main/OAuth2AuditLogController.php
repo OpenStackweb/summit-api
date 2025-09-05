@@ -59,6 +59,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'user_email' => ['==', '=@','@@'],
                     'user_full_name'  => ['==', '=@','@@'],
                     'action'  => ['=@','@@'],
+                    'metadata'  => ['==', '=@','@@'],
                     'created' => ['==', '>', '<', '>=', '<=','[]'],
                 ];
             },
@@ -72,6 +73,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'user_email' => 'sometimes|string',
                     'user_full_name' => 'sometimes|string',
                     'action' => 'sometimes|string',
+                    'metadata' => 'sometimes|string',
                     'created' => 'sometimes|date_format:U|epoch_seconds',
                 ];
             },
@@ -84,6 +86,7 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                     'created',
                     'user_email',
                     'user_full_name',
+                    'metadata',
                 ];
             },
             function($filter) {

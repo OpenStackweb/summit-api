@@ -269,6 +269,11 @@ class SummitRSVPService extends AbstractService
             }
             $rsvp = AdminSummitRSVPFactory::build($event, $member, $payload);
             $rsvp->activate();
+            // check if we have a pending invitation and mark it as accepted
+            $invitation =  $event->getRSVPInvitationByInvitee($attendee);
+            if(!is_null($invitation)) {
+                $invitation->markAsAcceptedWithRSVP($rsvp);
+            }
             return $rsvp;
         });
 

@@ -247,7 +247,7 @@ class PresentationCategory extends SilverstripeBaseModel
     /**
      * @var PresentationCategory[]
      */
-    #[ORM\OneToMany(targetEntity: \models\summit\PresentationCategory::class, mappedBy: 'parent', cascade: ['persist', 'remove'], fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(targetEntity: \models\summit\PresentationCategory::class, mappedBy: 'parent', cascade: ['persist'], fetch: 'EXTRA_LAZY')]
     protected $subtracks;
 
     /**

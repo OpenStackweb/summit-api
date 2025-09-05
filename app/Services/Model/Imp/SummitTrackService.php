@@ -209,14 +209,13 @@ final class SummitTrackService
 
     /**
      * @param Summit $summit
-     * @param int $track_id
+     * @param $track_id
      * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function deleteTrack(Summit $summit, $track_id)
+    public function deleteTrack(Summit $summit, $track_id):void
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id) {
+        $this->tx_service->transaction(function () use ($summit, $track_id) {
 
             $track = $summit->getPresentationCategory($track_id);
 
@@ -231,8 +230,19 @@ final class SummitTrackService
             if (count($summit_events) > 0) {
                 throw new ValidationException
                 (
-                    sprintf("track id %s could not be deleted bc its assigned to published events on summit id %s", $track_id, $summit->getId())
+                    sprintf
+                    (
+                        "Track %s (%s) can not be deleted bc its assigned to published events on summit id %s",
+                        $track->getTitle(),
+                        $track_id,
+                        $summit->getId())
                 );
+            }
+
+            if($track->hasSubTracks()){
+                foreach ($track->getSubTracks() as $subtrack){
+                    $subtrack->clearParent();
+                }
             }
 
             $this->track_repository->delete($track);

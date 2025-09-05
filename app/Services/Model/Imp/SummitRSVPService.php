@@ -316,9 +316,9 @@ class SummitRSVPService extends AbstractService
             (
                 sprintf
                 (
-                    "Member %s already submitted an rsvp for event %s.",
-                    $member->getId(),
-                    $event_id,
+                    "%s has already RSVPd to this event %s.",
+                    $member->getEmail(),
+                    $old_rsvp->getEvent()->getTitle(),
                 )
             );
     }

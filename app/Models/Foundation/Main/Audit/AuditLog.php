@@ -48,6 +48,12 @@ abstract class AuditLog extends SilverstripeBaseModel
     #[ORM\Column(name: 'Action', type: 'string')]
     private $action;
 
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'Metadata', type: 'string')]
+    private $metadata;
+
     public function getUser(): ?Member
     {
         return $this->user;
@@ -68,10 +74,21 @@ abstract class AuditLog extends SilverstripeBaseModel
         $this->action = $action;
     }
 
-    public function __construct(?Member $user, string $action)
+    public function getMetadata(): string
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(string $metadata)
+    {
+        $this->metadata = $metadata;
+    }
+
+    public function __construct(?Member $user, string $action, string $metadata = null)
     {
         parent::__construct();
         $this->user = $user;
         $this->action = $action;
+        $this->metadata = $metadata;
     }
 }

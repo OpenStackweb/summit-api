@@ -70,9 +70,9 @@ class SummitEventAuditLog extends SummitAuditLog
      * @param Summit $summit
      * @param SummitEvent $event
      */
-    public function __construct(?Member $user, string $action, Summit $summit, SummitEvent $event)
+    public function __construct(?Member $user, string $action, Summit $summit, SummitEvent $event, string $metadata = null)
     {
-        parent::__construct($user, $action, $summit);
+        parent::__construct($user, $action, $summit, $metadata);
         $this->related_entity = $event;
     }
 

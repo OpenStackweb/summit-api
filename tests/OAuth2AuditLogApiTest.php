@@ -47,8 +47,8 @@ class OAuth2AuditLogApiTest extends ProtectedApiTestCase
     public function testGetSummitEventAuditLog()
     {
         $params = [
-            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3699', 'event_id==119876'],
-            'order'  => '-created',
+            'filter' => ['class_name==SummitEventAuditLog'],
+            'order'  => 'metadata',
             'expand' => 'user'
         ];
 

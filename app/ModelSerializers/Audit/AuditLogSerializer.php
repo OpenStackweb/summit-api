@@ -30,6 +30,7 @@ class AuditLogSerializer extends SilverStripeSerializer
 
     protected static $array_mappings = [
         'Action' => 'action:json_string',
+        'Metadata' => 'metadata:json_string',
         'UserId' => 'user_id:json_int',
     ];
 

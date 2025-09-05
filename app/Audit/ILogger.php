@@ -29,7 +29,8 @@ interface ILogger
      * @param EntityManagerInterface $entity_manager
      * @param BaseEntity $entity
      * @param string $description
+     * @param string $event_type
      * @return void
      */
-    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description);
+    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description): void;
 }

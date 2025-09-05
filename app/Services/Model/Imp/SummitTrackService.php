@@ -13,11 +13,13 @@
  * limitations under the License.
  **/
 
+use App\Events\ScheduleEntityLifeCycleEvent;
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\PresentationCategoryFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -410,9 +412,9 @@ final class SummitTrackService
     /**
      * @inheritDoc
      */
-    public function addSubTrack(Summit $summit, int $track_id, int $child_track_id, array $data)
+    public function addSubTrack(Summit $summit, int $track_id, int $child_track_id, array $data):PresentationCategory
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id, $child_track_id, $data) {
+        $track = $this->tx_service->transaction(function () use ($summit, $track_id, $child_track_id, $data) {
 
             $track = $summit->getPresentationCategory($track_id);
 
@@ -447,14 +449,21 @@ final class SummitTrackService
 
             return $track;
         });
+
+          Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,
+              $track->getSummitId(),
+              $track->getId(),
+              'PresentationCategory'));
+
+          return $track;
     }
 
     /**
      * @inheritDoc
      */
-    public function removeSubTrack(Summit $summit, int $track_id, int $child_track_id): void {
+    public function removeSubTrack(Summit $summit, int $track_id, int $child_track_id): PresentationCategory {
 
-        $this->tx_service->transaction(function () use ($summit, $track_id, $child_track_id) {
+        $track = $this->tx_service->transaction(function () use ($summit, $track_id, $child_track_id) {
 
             $track = $summit->getPresentationCategory($track_id);
 
@@ -469,6 +478,14 @@ final class SummitTrackService
             }
 
             $track->removeChild($child_track);
+
+            return $track;
         });
+
+        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,
+            $track->getSummitId(),
+            $track->getId(),
+            'PresentationCategory'));
+        return $track;
     }
 }

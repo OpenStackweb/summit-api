@@ -425,7 +425,7 @@ class SummitRSVPService extends AbstractService
      */
     private function emitSummitEventDomainEvent(SummitEvent $event): void
     {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
+        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,
             $event->getSummitId(),
             $event->getId(),
             Presentation::ClassName,

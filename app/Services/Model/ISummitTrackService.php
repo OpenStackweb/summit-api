@@ -106,17 +106,15 @@ interface ISummitTrackService
      * @param int $track_id
      * @param int $child_track_id
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
+     * @return PresentationCategory
      */
-    public function addSubTrack(Summit $summit, int $track_id, int $child_track_id, array $data);
+    public function addSubTrack(Summit $summit, int $track_id, int $child_track_id, array $data):PresentationCategory;
 
     /**
      * @param Summit $summit
      * @param int $track_id
      * @param int $child_track_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
+     * @return PresentationCategory
      */
-    public function removeSubTrack(Summit $summit, int $track_id, int $child_track_id): void;
+    public function removeSubTrack(Summit $summit, int $track_id, int $child_track_id):PresentationCategory;
 }

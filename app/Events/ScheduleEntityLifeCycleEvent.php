@@ -22,6 +22,10 @@ final class ScheduleEntityLifeCycleEvent extends Event
 {
     use SerializesModels;
 
+    const Operation_Insert = 'INSERT';
+    const Operation_Update = 'UPDATE';
+    const Operation_Delete = 'DELETE';
+
     /**
      * @var string
      */

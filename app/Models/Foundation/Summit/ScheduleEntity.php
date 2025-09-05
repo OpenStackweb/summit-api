@@ -31,6 +31,7 @@ trait ScheduleEntity
         updated as protected cachedUpdated;
     }
 
+
     /**
      * @return int
      */
@@ -59,7 +60,7 @@ trait ScheduleEntity
     #[ORM\PreRemove]
     public function deleting($args)
     {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('DELETE',
+        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Delete,
             $this->_getSummitId(),
             $this->id,
             $this->_getClassName()));
@@ -82,7 +83,7 @@ trait ScheduleEntity
     {
         Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
         $this->cachedUpdated($args);
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
+        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,
             $this->_getSummitId(),
             $this->id,
             $this->_getClassName()));
@@ -92,7 +93,7 @@ trait ScheduleEntity
     #[ORM\PostPersist]
     public function inserted($args)
     {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('INSERT',
+        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Insert,
             $this->_getSummitId(),
             $this->id,
             $this->_getClassName()));

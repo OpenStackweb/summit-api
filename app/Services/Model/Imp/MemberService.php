@@ -382,7 +382,7 @@ final class MemberService
                         );
                         foreach($former_speaker->getAllPresentations() as $presentation){
                             if(!$presentation instanceof Presentation) continue;
-                            Log:debug
+                            Log::debug
                             (
                                 sprintf
                                 (

@@ -30,6 +30,7 @@ implements IRSVPInvitationRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->join('e.event', 'se');
         $query = $query->join('e.invitee', 'a');
+        $query = $query->leftJoin('a.member', 'm');
         return $query;
     }
 
@@ -41,10 +42,22 @@ implements IRSVPInvitationRepository
         return [
             'id' => new DoctrineInFilterMapping('e.id'),
             'not_id' => new DoctrineNotInFilterMapping('e.id'),
-            'attendee_email' => 'a.email:json_string',
-            'attendee_first_name' => Filter::buildLowerCaseStringField('a.first_name'),
-            'attendee_last_name' => Filter::buildLowerCaseStringField('a.surname'),
-            'attendee_full_name' => Filter::buildConcatStringFields(['a.first_name', 'a.surname']),
+            'attendee_email'                => [
+                Filter::buildEmailField("m.email"),
+                Filter::buildEmailField("a.email")
+            ],
+            'attendee_first_name'           => [
+                "m.first_name :operator :value",
+                "a.first_name :operator :value"
+            ],
+            'attendee_last_name'            => [
+                "m.last_name :operator :value",
+                "a.surname :operator :value"
+            ],
+            'attendee_full_name'            => [
+                "concat(m.first_name, ' ', m.last_name) :operator :value",
+                "concat(a.first_name, ' ', a.surname) :operator :value"
+            ],
             'is_accepted' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
@@ -79,10 +92,14 @@ implements IRSVPInvitationRepository
     {
         return [
             'id'   => 'e.id',
-            'attendee_email' => 'a.email',
             'attendee_first_name' => 'a.first_name',
             'attendee_last_name' => 'a.surname',
-            'attendee_full_name'=> Filter::buildConcatStringFields(['a.first_name', 'a.surname']),
+            "attendee_full_name"         => <<<SQL
+COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
+SQL,
+            'attendee_email'             => <<<SQL
+COALESCE(LOWER(m.email), LOWER(a.email)) 
+SQL,
             'status' => 'e.status',
         ];
     }

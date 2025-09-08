@@ -376,8 +376,8 @@ class SummitRSVPInvitationService
             "invitations",
             function ($root_entity, $paging_info, $filter, $resetPage) {
 
-                if (!$filter->hasFilter("event_id"))
-                    $filter->addFilterCondition(FilterElement::makeEqual('event_id', $root_entity->getId()));
+                if (!$filter->hasFilter("summit_event_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $root_entity->getId()));
 
                 if ($filter->hasFilter("is_sent")) {
                     $isSentFilter = $filter->getUniqueFilter("is_sent");

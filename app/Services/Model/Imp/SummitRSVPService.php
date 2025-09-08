@@ -437,4 +437,23 @@ class SummitRSVPService extends AbstractService
         ));
     }
 
+    /**
+     * @param SummitEvent $event
+     * @param int $rsvp_id
+     * @return void
+     * @throws \Exception
+     */
+    public function delete(SummitEvent $event, int $rsvp_id): void
+    {
+         $this->tx_service->transaction(function () use ($event, $rsvp_id) {
+
+            $rsvp = $event->getRSVPById($rsvp_id);
+            if (is_null($rsvp))
+                throw new EntityNotFoundException("RSVP not found.");
+
+             $this->rsvp_repository->delete($rsvp);
+
+             Event::dispatch(new RSVPDeleted($rsvp));
+        });
+    }
 }

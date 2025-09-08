@@ -45,6 +45,13 @@ interface ISummitRSVPService
     public function update(SummitEvent $event, int $rsvp_id, array $payload): RSVP;
 
     /**
+     * @param SummitEvent $event
+     * @param int $rsvp_id
+     * @return void
+     */
+    public function delete(SummitEvent $event, int $rsvp_id): void;
+
+    /**
      * @param Summit $summit
      * @param int $event_id
      * @param array $payload

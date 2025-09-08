@@ -453,7 +453,6 @@ class SummitRSVPService extends AbstractService
 
              $this->rsvp_repository->delete($rsvp);
 
-             Event::dispatch(new RSVPDeleted($rsvp));
         });
     }
 }

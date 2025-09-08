@@ -737,7 +737,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     public function delete($summit_id, $event_id, $rsvp_id){
         return $this->processRequest(function() use($summit_id, $event_id, $rsvp_id){
             $summit = $this->getSummitOr404($summit_id);
-            $event = $this->getScheduleEventOr404($summit, $event_id);
+            $event = $this->getEventOr404($summit, $event_id);
             $rsvp = $this->getRSVPOr404($event, $rsvp_id);
             $this->service->delete($event, $rsvp->getId());
             return $this->deleted();

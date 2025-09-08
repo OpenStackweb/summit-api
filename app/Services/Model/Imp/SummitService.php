@@ -385,12 +385,12 @@ final class SummitService
     public function removeEventFromMemberSchedule(Summit $summit, Member $member, $event_id, $check_rsvp = true)
     {
         $this->tx_service->transaction(function () use ($summit, $member, $event_id, $check_rsvp) {
-            $event = $summit->getScheduleEvent($event_id);
+            $event = $summit->getEvent($event_id);
             if (is_null($event))
-                throw new EntityNotFoundException('event not found on summit!');
+                throw new EntityNotFoundException('Event not found .');
 
             if ($check_rsvp && $event->hasRSVP() && !$event->isExternalRSVP())
-                throw new ValidationException("event has rsvp set on it!");
+                throw new ValidationException("Event has rsvp set on it.");
 
             $member->removeFromSchedule($event);
 

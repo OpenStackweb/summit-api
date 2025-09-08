@@ -294,12 +294,17 @@ final class EventServiceProvider extends ServiceProvider
                         )
                     );
 
-                    $summit_service->removeEventFromMemberSchedule(
-                        $summit_event->getSummit(),
-                        $member,
-                        $summit_event_id,
-                        false
-                    );
+                    try {
+                        $summit_service->removeEventFromMemberSchedule(
+                            $summit_event->getSummit(),
+                            $member,
+                            $summit_event_id,
+                            false
+                        );
+                    }
+                    catch (\Exception $ignore) {
+                        Log::debug($ignore);
+                    }
                 }
             }
 

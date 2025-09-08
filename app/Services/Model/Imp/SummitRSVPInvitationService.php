@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Jobs\Emails\Schedule\RSVP\ProcessRSVPInvitationsJob;
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
@@ -139,17 +140,18 @@ class SummitRSVPInvitationService
                 }
 
                 $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
-                $row['invitee_ids'] = [$attendee->getId()];
                 if (!is_null($former_invitation))
                     throw new ValidationException
                     (
                         sprintf
                         (
-                            "Attendee %s already has a RSVP Invitation (%s).",
-                            $attendee->getId(), $former_invitation->getId()
+                            "Attendee %s (%s) already has a RSVP Invitation (%s).",
+                            $attendee->getFirstName(),
+                            $attendee->getEmail(),
+                            $former_invitation->getId()
                         )
                     );
-                $this->add($summit_event, $row);
+                $this->_add($summit_event, $attendee->getId());
 
             } catch (\Exception $ex) {
                 Log::warning($ex);
@@ -158,7 +160,7 @@ class SummitRSVPInvitationService
             }
         }
         if (count($errors) > 0) {
-                                                                                                                                                                                                                                                                                                                                                                    throw new ValidationException($errors);
+            throw new ValidationException($errors);
         }
     }
 
@@ -205,33 +207,45 @@ class SummitRSVPInvitationService
         });
     }
 
+
+    private function _add(SummitEvent $summit_event, int $invitee_id): RSVPInvitation
+    {
+        return $this->tx_service->transaction(function () use ($summit_event, $invitee_id) {
+
+            Log::debug(sprintf("SummitRSVPInvitationService::_add trying to add process invitee id %s.", $invitee_id));
+            $summit = $summit_event->getSummit();
+            $attendee = $summit->getAttendeeById($invitee_id);
+            if (is_null($attendee))
+                throw new EntityNotFoundException("Attendee not found.");
+            $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
+            if (!is_null($former_invitation))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Attendee %s (%s) already has a RSVP Invitation (%s).",
+                        $attendee->getFullName(),
+                        $attendee->getEmail(),
+                        $former_invitation->getId()
+                    )
+                );
+            return $summit_event->addRSVPInvitation($attendee);
+        });
+    }
+
     /**
      * @inheritDoc
      */
     public function add(SummitEvent $summit_event, array $payload): array
     {
-
         return $this->tx_service->transaction(function () use ($summit_event, $payload) {
             $invitee_ids = $payload['invitee_ids'] ?? [];
             $invitations = [];
             foreach ($invitee_ids as $invitee_id) {
                 try {
                     Log::debug(sprintf("SummitRSVPInvitationService::add trying to add process invitee id %s.", $invitee_id));
-                    $summit = $summit_event->getSummit();
-                    $attendee = $summit->getAttendeeById($invitee_id);
-                    if (is_null($attendee))
-                        throw new EntityNotFoundException("Attendee not found.");
-                    $former_invitation = $summit_event->getRSVPInvitationByInvitee($attendee);
-                    if (!is_null($former_invitation))
-                        throw new ValidationException
-                        (
-                            sprintf
-                            (
-                                "Attendee %s already has a RSVP Invitation (%s).",
-                                $attendee->getId(), $former_invitation->getId()
-                            )
-                        );
-                    $invitations[] = $summit_event->addRSVPInvitation($attendee);
+
+                    $invitations[] = $this->_add($summit_event, $invitee_id);
                 } catch (\Exception $ex) {
                     Log::warning($ex);
                 }

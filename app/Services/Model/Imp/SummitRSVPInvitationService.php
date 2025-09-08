@@ -365,10 +365,20 @@ class SummitRSVPInvitationService
     }
 
     /**
-     * @inheritDoc
+     * @param SummitEvent $summit_event
+     * @param array $payload
+     * @param $filter
+     * @return void
+     * @throws ValidationException
      */
     public function triggerSend(SummitEvent $summit_event, array $payload, $filter = null): void
     {
+        if(!$summit_event->isPublished()){
+            throw new ValidationException(sprintf("Event %s is not published.", $summit_event->getId()));
+        }
+        if(!$summit_event->hasPrivateRSVP()){
+            throw new ValidationException(sprintf("Event %s has not Private RSVP", $summit_event->getId()));
+        }
         ProcessRSVPInvitationsJob::dispatch($summit_event, $payload, $filter);
     }
 

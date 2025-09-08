@@ -118,6 +118,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             'sponsorship_size' => ['==', '=@', '@@'],
             'badge_scans_count' => ['==', '<', '>', '<=', '>=', '<>'],
             'is_published' => ['=='],
+            'company_id' => ['=='],
         ];
     }
 
@@ -128,6 +129,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     {
         return [
             'company_name' => 'sometimes|required|string',
+            'company_id' => 'sometimes|required|integer',
             'sponsorship_name' => 'sometimes|required|string',
             'sponsorship_size' => 'sometimes|required|string',
             'badge_scans_count' => 'sometimes|required|integer',

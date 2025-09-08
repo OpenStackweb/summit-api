@@ -38,6 +38,7 @@ implements ISponsorRepository
         return [
             'sponsor_id'        => new DoctrineFilterMapping("e.id :operator :value"),
             'company_name'      => "c.name",
+            'company_id'        => "c.id",
             'sponsorship_name'  => "st.name",
             'sponsorship_label' => "st.label",
             'sponsorship_size'  => "st.size",

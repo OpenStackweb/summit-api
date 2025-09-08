@@ -16,8 +16,9 @@ use ModelSerializers\SilverStripeSerializer;
 class RSVPInvitationCSVSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'InviteeId' => 'invitee_id:json_int',
         'SummitEventId' => 'event_id:json_int',
+        'InviteeEmail' => 'invitee_email:json_string',
+        'InviteeFullName' => 'invitee_full_name:json_string',
         'Status' => 'status:json_string',
         'Accepted' => 'is_accepted:json_boolean',
         'Sent'     => 'is_sent:json_boolean',

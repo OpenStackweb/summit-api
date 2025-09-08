@@ -16,8 +16,9 @@ use ModelSerializers\SilverStripeSerializer;
 class RSVPCSVSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'OwnerId'             => 'owner_id:json_int',
         'EventId'             => 'event_id:json_int',
+        'OwnerFullName'       => 'owner_full_name:json_string',
+        'OwnerEmail'          => 'owner_email:json_string',
         'SeatType'            => 'seat_type:json_string',
         'Created'             => 'created:datetime_epoch',
         'ConfirmationNumber'  => 'confirmation_number:json_string',

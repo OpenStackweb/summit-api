@@ -174,6 +174,18 @@ class RSVPInvitation extends SilverstripeBaseModel
         return $this->getInvitee()->getEmail();
     }
 
+    public function getInviteeEmail():?string{
+        if($this->hasInvitee())
+            return $this->getInvitee()->getEmail();
+        return null;
+    }
+
+    public function getInviteeFullName():?string{
+        if($this->hasInvitee())
+            return $this->getInvitee()->getFullName();
+        return null;
+    }
+
     public function markAsSent():void{
         $this->sent_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }

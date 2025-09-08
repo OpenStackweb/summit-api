@@ -368,4 +368,14 @@ class RSVP extends SilverstripeBaseModel
             throw new ValidationException(sprintf("Status %s is not valid.", $status), $status);
         $this->status = $status;
     }
+
+    public function getOwnerFullName():?string{
+        if ($this->hasOwner()) return $this->getOwner()->getFullName();
+        return null;
+    }
+
+    public function getOwnerEmail():?string{
+        if ($this->hasOwner()) return $this->getOwner()->getEmail();
+        return null;
+    }
 }

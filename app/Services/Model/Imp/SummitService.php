@@ -16,6 +16,7 @@ use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
 use App\Events\MyScheduleRemove;
+use App\Events\SponsorServices\SummitDomainEvents;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
@@ -47,6 +48,8 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
+use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
+use App\Services\Utils\RabbitPublisherService;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -240,6 +243,11 @@ final class SummitService
     private $cache_service;
 
     /**
+     * @var RabbitPublisherService
+     */
+    private $sponsor_services_publisher;
+
+    /**
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
@@ -323,6 +331,8 @@ final class SummitService
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
         $this->cache_service = $cache_service;
+
+        $this->sponsor_services_publisher = RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
     }
 
     /**
@@ -1495,7 +1505,7 @@ final class SummitService
      */
     public function addSummit(array $data)
     {
-        return $this->tx_service->transaction(function () use ($data) {
+        $summit = $this->tx_service->transaction(function () use ($data) {
 
             $name = trim($data['name']);
             $former_summit = $this->summit_repository->getByName($name);
@@ -1560,6 +1570,17 @@ final class SummitService
             return $summit;
 
         });
+
+        $this->sponsor_services_publisher->publish([
+            'id' => $summit->getId(),
+            'name' => $summit->getName(),
+            'start_date' => $summit->getBeginDate()->getTimestamp(),
+            'end_date' => $summit->getEndDate()->getTimestamp(),
+            'time_zone_id' => $summit->getTimeZoneId(),
+            'support_email' => $summit->getSupportEmail()
+        ], SummitDomainEvents::SummitCreated);
+
+        return $summit;
     }
 
     /**
@@ -1642,6 +1663,15 @@ final class SummitService
 
             $summit = SummitFactory::populate($summit, $data);
 
+            $this->sponsor_services_publisher->publish([
+                'id' => $summit->getId(),
+                'name' => $summit->getName(),
+                'start_date' => $summit->getBeginDate()->getTimestamp(),
+                'end_date' => $summit->getEndDate()->getTimestamp(),
+                'time_zone_id' => $summit->getTimeZoneId(),
+                'support_email' => $summit->getSupportEmail()
+            ], SummitDomainEvents::SummitUpdated);
+
             return $summit;
         });
     }
@@ -1671,6 +1701,10 @@ final class SummitService
 
             Log::debug(sprintf("SummitService::deleteSummit summit_id %s", $summit_id));
             $summit->markAsDeleted();
+
+            $this->sponsor_services_publisher->publish([
+                'summit_id' => $summit_id
+            ], SummitDomainEvents::SummitDeleted);
 
         });
     }

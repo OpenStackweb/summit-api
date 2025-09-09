@@ -19,6 +19,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+      rabbitmq_sponsor_services:
+        condition: service_started
       db_config:
         condition: service_healthy
       db_model:
@@ -33,6 +35,17 @@ services:
     volumes:
       - /tmp/summit_api/redis:/root/redis
       - ./docker-compose/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - summit-api-local-net
+    env_file: ./.env
+  rabbitmq_sponsor_services:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${SPONSOR_SERVICES_RABBITMQ_LOGIN}
+      RABBITMQ_DEFAULT_PASS: ${SPONSOR_SERVICES_RABBITMQ_PASSWORD}
+    ports:
+      - "15672:15672"  # admin
+      - "5672:5672"    # RabbitMQ
     networks:
       - summit-api-local-net
     env_file: ./.env

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Exception;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 
@@ -23,11 +25,42 @@ interface ISponsorUserSyncService
     /**
      * @param int $summit_id
      * @param int $sponsor_id
-     * @param int $user_external_id
+     * @param int $user_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
-     * @throws \Exception
+     * @throws Exception
      */
-    public function addSponsorUser(int $summit_id, int $sponsor_id, int $user_external_id);
+    public function addSponsorUser(int $summit_id, int $sponsor_id, int $user_id): void;
+
+    /**
+     * @param int $summit_id
+     * @param int $user_id
+     * @param int|null $sponsor_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws Exception
+     */
+    public function removeSponsorUser(int $summit_id, int $user_id, ?int $sponsor_id = null): void;
+
+    /**
+     * @param int $user_id
+     * @param string $group_slug
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws Exception
+     */
+    public function addSponsorUserToGroup(int $user_id, string $group_slug): void;
+
+    /**
+     * @param int $user_id
+     * @param string $group_slug
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws Exception
+     */
+    public function removeSponsorUserFromGroup(int $user_id, string $group_slug): void;
 }

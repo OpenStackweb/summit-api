@@ -1,6 +1,5 @@
-<?php namespace App\Jobs;
-
-/**
+<?php namespace App\Jobs\SponsorServices;
+/*
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +12,15 @@
  * limitations under the License.
  **/
 
-use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob as BaseJob;
-
-class RabbitMQJob extends BaseJob
+/**
+ * Class EventTypes
+ * @package App\Jobs\SponsorServices
+ */
+final class EventTypes
 {
-    public $tries = 3;
-
-    /**
-     * Get the decoded body of the job.
-     *
-     * @return array
-     */
-    public function payload(): array
-    {
-        return [
-            'job' => 'App\Jobs\SyncSponsorMemberMQJob@handle',
-            'data' => json_decode($this->getRawBody(), true)
-        ];
-    }
+    const string AUTH_USER_ADDED_TO_GROUP = 'auth_user_added_to_group';
+    const string AUTH_USER_REMOVED_FROM_GROUP = 'auth_user_removed_from_group';
+    const string AUTH_USER_ADDED_TO_SPONSOR_AND_SUMMIT = 'auth_user_added_to_sponsor_and_summit';
+    const string AUTH_USER_REMOVED_FROM_SPONSOR_AND_SUMMIT = 'auth_user_removed_from_sponsor_and_summit';
+    const string AUTH_USER_REMOVED_FROM_SUMMIT = 'auth_user_removed_from_summit';
 }

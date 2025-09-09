@@ -27,6 +27,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -175,9 +176,21 @@ final class SummitSponsorService
     public function updateSponsor(Summit $summit, int $sponsor_id, array $payload): Sponsor
     {
         return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitSponsorService::updateSponsor summit %s sponsor id %s payload %s",
+                    $summit->getId(),
+                    $sponsor_id,
+                    json_encode($payload)
+                )
+            );
+
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
+
             $company = null;
 
             if (isset($payload['company_id'])) {
@@ -217,10 +230,30 @@ final class SummitSponsorService
 
                 // check if we have that sponsor ship type already
                 if($summit_sponsor->hasSponsorships()) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitSponsorService::updateSponsor summit %s sponsor id %s sponsorship_id %s has at least one sponsorship, updating it ...",
+                            $summit->getId(),
+                            $sponsor_id,
+                            $type_id
+                        )
+                    );
                     // update the first
                     $summit_sponsor->getSponsorships()->first()->setType($summit_sponsorship_type);
                 }
                 else {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitSponsorService::updateSponsor summit %s sponsor id %s sponsorship_id %s creating new sponsorship ...",
+                            $summit->getId(),
+                            $sponsor_id,
+                            $type_id
+                        )
+                    );
                     // create it
                     $sponsorship = new SummitSponsorship();
                     $sponsorship->setType($summit_sponsorship_type);

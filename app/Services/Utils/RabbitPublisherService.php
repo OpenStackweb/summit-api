@@ -13,6 +13,7 @@
  **/
 
 
+use Exception;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -20,6 +21,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exception\AMQPRuntimeException;
 use PhpAmqpLib\Exchange\AMQPExchangeType;
 use PhpAmqpLib\Message\AMQPMessage;
+use RuntimeException;
 
 /**
  * Class RabbitPublisherService
@@ -30,51 +32,56 @@ final class RabbitPublisherService
 
     const WAIT_BEFORE_RECONNECT_uS = 1000000;
 
-    /**
-     * @var string
-     */
-    private $host;
+    private string $host;
 
-    /**
-     * @var int`
-     */
-    private $port;
+    private int $port;
 
-    /**
-     * @var string
-     */
-    private $login;
+    private string $login;
 
-    /**
-     * @var string
-     */
-    private $password;
+    private string $password;
 
-    /**
-     * @var string
-     */
-    private $exchange;
+    private string $exchange;
 
-    /**
-     * @var string
-     */
-    private $vhost;
+    private string $vhost;
 
-    public function __construct(string $exchange){
-        $this->host = Config::get('rabbitmq.host');
-        $this->port =  Config::get('rabbitmq.port');
-        $this->login = Config::get('rabbitmq.user');
-        $this->password = Config::get('rabbitmq.password');
-        $this->vhost = Config::get('rabbitmq.vhost');
+    private string $exchange_type;
+
+    private bool $passive;
+
+    private bool $durable;
+
+    private bool $auto_delete;
+
+    public function __construct(
+        string $exchange,
+        string $host = null,
+        int $port = null,
+        string $login = null,
+        string $password = null,
+        string $vhost = null,
+        string $exchange_type = AMQPExchangeType::FANOUT,
+        bool $passive = false,
+        bool $durable = true,
+        bool $auto_delete = false,
+    ){
+        $this->host = $host ?? Config::get('rabbitmq.host');
+        $this->port =  $port ?? Config::get('rabbitmq.port');
+        $this->login = $login ?? Config::get('rabbitmq.user');
+        $this->password = $password ?? Config::get('rabbitmq.password');
+        $this->vhost = $vhost ?? Config::get('rabbitmq.vhost');
         $this->exchange = $exchange;
+        $this->exchange_type = $exchange_type;
+        $this->passive = $passive;
+        $this->durable = $durable;
+        $this->auto_delete = $auto_delete;
     }
 
     /**
      * @return AMQPStreamConnection
+     * @throws \Exception
      */
     private function connect(): AMQPStreamConnection
     {
-
         Log::debug
         (
             sprintf
@@ -100,7 +107,7 @@ final class RabbitPublisherService
     /**
      * @param $connection
      */
-    private function cleanup_connection($connection)
+    private function cleanup_connection($connection): void
     {
         // Connection might already be closed.
         // Ignoring exceptions.
@@ -116,9 +123,10 @@ final class RabbitPublisherService
     /**
      * @param AMQPChannel $channel
      * @param array $payload
-     * @throws \Exception
+     * @param string $routing_key
+     * @throws \DateMalformedStringException
      */
-    private function publishMessage(AMQPChannel $channel, array $payload):void{
+    private function publishMessage(AMQPChannel $channel, array $payload, string $routing_key = ''):void{
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $payload['published_at'] = $now->getTimestamp();
@@ -131,20 +139,20 @@ final class RabbitPublisherService
 
         Log::debug(sprintf("RabbitPublisherService::publishMessage publishing message %s", json_encode($payload)));
 
-        $channel->basic_publish($message, $this->exchange, '', true, false);
+        $channel->basic_publish($message, $this->exchange, $routing_key, true, false);
     }
 
     /**
      * @param array $payload
-     * @throws \Exception
+     * @param string $routing_key
+     * @throws Exception
      */
-    public function publish(array $payload):void
+    public function publish(array $payload, string $routing_key = ''):void
     {
         $connection = null;
         $done = false;
         while (!$done) {
             try {
-
                 $connection = $this->connect();
 
                 $channel = $connection->channel();
@@ -152,33 +160,30 @@ final class RabbitPublisherService
                 $channel->exchange_declare
                 (
                     $this->exchange,
-                    AMQPExchangeType::FANOUT,
-                    false,
-                    true,
-                    false
+                    $this->exchange_type,
+                    $this->passive,
+                    $this->durable,
+                    $this->auto_delete
                 );
 
-                $this->publishMessage($channel, $payload);
+                $this->publishMessage($channel, $payload, $routing_key);
                 $channel->close();
                 $connection->close();
                 $done = true;
-                Log::debug(sprintf("RabbitPublisherService::process message published to QUEUE"));
-
+                Log::debug('RabbitPublisherService::publish - message published to QUEUE');
             } catch (AMQPRuntimeException $ex) {
                 Log::error($ex);
                 $this->cleanup_connection($connection);
                 usleep(self::WAIT_BEFORE_RECONNECT_uS);
-            } catch (\RuntimeException $ex) {
+            } catch (RuntimeException $ex) {
                 Log::error($ex);
                 $this->cleanup_connection($connection);
                 usleep(self::WAIT_BEFORE_RECONNECT_uS);
-            } catch (\ErrorException $ex) {
+            } catch (Exception $ex) {
                 Log::error($ex);
                 $this->cleanup_connection($connection);
                 usleep(self::WAIT_BEFORE_RECONNECT_uS);
             }
-
         }
     }
-
 }

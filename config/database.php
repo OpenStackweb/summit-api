@@ -192,7 +192,7 @@ return [
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => true,
-            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'persistent_id' => env('REDIS_PERSISTENT_ID_DEFAULT', 'summit-api-default'),
             'name'          => env('REDIS_DEFAULT_CLIENT_NAME','summit-api'),
         ],
 
@@ -207,7 +207,7 @@ return [
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => true,
-            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'persistent_id' => env('REDIS_PERSISTENT_ID_CACHE', 'summit-api-cache'),
             'name'          => env('REDIS_CACHE_CLIENT_NAME','summit-api-cache'),
         ],
 
@@ -222,7 +222,7 @@ return [
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => true,
-            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'persistent_id' => env('REDIS_PERSISTENT_ID_SESSION', 'summit-api-session'),
             'name'          => env('REDIS_SESSION_CLIENT_NAME','summit-api-session'),
         ],
 
@@ -237,7 +237,7 @@ return [
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => true,
-            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'persistent_id' => env('REDIS_PERSISTENT_ID_WORKER', 'summit-api-worker'),
             'name'          => env('REDIS_WORKER_CLIENT_NAME','summit-api-worker'),
         ],
         'doctrine_cache' => [
@@ -251,7 +251,7 @@ return [
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => true,
-            'persistent_id' => env('REDIS_PERSISTENT_ID', 'redis-shared'),
+            'persistent_id' => env('REDIS_PERSISTENT_ID_DOCTRINE', 'summit-api-doctrine'),
             'name'          => env('REDIS_DOCTRINE_CACHE_CLIENT_NAME','summit-api-doctrine-cache'),
         ],
 

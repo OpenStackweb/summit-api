@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Events\SponsorServices\SponsorDomainEvents;
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
@@ -25,6 +26,8 @@ use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
+use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
+use App\Services\Utils\RabbitPublisherService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -74,6 +77,11 @@ final class SummitSponsorService
     private $file_uploader;
 
     /**
+     * @var RabbitPublisherService
+     */
+    private $sponsor_services_publisher;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISponsorExtraQuestionTypeRepository $repository
@@ -97,6 +105,8 @@ final class SummitSponsorService
         $this->sponsorship_repository = $sponsorship_repository;
         $this->file_uploader = $file_uploader;
         $this->repository = $repository;
+
+        $this->sponsor_services_publisher = RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
     }
 
     /**
@@ -108,7 +118,7 @@ final class SummitSponsorService
      */
     public function addSponsor(Summit $summit, array $payload): Sponsor
     {
-        return $this->tx_service->transaction(function () use ($summit, $payload) {
+        $sponsor = $this->tx_service->transaction(function () use ($summit, $payload) {
             $company_id = intval($payload['company_id']);
             $featured_event_id = isset($payload['featured_event_id']) ? intval($payload['featured_event_id']) : 0;
 
@@ -163,6 +173,13 @@ final class SummitSponsorService
 
             return $sponsor;
         });
+
+        $this->sponsor_services_publisher->publish([
+            'id' => $sponsor->getId(),
+            'company_name' => $sponsor->getCompany()->getName(),
+        ], SponsorDomainEvents::SponsorCreated);
+
+        return $sponsor;
     }
 
     /**
@@ -320,6 +337,11 @@ final class SummitSponsorService
                 $summit->recalculateSummitSponsorOrder($sponsor, $payload['order']);
             }
 
+            $this->sponsor_services_publisher->publish([
+                'id' => $sponsor->getId(),
+                'company_name' => $sponsor->getCompany()->getName(),
+            ], SponsorDomainEvents::SponsorUpdated);
+
             return $sponsor;
         });
     }
@@ -338,6 +360,10 @@ final class SummitSponsorService
                 throw new EntityNotFoundException("Sponsor not found.");
 
             $summit->removeSummitSponsor($summit_sponsor);
+
+            $this->sponsor_services_publisher->publish([
+                'id' => $sponsor_id
+            ], SponsorDomainEvents::SponsorDeleted);
         });
     }
 

@@ -185,6 +185,9 @@ final class SerializerRegistry
 
     private $registry = [];
 
+    private array $resolve_cache = [];        // fqcn => class|array
+    private array $resolve_type_cache = [];    // fqcn|type => serializer class
+
     private function __construct()
     {
         $this->resource_server_context = App::make(IResourceServerContext::class);
@@ -707,27 +710,41 @@ final class SerializerRegistry
     public function getSerializer($object, $type = self::SerializerType_Public):?IModelSerializer
     {
         if (is_null($object)) return null;
-        $reflect = new \ReflectionClass($object);
-        $class = $reflect->getShortName();
-        if (!isset($this->registry[$class]))
-            throw new \InvalidArgumentException('Serializer not found for ' . $class);
 
-        $serializer_class = $this->registry[$class];
+        $fqcn = \get_class($object);
 
-        if (is_array($serializer_class)) {
+        // cache registry entry by FQCN (avoid Reflection)
+        if (!isset($this->resolve_cache[$fqcn])) {
+            // basename sin Reflection
+            $pos = strrpos($fqcn, '\\');
+            $short = ($pos === false) ? $fqcn : substr($fqcn, $pos + 1);
 
-            if (!isset($serializer_class[$type])) {
-                $type = self::SerializerType_Public;
+            if (!isset($this->registry[$short])) {
+                throw new \InvalidArgumentException('Serializer not found for ' . $short);
             }
-
-            if (!isset($serializer_class[$type])) {
-                throw new \InvalidArgumentException(sprintf('Serializer not found for %s , type %s', $class, $type));
-            }
-
-            $serializer_class = $serializer_class[$type];
+            $this->resolve_cache[$fqcn] = $this->registry[$short];
         }
 
-        return new SerializerDecorator(new $serializer_class($object, $this->resource_server_context));
+        $entry = $this->resolve_cache[$fqcn];
+
+        // if the input has types, resolve and cache by (fqcn,type
+        if (\is_array($entry)) {
+            $key = $fqcn.'|'.$type;
+            if (!isset($this->resolve_type_cache[$key])) {
+                if (!isset($entry[$type])) {
+                    $type = self::SerializerType_Public;
+                }
+                if (!isset($entry[$type])) {
+                    throw new \InvalidArgumentException(sprintf('Serializer not found for %s , type %s', $fqcn, $type));
+                }
+                $this->resolve_type_cache[$key] = $entry[$type];
+            }
+            $serializerClass = $this->resolve_type_cache[$key];
+        } else {
+            $serializerClass = $entry;
+        }
+
+        return new SerializerDecorator(new $serializerClass($object, $this->resource_server_context));
     }
 }
 
@@ -751,17 +768,6 @@ final class SerializerDecorator implements IModelSerializer {
 
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-       /* Log::debug
-        (
-            sprintf
-            (
-                "SerializerDecorator::serialize %s expand %s fields %s relations %s",
-                get_class($this->serializer_imp),
-                $expand,
-                json_encode($fields),
-                json_encode($relations)
-            )
-        );*/
 
         // check first level fields, and if empty get default fields
         if (!count(AbstractSerializer::getFirstLevelAllowedFields($relations)))
@@ -773,18 +779,6 @@ final class SerializerDecorator implements IModelSerializer {
             if (!is_callable($hook)) continue;
             list($expand, $fields, $relations, $params) = call_user_func($expand, $fields, $relations, $params);
         }
-
-        /*Log::debug
-        (
-            sprintf
-            (
-                "SerializerDecorator::serialize %s expand %s fields %s relations %s after pre hooks",
-                get_class($this->serializer_imp),
-                $expand,
-                json_encode($fields),
-                json_encode($relations)
-            )
-        );*/
 
         $res = $this->serializer_imp->serialize($expand, $fields, $relations, $params);
 

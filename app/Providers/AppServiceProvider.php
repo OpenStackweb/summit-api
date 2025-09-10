@@ -201,8 +201,19 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        /*
+         * Registers a callback that runs before every iteration of a queue worker’s main loop
+         * This fires for php artisan queue:work and Horizon worker processes.
+         */
         Queue::looping(function () {
-            // kill old sockets on each worker loop
+            /*
+             * This closes the underlying TCP socket(s) for those named Redis connections and forgets the client
+             * instance(s). Laravel will re-create/reconnect lazily the next time anything uses Redis.
+             * Long-lived queue workers keep Redis sockets open for hours/days. In some environments
+             * (NATs, load balancers, Redis restarts, failovers, idle timeouts), those sockets can go stale and
+             * cause “went away/timeout” errors. Forcing a disconnect each loop ensures every job starts with a fresh
+             * Redis connection, avoiding flaky, long-lived sockets.
+             */
             try { Redis::connection('worker')->disconnect(); } catch (\Throwable $e) {}
             try { Redis::connection('default')->disconnect(); } catch (\Throwable $e) {}
         });

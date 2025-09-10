@@ -201,23 +201,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        /*
-         * Registers a callback that runs before every iteration of a queue worker’s main loop
-         * This fires for php artisan queue:work and Horizon worker processes.
-         */
-        Queue::looping(function () {
-            /*
-             * This closes the underlying TCP socket(s) for those named Redis connections and forgets the client
-             * instance(s). Laravel will re-create/reconnect lazily the next time anything uses Redis.
-             * Long-lived queue workers keep Redis sockets open for hours/days. In some environments
-             * (NATs, load balancers, Redis restarts, failovers, idle timeouts), those sockets can go stale and
-             * cause “went away/timeout” errors. Forcing a disconnect each loop ensures every job starts with a fresh
-             * Redis connection, avoiding flaky, long-lived sockets.
-             */
-            try { Redis::connection('worker')->disconnect(); } catch (\Throwable $e) {}
-            try { Redis::connection('default')->disconnect(); } catch (\Throwable $e) {}
-        });
-
         $logger = Log::getLogger();
         foreach ($logger->getHandlers() as $handler) {
             $handler->setLevel(Config::get('log.level', 'debug'));
@@ -729,18 +712,6 @@ class AppServiceProvider extends ServiceProvider
             return is_numeric($value) && intval($value) > - strlen(strval($value)) == 10;
         });
 
-        // octane
-        if (class_exists(\Laravel\Octane\Facades\Octane::class)) {
-            \Laravel\Octane\Facades\Octane::listen(
-                \Laravel\Octane\Events\WorkerStarting::class,
-                function () {
-                    RedisClientNamer::ensure('octane');
-                }
-            );
-        } else {
-            // classic FPM
-            RedisClientNamer::ensure('fpm');
-        }
     }
 
     /**

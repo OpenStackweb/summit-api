@@ -4,6 +4,7 @@ use Keepsuit\LaravelOpenTelemetry\Instrumentation;
 use OpenTelemetry\SDK\Common\Configuration\Variables;
 
 return [
+    'enabled' => env('OTEL_SERVICE_ENABLED', false),
     /**
      * Service name
      */

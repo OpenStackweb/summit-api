@@ -733,7 +733,8 @@ class AppServiceProvider extends ServiceProvider
     {
 
         // phpunit.xml sets APP_ENV=testing during tests
-        if (! App::environment('testing')) {
+        if (! App::environment('testing') && boolval(Config::get('opentelemetry.enabled', false))) {
+            Log::debug('Enabling LaravelOpenTelemetryServiceProvider');
             App::register(
                 \Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class
             );

@@ -13,6 +13,7 @@
  **/
 
 use App\Utils\AES;
+use App\Utils\Base64;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -406,14 +407,24 @@ SQL;
      * @param Summit $summit
      * @param string $qr_code
      * @return string
+     * @throws ValidationException
      */
     public static function decodeQRCodeFor(Summit $summit, string $qr_code): string
     {
         $val = trim($qr_code);
-        if(base64_decode($val, true) !== false){
+        $val = str_replace(' ', '+', $val);
+        $val = strtr($val, '-_', '+/');
+        $val = rawurldecode($val);
+
+        if (Base64::looksLikeBase64($val)) {
             // if qr_code is base64 encoded, decode it
             Log::debug(sprintf("SummitAttendeeBadge::decodeQRCodeFor summit %s qr_code %s with base64 decode", $summit->getId(), $val));
-            $val = base64_decode($val, true);
+
+            $val = Base64::tryBase64Decode($val);
+            if(empty($val)) {
+                Log::warning(sprintf("SummitAttendeeBadge::decodeQRCodeFor qr_code %s is not valid", $qr_code));
+                throw new ValidationException("QR Code is not valid");
+            }
         }
 
         // check first for encryption ...
@@ -433,7 +444,8 @@ SQL;
 
             $val = AES::decrypt($summit->getQRCodesEncKey(), $val)->getData();
         }
-
+        if(empty($val))
+            throw new ValidationException("QR Code is not valid");
         return $val;
     }
 }

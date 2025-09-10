@@ -777,7 +777,7 @@ final class SerializerDecorator implements IModelSerializer {
 
         foreach($this->pre_hooks as $hook) {
             if (!is_callable($hook)) continue;
-            list($expand, $fields, $relations, $params) = call_user_func($expand, $fields, $relations, $params);
+            list($expand, $fields, $relations, $params) = call_user_func($hook, $fields, $relations, $params);
         }
 
         $res = $this->serializer_imp->serialize($expand, $fields, $relations, $params);

@@ -565,7 +565,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             null,
             null,
             function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($attendee) {
-                return $this->repository->getAllAllowedByPage
+                return $this->repository->getAllAllowedMainQuestionByAttendee
                 (
                     $attendee,
                     new PagingInfo($page, $per_page),

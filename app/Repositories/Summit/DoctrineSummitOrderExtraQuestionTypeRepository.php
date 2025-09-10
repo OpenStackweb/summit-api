@@ -13,9 +13,12 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 use models\summit\SummitOrderExtraQuestionType;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -82,6 +85,161 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
                 //default order
                 return $query;
             });
+    }
+
+    public function getAllAllowedMainQuestionByAttendee  (
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
+    ): PagingResponse{
+        $page = $this->getAllIdsAllowedMainQuestionByAttendee($attendee, $paging_info, $filter, $order);
+        $total = $page->getTotal();
+
+        $data = $this->getEntityManager()->createQueryBuilder()
+            ->select("e, FIELD(e.id, :ids) AS HIDDEN ids")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.id in (:ids)")
+            ->orderBy("ids")
+            ->setParameter("ids", $page->getItems())
+            ->getQuery()
+            ->getResult();
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
+    }
+
+    public function getAllIdsAllowedMainQuestionByAttendee  (
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
+    ): PagingResponse{
+
+        $ticket_types = [];
+        $badge_features = [];
+        $exclude_inactive_tickets = true;
+
+        if($filter->hasFilter('tickets_exclude_inactives')){
+            $exclude_inactive_tickets = $filter->getUniqueFilter('tickets_exclude_inactives')->getBooleanValue();
+        }
+
+        foreach ($attendee->getAllowedTicketTypes($exclude_inactive_tickets) as $ticket_type) {
+            $ticket_types[] = $ticket_type->getId();
+        }
+
+        foreach ($attendee->getAllowedBadgeFeatures($exclude_inactive_tickets) as $badge_feature) {
+            $badge_features[] = $badge_feature->getId();
+        }
+
+        $bindings = [
+            'summit_id' => $attendee->getSummitId(),
+            'usage' =>  SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+        ];
+
+        $types = [
+            'summit_id'      => ParameterType::INTEGER,
+            'usage'          => ParameterType::STRING,
+        ];
+
+        $filter_restriction = "";
+
+        if(count($ticket_types) > 0){
+            $bindings['ticket_types'] = $ticket_types;
+            $types['ticket_types']  = ArrayParameterType::INTEGER;
+            $filter_restriction = <<<SQL
+      -- matches attendee ticket type
+      OR EXISTS (
+          SELECT 1
+          FROM SummitOrderExtraQuestionType_SummitTicketType tt2
+          WHERE tt2.SummitOrderExtraQuestionTypeID = s.ID
+            AND tt2.SummitTicketTypeID IN (:ticket_types)
+      )
+SQL;
+        }
+
+        if(count($badge_features) > 0){
+            $bindings['badge_features'] = $badge_features;
+            $types['badge_features']  = ArrayParameterType::INTEGER;
+            $filter_restriction .= <<<SQL
+      -- matches attendee badge feature
+      OR EXISTS (
+          SELECT 1
+          FROM SummitOrderExtraQuestionType_SummitBadgeFeatureType bf2
+          WHERE bf2.SummitOrderExtraQuestionTypeID = s.ID
+            AND bf2.SummitBadgeFeatureTypeID IN (:badge_features)
+      )
+SQL;
+        }
+
+        $extra_orders = <<<SQL
+ORDER BY e.ID ASC
+SQL;
+
+        $extra_filters = <<<SQL
+WHERE s.SummitID = :summit_id
+  AND s.Usage    = :usage
+ -- MAIN QUESTIONS CONDITION ( DOES NOT HAS SUBRULES)
+  AND NOT EXISTS (
+      SELECT 1
+      FROM SubQuestionRule r
+      WHERE r.SubQuestionID = e.ID
+  )
+AND (
+      --  (o restrictions on either list
+      (
+          NOT EXISTS (
+            SELECT 1 FROM SummitOrderExtraQuestionType_SummitBadgeFeatureType bf
+            WHERE bf.SummitOrderExtraQuestionTypeID = s.ID
+          ) AND 
+          NOT EXISTS (
+            SELECT 1 FROM SummitOrderExtraQuestionType_SummitTicketType tt
+            WHERE tt.SummitOrderExtraQuestionTypeID = s.ID
+          )
+     )
+     $filter_restriction
+)
+SQL;
+
+        $query_from = <<<SQL
+FROM SummitOrderExtraQuestionType s
+JOIN ExtraQuestionType e ON e.ID = s.ID
+SQL;
+
+        $query_count = <<<SQL
+SELECT COUNT(DISTINCT(e.ID)) AS QTY
+{$query_from}
+{$extra_filters}
+SQL;
+
+
+        $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings, $types);
+
+        $total = intval($stm->fetchOne());
+
+        $limit = $paging_info->getPerPage();
+        $offset = $paging_info->getOffset();
+
+
+        $query = <<<SQL
+SELECT DISTINCT(e.ID)
+{$query_from}
+{$extra_filters} 
+{$extra_orders} LIMIT {$limit} OFFSET {$offset};
+SQL;
+
+        $res = $this->getEntityManager()->getConnection()->executeQuery($query, $bindings, $types);
+
+        $ids = $res->fetchFirstColumn();
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $ids
+        );
     }
 
     /**

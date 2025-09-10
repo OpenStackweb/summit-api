@@ -35,4 +35,16 @@ interface ISummitOrderExtraQuestionTypeRepository extends IExtraQuestionTypeRepo
     (
         SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
     ): PagingResponse;
+
+
+    /**
+     * @param SummitAttendee $attendee
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllAllowedMainQuestionByAttendee  (
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
+    ): PagingResponse;
 }

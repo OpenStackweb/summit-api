@@ -507,7 +507,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
             if(!$auth){
                 // check if the attendee is under some order of the current member
-                foreach($current_member->getPadRegistrationOrdersForSummit($summit) as $order){
+                foreach($current_member->getPaidRegistrationOrdersForSummit($summit) as $order){
                     if(!$order instanceof SummitOrder) continue;
                     if($order->hasTicketOwner($attendee)){
                         $auth = true;

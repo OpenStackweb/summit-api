@@ -1421,6 +1421,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function setStreamingUrl(?string $streaming_url): void
     {
         $this->streaming_url = $streaming_url;
+        $this->overflow_streaming_url = $streaming_url;;
         $key = $this->getSecureStreamCacheKey();
         if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
             Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->forget($key);
@@ -1858,6 +1859,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         Log::debug(sprintf("SummitEvent::setStreamIsSecure summit %s event %s stream_is_secure %s", $this->summit->getId(), $this->id, $stream_is_secure));
         $this->stream_is_secure = $stream_is_secure;
+        $this->overflow_stream_is_secure = $stream_is_secure;
 
         $key = $this->getSecureStreamCacheKey();
         if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
@@ -1982,6 +1984,8 @@ SQL;
     {
         $this->overflow_streaming_url = $overflow_streaming_url;
         $this->overflow_stream_is_secure = $overflow_stream_is_secure;
+        $this->streaming_url = $overflow_streaming_url;
+        $this->stream_is_secure = $overflow_stream_is_secure;
         $this->occupancy = self::OccupancyOverflow;
     }
 
@@ -1990,6 +1994,8 @@ SQL;
         $this->overflow_streaming_url = null;
         $this->overflow_stream_is_secure = false;
         $this->overflow_stream_key = null;
+        $this->streaming_url = null;
+        $this->stream_is_secure = false;
         $this->occupancy = $occupancy;
     }
 

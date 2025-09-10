@@ -1924,7 +1924,7 @@ SQL;
         return $this->summit_registration_orders->matching($criteria)->count() > 0;
     }
 
-    public function getPadRegistrationOrdersForSummit(Summit $summit)
+    public function getPaidRegistrationOrdersForSummit(Summit $summit)
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('summit', $summit))

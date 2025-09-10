@@ -58,38 +58,58 @@ abstract class AbstractSerializer implements IModelSerializer
 
     protected static $expand_mappings = [];
 
+
+    // cache for memoizing
+    private static array $_memoAllowedFields   = [];
+    private static array $_memoAllowedRelations= [];
+    private static array $_memoExpandMappings  = [];
+    private static array $_memoMappings        = [];
+    private static array $_memoHierarchy       = [];
+
+
+    /**
+     * @return array
+     */
+    private function getClassHierarchy(): array
+    {
+        $cur_class = static::class;
+        if (isset(self::$_memoHierarchy[$cur_class])) return self::$_memoHierarchy[$cur_class];
+        return self::$_memoHierarchy[$cur_class] = array_reverse($this->get_class_lineage($this));
+    }
+    /**
+     * @param $object
+     * @return array
+     */
+    private function get_class_lineage($object):array
+    {
+        $class_name = get_class($object);
+        $parents = array_values(class_parents($class_name));
+        return array_merge(array($class_name), $parents);
+    }
+
     /**
      * @return array
      */
     public function getAllowedFields():array
     {
         try {
+            $cur_class = static::class;
+            if (isset(self::$_memoAllowedFields[$cur_class])) return self::$_memoAllowedFields[$cur_class];
+
             $allowed_fields = [];
-            $hierarchy = $this->getClassHierarchy();
-            $cur_class = get_class($this);
-            $cache_key = $cur_class . '.allowed_fields';
-
-            if (Cache::has($cache_key)) {
-                $res = Cache::get($cache_key);
-                if(!empty($res))
-                    return json_decode($res, true);
-            }
-
-            foreach ($hierarchy as $class_name) {
-                if ($class_name === AbstractSerializer::class) continue;
-                $refClass = new ReflectionClass($class_name);
-                if ($refClass->hasProperty("allowed_fields")) {
-                    $prop = $refClass->getProperty("allowed_fields");
+            foreach ($this->getClassHierarchy() as $class_name) {
+                if ($class_name === self::class) continue;
+                $refClass = new \ReflectionClass($class_name);
+                if ($refClass->hasProperty('allowed_fields')) {
+                    $prop = $refClass->getProperty('allowed_fields');
                     $prop->setAccessible(true);
                     $allowed_fields = array_merge($allowed_fields, $prop->getValue());
                 }
             }
-
             $allowed_fields = array_merge($allowed_fields, static::$allowed_fields);
-            Cache::put($cache_key, json_encode($allowed_fields));
-            return $allowed_fields;
-        }
-        catch (Exception $ex){
+
+            return self::$_memoAllowedFields[$cur_class] = $allowed_fields;
+        } catch (\Throwable $ex) {
             Log::error($ex);
             return [];
         }
@@ -101,31 +121,22 @@ abstract class AbstractSerializer implements IModelSerializer
     protected function getExpandsMappings():array
     {
         try {
+            $cur_class = static::class;
+            if (isset(self::$_memoExpandMappings[$cur_class])) return self::$_memoExpandMappings[$cur_class];
+
             $expands = [];
-            $hierarchy = $this->getClassHierarchy();
-            $cur_class = get_class($this);
-            $cache_key = $cur_class . '.expand_mappings';
-
-            if (Cache::has($cache_key)) {
-                $res = Cache::get($cache_key);
-                if(!empty($res))
-                    return json_decode($res, true);
-            }
-
-            foreach ($hierarchy as $class_name) {
-                if ($class_name === AbstractSerializer::class) continue;
-                $refClass = new ReflectionClass($class_name);
-                if ($refClass->hasProperty("expand_mappings")) {
-                    $prop = $refClass->getProperty("expand_mappings");
+            foreach ($this->getClassHierarchy() as $class_name) {
+                if ($class_name === self::class) continue;
+                $refClass = new \ReflectionClass($class_name);
+                if ($refClass->hasProperty('expand_mappings')) {
+                    $prop = $refClass->getProperty('expand_mappings');
                     $prop->setAccessible(true);
                     $expands = array_merge($expands, $prop->getValue());
                 }
             }
             $expands = array_merge($expands, static::$expand_mappings);
-            Cache::put($cache_key, json_encode($expands));
-            return $expands;
-        }
-        catch (Exception $ex){
+            return self::$_memoExpandMappings[$cur_class] = $expands;
+        } catch (\Throwable $ex) {
             Log::error($ex);
             return [];
         }
@@ -137,32 +148,48 @@ abstract class AbstractSerializer implements IModelSerializer
     public function getAllowedRelations():array
     {
         try {
+            $cur_class = static::class;
+            if (isset(self::$_memoAllowedRelations[$cur_class])) return self::$_memoAllowedRelations[$cur_class];
+
             $relations = [];
-            $hierarchy = $this->getClassHierarchy();
-            $cur_class = get_class($this);
-            $cache_key = $cur_class . '.relations';
-
-            if (Cache::has($cache_key)) {
-                $res = Cache::get($cache_key);
-                if(!empty($res))
-                    return json_decode($res, true);
-            }
-
-            foreach ($hierarchy as $class_name) {
-                if ($class_name === AbstractSerializer::class) continue;
-                $refClass = new ReflectionClass($class_name);
-                if ($refClass->hasProperty("allowed_relations")) {
-                    $prop = $refClass->getProperty("allowed_relations");
+            foreach ($this->getClassHierarchy() as $class_name) {
+                if ($class_name === self::class) continue;
+                $refClass = new \ReflectionClass($class_name);
+                if ($refClass->hasProperty('allowed_relations')) {
+                    $prop = $refClass->getProperty('allowed_relations');
                     $prop->setAccessible(true);
                     $relations = array_merge($relations, $prop->getValue());
                 }
             }
-
             $relations = array_merge($relations, static::$allowed_relations);
-            Cache::put($cache_key, json_encode($relations));
-            return $relations;
+            return self::$_memoAllowedRelations[$cur_class] = $relations;
+        } catch (\Throwable $ex) {
+            Log::error($ex);
+            return [];
         }
-        catch (Exception $ex){
+    }
+
+    /**
+     * @return array
+     */
+    private function getAttributeMappings():array
+    {
+        try {
+            $cur_class = static::class;
+            if (isset(self::$_memoMappings[$cur_class])) return self::$_memoMappings[$cur_class];
+
+            $mappings = [];
+            foreach ($this->getClassHierarchy() as $class_name) {
+                $refClass = new \ReflectionClass($class_name);
+                if ($refClass->hasProperty('array_mappings')) {
+                    $prop = $refClass->getProperty('array_mappings');
+                    $prop->setAccessible(true);
+                    $mappings = array_merge($mappings, $prop->getValue());
+                }
+            }
+            $mappings = array_merge($mappings, static::$array_mappings);
+            return self::$_memoMappings[$cur_class] = $mappings;
+        } catch (\Throwable $ex) {
             Log::error($ex);
             return [];
         }
@@ -172,61 +199,6 @@ abstract class AbstractSerializer implements IModelSerializer
         return array_filter($relations, function($elem) {
             return !str_contains(trim($elem), ".");
         });
-    }
-    /**
-     * @return array
-     */
-    private function getAttributeMappings():array
-    {
-        try {
-            $mappings = [];
-            $hierarchy = $this->getClassHierarchy();
-            $cur_class = get_class($this);
-            $cache_key = $cur_class . '.mappings';
-
-            if (Cache::has($cache_key)) {
-                $res = Cache::get($cache_key);
-                if(!empty($res))
-                    return json_decode($res, true);
-            }
-
-            foreach ($hierarchy as $class_name) {
-                $refClass = new ReflectionClass($class_name);
-                if ($refClass->hasProperty("array_mappings")) {
-                    $prop = $refClass->getProperty("array_mappings");
-                    $prop->setAccessible(true);
-                    $mappings = array_merge($mappings, $prop->getValue());
-                }
-            }
-
-            $mappings = array_merge($mappings, static::$array_mappings);
-            Cache::put($cache_key, json_encode($mappings));
-
-            return $mappings;
-        }
-        catch (Exception $ex){
-            Log::error($ex);
-            return [];
-        }
-    }
-
-    /**
-     * @return array
-     */
-    private function getClassHierarchy():array
-    {
-        return array_reverse($this->get_class_lineage($this));
-    }
-
-    /**
-     * @param $object
-     * @return array
-     */
-    private function get_class_lineage($object):array
-    {
-        $class_name = get_class($object);
-        $parents = array_values(class_parents($class_name));
-        return array_merge(array($class_name), $parents);
     }
 
     const BoolType = 'json_boolean';
@@ -278,6 +250,7 @@ abstract class AbstractSerializer implements IModelSerializer
         $method_prefix = ['get', 'is'];
         if (!count($fields)) $fields = $this->getAllowedFields();
         if (!count($relations)) $relations = $this->getAllowedRelations();
+
         $mappings = $this->getAttributeMappings();
         if (count($mappings)) {
             $new_values = [];
@@ -362,10 +335,12 @@ abstract class AbstractSerializer implements IModelSerializer
                         {
                             $value = JsonUtils::toObfuscatedEmail($value);
                         }
+                        break;
                         case 'json_null_email':
                         {
                             $value = JsonUtils::toNullEmail($value);
                         }
+                        break;
                         case 'json_url':
                             {
                                 $value = JsonUtils::encodeUrl($value);

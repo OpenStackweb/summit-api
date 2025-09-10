@@ -27,7 +27,8 @@ use models\main\PushNotificationMessagePriority;
 use models\oauth2\IResourceServerContext;
 use models\oauth2\ResourceServerContext;
 use Sokil\IsoCodes\IsoCodesFactory;
-
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Redis;
 /**
  * Class AppServiceProvider
  * @package App\Providers
@@ -199,6 +200,12 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production') || app()->environment('dev')  ) {
             URL::forceScheme('https');
         }
+
+        Queue::looping(function () {
+            // kill old sockets on each worker loop
+            try { Redis::connection('worker')->disconnect(); } catch (\Throwable $e) {}
+            try { Redis::connection('default')->disconnect(); } catch (\Throwable $e) {}
+        });
 
         $logger = Log::getLogger();
         foreach ($logger->getHandlers() as $handler) {

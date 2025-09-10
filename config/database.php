@@ -175,6 +175,8 @@ return [
             'serializer' => 'igbinary', //\Redis::SERIALIZER_IGBINARY
             'compression' => 'zstd', // \Redis::COMPRESSION_ZSTD needs phpredis built w/ zstd (or LZF)
             'compression_level' => 3,
+            'read_timeout'     => 5.0,
+            'tcp_keepalive'    => 60,
         ],
         /*
          * @see https://github.com/predis/predis/wiki/Connection-Parameters
@@ -187,12 +189,11 @@ return [
             'database' => env('REDIS_DEFAULT_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 5),
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => false,
-            'persistent_id' => env('REDIS_PERSISTENT_ID_DEFAULT', 'summit-api-default'),
+            //'persistent_id' => env('REDIS_PERSISTENT_ID_DEFAULT', 'summit-api-default'),
             'name'          => env('REDIS_DEFAULT_CLIENT_NAME','summit-api'),
         ],
 
@@ -207,7 +208,7 @@ return [
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => false,
-            'persistent_id' => env('REDIS_PERSISTENT_ID_CACHE', 'summit-api-cache'),
+            //'persistent_id' => env('REDIS_PERSISTENT_ID_CACHE', 'summit-api-cache'),
             'name'          => env('REDIS_CACHE_CLIENT_NAME','summit-api-cache'),
         ],
 
@@ -217,12 +218,11 @@ return [
             'database' => env('REDIS_SESSION_DATABASE', 1),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 5),
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => false,
-            'persistent_id' => env('REDIS_PERSISTENT_ID_SESSION', 'summit-api-session'),
+            //'persistent_id' => env('REDIS_PERSISTENT_ID_SESSION', 'summit-api-session'),
             'name'          => env('REDIS_SESSION_CLIENT_NAME','summit-api-session'),
         ],
 
@@ -232,12 +232,11 @@ return [
             'database' => env('REDIS_WORKER_DATABASE', 2),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 5),
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => false,
-            'persistent_id' => env('REDIS_PERSISTENT_ID_WORKER', 'summit-api-worker'),
+            //'persistent_id' => env('REDIS_PERSISTENT_ID_WORKER', 'summit-api-worker'),
             'name'          => env('REDIS_WORKER_CLIENT_NAME','summit-api-worker'),
         ],
         'doctrine_cache' => [
@@ -246,12 +245,11 @@ return [
             'database' => env('REDIS_DOCTRINE_CACHE_DB', 5),
             'password' => env('REDIS_PASSWORD'),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 5),
             'read_timeout'  => 5.0,
             'retry_interval' => 100,
             'persistent'    => false,
-            'persistent_id' => env('REDIS_PERSISTENT_ID_DOCTRINE', 'summit-api-doctrine'),
+            //'persistent_id' => env('REDIS_PERSISTENT_ID_DOCTRINE', 'summit-api-doctrine'),
             'name'          => env('REDIS_DOCTRINE_CACHE_CLIENT_NAME','summit-api-doctrine-cache'),
         ],
 

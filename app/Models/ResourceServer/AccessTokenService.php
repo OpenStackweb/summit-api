@@ -144,7 +144,7 @@ final class AccessTokenService implements IAccessTokenService
         }
 
         if(!array_key_exists("user_groups" , $token_info)){
-            $token_info['user_groups'] = [];
+            $token_info['user_groups'] = json_encode([]);
         }
         else{
             $token_info['user_groups'] = json_encode($token_info['user_groups']);

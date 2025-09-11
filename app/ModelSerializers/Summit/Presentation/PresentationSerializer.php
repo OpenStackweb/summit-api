@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Presentation;
+use models\summit\PresentationType;
+
 /**
  * Class PresentationSerializer
  * @package ModelSerializers
@@ -73,6 +75,7 @@ class PresentationSerializer extends SummitEventSerializer
         'actions',
         'creator',
         'selection_plan',
+        'moderator',
     ];
 
     /**
@@ -371,7 +374,26 @@ class PresentationSerializer extends SummitEventSerializer
                         }
                         $values['actions'] = $actions;
                     }
-                        break;
+                    break;
+                    case 'moderator':{
+                        $type = $presentation->getType();
+                        if($type instanceof PresentationType && $type->isUseModerator() && $presentation->hasModerator())
+                        {
+                            unset($values['moderator_speaker_id']);
+                            $values['moderator'] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $presentation->getModerator(),
+                                $this->getSerializerType($relation)
+                            )->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
+                        }
+                    }
+                    break;
                 }
             }
         }

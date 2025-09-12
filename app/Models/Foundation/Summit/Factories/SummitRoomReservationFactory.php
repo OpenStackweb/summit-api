@@ -29,6 +29,7 @@ final class SummitRoomReservationFactory
     }
 
     public static function populate(SummitRoomReservation $reservation, Summit $summit, array $data):SummitRoomReservation{
+
         if(isset($data['owner']))
             $reservation->setOwner($data['owner']);
         if(isset($data['currency']))

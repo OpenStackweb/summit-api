@@ -1693,6 +1693,7 @@ final class SummitLocationService
             }
 
             $owner_id = $payload["owner_id"];
+            $quantity = intval($payload["quantity"] ?? 1 );
 
             $owner = $this->member_repository->getById($owner_id);
 
@@ -1700,7 +1701,7 @@ final class SummitLocationService
                 throw new EntityNotFoundException('Member not found.');
             }
 
-            if ($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
+            if ($quantity == 1 && $owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
                 throw new ValidationException
                 (
                     sprintf
@@ -1744,14 +1745,51 @@ final class SummitLocationService
                 }
             }
 
-            $reservation = SummitRoomReservationFactory::build($summit, $payload);
-            $reservation->markAsOffline();
-            $room->addReservation($reservation);
-            $reservation->setPaid();
+            $booking_slot_len     = $summit->getMeetingRoomBookingSlotLength();
+            $next_start_date = null;
+            $next_end_date = null;
+
+            Log::debug(sprintf("SummitLocationService::addOfflineBookableRoomReservation we are gonna create %s slots", $quantity));
+            for($i = 0 ; $i < $quantity ; $i++) {
+                $reservation = SummitRoomReservationFactory::build($summit, $payload);
+
+                if(!is_null($next_start_date)) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitLocationService::addOfflineBookableRoomReservation setting next_start_date %s",
+                            $next_start_date->format('Y-m-d H:i:s')
+                        )
+                    );
+                    $reservation->setStartDatetime($next_start_date);
+                }
+
+                if(!is_null($next_end_date)) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitLocationService::addOfflineBookableRoomReservation setting next_end_date %s",
+                            $next_end_date->format('Y-m-d H:i:s')
+                        )
+                    );
+                    $reservation->setEndDatetime($next_end_date);
+                }
+                $reservation->markAsOffline();
+                $room->addReservation($reservation);
+                $reservation->setPaid();
+                $next_start_date = clone $reservation->getEndDatetime();
+                $next_end_date = (clone $reservation->getEndDatetime())->add(new \DateInterval("PT" . $booking_slot_len . 'M'));
+            }
+
             return $reservation;
         });
 
-        Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
+        $supress_email = boolval($payload["supress_email"] ?? false);
+
+        if(!$supress_email)
+            Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
 
         return $reservation;
     }

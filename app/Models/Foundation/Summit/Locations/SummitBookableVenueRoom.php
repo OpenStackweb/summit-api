@@ -72,6 +72,17 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $local_start_date = $summit->convertDateFromUTC2TimeZone(clone $start_date);
         $local_end_date   = $summit->convertDateFromUTC2TimeZone(clone $end_date);
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitBookableVenueRoom::validateReservation summit %s local_start_date %s local_end_date %s",
+                $summit->getId(),
+                $start_date->format('Y-m-d H:i:s'),
+                $end_date->format('Y-m-d H:i:s')
+            )
+        );
+
         if($summit->isBookingPeriodEnded()){
             throw new ValidationException
             (
@@ -102,8 +113,9 @@ class SummitBookableVenueRoom extends SummitVenueRoom
                 SummitRoomReservation::Canceled
             ]));
 
-        if($this->reservations->matching($criteria)->count() > 0)
+        if($this->reservations->matching($criteria)->count() > 0) {
             throw new ValidationException("Reservation overlaps an existent reservation(s).");
+        }
 
 
         $criteria
@@ -115,11 +127,12 @@ class SummitBookableVenueRoom extends SummitVenueRoom
                 SummitRoomReservation::Canceled
             ]));
 
-        if($this->reservations->matching($criteria)->count() > 0)
+        if($this->reservations->matching($criteria)->count() > 0) {
             throw new ValidationException
             (
                 "Reservation overlaps an existent reservation(s)."
             );
+        }
 
         $start_time       = $summit->getMeetingRoomBookingStartTime();
         $end_time         = $summit->getMeetingRoomBookingEndTime();

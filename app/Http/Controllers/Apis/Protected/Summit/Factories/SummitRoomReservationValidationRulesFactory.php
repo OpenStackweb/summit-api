@@ -40,11 +40,13 @@ final class SummitRoomReservationValidationRulesFactory extends AbstractValidati
     public  static function buildForAddOffline(array $payload = []):array{
 
         return [
-            'currency'       => 'required|string|currency_iso',
-            'owner_id'       => 'required|integer',
-            'amount'         => 'required|integer|min:0',
-            'start_datetime' => 'required|date_format:U|epoch_seconds',
-            'end_datetime'   => 'required|date_format:U|epoch_seconds|after:start_datetime',
+            'currency'        => 'required|string|currency_iso',
+            'owner_id'        => 'required|integer',
+            'amount'          => 'required|integer|min:0',
+            'start_datetime'  => 'required|date_format:U|epoch_seconds',
+            'end_datetime'    => 'required|date_format:U|epoch_seconds|after:start_datetime',
+            'quantity'        => 'sometimes|integer|min:1',
+            'supress_email'   => 'sometimes|boolean',
         ];
     }
 

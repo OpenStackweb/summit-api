@@ -196,11 +196,13 @@ class SummitRSVPServiceTest extends TestCase
         $event_type = Mockery::mock(\models\summit\SummitEventType::class)->makePartial();
         $event_type->shouldReceive('isPrivate')->andReturn(false);
         $event->shouldReceive('getType')->andReturn($event_type);
+        $event->shouldReceive('getTitle')->andReturn("TEST TITLE");
         $event->shouldReceive('hasRSVP')->andReturn(true);
         $event->shouldReceive("getRSVPType")->andReturn(SummitEvent::RSVPType_Public);
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
 
         $existing = Mockery::mock(RSVP::class)->makePartial();
+        $existing->shouldReceive("getEvent")->andReturn($event);
         $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturn($existing);
 
         $this->service->rsvpEvent($summit, $member, 100, []);
@@ -324,6 +326,10 @@ class SummitRSVPServiceTest extends TestCase
         $event->shouldReceive('getCurrentRSVPSubmissionSeatType')->andReturn(\models\summit\RSVP::SeatTypeRegular);
         $event->shouldReceive('increaseRSVPMaxUserNumber')->never();
 
+        // init the collection used by addRSVPSubmission()
+        $prop = new \ReflectionProperty(\models\summit\SummitEvent::class, 'rsvp_invitations');
+        $prop->setAccessible(true);
+        $prop->setValue($event, new \Doctrine\Common\Collections\ArrayCollection());
         // attendee with paid tickets and a member
         $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
         $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
@@ -372,6 +378,10 @@ class SummitRSVPServiceTest extends TestCase
         $event->shouldReceive('getCurrentRSVPSubmissionSeatType')->andReturn(\models\summit\RSVP::SeatTypeWaitList);
         $event->shouldReceive('increaseRSVPMaxUserNumber')->once();
 
+        // init the collection used by addRSVPSubmission()
+        $prop = new \ReflectionProperty(\models\summit\SummitEvent::class, 'rsvp_invitations');
+        $prop->setAccessible(true);
+        $prop->setValue($event, new \Doctrine\Common\Collections\ArrayCollection());
         $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
         $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
         $attendee->shouldReceive('getMember')->andReturn($member);
@@ -480,20 +490,20 @@ class SummitRSVPServiceTest extends TestCase
     public function testCreateRSVPFromPayloadFormerRSVPExists(): void
     {
         $this->expectException(\models\exceptions\ValidationException::class);
-        $this->expectExceptionMessage('already submitted an rsvp');
+        $this->expectExceptionMessage('has already RSVPd to this event TEST TITLE');
 
         $summit  = $this->mockSummit(1);
         $event   = $this->mockEvent(100, 1);
         $member  = $this->mockMember(10);
 
         $event->shouldReceive('hasRSVP')->andReturn(true);
-
+        $event->shouldReceive("getTitle")->andReturn("TEST TITLE");
         $attendee = Mockery::mock(\models\summit\SummitAttendee::class)->makePartial();
         $attendee->shouldReceive('hasTicketsPaidTickets')->andReturn(true);
         $attendee->shouldReceive('getMember')->andReturn($member);
 
         $existing = Mockery::mock(\models\summit\RSVP::class)->makePartial();
-
+        $existing->shouldReceive("getEvent")->andReturn($event);
         $this->event_repository->shouldReceive('getByIdExclusiveLock')->once()->with(100)->andReturn($event);
         $summit->shouldReceive('getAttendeeById')->once()->with(10)->andReturn($attendee);
         $member->shouldReceive('getRsvpByEvent')->once()->with(100)->andReturn($existing);

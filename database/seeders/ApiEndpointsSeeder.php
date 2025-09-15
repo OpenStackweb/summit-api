@@ -7016,7 +7016,7 @@ class ApiEndpointsSeeder extends Seeder
 
             ],
             [
-                'name' => 'resend-rsvp-confirmatio-by-event',
+                'name' => 'resend-rsvp-confirmation-by-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/resend',
                 'http_method' => 'PUT',
                 'scopes' => [

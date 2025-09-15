@@ -16,11 +16,17 @@ use App\Events\RSVP\RSVPCreated;
 use App\Events\RSVP\RSVPDeleted;
 use App\Events\RSVP\RSVPUpdated;
 use App\Events\ScheduleEntityLifeCycleEvent;
+use App\Jobs\Emails\Schedule\RSVP\ProcessRSVPConfirmationEmailsJob;
+use App\Jobs\Emails\Schedule\RSVP\RSVPConfirmationExcerptEmail;
+use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
+use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use App\Models\Foundation\Summit\Factories\AdminSummitRSVPFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Services\Model\AbstractService;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\ISummitRSVPService;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -34,6 +40,8 @@ use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
+use utils\Filter;
+use utils\FilterElement;
 
 class SummitRSVPService extends AbstractService
     implements ISummitRSVPService
@@ -454,5 +462,112 @@ class SummitRSVPService extends AbstractService
              $this->rsvp_repository->delete($rsvp);
 
         });
+    }
+
+    public function triggerReSend(SummitEvent $summit_event, array $payload, $filter = null): void
+    {
+        ProcessRSVPConfirmationEmailsJob::dispatch($summit_event, $payload, $filter);
+    }
+
+    use ParametrizedSendEmails;
+
+    public function resend(int $event_id, array $payload, Filter $filter = null): void
+    {
+        $this->_sendEmails(
+            $event_id,
+            $payload,
+            "rsvps",
+            function ($root_entity, $paging_info, $filter, $resetPage) {
+
+                if (!$filter->hasFilter("summit_event_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_event_id', $root_entity->getId()));
+
+                if ($filter->hasFilter("is_sent")) {
+                    $isSentFilter = $filter->getUniqueFilter("is_sent");
+                    $is_sent = $isSentFilter->getBooleanValue();
+                    Log::debug(sprintf("SummitRSVPService::resend is_sent filter value %b", $is_sent));
+                    if (!$is_sent && is_callable($resetPage)) {
+                        // we need to reset the page bc the page processing will mark the current page as "sent"
+                        // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
+                        Log::debug("SummitRSVPService::resend resetting page bc is_sent filter is false");
+                        $resetPage();
+                    }
+                }
+                return $this->rsvp_repository->getAllIdsByPage($paging_info, $filter);
+            },
+            function (
+                $root_entity,
+                $flow_event,
+                $invitation_id,
+                $test_email_recipient,
+                $announcement_email_config,
+                $filter,
+                $onDispatchSuccess,
+                $onDispatchError
+            ) use ($payload) {
+                try {
+                    $this->tx_service->transaction(function () use (
+                        $root_entity,
+                        $flow_event,
+                        $invitation_id,
+                        $test_email_recipient,
+                        $filter,
+                        $onDispatchSuccess,
+                        $onDispatchError,
+                        $payload
+                    ) {
+                        $rsvp = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
+
+                            Log::debug(sprintf("SummitRSVPService::resend processing rsvp id  %s", $invitation_id));
+
+                            $rsvp = $this->rsvp_repository->getById(intval($invitation_id));
+
+                            if (!$rsvp instanceof RSVP)
+                                return null;
+
+                            if ($rsvp->isActive()) {
+                                Log::warning(sprintf("SummitRSVPService::resend rsvp %s is not active", $invitation_id));
+                                return null;
+                            }
+                            return $rsvp;
+                        });
+
+                        $add_excerpt = false;
+
+                        // send email
+                        if (!$rsvp instanceof RSVP) return;
+
+                        if ($rsvp->getSeatType() == RSVP::SeatTypeRegular)
+                            RSVPRegularSeatMail::dispatch($rsvp);
+
+                        if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
+                            RSVPWaitListSeatMail::dispatch($rsvp);
+
+                        if ($add_excerpt) {
+                            $onDispatchSuccess(
+                                $rsvp->getOwnerEmail(), IEmailExcerptService::EmailLineType, $flow_event
+                            );
+                        }
+
+                    });
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                    $onDispatchError($ex->getMessage());
+                }
+            },
+            function ($root_entity, $outcome_email_recipient, $report) {
+                if (!$root_entity instanceof SummitEvent) return;
+                RSVPConfirmationExcerptEmail::dispatch($root_entity->getSummit(), $outcome_email_recipient, $report);
+            },
+            $filter,
+            function () {
+                return "SummitEvent";
+            },
+            function ($root_entity_id) {
+                $summit_event = $this->event_repository->getById($root_entity_id);
+                if (!$summit_event instanceof SummitEvent) return null;
+                return $summit_event;
+            }
+        );
     }
 }

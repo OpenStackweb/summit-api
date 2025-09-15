@@ -339,6 +339,10 @@ class RSVP extends SilverstripeBaseModel
         $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
+    public function isActive():bool{
+        return $this->status == self::Status_Active;
+    }
+
     public function ticketReassigned():void{
         $this->status = self::Status_TicketReassigned;
         $this->action_date = new \DateTime('now', new \DateTimeZone('UTC'));

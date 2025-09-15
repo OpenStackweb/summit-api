@@ -413,7 +413,6 @@ SQL;
     {
         $val = trim($qr_code);
         $val = str_replace(' ', '+', $val);
-        $val = strtr($val, '-_', '+/');
         $val = rawurldecode($val);
 
         if (Base64::looksLikeBase64($val)) {

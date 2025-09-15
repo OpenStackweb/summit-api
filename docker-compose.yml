@@ -55,7 +55,7 @@ services:
       retries: 10
     volumes:
       - ./docker-compose/mysql/config:/docker-entrypoint-initdb.d
-      - /tmp/mysql/summit_api/config:/var/lib/mysql
+      - mysql_summit_api_config:/var/lib/mysql
     networks:
       - summit-api-local-net
     env_file: ./.env
@@ -78,7 +78,7 @@ services:
       retries: 10
     volumes:
       - ./docker-compose/mysql/model:/docker-entrypoint-initdb.d
-      - /tmp/mysql/summit_api/model:/var/lib/mysql
+      - mysql_summit_api_model:/var/lib/mysql
     networks:
       - summit-api-local-net
     env_file: ./.env
@@ -99,3 +99,6 @@ services:
 networks:
   summit-api-local-net:
     driver: bridge
+volumes:
+  mysql_summit_api_model:
+  mysql_summit_api_config:

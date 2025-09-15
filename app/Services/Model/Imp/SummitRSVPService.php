@@ -525,7 +525,7 @@ class SummitRSVPService extends AbstractService
                             if (!$rsvp instanceof RSVP)
                                 return null;
 
-                            if ($rsvp->isActive()) {
+                            if (!$rsvp->isActive()) {
                                 Log::warning(sprintf("SummitRSVPService::resend rsvp %s is not active", $invitation_id));
                                 return null;
                             }

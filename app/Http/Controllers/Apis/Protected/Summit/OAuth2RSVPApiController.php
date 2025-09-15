@@ -432,7 +432,7 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/summits/{id}/events/{event_id}/rsvps/resend",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
-        summary: 'Resent RSVPS Confirmation Emails for event',
+        summary: 'Resend RSVP Confirmation Emails for event',
         operationId: 'resenddRSVP',
         tags: ['RSVP'],
         x: [

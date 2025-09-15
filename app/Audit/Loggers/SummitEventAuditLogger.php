@@ -32,8 +32,8 @@ class SummitEventAuditLogger implements ILogger
     /**
      * @inheritDoc
      */
-    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description) {
-
+    public function createAuditLogEntry(EntityManagerInterface $entity_manager, BaseEntity $entity, string $description): void
+    {
         if (!$entity instanceof SummitEvent) return;
 
         $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
@@ -45,7 +45,8 @@ class SummitEventAuditLogger implements ILogger
             $user,
             $description,
             $entity->getSummit(),
-            $entity
+            $entity,
+            $entity->getTitle()
         );
         $entity_manager->persist($entry);
 

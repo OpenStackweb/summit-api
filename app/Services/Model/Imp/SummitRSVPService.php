@@ -537,11 +537,15 @@ class SummitRSVPService extends AbstractService
                         // send email
                         if (!$rsvp instanceof RSVP) return;
 
-                        if ($rsvp->getSeatType() == RSVP::SeatTypeRegular)
+                        if ($rsvp->getSeatType() == RSVP::SeatTypeRegular) {
+                            $add_excerpt = true;
                             RSVPRegularSeatMail::dispatch($rsvp);
+                        }
 
-                        if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
+                        if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList) {
+                            $add_excerpt = true;
                             RSVPWaitListSeatMail::dispatch($rsvp);
+                        }
 
                         if ($add_excerpt) {
                             $onDispatchSuccess(

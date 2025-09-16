@@ -130,7 +130,7 @@ final class ProcessScheduleEntityLifeCycleEventService
             // clear cache region...
 
             $cache_region_key = null;
-            if ($entity_type === 'Presentation' || $entity_type === 'SummitEvent') {
+            if ($entity_type === 'Presentation' || $entity_type === 'SummitEvent' || $entity_type === 'SummitEventWithFile') {
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionEvents, $entity_id);
             }
             if($entity_type === 'Summit'){

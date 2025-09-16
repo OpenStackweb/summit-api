@@ -16,6 +16,8 @@ use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
 use App\Events\MyScheduleRemove;
+use App\Events\SponsorServices\SummitCreatedEventDTO;
+use App\Events\SponsorServices\DeletedEventDTO;
 use App\Events\SponsorServices\SummitDomainEvents;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
@@ -48,8 +50,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
-use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
-use App\Services\Utils\RabbitPublisherService;
+use App\Services\Utils\IPublisherService;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -243,7 +244,7 @@ final class SummitService
     private $cache_service;
 
     /**
-     * @var RabbitPublisherService
+     * @var IPublisherService
      */
     private $sponsor_services_publisher;
 
@@ -273,6 +274,7 @@ final class SummitService
      * @param IEncryptionAES256KeysGenerator $encryption_key_generator
      * @param IMUXApi $mux_api
      * @param ICacheService $cache_service
+     * @param IPublisherService $sponsor_services_publisher
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -302,6 +304,7 @@ final class SummitService
         IEncryptionAES256KeysGenerator             $encryption_key_generator,
         IMUXApi                                    $mux_api,
         ICacheService                              $cache_service,
+        IPublisherService                          $sponsor_services_publisher,
         ITransactionService                        $tx_service
     )
     {
@@ -331,8 +334,7 @@ final class SummitService
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
         $this->cache_service = $cache_service;
-
-        $this->sponsor_services_publisher = RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
+        $this->sponsor_services_publisher = $sponsor_services_publisher;
     }
 
     /**
@@ -1571,14 +1573,8 @@ final class SummitService
 
         });
 
-        $this->sponsor_services_publisher->publish([
-            'id' => $summit->getId(),
-            'name' => $summit->getName(),
-            'start_date' => $summit->getBeginDate()->getTimestamp(),
-            'end_date' => $summit->getEndDate()->getTimestamp(),
-            'time_zone_id' => $summit->getTimeZoneId(),
-            'support_email' => $summit->getSupportEmail()
-        ], SummitDomainEvents::SummitCreated);
+        $this->sponsor_services_publisher->publish(
+            SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitCreated);
 
         return $summit;
     }
@@ -1663,14 +1659,8 @@ final class SummitService
 
             $summit = SummitFactory::populate($summit, $data);
 
-            $this->sponsor_services_publisher->publish([
-                'id' => $summit->getId(),
-                'name' => $summit->getName(),
-                'start_date' => $summit->getBeginDate()->getTimestamp(),
-                'end_date' => $summit->getEndDate()->getTimestamp(),
-                'time_zone_id' => $summit->getTimeZoneId(),
-                'support_email' => $summit->getSupportEmail()
-            ], SummitDomainEvents::SummitUpdated);
+            $this->sponsor_services_publisher->publish(
+                SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitUpdated);
 
             return $summit;
         });
@@ -1702,9 +1692,8 @@ final class SummitService
             Log::debug(sprintf("SummitService::deleteSummit summit_id %s", $summit_id));
             $summit->markAsDeleted();
 
-            $this->sponsor_services_publisher->publish([
-                'summit_id' => $summit_id
-            ], SummitDomainEvents::SummitDeleted);
+            $this->sponsor_services_publisher->publish(
+                DeletedEventDTO::fromEntity($summit)->serialize(), SummitDomainEvents::SummitDeleted);
 
         });
     }

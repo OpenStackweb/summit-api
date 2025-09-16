@@ -13,6 +13,8 @@
  **/
 
 use App\Events\SponsorServices\SponsorDomainEvents;
+use App\Events\SponsorServices\SummitSponsorCreatedEventDTO;
+use App\Events\SponsorServices\DeletedEventDTO;
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
@@ -26,8 +28,7 @@ use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
-use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
-use App\Services\Utils\RabbitPublisherService;
+use App\Services\Utils\IPublisherService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -77,7 +78,7 @@ final class SummitSponsorService
     private $file_uploader;
 
     /**
-     * @var RabbitPublisherService
+     * @var IPublisherService
      */
     private $sponsor_services_publisher;
 
@@ -87,6 +88,7 @@ final class SummitSponsorService
      * @param ISponsorExtraQuestionTypeRepository $repository
      * @param ISummitSponsorshipRepository $sponsorship_repository
      * @param IFileUploader $file_uploader
+     * @param IPublisherService $sponsor_services_publisher
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -96,6 +98,7 @@ final class SummitSponsorService
         ISponsorExtraQuestionTypeRepository $repository,
         ISummitSponsorshipRepository $sponsorship_repository,
         IFileUploader              $file_uploader,
+        IPublisherService          $sponsor_services_publisher,
         ITransactionService        $tx_service
     )
     {
@@ -105,8 +108,7 @@ final class SummitSponsorService
         $this->sponsorship_repository = $sponsorship_repository;
         $this->file_uploader = $file_uploader;
         $this->repository = $repository;
-
-        $this->sponsor_services_publisher = RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
+        $this->sponsor_services_publisher = $sponsor_services_publisher;
     }
 
     /**
@@ -174,10 +176,9 @@ final class SummitSponsorService
             return $sponsor;
         });
 
-        $this->sponsor_services_publisher->publish([
-            'id' => $sponsor->getId(),
-            'company_name' => $sponsor->getCompany()->getName(),
-        ], SponsorDomainEvents::SponsorCreated);
+        $this->sponsor_services_publisher->publish(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+            SponsorDomainEvents::SponsorCreated);
 
         return $sponsor;
     }
@@ -337,10 +338,9 @@ final class SummitSponsorService
                 $summit->recalculateSummitSponsorOrder($sponsor, $payload['order']);
             }
 
-            $this->sponsor_services_publisher->publish([
-                'id' => $sponsor->getId(),
-                'company_name' => $sponsor->getCompany()->getName(),
-            ], SponsorDomainEvents::SponsorUpdated);
+            $this->sponsor_services_publisher->publish(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
 
             return $sponsor;
         });
@@ -361,9 +361,9 @@ final class SummitSponsorService
 
             $summit->removeSummitSponsor($summit_sponsor);
 
-            $this->sponsor_services_publisher->publish([
-                'id' => $sponsor_id
-            ], SponsorDomainEvents::SponsorDeleted);
+            $this->sponsor_services_publisher->publish(
+                DeletedEventDTO::fromEntity($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorDeleted);
         });
     }
 

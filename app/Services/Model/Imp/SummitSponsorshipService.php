@@ -13,11 +13,13 @@
  **/
 
 use App\Events\SponsorServices\SponsorDomainEvents;
+use App\Events\SponsorServices\SummitSponsorshipAddOnCreatedEventDTO;
+use App\Events\SponsorServices\SummitSponsorshipCreatedEventDTO;
+use App\Events\SponsorServices\DeletedEventDTO;
 use App\Models\Foundation\Summit\Factories\SummitSponsorshipAddOnFactory;
 use App\Services\Model\AbstractService;
-use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
 use App\Services\Model\ISummitSponsorshipService;
-use App\Services\Utils\RabbitPublisherService;
+use App\Services\Utils\IPublisherService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\summit\Summit;
@@ -31,17 +33,18 @@ use models\summit\SummitSponsorshipAddOn;
 final class SummitSponsorshipService extends AbstractService implements ISummitSponsorshipService
 {
     /**
-     * @var RabbitPublisherService
+     * @var IPublisherService
      */
     private $sponsor_services_publisher;
 
     /**
+     * @param IPublisherService $sponsor_services_publisher
      * @param ITransactionService $tx_service
      */
-    public function __construct(ITransactionService $tx_service)
+    public function __construct(IPublisherService $sponsor_services_publisher, ITransactionService $tx_service)
     {
         parent::__construct($tx_service);
-        $this->sponsor_services_publisher = RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
+        $this->sponsor_services_publisher = $sponsor_services_publisher;
     }
 
     /**
@@ -67,14 +70,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
         });
 
         foreach ($sponsorships as $sponsorship) {
-            $sponsorship_type = $sponsorship->getType()->getType();
-
-            $this->sponsor_services_publisher->publish([
-                'id' => $sponsorship->getId(),
-                'sponsor_id' => $sponsorship->getSponsor()->getId(),
-                'type_id' => $sponsorship_type->getId(),
-                'type_name' => $sponsorship_type->getName(),
-            ], SponsorDomainEvents::SponsorshipCreated);
+            $this->sponsor_services_publisher->publish(
+                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                SponsorDomainEvents::SponsorshipCreated);
         }
 
         return $sponsorships;
@@ -97,9 +95,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
 
             $summit_sponsor->removeSponsorship($sponsorship);
 
-            $this->sponsor_services_publisher->publish([
-                'id' => $sponsorship->getId(),
-            ], SponsorDomainEvents::SponsorshipRemoved);
+            $this->sponsor_services_publisher->publish(
+                DeletedEventDTO::fromEntity($sponsorship)->serialize(),
+                SponsorDomainEvents::SponsorshipRemoved);
         });
     }
 
@@ -123,12 +121,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             return $add_on;
         });
 
-        $this->sponsor_services_publisher->publish([
-            'id' => $add_on->getId(),
-            'type' => $add_on->getType(),
-            'name' => $add_on->getName(),
-            'sponsorship_id' => $add_on->getSponsorship()->getId(),
-        ], SponsorDomainEvents::SponsorshipAddOnCreated);
+        $this->sponsor_services_publisher->publish(
+            SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($add_on)->serialize(),
+            SponsorDomainEvents::SponsorshipAddOnCreated);
 
         return $add_on;
     }
@@ -154,12 +149,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
 
             $res = SummitSponsorshipAddOnFactory::populate($add_on, $payload);
 
-            $this->sponsor_services_publisher->publish([
-                'id' => $add_on_id,
-                'type' => $res->getType(),
-                'name' => $res->getName(),
-                'sponsorship_id' => $res->getSponsorship()->getId(),
-            ], SponsorDomainEvents::SponsorshipAddOnUpdated);
+            $this->sponsor_services_publisher->publish(
+                SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($res)->serialize(),
+                SponsorDomainEvents::SponsorshipAddOnUpdated);
 
             return $res;
         });
@@ -187,9 +179,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
 
             $sponsorship->removeAddOn($add_on);
 
-            $this->sponsor_services_publisher->publish([
-                'id' => $add_on_id,
-            ], SponsorDomainEvents::SponsorshipAddOnRemoved);
+            $this->sponsor_services_publisher->publish(
+                DeletedEventDTO::fromEntity($add_on)->serialize(),
+                SponsorDomainEvents::SponsorshipAddOnRemoved);
         });
     }
 }

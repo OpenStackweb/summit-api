@@ -27,7 +27,7 @@ use RuntimeException;
  * Class RabbitPublisherService
  * @package App\Services\Utils
  */
-final class RabbitPublisherService
+final class RabbitPublisherService implements IPublisherService
 {
 
     const WAIT_BEFORE_RECONNECT_uS = 1000000;

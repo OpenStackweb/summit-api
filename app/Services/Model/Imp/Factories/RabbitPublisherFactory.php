@@ -13,6 +13,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Utils\IPublisherService;
 use App\Services\Utils\RabbitPublisherService;
 use Illuminate\Support\Facades\Config;
 
@@ -21,9 +22,9 @@ class RabbitPublisherFactory
     /**
      * @param string $connection_key
      * @param string|null $publisher_name
-     * @return RabbitPublisherService
+     * @return IPublisherService
      */
-    public static function make(string $connection_key, ?string $publisher_name = null): RabbitPublisherService
+    public static function make(string $connection_key, ?string $publisher_name = null): IPublisherService
     {
         $host_settings_path = "queue.connections.{$connection_key}.hosts.0";
         $exchange_settings_path = "queue.connections.{$connection_key}.options.exchange";

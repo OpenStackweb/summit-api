@@ -466,6 +466,7 @@ class SummitRSVPService extends AbstractService
 
     public function triggerReSend(SummitEvent $summit_event, array $payload, $filter = null): void
     {
+        Log::debug(sprintf("SummitRSVPService::triggerReSend summit event %s payload %s", $summit_event->getId(), json_encode($payload)));
         ProcessRSVPConfirmationEmailsJob::dispatch($summit_event, $payload, $filter);
     }
 

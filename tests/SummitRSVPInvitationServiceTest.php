@@ -505,6 +505,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $event->shouldReceive("isPublished")->andReturn(true);
         $event->shouldReceive("hasPrivateRSVP")->andReturn(true);
         $payload = ['foo' => 'bar'];
+        $event->shouldReceive("isPublished")->andReturn(true);
+        $event->shouldReceive("hasPrivateRSVP")->andReturn(true);
 
         $this->service->triggerSend($event, $payload, null);
 
@@ -546,8 +548,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
             ->atLeast()->once()
             ->withArgs(function ($pagingInfo, $filter) use ($eventId) {
                 $this->assertEquals(\App\Services\Model\Imp\Traits\MaxPageSize, $pagingInfo->getPerPage());
-                $this->assertTrue($filter->hasFilter('event_id'), 'event_id filter not injected');
-                $uf = $filter->getUniqueFilter('event_id');
+                $this->assertTrue($filter->hasFilter('summit_event_id'), 'summit_event_id filter not injected');
+                $uf = $filter->getUniqueFilter('summit_event_id');
                 $this->assertEquals((string)$eventId, (string)$uf->getValue());
                 return true;
             })

@@ -46,7 +46,7 @@ final class SummitRoomReservationValidationRulesFactory extends AbstractValidati
             'start_datetime'  => 'required|date_format:U|epoch_seconds',
             'end_datetime'    => 'required|date_format:U|epoch_seconds|after:start_datetime',
             'quantity'        => 'sometimes|integer|min:1',
-            'supress_email'   => 'sometimes|boolean',
+            'suppres_email'   => 'sometimes|boolean',
         ];
     }
 

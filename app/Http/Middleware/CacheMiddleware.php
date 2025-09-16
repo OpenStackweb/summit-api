@@ -44,32 +44,36 @@ final class CacheMiddleware
                 $regionTag = CacheRegions::getCacheRegionFor($cache_region, $id);
             }
         }
-
+        $status = 200;
         if ($regionTag) {
             Log::debug("CacheMiddleware: using region tag {$regionTag}");
             $data = Cache::tags($regionTag)
-                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime) {
+                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime, &$status) {
                     Log::debug("CacheMiddleware: cache miss for {$key} in tag {$regionTag}");
                     $resp = $next($request);
-                    if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
-                        return $resp->getData(true);
+                    if ($resp instanceof JsonResponse) {
+                        $status = $resp->getStatusCode();
+                        if($status === 200)
+                            return $resp->getData(true);
                     }
                     // don’t cache non-200 or non-JSON
                     return Cache::get($key);
                 });
         } else {
-            $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key) {
+            $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status) {
                 Log::debug("CacheMiddleware: cache miss for {$key}");
                 $resp = $next($request);
-                if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
-                    return $resp->getData(true);
+                if ($resp instanceof JsonResponse) {
+                    $status = $resp->getStatusCode();
+                    if($status === 200)
+                        return $resp->getData(true);
                 }
                 return Cache::get($key);
             });
         }
 
         // Build the JsonResponse (either from cache or fresh)
-        $response = new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
+        $response = new JsonResponse($data, $status, ['Content-Type' => 'application/json']);
 
         // Mark for revalidation so your ETag middleware can return 304 when unchanged
         $response->setPublic();

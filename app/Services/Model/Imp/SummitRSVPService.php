@@ -474,6 +474,7 @@ class SummitRSVPService extends AbstractService
 
     public function resend(int $event_id, array $payload, Filter $filter = null): void
     {
+        $payload['email_flow_event'] = RSVPRegularSeatMail::EVENT_SLUG;
         $this->_sendEmails(
             $event_id,
             $payload,

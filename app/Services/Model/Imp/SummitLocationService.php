@@ -1788,8 +1788,10 @@ final class SummitLocationService
 
         $supress_email = boolval($payload["supress_email"] ?? false);
 
-        if(!$supress_email)
+        if(!$supress_email){
+            Log::debug("SummitLocationService::addOfflineBookableRoomReservation emitting CreatedBookableRoomReservation");
             Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
+        }
 
         return $reservation;
     }

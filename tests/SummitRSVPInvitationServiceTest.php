@@ -502,6 +502,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         Bus::fake();
 
         $event = Mockery::mock(SummitEvent::class)->makePartial();
+        $event->shouldReceive("isPublished")->andReturn(true);
+        $event->shouldReceive("hasPrivateRSVP")->andReturn(true);
         $payload = ['foo' => 'bar'];
 
         $this->service->triggerSend($event, $payload, null);

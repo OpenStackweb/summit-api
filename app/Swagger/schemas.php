@@ -189,6 +189,17 @@ class SendRSVPInvitationsRequestSchema {}
 
 
 #[OA\Schema(
+    schema: 'ReSendRSVPConfirmationRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'test_email_recipient', type: 'string', example: 'test@test.com'),
+        new OA\Property(property: 'outcome_email_recipient', type: 'string', example: 'result@test.com'),
+    ]
+)]
+class ReSendRSVPConfirmationRequestSchema {}
+
+
+#[OA\Schema(
     schema: 'BulkRSVPInvitationsRequest',
     type: 'object',
     properties: [

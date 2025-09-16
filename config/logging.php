@@ -83,7 +83,14 @@ return [
             'driver' => 'monolog',
             'handler' => \Keepsuit\LaravelOpenTelemetry\Support\OpenTelemetryMonologHandler::class,
             'level' => 'debug',
+            'tap' => [
+
+            ]
         ]
     ],
 
+    "tracking" => [
+        "enabled" => env('TRACKING_ENABLED', true),
+        "span" => env('TRACE_SPAN_PREFIX', 'SPAN'),
+    ],
 ];

@@ -53,10 +53,10 @@ BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY=
 BOOKABLE_ROOMS_DEFAULT_TEST_WEBHOOK_SECRET=
 
 ```
-2.( optional ) Drop here  [docker-compose/mysql/model](docker-compose/mysql/model) the database dump *.sql file
-3.Install docker and docker compose see
+2. ( optional ) Drop here  [docker-compose/mysql/model](docker-compose/mysql/model) the database dump *.sql file
+3. Install docker and docker compose see
    [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04) and [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04)
-4.Run script ./start_local_server.sh (http://localhost:8002/)
+4. Run script ./start_local_server.sh (http://localhost:8002/)
 
 Redump the database
 ===================
@@ -77,10 +77,10 @@ docker inspect --format "{{json .State.Health }}" www-openstack-model-db-local |
 # APC CACHE Page
 
 1. open file at /var/www/public/apc.php
-2. add following lines to the beginning 
+2. add following lines to the beginning
 ````php
-$AUTHENTICATION = 1;               
-define('ADMIN_USERNAME', 'apc');   
+$AUTHENTICATION = 1;
+define('ADMIN_USERNAME', 'apc');
 define('ADMIN_PASSWORD', '1qaz2wsx!');
 ````
 3. now you can access to http://localhost:8002/apc.php -> [ User Cache Entries ] Section

@@ -12,21 +12,21 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\Logs\LaravelMailerHandler;
-use App\Utils\Redis\RedisClientNamer;
+use libs\utils\ICacheService;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\ServiceProvider;
-use libs\utils\ICacheService;
-use models\exceptions\ValidationException;
 use models\main\ChatTeamPermission;
-use models\main\PushNotificationMessagePriority;
-use models\oauth2\IResourceServerContext;
-use models\oauth2\ResourceServerContext;
 use Sokil\IsoCodes\IsoCodesFactory;
+use App\Utils\Redis\RedisClientNamer;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\ServiceProvider;
+use models\oauth2\ResourceServerContext;
+use Illuminate\Support\Facades\Validator;
+use models\oauth2\IResourceServerContext;
+use models\exceptions\ValidationException;
+use App\Http\Utils\Logs\LaravelMailerHandler;
+use models\main\PushNotificationMessagePriority;
 
 /**
  * Class AppServiceProvider
@@ -733,11 +733,11 @@ class AppServiceProvider extends ServiceProvider
     {
 
         // phpunit.xml sets APP_ENV=testing during tests
-        if (! App::environment('testing')) {
-            App::register(
-                \Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class
-            );
-        }
+        // if (! App::environment('testing')) {
+        //     App::register(
+        //         \Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class
+        //     );
+        // }
 
         App::singleton(IResourceServerContext::class, ResourceServerContext::class);
 

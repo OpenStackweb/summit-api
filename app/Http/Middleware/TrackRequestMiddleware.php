@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
 use Closure;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Log\LogManager;
 use \OpenTelemetry\API\Trace\SpanInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Log\LogManager;
 use Keepsuit\LaravelOpenTelemetry\Facades\Tracer;
 
 
@@ -46,13 +46,13 @@ class TrackRequestMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if(env('APP_ENV') === 'testing') {
+        if(!config('logging.tracking.enabled')) {
             // Skip tracking in testing environment
             return $next($request);
         }
         try {
             // generating dynamic id for span with configurable prefix
-            $spanId = env('TRACE_SPAN_PREFIX', 'SPAN') . '_' . Str::uuid();
+            $spanId = config('logging.tracking.span') . '_' . Str::uuid();
             $this->startTime = microtime(true);
             $this->span = Tracer::newSpan($spanId)->start();
 

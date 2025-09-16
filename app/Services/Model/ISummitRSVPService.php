@@ -15,6 +15,7 @@ use models\main\Member;
 use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitEvent;
+use utils\Filter;
 
 interface ISummitRSVPService
 {
@@ -58,4 +59,17 @@ interface ISummitRSVPService
      * @return RSVP
      */
     public function createRSVPFromPayload(Summit $summit, int $event_id, array $payload):RSVP;
+    /**
+     * @param SummitEvent $summit_event
+     * @param array $payload
+     * @param mixed $filter
+     */
+    public function triggerReSend(SummitEvent $summit_event, array $payload, $filter = null):void;
+
+    /**
+     * @param int $event_id
+     * @param array $payload
+     * @param Filter|null $filter
+     */
+    public function resend(int $event_id, array $payload, Filter $filter = null):void;
 }

@@ -13,13 +13,14 @@
  **/
 
 use App\Http\Controllers\Utils\Assertions;
-use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitRSVPService;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Validator;
 use models\oauth2\IResourceServerContext;
 use models\summit\IRSVPRepository;
 use models\summit\ISummitEventRepository;
@@ -29,6 +30,7 @@ use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 
 
 class OAuth2RSVPApiController extends OAuth2ProtectedController
@@ -424,6 +426,166 @@ class OAuth2RSVPApiController extends OAuth2ProtectedController
                     return SerializerRegistry::SerializerType_Public;
                 }
             );
+        });
+    }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/events/{event_id}/rsvps/resend",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Resend RSVP Confirmation Emails for event',
+        operationId: 'resendRSVP',
+        tags: ['RSVP'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_rsvp_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'event_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The event id'
+            ),
+            // query string params
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'owner_email@@email@test.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-seat_type')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'event,owner')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to load eagerly',
+                schema: new OA\Schema(type: 'string', example: 'event,owner')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of fields to return',
+                schema: new OA\Schema(type: 'string', example: 'id,seat_type,owner.first_name,owner.last_name')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/ReSendRSVPConfirmationRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'RSVP Confirmation send success',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+
+    public function resend($summit_id, $event_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $event_id) {
+
+            if (!Request::isJson()) return $this->error400();
+            $data = Request::json();
+
+            $summit = $this->getSummitOr404($summit_id);
+            $summit_event = $this->getEventOr404($summit, $event_id);
+            $this->getCurrentMemberOr403();
+
+            $payload = $data->all();
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, [
+                'rsvps_ids' => 'sometimes|int_array',
+                'excluded_rsvps_ids' => 'sometimes|int_array',
+                'test_email_recipient' => 'sometimes|email',
+                'outcome_email_recipient' => 'sometimes|email',
+            ]);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
+                    'owner_email' => ['@@', '=@', '=='],
+                    'owner_first_name' => ['@@', '=@', '=='],
+                    'owner_last_name' => ['@@', '=@', '=='],
+                    'owner_full_name' => ['@@', '=@', '=='],
+                    'seat_type' => ['=='],
+                ]);
+            }
+
+            if (is_null($filter))
+                $filter = new Filter();
+
+            $filter->validate([
+                'id' => 'sometimes|integer',
+                'not_id' => 'sometimes|integer',
+                'owner_email' => 'sometimes|required|string',
+                'owner_first_name' => 'sometimes|required|string',
+                'owner_last_name' => 'sometimes|required|string',
+                'owner_full_name' => 'sometimes|required|string',
+                'seat_type' => 'sometimes|required|string|in:' . join(",", RSVP::ValidSeatTypes),
+            ]);
+
+            $this->service->triggerReSend($summit_event, $payload, Request::input('filter'));
+
+            return $this->ok();
+
         });
     }
 

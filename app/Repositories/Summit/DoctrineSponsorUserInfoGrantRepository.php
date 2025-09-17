@@ -14,9 +14,12 @@
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\ISponsorUserInfoGrantRepository;
+use models\summit\Presentation;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorUserInfoGrant;
+use models\summit\SummitEvent;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
 use utils\Order;
 
@@ -58,6 +61,13 @@ final class DoctrineSponsorUserInfoGrantRepository
                 "o.email :operator :value"
             ],
             'attendee_company' =>  new DoctrineFilterMapping("o.company_name :operator :value"),
+            'class_name' => new DoctrineInstanceOfFilterMapping(
+                "e",
+                [
+                    SponsorBadgeScan::ClassName => SponsorBadgeScan::class,
+                    SponsorUserInfoGrant::ClassName => SponsorUserInfoGrant::class,
+                ]
+            ),
         ];
     }
 
@@ -87,11 +97,17 @@ final class DoctrineSponsorUserInfoGrantRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
-        $query = $query->join('e.sponsor', 'sp')
+        if(!is_null($filter) && $filter->hasFilter("class_name") && $filter->getValue("class_name")[0] ==  SponsorBadgeScan::ClassName) {
+            $query = $query->innerJoin(SponsorBadgeScan::class, 'sbs', 'WITH', 'e.id = sbs.id');
+        }
+        else {
+            $query = $query->leftJoin(SponsorBadgeScan::class, 'sbs', 'WITH', 'e.id = sbs.id');
+        }
+        $query = $query
+            ->join('e.sponsor', 'sp')
             ->join('sp.summit', 's')
             ->join('sp.company', 'c')
             ->leftJoin('e.allowed_user', 'au')
-            ->leftJoin(SponsorBadgeScan::class, 'sbs', 'WITH', 'e.id = sbs.id')
             ->leftJoin('sbs.user', 'u')
             ->leftJoin('sbs.badge', 'b')
             ->leftJoin('b.ticket', 't')

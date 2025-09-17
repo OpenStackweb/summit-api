@@ -23,6 +23,7 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use App\Services\Model\ISponsorUserInfoGrantService;
 use models\summit\ISummitRepository;
+use models\summit\SponsorBadgeScan;
 use models\summit\Summit;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
@@ -226,6 +227,7 @@ final class OAuth2SummitBadgeScanApiController
             function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('class_name', SponsorBadgeScan::ClassName));
                     $filter->addFilterCondition(FilterElement::makeEqual('user_id', $current_member->getId()));
                 }
                 return $filter;
@@ -292,6 +294,7 @@ final class OAuth2SummitBadgeScanApiController
             function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('class_name', SponsorBadgeScan::ClassName));
                     if (!is_null($current_member)){
                         if ($current_member->isAuthzFor($summit)) return $filter;
                         // add filter for sponsor user
@@ -380,6 +383,7 @@ final class OAuth2SummitBadgeScanApiController
             function($filter) use($summit, $current_member){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('class_name', SponsorBadgeScan::ClassName));
                     if (!is_null($current_member)){
                         if ($current_member->isAuthzFor($summit)) return $filter;
                         // add filter for sponsor user

@@ -1291,4 +1291,24 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             }
         }
     }
+
+    public function getTicketsExcerpt():array{
+        try {
+            $sql = <<<SQL
+SELECT SummitTicketType.Name AS type , COUNT(SummitAttendeeTicket.ID) AS qty FROM SummitAttendeeTicket
+         INNER JOIN SummitTicketType ON SummitTicketType.ID = SummitAttendeeTicket.TicketTypeID
+         WHERE SummitAttendeeTicket.OrderID = :order_id
+GROUP BY SummitTicketType.Name
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql, ['order_id' => $this->id]);
+            $res = $stmt->executeQuery();
+            $res = $res->fetchAllAssociative();
+            $res = count($res) > 0 ? $res : [];
+            return $res;
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
 }

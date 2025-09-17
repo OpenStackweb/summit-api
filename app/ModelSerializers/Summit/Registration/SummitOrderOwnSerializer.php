@@ -34,31 +34,11 @@ final class SummitOrderOwnSerializer
         $order = $this->object;
         if (!$order instanceof SummitOrder) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $attendees_status = SummitAttendee::StatusComplete;
+        $values['attendees_status'] = SummitAttendee::StatusIncomplete;
         $tickets_excerpt_by_ticket_type = [];
-        // calculate excerpt
-        foreach($order->getTickets() as $ticket){
-            if(!$ticket->hasOwner() ){
-                if($attendees_status === SummitAttendee::StatusComplete)
-                    $attendees_status = SummitAttendee::StatusIncomplete;
-            }
-            else{
-                // has owner
-                $attendee = $ticket->getOwner();
-                $attendee_current_status = $attendee->updateStatus();
-                  if($attendees_status === SummitAttendee::StatusComplete){
-                      $attendees_status = $attendee_current_status;
-                  }
-            }
-            $ticket_type_name = $ticket->getTicketTypeName();
-            if(!isset($tickets_excerpt_by_ticket_type[$ticket_type_name]))
-                $tickets_excerpt_by_ticket_type[$ticket_type_name] = 0;
-
-            $tickets_excerpt_by_ticket_type[$ticket_type_name] = $tickets_excerpt_by_ticket_type[$ticket_type_name] + 1;
+        foreach($order->getTicketsExcerpt() as $entry){
+            $tickets_excerpt_by_ticket_type[$entry['type']] = intval($entry['qty']);
         }
-
-        $values['attendees_status'] = $attendees_status;
         $values['tickets_excerpt_by_ticket_type'] = $tickets_excerpt_by_ticket_type;
 
         return $values;

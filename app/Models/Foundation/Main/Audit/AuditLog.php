@@ -74,7 +74,7 @@ abstract class AuditLog extends SilverstripeBaseModel
         $this->action = $action;
     }
 
-    public function getMetadata(): string
+    public function getMetadata(): ?string
     {
         return $this->metadata;
     }

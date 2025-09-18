@@ -38,6 +38,7 @@ processors:
   memory_limiter:
     limit_mib: 400
     spike_limit_mib: 100
+    check_interval: 1s
 
   # Resource processor to add/modify resource attributes
   resource:
@@ -60,9 +61,9 @@ processors:
         action: upsert
 
 exporters:
-  # Console exporter for debugging - outputs to stdout
-  logging:
-    loglevel: info
+  # Debug exporter for debugging - outputs to stdout
+  debug:
+    verbosity: normal
     sampling_initial: 5
     sampling_thereafter: 200
 
@@ -96,35 +97,31 @@ extensions:
   zpages:
     endpoint: 0.0.0.0:55679
 
-  # Memory ballast extension to improve memory management
-  memory_ballast:
-    size_mib: 64
-
 service:
-  extensions: [health_check, pprof, zpages, memory_ballast]
+  extensions: [health_check, pprof, zpages]
 
   pipelines:
     # Traces pipeline
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resource, attributes, batch]
-      exporters: [logging, file]
+      exporters: [debug, file]
 
     # Metrics pipeline
     metrics:
       receivers: [otlp, prometheus]
       processors: [memory_limiter, resource, batch]
-      exporters: [logging, prometheus]
+      exporters: [debug, prometheus]
 
     # Logs pipeline
     logs:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [logging]
+      exporters: [debug]
 
   # Telemetry configuration for the collector itself
   telemetry:
     logs:
       level: "info"
     metrics:
-      address: 0.0.0.0:8888
+      level: basic

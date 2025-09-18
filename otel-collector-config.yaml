@@ -84,6 +84,30 @@ exporters:
     tls:
       insecure: true
 
+  # Elasticsearch exporter for storing traces, metrics, and logs
+  elasticsearch:
+    endpoints: [http://elasticsearch:9200]
+    # Authentication (uncomment if needed)
+    # auth:
+    #   authenticator: basicauth/elastic
+    logs_index: otel-logs
+    traces_index: otel-traces
+    metrics_index: otel-metrics
+    pipeline: otel-pipeline
+    # Index template settings
+    index:
+      number_of_shards: 1
+      number_of_replicas: 0
+    # Mapping settings for better performance
+    mapping:
+      mode: ecs  # Use Elastic Common Schema
+    # Retry configuration
+    retry_on_failure:
+      enabled: true
+      max_requests: 3
+      initial_interval: 100ms
+      max_interval: 1s
+
 extensions:
   # Health check extension
   health_check:
@@ -97,6 +121,12 @@ extensions:
   zpages:
     endpoint: 0.0.0.0:55679
 
+  # Basic auth extension for Elasticsearch (uncomment if needed)
+  # basicauth/elastic:
+  #   client_auth:
+  #     username: elastic
+  #     password: changeme
+
 service:
   extensions: [health_check, pprof, zpages]
 
@@ -105,19 +135,19 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resource, attributes, batch]
-      exporters: [debug, file]
+      exporters: [debug, file, elasticsearch]
 
     # Metrics pipeline
     metrics:
       receivers: [otlp, prometheus]
       processors: [memory_limiter, resource, batch]
-      exporters: [debug, prometheus]
+      exporters: [debug, prometheus, elasticsearch]
 
     # Logs pipeline
     logs:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [debug]
+      exporters: [debug, elasticsearch]
 
   # Telemetry configuration for the collector itself
   telemetry:

@@ -93,20 +93,9 @@ exporters:
     logs_index: otel-logs
     traces_index: otel-traces
     metrics_index: otel-metrics
-    pipeline: otel-pipeline
-    # Index template settings
-    index:
-      number_of_shards: 1
-      number_of_replicas: 0
     # Mapping settings for better performance
     mapping:
       mode: ecs  # Use Elastic Common Schema
-    # Retry configuration
-    retry_on_failure:
-      enabled: true
-      max_requests: 3
-      initial_interval: 100ms
-      max_interval: 1s
 
 extensions:
   # Health check extension

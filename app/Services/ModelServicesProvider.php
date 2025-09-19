@@ -174,26 +174,12 @@ final class ModelServicesProvider extends ServiceProvider
     {
         App::when(SummitService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
         App::when(SummitService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-        App::when(SummitService::class)->needs(IPublisherService::class)
-            ->give(function () {
-                return RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
-            });
 
         App::when(SummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
         App::when(SummitOrderService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
 
         App::when(SummitSelectionPlanService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
         App::when(SummitSelectionPlanService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-
-        App::when(SummitSponsorService::class)->needs(IPublisherService::class)
-            ->give(function () {
-                return RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
-            });
-
-        App::when(SummitSponsorshipService::class)->needs(IPublisherService::class)
-            ->give(function () {
-                return RabbitPublisherFactory::make('sponsor_services_sync_message_broker');
-            });
 
         // add bindings for service
         App::singleton(ISummitService::class, SummitService::class);

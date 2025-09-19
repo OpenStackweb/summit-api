@@ -27,7 +27,6 @@ use App\Services\Apis\PasswordlessAPI;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Apis\Samsung\SamsungRegistrationAPI;
 use App\Services\Model\FolderService;
-use App\Services\Model\IDomainEventsPublishService;
 use App\Services\Model\IFolderService;
 use App\Services\utils\EmailExcerptService;
 use App\Services\Utils\Facades\EmailExcerpt;

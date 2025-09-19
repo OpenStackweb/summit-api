@@ -29,6 +29,7 @@ use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
 use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
+use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -50,7 +51,6 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
-use App\Services\Utils\IPublisherService;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -244,11 +244,6 @@ final class SummitService
     private $cache_service;
 
     /**
-     * @var IPublisherService
-     */
-    private $sponsor_services_publisher;
-
-    /**
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
@@ -274,7 +269,6 @@ final class SummitService
      * @param IEncryptionAES256KeysGenerator $encryption_key_generator
      * @param IMUXApi $mux_api
      * @param ICacheService $cache_service
-     * @param IPublisherService $sponsor_services_publisher
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -304,7 +298,6 @@ final class SummitService
         IEncryptionAES256KeysGenerator             $encryption_key_generator,
         IMUXApi                                    $mux_api,
         ICacheService                              $cache_service,
-        IPublisherService                          $sponsor_services_publisher,
         ITransactionService                        $tx_service
     )
     {
@@ -334,7 +327,6 @@ final class SummitService
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
         $this->cache_service = $cache_service;
-        $this->sponsor_services_publisher = $sponsor_services_publisher;
     }
 
     /**
@@ -1573,7 +1565,7 @@ final class SummitService
 
         });
 
-        $this->sponsor_services_publisher->publish(
+        PublishSponsorServiceDomainEventsJob::dispatch(
             SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitCreated);
 
         return $summit;
@@ -1659,7 +1651,7 @@ final class SummitService
 
             $summit = SummitFactory::populate($summit, $data);
 
-            $this->sponsor_services_publisher->publish(
+            PublishSponsorServiceDomainEventsJob::dispatch(
                 SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitUpdated);
 
             return $summit;
@@ -1692,7 +1684,7 @@ final class SummitService
             Log::debug(sprintf("SummitService::deleteSummit summit_id %s", $summit_id));
             $summit->markAsDeleted();
 
-            $this->sponsor_services_publisher->publish(
+            PublishSponsorServiceDomainEventsJob::dispatch(
                 DeletedEventDTO::fromEntity($summit)->serialize(), SummitDomainEvents::SummitDeleted);
 
         });

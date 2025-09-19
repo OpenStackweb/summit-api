@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0fe683ede6eab50b8e08f13b3e2791cf",
+    "content-hash": "d176feda4a07a4a95de5abdffe2c5b4f",
     "packages": [
         {
             "name": "affinipay/chargeio-php",
@@ -5717,6 +5717,68 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2025-01-15T23:07:07+00:00"
+        },
+        {
+            "name": "open-telemetry/opentelemetry-auto-guzzle",
+            "version": "1.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/opentelemetry-php/contrib-auto-guzzle.git",
+                "reference": "dd67e8a1cf937a505114aa70c2dad33289ddeecd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/opentelemetry-php/contrib-auto-guzzle/zipball/dd67e8a1cf937a505114aa70c2dad33289ddeecd",
+                "reference": "dd67e8a1cf937a505114aa70c2dad33289ddeecd",
+                "shasum": ""
+            },
+            "require": {
+                "ext-opentelemetry": "*",
+                "guzzlehttp/guzzle": "^7",
+                "open-telemetry/api": "^1.0",
+                "open-telemetry/sem-conv": "^1.32",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3",
+                "guzzlehttp/promises": "^2",
+                "nyholm/psr7": "*",
+                "open-telemetry/sdk": "^1.0",
+                "phan/phan": "^5.0",
+                "phpstan/phpstan": "^1.1",
+                "phpstan/phpstan-mockery": "^1.1.0",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "phpunit/phpunit": "^9.5",
+                "psalm/plugin-phpunit": "^0.19.2",
+                "vimeo/psalm": "6.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "_register.php"
+                ],
+                "psr-4": {
+                    "OpenTelemetry\\Contrib\\Instrumentation\\Guzzle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "OpenTelemetry auto-instrumentation for Guzzle.",
+            "homepage": "https://opentelemetry.io/docs/php",
+            "keywords": [
+                "Guzzle",
+                "instrumentation",
+                "open-telemetry",
+                "opentelemetry",
+                "otel",
+                "tracing"
+            ],
+            "support": {
+                "source": "https://github.com/opentelemetry-php/contrib-auto-guzzle/tree/1.2.1"
+            },
+            "time": "2025-06-17T23:41:12+00:00"
         },
         {
             "name": "open-telemetry/sdk",
@@ -14065,15 +14127,16 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3",
+        "ext-apcu": "*",
         "ext-gd": "*",
+        "ext-igbinary": "*",
         "ext-imagick": "*",
         "ext-json": "*",
         "ext-openssl": "*",
+        "ext-opentelemetry": "*",
         "ext-pdo": "*",
-        "ext-zlib": "*",
-        "ext-igbinary": "*",
         "ext-redis": "*",
-        "ext-apcu": "*"
+        "ext-zlib": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

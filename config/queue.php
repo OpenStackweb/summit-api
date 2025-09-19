@@ -88,7 +88,7 @@ return [
             ],
         ],
 
-        'sponsor_users_sync_message_broker' => [
+        'sponsor_users_sync_consumer' => [
             'driver' => 'rabbitmq',
             'queue' => env('SPONSOR_USERS_QUEUE', 'sponsor-users'),
             'connection' => $rabbit_connection,
@@ -117,7 +117,37 @@ return [
                     'job' => \App\Jobs\SponsorServices\SponsorServicesMQJob::class,
                 ],
             ],
-        ]
+        ],
+
+        'sponsor_services_sync_message_broker' => [
+            'driver' => 'rabbitmq',
+            'hosts' => [
+                [
+                    'host' => env('SPONSOR_SERVICES_RABBITMQ_HOST', '127.0.0.1'),
+                    'port' => $rabbit_port,
+                    'user' => env('SPONSOR_SERVICES_RABBITMQ_LOGIN', 'guest'),
+                    'password' => env('SPONSOR_SERVICES_RABBITMQ_PASSWORD', 'guest'),
+                    'vhost' => env('SPONSOR_SERVICES_RABBITMQ_VHOST', '/'),
+                ],
+            ],
+            'options' => [
+                'exchange' => [
+                    'name' => env('SPONSOR_SERVICES_EXCHANGE_NAME', 'sponsor-services-broker'),
+                    'type' => env('SPONSOR_SERVICES_EXCHANGE_TYPE', 'direct'), // direct, fanout, topic, headers
+                    'passive' => false,
+                    'durable' => true,
+                    'auto_delete' => false,
+                ],
+                'ssl_options' => [
+                    // @see https://www.php.net/manual/en/context.ssl.php
+                    'cafile' => env('RABBITMQ_SSL_CAFILE', null),
+                    'local_cert' => env('RABBITMQ_SSL_LOCALCERT', null),
+                    'local_pk' => env('RABBITMQ_SSL_LOCALKEY', null),
+                    'verify_peer' => env('RABBITMQ_SSL_VERIFY_PEER', true),
+                    'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
+                ],
+            ],
+        ],
     ],
 
     /*

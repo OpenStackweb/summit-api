@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'otlpstack'),
+    // 'default' => env('LOG_CHANNEL', 'otlpstack'),
+    'default' => env('LOG_CHANNEL', 'stack'),
 
     /*
     |--------------------------------------------------------------------------

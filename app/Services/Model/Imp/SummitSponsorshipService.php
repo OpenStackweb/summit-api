@@ -20,6 +20,7 @@ use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
 use App\Models\Foundation\Summit\Factories\SummitSponsorshipAddOnFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitSponsorshipService;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\summit\Summit;
 use models\summit\SummitSponsorship;
@@ -119,6 +120,19 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
     public function updateAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id, array $payload): SummitSponsorshipAddOn
     {
         return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id, $payload) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitSponsorshipService::updateAddOn summit %s sponsor_id %s sponsorship id %s add_on_id %s payload %s",
+                    $summit->getId(),
+                    $sponsor_id,
+                    $sponsorship_id,
+                    $add_on_id,
+                    json_encode($payload)
+                )
+            );
+
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");

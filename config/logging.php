@@ -1,6 +1,7 @@
 <?php
 
 use Monolog\Handler\StreamHandler;
+use Keepsuit\LaravelOpenTelemetry\Support\OpenTelemetryMonologHandler;
 
 return [
 
@@ -15,7 +16,6 @@ return [
     |
     */
 
-    // 'default' => env('LOG_CHANNEL', 'otlpstack'),
     'default' => env('LOG_CHANNEL', 'stack'),
 
     /*
@@ -40,7 +40,7 @@ return [
         ],
         'otlpstack' => [
             'driver' => 'stack',
-            'channels' => ['otlp', 'stderr'],
+            'channels' => ['daily', 'stderr', 'otlp'],
         ],
         'single' => [
             'driver' => 'single',
@@ -86,7 +86,7 @@ return [
         ],
         'otlp' => [
             'driver' => 'monolog',
-            'handler' => \Keepsuit\LaravelOpenTelemetry\Support\OpenTelemetryMonologHandler::class,
+            'handler' => OpenTelemetryMonologHandler::class,
             'level' => 'debug',
         ]
     ],

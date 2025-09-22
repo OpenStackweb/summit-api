@@ -16,6 +16,9 @@ use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
 use App\Events\MyScheduleRemove;
+use App\Events\SponsorServices\SummitCreatedEventDTO;
+use App\Events\SponsorServices\DeletedEventDTO;
+use App\Events\SponsorServices\SummitDomainEvents;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
@@ -26,6 +29,7 @@ use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
 use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
+use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -1495,7 +1499,7 @@ final class SummitService
      */
     public function addSummit(array $data)
     {
-        return $this->tx_service->transaction(function () use ($data) {
+        $summit = $this->tx_service->transaction(function () use ($data) {
 
             $name = trim($data['name']);
             $former_summit = $this->summit_repository->getByName($name);
@@ -1560,6 +1564,11 @@ final class SummitService
             return $summit;
 
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitCreated);
+
+        return $summit;
     }
 
     /**
@@ -1642,6 +1651,9 @@ final class SummitService
 
             $summit = SummitFactory::populate($summit, $data);
 
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitUpdated);
+
             return $summit;
         });
     }
@@ -1671,6 +1683,9 @@ final class SummitService
 
             Log::debug(sprintf("SummitService::deleteSummit summit_id %s", $summit_id));
             $summit->markAsDeleted();
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                DeletedEventDTO::fromEntity($summit)->serialize(), SummitDomainEvents::SummitDeleted);
 
         });
     }

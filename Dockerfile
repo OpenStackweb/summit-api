@@ -25,6 +25,7 @@ RUN apt-get install -y \
     redis-tools \
     nano \
     python3 \
+    iputils-ping \
     make \
     g++\
     gpg \

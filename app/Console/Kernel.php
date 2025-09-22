@@ -52,6 +52,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PublishStreamUpdatesCommand::class,
         \App\Console\Commands\PurgeSummitsMarkAsDeletedCommand::class,
         \App\Console\Commands\IngestSummitOrderPaymentInfoCommand::class,
+        \App\Console\Commands\SetupSponsorServiceMessageBrokerCommand::class,
     ];
 
     /**

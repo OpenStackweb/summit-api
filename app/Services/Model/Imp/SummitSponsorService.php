@@ -12,7 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Events\SponsorServices\SponsorDomainEvents;
+use App\Events\SponsorServices\SummitSponsorCreatedEventDTO;
+use App\Events\SponsorServices\DeletedEventDTO;
 use App\Http\Utils\IFileUploader;
+use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
@@ -108,7 +112,7 @@ final class SummitSponsorService
      */
     public function addSponsor(Summit $summit, array $payload): Sponsor
     {
-        return $this->tx_service->transaction(function () use ($summit, $payload) {
+        $sponsor = $this->tx_service->transaction(function () use ($summit, $payload) {
             $company_id = intval($payload['company_id']);
             $featured_event_id = isset($payload['featured_event_id']) ? intval($payload['featured_event_id']) : 0;
 
@@ -163,6 +167,12 @@ final class SummitSponsorService
 
             return $sponsor;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+             SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+            SponsorDomainEvents::SponsorCreated);
+
+        return $sponsor;
     }
 
     /**
@@ -320,6 +330,10 @@ final class SummitSponsorService
                 $summit->recalculateSummitSponsorOrder($sponsor, $payload['order']);
             }
 
+            PublishSponsorServiceDomainEventsJob::dispatch(
+             SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+
             return $sponsor;
         });
     }
@@ -338,6 +352,10 @@ final class SummitSponsorService
                 throw new EntityNotFoundException("Sponsor not found.");
 
             $summit->removeSummitSponsor($summit_sponsor);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+             DeletedEventDTO::fromEntity($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorDeleted);
         });
     }
 

@@ -4008,6 +4008,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSpeakersData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],
@@ -4017,6 +4018,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadMySpeakersData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],

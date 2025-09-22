@@ -128,15 +128,15 @@ service:
 
     # Metrics pipeline
     metrics:
-      receivers: [otlp, prometheus]
+      receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [debug, prometheus, elasticsearch]
+      exporters: [debug, elasticsearch]
 
     # Logs pipeline
     logs:
       receivers: [otlp]
-      processors: [memory_limiter, resource, batch]
-      exporters: [debug, elasticsearch]
+      processors: [memory_limiter, resource, attributes, batch]
+      exporters: [debug, file, elasticsearch]
 
   # Telemetry configuration for the collector itself
   telemetry:

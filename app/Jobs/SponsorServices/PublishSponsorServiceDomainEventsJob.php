@@ -48,10 +48,9 @@ final class PublishSponsorServiceDomainEventsJob implements ShouldQueue
     }
 
     /**
-     * @param array $data
      * @param Throwable $exception
      */
-    public function failed(array $data, Throwable $exception): void
+    public function failed(Throwable $exception): void
     {
         Log::error("PublishSponsorServiceDomainEventsJob::failed {$exception->getMessage()}");
     }

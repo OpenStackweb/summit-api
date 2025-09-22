@@ -41,8 +41,8 @@ services:
   rabbitmq_sponsor_services:
     image: rabbitmq:3-management
     environment:
-      RABBITMQ_DEFAULT_USER: ${SPONSOR_SERVICES_RABBITMQ_LOGIN}
-      RABBITMQ_DEFAULT_PASS: ${SPONSOR_SERVICES_RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${DOMAIN_EVENTS_RABBITMQ_LOGIN}
+      RABBITMQ_DEFAULT_PASS: ${DOMAIN_EVENTS_RABBITMQ_PASSWORD}
     ports:
       - "15672:15672"  # admin
       - "5672:5672"    # RabbitMQ

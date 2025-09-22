@@ -30,14 +30,14 @@ final class SetupSponsorServiceMessageBrokerCommand extends Command {
      *
      * @var string
      */
-    protected $name = "setup_sponsor_service_message_broker";
+    protected $name = "setup_domain_events_message_broker";
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "mq:setup_sponsor_service_message_broker";
+    protected $signature = "mq:setup_domain_events_message_broker";
 
     /**
      * The console command description.
@@ -52,8 +52,8 @@ final class SetupSponsorServiceMessageBrokerCommand extends Command {
      * @return void
      */
     public function handle(): void {
-        $host_settings_path = "queue.connections.sponsor_services_sync_message_broker.hosts.0";
-        $exchange_settings_path = "queue.connections.sponsor_services_sync_message_broker.options.exchange";
+        $host_settings_path = "queue.connections.domain_events_message_broker.hosts.0";
+        $exchange_settings_path = "queue.connections.domain_events_message_broker.options.exchange";
 
         $host_settings = Config::get($host_settings_path);
 

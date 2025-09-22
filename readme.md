@@ -70,8 +70,8 @@ php artisan queue:work
 - php artisan queue:work message_broker
 - php artisan queue:work sponsor_users_sync_consumer
 
-### Set up rabbitmq exchange, queue and bindings for Sponsor Services
-- php artisan mq:setup_sponsor_service_message_broker
+### Set up rabbitmq exchange, queue and bindings for Domain Events
+- php artisan mq:setup_domain_events_message_broker
 
 # Audit Log Management
 

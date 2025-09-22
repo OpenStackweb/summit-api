@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use libs\utils\CacheRegions;
 // public api ( without AUTHZ [OAUTH2.0])
-Route::get('test-otpl', [OtlpDemoController::class, 'index']);
 
 Route::group(['prefix' => 'sponsored-projects'], function () {
     Route::get('', 'OAuth2SponsoredProjectApiController@getAll');

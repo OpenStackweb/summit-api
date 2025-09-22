@@ -35,17 +35,17 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily', 'stderr'],
+            'channels' => ['otlp', 'slack', 'stderr'],
         ],
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
-            'level' =>  env('LOG_LEVEL', 'error'),
+            'level' => env('LOG_LEVEL', 'error'),
         ],
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
-            'level' =>  env('LOG_LEVEL', 'error'),
+            'level' => env('LOG_LEVEL', 'error'),
             'days' => 7,
         ],
         'slack' => [
@@ -58,7 +58,7 @@ return [
         'stderr' => [
             'driver' => 'monolog',
             'handler' => StreamHandler::class,
-            'level' =>  env('LOG_LEVEL', 'error'),
+            'level' => env('LOG_LEVEL', 'error'),
             'with' => [
                 'stream' => 'php://stderr',
             ],
@@ -66,18 +66,18 @@ return [
         'stdout' => [
             'driver' => 'monolog',
             'handler' => StreamHandler::class,
-            'level' =>  env('LOG_LEVEL', 'error'),
+            'level' => env('LOG_LEVEL', 'error'),
             'with' => [
                 'stream' => 'php://stdout',
             ],
         ],
         'syslog' => [
             'driver' => 'syslog',
-            'level' =>  env('LOG_LEVEL', 'error'),
+            'level' => env('LOG_LEVEL', 'error'),
         ],
         'errorlog' => [
             'driver' => 'errorlog',
-            'level' =>  env('LOG_LEVEL', 'error'),
+            'level' => env('LOG_LEVEL', 'error'),
         ],
         'otlp' => [
             'driver' => 'monolog',

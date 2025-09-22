@@ -14,6 +14,7 @@ services:
     working_dir: /var/www/
     volumes:
       - ./:/var/www
+      - ./opentelemetry.ini:/usr/local/etc/php/conf.d/opentelemetry.ini
     networks:
       - summit-api-local-net
     depends_on:

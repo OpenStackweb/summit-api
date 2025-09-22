@@ -12,22 +12,23 @@
  * limitations under the License.
  **/
 
+use App\Http\Controllers\OtlpDemoController;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use libs\utils\CacheRegions;
 // public api ( without AUTHZ [OAUTH2.0])
+Route::get('test-otpl', [OtlpDemoController::class, 'index']);
 
-
-Route::group(['prefix' => 'sponsored-projects'], function(){
+Route::group(['prefix' => 'sponsored-projects'], function () {
     Route::get('', 'OAuth2SponsoredProjectApiController@getAll');
-    Route::group(['prefix'=>'{id}'], function(){
-        Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@get']);
-        Route::group(['prefix'=>'sponsorship-types'], function(){
-            Route::get('',[ 'middleware' => 'cache:1800', 'uses' => 'OAuth2SponsoredProjectApiController@getAllSponsorshipTypes']);
-            Route::group(['prefix'=>'{sponsorship_type_id}'], function(){
-                Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSponsorshipType']);
-                Route::group(['prefix'=>'supporting-companies'], function(){
-                    Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSupportingCompanies']);
+    Route::group(['prefix' => '{id}'], function () {
+        Route::get('', ['uses' => 'OAuth2SponsoredProjectApiController@get']);
+        Route::group(['prefix' => 'sponsorship-types'], function () {
+            Route::get('', ['middleware' => 'cache:1800', 'uses' => 'OAuth2SponsoredProjectApiController@getAllSponsorshipTypes']);
+            Route::group(['prefix' => '{sponsorship_type_id}'], function () {
+                Route::get('', ['uses' => 'OAuth2SponsoredProjectApiController@getSponsorshipType']);
+                Route::group(['prefix' => 'supporting-companies'], function () {
+                    Route::get('', ['uses' => 'OAuth2SponsoredProjectApiController@getSupportingCompanies']);
                 });
             });
         });
@@ -35,13 +36,13 @@ Route::group(['prefix' => 'sponsored-projects'], function(){
 });
 
 // elections
-Route::group(['prefix' => 'elections'], function(){
-    Route::group(['prefix'=>'current'], function(){
-        Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getCurrent']);
-        Route::group(['prefix'=>'candidates'], function(){
-            Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getCurrentCandidates']);
-            Route::group(['prefix'=>'gold'], function(){
-                Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getCurrentGoldCandidates']);
+Route::group(['prefix' => 'elections'], function () {
+    Route::group(['prefix' => 'current'], function () {
+        Route::get('', ['uses' => 'OAuth2ElectionsApiController@getCurrent']);
+        Route::group(['prefix' => 'candidates'], function () {
+            Route::get('', ['uses' => 'OAuth2ElectionsApiController@getCurrentCandidates']);
+            Route::group(['prefix' => 'gold'], function () {
+                Route::get('', ['uses' => 'OAuth2ElectionsApiController@getCurrentGoldCandidates']);
             });
         });
     });
@@ -142,12 +143,15 @@ Route::group(['prefix' => 'summits'], function () {
             Route::get('current/{status}', 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus')->where('status', 'submission|selection|voting');
         });
 
-        Route::get('', ['middleware' =>
-              sprintf('cache:%s,%s,id',
-                Config::get('cache_api_response.get_summit_response_lifetime', 1200),
-                CacheRegions::CacheRegionSummits,
-            ),
-            'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+        Route::get('', [
+            'middleware' =>
+                sprintf(
+                    'cache:%s,%s,id',
+                    Config::get('cache_api_response.get_summit_response_lifetime', 1200),
+                    CacheRegions::CacheRegionSummits,
+                ),
+            'uses' => 'OAuth2SummitApiController@getSummit'
+        ])->where('id', 'current|[0-9]+');
 
         // members
         Route::group(['prefix' => 'members'], function () {
@@ -163,32 +167,35 @@ Route::group(['prefix' => 'summits'], function () {
         // events
         Route::group(['prefix' => 'events'], function () {
             Route::group(['prefix' => 'published'], function () {
-                Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvents']);
+                Route::get('', ['uses' => 'OAuth2SummitEventsApiController@getScheduledEvents']);
             });
 
             Route::group(array('prefix' => '{event_id}'), function () {
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', ['middleware' =>
-                        sprintf('cache:%s,%s,event_id',
-                            Config::get('cache_api_response.get_published_event_response_lifetime', 600),
-                            CacheRegions::CacheRegionEvents,
-                        ),
-                        'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                    Route::get('', [
+                        'middleware' =>
+                            sprintf(
+                                'cache:%s,%s,event_id',
+                                Config::get('cache_api_response.get_published_event_response_lifetime', 600),
+                                CacheRegions::CacheRegionEvents,
+                            ),
+                        'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent'
+                    ]);
                 });
 
                 // rsvp invitations
                 Route::group(array('prefix' => 'rsvp-invitations'), function () {
                     Route::group(array('prefix' => '{token}'), function () {
-                        Route::get('', [ 'uses' => 'OAuth2RSVPInvitationApiController@getInvitationByToken']);
-                        Route::put('accept', [ 'uses' => 'OAuth2RSVPInvitationApiController@acceptByToken']);
-                        Route::delete('decline', [ 'uses' => 'OAuth2RSVPInvitationApiController@rejectByToken']);
+                        Route::get('', ['uses' => 'OAuth2RSVPInvitationApiController@getInvitationByToken']);
+                        Route::put('accept', ['uses' => 'OAuth2RSVPInvitationApiController@acceptByToken']);
+                        Route::delete('decline', ['uses' => 'OAuth2RSVPInvitationApiController@rejectByToken']);
                     });
                 });
             });
             Route::group(['prefix' => 'all'], function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
-                    Route::get('overflow', [ 'uses' =>'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
+                    Route::get('overflow', ['uses' => 'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
                 });
             });
         });
@@ -224,11 +231,15 @@ Route::group(['prefix' => 'summits'], function () {
         Route::group(['prefix' => 'speakers'], function () {
             Route::get('', 'OAuth2SummitSpeakersApiController@getSpeakers');
             Route::group(['prefix' => '{speaker_id}'], function () {
-                Route::get('', ['middleware' =>
-                    sprintf('cache:%s,%s,speaker_id',
-                        3600,
-                        CacheRegions::CacheRegionSpeakers,
-                    ) , 'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker']);
+                Route::get('', [
+                    'middleware' =>
+                        sprintf(
+                            'cache:%s,%s,speaker_id',
+                            3600,
+                            CacheRegions::CacheRegionSpeakers,
+                        ),
+                    'uses' => 'OAuth2SummitSpeakersApiController@getSummitSpeaker'
+                ]);
             });
         });
         // orders
@@ -251,13 +262,13 @@ Route::group(['prefix' => 'summits'], function () {
 
         // taxes types -- only dev
 
-        if(\Illuminate\Support\Facades\App::environment("dev")){
+        if (\Illuminate\Support\Facades\App::environment("dev")) {
             Route::group(['prefix' => 'tax-types'], function () {
                 Route::get('', ['uses' => 'OAuth2SummitTaxTypeApiController@getAllBySummit']);
                 Route::post('', ['uses' => 'OAuth2SummitTaxTypeApiController@add']);
                 Route::group(['prefix' => '{tax_id}'], function () {
-                    Route::get('', [ 'uses' => 'OAuth2SummitTaxTypeApiController@get']);
-                    Route::put('', [ 'uses' => 'OAuth2SummitTaxTypeApiController@update']);
+                    Route::get('', ['uses' => 'OAuth2SummitTaxTypeApiController@get']);
+                    Route::put('', ['uses' => 'OAuth2SummitTaxTypeApiController@update']);
                     Route::delete('', ['uses' => 'OAuth2SummitTaxTypeApiController@delete']);
                 });
             });

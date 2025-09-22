@@ -55,7 +55,6 @@ RUN echo 'memory_limit = 1024M' >> "$PHP_INI_DIR/php.ini"
 RUN echo 'apc.shm_size=128M' >> "$PHP_INI_DIR/php.ini"
 # Enable APCu in CLI if you run warmers via artisan
 RUN echo 'apc.enable_cli=1' >> $"PHP_INI_DIR/php.ini"
-RUN echo 'extension=opentelemetry.so' >> "$PHP_INI_DIR/php.ini"
 
 WORKDIR /var/www
 COPY . /var/www

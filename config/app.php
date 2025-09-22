@@ -3,9 +3,9 @@
 return [
 
     //oauth2.0 params from openstackid server resource server admin console
-    'openstackid_client_id'     => env('APP_OAUTH_2_0_CLIENT_ID'),
+    'openstackid_client_id' => env('APP_OAUTH_2_0_CLIENT_ID'),
     'openstackid_client_secret' => env('APP_OAUTH_2_0_CLIENT_SECRET'),
-    'openstackid_base_url'      => env('APP_OAUTH_2_0_AUTH_SERVER_BASE_URL'),
+    'openstackid_base_url' => env('APP_OAUTH_2_0_AUTH_SERVER_BASE_URL'),
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -124,8 +124,8 @@ return [
     'providers' => [
 
         /*
-        * Laravel Framework Service Providers...
-        */
+         * Laravel Framework Service Providers...
+         */
         Illuminate\Auth\AuthServiceProvider::class,
         Illuminate\Broadcasting\BroadcastServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
@@ -217,14 +217,14 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'EntityManager' => LaravelDoctrine\ORM\Facades\EntityManager::class,
-        'Registry'      => LaravelDoctrine\ORM\Facades\Registry::class,
-        'Doctrine'      => LaravelDoctrine\ORM\Facades\Doctrine::class,
-        'Encryption'    => App\Services\Utils\Facades\Encryption::class,
-        'QrCode'        => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
+        'Registry' => LaravelDoctrine\ORM\Facades\Registry::class,
+        'Doctrine' => LaravelDoctrine\ORM\Facades\Doctrine::class,
+        'Encryption' => App\Services\Utils\Facades\Encryption::class,
+        'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
         'ResourceServerContext' => \App\Facades\ResourceServerContext::class,
     ],
 
-    'app_name'    => env('APP_NAME', 'Open Infrastructure Summit'),
+    'app_name' => env('APP_NAME', 'Open Infrastructure Summit'),
     'tenant_name' => env('TENANT_NAME', 'OpenStack'),
     "default_profile_image" => env('DEFAULT_PROFILE_IMAGE', null),
 ];

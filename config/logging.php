@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    'default' => env('LOG_CHANNEL', 'otlpstack'),
 
     /*
     |--------------------------------------------------------------------------
@@ -35,7 +35,11 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['otlp', 'slack', 'stderr'],
+            'channels' => ['daily', 'stderr'],
+        ],
+        'otlpstack' => [
+            'driver' => 'stack',
+            'channels' => ['otlp', 'stderr'],
         ],
         'single' => [
             'driver' => 'single',

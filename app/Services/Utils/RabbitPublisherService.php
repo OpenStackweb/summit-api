@@ -22,6 +22,7 @@ use PhpAmqpLib\Exception\AMQPRuntimeException;
 use PhpAmqpLib\Exchange\AMQPExchangeType;
 use PhpAmqpLib\Message\AMQPMessage;
 use RuntimeException;
+use function Psy\debug;
 
 /**
  * Class RabbitPublisherService
@@ -149,6 +150,7 @@ final class RabbitPublisherService implements IPublisherService
      */
     public function publish(array $payload, string $routing_key = ''):void
     {
+        Log::debug(sprintf("RabbitPublisherService::publish payload %s $routing_key", json_encode($payload)));
         $connection = null;
         $done = false;
         while (!$done) {

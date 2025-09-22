@@ -38,6 +38,7 @@ final class PublishSponsorServiceDomainEventsJob implements ShouldQueue
     public function handle(array $payload, string $event_type): void
     {
         try {
+            Log::debug(sprintf("PublishSponsorServiceDomainEventsJob::handle payload %s event_type %s", json_encode($payload), json_encode($event_type)));
             $sponsor_services_publisher = RabbitPublisherFactory::make('domain_events_message_broker');
             $sponsor_services_publisher->publish($payload, $event_type);
         } catch (\Exception $ex) {

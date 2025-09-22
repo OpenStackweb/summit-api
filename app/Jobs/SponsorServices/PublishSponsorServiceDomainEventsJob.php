@@ -30,17 +30,22 @@ final class PublishSponsorServiceDomainEventsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @param array $payload
-     * @param string $event_type
-     * @throws \Exception
-     */
-    public function handle(array $payload, string $event_type): void
+    private $payload;
+
+    private $event_type;
+
+    public function __construct(array $payload, string $event_type){
+        $this->payload = $payload;
+        $this->event_type = $event_type;
+        Log::debug(sprintf("PublishSponsorServiceDomainEventsJob::__construct payload %s event_type %s ", json_encode($payload), $event_type));
+    }
+
+    public function handle(): void
     {
         try {
-            Log::debug(sprintf("PublishSponsorServiceDomainEventsJob::handle payload %s event_type %s", json_encode($payload), json_encode($event_type)));
+            Log::debug(sprintf("PublishSponsorServiceDomainEventsJob::handle payload %s event_type %s", json_encode($this->payload), $this->event_type));
             $sponsor_services_publisher = RabbitPublisherFactory::make('domain_events_message_broker');
-            $sponsor_services_publisher->publish($payload, $event_type);
+            $sponsor_services_publisher->publish($this->payload, $this->event_type);
         } catch (\Exception $ex) {
             Log::error($ex);
             throw $ex;

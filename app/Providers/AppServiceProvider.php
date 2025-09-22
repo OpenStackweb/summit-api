@@ -26,6 +26,8 @@ use models\main\ChatTeamPermission;
 use models\main\PushNotificationMessagePriority;
 use models\oauth2\IResourceServerContext;
 use models\oauth2\ResourceServerContext;
+use OpenTelemetry\SDK\Logs\LoggerProvider;
+use OpenTelemetry\SDK\Logs\LoggerProviderFactory;
 use Sokil\IsoCodes\IsoCodesFactory;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
@@ -725,7 +727,11 @@ class AppServiceProvider extends ServiceProvider
         if (! App::environment('testing') && boolval(Config::get('opentelemetry.enabled', false))) {
             // Register LoggerInterface binding BEFORE registering LaravelOpenTelemetryServiceProvider
             App::bind(\OpenTelemetry\API\Logs\LoggerInterface::class, function ($app) {
-                return new \OpenTelemetry\API\Logs\NoopLogger();
+                $loggerProvider = (new LoggerProviderFactory())->create();
+                if ($loggerProvider instanceof LoggerProvider) {
+                    return $loggerProvider->getLogger('default');
+                }
+                throw new \Exception('Could not create OpenTelemetry LoggerProvider');
             });
 
             Log::debug('Enabling LaravelOpenTelemetryServiceProvider');

@@ -3128,16 +3128,16 @@
         },
         {
             "name": "keepsuit/laravel-opentelemetry",
-            "version": "1.11.0",
+            "version": "1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keepsuit/laravel-opentelemetry.git",
-                "reference": "f37602e38801e598e805646e598d70679082abc1"
+                "reference": "d5aac69698b02e04fa5a9e04bf1fbd3455821504"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keepsuit/laravel-opentelemetry/zipball/f37602e38801e598e805646e598d70679082abc1",
-                "reference": "f37602e38801e598e805646e598d70679082abc1",
+                "url": "https://api.github.com/repos/keepsuit/laravel-opentelemetry/zipball/d5aac69698b02e04fa5a9e04bf1fbd3455821504",
+                "reference": "d5aac69698b02e04fa5a9e04bf1fbd3455821504",
                 "shasum": ""
             },
             "require": {
@@ -3220,9 +3220,9 @@
             ],
             "support": {
                 "issues": "https://github.com/keepsuit/laravel-opentelemetry/issues",
-                "source": "https://github.com/keepsuit/laravel-opentelemetry/tree/1.11.0"
+                "source": "https://github.com/keepsuit/laravel-opentelemetry/tree/1.12.0"
             },
-            "time": "2025-09-15T12:25:50+00:00"
+            "time": "2025-09-21T09:20:28+00:00"
         },
         {
             "name": "laminas/laminas-math",

@@ -1,4 +1,5 @@
-<?php namespace App\Providers;
+<?php
+namespace App\Providers;
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,11 +27,15 @@ use models\main\ChatTeamPermission;
 use models\main\PushNotificationMessagePriority;
 use models\oauth2\IResourceServerContext;
 use models\oauth2\ResourceServerContext;
+use OpenTelemetry\API\Logs\LoggerInterface;
 use OpenTelemetry\SDK\Logs\LoggerProvider;
 use OpenTelemetry\SDK\Logs\LoggerProviderFactory;
 use Sokil\IsoCodes\IsoCodesFactory;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
+use Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider;
+use App\Providers\OpenTelemetryServiceProvider;
+
 /**
  * Class AppServiceProvider
  * @package App\Providers
@@ -167,7 +172,7 @@ class AppServiceProvider extends ServiceProvider
         'streaming_type' => 'required_with:streaming_url|string|in:VOD,LIVE',
         'etherpad_link' => 'nullable|sometimes|url',
         'meeting_url' => 'nullable|sometimes|url',
-        'stream_is_secure' =>  'sometimes|boolean',
+        'stream_is_secure' => 'sometimes|boolean',
     ];
 
 
@@ -182,7 +187,7 @@ class AppServiceProvider extends ServiceProvider
     ];
 
     static $lead_report_settings_question_dto_validation_rules = [
-        'id'   => 'required|integer',
+        'id' => 'required|integer',
         'name' => 'sometimes|string',
     ];
 
@@ -199,7 +204,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if (app()->environment('production') || app()->environment('dev')  ) {
+        if (app()->environment('production') || app()->environment('dev')) {
             URL::forceScheme('https');
         }
 
@@ -224,9 +229,11 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('int_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be an array of integers", $attribute);
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
-                if (!is_numeric($element)) return false;
+                if (!is_numeric($element))
+                    return false;
             }
             return true;
         });
@@ -236,10 +243,13 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('emails_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be an array of valid emails", $attribute);
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
-                if (!is_string($element)) return false;
-                if(!filter_var($element, FILTER_VALIDATE_EMAIL)) return false;
+                if (!is_string($element))
+                    return false;
+                if (!filter_var($element, FILTER_VALIDATE_EMAIL))
+                    return false;
             }
             return true;
         });
@@ -248,9 +258,11 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('int_or_string_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be an array of integers or strings", $attribute);
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
-                if (!is_numeric($element) && !is_string($element)) return false;
+                if (!is_numeric($element) && !is_string($element))
+                    return false;
             }
             return true;
         });
@@ -261,10 +273,11 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf
                 (
                     "%s should be an array of event data {id : int, location_id: int, start_date: int (epoch), end_date: int (epoch)}",
-                    $attribute);
+                    $attribute
+                );
             });
 
-            if (!is_array($value)){
+            if (!is_array($value)) {
                 Log::debug(sprintf("event_dto_array::is not array %s", print_r($value, true)));
                 return false;
             }
@@ -294,20 +307,24 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf
                 (
                     "%s should be an array of extra question data {question_id : int, answer: string}",
-                    $attribute);
+                    $attribute
+                );
             });
 
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
 
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$extra_question_dto_fields)) return false;
+                    if (!in_array($key, self::$extra_question_dto_fields))
+                        return false;
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$extra_question_dto_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -320,16 +337,19 @@ class AppServiceProvider extends ServiceProvider
                     $attribute
                 );
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$summit_schedule_config_filter_dto_fields)) return false;
+                    if (!in_array($key, self::$summit_schedule_config_filter_dto_fields))
+                        return false;
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$summit_schedule_config_filter_dto_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -342,16 +362,19 @@ class AppServiceProvider extends ServiceProvider
                     $attribute
                 );
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$summit_schedule_config_pre_filter_dto_fields)) return false;
+                    if (!in_array($key, self::$summit_schedule_config_pre_filter_dto_fields))
+                        return false;
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$summit_schedule_config_pre_filter_dto_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -364,16 +387,19 @@ class AppServiceProvider extends ServiceProvider
                     $attribute
                 );
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$ticket_dto_fields)) return false;
+                    if (!in_array($key, self::$ticket_dto_fields))
+                        return false;
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$ticket_dto_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -383,18 +409,22 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf
                 (
                     "%s should be an array of event data {id : int, location_id: int, start_date: int (epoch), end_date: int (epoch)}",
-                    $attribute);
+                    $attribute
+                );
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$event_dto_fields_publish)) return false;
+                    if (!in_array($key, self::$event_dto_fields_publish))
+                        return false;
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$event_dto_publish_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -404,21 +434,26 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf
                 (
                     "%s should be an array of strings or extra question data {id : int, name: string}",
-                    $attribute);
+                    $attribute
+                );
             });
 
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
 
             foreach ($value as $element) {
-                if (is_string($element)) continue;
+                if (is_string($element))
+                    continue;
 
                 foreach ($element as $key => $element_val) {
-                    if ($element_val == '*') continue;
+                    if ($element_val == '*')
+                        continue;
 
                     // Creates a Validator instance and validates the data.
                     $validation = Validator::make($element_val, self::$lead_report_settings_question_dto_validation_rules);
 
-                    if ($validation->fails()) return false;
+                    if ($validation->fails())
+                        return false;
                 }
             }
             return true;
@@ -429,21 +464,26 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf
                 (
                     "%s should be an array of sponsorship data {type_id : int}",
-                    $attribute);
+                    $attribute
+                );
             });
 
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
 
             foreach ($value as $element) {
-                if (!is_array($element)) return false;
+                if (!is_array($element))
+                    return false;
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$sponsorship_dto_fields)) return false;
+                    if (!in_array($key, self::$sponsorship_dto_fields))
+                        return false;
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$sponsorship_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -491,7 +531,8 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('url_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should a list of valid urls.", $attribute);
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 if (!filter_var($element, FILTER_VALIDATE_URL)) {
                     // try to add the default schema in front of the url to valiate
@@ -507,10 +548,13 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('entity_value_array', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be an array of {id,value} tuple", $attribute);
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
-                if (!isset($element['id'])) return false;
-                if (!isset($element['value'])) return false;
+                if (!isset($element['id']))
+                    return false;
+                if (!isset($element['value']))
+                    return false;
             }
             return true;
         });
@@ -520,7 +564,8 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf("%s should be an array of {title,link} tuple", $attribute);
             });
 
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, [
@@ -528,7 +573,8 @@ class AppServiceProvider extends ServiceProvider
                     'link' => 'required|url',
                 ]);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails())
+                    return false;
             }
             return true;
         });
@@ -552,7 +598,8 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf("%s should be zero or after %s", $attribute, $parameters[0]);
             });
             $data = $validator->getData();
-            if (is_null($value) || intval($value) == 0) return true;
+            if (is_null($value) || intval($value) == 0)
+                return true;
             if (isset($data[$parameters[0]])) {
                 $compare_to = $data[$parameters[0]];
                 $parsed = date_parse_from_format('U', $value);
@@ -567,7 +614,8 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf("%s should be greater than %s", $attribute, $parameters[0]);
             });
             $data = $validator->getData();
-            if (is_null($value) || intval($value) == 0) return true;
+            if (is_null($value) || intval($value) == 0)
+                return true;
             if (isset($data[$parameters[0]])) {
                 $compare_to = $data[$parameters[0]];
                 return intval($compare_to) < intval($value);
@@ -580,7 +628,8 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf("%s should be greater or equal than %s", $attribute, $parameters[0]);
             });
             $data = $validator->getData();
-            if (is_null($value) || intval($value) == 0) return true;
+            if (is_null($value) || intval($value) == 0)
+                return true;
             if (isset($data[$parameters[0]])) {
                 $compare_to = $data[$parameters[0]];
                 return intval($compare_to) <= intval($value);
@@ -599,8 +648,10 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('hex_color2', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be a valid hex color value", $attribute);
             });
-            if (strlen($value) != 6) return false;
-            if (!ctype_xdigit($value)) return false;
+            if (strlen($value) != 6)
+                return false;
+            if (!ctype_xdigit($value))
+                return false;
             return true;
         });
 
@@ -627,7 +678,8 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('country_iso_alpha2_code', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be a valid country iso code", $attribute);
             });
-            if (!is_string($value)) return false;
+            if (!is_string($value))
+                return false;
             $value = trim($value);
 
             $isoCodes = new IsoCodesFactory();
@@ -642,7 +694,8 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('currency_iso', function ($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be a valid currency iso 4217 code", $attribute);
             });
-            if (!is_string($value)) return false;
+            if (!is_string($value))
+                return false;
             $value = trim($value);
 
             $isoCodes = new IsoCodesFactory();
@@ -668,9 +721,11 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf
                 (
                     "%s should be an array of rsvp answer data {question_id : int, value: string, values: string array}",
-                    $attribute);
+                    $attribute
+                );
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value))
+                return false;
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
                     if (!in_array($key, self::$rsvp_answer_dto_fields))
@@ -693,7 +748,8 @@ class AppServiceProvider extends ServiceProvider
 
             $value = intval($value);
 
-            if ($value <= 0) return false;
+            if ($value <= 0)
+                return false;
 
             return ($value % 1024 == 0);
         });
@@ -711,7 +767,7 @@ class AppServiceProvider extends ServiceProvider
                 return sprintf("%s should be a valid epoch timestamp with 10 digits", $attribute);
             });
 
-            return is_numeric($value) && intval($value) > - strlen(strval($value)) == 10;
+            return is_numeric($value) && intval($value) > -strlen(strval($value)) == 10;
         });
 
     }
@@ -722,22 +778,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-
         // phpunit.xml sets APP_ENV=testing during tests
-        if (! App::environment('testing') && boolval(Config::get('opentelemetry.enabled', false))) {
-            // Register LoggerInterface binding BEFORE registering LaravelOpenTelemetryServiceProvider
-            App::bind(\OpenTelemetry\API\Logs\LoggerInterface::class, function ($app) {
-                $loggerProvider = (new LoggerProviderFactory())->create();
-                if ($loggerProvider instanceof LoggerProvider) {
-                    return $loggerProvider->getLogger('default');
+        if (!$this->app->environment('testing') && boolval(Config::get('opentelemetry.enabled', false))) {
+            $this->app->bind(
+                LoggerInterface::class,
+                function ($app) {
+                    $loggerProvider = (new LoggerProviderFactory())->create();
+                    if ($loggerProvider instanceof LoggerProvider) {
+                        return $loggerProvider->getLogger('default');
+                    }
+                    throw new \Exception('Could not create OpenTelemetry LoggerProvider');
                 }
-                throw new \Exception('Could not create OpenTelemetry LoggerProvider');
-            });
-
-            Log::debug('Enabling LaravelOpenTelemetryServiceProvider');
-            App::register(
-                \Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class
             );
+
+            // Register LoggerInterface binding BEFORE registering LaravelOpenTelemetryServiceProvider
+            Log::debug('Enabling LaravelOpenTelemetryServiceProvider');
+            $this->app->register(LaravelOpenTelemetryServiceProvider::class);
         }
 
         App::singleton(IResourceServerContext::class, ResourceServerContext::class);

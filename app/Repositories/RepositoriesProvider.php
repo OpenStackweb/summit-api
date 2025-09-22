@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\Schedule\RSVP\RSVPInvitationExcerptEmail;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\IElectionsRepository;
 use App\Models\Foundation\Main\Language;

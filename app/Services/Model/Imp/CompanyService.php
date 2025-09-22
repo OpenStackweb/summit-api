@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Utils\IFileUploader;
+use App\Jobs\CompanyEventJob;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ICompanyService;
@@ -86,7 +87,7 @@ final class CompanyService
      */
     public function updateCompany(int $company_id, array $payload): Company
     {
-        return $this->tx_service->transaction(function() use($company_id, $payload){
+        $company = $this->tx_service->transaction(function() use($company_id, $payload){
             $company = $this->repository->getById($company_id);
             if(is_null($company) || !$company instanceof Company)
                 throw new EntityNotFoundException(sprintf("company %s not found.", $company_id));
@@ -100,6 +101,8 @@ final class CompanyService
 
             return CompanyFactory::populate($company, $payload);
         });
+        CompanyEventJob::dispatch($company, "UPDATE");
+        return $company;
     }
 
     /**
@@ -113,7 +116,7 @@ final class CompanyService
             $company = $this->repository->getById($company_id);
             if(is_null($company))
                 throw new EntityNotFoundException(sprintf("company %s not found.", $company_id));
-
+            CompanyEventJob::dispatch($company, "DELETE");
             $this->repository->delete($company);
         });
     }

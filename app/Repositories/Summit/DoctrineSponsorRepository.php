@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\Sponsor;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
-use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -98,5 +99,31 @@ implements ISponsorRepository
     protected function getBaseEntity()
     {
        return Sponsor::class;
+    }
+
+    /**
+     * @param int $company_id
+     * @return array
+     */
+    public function getSponsorsExcerptByCompanyID(int $company_id):array{
+        try {
+            $sql = <<<SQL
+SELECT Sponsor.ID AS sponsor_id, Sponsor.SummitID as summit_id FROM Sponsor
+         WHERE Sponsor.CompanyID = :company_id
+SQL;
+
+            $bindings = ['company_id' => $company_id];
+            $types = [
+                'company_id'  => ParameterType::INTEGER
+            ];
+
+            $stm = $this->getEntityManager()->getConnection()->executeQuery($sql, $bindings, $types);
+
+            return $stm->fetchAllAssociative();
+
+        } catch (\Exception $ex) {
+
+        }
+        return [];
     }
 }

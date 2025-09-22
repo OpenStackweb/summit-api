@@ -18,5 +18,9 @@ use models\utils\IBaseRepository;
  */
 interface ISponsorRepository extends IBaseRepository
 {
-
+    /**
+     * @param int $company_id
+     * @return array
+     */
+    public function getSponsorsExcerptByCompanyID(int $company_id):array;
 }

@@ -2,22 +2,22 @@
     "name": "openstack-infra/openstackid-resources",
     "description": "The OpenStackId Resource Server.",
     "keywords": [
-      "framework",
-      "laravel"
+        "framework",
+        "laravel"
     ],
     "license": "MIT",
     "type": "project",
     "require": {
         "php": "^8.3",
+        "ext-apcu": "*",
         "ext-gd": "*",
+        "ext-igbinary": "*",
         "ext-imagick": "*",
         "ext-json": "*",
         "ext-openssl": "*",
         "ext-pdo": "*",
-        "ext-zlib": "*",
-        "ext-igbinary": "*",
         "ext-redis": "*",
-        "ext-apcu": "*",
+        "ext-zlib": "*",
         "affinipay/chargeio-php": "dev-master",
         "beberlei/doctrineextensions": "1.5.0",
         "behat/transliterator": "^1.2",
@@ -31,7 +31,7 @@
         "google/apiclient": "^2.2",
         "guzzlehttp/guzzle": "7.8.2",
         "guzzlehttp/uri-template": "^1.0",
-        "keepsuit/laravel-opentelemetry": "^1.6",
+        "keepsuit/laravel-opentelemetry": "^1.12",
         "laminas/laminas-math": "^3.7",
         "laravel-doctrine/extensions": "2.0.1",
         "laravel-doctrine/migrations": "3.4.0",
@@ -43,6 +43,11 @@
         "league/flysystem-aws-s3-v3": "3.8.0",
         "league/oauth2-client": "^2.4",
         "muxinc/mux-php": "^3.11",
+        "open-telemetry/api": "^1.6",
+        "open-telemetry/context": "^1.4",
+        "open-telemetry/opentelemetry": "^1.0",
+        "open-telemetry/sdk": "^1.8",
+        "php-http/httplug": "^2.4",
         "php-opencloud/openstack": "3.10.0",
         "pion/laravel-chunk-upload": "^v1.5.4",
         "predis/predis": "v2.2.2",
@@ -66,10 +71,10 @@
         "rector/rector": "*",
         "spatie/laravel-ignition": "^2.8.0"
     },
-    "suggest":{
+    "suggest": {
         "lib-openssl": "Required to use AES algorithms (except AES GCM)",
-        "ext-json":"Required to use json algorithms",
-        "ext-gd":"Required to use json algorithms"
+        "ext-json": "Required to use json algorithms",
+        "ext-gd": "Required to use json algorithms"
     },
     "autoload": {
         "classmap": [
@@ -84,7 +89,9 @@
         "psr-4": {
             "App\\": "app/"
         },
-        "files": ["app/Utils/helpers.php"]
+        "files": [
+            "app/Utils/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

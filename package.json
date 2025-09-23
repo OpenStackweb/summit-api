@@ -2,11 +2,14 @@
   "private": true,
   "scripts": {
     "prod": "gulp --production",
-    "dev": "gulp watch"
+    "dev": "gulp watch",
+    "prepare": "husky"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
     "laravel-elixir": "^5.0.0",
-    "bootstrap-sass": "^3.3.0"
+    "bootstrap-sass": "^3.3.0",
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.0.11"
   }
 }

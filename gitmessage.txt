@@ -1,0 +1,26 @@
+# Conventional Commit template
+# Lines starting with # are ignored by Git.
+# Keep header ≤72 chars; subject in imperative mood.
+# Examples of <type>: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+
+<type>(<scope>): <subject>
+
+# Why?
+# - What problem does this change solve?
+# - Why now / context?
+
+# What changed?
+# - Key changes, trade-offs, alternatives considered
+# - Any user-facing behavior changes
+
+# How was it tested?
+# - Test strategy, manual steps, screenshots if relevant
+
+# Notes
+# - Known limitations, follow-ups, migrations
+
+# Footer (one per line)
+# BREAKING CHANGE: <describe the breaking change and migration path>
+# Closes #123
+# Relates-to #456
+# Co-authored-by: Name <email>

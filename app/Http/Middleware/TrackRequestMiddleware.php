@@ -2,99 +2,88 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
 use Closure;
-use Illuminate\Support\Str;
-use \OpenTelemetry\API\Trace\SpanInterface;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Log\LogManager;
 use Keepsuit\LaravelOpenTelemetry\Facades\Tracer;
-
+use Illuminate\Log\LogManager;
+use OpenTelemetry\API\Baggage\Baggage;
+use OpenTelemetry\Context\ScopeInterface;
 
 class TrackRequestMiddleware
 {
-    /**
-     * @var LogManager
-     */
+    private const ATTRIBUTE_START_TIME = '_start_time';
+    private const EVENT_REQUEST_STARTED = 'request.started';
+    private const EVENT_REQUEST_FINISHED = 'request.finished';
+
     protected LogManager $logger;
+    private ?ScopeInterface $baggageScope = null;
+    private bool $shouldTrack;
 
-    /**
-     * @var float
-     */
-    protected float $startTime = 0;
-
-    /**
-     * @var SpanInterface
-     */
-    protected SpanInterface $span;
-
-    /**
-     * Constructor del middleware.
-     * Laravel inyectará el LogManager aquí.
-     *
-     * @param LogManager $logger
-     */
     public function __construct(LogManager $logger)
     {
         $this->logger = $logger;
+        $this->shouldTrack = env('APP_ENV') !== 'testing' &&
+            config('opentelemetry.enhance_requests', true);
     }
 
-    /**
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
     public function handle(Request $request, Closure $next)
     {
-        if(env('APP_ENV') === 'testing') {
-            // Skip tracking in testing environment
+        if (!$this->shouldTrack) {
             return $next($request);
         }
-        try {
-            // generating dynamic id for span with configurable prefix
-            $spanId = env('TRACE_SPAN_PREFIX', 'SPAN') . '_' . Str::uuid();
-            $this->startTime = microtime(true);
-            $this->span = Tracer::newSpan($spanId)->start();
 
-            $this->logger->channel('otlp')->info('Request started.', [
-                'endpoint' => $request->url(),
-                'method' => $request->method(),
-                'timestamp_utc' => now()->toIso8601String(),
-            ]);
+        try {
+            $request->attributes->set(self::ATTRIBUTE_START_TIME, microtime(true));
+
+            if ($span = Tracer::activeSpan()) {
+                if ($ray = $request->header('cf-ray')) {
+                    $span->setAttribute('cloudflare.ray_id', $ray);
+
+                    $baggage = Baggage::getCurrent()
+                        ->toBuilder()
+                        ->set('cf-ray', $ray)
+                        ->set('request_id', $request->header('x-request-id', uniqid('req_')))
+                        ->set('user_agent', substr($request->userAgent() ?? 'unknown', 0, 100))
+                        ->build();
+
+                    $this->baggageScope = $baggage->activate();
+                }
+
+                $span->addEvent(self::EVENT_REQUEST_STARTED, [
+                    'method' => $request->method(),
+                    'url'    => $request->fullUrl(),
+                ]);
+            }
         } catch (\Throwable $e) {
-            // forcing 'single' channel in case otlp log fails
-            $this->logger->channel('single')->error("Error on request tracking" . $e->getMessage());
+            $this->logger->channel('single')->error("Error on request tracking: " . $e->getMessage());
         }
 
-        $response = $next($request);
-        return $response;
+        return $next($request);
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return void
-     */
     public function terminate(Request $request, Response $response): void
     {
-        if(env('APP_ENV') === 'testing') {
-            // Skip tracking in testing environment
+        if (!$this->shouldTrack) {
             return;
         }
+
         try {
-            $endTime = microtime(true);
-            $responseTime = intval(($endTime - $this->startTime) * 1000);
-            $this->logger->channel('otlp')->info('Request finished.', [
-                'response_time' => $responseTime,
-            ]);
+            $start = (float) $request->attributes->get(self::ATTRIBUTE_START_TIME, microtime(true));
+            $ms = (int) ((microtime(true) - $start) * 1000);
 
-            if (isset($this->span)) {
-                $this->span->end();
+            if ($span = Tracer::activeSpan()) {
+                $span->setAttribute('app.response_ms', $ms);
+                $span->setAttribute('http.status_code', $response->getStatusCode());
+                $span->addEvent(self::EVENT_REQUEST_FINISHED, ['response_ms' => $ms]);
             }
-
         } catch (\Throwable $e) {
-            // forcing 'single' channel in case otlp log fails
             $this->logger->channel('single')->error("Error on request tracking: " . $e->getMessage());
+        } finally {
+            if ($this->baggageScope) {
+                $this->baggageScope->detach();
+                $this->baggageScope = null;
+            }
         }
     }
 }

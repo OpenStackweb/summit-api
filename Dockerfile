@@ -7,9 +7,10 @@ ARG XDEBUG_VERSION="xdebug-3.3.2"
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV GITHUB_OAUTH_TOKEN=$GITHUB_OAUTH_TOKEN
 ENV PHP_DIR /usr/local/etc/php
+ARG YARN_VERSION="1.22.22"
+ARG NVM_VERSION="v0.40.3"
+ARG NODE_VERSION="20.19.4"
 
-ARG NVM_VERSION="v0.39.7"
-ARG NODE_VERSION="18.20.2"
 # base packages
 RUN apt-get update
 RUN apt-get install -y \
@@ -33,15 +34,17 @@ RUN apt-get install -y \
     libmagickwand-dev
 
 
-# nvm
 
 # nvm + node + yarn via corepack
 ENV NVM_DIR=/root/.nvm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
 # Install Node, enable Corepack (Yarn)
-RUN bash -lc "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && corepack enable && corepack prepare yarn@stable --activate"
-
+RUN bash -lc "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && corepack enable && corepack prepare yarn@$YARN_VERSION --activate"
 RUN apt clean && rm -rf /var/lib/apt/lists/*
+
+# Set up our PATH correctly so we don't have to long-reference npm, node, &c.
+ENV NODE_PATH=$NVM_DIR/versions/node/v$NODE_VERSION/lib/node_modules
+ENV PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 

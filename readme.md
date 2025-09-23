@@ -77,3 +77,21 @@ php artisan audit:purge-log _SUMMIT_ID_ _DATE_BACKWARD_FROM_
 
 - SUMMIT_ID: Summit id to clear audit log from
 - DATE_BACKWARD_FROM: Maximum date to delete starting from the beginning
+
+## OpenTelemetry Observability
+
+This application includes OpenTelemetry instrumentation for distributed tracing and monitoring.
+
+### Quick Setup
+```bash
+# Enable in .env
+OTEL_SERVICE_ENABLED=true
+OTEL_SERVICE_NAME=summit-api
+OTEL_INSTRUMENTATION_GUZZLE=true
+
+# Start collector and Elasticsearch
+docker compose up -d otel-collector elasticsearch
+
+# View traces
+curl http://localhost:55679/debug/tracez
+```

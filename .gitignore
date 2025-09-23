@@ -36,3 +36,4 @@ package.xml
 .env.dev
 rector.php
 public/apc.php
+docker-compose/opentelemetry/otel-traces.json

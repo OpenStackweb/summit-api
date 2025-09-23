@@ -1,0 +1,146 @@
+# OpenTelemetry Collector Configuration
+# This configuration sets up a basic collector pipeline for traces, metrics, and logs
+
+receivers:
+  # OTLP receiver for gRPC and HTTP protocols
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://localhost"
+            - "http://localhost:*"
+            - "https://localhost"
+            - "https://localhost:*"
+          allowed_headers:
+            - "*"
+
+  # Prometheus metrics receiver for scraping metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']
+
+processors:
+  # Batch processor to batch telemetry data before export
+  batch:
+    send_batch_size: 1024
+    timeout: 1s
+    send_batch_max_size: 2048
+
+  # Memory limiter to prevent out-of-memory issues
+  memory_limiter:
+    limit_mib: 400
+    spike_limit_mib: 100
+    check_interval: 1s
+
+  # Resource processor to add/modify resource attributes
+  resource:
+    attributes:
+      - key: service.name
+        value: summit-api
+        action: upsert
+      - key: service.version
+        value: 1.0.0
+        action: upsert
+      - key: deployment.environment
+        value: development
+        action: upsert
+
+  # Attributes processor to modify span/metric attributes
+  attributes:
+    actions:
+      - key: environment
+        value: development
+        action: upsert
+
+exporters:
+  # Debug exporter for debugging - outputs to stdout
+  debug:
+    verbosity: normal
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+  # Prometheus exporter for metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: summit_api
+    const_labels:
+      environment: development
+
+  # File exporter for traces (useful for debugging)
+  file:
+    path: /tmp/otel-traces.json
+
+  # OTLP exporter (can be used to forward to other collectors or backends)
+  otlp/jaeger:
+    endpoint: http://jaeger:14250
+    tls:
+      insecure: true
+
+  # Elasticsearch exporter for storing traces, metrics, and logs
+  elasticsearch:
+    endpoints: [http://elasticsearch:9200]
+    # Authentication (uncomment if needed)
+    # auth:
+    #   authenticator: basicauth/elastic
+    logs_index: otel-logs
+    traces_index: otel-traces
+    metrics_index: otel-metrics
+    # Mapping settings for better performance
+    mapping:
+      mode: ecs  # Use Elastic Common Schema
+
+extensions:
+  # Health check extension
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # PPprof extension for performance profiling
+  pprof:
+    endpoint: 0.0.0.0:1888
+
+  # ZPages extension for debugging
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+  # Basic auth extension for Elasticsearch (uncomment if needed)
+  # basicauth/elastic:
+  #   client_auth:
+  #     username: elastic
+  #     password: changeme
+
+service:
+  extensions: [health_check, pprof, zpages]
+
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, attributes, batch]
+      exporters: [debug, file, elasticsearch]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [debug, elasticsearch]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, attributes, batch]
+      exporters: [debug, file, elasticsearch]
+
+  # Telemetry configuration for the collector itself
+  telemetry:
+    logs:
+      level: "info"
+    metrics:
+      level: basic

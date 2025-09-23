@@ -14,6 +14,7 @@ services:
     working_dir: /var/www/
     volumes:
       - ./:/var/www
+      - ./opentelemetry.ini:/usr/local/etc/php/conf.d/opentelemetry.ini
     networks:
       - summit-api-local-net
     depends_on:
@@ -63,7 +64,7 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
     volumes:
@@ -86,7 +87,7 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
     volumes:
@@ -109,9 +110,49 @@ services:
     env_file: ./.env
     depends_on:
       - app
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./docker-compose/opentelemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./docker-compose/opentelemetry/otel-traces.json:/tmp/otel-traces.json
+    ports:
+      - 1888:1888 # pprof extension
+      - 8888:8888 # Prometheus metrics exposed by the Collector
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP http receiver
+      - 55679:55679 # zpages extension
+    networks:
+      - summit-api-local-net
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=summit-api-cluster
+      - node.name=summit-api-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - summit-api-local-net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 networks:
   summit-api-local-net:
     driver: bridge
 volumes:
   mysql_summit_api_model:
   mysql_summit_api_config:
+  elasticsearch_data:

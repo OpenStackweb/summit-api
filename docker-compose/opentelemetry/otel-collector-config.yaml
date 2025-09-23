@@ -78,12 +78,6 @@ exporters:
   file:
     path: /tmp/otel-traces.json
 
-  # OTLP exporter (can be used to forward to other collectors or backends)
-  otlp/jaeger:
-    endpoint: http://jaeger:14250
-    tls:
-      insecure: true
-
   # Elasticsearch exporter for storing traces, metrics, and logs
   elasticsearch:
     endpoints: [http://elasticsearch:9200]
@@ -124,7 +118,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resource, attributes, batch]
-      exporters: [debug, file , elasticsearch]
+      exporters: [debug, file, elasticsearch]
 
     # Metrics pipeline
     metrics:

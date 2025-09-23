@@ -136,6 +136,12 @@ return [
             'sensitive_headers' => [],
         ],
 
+        \App\OpenTelemetry\Instrumentation\GuzzleInstrumentation::class => [
+            'enabled' => env('OTEL_INSTRUMENTATION_GUZZLE', true),
+            'manual' => env('OTEL_INSTRUMENTATION_GUZZLE_MANUAL', false),
+            'enableLogs' => env('OTEL_INSTRUMENTATION_GUZZLE_ENABLE_LOGS', false),
+        ],
+
         Instrumentation\QueryInstrumentation::class => env('OTEL_INSTRUMENTATION_QUERY', true),
 
         Instrumentation\RedisInstrumentation::class => env('OTEL_INSTRUMENTATION_REDIS', true),

@@ -1,0 +1,19 @@
+name: Validate Branch Name
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name format
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "Checking branch name: $BRANCH_NAME"
+          if [[ ! "$BRANCH_NAME" =~ ^(chore|feature|fix|hotfix|patch|refactor)/[a-z0-9._-]+$ ]]; then
+            echo "❌ Invalid branch name: $BRANCH_NAME"
+            echo "✅ Should match: feature/foo-bar, hotfix/issue-123, etc."
+            exit 1
+          fi

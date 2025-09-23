@@ -2,11 +2,13 @@
   "private": true,
   "scripts": {
     "prod": "gulp --production",
-    "dev": "gulp watch"
+    "dev": "gulp watch",
+    "prepare": "husky",
+    "postinstall":"git config --local commit.template .gitmessage.txt || true"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "laravel-elixir": "^5.0.0",
-    "bootstrap-sass": "^3.3.0"
-  }
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.0.11"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

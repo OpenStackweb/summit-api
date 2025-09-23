@@ -1,4 +1,7 @@
-<?php namespace App\Providers;
+<?php
+
+namespace App\Providers;
+
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,9 +29,15 @@ use models\main\ChatTeamPermission;
 use models\main\PushNotificationMessagePriority;
 use models\oauth2\IResourceServerContext;
 use models\oauth2\ResourceServerContext;
+use OpenTelemetry\API\Logs\LoggerInterface;
+use OpenTelemetry\SDK\Logs\LoggerProvider;
+use OpenTelemetry\SDK\Logs\LoggerProviderFactory;
 use Sokil\IsoCodes\IsoCodesFactory;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
+use Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider;
+use App\Providers\OpenTelemetryServiceProvider;
+
 /**
  * Class AppServiceProvider
  * @package App\Providers
@@ -720,13 +729,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-
         // phpunit.xml sets APP_ENV=testing during tests
-        if (! App::environment('testing') && boolval(Config::get('opentelemetry.enabled', false))) {
-            Log::debug('Enabling LaravelOpenTelemetryServiceProvider');
-            App::register(
-                \Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class
+        if (!$this->app->environment('testing') && boolval(Config::get('opentelemetry.enabled', false))) {
+            $this->app->bind(
+                LoggerInterface::class,
+                function ($app) {
+                    $loggerProvider = (new LoggerProviderFactory())->create();
+                    if ($loggerProvider instanceof LoggerProvider) {
+                        return $loggerProvider->getLogger('default');
+                    }
+                    throw new \Exception('Could not create OpenTelemetry LoggerProvider');
+                }
             );
+            // Register LoggerInterface binding BEFORE registering LaravelOpenTelemetryServiceProvider
+            Log::debug('Enabling LaravelOpenTelemetryServiceProvider');
+            $this->app->register(LaravelOpenTelemetryServiceProvider::class);
         }
 
         App::singleton(IResourceServerContext::class, ResourceServerContext::class);

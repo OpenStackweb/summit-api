@@ -158,4 +158,7 @@ return [
             'excluded' => [],
         ],
     ],
+
+    'enhance_requests' => env('OTEL_ENHANCE_REQUESTS', true),
+
 ];

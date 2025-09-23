@@ -66,6 +66,7 @@ class CompanyEventJob implements ShouldQueue
         foreach($excerpt as $entry) {
             $payload = [
                 'id' => intval($entry['sponsor_id']),
+                'company_id' => $this->company_id,
                 'company_name' => $this->company_name,
             ];
             $routing_key = $this->op == 'UPDATE' ? SponsorDomainEvents::SponsorUpdated : SponsorDomainEvents::SponsorDeleted;

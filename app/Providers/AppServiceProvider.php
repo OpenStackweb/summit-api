@@ -36,7 +36,6 @@ use Sokil\IsoCodes\IsoCodesFactory;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider;
-use App\Providers\OpenTelemetryServiceProvider;
 
 /**
  * Class AppServiceProvider
@@ -738,7 +737,7 @@ class AppServiceProvider extends ServiceProvider
                     if ($loggerProvider instanceof LoggerProvider) {
                         return $loggerProvider->getLogger('default');
                     }
-                    throw new \Exception('Could not create OpenTelemetry LoggerProvider');
+                    throw new \Exception('Could not create OpenTelemetry LoggerProvider: Expected instance of LoggerProvider, got ' . (is_object($loggerProvider) ? get_class($loggerProvider) : gettype($loggerProvider)));
                 }
             );
             // Register LoggerInterface binding BEFORE registering LaravelOpenTelemetryServiceProvider

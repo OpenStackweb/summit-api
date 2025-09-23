@@ -102,7 +102,7 @@ extensions:
   health_check:
     endpoint: 0.0.0.0:13133
 
-  # PPprof extension for performance profiling
+  # pprof extension for performance profiling
   pprof:
     endpoint: 0.0.0.0:1888
 

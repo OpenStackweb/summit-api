@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+
+
 /**
  * Class Kernel
  * @package App\Http
@@ -28,7 +31,7 @@ class Kernel extends HttpKernel
     protected $middleware = [
         //\App\Http\Middleware\TrustProxies::class,
         \App\Http\Middleware\CheckForMaintenanceMode::class,
-       // \App\Http\Middleware\TrackRequestMiddleware::class,
+        \App\Http\Middleware\TrackRequestMiddleware::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         //\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
@@ -89,4 +92,5 @@ class Kernel extends HttpKernel
         'ssl'              => \App\Http\Middleware\SSLMiddleware::class,
         'auth.user'        => \App\Http\Middleware\UserAuthEndpoint::class,
     ];
+
 }

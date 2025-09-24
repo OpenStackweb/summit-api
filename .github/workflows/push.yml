@@ -12,6 +12,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     env:
+      OTEL_SERVICE_ENABLED: false
       APP_ENV: testing
       APP_DEBUG: true
       APP_KEY: base64:4vh0op/S1dAsXKQ2bbdCfWRyCI9r8NNIdPXyZWt9PX4=

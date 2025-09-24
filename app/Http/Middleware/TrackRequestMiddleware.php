@@ -35,15 +35,13 @@ class TrackRequestMiddleware
 
         try {
             $request->attributes->set(self::ATTRIBUTE_START_TIME, microtime(true));
-
             if ($span = Tracer::activeSpan()) {
                 if ($ray = $request->header('cf-ray')) {
-                    $span->setAttribute('cloudflare.ray_id', $ray);
+                    $span->setAttribute('cloudflare.cf-ray', $ray);
 
                     $baggage = Baggage::getCurrent()
                         ->toBuilder()
                         ->set('cf-ray', $ray)
-                        ->set('request_id', $request->header('x-request-id', uniqid('req_')))
                         ->set('user_agent', substr($request->userAgent() ?? 'unknown', 0, 100))
                         ->build();
 

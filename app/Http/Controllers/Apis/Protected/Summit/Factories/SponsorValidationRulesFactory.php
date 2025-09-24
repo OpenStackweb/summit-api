@@ -77,7 +77,7 @@ final class SponsorValidationRulesFactory extends AbstractValidationRulesFactory
             'header_image_alt_text' => 'sometimes|string|max:255',
             'header_image_mobile_alt_text' => 'sometimes|string|max:255',
             'carousel_advertise_image_alt_text' => 'sometimes|string|max:255',
-            'sponsorship_id' => 'required|integer',
+            'sponsorship_id' => 'sometimes|integer',
         ];
     }
 

@@ -953,12 +953,10 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function getSelectionStatus()
     {
 
-        Log::debug(sprintf("Presentation::getSelectionStatus presentation %s", $this->id));
-
-        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp 
+        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
             JOIN sp.list l
             JOIN sp.presentation p
-            WHERE p.id = :presentation_id 
+            WHERE p.id = :presentation_id
             AND sp.collection = :collection
             AND l.list_type = :list_type
             AND l.list_class = :list_class")
@@ -973,16 +971,6 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         }
 
         if ($this->isPublished()) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( is published ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Accepted
-                )
-            );
-
             return Presentation::SelectionStatus_Accepted;
         }
 
@@ -990,104 +978,37 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
 
         $selection_plan = $this->getSelectionPlan();
         if (is_null($selection_plan)) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( has no selection plan ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Pending
-                )
-            );
             return Presentation::SelectionStatus_Pending;
         }
         if (!$selection_plan->hasSelectionPeriodDefined()) {
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( selection plan hasSelectionPeriodDefined ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Pending
-                )
-            );
             return Presentation::SelectionStatus_Pending;
         }
         if ($selection_plan->isSelectionNotYetStarted()) {
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( selection plan isSelectionNotYetStarted ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Pending
-                )
-            );
             return Presentation::SelectionStatus_Pending;
         }
 
         $selection = null;
         if (count($session_sel) == 1) {
             $selection = $session_sel[0];
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s got selection %s",
-                    $this->id,
-                    $selection->getId()
-                )
-            );
         }
 
         if (!$selection) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( not selected ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Unaccepted
-                )
-            );
             return Presentation::SelectionStatus_Unaccepted;
         }
 
         if ($selection->getOrder() <= $this->getCategory()->getSessionCount()) {
-            Log::debug
-            (
-                sprintf
-                (
-                    "Presentation::getSelectionStatus presentation %s return %s ( selection order is %s from %s ).",
-                    $this->id,
-                    Presentation::SelectionStatus_Accepted,
-                    $selection->getOrder(),
-                    $this->getCategory()->getSessionCount()
-                )
-            );
             return Presentation::SelectionStatus_Accepted;
         }
 
-        Log::debug
-        (
-            sprintf
-            (
-                "Presentation::getSelectionStatus presentation %s return %s ( default ).",
-                $this->id,
-                Presentation::SelectionStatus_Alternate
-            )
-        );
         return Presentation::SelectionStatus_Alternate;
     }
 
     public function getRank(): ?int
     {
-        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp 
+        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
             JOIN sp.list l
             JOIN sp.presentation p
-            WHERE p.id = :presentation_id 
+            WHERE p.id = :presentation_id
             AND sp.collection = :collection
             AND l.list_type = :list_type
             AND l.list_class = :list_class")
@@ -1553,10 +1474,10 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function isGroupSelected($list_class = SummitSelectedPresentationList::Session): bool
     {
-        return $this->createQuery("SELECT COUNT(sp.id) from models\summit\SummitSelectedPresentation sp 
+        return $this->createQuery("SELECT COUNT(sp.id) from models\summit\SummitSelectedPresentation sp
             JOIN sp.list l
             JOIN sp.presentation p
-            WHERE p.id = :presentation_id 
+            WHERE p.id = :presentation_id
             AND sp.collection = :collection
             AND l.list_type = :list_type
             AND l.list_class = :list_class")
@@ -1700,7 +1621,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function getVotesTotalPoints(): int
     {
-        $res = $this->createQuery("SELECT SUM(v.vote) from models\summit\PresentationVote v 
+        $res = $this->createQuery("SELECT SUM(v.vote) from models\summit\PresentationVote v
             JOIN v.presentation p
             WHERE p.id = :presentation_id")
             ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
@@ -1713,7 +1634,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function getVotesCount(): int
     {
 
-        $res = $this->createQuery("SELECT COUNT(v.id) from models\summit\PresentationVote v 
+        $res = $this->createQuery("SELECT COUNT(v.id) from models\summit\PresentationVote v
             JOIN v.presentation p
             WHERE p.id = :presentation_id")
             ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
@@ -1725,7 +1646,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function getVotesAverage(): float
     {
-        $res = $this->createQuery("SELECT AVG(v.vote) from models\summit\PresentationVote v 
+        $res = $this->createQuery("SELECT AVG(v.vote) from models\summit\PresentationVote v
             JOIN v.presentation p
             WHERE p.id = :presentation_id")
             ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
@@ -2263,8 +2184,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         Log::debug(sprintf("Presentation::getTrackChairAvgScoresPerRakingType presentation %s", $this->getId()));
 
         $query = <<<SQL
-SELECT 
-AVG(PresentationTrackChairScoreType.Score) avg_score, 
+SELECT
+AVG(PresentationTrackChairScoreType.Score) avg_score,
 PresentationTrackChairRatingType.ID AS ranking_type_id
 FROM PresentationTrackChairScore
 INNER JOIN PresentationTrackChairScoreType on PresentationTrackChairScoreType.ID = PresentationTrackChairScore.TypeID

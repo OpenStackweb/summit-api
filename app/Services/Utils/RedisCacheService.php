@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
 use Predis\Connection\ConnectionException as PredisConnectionException;
@@ -323,5 +324,30 @@ class RedisCacheService implements ICacheService
         return $this->retryOnConnectionError(function ($conn) use ($key) {
             return (int)$conn->ttl($key);
         }, 0);
+    }
+
+    /**
+     * @param string $cache_region_key
+     * @return void
+     */
+    public function clearCacheRegion(string $cache_region_key): void
+    {
+        if (!empty($cache_region_key)) {
+            Cache::tags($cache_region_key)->flush();
+            if($this->exists($cache_region_key)){
+                Log::debug(sprintf("RedisCacheService::clearCacheRegion will clear cache region %s", $cache_region_key));
+                $region_data = $this->getSingleValue($cache_region_key);
+                if (!empty($region_data)) {
+                    $region = json_decode(gzinflate($region_data), true);
+                    Log::debug(sprintf("RedisCacheService::clearCacheRegion got payload %s region %s", json_encode($region), $cache_region_key));
+                    foreach ($region as $key => $val) {
+                        Log::debug(sprintf("RedisCacheService::clearCacheRegion clearing cache key %s", $key));
+                        $this->delete($key);
+                        $this->delete($key . 'generated');
+                    }
+                    $this->delete($cache_region_key);
+                }
+            }
+        }
     }
 }

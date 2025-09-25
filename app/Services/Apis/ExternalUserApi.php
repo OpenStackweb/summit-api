@@ -69,9 +69,8 @@ final class ExternalUserApi extends AbstractOAuth2Api
         Log::debug(sprintf("ExternalUserApi::getUserByEmail email %s", $email));
 
         return $this->invokeWithRetry(function () use ($email) {
-
             $query = [
-                'access_token' => $this->getAccessToken()
+                'access_token' => $this->getAccessToken(),
             ];
 
             $params = [
@@ -83,6 +82,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
             }
 
             $response = $this->client->get('/api/v1/users', [
+                    'headers' => [
+                        'Accept'        => 'application/json',
+                        'Cache-Control' => 'no-cache, no-store, max-age=0, must-revalidate',
+                        'Pragma'        => 'no-cache',
+                    ],
                     'query' => $query,
                 ]
             );
@@ -162,12 +166,16 @@ final class ExternalUserApi extends AbstractOAuth2Api
         Log::debug(sprintf("ExternalUserApi::getUserById id %s", $id));
 
         return $this->invokeWithRetry(function () use ($id) {
-
             $query = [
-                'access_token' => $this->getAccessToken()
+                'access_token' => $this->getAccessToken(),
             ];
 
             $response = $this->client->get(sprintf('/api/v1/users/%s', $id), [
+                    'headers' => [
+                        'Accept'        => 'application/json',
+                        'Cache-Control' => 'no-cache, no-store, max-age=0, must-revalidate',
+                        'Pragma'        => 'no-cache',
+                    ],
                     'query' => $query,
                 ]
             );
@@ -237,7 +245,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
         Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
 
         return $this->invokeWithRetry(function () use ($email) {
-
             $query = [
                 'access_token' => $this->getAccessToken(),
             ];
@@ -251,6 +258,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
             }
 
             $response = $this->client->get('/api/v1/user-registration-requests', [
+                'headers' => [
+                    'Accept'        => 'application/json',
+                    'Cache-Control' => 'no-cache, no-store, max-age=0, must-revalidate',
+                    'Pragma'        => 'no-cache',
+                ],
                 'query' => $query,
             ]);
 

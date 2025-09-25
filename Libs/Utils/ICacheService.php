@@ -111,4 +111,10 @@ interface ICacheService
 	* @return int
 	*/
 	public function ttl($key);
+
+    /**
+     * @param string $cache_region_key
+     * @return void
+     */
+    public function clearCacheRegion(string $cache_region_key):void;
 }

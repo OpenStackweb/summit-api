@@ -169,4 +169,10 @@ interface IMemberService
      * @throws \Exception
      */
     public function signIndividualMembership(Member $member): Member;
+
+    /**
+     * @param int $member_id
+     * @return void
+     */
+    public function cleanMemberRelatedCacheData(int $member_id):void;
 }
